@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, forwardRef, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  X, Send, Bot, User, Sparkles, Loader2, 
+  X, Send, Bot, Loader2, 
   ExternalLink, Minimize2, Mic, Headphones,
   Layers, ShieldCheck, FileDown, RotateCcw,
   Copy, Check, Phone, PhoneOff, Star, Camera,
