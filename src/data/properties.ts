@@ -624,7 +624,7 @@ export const properties: Property[] = [
   {
     id: 14,
     slug: "ring-residence-apart-hotel",
-    name: "Ring Residence ApArt Hotel by RealTrust",
+    name: "RING Family Residence - ApArt Hotel by RealTrust",
     location: "Strada Vasile Loichiță 1-3, Timișoara",
     images: [pyn(1, 7778, 73005), pyn(1, 7778, 73006), pyn(1, 7778, 73007), pyn(1, 7778, 73008), pyn(1, 7778, 73009), pyn(1, 7778, 73010), pyn(1, 7778, 73011), pyn(1, 7778, 73012), pyn(1, 7778, 73014), pyn(1, 7778, 73017), pyn(1, 7778, 73018), pyn(1, 7778, 73019)],
     imageAlts: [
@@ -660,10 +660,10 @@ export const properties: Property[] = [
     bookingUrl: "https://ring-residence.pynbooking.direct/",
     description: "Apartament DeLuxe cu 2 dormitoare și living, în ansamblul Ring, cu parcare subterană inclusă",
     descriptionEn: "DeLuxe apartment with 2 bedrooms and living room in the Ring development, underground parking included",
-    longDescription: "Ring Residence ApArt Hotel by RealTrust, pe Strada Vasile Loichiță 1-3, este un apartament DeLuxe spațios din ansamblul rezidențial Ring: 2 dormitoare, living generos, bucătărie complet utilată și baie cu cadă și cabină de duș separată. Bloc nou, mobilat modern și utilat la cheie, ideal atât pentru sejururi scurte, cât și pentru șederi mai lungi. Parcare privată în garajul subteran inclusă, lift, terasă și grădină în ansamblu. Locație practică în zona Aradului Vest: aproape de Spitalul Premiere, Vox Technology Park și Iulius Town, la 15 minute cu transportul în comun (30 de minute pe jos) de Piața Unirii.",
-    longDescriptionEn: "Ring Residence ApArt Hotel by RealTrust, on Vasile Loichiță Street 1-3, is a spacious DeLuxe apartment in the Ring residential development: 2 bedrooms, a generous living room, a fully equipped kitchen and a bathroom with bathtub and separate shower cabin. Brand-new building, modern turnkey furnishing, ideal for both short stays and longer stays. Private parking in the underground garage included, elevator, terrace and garden within the development. Practical location in the Aradului Vest area: close to Premiere Hospital, Vox Technology Park and Iulius Town, 15 minutes by public transport (30 minutes on foot) from Piața Unirii.",
-    rating: 9.7,
-    reviews: 1,
+    longDescription: "RING Family Residence - ApArt Hotel by RealTrust, pe Strada Vasile Loichiță 1-3, este un apartament DeLuxe spațios din ansamblul rezidențial Ring: 2 dormitoare, living generos, bucătărie complet utilată și baie cu cadă și cabină de duș separată. Bloc nou, mobilat modern și utilat la cheie, ideal atât pentru sejururi scurte, cât și pentru șederi mai lungi. Parcare privată în garajul subteran inclusă, lift, terasă și grădină în ansamblu. Locație practică în zona Aradului Vest: aproape de Spitalul Premiere, Vox Technology Park și Iulius Town, la 15 minute cu transportul în comun (30 de minute pe jos) de Piața Unirii.",
+    longDescriptionEn: "RING Family Residence - ApArt Hotel by RealTrust, on Vasile Loichiță Street 1-3, is a spacious DeLuxe apartment in the Ring residential development: 2 bedrooms, a generous living room, a fully equipped kitchen and a bathroom with bathtub and separate shower cabin. Brand-new building, modern turnkey furnishing, ideal for both short stays and longer stays. Private parking in the underground garage included, elevator, terrace and garden within the development. Practical location in the Aradului Vest area: close to Premiere Hospital, Vox Technology Park and Iulius Town, 15 minutes by public transport (30 minutes on foot) from Piața Unirii.",
+    rating: 9.0,
+    reviews: 4,
     capacity: 6,
     bedrooms: 2,
     bathrooms: 1,

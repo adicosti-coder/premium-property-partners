@@ -824,7 +824,7 @@ const AIChatbot = () => {
             exit={{ opacity: 0, scale: 0 }}
             whileHover={{ scale: 1.05, y: -5 }}
             onClick={() => { setIsOpen(true); setIsMinimized(false); setHasUnread(false); }}
-            className="fixed bottom-[136px] md:bottom-[136px] right-4 z-40 w-16 h-16 rounded-full bg-primary text-primary-foreground shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex items-center justify-center border-4 border-primary/20 backdrop-blur-md"
+            className="fixed bottom-[calc(10.5rem+env(safe-area-inset-bottom))] md:bottom-[136px] right-4 z-40 w-16 h-16 rounded-full bg-primary text-primary-foreground shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex items-center justify-center border-4 border-primary/20 backdrop-blur-md"
             aria-label={text.title}
           >
             <Bot className="w-8 h-8 relative z-10" />
