@@ -299,7 +299,7 @@ serve(async (req) => {
     }
 
     // Async lead detection
-    detectAndSaveLead(message, conversationHistory).catch(console.error);
+    detectAndSaveLead(message, conversationHistory, pageContext).catch(console.error);
     notifyChatLead(message, sessionId, pageContext, conversationHistory).catch(console.error);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
