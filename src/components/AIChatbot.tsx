@@ -898,14 +898,14 @@ const AIChatbot = () => {
             )}
 
             {/* ─── Premium Header ─── */}
-            <div className="px-4 py-3 md:p-5 border-b border-border/30 flex items-center justify-between shrink-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5">
+            <div className="px-4 py-3 md:p-5 border-b border-border/40 flex items-center justify-between shrink-0 bg-card/80 backdrop-blur-md">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="relative">
                   <div className={cn(
-                    "w-11 h-11 md:w-12 md:h-12 rounded-2xl flex items-center justify-center border shadow-lg",
+                    "w-11 h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center border shadow-lg",
                     voiceMode
-                      ? "bg-accent/20 border-accent/30"
-                      : "bg-primary/20 border-primary/30"
+                      ? "bg-accent/15 border-accent/30"
+                      : "bg-accent/10 border-accent/25"
                   )}>
                     {voiceMode ? <Phone className="w-6 h-6 text-accent" /> : <Bot className="w-7 h-7 text-primary" />}
                   </div>
@@ -913,12 +913,12 @@ const AIChatbot = () => {
                 </div>
                 {!isMinimized && (
                   <div className="min-w-0">
-                    <h3 className="font-bold text-sm md:text-base tracking-tight text-foreground truncate">
+                    <h3 className="font-serif font-semibold text-base md:text-lg tracking-tight text-foreground truncate">
                       {voiceMode ? text.voiceModeActive : text.title}
                     </h3>
                     <div className="flex items-center gap-2 mt-0.5">
                       {voiceMode ? <VoiceWave /> : (
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold opacity-60">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-[0.14em] font-medium">
                           {text.status}
                         </span>
                       )}
@@ -979,7 +979,7 @@ const AIChatbot = () => {
             {/* ─── Chat Body ─── */}
             {!isMinimized && !voiceMode && (
               <>
-                <ScrollArea className="flex-1 px-3 py-4 md:p-5" ref={scrollRef}>
+                <ScrollArea className="flex-1 px-3 py-4 md:p-5 bg-muted/20" ref={scrollRef}>
                   <div className="space-y-5">
                     {/* Empty state */}
                     {messages.length === 0 && (
