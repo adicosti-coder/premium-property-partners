@@ -609,6 +609,23 @@ Deno.serve(async (req) => {
     }
   };
 
+  const { data: agentSettings } = await supabase
+    .from("wa_agent_settings")
+    .select("enabled")
+    .eq("id", 1)
+    .maybeSingle();
+  const agentEnabled = !!agentSettings?.enabled;
+
+  // Când agentul AI e activ, butoanele de interes (vânzare / administrare) și
+  // primul răspuns merg la Andrei AI; refuzul/STOP/acordul rămân pe regulile fixe.
+  const SAFETY_KINDS = new Set(["quick_no", "quick_stop", "publish_consent", "publish_revoke", "publish_consent_request"]);
+  if (agentEnabled) {
+    for (const [convId, quick] of [...quickReplyConversations]) {
+      if (!SAFETY_KINDS.has(quick.kind)) { quickReplyConversations.delete(convId); conversationsToReply.add(convId); }
+    }
+    for (const convId of [...intakeConversations.keys()]) { intakeConversations.delete(convId); conversationsToReply.add(convId); }
+  }
+
   // Răspuns automat la butoanele din primul mesaj (vânzare / administrare / refuz).
   for (const [convId, quick] of quickReplyConversations) {
     if (quick.kind === "quick_no" || quick.kind === "quick_stop") {
@@ -653,12 +670,6 @@ Deno.serve(async (req) => {
   // Mesajele următoare: dacă agentul AI e activ, răspunde el. Dacă e oprit,
   // trimitem o confirmare automată, ca niciun client să nu rămână fără răspuns
   // până intervine un coleg (o singură confirmare la 3 ore per conversație).
-  const { data: agentSettings } = await supabase
-    .from("wa_agent_settings")
-    .select("enabled")
-    .eq("id", 1)
-    .maybeSingle();
-  const agentEnabled = !!agentSettings?.enabled;
 
 
   for (const convId of conversationsToReply) {

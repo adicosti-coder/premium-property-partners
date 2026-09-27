@@ -282,7 +282,7 @@ Răspunde DOAR cu JSON: {"reply": "textul mesajului", "intent": "hot" | "interes
     return new Response(JSON.stringify({ ok: true, skipped: "empty_text" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
-  if (convAfter?.status === "escalated_to_call") {
+  if (wantsCall || convAfter?.status === "escalated_to_call") {
     // Add a courtesy heads-up before Andrei calls
     if (!replyText.toLowerCase().includes("sun")) {
       replyText = `${replyText}\n\nVă sun eu acum să discutăm direct.`;
@@ -317,7 +317,7 @@ Răspunde DOAR cu JSON: {"reply": "textul mesajului", "intent": "hot" | "interes
     .maybeSingle();
   if (lastOut?.id) {
     await supabase.from("wa_messages")
-      .update({ ai_model: "openai/gpt-5.4-mini", ai_tokens_in: tokensIn, ai_tokens_out: tokensOut })
+      .update({ ai_model: `google-direct/${GEMINI_MODEL}`, ai_tokens_in: tokensIn, ai_tokens_out: tokensOut })
       .eq("id", lastOut.id);
   }
 
