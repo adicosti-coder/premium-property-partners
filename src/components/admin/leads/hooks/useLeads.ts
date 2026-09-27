@@ -24,6 +24,7 @@ const LEAD_COLUMNS = [
   "lead_grade",
   "score_breakdown",
   "engagement_status",
+  "crm_status",
   "touch_count",
   "alert_status",
   "alert_attempts",
@@ -33,6 +34,7 @@ const LEAD_COLUMNS = [
 
 export interface LeadRow {
   id: string;
+  crm_status?: string | null;
   name: string;
   whatsapp_number: string;
   email: string | null;
@@ -205,7 +207,7 @@ export function useLeads(opts: UseLeadsOptions) {
       const { data, error } = await supabase
         .from("leads")
         .select(
-          "id, source, property_type, created_at, calculated_net_profit, property_area, is_read",
+          "id, source, property_type, created_at, calculated_net_profit, property_area, is_read, crm_status",
         )
         .gte("created_at", since)
         .order("created_at", { ascending: false })
@@ -219,6 +221,7 @@ export function useLeads(opts: UseLeadsOptions) {
         calculated_net_profit: number | null;
         property_area: number;
         is_read: boolean;
+        crm_status: string | null;
       }>;
     },
   });

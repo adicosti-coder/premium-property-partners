@@ -32,6 +32,7 @@ import { RevealableField } from "../../shared/RevealableField";
 import { LeadScoreBadge } from "./LeadScoreBadge";
 import LeadNotesDialog from "../../LeadNotesDialog";
 import type { LeadRow } from "../hooks/useLeads";
+import { ConversionCell } from "./ConversionCell";
 
 export interface LeadRowLabels {
   perMonth: string;
@@ -94,7 +95,7 @@ export const LeadTableRow = ({
               <p className={!lead.is_read ? "font-semibold" : ""}>{lead.name}</p>
               {(() => {
                 const st = String((lead as any).crm_status ?? "").toLowerCase();
-                const closed = ["closed", "inchis", "închis", "won", "lost", "converted", "rejected"].includes(st);
+                const closed = ["vandut", "inchiriat", "closed", "inchis", "închis", "won", "lost", "converted", "rejected"].includes(st);
                 const hot = !closed && (lead.engagement_status === "hot_lead" || lead.lead_grade === "hot");
                 const label = closed ? "Închis" : hot ? "🔥 Hot Lead" : "În proces";
                 const cls = closed ? "bg-muted text-muted-foreground" : hot ? "bg-destructive/15 text-destructive" : "bg-primary/10 text-primary";
@@ -224,6 +225,7 @@ export const LeadTableRow = ({
           <span className="text-muted-foreground">-</span>
         )}
       </TableCell>
+      <TableCell onClick={(e) => e.stopPropagation()}><ConversionCell lead={lead} /></TableCell>
       <TableCell>{sourceBadge}</TableCell>
       <TableCell>
         <div className="space-y-1">

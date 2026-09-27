@@ -22,6 +22,8 @@ import { template as automationRunReport } from './automation-run-report.tsx'
 import { template as seoWeeklyReport } from './seo-weekly-report.tsx'
 import { template as myListingPublished } from './my-listing-published.tsx'
 import { template as ownerListingDetails } from './owner-listing-details.tsx'
+import { template as hotLeadFollowup } from './hot-lead-followup.tsx'
+import { template as chatLeadAlert } from './chat-lead-alert.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'welcome': welcomeEmail,
@@ -37,4 +39,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'seo-weekly-report': seoWeeklyReport,
   'my-listing-published': myListingPublished,
   'owner-listing-details': ownerListingDetails,
+  'hot-lead-followup': hotLeadFollowup,
+  'chat-lead-alert': chatLeadAlert,
 }

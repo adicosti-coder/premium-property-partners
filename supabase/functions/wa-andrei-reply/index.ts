@@ -274,6 +274,10 @@ Răspunde DOAR cu JSON: {"reply": "textul mesajului", "intent": "hot" | "interes
     console.warn("[wa-andrei-reply] email step failed:", e);
   }
 
+  const lastUserEmail = () => {
+    const t = [...contents].reverse().find((c) => c.role === "user")?.parts?.[0]?.text ?? "";
+    return (t.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] ?? "").toLowerCase();
+  };
   // 6. Hot Lead → Lead Manager + alertă
   if (intent === "hot" || wantsCall) {
     try {
@@ -320,6 +324,28 @@ Răspunde DOAR cu JSON: {"reply": "textul mesajului", "intent": "hot" | "interes
         action_label: "Deschide lead-ul",
       }));
       if (rows.length) await supabase.from("user_notifications").insert(rows);
+      // E-mail automat de follow-up (detalii anunț + apel 2 minute), o singură dată per lead
+      const followEmail = knownEmail
+        ?? (lastUserEmail() || null);
+      if (followEmail && leadId) {
+        const { error: fErr } = await supabase.functions.invoke("send-transactional-email", {
+          headers: { "x-webhook-secret": Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "" },
+          body: {
+            templateName: "hot-lead-followup",
+            recipientEmail: followEmail,
+            idempotencyKey: `hot-lead-followup-${leadId}`,
+            templateData: {
+              name: listingInfo?.contact_name || conv.wa_profile_name || "",
+              title: listingInfo?.title || "",
+              zone: listingInfo?.zone || "",
+              price: listingInfo?.price ? `${listingInfo.price} ${listingInfo.currency ?? "EUR"}` : "",
+              category: listingInfo?.category || "",
+              url: listingInfo?.published_at ? `https://realtrust.ro/anunturi-proprietari?anunt=${listingInfo.id}` : (listingInfo?.source_url || ""),
+            },
+          },
+        });
+        if (fErr) console.error("[wa-andrei-reply] hot follow-up email failed:", fErr);
+      }
       await relayToMake("wa_hot_lead", {
         lead_id: leadId, conversation_id: conversationId, phone: conv.phone_normalized,
         listing: listingText, wants_call: wantsCall, summary,

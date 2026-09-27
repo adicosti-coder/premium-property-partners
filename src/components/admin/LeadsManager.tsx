@@ -348,7 +348,10 @@ const LeadsManager = () => {
       ? Math.round(snapshot.reduce((a, l) => a + (l.property_area || 0), 0) / snapshot.length)
       : 0;
     const unreadCount = snapshot.filter((l) => !l.is_read).length;
-    return { total: snapshot.length, thisWeek, thisMonth, avgProfit, avgArea, unreadCount };
+    const sold = snapshot.filter((l: any) => l.crm_status === "vandut").length;
+    const rented = snapshot.filter((l: any) => l.crm_status === "inchiriat").length;
+    const conversionRate = snapshot.length ? Math.round(((sold + rented) / snapshot.length) * 1000) / 10 : 0;
+    return { total: snapshot.length, thisWeek, thisMonth, avgProfit, avgArea, unreadCount, sold, rented, conversionRate };
   }, [snapshot]);
 
   const sourceChartData = useMemo(() => {
@@ -521,6 +524,14 @@ const LeadsManager = () => {
 
   return (
     <div className="space-y-6">
+      <Card className="border-accent/30">
+        <CardContent className="p-4 flex flex-wrap items-center gap-6">
+          <div><p className="text-xs uppercase tracking-wide text-muted-foreground">Conversii (90 zile)</p><p className="text-2xl font-bold text-foreground">{stats.sold + stats.rented}</p></div>
+          <div><p className="text-xs text-muted-foreground">Vânzări</p><p className="text-xl font-semibold text-foreground">{stats.sold}</p></div>
+          <div><p className="text-xs text-muted-foreground">Închirieri / administrare</p><p className="text-xl font-semibold text-foreground">{stats.rented}</p></div>
+          <div><p className="text-xs text-muted-foreground">Rată conversie</p><p className="text-xl font-semibold text-accent">{stats.conversionRate}%</p></div>
+        </CardContent>
+      </Card>
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
@@ -927,6 +938,7 @@ const LeadsManager = () => {
                   <TableHead>{text.property}</TableHead>
                   <TableHead>HostScan</TableHead>
                   <TableHead>{text.profit}</TableHead>
+                  <TableHead>Conversie</TableHead>
                   <TableHead>{text.source}</TableHead>
                   <TableHead>{text.date}</TableHead>
                   <TableHead className="w-[80px]">{text.actions}</TableHead>
