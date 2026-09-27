@@ -27,29 +27,15 @@ serve(async (req) => {
     // Verify Twilio HMAC signature for POST callbacks.
     // In production behind the edge gateway the public URL seen by Twilio can differ
     // from req.url, so we soft-fail and still process the form for live call health.
+    // Verify Twilio HMAC signature — fail closed: unsigned callbacks cannot mutate call records.
     let twilioForm: URLSearchParams | null = null;
-    if (req.method === "POST") {
-      const verification = await verifyTwilioRequest(req.clone());
-      if (verification.ok) {
-        twilioForm = verification.params;
-      } else {
-        console.warn("[voice-status] Twilio HMAC mismatch — proceeding (soft-check)", {
-          status: verification.response.status,
-          url: req.url,
-        });
-        try {
-          const ct = req.headers.get("content-type") || "";
-          if (ct.includes("application/x-www-form-urlencoded") || ct.includes("multipart/form-data")) {
-            const form = await req.formData();
-            const params = new URLSearchParams();
-            for (const [k, v] of form.entries()) params.append(k, String(v));
-            twilioForm = params;
-          }
-        } catch (e) {
-          console.error("[voice-status] could not re-parse body after soft HMAC fail:", e);
-        }
-      }
+    if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
+    const verification = await verifyTwilioRequest(req.clone());
+    if (!verification.ok) {
+      console.warn("[voice-status] Twilio HMAC mismatch — rejected", { status: verification.response.status });
+      return verification.response;
     }
+    twilioForm = verification.params;
 
     const url = new URL(req.url);
     const sessionId = url.searchParams.get("sessionId");

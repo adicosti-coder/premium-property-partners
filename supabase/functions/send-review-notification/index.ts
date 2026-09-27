@@ -97,10 +97,17 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { data: reviewRow } = await supabase
       .from("property_reviews")
-      .select("guest_name, guest_email, title, content, rating, property_id, properties(title)")
+      .select("guest_name, guest_email, title, content, rating, property_id, created_at, properties(title)")
       .eq("id", reviewId)
       .maybeSingle();
 
+    // Only freshly submitted reviews (last 10 minutes) can trigger staff notifications.
+    if (reviewRow && Date.now() - new Date((reviewRow as any).created_at).getTime() > 10 * 60 * 1000) {
+      return new Response(JSON.stringify({ error: "review_too_old" }), {
+        status: 409,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
     if (!reviewRow) {
       return new Response(JSON.stringify({ error: "review_not_found" }), {
         status: 404,

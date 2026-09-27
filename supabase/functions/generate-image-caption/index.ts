@@ -1,3 +1,4 @@
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { isUrlAllowed } from "../_shared/urlGuard.ts";
@@ -58,6 +59,14 @@ serve(async (req) => {
       }
     } catch (e) {
       console.warn("Cache read failed, proceeding to AI:", e);
+    }
+
+    // Cache misses trigger paid AI generation: only admins / internal jobs may do that.
+    const gate = await requireInternalOrAdmin(req, corsHeaders);
+    if (gate) {
+      return new Response(JSON.stringify({ caption: null, cached: false }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const langLabel = lang === "en" ? "English" : "Romanian";

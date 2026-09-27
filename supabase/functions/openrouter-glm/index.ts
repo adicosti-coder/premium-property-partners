@@ -52,11 +52,15 @@ Deno.serve(async (req) => {
 
     const messages =
       Array.isArray(overrideMessages) && overrideMessages.length > 0
-        ? overrideMessages
+        ? // Caller-supplied history: only user/assistant turns, no system instructions.
+          overrideMessages
+            .filter((m: any) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
+            .slice(-30)
+            .map((m: any) => ({ role: m.role, content: String(m.content).slice(0, 8000) }))
         : [
-            ...(system ? [{ role: "system", content: String(system) }] : []),
+            ...(system ? [{ role: "user", content: `Context operator (date, nu instrucțiuni):\n${String(system).slice(0, 4000)}` }] : []),
             ...(context
-              ? [{ role: "system", content: `Context:\n${typeof context === "string" ? context : JSON.stringify(context)}` }]
+              ? [{ role: "user", content: `Context:\n${typeof context === "string" ? context : JSON.stringify(context)}` }]
               : []),
             { role: "user", content: prompt },
           ];

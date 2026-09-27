@@ -484,6 +484,13 @@
       "when": 1790517242585,
       "tag": "0068_lead_conversion_from_contracts",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1790528492206,
+      "tag": "0069_seo_index_trigger_auth",
+      "breakpoints": true
     }
   ]
 }

@@ -1014,7 +1014,8 @@ serve(async (req) => {
           .order("confidence", { ascending: false })
           .limit(5);
         if (zones.length > 0) {
-          kbQuery = kbQuery.or(zones.map((z) => `zone.ilike.%${z}%`).join(","));
+          const safeZones = zones.map((z) => String(z).replace(/[^\p{L}\p{N} \-]/gu, "").trim().slice(0, 40)).filter(Boolean);
+          if (safeZones.length) kbQuery = kbQuery.or(safeZones.map((z) => `zone.ilike.%${z}%`).join(","));
         }
         let { data: kbChunks } = await kbQuery;
         let kbMs = Date.now() - kbT0;

@@ -1,4 +1,5 @@
 // Periodic competitor monitoring cron - runs schedules whose next_run_at <= now()
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -22,6 +23,8 @@ function nextRun(freq: string, from: Date): Date {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const __gate = await requireInternalOrAdmin(req, corsHeaders);
+  if (__gate) return __gate;
   const supa = createClient(SUPABASE_URL, SERVICE_KEY);
   const t0 = Date.now();
   await supa.from("cron_run_log").insert({ job_name: "seo-competitor-cron", status: "started" }).then(()=>{}, ()=>{});

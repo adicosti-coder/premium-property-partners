@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
       const host = parsed.hostname.toLowerCase();
       const allowed =
         parsed.protocol === "https:" &&
-        (ALLOWED_RETURN_HOSTS.includes(host) || host.endsWith(".lovable.app"));
+        (ALLOWED_RETURN_HOSTS.includes(host) || host === "id-preview--b9975a45-416b-429b-b6fa-9e3d771a5693.lovable.app");
       if (allowed) safeReturnUrl = parsed.toString();
     } catch {
       safeReturnUrl = "";

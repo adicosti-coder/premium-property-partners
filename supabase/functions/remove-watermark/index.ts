@@ -26,10 +26,13 @@ async function fetchImageAsBytes(url: string): Promise<{ bytes: Uint8Array; cont
   return { bytes, contentType };
 }
 
+const MAX_B64_LEN = Math.ceil((10 * 1024 * 1024 * 4) / 3); // ~10 MB decoded
+
 function parseDataUri(dataUri: string): { bytes: Uint8Array; contentType: string } | null {
   const match = dataUri.match(/^data:(image\/[^;]+);base64,(.+)$/);
   if (!match) return null;
   const [, contentType, base64] = match;
+  if (base64.length > MAX_B64_LEN) throw new Error("Imagine prea mare (max 10 MB)");
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
@@ -41,6 +44,7 @@ async function uploadToStorage(base64Image: string, contentType: string): Promis
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!supabaseUrl || !supabaseServiceKey) throw new Error("Storage backend not configured");
 
+  if (base64Image.length > MAX_B64_LEN) throw new Error("Imagine procesată prea mare (max 10 MB)");
   const binary = atob(base64Image);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);

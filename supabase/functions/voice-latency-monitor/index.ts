@@ -1,6 +1,7 @@
 // Voice Latency Monitor — checks last completed Andrei calls; alerts when
 // 3 consecutive RECENT calls (last 24h) exceed threshold avg TTS latency.
 // Dedupes by call_session_ids set so the same stale calls never re-alert.
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -13,6 +14,8 @@ const RECENT_WINDOW_HOURS = 24;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const __gate = await requireInternalOrAdmin(req, corsHeaders);
+  if (__gate) return __gate;
 
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const t0 = Date.now();

@@ -1727,17 +1727,17 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
       p.geo.score,
       p.owner_sentiment ?? p.ai_score_breakdown?.owner_sentiment ?? "",
       p.urgency_level ?? p.ai_score_breakdown?.urgency_level ?? "",
-      (p.title || "").replace(/"/g, '""'),
+      p.title || "",
       p.category ?? "",
       getProspectPhone(p) || "",
-      (p.contact_name || "").replace(/"/g, '""'),
+      p.contact_name || "",
       p.location ?? "",
       p.zone ?? "",
       p.price ?? "",
       p.lifecycle_status,
       p.source_url,
     ]);
-    const csv = [headers, ...rows].map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+    const csv = [headers, ...rows].map((r) => r.map((c) => { const raw = String(c ?? ""); const safe = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw; return `"${safe.replace(/"/g, '""')}"`; }).join(",")).join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

@@ -73,13 +73,11 @@ Deno.serve(async (req) => {
           `<<<CONTEXT\n${systemPrompt.slice(0, 4000)}\nCONTEXT>>>`
         : undefined;
 
-    const finalSystem = jsonMode
-      ? `${safeSystemPrompt ? safeSystemPrompt + "\n\n" : ""}Răspunde DOAR cu JSON valid, fără text în afara obiectului JSON și fără code fences.`
-      : safeSystemPrompt;
-
+    // System role is fixed server-side; operator-provided context travels in the user turn.
+    const fixedSystem = `Ești asistentul intern RealTrust.${jsonMode ? " Răspunde DOAR cu JSON valid, fără text în afara obiectului JSON și fără code fences." : ""}`;
     const messages = [
-      ...(finalSystem ? [{ role: "system", content: finalSystem }] : []),
-      { role: "user", content: prompt },
+      { role: "system", content: fixedSystem },
+      { role: "user", content: safeSystemPrompt ? `${safeSystemPrompt}\n\n${prompt}` : prompt },
     ];
 
     const payload: Record<string, unknown> = {
