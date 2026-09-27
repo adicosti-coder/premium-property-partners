@@ -215,13 +215,14 @@ async function notifyChatLead(message: string, sessionId: string, pageContext: s
   const phone = message.match(/(?:\+?40|0)7\d{2}[\s.-]?\d{3}[\s.-]?\d{3}/)?.[0] ?? "";
   // Alertă internă: primul mesaj al sesiunii + ori de câte ori apar date de contact
   if (userTurns === 0 || email || phone) {
-    await sb.functions.invoke("send-transactional-email", {
+    const r = await sb.functions.invoke("send-transactional-email", {
       body: {
         templateName: "chat-lead-alert",
         idempotencyKey: `chat-alert-${sid}-${email || phone || "first"}`,
         templateData: { source: "chat", message: message.slice(0, 500), page: String(pageContext).slice(0, 200), email: email || undefined, phone: phone || undefined },
       },
     });
+    console.log("[chat-alert]", r.error ? `error: ${r.error.message}` : "queued");
   }
   if (email) {
     await sb.functions.invoke("send-transactional-email", {
