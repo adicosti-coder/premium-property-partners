@@ -123,33 +123,48 @@ Deno.serve(async (req) => {
     console.warn("[wa-andrei-reply] context fetch failed:", e);
   }
 
-  // 4. Contextul anunțului (titlu, zonă, preț) din campania de prospectare
+  // 4. Contextul anunțului (titlu, zonă, preț, tip tranzacție) din campania de prospectare
   let listingText = "(anunț necunoscut)";
+  let listingCategory = "";
   let listingId: string | null = conv.prospect_id ?? null;
   try {
     let q = supabase.from("prospect_listings")
-      .select("id, title, zone, price, currency, rooms, size, contact_name");
+      .select("id, title, zone, price, currency, rooms, size, contact_name, category");
     q = listingId ? q.eq("id", listingId) : q.eq("phone_normalized", conv.phone_normalized);
     const { data: pl } = await q.limit(1).maybeSingle();
     if (pl) {
       listingId = pl.id;
+      listingCategory = String(pl.category ?? "").trim().toLowerCase();
       listingText = [
         pl.title, pl.zone ? `zona ${pl.zone}` : null,
         pl.price ? `${pl.price} ${pl.currency ?? "EUR"}` : null,
         pl.rooms ? `${pl.rooms} camere` : null, pl.size ? `${pl.size} mp` : null,
         pl.contact_name ? `proprietar: ${pl.contact_name}` : null,
+        pl.category ? `tip anunț: ${pl.category}` : null,
       ].filter(Boolean).join(" · ");
     }
   } catch (e) {
     console.warn("[wa-andrei-reply] listing context failed:", e);
   }
 
+  // Strategia conversației în funcție de tipul anunțului (vânzare vs închiriere)
+  const isVanzare = listingCategory === "vanzare";
+  const isChirie = listingCategory === "inchiriere" || listingCategory === "hotelier";
+  const strategyText = isVanzare
+    ? `STRATEGIE (anunț de VÂNZARE): prioritizează „Vânzare Asistată” — promovare profesională, cumpărători calificați și pre-verificați, dosare complete, negociere și acte până la semnare. Propune o evaluare GRATUITĂ a prețului de piață al proprietății ca pas concret.`
+    : isChirie
+      ? `STRATEGIE (anunț de ÎNCHIRIERE): prioritizează „Regim Hotelier (ApArt Hotel)” — administrare 100% pasivă, randament net estimat ~9,4%/an, cu administrarea RealTrust de 15-20%. Prezintă beneficiul fără bătăi de cap: ne ocupăm de oaspeți, curățenie, chei și taxe.`
+      : `STRATEGIE: descoperă mai întâi dacă proprietarul vrea să vândă sau să închirieze, apoi aplică varianta potrivită: Vânzare Asistată cu evaluare gratuită a prețului, respectiv Regim Hotelier cu randament net estimat ~9,4%/an (administrare RealTrust 15-20%).`;
+
   const systemPrompt = `Ești Andrei, consultant RealTrust Timișoara. Răspunzi pe WhatsApp proprietarilor care au răspuns la mesajul nostru despre anunțul lor.
-STIL: scurt (max 2-3 propoziții), profesionist, consultativ, în română, fără markdown, fără presiune.
+STIL: scurt (max 2-3 propoziții), cald dar profesionist, consultativ, în română, fără markdown, fără presiune.
+FINAL MANDATORIU: încheie fiecare mesaj cu o întrebare deschisă sau cu o invitație la un apel de 2 minute ori la o vizionare/evaluare la apartament.
+${strategyText}
 SERVICII (menționează-le natural, doar cât e relevant):
 1) Vânzare asistată — promovare, filtrarea cumpărătorilor, negociere și acte, până la semnare.
 2) Regim hotelier — administrare completă ApArt Hotel, randament net estimat ~9,4%/an; administrarea RealTrust e 15-20%.
-REGULI: nu avem birou pentru clienți — vizionările/evaluările se fac la apartament. Nu inventa prețuri sau promisiuni. Propune mereu un pas concret: o scurtă discuție telefonică sau o evaluare a proprietății.
+COMISION & COSTURI: când proprietarul întreabă direct de comision sau costuri, fii transparent — administrarea RealTrust este de 15-20% din venit și în regim hotelier ea acoperă administrarea 100% pasivă (oaspeți, curățenie, chei, taxe). Explică valoarea adusă și orientează discuția spre un apel scurt. NU menționa niciodată alte procente de cheltuieli.
+REGULI: nu avem birou pentru clienți — vizionările/evaluările se fac la apartament. Nu inventa prețuri sau promisiuni.
 Dacă proprietarul refuză, mulțumește politicos și încheie.
 ${settings.system_prompt ? `\nINDICAȚII SUPLIMENTARE:\n${String(settings.system_prompt).slice(0, 3000)}\n` : ""}
 ANUNȚUL PROPRIETARULUI: ${listingText}
