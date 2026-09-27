@@ -6,7 +6,7 @@ import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import EntityDefinitionBlock from "@/components/EntityDefinitionBlock";
 import BackToTop from "@/components/BackToTop";
-import { MapPin, Phone, Mail, Clock, ExternalLink, Building2, Shield, Star, ArrowRight } from "lucide-react";
+import { MapPin, Phone, Mail, Clock, Building2, Shield, Star, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { lazy, Suspense } from "react";
@@ -18,8 +18,6 @@ const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversion
 
 const BASE_URL = "https://realtrust.ro";
 const GOOGLE_BUSINESS_URL = GOOGLE_BUSINESS_PROFILE_URL;
-const GOOGLE_MAPS_QUERY = encodeURIComponent("Strada Samuil Micu 14, ap.4, Timișoara");
-const GOOGLE_MAPS_URL = `https://www.google.com/maps/search/?api=1&query=${GOOGLE_MAPS_QUERY}`;
 
 const ContactPage = () => {
   const { language } = useLanguage();
@@ -27,14 +25,14 @@ const ContactPage = () => {
 
   const faqItems = isRo
     ? [
-        { q: "Care este programul agenției imobiliare RealTrust din Timișoara?", a: "Sediul RealTrust din Strada Samuil Micu Nr.14, ap.4, Timișoara este deschis Luni-Vineri 09:00-18:00 și Sâmbătă 10:00-14:00. Suport oaspeți disponibil 24/7 prin WhatsApp." },
-        { q: "Aveți departamente separate pentru vânzări, închirieri și administrare?", a: "Da. Departamentul Vânzări gestionează tranzacțiile imobiliare, Departamentul Închirieri se ocupă de contracte rezidențiale, iar Departamentul Administrare operează portofoliul ApArt Hotel. Vezi toate serviciile pe pagina Servicii Imobiliare Timișoara." },
-        { q: "Cum ajung la sediul RealTrust din Timișoara?", a: "Sediul este în Strada Samuil Micu Nr.14, ap.4, sector central — vis-à-vis de zona Iulius Town. Folosește butonul „Deschide în Google Maps” pentru rută." },
+        { q: "Care este programul RealTrust Timișoara?", a: "Programul de consultanță și administrare este Luni-Vineri 09:00-18:00 și Sâmbătă 10:00-14:00. Suport oaspeți disponibil 24/7 prin WhatsApp." },
+        { q: "Unde au loc întâlnirile și vizionările?", a: "Nu primim clienți într-un sediu comercial: consultanța se face online sau telefonic, iar vizionările se programează direct la proprietate — în Centru/Cetate, Iosefin, Fabric, Dumbrăvița sau pe culoarul Aradului." },
+        { q: "Cum solicit o evaluare sau o consultanță?", a: "Sunteți la distanță de un apel sau un mesaj: sunați la +40 799 069 256, scrieți pe WhatsApp sau trimiteți formularul de pe această pagină și revenim cu o evaluare online a proprietății." },
       ]
     : [
-        { q: "What are RealTrust office hours in Timișoara?", a: "Our office at Strada Samuil Micu Nr.14, ap.4, Timișoara is open Mon-Fri 09:00-18:00 and Sat 10:00-14:00. Guest support is available 24/7 via WhatsApp." },
-        { q: "Do you have separate departments for sales, rentals and management?", a: "Yes. The Sales department handles transactions, the Rentals department covers long-term residential contracts, and the Management department operates the ApArt Hotel portfolio. See all services on the Real Estate Services Timișoara page." },
-        { q: "How do I get to the RealTrust office in Timișoara?", a: "The office is at Strada Samuil Micu Nr.14, ap.4, central area — near Iulius Town. Use the 'Open in Google Maps' button for directions." },
+        { q: "What are RealTrust's working hours in Timișoara?", a: "Consulting and management hours are Mon-Fri 09:00-18:00 and Sat 10:00-14:00. Guest support is available 24/7 via WhatsApp." },
+        { q: "Where do meetings and viewings take place?", a: "We don't host clients at a commercial office: consulting is done online or by phone, and viewings are scheduled directly at the property — in Centru/Cetate, Iosefin, Fabric, Dumbrăvița or the Arad corridor." },
+        { q: "How do I request a valuation or a consultation?", a: "You're one call or message away: call +40 799 069 256, message us on WhatsApp or submit the form on this page and we'll come back with an online valuation of your property." },
       ];
 
   // Visible FAQ → single consolidated FAQPage node via the provider.
@@ -50,25 +48,12 @@ const ContactPage = () => {
       "@id": `${BASE_URL}/contact`,
       "name": "RealTrust",
       "description": isRo
-        ? "Sediu RealTrust Timișoara — date contact, program și locație. Departamente: Vânzări, Închirieri, Administrare regim hotelier."
-        : "RealTrust Timișoara office — contact details, hours and location. Departments: Sales, Rentals, Short-term rental management.",
+        ? "RealTrust Timișoara — consultanță, vânzări, închirieri și administrare regim hotelier. Contact rapid prin telefon, WhatsApp și e-mail."
+        : "RealTrust Timișoara — consulting, sales, rentals and short-term rental management. Fast contact by phone, WhatsApp and e-mail.",
       "url": `${BASE_URL}/contact`,
       "telephone": "+40799069256",
       "email": "info@realtrust.ro",
       "image": `${BASE_URL}/images/hero-optimized-800w.webp`,
-      "address": {
-        "@type": "PostalAddress",
-        "streetAddress": "Strada Samuil Micu Nr.14, ap.4",
-        "addressLocality": "Timișoara",
-        "addressRegion": "Timiș",
-        "postalCode": "300125",
-        "addressCountry": "RO",
-      },
-      "geo": {
-        "@type": "GeoCoordinates",
-        "latitude": 45.7672,
-        "longitude": 21.2495,
-      },
       "openingHoursSpecification": [
         { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], "opens": "09:00", "closes": "18:00" },
         { "@type": "OpeningHoursSpecification", "dayOfWeek": "Saturday", "opens": "10:00", "closes": "14:00" },
@@ -132,7 +117,6 @@ const ContactPage = () => {
         "https://www.instagram.com/realtrust_timisoara",
         GOOGLE_BUSINESS_URL,
       ],
-      "hasMap": GOOGLE_MAPS_URL,
       "founder": {
         "@type": "Person",
         "@id": `${BASE_URL}/despre-noi#adrian-costi`,
@@ -154,8 +138,8 @@ const ContactPage = () => {
       <SEOHead
         title={isRo ? "Contact & Locație | Management Proprietăți Timișoara — RealTrust" : "Contact & Location | Property Management Timișoara — RealTrust"}
         description={isRo
-          ? "Contactează echipa RealTrust Timișoara: sediu Str. Samuil Micu 14, ap.4, telefon +40 799 069 256, hartă și program. Suntem aici pentru a te ajuta!"
-          : "Contact the RealTrust Timișoara team: office Str. Samuil Micu 14, ap.4, phone +40 799 069 256, map and hours. We're here to help!"}
+          ? "Contactează echipa RealTrust Timișoara: telefon +40 799 069 256, WhatsApp și info@realtrust.ro. Consultanță la distanță și vizionări programate direct la proprietate."
+          : "Contact the RealTrust Timișoara team: phone +40 799 069 256, WhatsApp and info@realtrust.ro. Remote consulting and viewings scheduled directly at the property."}
         url={`${BASE_URL}/contact`}
         jsonLd={jsonLdSchemas}
       />
@@ -178,12 +162,12 @@ const ContactPage = () => {
           {/* Hero */}
           <section className="text-center max-w-2xl mx-auto mb-10">
             <h1 className="text-3xl sm:text-4xl font-serif font-bold mb-3">
-              {isRo ? "Contact & Locație — Sediu RealTrust Timișoara" : "Contact & Location — RealTrust Timișoara Office"}
+              {isRo ? "Contact — RealTrust Timișoara" : "Contact — RealTrust Timișoara"}
             </h1>
             <p className="text-base text-muted-foreground mb-5">
               {isRo
-                ? "Adresă, telefon, program și hartă. Pentru detalii despre serviciile noastre, vezi pagina dedicată."
-                : "Address, phone, hours and map. For details about our services, see the dedicated page."}
+                ? "Consultanță & administrare la distanță în Timișoara — telefon, WhatsApp și e-mail. Întâlnirile și vizionările se stabilesc direct la proprietate."
+                : "Remote consulting & management in Timișoara — phone, WhatsApp and e-mail. Meetings and viewings are scheduled directly at the property."}
             </p>
             <Link to="/servicii-imobiliare" className="inline-block">
               <Button
@@ -217,7 +201,7 @@ const ContactPage = () => {
             </a>
             <div className="flex flex-col items-center p-6 bg-card border rounded-2xl">
               <Clock className="w-8 h-8 text-primary mb-3" />
-              <span className="font-semibold mb-1">{isRo ? "Program" : "Hours"}</span>
+              <span className="font-semibold mb-1">{isRo ? "Program consultanță" : "Consulting hours"}</span>
               <span className="text-sm text-muted-foreground text-center">{isRo ? "L-V: 09-18 | S: 10-14" : "Mon-Fri: 09-18 | Sat: 10-14"}</span>
             </div>
           </section>
