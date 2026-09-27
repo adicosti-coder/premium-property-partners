@@ -1303,7 +1303,23 @@ const AIChatbot = () => {
                         onChange={handleImageUpload}
                       />
                     </label>
-                    <div className="relative flex-1">
+                    {/* Voice mode toggle — integrated in the input bar (was a floating header button) */}
+                    <button
+                      type="button"
+                      onClick={async () => { if (voiceMode) await endVoiceMode(); else await startVoiceMode(); }}
+                      aria-label={language === "ro" ? "Mod vocal cu asistentul" : "Voice mode with assistant"}
+                      className={cn(
+                        "h-12 w-12 md:h-14 md:w-14 rounded-full flex items-center justify-center shrink-0 border transition-all active:scale-95",
+                        voiceMode || isConnectingVoice
+                          ? "bg-primary text-primary-foreground border-primary shadow-lg"
+                          : "bg-accent/15 text-accent border-accent/40 hover:bg-accent/25",
+                      )}
+                    >
+                      {isConnectingVoice
+                        ? <Loader2 className="w-5 h-5 animate-spin" />
+                        : voiceMode ? <Headphones className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                    </button>
+                    <div className="relative flex-1 min-w-0">
                       <Input
                         ref={inputRef}
                         placeholder={attachedImage 
