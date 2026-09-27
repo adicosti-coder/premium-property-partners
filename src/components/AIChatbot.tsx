@@ -303,12 +303,15 @@ const getInstantEstimate = (msg: string): string | null => {
   const ppsqm = Math.round((zone?.avgPricePerSqm ?? cityAvg) * factor);
   const mid = Math.round((ppsqm * sqm) / 500) * 500;
   const f = (v: number) => `${(Math.round(v / 500) * 500).toLocaleString("ro-RO")} €`;
-  return `⚡ **Estimare rapidă:** ${f(mid * 0.92)} – ${f(mid * 1.08)} (≈${ppsqm.toLocaleString("ro-RO")} €/mp${zone ? ` în ${zone.name}` : ", media Timișoara"}, ${sqm} mp). Lasă-mi e-mailul sau telefonul și îți trimit oferta detaliată. Andrei continuă 👇`;
+  return `⚡ **Estimare rapidă:** ${f(mid * 0.92)} – ${f(mid * 1.08)} (≈${ppsqm.toLocaleString("ro-RO")} €/mp${zone ? ` în ${zone.name}` : ", media Timișoara"}, ${sqm} mp). Vezi ofertele comparabile: [Anunțuri de vânzare RealTrust](/imobiliare). Lasă-mi e-mailul sau telefonul și îți trimit oferta detaliată. Andrei continuă 👇`;
 };
+
+const SELL_INTENT = /\b(vreau|doresc|as vrea|aș vrea)\s+(sa|să)\s+(vand|vând|vinde)|\bvand\b|\bvând\b/i;
 
 const getInstantReply = (msg: string, fallback = false): string | null => {
   const est = getInstantEstimate(msg);
   if (est) return est;
+  if (SELL_INTENT.test(msg)) return "⚡ Perfect! Uite anunțurile de vânzare RealTrust din Timișoara: [Vezi anunțurile](/imobiliare) · [Evaluare gratuită](/evaluare-gratuita). Scrie-mi suprafața, zona și e-mailul și îți trimit linkul și estimarea. Andrei continuă 👇";
   if (/estim|valoare/i.test(msg)) return "⚡ Scrie-mi suprafața și zona (ex: „2 camere, 55 mp, Iosefin”) și îți calculez imediat valoarea estimată 👇";
   for (const [re, reply] of INSTANT_REPLIES) if (re.test(msg)) return reply;
   return fallback ? "⚡ Am primit mesajul tău! Andrei îți răspunde chiar acum 👇 (dacă preferi, lasă un număr de telefon și te sunăm noi)" : null;

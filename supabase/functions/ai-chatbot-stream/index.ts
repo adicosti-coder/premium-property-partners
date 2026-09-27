@@ -268,13 +268,17 @@ async function notifyChatLead(message: string, sessionId: string, pageContext: s
     console.log("[chat-alert]", r.error ? `error: ${await (r.error as any).context?.text?.().catch(() => "") || r.error.message}` : "queued");
   }
   if (email) {
+    const convo = [...(history || []).map((m: any) => String(m?.content ?? "")), message].join(" ");
+    const sellIntent = /\b(vreau|doresc|as vrea|aș vrea|intentionez|intenționez)\s+(sa|să)\s+(vand|vând|vinde)|\bde vanzare\b|\bde vânzare\b|\bvand\b|\bvând\b/i.test(convo);
     await sb.functions.invoke("send-transactional-email", {
       headers: { "x-webhook-secret": Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "" },
       body: {
         templateName: "hot-lead-followup",
         recipientEmail: email,
         idempotencyKey: `chat-followup-${sid}-${email}`,
-        templateData: { intro: "Mulțumim pentru mesajul din chat! Ca să vă răspundem concret, vă propun un apel scurt, de 2 minute." },
+        templateData: sellIntent
+          ? { intro: "Mulțumim pentru mesaj! Mai jos găsiți anunțurile de vânzare RealTrust din Timișoara și evaluarea gratuită a proprietății dvs. Vă propun un apel scurt, de câteva minute.", title: "Anunțuri de vânzare RealTrust Timișoara", category: "vanzare", url: "https://realtrust.ro/imobiliare" }
+          : { intro: "Mulțumim pentru mesajul din chat! Ca să vă răspundem concret, vă propun un apel scurt, de 2 minute." },
       },
     });
   }
