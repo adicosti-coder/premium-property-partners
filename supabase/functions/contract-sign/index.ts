@@ -60,12 +60,11 @@ Deno.serve(async (req) => {
 
     // ── send_code ─────────────────────────────────────────────────────────────
     if (action === "send_code") {
-      const email = typeof body?.email === "string" && body.email.includes("@")
-        ? body.email.trim().slice(0, 200)
-        : contract.owner_email;
+      // Signing codes go ONLY to the address stored on the contract (set by staff).
+      const email = contract.owner_email;
       if (!email) return json({ error: "Adresă de email lipsă" }, 400);
 
-      const code = String(Math.floor(100000 + Math.random() * 900000));
+      const code = String(100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000));
       await admin
         .from("owner_contracts")
         .update({

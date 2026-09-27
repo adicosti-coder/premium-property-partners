@@ -129,7 +129,7 @@ async function sendEmailNotification(
       return false;
     }
 
-    console.log(`Email sent successfully to ${email}`);
+    console.log('Email sent successfully');
     return true;
   } catch (error) {
     console.error('Error sending email notification:', error);
@@ -243,7 +243,7 @@ serve(async (req) => {
     
     if (!userError && userData?.user?.email) {
       sharerEmail = userData.user.email;
-      console.log(`Found sharer email: ${sharerEmail}`);
+      console.log('Found sharer email');
     } else {
       console.log('Could not find sharer email:', userError);
     }

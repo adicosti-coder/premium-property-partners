@@ -1,5 +1,6 @@
 // Send Investor Guide email — delivers the PDF guide link to leads
 // who submit the InvestmentGuideLeadModal on /blog/ghid-investitii-imobiliare-timisoara-2026
+import { escapeHtml } from "../_shared/htmlEscape.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -21,7 +22,10 @@ serve(async (req) => {
   }
 
   try {
-    const { name, email, language, budget } = (await req.json()) as InvestorGuideRequest;
+    const __raw = (await req.json()) as InvestorGuideRequest;
+    const { email, language } = __raw;
+    const name = escapeHtml(String(__raw.name ?? "").slice(0, 120));
+    const budget = __raw.budget != null ? escapeHtml(String(__raw.budget).slice(0, 60)) : undefined;
 
     if (!email || !name) {
       return new Response(
@@ -163,7 +167,7 @@ serve(async (req) => {
           from: "RealTrust Leads <info@realtrust.ro>",
           to: ["info@realtrust.ro"],
           subject: `📊 Lead Ghid Investitor: ${name} (${budget ?? "buget necunoscut"})`,
-          html: `<p><strong>Nume:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p><strong>Buget:</strong> ${budget ?? "—"}</p><p><strong>Sursă:</strong> Ghid Investiții 2026 (blog)</p>`,
+          html: `<p><strong>Nume:</strong> ${name}</p><p><strong>Email:</strong> ${escapeHtml(String(email))}</p><p><strong>Buget:</strong> ${budget ?? "—"}</p><p><strong>Sursă:</strong> Ghid Investiții 2026 (blog)</p>`,
         }),
       });
     } catch (adminErr) {

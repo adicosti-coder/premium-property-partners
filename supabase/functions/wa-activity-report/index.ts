@@ -101,6 +101,12 @@ Deno.serve(async (req) => {
 
   const to = String(body.to ?? "").replace(/[^\d]/g, "");
   if (!to) return json({ ok: true, stats, text, delivered: false, note: "no_recipient" });
+  // Reports may only go to pre-approved staff numbers (not arbitrary recipients).
+  const allowedTo = (Deno.env.get("ADMIN_WA_REPORT_NUMBERS") || "40799069256")
+    .split(",").map((n) => n.replace(/[^\d]/g, "")).filter(Boolean);
+  if (!allowedTo.includes(to)) {
+    return json({ ok: false, error: "recipient_not_allowed", stats, text, delivered: false }, 403);
+  }
 
   const accessToken =
     Deno.env.get("META_PERMANENT_TOKEN") || Deno.env.get("WHATSAPP_ACCESS_TOKEN");

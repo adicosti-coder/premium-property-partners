@@ -26,7 +26,8 @@ import {
 /* ============ CSV helpers ============ */
 const csvEscape = (v: any): string => {
   if (v === null || v === undefined) return "";
-  const s = String(v);
+  const raw = String(v);
+  const s = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
   if (/[",\n;]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
   return s;
 };

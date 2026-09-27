@@ -1370,7 +1370,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       cleanTitleStatic(l.title), l.original_price, l.listing_type, l.extra_profit_3y, l.monthly_extra, l.lead_score,
       getYield(l) || "N/A", l.status, (l.tags || []).join("; "), l.url, l.created_at?.slice(0, 10),
     ]);
-    const csv = [headers.join(","), ...rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
+    const csv = [headers.join(","), ...rows.map((r) => r.map((v) => `"${((s) => (/^[=+\-@\t\r]/.test(s) ? `'${s}` : s))(String(v ?? "")).replace(/"/g, '""')}"`).join(","))].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -1395,7 +1395,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       l.status,
       l.url,
     ]);
-    const csv = [headers.join(","), ...rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
+    const csv = [headers.join(","), ...rows.map((r) => r.map((v) => `"${((s) => (/^[=+\-@\t\r]/.test(s) ? `'${s}` : s))(String(v ?? "")).replace(/"/g, '""')}"`).join(","))].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -2306,7 +2306,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       new Date().toISOString().slice(0, 19),
     ]);
     const allRows = [...csvRows, ...blockedCsvRows];
-    const csv = [headers.join(","), ...allRows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
+    const csv = [headers.join(","), ...allRows.map((r) => r.map((v) => `"${((s) => (/^[=+\-@\t\r]/.test(s) ? `'${s}` : s))(String(v ?? "")).replace(/"/g, '""')}"`).join(","))].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);

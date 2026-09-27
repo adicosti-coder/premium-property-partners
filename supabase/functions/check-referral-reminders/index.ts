@@ -1,3 +1,4 @@
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { escapeHtml } from "../_shared/htmlEscape.ts";
 
@@ -22,6 +23,8 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  const __gate = await requireInternalOrAdmin(req, corsHeaders);
+  if (__gate) return __gate;
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;

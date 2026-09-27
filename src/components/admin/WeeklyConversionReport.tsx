@@ -90,8 +90,9 @@ const Stat = ({
 );
 
 const csvCell = (v: unknown) => {
-  const s = String(v ?? "");
-  return /[",;\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  const raw = String(v ?? "");
+  const s = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
+  return /^'|[",;\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
 const downloadBlob = (blob: Blob, filename: string) => {

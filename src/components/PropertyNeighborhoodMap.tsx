@@ -99,9 +99,13 @@ const PropertyNeighborhoodMap: React.FC<Props> = ({ propertySlug, propertyName, 
       `;
       markerEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
 
-      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
-        `<div style="padding:8px;font-family:system-ui;"><strong style="font-size:13px;">${propertyName || propertySlug}</strong></div>`
-      );
+      const popupEl = document.createElement('div');
+      popupEl.style.cssText = 'padding:8px;font-family:system-ui;';
+      const popupStrong = document.createElement('strong');
+      popupStrong.style.fontSize = '13px';
+      popupStrong.textContent = propertyName || propertySlug || '';
+      popupEl.appendChild(popupStrong);
+      const popup = new mapboxgl.Popup({ offset: 25 }).setDOMContent(popupEl);
 
       new mapboxgl.Marker(markerEl).setLngLat(coords).setPopup(popup).addTo(map.current);
 

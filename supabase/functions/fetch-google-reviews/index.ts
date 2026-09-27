@@ -29,7 +29,8 @@ serve(async (req) => {
 
     // Get place_id from request or find it via text search
     const url = new URL(req.url);
-    let placeId = url.searchParams.get("place_id");
+    // Caller-supplied place_id is ignored: only our own business listing is looked up.
+    let placeId: string | null = Deno.env.get("GOOGLE_PLACE_ID") || null;
 
     if (!placeId) {
       // Find place by text search

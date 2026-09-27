@@ -204,6 +204,20 @@ serve(async (req) => {
     const our_url: string = body.our_url;
     const competitor_url: string = body.competitor_url;
     if (!our_url || !competitor_url) return json({ error: "our_url and competitor_url required" }, 400);
+    const isPublicWebUrl = (u: string) => {
+      try {
+        const p = new URL(u);
+        if (p.protocol !== "https:" && p.protocol !== "http:") return false;
+        if (p.username || p.password) return false;
+        if (p.port && p.port !== "80" && p.port !== "443") return false;
+        const h = p.hostname.toLowerCase();
+        if (!h.includes(".") || h === "localhost" || h.endsWith(".local") || h.endsWith(".internal")) return false;
+        if (/^[\d.]+$/.test(h) || h.includes(":") || h.startsWith("[")) return false; // no raw IPs
+        if (h.endsWith("supabase.co") || h.endsWith("supabase.in") || h === "metadata.google.internal") return false;
+        return true;
+      } catch { return false; }
+    };
+    if (!isPublicWebUrl(our_url) || !isPublicWebUrl(competitor_url)) return json({ error: "URL invalid (doar site-uri publice http/https)" }, 400);
 
     const [ourHtml, theirHtml] = await Promise.all([fetchHtml(our_url), fetchHtml(competitor_url)]);
     const ours = extract(ourHtml, our_url);

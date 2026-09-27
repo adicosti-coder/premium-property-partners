@@ -1,3 +1,4 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -172,13 +173,30 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const payload: NotificationRequest = await req.json();
-    console.log("Notification payload:", payload);
+    
 
     const raw = payload as NotificationRequest;
     const type = raw.type;
-    const userEmail = raw.userEmail;
-    const submissionTitle = escapeHtml(raw.submissionTitle);
-    const userName = escapeHtml(raw.userName);
+    if (!["approved", "rejected", "winner"].includes(type)) {
+      return new Response(JSON.stringify({ error: "Invalid type" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    // Recipient, title and name are bound to the stored submission — never taken from the request.
+    const sbAdmin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data: sub } = await sbAdmin
+      .from("user_article_submissions")
+      .select("id, title, user_id")
+      .eq("id", String(raw.submissionId ?? ""))
+      .maybeSingle();
+    const { data: authorData } = sub?.user_id
+      ? await sbAdmin.auth.admin.getUserById(sub.user_id)
+      : { data: null as any };
+    const author = authorData?.user;
+    if (!sub || !author?.email) {
+      return new Response(JSON.stringify({ error: "Submission not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const userEmail = author.email as string;
+    const submissionTitle = escapeHtml(sub.title ?? "");
+    const userName = escapeHtml((author.user_metadata as any)?.full_name || raw.userName || "Utilizator");
     const feedback = raw.feedback ? escapeHtml(raw.feedback) : raw.feedback;
     const prizeName = raw.prizeName ? escapeHtml(raw.prizeName) : raw.prizeName;
     const contestName = raw.contestName ? escapeHtml(raw.contestName) : raw.contestName;
@@ -203,7 +221,7 @@ const handler = async (req: Request): Promise<Response> => {
         throw new Error(`Unknown notification type: ${type}`);
     }
 
-    console.log(`Sending ${type} email to ${userEmail}`);
+    console.log(`Sending ${type} email`);
 
     const emailResponse = await resend.emails.send({
       from: "RealTrust <info@realtrust.ro>",

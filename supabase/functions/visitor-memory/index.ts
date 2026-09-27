@@ -28,7 +28,8 @@ serve(async (req) => {
     const { data: { user } } = await authClient.auth.getUser();
     const userId = user?.id || null;
 
-    if (typeof sessionId !== "string" || !/^[A-Za-z0-9_-]{16,120}$/.test(sessionId)) {
+    // sessionId is a client-held random UUID capability; require full-entropy format.
+    if (typeof sessionId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sessionId)) {
       return new Response(JSON.stringify({ error: "sessionId required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -41,7 +42,11 @@ serve(async (req) => {
         .select("*")
         .eq("session_id", sessionId)
         .maybeSingle();
-      if (existing) return existing;
+      if (existing) {
+        // Rows linked to an account are only accessible by that account.
+        if (existing.user_id && existing.user_id !== userId) throw new Error("__forbidden__");
+        return existing;
+      }
       const { data: created } = await supabase
         .from("visitor_memory")
         .insert({ session_id: sessionId, user_id: userId || null })
@@ -223,8 +228,13 @@ serve(async (req) => {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: any) {
+    if (e?.message === "__forbidden__") {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     console.error("visitor-memory error:", e);
-    return new Response(JSON.stringify({ error: e.message }), {
+    return new Response(JSON.stringify({ error: "Internal error" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

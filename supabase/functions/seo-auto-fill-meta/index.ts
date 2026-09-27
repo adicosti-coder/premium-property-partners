@@ -2,6 +2,7 @@
 // Scans seo_page_audits for pages with weak/missing title or meta_description (or low health_score),
 // generates Gemini-powered drafts, writes them to seo_overrides with pending_review=true.
 // Drafts NEVER go live until admin approves. Creates an automation_approval per draft.
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
@@ -53,6 +54,8 @@ Răspunde DOAR JSON: {"title":"...","meta_description":"...","rationale":"max 10
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const __gate = await requireInternalOrAdmin(req, corsHeaders);
+  if (__gate) return __gate;
 
   const reqBody = req.method === "POST" ? await req.json().catch(() => ({})) : {};
   const dryRun = reqBody?.dry_run === true;

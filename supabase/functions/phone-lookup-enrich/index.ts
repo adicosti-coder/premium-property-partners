@@ -118,9 +118,9 @@ serve(async (req) => {
     for (const phone of phones) {
       try {
         const normalized = normalizePhone(phone);
-        console.log(`[lookup] raw="${phone}" → normalized="${normalized}"`);
+        console.log(`[lookup] normalized=***${normalized.slice(-3)}`);
         const { ok, status, data } = await lookupPhone(normalized, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
-        console.log(`[lookup] ${normalized} → status=${status} lti=${JSON.stringify(data?.line_type_intelligence)}`);
+        console.log(`[lookup] ***${normalized.slice(-3)} → status=${status} lti=${JSON.stringify(data?.line_type_intelligence)}`);
 
         if (!ok) {
           const code = data?.code || data?.error_code;
