@@ -232,7 +232,7 @@ const MarkdownContent = memo(forwardRef<HTMLDivElement, { content: string; isStr
     const { text, cards } = parseConciergeListingCards(content);
 
     return (
-      <div ref={ref} className="prose prose-sm dark:prose-invert max-w-none text-[13px] leading-[1.6] tracking-tight">
+      <div ref={ref} className="prose prose-sm dark:prose-invert max-w-none text-[13px] leading-[1.6] tracking-tight break-words [overflow-wrap:anywhere]">
         {text && (
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
@@ -881,10 +881,10 @@ const AIChatbot = () => {
             exit={{ opacity: 0, y: 50, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className={cn(
-              "fixed z-50 bg-card/98 backdrop-blur-xl border border-border/50 shadow-[0_30px_100px_rgba(0,0,0,0.38)] flex flex-col overflow-hidden transition-all duration-500",
+              "fixed z-50 bg-card backdrop-blur-xl border border-border/50 shadow-[0_30px_100px_rgba(0,0,0,0.38)] flex flex-col overflow-hidden transition-all duration-500",
               isMinimized
                 ? "bottom-8 right-8 w-72 h-16 rounded-full"
-                : "bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-2 md:right-4 left-2 md:left-auto w-auto md:w-[450px] h-[min(82vh,720px)] md:h-[700px] rounded-[1.75rem]"
+                : "bottom-[max(4.5rem,calc(env(safe-area-inset-bottom)+4.5rem))] md:bottom-4 right-2 md:right-4 left-2 md:left-auto w-auto max-w-[calc(100vw-1rem)] md:w-[450px] h-[min(74vh,700px)] md:h-[700px] rounded-[1.75rem]"
             )}
           >
             {/* Stream Progress Bar */}
@@ -935,13 +935,6 @@ const AIChatbot = () => {
                     </Button>
                     <Button variant="ghost" size="icon" className="rounded-xl hover:bg-muted/50 h-9 w-9" onClick={handleNewChat} title={text.newChat}>
                       <RotateCcw className="w-4 h-4 text-muted-foreground" />
-                    </Button>
-                    <Button
-                      variant="ghost" size="icon"
-                      className={cn("rounded-xl h-9 w-9 transition-colors", voiceMode && "bg-primary/20 text-primary")}
-                      onClick={async () => voiceMode ? endVoiceMode() : startVoiceMode()}
-                    >
-                      {isConnectingVoice ? <Loader2 className="w-4 h-4 animate-spin" /> : voiceMode ? <Headphones className="w-5 h-5 text-primary" /> : <Mic className="w-5 h-5 text-muted-foreground" />}
                     </Button>
                   </>
                 )}
@@ -1013,7 +1006,7 @@ const AIChatbot = () => {
                           {m.role === "user" ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
                         </div>
                         <div className={cn(
-                          "max-w-[calc(100%-3rem)] md:max-w-[80%] p-3.5 md:p-4 md:px-5 rounded-[1.35rem] md:rounded-[1.5rem] shadow-sm relative overflow-hidden",
+                          "max-w-[calc(100%-3rem)] md:max-w-[80%] p-3.5 md:p-4 md:px-5 rounded-[1.35rem] md:rounded-[1.5rem] shadow-sm relative min-w-0 break-words [overflow-wrap:anywhere]",
                           m.role === "user"
                             ? "bg-primary text-primary-foreground rounded-tr-none"
                             : m.isError
@@ -1052,8 +1045,8 @@ const AIChatbot = () => {
 
                     {/* Typing indicator */}
                     {isLoading && messages[messages.length - 1]?.content === "" && (
-                      <div className="flex gap-4">
-                        <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-lg">
+                      <div className="flex gap-2.5 md:gap-4">
+                        <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-lg">
                           <Bot className="w-5 h-5 text-primary-foreground" />
                         </div>
                         <div className="bg-muted/50 rounded-[1.5rem] rounded-tl-none border border-border/30 px-5 py-3">
@@ -1310,7 +1303,23 @@ const AIChatbot = () => {
                         onChange={handleImageUpload}
                       />
                     </label>
-                    <div className="relative flex-1">
+                    {/* Voice mode toggle — integrated in the input bar (was a floating header button) */}
+                    <button
+                      type="button"
+                      onClick={async () => { if (voiceMode) await endVoiceMode(); else await startVoiceMode(); }}
+                      aria-label={language === "ro" ? "Mod vocal cu asistentul" : "Voice mode with assistant"}
+                      className={cn(
+                        "h-12 w-12 md:h-14 md:w-14 rounded-full flex items-center justify-center shrink-0 border transition-all active:scale-95",
+                        voiceMode || isConnectingVoice
+                          ? "bg-primary text-primary-foreground border-primary shadow-lg"
+                          : "bg-accent/15 text-accent border-accent/40 hover:bg-accent/25",
+                      )}
+                    >
+                      {isConnectingVoice
+                        ? <Loader2 className="w-5 h-5 animate-spin" />
+                        : voiceMode ? <Headphones className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                    </button>
+                    <div className="relative flex-1 min-w-0">
                       <Input
                         ref={inputRef}
                         placeholder={attachedImage 
