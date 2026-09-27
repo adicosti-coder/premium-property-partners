@@ -491,6 +491,20 @@
       "when": 1790528492206,
       "tag": "0069_seo_index_trigger_auth",
       "breakpoints": true
+    },
+    {
+      "idx": 70,
+      "version": "7",
+      "when": 1790533242475,
+      "tag": "0070_revoke_anon_security_definer_execute",
+      "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1790533258288,
+      "tag": "0071_zone_norm_search_path",
+      "breakpoints": true
     }
   ]
 }

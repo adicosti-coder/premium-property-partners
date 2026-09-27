@@ -1,0 +1,1 @@
+ALTER FUNCTION public.zone_norm(text) SET search_path = public;
