@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, forwardRef, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  X, Send, Bot, User, Sparkles, Loader2, 
+  X, Send, Bot, Loader2, 
   ExternalLink, Minimize2, Mic, Headphones,
   Layers, ShieldCheck, FileDown, RotateCcw,
   Copy, Check, Phone, PhoneOff, Star, Camera,
@@ -898,14 +898,14 @@ const AIChatbot = () => {
             )}
 
             {/* ─── Premium Header ─── */}
-            <div className="px-4 py-3 md:p-5 border-b border-border/30 flex items-center justify-between shrink-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5">
+            <div className="px-4 py-3 md:p-5 border-b border-border/40 flex items-center justify-between shrink-0 bg-card/80 backdrop-blur-md">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="relative">
                   <div className={cn(
-                    "w-11 h-11 md:w-12 md:h-12 rounded-2xl flex items-center justify-center border shadow-lg",
+                    "w-11 h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center border shadow-lg",
                     voiceMode
-                      ? "bg-accent/20 border-accent/30"
-                      : "bg-primary/20 border-primary/30"
+                      ? "bg-accent/15 border-accent/30"
+                      : "bg-accent/10 border-accent/25"
                   )}>
                     {voiceMode ? <Phone className="w-6 h-6 text-accent" /> : <Bot className="w-7 h-7 text-primary" />}
                   </div>
@@ -913,12 +913,12 @@ const AIChatbot = () => {
                 </div>
                 {!isMinimized && (
                   <div className="min-w-0">
-                    <h3 className="font-bold text-sm md:text-base tracking-tight text-foreground truncate">
+                    <h3 className="font-serif font-semibold text-base md:text-lg tracking-tight text-foreground truncate">
                       {voiceMode ? text.voiceModeActive : text.title}
                     </h3>
                     <div className="flex items-center gap-2 mt-0.5">
                       {voiceMode ? <VoiceWave /> : (
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold opacity-60">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-[0.14em] font-medium">
                           {text.status}
                         </span>
                       )}
@@ -979,7 +979,7 @@ const AIChatbot = () => {
             {/* ─── Chat Body ─── */}
             {!isMinimized && !voiceMode && (
               <>
-                <ScrollArea className="flex-1 px-3 py-4 md:p-5" ref={scrollRef}>
+                <ScrollArea className="flex-1 px-3 py-4 md:p-5 bg-muted/20" ref={scrollRef}>
                   <div className="space-y-5">
                     {/* Empty state */}
                     {messages.length === 0 && (
@@ -997,21 +997,15 @@ const AIChatbot = () => {
                         key={m.id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={cn("flex gap-2.5 md:gap-4 group", m.role === "user" ? "flex-row-reverse" : "flex-row")}
+                        className={cn("flex gap-2 group", m.role === "user" ? "justify-end" : "justify-start")}
                       >
                         <div className={cn(
-                          "w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center shrink-0 shadow-lg",
-                          m.role === "user" ? "bg-muted text-foreground" : "bg-primary text-primary-foreground"
-                        )}>
-                          {m.role === "user" ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
-                        </div>
-                        <div className={cn(
-                          "max-w-[calc(100%-3rem)] md:max-w-[80%] p-3.5 md:p-4 md:px-5 rounded-[1.35rem] md:rounded-[1.5rem] shadow-sm relative min-w-0 break-words [overflow-wrap:anywhere]",
+                          "max-w-[85%] p-3.5 md:p-4 md:px-5 rounded-[1.35rem] md:rounded-[1.5rem] relative min-w-0 break-words [overflow-wrap:anywhere]",
                           m.role === "user"
-                            ? "bg-primary text-primary-foreground rounded-tr-none"
+                            ? "bg-card border border-border/70 rounded-tr-[0.35rem] shadow-sm"
                             : m.isError
-                              ? "bg-destructive/10 border border-destructive/20 rounded-tl-none"
-                              : "bg-muted/50 rounded-tl-none border border-border/30"
+                              ? "bg-destructive/10 border border-destructive/20 rounded-tl-[0.35rem]"
+                              : "bg-accent/[0.07] border border-accent/20 rounded-tl-[0.35rem] shadow-sm"
                         )}>
                           {/* Image preview */}
                           {m.imagePreview && (
@@ -1045,14 +1039,11 @@ const AIChatbot = () => {
 
                     {/* Typing indicator */}
                     {isLoading && messages[messages.length - 1]?.content === "" && (
-                      <div className="flex gap-2.5 md:gap-4">
-                        <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-lg">
-                          <Bot className="w-5 h-5 text-primary-foreground" />
-                        </div>
-                        <div className="bg-muted/50 rounded-[1.5rem] rounded-tl-none border border-border/30 px-5 py-3">
+                      <div className="flex justify-start">
+                        <div className="bg-accent/[0.07] rounded-[1.5rem] rounded-tl-[0.35rem] border border-accent/20 px-5 py-3 shadow-sm">
                           <div className="flex gap-1.5 items-center">
                             {[0, 1, 2].map((i) => (
-                              <motion.div key={i} className="w-2 h-2 rounded-full bg-primary/60" animate={{ y: [0, -4, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }} />
+                              <motion.div key={i} className="w-2 h-2 rounded-full bg-accent/60" animate={{ y: [0, -4, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }} />
                             ))}
                           </div>
                         </div>
@@ -1291,10 +1282,10 @@ const AIChatbot = () => {
                     </button>
                   )}
 
-                  <div className="flex gap-2 items-center">
-                    {/* Camera button */}
-                    <label className="cursor-pointer h-12 w-12 md:h-14 md:w-14 rounded-2xl bg-muted/50 border border-border/50 flex items-center justify-center hover:bg-primary/10 hover:border-primary/30 transition-all shrink-0" aria-label={language === "ro" ? "Atașează fotografie pentru analiză" : "Attach photo for analysis"}>
-                      <Camera className="w-5 h-5 text-primary" />
+                  <div className="flex gap-1.5 md:gap-2 items-center">
+                    {/* Camera button — plain icon, no chrome */}
+                    <label className="cursor-pointer h-12 w-12 md:h-14 md:w-14 flex items-center justify-center text-muted-foreground hover:text-accent transition-colors shrink-0" aria-label={language === "ro" ? "Atașează fotografie pentru analiză" : "Attach photo for analysis"}>
+                      <Camera className="w-5 h-5 md:w-6 md:h-6" />
                       <input
                         ref={fileInputRef}
                         type="file"
@@ -1303,16 +1294,16 @@ const AIChatbot = () => {
                         onChange={handleImageUpload}
                       />
                     </label>
-                    {/* Voice mode toggle — integrated in the input bar (was a floating header button) */}
+                    {/* Voice mode toggle — solid gold mic, integrated in the input bar */}
                     <button
                       type="button"
                       onClick={async () => { if (voiceMode) await endVoiceMode(); else await startVoiceMode(); }}
                       aria-label={language === "ro" ? "Mod vocal cu asistentul" : "Voice mode with assistant"}
                       className={cn(
-                        "h-12 w-12 md:h-14 md:w-14 rounded-full flex items-center justify-center shrink-0 border transition-all active:scale-95",
+                        "h-12 w-12 md:h-14 md:w-14 rounded-full flex items-center justify-center shrink-0 transition-all active:scale-95",
                         voiceMode || isConnectingVoice
-                          ? "bg-primary text-primary-foreground border-primary shadow-lg"
-                          : "bg-accent/15 text-accent border-accent/40 hover:bg-accent/25",
+                          ? "bg-primary text-primary-foreground shadow-lg"
+                          : "bg-accent text-primary-foreground shadow-lg shadow-accent/25 hover:bg-accent/90",
                       )}
                     >
                       {isConnectingVoice
@@ -1329,15 +1320,15 @@ const AIChatbot = () => {
                         value={input}
                         onChange={e => setInput(e.target.value)}
                         onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                        className="h-12 md:h-14 rounded-2xl bg-muted/30 border-border/50 focus-visible:ring-primary/50 text-base pr-12 text-foreground placeholder:text-muted-foreground"
+                        className="h-12 md:h-14 rounded-full bg-muted/60 border-transparent focus-visible:ring-accent/40 focus-visible:border-accent/40 text-base text-foreground placeholder:text-muted-foreground"
                         disabled={isLoading}
                         maxLength={2000}
                       />
-                      <Sparkles className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary/30" />
                     </div>
                     <Button
+                      variant="ghost"
                       size="icon"
-                      className="h-12 w-12 md:h-14 md:w-14 rounded-2xl bg-primary text-primary-foreground shadow-xl hover:scale-105 transition-transform shrink-0"
+                      className="h-12 w-12 md:h-14 md:w-14 rounded-full text-accent hover:bg-accent/10 hover:text-accent disabled:opacity-40 shrink-0"
                       onClick={() => handleSend()}
                       disabled={(!input.trim() && !attachedImage) || isLoading}
                     >
