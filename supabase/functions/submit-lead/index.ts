@@ -33,6 +33,7 @@ const VALID_PROPERTY_TYPES = [
 const VALID_SOURCES = [
   "calculator", "quick_form", "lead_capture_form",
   "rental-calculator", "advanced-rental-calculator", "city_of_mara_landing",
+  "pagina_contact", "apel_2_minute",
 ];
 
 const handler = async (req: Request): Promise<Response> => {
@@ -232,6 +233,32 @@ const handler = async (req: Request): Promise<Response> => {
         });
       } catch (emailError) {
         console.error("Failed to send lead notification:", emailError);
+      }
+    }
+
+    // --- Cerere apel 2 minute (pagina Contact): Hot Lead + alertă internă + e-mail vizitator ---
+    if (source === "apel_2_minute") {
+      try {
+        await supabase.from("leads").update({ lead_grade: "hot", engagement_status: "hot_lead", lead_score: 90 }).eq("id", leadId);
+        await supabase.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "chat-lead-alert",
+            idempotencyKey: `contact-callback-alert-${leadId}`,
+            templateData: { source: "contact", message: String(body.message ?? "").slice(0, 500), phone: whatsappNumber, email: email || undefined, page: "/contact" },
+          },
+        });
+        if (email) {
+          await supabase.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "hot-lead-followup",
+              recipientEmail: email,
+              idempotencyKey: `hot-lead-followup-${leadId}`,
+              templateData: { name, intro: "Am primit cererea dvs. de apel. Vă sunăm în intervalul ales — sau ne puteți suna direct acum." },
+            },
+          });
+        }
+      } catch (e) {
+        console.error("callback follow-up failed:", e);
       }
     }
 
