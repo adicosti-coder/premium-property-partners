@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { supabase, supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
 import { useConversation } from "@elevenlabs/react";
 import { useOptionalSharedAssistantContext } from "@/hooks/useSharedAssistantContext";
+import { neighborhoods } from "@/data/neighborhoods";
 // jsPDF loaded dynamically on export to avoid 132KB from initial bundle
 
 interface Message {
@@ -287,7 +288,28 @@ const INSTANT_REPLIES: Array<[RegExp, string]> = [
   [/disponibil|availability|libere|free now/i, "⚡ Verific disponibilitatea live acum. Rezervarea directă are -5% cu codul DIRECT5 👇"],
   [/sun|call|apel|programe|rezerv|book/i, "⚡ Sigur! Scrie-ne numărul tău de telefon aici și te contactăm imediat, sau folosește butonul WhatsApp de jos 👇"],
 ];
+// Instant value estimate from the message text: "<N> mp" + optional Timișoara zone.
+const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const getInstantEstimate = (msg: string): string | null => {
+  const m = msg.match(/(\d{2,4})\s*(mp|m2|m²|metri)/i);
+  if (!m) return null;
+  const sqm = parseInt(m[1], 10);
+  if (sqm < 12 || sqm > 1000) return null;
+  const text = norm(msg);
+  const known = neighborhoods.filter((n) => n.avgPricePerSqm > 0);
+  const zone = known.find((n) => text.includes(norm(n.name)) || text.includes(n.slug.replace(/-/g, " ")));
+  const cityAvg = known.length ? Math.round(known.reduce((a, n) => a + n.avgPricePerSqm, 0) / known.length) : 1900;
+  const factor = /\bcasa|vila\b/.test(text) ? 1.1 : /\bteren\b/.test(text) ? 0.25 : /comercial|spatiu/.test(text) ? 1.05 : 1;
+  const ppsqm = Math.round((zone?.avgPricePerSqm ?? cityAvg) * factor);
+  const mid = Math.round((ppsqm * sqm) / 500) * 500;
+  const f = (v: number) => `${(Math.round(v / 500) * 500).toLocaleString("ro-RO")} €`;
+  return `⚡ **Estimare rapidă:** ${f(mid * 0.92)} – ${f(mid * 1.08)} (≈${ppsqm.toLocaleString("ro-RO")} €/mp${zone ? ` în ${zone.name}` : ", media Timișoara"}, ${sqm} mp). Lasă-mi e-mailul sau telefonul și îți trimit oferta detaliată. Andrei continuă 👇`;
+};
+
 const getInstantReply = (msg: string, fallback = false): string | null => {
+  const est = getInstantEstimate(msg);
+  if (est) return est;
+  if (/estim|valoare/i.test(msg)) return "⚡ Scrie-mi suprafața și zona (ex: „2 camere, 55 mp, Iosefin”) și îți calculez imediat valoarea estimată 👇";
   for (const [re, reply] of INSTANT_REPLIES) if (re.test(msg)) return reply;
   return fallback ? "⚡ Am primit mesajul tău! Andrei îți răspunde chiar acum 👇 (dacă preferi, lasă un număr de telefon și te sunăm noi)" : null;
 };
@@ -328,7 +350,7 @@ const getContextualQuickActions = (lang: "ro" | "en"): string[] => {
   }
   // Default — Hub / Homepage
   return lang === "ro"
-    ? ["🏠 Ce apartamente sunt libere acum?", "💰 Calculează-mi randamentul investiției", "📸 Evaluare gratuită a proprietății mele", "🗺️ Ghid local — restaurante și atracții"]
+    ? ["🏷️ Estimează valoarea apartamentului meu", "🏠 Ce apartamente sunt libere acum?", "💰 Calculează-mi randamentul investiției", "📸 Evaluare gratuită a proprietății mele"]
     : ["🏠 Which apartments are free now?", "💰 Calculate my investment yield", "📸 Free evaluation of my property", "🗺️ Local guide — restaurants & attractions"];
 };
 
