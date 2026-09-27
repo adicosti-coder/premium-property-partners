@@ -232,9 +232,11 @@ async function detectAndSaveLead(message: string, conversationHistory: any[], pa
       property_type: propertyType,
       property_area: propertyType === "studio" ? 35 : propertyType === "2_camere" ? 55 : 75,
       source: `Chat Premium (${String(pageContext).slice(0, 80)})`,
+      lead_grade: "hot",
+      lead_score: 90,
       engagement_status: "hot_lead",
     }).select("id").maybeSingle();
-    // Trigger-ul de auto-scoring rulează la INSERT; forțăm starea Hot Lead după inserare.
+    // Siguranță: forțăm starea Hot Lead chiar dacă trigger-ul de auto-scoring suprascrie scorul.
     if (inserted?.id) {
       await sb.from("leads").update({ lead_grade: "hot", lead_score: 90, engagement_status: "hot_lead" }).eq("id", inserted.id);
     }
