@@ -230,46 +230,46 @@ const ContactPage = () => {
             </div>
           </section>
 
-          {/* Map + Address */}
+          {/* Servicii la distanță + vizionări la proprietate */}
           <section className="grid lg:grid-cols-2 gap-8 mb-12">
-            <div className="rounded-2xl overflow-hidden border aspect-[4/3] lg:aspect-auto">
-              <iframe
-                src={`https://maps.google.com/maps?q=${GOOGLE_MAPS_QUERY}&t=&z=16&ie=UTF8&iwloc=&output=embed`}
-                width="100%"
-                height="100%"
-                style={{ border: 0, minHeight: 300 }}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                title={isRo ? "Sediul RealTrust pe hartă" : "RealTrust office on map"}
-              />
-            </div>
-            <div className="flex flex-col justify-center space-y-6">
-              <div>
-                <h2 className="text-2xl font-serif font-semibold mb-3 flex items-center gap-2">
-                  <MapPin className="w-6 h-6 text-primary" />
-                  {isRo ? "Sediu Fizic" : "Physical Office"}
-                </h2>
-                <address className="not-italic text-muted-foreground space-y-1">
-                  <p className="font-medium text-foreground">RealTrust & ApArt Hotel</p>
-                  <p>Strada Samuil Micu Nr.14, ap.4</p>
-                  <p>Timișoara, Timiș 300125</p>
-                  <p>România</p>
-                </address>
-              </div>
-              <ul className="text-sm space-y-1">
-                <li className="flex justify-between"><span className="text-muted-foreground">{isRo ? "Luni – Vineri" : "Monday – Friday"}</span><span className="font-medium">09:00 – 18:00</span></li>
-                <li className="flex justify-between"><span className="text-muted-foreground">{isRo ? "Sâmbătă" : "Saturday"}</span><span className="font-medium">10:00 – 14:00</span></li>
-                <li className="flex justify-between"><span className="text-muted-foreground">{isRo ? "Duminică" : "Sunday"}</span><span className="font-medium">{isRo ? "Doar urgențe" : "Emergencies only"}</span></li>
+            <div className="p-8 bg-card border rounded-2xl">
+              <h2 className="text-2xl font-serif font-semibold mb-3 flex items-center gap-2">
+                <Phone className="w-6 h-6 text-primary" />
+                {isRo ? "Consultanță & Administrare la distanță" : "Remote Consulting & Management"}
+              </h2>
+              <p className="text-muted-foreground leading-relaxed">
+                {isRo
+                  ? "Deservim Timișoara și județul Timiș fără un sediu comercial: evaluările, consultanța și administrarea se fac integral la distanță — telefonic, pe WhatsApp sau online. Trimiteți documentele digital, iar noi ne ocupăm de tot restul."
+                  : "We serve Timișoara and Timiș county without a commercial office: valuations, consulting and management are handled fully remotely — by phone, WhatsApp or online. Send documents digitally and we take care of the rest."}
+              </p>
+              <ul className="mt-4 space-y-2 text-sm">
+                <li className="flex items-center gap-2"><Phone className="w-4 h-4 text-primary" />{isRo ? "Consultanță telefonică și evaluări online" : "Phone consulting and online valuations"}</li>
+                <li className="flex items-center gap-2"><Mail className="w-4 h-4 text-primary" />{isRo ? "Documente și contracte digital" : "Digital documents and contracts"}</li>
+                <li className="flex items-center gap-2"><Shield className="w-4 h-4 text-primary" />{isRo ? "Administrare 100% pasivă, rapoarte lunare" : "Fully passive management, monthly reports"}</li>
               </ul>
-              <div className="flex flex-wrap gap-2">
-                <a href={GOOGLE_MAPS_URL} target="_blank" rel="noopener noreferrer">
+            </div>
+            <div className="p-8 bg-card border rounded-2xl flex flex-col">
+              <h2 className="text-2xl font-serif font-semibold mb-3 flex items-center gap-2">
+                <MapPin className="w-6 h-6 text-primary" />
+                {isRo ? "Întâlniri & vizionări la proprietate" : "Meetings & viewings at the property"}
+              </h2>
+              <p className="text-muted-foreground leading-relaxed">
+                {isRo
+                  ? "Nu primim vizitatori într-un birou: toate vizionările și întâlnirile se stabilesc direct la proprietate, la ora care vă convine. Lucrăm în Centru/Cetate, Iosefin, Fabric, Dumbrăvița și pe culoarul Aradului."
+                  : "We don't host visitors at an office: all viewings and meetings take place directly at the property, whenever suits you. We cover Centru/Cetate, Iosefin, Fabric, Dumbrăvița and the Arad corridor."}
+              </p>
+              <ul className="mt-4 space-y-2 text-sm">
+                <li className="flex items-center gap-2"><Clock className="w-4 h-4 text-primary" />{isRo ? "Program L-V 09:00-18:00, S 10:00-14:00" : "Mon-Fri 09:00-18:00, Sat 10:00-14:00"}</li>
+                <li className="flex items-center gap-2"><Building2 className="w-4 h-4 text-primary" />{isRo ? "Programezi vizionarea telefonic sau pe WhatsApp" : "Book a viewing by phone or WhatsApp"}</li>
+              </ul>
+              <div className="flex flex-wrap gap-2 mt-auto pt-6">
+                <a href="tel:+40799069256">
                   <Button variant="outline" className="gap-2">
-                    <ExternalLink className="w-4 h-4" />
-                    {isRo ? "Deschide în Google Maps" : "Open in Google Maps"}
+                    <Phone className="w-4 h-4" />
+                    {isRo ? "Sună acum" : "Call now"}
                   </Button>
                 </a>
-                <a href={GOOGLE_BUSINESS_URL} target="_blank" rel="noopener noreferrer">
+                <a href="https://wa.me/40799069256" target="_blank" rel="noopener noreferrer">
                   <Button variant="outline" className="gap-2">
                     <Star className="w-4 h-4" />
                     {isRo ? "Profil Google" : "Google Profile"}
