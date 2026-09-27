@@ -674,6 +674,7 @@ Deno.serve(async (req) => {
 
   for (const convId of conversationsToReply) {
     if (agentEnabled) {
+      if (await isBlockedConv(convId)) continue;
       fetch(`${supabaseUrl}/functions/v1/wa-andrei-reply`, {
         method: "POST",
         headers: {
