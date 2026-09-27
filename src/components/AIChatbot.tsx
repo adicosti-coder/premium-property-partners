@@ -1282,10 +1282,10 @@ const AIChatbot = () => {
                     </button>
                   )}
 
-                  <div className="flex gap-2 items-center">
-                    {/* Camera button */}
-                    <label className="cursor-pointer h-12 w-12 md:h-14 md:w-14 rounded-2xl bg-muted/50 border border-border/50 flex items-center justify-center hover:bg-primary/10 hover:border-primary/30 transition-all shrink-0" aria-label={language === "ro" ? "Atașează fotografie pentru analiză" : "Attach photo for analysis"}>
-                      <Camera className="w-5 h-5 text-primary" />
+                  <div className="flex gap-1.5 md:gap-2 items-center">
+                    {/* Camera button — plain icon, no chrome */}
+                    <label className="cursor-pointer h-12 w-12 md:h-14 md:w-14 flex items-center justify-center text-muted-foreground hover:text-accent transition-colors shrink-0" aria-label={language === "ro" ? "Atașează fotografie pentru analiză" : "Attach photo for analysis"}>
+                      <Camera className="w-5 h-5 md:w-6 md:h-6" />
                       <input
                         ref={fileInputRef}
                         type="file"
@@ -1294,16 +1294,16 @@ const AIChatbot = () => {
                         onChange={handleImageUpload}
                       />
                     </label>
-                    {/* Voice mode toggle — integrated in the input bar (was a floating header button) */}
+                    {/* Voice mode toggle — solid gold mic, integrated in the input bar */}
                     <button
                       type="button"
                       onClick={async () => { if (voiceMode) await endVoiceMode(); else await startVoiceMode(); }}
                       aria-label={language === "ro" ? "Mod vocal cu asistentul" : "Voice mode with assistant"}
                       className={cn(
-                        "h-12 w-12 md:h-14 md:w-14 rounded-full flex items-center justify-center shrink-0 border transition-all active:scale-95",
+                        "h-12 w-12 md:h-14 md:w-14 rounded-full flex items-center justify-center shrink-0 transition-all active:scale-95",
                         voiceMode || isConnectingVoice
-                          ? "bg-primary text-primary-foreground border-primary shadow-lg"
-                          : "bg-accent/15 text-accent border-accent/40 hover:bg-accent/25",
+                          ? "bg-primary text-primary-foreground shadow-lg"
+                          : "bg-accent text-primary-foreground shadow-lg shadow-accent/25 hover:bg-accent/90",
                       )}
                     >
                       {isConnectingVoice
@@ -1320,15 +1320,15 @@ const AIChatbot = () => {
                         value={input}
                         onChange={e => setInput(e.target.value)}
                         onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                        className="h-12 md:h-14 rounded-2xl bg-muted/30 border-border/50 focus-visible:ring-primary/50 text-base pr-12 text-foreground placeholder:text-muted-foreground"
+                        className="h-12 md:h-14 rounded-full bg-muted/60 border-transparent focus-visible:ring-accent/40 focus-visible:border-accent/40 text-base text-foreground placeholder:text-muted-foreground"
                         disabled={isLoading}
                         maxLength={2000}
                       />
-                      <Sparkles className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary/30" />
                     </div>
                     <Button
+                      variant="ghost"
                       size="icon"
-                      className="h-12 w-12 md:h-14 md:w-14 rounded-2xl bg-primary text-primary-foreground shadow-xl hover:scale-105 transition-transform shrink-0"
+                      className="h-12 w-12 md:h-14 md:w-14 rounded-full text-accent hover:bg-accent/10 hover:text-accent disabled:opacity-40 shrink-0"
                       onClick={() => handleSend()}
                       disabled={(!input.trim() && !attachedImage) || isLoading}
                     >
