@@ -222,7 +222,7 @@ async function notifyChatLead(message: string, sessionId: string, pageContext: s
         templateData: { source: "chat", message: message.slice(0, 500), page: String(pageContext).slice(0, 200), email: email || undefined, phone: phone || undefined },
       },
     });
-    console.log("[chat-alert]", r.error ? `error: ${r.error.message}` : "queued");
+    console.log("[chat-alert]", r.error ? `error: ${await (r.error as any).context?.text?.().catch(() => "") || r.error.message}` : "queued");
   }
   if (email) {
     await sb.functions.invoke("send-transactional-email", {
