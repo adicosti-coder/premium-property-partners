@@ -336,6 +336,16 @@ const PropertyDetail = () => {
   const fallbackNightly = isNightlyRateListing ? (property?.pricePerNight || 0) : 0;
   const effectivePrice = isPlausibleLivePrice ? livePricePerNight! : fallbackNightly;
   const effectivePriceRon = effectivePrice ? eurToRon(effectivePrice) : 0;
+  const hasLiveRating =
+    typeof liveData?.rating === "number" &&
+    liveData.rating > 0 &&
+    typeof liveData?.reviews_count === "number" &&
+    liveData.reviews_count > 0;
+  const rawRating = hasLiveRating ? liveData.rating : property?.rating;
+  const effectiveRating = typeof rawRating === "number" && rawRating > 0 && rawRating <= 5
+    ? rawRating * 2
+    : rawRating;
+  const effectiveReviewCount = hasLiveRating ? liveData.reviews_count : property?.reviews;
 
 
 
@@ -841,6 +851,19 @@ const PropertyDetail = () => {
               </Badge>
             )}
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold break-words">{displayName}</h1>
+
+            {normalizedListingType === 'cazare' && effectiveRating && effectiveReviewCount ? (
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-sm" aria-label={`${effectiveRating.toFixed(1)} din 10, ${effectiveReviewCount} evaluări`}>
+                <Badge className="gap-1 bg-primary text-primary-foreground">
+                  <Star className="h-3.5 w-3.5 fill-current" aria-hidden="true" />
+                  {effectiveRating.toFixed(1)} / 10
+                </Badge>
+                {effectiveRating >= 9 && <span className="font-semibold text-foreground">Superb</span>}
+                <span className="text-muted-foreground">
+                  {effectiveReviewCount} {language === 'ro' ? 'evaluări' : 'reviews'}
+                </span>
+              </div>
+            ) : null}
 
             {normalizedListingType === 'cazare' && (
               <div className="flex flex-col sm:flex-row gap-3 mt-4">

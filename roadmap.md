@@ -38,3 +38,9 @@
 - [x] Lista „Anunțuri găsite": filtre stare/vechime, coloane Stare și Publicat
 - [x] Fotografii OLX salvate din feed (8-12 poze/anunț) — verificat pe pagina de detalii
 - [ ] Telefonul proprietarilor OLX: nu este public în feed, se vede doar în anunțul original
+
+## RING Family Residence (27 sep 2026)
+- [x] Denumire Booking sincronizată pe card, detalii, hartă și sursele SEO
+- [x] Rating actualizat la 9,0 Superb din 4 evaluări
+- [x] Chat mobil ridicat peste bara fixă de contact
+- [x] Typecheck 0 erori

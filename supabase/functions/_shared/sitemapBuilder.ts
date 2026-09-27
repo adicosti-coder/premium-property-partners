@@ -120,7 +120,7 @@ export const GUEST_APARTMENTS: { slug: string; name: string; image?: string }[] 
   { slug: "sunset-da-ra-studio-deluxe", name: "Sunset Da Ra Studio DeLuxe", image: "https://d3hj7i5wny7p5d.cloudfront.net/upload/hotel/15/7388/63154-m.jpg" },
   { slug: "moonlight-emerald-suite", name: "Moonlight Emerald Suite by RealTrust", image: "https://d3hj7i5wny7p5d.cloudfront.net/upload/hotel/22/7799/73158-m.jpg" },
   { slug: "xcity-3-apart-hotel", name: "XCity 3 ApArt Hotel by RealTrust", image: "https://d3hj7i5wny7p5d.cloudfront.net/upload/hotel/42/7718/69009-m.jpg" },
-  { slug: "ring-residence-apart-hotel", name: "Ring Residence ApArt Hotel by RealTrust", image: "https://d3hj7i5wny7p5d.cloudfront.net/upload/hotel/1/7778/73005-m.jpg" },
+  { slug: "ring-residence-apart-hotel", name: "RING Family Residence - ApArt Hotel by RealTrust", image: "https://d3hj7i5wny7p5d.cloudfront.net/upload/hotel/1/7778/73005-m.jpg" },
 ];
 
 export function buildStaticSitemap(): string {
