@@ -267,6 +267,7 @@ Deno.serve(async (req) => {
   const results: Record<string, unknown>[] = [];
   const startedAt = Date.now();
   let consecutiveFailures = 0;
+  let permanentFailures = 0;
   // Rămâne loc pentru încă un ciclu de trimitere înainte de timeout-ul funcției.
   const TIME_BUDGET_MS = 40_000;
 
@@ -463,6 +464,34 @@ Deno.serve(async (req) => {
             meta_error: err,
             attempts,
           });
+        }
+        // Erorile permanente de șablon nu opresc coada, dar NU trebuie să
+        // rămână tăcute: le raportăm și alertăm adminii la primul lot.
+        if (permanent) {
+          permanentFailures += 1;
+          await relayToMake("wa_template_invalid", {
+            queue_id: item.id,
+            phone: item.phone_normalized,
+            prospect_listing_id: item.prospect_listing_id,
+            template_name: item.template_name,
+            meta_error: err,
+          });
+          if (permanentFailures === 1) {
+            try {
+              const { data: admins } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
+              const rows = (admins ?? []).map((a: { user_id: string }) => ({
+                user_id: a.user_id,
+                type: "warning",
+                title: "Șablon WhatsApp respins de Meta",
+                message: `Meta respinge șablonul „${item.template_name}": ${err}. Mesajele cu acest șablon eșuează definitiv — verifică numele și limba în Meta.`,
+                action_url: "/admin/whatsapp-queue",
+                action_label: "Vezi coada",
+              }));
+              if (rows.length) await supabase.from("user_notifications").insert(rows);
+            } catch (e) {
+              console.error("[wa-outbound-worker] template alert failed:", e);
+            }
+          }
         }
         if (autoPauseEnabled && consecutiveFailures >= maxConsecutiveFailures) {
           await autoPause("consecutive_meta_failures", {
