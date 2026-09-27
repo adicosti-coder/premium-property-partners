@@ -2,11 +2,17 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/securityHeaders.ts";
 import { beginIdempotent } from "../_shared/idempotency.ts";
+import { applyRateLimit } from "../_shared/rateLimiter.ts";
 
 
 function validateString(value: unknown, maxLength: number): string {
   if (typeof value !== "string") return "";
-  return value.trim().slice(0, maxLength);
+  // Strip HTML tags / control chars to prevent stored XSS in admin views & emails.
+  return value
+    .replace(/<[^>]*>/g, "")
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+    .trim()
+    .slice(0, maxLength);
 }
 
 function sanitizePhone(value: unknown): string {
@@ -49,6 +55,10 @@ const handler = async (req: Request): Promise<Response> => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+
+  // Anti-spam: max 5 lead submissions / minute / IP.
+  const limited = applyRateLimit(req, corsHeaders, { maxRequests: 5, windowMs: 60_000 });
+  if (limited) return limited;
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
