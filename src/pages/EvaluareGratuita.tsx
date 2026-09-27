@@ -147,6 +147,21 @@ const EvaluareGratuita = () => {
 
   const zoneLabel = ZONES.find((z) => z.value === form.zone)?.label ?? form.zone;
 
+  // Instant estimate: zone €/mp from local data (fallback: city average), ±8% range.
+  const [surface, setSurface] = useState("");
+  const estimate = (() => {
+    const sqm = parseInt(surface, 10);
+    if (!sqm || sqm < 12 || sqm > 1000) return null;
+    const known = neighborhoods.map((n) => n.avgPricePerSqm).filter((v) => v > 0);
+    const cityAvg = known.length ? Math.round(known.reduce((a, b) => a + b, 0) / known.length) : 1900;
+    const zoneAvg = neighborhoods.find((n) => n.slug === form.zone)?.avgPricePerSqm;
+    const typeFactor = form.propertyType === "casa" ? 1.1 : form.propertyType === "teren" ? 0.25 : form.propertyType === "comercial" ? 1.05 : 1;
+    const pricePerSqm = Math.round((zoneAvg && zoneAvg > 0 ? zoneAvg : cityAvg) * typeFactor);
+    const mid = Math.round((pricePerSqm * sqm) / 500) * 500;
+    return { pricePerSqm, mid, min: Math.round((mid * 0.92) / 500) * 500, max: Math.round((mid * 1.08) / 500) * 500 };
+  })();
+  const fmtEur = (v: number) => `${v.toLocaleString("ro-RO")} €`;
+
   const handleSubmit = async () => {
     if (!canNext() || submitted) return;
     setSubmitted(true);
@@ -296,6 +311,36 @@ const EvaluareGratuita = () => {
                   </button>
                 ))}
               </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="eval-surface">Suprafață utilă (mp) — pentru estimarea automată</Label>
+                <Input
+                  id="eval-surface"
+                  inputMode="numeric"
+                  placeholder="ex. 55"
+                  value={surface}
+                  onChange={(e) => setSurface(e.target.value.replace(/[^\d]/g, "").slice(0, 4))}
+                />
+              </div>
+              {estimate && (
+                <div className="rounded-xl border border-accent/40 bg-accent/5 p-4 space-y-2" aria-live="polite">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground">Estimare automată orientativă</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {fmtEur(estimate.min)} – {fmtEur(estimate.max)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Medie ≈ {fmtEur(estimate.mid)} ({estimate.pricePerSqm.toLocaleString("ro-RO")} €/mp în {zoneLabel}). Estimarea finală o face Andrei, după detalii despre etaj, an și finisaje.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="min-h-[48px] w-full"
+                    onClick={() => window.dispatchEvent(new CustomEvent("open-ai-chatbot"))}
+                  >
+                    Discută estimarea cu Andrei în chat
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 
