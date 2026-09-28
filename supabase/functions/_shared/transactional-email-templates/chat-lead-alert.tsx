@@ -7,19 +7,19 @@ interface Props { message?: string; page?: string; email?: string; phone?: strin
 const ChatLeadAlert = ({ message, page, email, phone, source }: Props) => (
   <Html lang="ro" dir="ltr">
     <Head />
-    <Preview>Vizitator nou — sună-l în 2 minute</Preview>
+    <Preview>Vizitator nou — scrie-i pe WhatsApp</Preview>
     <Body style={main}>
       <Container style={container}>
         <Text style={logo}>RealTrust · Alertă lead</Text>
         <Hr style={hr} />
-        <Heading style={h1}>{source === 'contact' ? 'Cerere de apel de pe pagina Contact' : 'Mesaj nou în chatul premium'}</Heading>
+        <Heading style={h1}>{source === 'contact' ? 'Cerere de contact de pe pagina Contact' : 'Mesaj nou în chatul premium'}</Heading>
         <Section style={card}>
           <Text style={row}><b>Mesaj:</b> {message || '—'}</Text>
           {page ? <Text style={row}><b>Pagina:</b> {page}</Text> : null}
           {phone ? <Text style={row}><b>Telefon:</b> {phone}</Text> : null}
           {email ? <Text style={row}><b>E-mail:</b> {email}</Text> : null}
         </Section>
-        <Text style={text}>Propune un apel de 2 minute cât interesul e fierbinte.</Text>
+        <Text style={text}>Scrie-i pe WhatsApp cât interesul e fierbinte.</Text>
         <Button style={button} href="https://realtrust.ro/admin?tab=leads">Deschide Lead Manager</Button>
       </Container>
     </Body>
@@ -28,7 +28,7 @@ const ChatLeadAlert = ({ message, page, email, phone, source }: Props) => (
 
 export const template = {
   component: ChatLeadAlert,
-  subject: (d: Record<string, any>) => d?.source === 'contact' ? 'Cerere de apel — pagina Contact' : 'Mesaj nou în chatul premium',
+  subject: (d: Record<string, any>) => d?.source === 'contact' ? 'Cerere de contact — pagina Contact' : 'Mesaj nou în chatul premium',
   to: 'info@realtrust.ro',
   displayName: 'Alertă internă: lead chat / contact',
   previewData: { message: 'Vreau o evaluare pentru apartamentul meu', page: '/cartiere', phone: '07xx', source: 'chat' },

@@ -301,7 +301,7 @@ const INSTANT_REPLIES: Array<[RegExp, string]> = [
 
   [/randament|yield|roi/i, "⚡ Pe scurt: în regim hotelier, randamentul net estimat e ~9,4%/an, cu administrarea RealTrust de 15-20%. Andrei îți face imediat calculul exact 👇"],
   [/comision|commission|cost/i, "⚡ Administrarea RealTrust este de 15-20% din venit și include oaspeți, curățenie, chei și taxe — 100% pasiv pentru tine. Detaliile vin imediat 👇"],
-  [/evaluare|evaluation|preț|pret|price/i, "⚡ Evaluarea este gratuită și se face la apartament. Lasă-ne un număr de telefon și te sunăm în 2 minute. Andrei continuă 👇"],
+  [/evaluare|evaluation|preț|pret|price/i, "⚡ Evaluarea este gratuită și se face la apartament. Lasă-ne numărul și îți scriem pe WhatsApp în câteva minute. Andrei continuă 👇"],
   [/disponibil|availability|libere|free now/i, "⚡ Verific disponibilitatea live acum. Rezervarea directă are -5% cu codul DIRECT5 👇"],
   [/sun|call|apel|programe|rezerv|book/i, "⚡ Sigur! Scrie-ne numărul tău de telefon aici și te contactăm imediat, sau folosește butonul WhatsApp de jos 👇"],
 ];
@@ -331,7 +331,7 @@ const getInstantReply = (msg: string, fallback = false): string | null => {
   if (SELL_INTENT.test(msg)) return "⚡ Perfect! Uite anunțurile de vânzare RealTrust din Timișoara: [Vezi anunțurile](/imobiliare) · [Evaluare gratuită](/evaluare-gratuita). Scrie-mi suprafața, zona și e-mailul și îți trimit linkul și estimarea. Andrei continuă 👇";
   if (/estim|valoare/i.test(msg)) return "⚡ Scrie-mi suprafața și zona (ex: „2 camere, 55 mp, Iosefin”) și îți calculez imediat valoarea estimată 👇";
   for (const [re, reply] of INSTANT_REPLIES) if (re.test(msg)) return reply;
-  return fallback ? "⚡ Am primit mesajul tău! Andrei îți răspunde chiar acum 👇 (dacă preferi, lasă un număr de telefon și te sunăm noi)" : null;
+  return fallback ? "⚡ Am primit mesajul tău! Andrei îți răspunde chiar acum 👇 (dacă preferi, lasă numărul și îți scriem pe WhatsApp)" : null;
 };
 
 // Context-aware quick actions based on current page

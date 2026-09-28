@@ -24,7 +24,7 @@ export const template = {
   component: AndreiMessage,
   subject: 'Mesaj de la Andrei — RealTrust',
   displayName: 'Mesaj Andrei către lead',
-  previewData: { name: 'Maria', message: 'Vă mulțumesc pentru interes. Când vă pot suna 2 minute?' },
+  previewData: { name: 'Maria', message: 'Vă mulțumesc pentru interes. Vă scriu detaliile aici, pe WhatsApp?' },
 } satisfies TemplateEntry
 
 const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }

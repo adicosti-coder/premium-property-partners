@@ -31,7 +31,7 @@ export const template = {
   subject: (d: Record<string, any>) => d?.leadName ? `Rezumat discuție chat — ${d.leadName}` : 'Rezumat discuție chat premium',
   to: 'info@realtrust.ro',
   displayName: 'Rezumat intern discuție chat',
-  previewData: { leadName: 'Maria', pageTitle: 'Apartament 2 camere Iosefin', lines: [{ who: 'Vizitator', text: 'Bună, e disponibil?' }, { who: 'Andrei', text: 'Da! Vă pot suna 2 minute?' }] },
+  previewData: { leadName: 'Maria', pageTitle: 'Apartament 2 camere Iosefin', lines: [{ who: 'Vizitator', text: 'Bună, e disponibil?' }, { who: 'Andrei', text: 'Da! Vă trimit detaliile aici, pe chat?' }] },
 } satisfies TemplateEntry
 
 const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }

@@ -246,7 +246,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // --- Cerere apel 2 minute (pagina Contact): Hot Lead + alertă internă + e-mail vizitator ---
+    // --- Cerere contact WhatsApp (pagina Contact): Hot Lead + alertă internă + e-mail vizitator ---
     if (source === "apel_2_minute") {
       try {
         await supabase.from("leads").update({ lead_grade: "hot", engagement_status: "hot_lead", lead_score: 90 }).eq("id", leadId);
@@ -265,7 +265,7 @@ const handler = async (req: Request): Promise<Response> => {
               templateName: "hot-lead-followup",
               recipientEmail: email,
               idempotencyKey: `hot-lead-followup-${leadId}`,
-              templateData: { name, intro: "Am primit cererea dvs. de apel. Vă sunăm în intervalul ales — sau ne puteți suna direct acum." },
+              templateData: { name, intro: "Am primit cererea dvs. Vă scriem pe WhatsApp în intervalul ales — fără apeluri, doar mesaje." },
             },
           });
         }
