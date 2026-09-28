@@ -19,7 +19,11 @@ export const ConversionCell = ({ lead }: { lead: LeadRow }) => {
   const change = async (next: string) => {
     const prev = value;
     setValue(next);
-    const { error } = await supabase.from("leads").update({ crm_status: next || null } as any).eq("id", lead.id);
+    // `crm_status` is NOT NULL — "În proces" resets the lead to the default pipeline status.
+    const { error } = await supabase
+      .from("leads")
+      .update({ crm_status: next || "nou_necontactat" } as any)
+      .eq("id", lead.id);
     if (error) {
       setValue(prev);
       toast.error("Nu am putut salva conversia.");

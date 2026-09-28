@@ -3,7 +3,7 @@ import { Phone, CalendarClock, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { submitLead } from "@/lib/leadSubmission";
+import { supabase } from "@/integrations/supabase/client";
 import { isValidWhatsAppNumber } from "@/lib/conversionTracking";
 
 const SLOTS = ["Cât mai curând", "09:00–12:00", "12:00–15:00", "15:00–18:00"];
@@ -24,16 +24,18 @@ const CallbackCard = () => {
     }
     setLoading(true);
     try {
-      const res = await submitLead({
-        name: name.trim(),
-        whatsapp_number: phone,
-        email: email.trim() || undefined,
-        message: `Cerere apel 2 minute · interval: ${slot}`,
-        property_type: "general",
-        property_area: 0,
-        source: "apel_2_minute",
-      } as any);
-      if (res.ok === false) throw new Error("fail");
+      const { error } = await supabase.functions.invoke("submit-lead", {
+        body: {
+          name: name.trim(),
+          whatsapp_number: phone,
+          email: email.trim() || null,
+          message: `Cerere apel 2 minute · interval: ${slot}`,
+          property_type: "cerere_rapida",
+          property_area: 0,
+          source: "apel_2_minute",
+        },
+      });
+      if (error) throw error;
       setDone(true);
       toast.success("Mulțumim! Vă sunăm în intervalul ales.");
     } catch {
