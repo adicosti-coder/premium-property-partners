@@ -562,6 +562,8 @@ When you complete a full property analysis, include a structured report at the e
 });
 
 // ─── Chat logging (feeds the Admin „Astăzi" counters) ────────
+const OFFER_RE = /\d[\d.\s]*\s?(€|eur\b|euro)|randament|9[,.]4\s*%|15\s*[-–]\s*20\s*%|evaluare(a)? gratuit|\/proprietate\/|\/imobiliare|\bofert/i;
+
 async function logChat(sessionId: string, language: string, userMsg: string, assistantMsg: string, ctx?: { leadPromise: Promise<string | null>; pageInfo: { title: string; url: string } }) {
   try {
     if (!sessionId || !assistantMsg) return;
@@ -587,6 +589,10 @@ async function logChat(sessionId: string, language: string, userMsg: string, ass
     await sb.from("chat_conversations").update(patch).eq("id", conv!.id);
     if (leadId) {
       await sb.from("leads").update({ crm_status: "contactat" }).eq("id", leadId).eq("crm_status", "nou_necontactat");
+      // Andrei a trimis o ofertă concretă (preț, randament, comision, evaluare, link anunț) => „Ofertat"
+      if (OFFER_RE.test(assistantMsg)) {
+        await sb.from("leads").update({ crm_status: "ofertat" }).eq("id", leadId).in("crm_status", ["nou_necontactat", "contactat"]);
+      }
     }
   } catch (e) { console.error("[chat-log]", e); }
 }

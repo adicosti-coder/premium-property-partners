@@ -14,6 +14,7 @@ const loaders: Record<string, Loader> = {
   "flux-proprietari": () => import("@/components/admin/OwnerFlowWorkspace"),
   "ai-cache": () => import("@/components/admin/AICacheManager"),
   leads: () => import("@/components/admin/LeadsManager"),
+  "chat-inbox": () => import("@/components/admin/ChatInboxPanel"),
   contracts: () => import("@/components/admin/ContractManager"),
   "leads-analytics": () => import("@/components/admin/LeadsAnalyticsDashboard"),
   "tracking-qa": () => import("@/components/admin/TrackingQAPanel"),
