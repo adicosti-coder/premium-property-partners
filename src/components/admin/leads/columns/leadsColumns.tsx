@@ -35,6 +35,7 @@ import LeadNotesDialog from "../../LeadNotesDialog";
 import type { LeadRow } from "../hooks/useLeads";
 import { ConversionCell } from "./ConversionCell";
 import { StageCell } from "./StageCell";
+import { ConsentCell } from "./ConsentCell";
 import { LeadThreadDialog } from "./LeadThreadDialog";
 
 export interface LeadRowLabels {
@@ -240,6 +241,7 @@ export const LeadTableRow = ({
       </TableCell>
       <TableCell onClick={(e) => e.stopPropagation()}><StageCell key={`s-${lead.crm_status}`} lead={lead} /></TableCell>
       <TableCell onClick={(e) => e.stopPropagation()}><ConversionCell lead={lead} /></TableCell>
+      <TableCell onClick={(e) => e.stopPropagation()}><ConsentCell lead={lead} /></TableCell>
       <TableCell>{sourceBadge}</TableCell>
       <TableCell>
         <div className="space-y-1">
