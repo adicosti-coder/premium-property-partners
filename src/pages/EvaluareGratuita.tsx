@@ -172,8 +172,13 @@ const EvaluareGratuita = () => {
       whatsapp_number: formatPhoneInput(form.phone),
       email: form.email,
       property_type: form.propertyType,
-      property_area: 0,
-      message: `[evaluare_gratuita] Zonă: ${zoneLabel} · Camere: ${form.rooms || "-"}${surface ? ` · ${surface} mp` : ""}${estimate ? ` · Estimare auto: ${estimate.min}-${estimate.max} €` : ""}`,
+      property_area: parseInt(surface, 10) || 0,
+      message: [
+        `• Zonă: ${zoneLabel}`,
+        `• Camere: ${form.rooms ? `${form.rooms} camere` : "-"}`,
+        surface ? `• Suprafață: ${parseInt(surface, 10)} m²` : null,
+        estimate ? `• Estimare: ${fmtEur(estimate.min)} – ${fmtEur(estimate.max)}` : null,
+      ].filter(Boolean).join("\n"),
       source: "evaluare_gratuita",
       simulation_data: withCampaignTracking({
         zone: form.zone,

@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { formatLeadMessage, areaFromMessage } from "@/lib/formatLeadMessage";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -108,7 +109,7 @@ export const LeadTableRow = ({
             {lead.message && (
               <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                 <MessageSquare className="w-3 h-3" />
-                {lead.message.substring(0, 50)}...
+                {formatLeadMessage(lead.message).replace(/\n/g, " ").substring(0, 50)}...
               </p>
             )}
           </div>
@@ -160,7 +161,7 @@ export const LeadTableRow = ({
           <Building2 className="w-4 h-4 text-muted-foreground" />
           <div>
             <span className="font-medium capitalize">{lead.property_type}</span>
-            <span className="text-muted-foreground ml-2">({lead.property_area} m²)</span>
+            <span className="text-muted-foreground ml-2">({lead.property_area || areaFromMessage(lead.message) || "—"} m²)</span>
           </div>
         </div>
       </TableCell>
@@ -229,8 +230,8 @@ export const LeadTableRow = ({
       </TableCell>
       <TableCell className="max-w-[260px] align-top">
         {lead.message ? (
-          <p className="text-xs text-foreground whitespace-pre-wrap [overflow-wrap:anywhere] line-clamp-4" title={lead.message}>
-            {lead.message}
+          <p className="text-xs text-foreground whitespace-pre-wrap [overflow-wrap:anywhere] line-clamp-4" title={formatLeadMessage(lead.message)}>
+            {formatLeadMessage(lead.message)}
           </p>
         ) : (
           <span className="text-muted-foreground text-xs">—</span>
