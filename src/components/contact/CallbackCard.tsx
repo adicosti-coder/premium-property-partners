@@ -29,7 +29,7 @@ const CallbackCard = () => {
           name: name.trim(),
           whatsapp_number: phone,
           email: email.trim() || null,
-          message: `Cerere apel 2 minute · interval: ${slot}`,
+          message: `Cerere contact WhatsApp · interval: ${slot}`,
           property_type: "cerere_rapida",
           property_area: 0,
           source: "apel_2_minute",
@@ -37,7 +37,7 @@ const CallbackCard = () => {
       });
       if (error) throw error;
       setDone(true);
-      toast.success("Mulțumim! Vă sunăm în intervalul ales.");
+      toast.success("Mulțumim! Vă scriem pe WhatsApp în intervalul ales.");
     } catch {
       toast.error("Nu am putut trimite cererea. Încercați din nou sau sunați-ne direct.");
     } finally {
@@ -50,9 +50,9 @@ const CallbackCard = () => {
       <div className="rounded-3xl border border-accent/30 bg-card shadow-lg overflow-hidden grid md:grid-cols-2">
         <div className="p-6 sm:p-8 bg-accent/[0.07] flex flex-col gap-4">
           <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Drum direct</p>
-          <h2 className="font-serif text-2xl font-semibold">Un apel de 2 minute</h2>
+          <h2 className="font-serif text-2xl font-semibold">Vă scriem noi pe WhatsApp</h2>
           <p className="text-sm text-muted-foreground">
-            Nu folosiți WhatsApp? Sunați-ne acum sau lăsați-ne numărul și vă sunăm noi, în intervalul ales.
+            Fără apeluri, doar mesaje: lăsați-ne numărul și vă scriem pe WhatsApp în intervalul ales. Sau ne puteți suna direct.
           </p>
           <a href="tel:+40799069256" className="w-full">
             <Button size="lg" className="w-full min-h-12 gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
@@ -66,7 +66,7 @@ const CallbackCard = () => {
           </a>
         </div>
         <form onSubmit={submit} className="p-6 sm:p-8 flex flex-col gap-3">
-          <div className="flex items-center gap-2 font-semibold"><CalendarClock className="w-4 h-4 text-accent" /> Vă sunăm noi</div>
+          <div className="flex items-center gap-2 font-semibold"><CalendarClock className="w-4 h-4 text-accent" /> Vă scriem noi</div>
           {done ? (
             <p className="text-sm text-muted-foreground">Cererea a fost trimisă. Vă contactăm în scurt timp.</p>
           ) : (
@@ -74,7 +74,7 @@ const CallbackCard = () => {
               <Input aria-label="Nume" placeholder="Nume *" value={name} onChange={(e) => setName(e.target.value)} maxLength={80} />
               <Input aria-label="Telefon" placeholder="Telefon *" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={20} />
               <Input aria-label="E-mail" placeholder="E-mail (opțional)" type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={120} />
-              <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Interval apel">
+              <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Interval contact WhatsApp">
                 {SLOTS.map((s) => (
                   <button
                     type="button" key={s} role="radio" aria-checked={slot === s} onClick={() => setSlot(s)}
@@ -82,7 +82,7 @@ const CallbackCard = () => {
                   >{s}</button>
                 ))}
               </div>
-              <Button type="submit" disabled={loading} className="min-h-12">{loading ? "Se trimite…" : "Programează apelul"}</Button>
+              <Button type="submit" disabled={loading} className="min-h-12">{loading ? "Se trimite…" : "Programează mesajul"}</Button>
             </>
           )}
         </form>

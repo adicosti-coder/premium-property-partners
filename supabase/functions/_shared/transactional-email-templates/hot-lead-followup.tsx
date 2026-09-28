@@ -7,7 +7,7 @@ interface Props {
   category?: string; url?: string; intro?: string
 }
 
-const CALL_URL = 'tel:+40799069256'
+const WHATSAPP_URL = 'https://wa.me/40799069256'
 const SCHEDULE_URL = 'https://realtrust.ro/contact#programare-apel'
 
 const HotLeadFollowup = ({ name, title, zone, price, category, url, intro }: Props) => {
@@ -16,13 +16,13 @@ const HotLeadFollowup = ({ name, title, zone, price, category, url, intro }: Pro
   return (
     <Html lang="ro" dir="ltr">
       <Head />
-      <Preview>Un apel de 2 minute și vă spunem exact următorii pași</Preview>
+      <Preview>Vă scriem pe WhatsApp cu următorii pași</Preview>
       <Body style={main}>
         <Container style={container}>
           <Text style={logo}>RealTrust</Text>
           <Hr style={hr} />
           <Heading style={h1}>{name ? `Bună ziua, ${name}!` : 'Bună ziua!'}</Heading>
-          <Text style={text}>{intro || 'Mulțumim pentru interes! Ca să nu pierdem momentul, vă propun un apel scurt, de 2 minute.'}</Text>
+          <Text style={text}>{intro || 'Mulțumim pentru interes! Ca să nu pierdem momentul, vă propun să continuăm pe WhatsApp — vă scriem noi primii.'}</Text>
           {(title || zone || price) ? (
             <Section style={card}>
               <Text style={cardTitle}>{title || 'Proprietatea discutată'}</Text>
@@ -37,8 +37,8 @@ const HotLeadFollowup = ({ name, title, zone, price, category, url, intro }: Pro
                 ? 'Pentru închiriere: Regim Hotelier (ApArt Hotel), randament net estimat ~9,4%/an, administrare RealTrust 15-20%, 100% pasiv pentru dvs.'
                 : 'Vânzare Asistată cu evaluare gratuită sau Regim Hotelier cu randament net estimat ~9,4%/an — alegem împreună varianta potrivită.'}
           </Text>
-          <Button style={button} href={CALL_URL}>Sunați acum (2 minute)</Button>
-          <Text style={small}>sau <a href={SCHEDULE_URL} style={link}>alegeți ora la care vă sunăm noi</a></Text>
+          <Button style={button} href={WHATSAPP_URL}>Scrieți-ne pe WhatsApp</Button>
+          <Text style={small}>sau <a href={SCHEDULE_URL} style={link}>alegeți intervalul în care vă scriem noi</a></Text>
           {url ? <Text style={small}><a href={url} style={link}>Vezi detaliile anunțului</a></Text> : null}
           <Text style={footer}>Andrei · RealTrust Timișoara · info@realtrust.ro</Text>
         </Container>
@@ -49,8 +49,8 @@ const HotLeadFollowup = ({ name, title, zone, price, category, url, intro }: Pro
 
 export const template = {
   component: HotLeadFollowup,
-  subject: (d: Record<string, any>) => `Un apel de 2 minute${d?.title ? ` despre ${d.title}` : ''} — RealTrust`,
-  displayName: 'Follow-up Hot Lead (apel 2 minute)',
+  subject: (d: Record<string, any>) => `Următorii pași${d?.title ? ` pentru ${d.title}` : ''} — RealTrust`,
+  displayName: 'Follow-up Hot Lead (WhatsApp)',
   previewData: { name: 'Maria', title: 'Apartament 2 camere', zone: 'Cetate', price: '99500 EUR', category: 'vanzare', url: 'https://realtrust.ro' },
 } satisfies TemplateEntry
 
