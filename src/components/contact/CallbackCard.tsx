@@ -3,7 +3,7 @@ import { Phone, CalendarClock, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { submitLead } from "@/lib/leadSubmission";
+import { supabase } from "@/integrations/supabase/client";
 import { isValidWhatsAppNumber } from "@/lib/conversionTracking";
 
 const SLOTS = ["Cât mai curând", "09:00–12:00", "12:00–15:00", "15:00–18:00"];
