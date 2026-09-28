@@ -24,6 +24,8 @@ import { template as myListingPublished } from './my-listing-published.tsx'
 import { template as ownerListingDetails } from './owner-listing-details.tsx'
 import { template as hotLeadFollowup } from './hot-lead-followup.tsx'
 import { template as chatLeadAlert } from './chat-lead-alert.tsx'
+import { template as andreiMessage } from './andrei-message.tsx'
+import { template as chatConversationSummary } from './chat-conversation-summary.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'welcome': welcomeEmail,
@@ -41,4 +43,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'owner-listing-details': ownerListingDetails,
   'hot-lead-followup': hotLeadFollowup,
   'chat-lead-alert': chatLeadAlert,
+  'andrei-message': andreiMessage,
+  'chat-conversation-summary': chatConversationSummary,
 }
