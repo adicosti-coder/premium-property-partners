@@ -1361,9 +1361,13 @@ export type Database = {
           id: string
           language: string | null
           last_activity_at: string
+          lead_id: string | null
           lead_qualified: boolean | null
           lead_type: string | null
+          page_title: string | null
+          page_url: string | null
           session_id: string
+          summary_sent_at: string | null
           updated_at: string
           user_id: string | null
         }
@@ -1373,9 +1377,13 @@ export type Database = {
           id?: string
           language?: string | null
           last_activity_at?: string
+          lead_id?: string | null
           lead_qualified?: boolean | null
           lead_type?: string | null
+          page_title?: string | null
+          page_url?: string | null
           session_id: string
+          summary_sent_at?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -1385,13 +1393,25 @@ export type Database = {
           id?: string
           language?: string | null
           last_activity_at?: string
+          lead_id?: string | null
           lead_qualified?: boolean | null
           lead_type?: string | null
+          page_title?: string | null
+          page_url?: string | null
           session_id?: string
+          summary_sent_at?: string | null
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "chat_conversations_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       chat_messages: {
         Row: {
