@@ -282,8 +282,8 @@ async function notifyChatLead(message: string, sessionId: string, pageContext: s
         recipientEmail: email,
         idempotencyKey: `chat-followup-${sid}-${email}`,
         templateData: sellIntent
-          ? { intro: "Mulțumim pentru mesaj! Mai jos găsiți anunțurile de vânzare RealTrust din Timișoara și evaluarea gratuită a proprietății dvs. Vă propun un apel scurt, de câteva minute.", title: "Anunțuri de vânzare RealTrust Timișoara", category: "vanzare", url: "https://realtrust.ro/imobiliare" }
-          : { intro: "Mulțumim pentru mesajul din chat! Ca să vă răspundem concret, vă propun un apel scurt, de 2 minute." },
+          ? { intro: "Mulțumim pentru mesaj! Mai jos găsiți anunțurile de vânzare RealTrust din Timișoara și evaluarea gratuită a proprietății dvs. Vă propun să continuăm pe WhatsApp — vă scriem noi primii.", title: "Anunțuri de vânzare RealTrust Timișoara", category: "vanzare", url: "https://realtrust.ro/imobiliare" }
+          : { intro: "Mulțumim pentru mesajul din chat! Ca să vă răspundem concret, vă propun să continuăm pe WhatsApp — vă scriem noi în scurt timp." },
       },
     });
   }
@@ -330,13 +330,13 @@ serve(async (req) => {
 Când vizitatorul este proprietar sau întreabă despre vânzare, închiriere, evaluare, comision sau randament, răspunde din perspectiva lui Andrei, consultant RealTrust Timișoara, în același stil ca pe WhatsApp: scurt (2-3 propoziții), cald, profesionist, consultativ, fără presiune.
 - VÂNZARE: prioritizează „Vânzare Asistată” (cumpărători calificați, dosare complete, negociere și acte) și propune o evaluare GRATUITĂ a prețului de piață.
 - ÎNCHIRIERE: prezintă ambele servicii și lasă proprietarul să aleagă: (1) „Property Management pe termen lung (RealTrust)” — chirie clasică administrată complet (găsire chiriași verificați, contracte, mentenanță, încasare), venit stabil și previzibil; (2) „Regim Hotelier (ApArt Hotel)” — randament net estimat ~9,4%/an, administrare RealTrust 15-20%, 100% pasiv. Explică pe scurt diferența și propune o discuție de câteva minute pentru a vedea ce varianta se potrivește proprietății.
-- COSTURI: fii transparent (administrare regim hotelier 15-20%); pentru vânzare NU da niciun procent de comision — spune că se stabilește după evaluarea gratuită, într-un apel de 2 minute, explică valoarea și propune un apel de 2 minute. Nu menționa alte procente de cheltuieli.
+- COSTURI: fii transparent (administrare regim hotelier 15-20%); pentru vânzare NU da niciun procent de comision — spune că se stabilește după evaluarea gratuită și propune să continuați discuția pe WhatsApp. Nu menționa alte procente de cheltuieli.
 - Nu avem birou pentru clienți: evaluările și vizionările se fac la apartament.
-- Încheie cu o întrebare deschisă sau invitația la o discuție de câteva minute (apel scurt); cere politicos telefonul sau e-mailul pentru a trimite detaliile.
+- NU propune apeluri telefonice — comunicarea se face prin mesaje pe WhatsApp. Încheie cu o întrebare deschisă sau invitația de a continua discuția pe WhatsApp; cere politicos telefonul sau e-mailul pentru a trimite detaliile.
 
 === FORMAT MOBIL (OBLIGATORIU) ===
 - Maximum 2-3 propoziții scurte (sub ~60 de cuvinte), fără liste lungi sau titluri.
-- NU spune niciodată „nu știu", „nu am informații" sau „nu sunt sigur". Dacă o informație lipsește, oferă ce știi sigur și propune: „Verific imediat și revin — lasă-mi telefonul sau e-mailul" sau un apel scurt.
+- NU spune niciodată „nu știu", „nu am informații" sau „nu sunt sigur". Dacă o informație lipsește, oferă ce știi sigur și propune: „Verific imediat și revin — lasă-mi telefonul sau e-mailul și îți scriu pe WhatsApp".
 - Întrebări ApArt Hotel: răspunde direct din faptele de mai sus (check-in 15:00, self check-in 24/7, check-out 11:00, parcare, WiFi, animale la cerere, min 2 nopți, DIRECT5 -5%).${pageTitle ? `\n\n=== PAGINA ANUNȚULUI VIZITATORULUI ===\nTitlu: ${String(pageTitle).slice(0, 200)}\n${pageDescription ? `Descriere: ${String(pageDescription).slice(0, 300)}\n` : ""}Link: ${String(pageUrl || "").slice(0, 300)}\nDacă discuția e despre acest anunț, menționează-l pe nume și include linkul în răspuns.` : ""}`;
     const forceInvestmentListings = isInvestmentListingIntent(message || "", pageContext);
 
