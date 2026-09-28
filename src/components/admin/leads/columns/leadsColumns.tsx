@@ -34,6 +34,7 @@ import LeadNotesDialog from "../../LeadNotesDialog";
 import type { LeadRow } from "../hooks/useLeads";
 import { ConversionCell } from "./ConversionCell";
 import { StageCell } from "./StageCell";
+import { LeadThreadDialog } from "./LeadThreadDialog";
 
 export interface LeadRowLabels {
   perMonth: string;
@@ -234,6 +235,7 @@ export const LeadTableRow = ({
         ) : (
           <span className="text-muted-foreground text-xs">—</span>
         )}
+        <div onClick={(e) => e.stopPropagation()}><LeadThreadDialog lead={lead} /></div>
       </TableCell>
       <TableCell onClick={(e) => e.stopPropagation()}><StageCell key={`s-${lead.crm_status}`} lead={lead} /></TableCell>
       <TableCell onClick={(e) => e.stopPropagation()}><ConversionCell lead={lead} /></TableCell>
