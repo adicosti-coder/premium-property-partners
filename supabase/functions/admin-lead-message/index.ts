@@ -14,12 +14,26 @@ Deno.serve(async (req) => {
 
   const body = await req.json().catch(() => ({}));
   const leadId = String(body.leadId ?? "");
+  const conversationId = String(body.conversationId ?? "");
   const channel = String(body.channel ?? "");
   const content = String(body.content ?? "").replace(/<[^>]*>/g, "").trim().slice(0, 2000);
-  if (!/^[0-9a-f-]{36}$/i.test(leadId) || !["chat", "email", "note"].includes(channel) || !content) {
-    return json({ error: "invalid_input" }, 400);
-  }
+  const uuid = /^[0-9a-f-]{36}$/i;
+  if (!["chat", "email", "note"].includes(channel) || !content) return json({ error: "invalid_input" }, 400);
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  // Reply straight into a chat conversation (Inbox), even without a lead attached
+  if (channel === "chat" && uuid.test(conversationId)) {
+    const { data: conv } = await sb.from("chat_conversations").select("id, lead_id").eq("id", conversationId).maybeSingle();
+    if (!conv) return json({ error: "conversation_not_found" }, 404);
+    const { error } = await sb.from("chat_messages").insert({ conversation_id: conv.id, role: "agent", content });
+    if (error) return json({ error: error.message }, 500);
+    await sb.from("chat_conversations").update({ last_activity_at: new Date().toISOString(), summary_sent_at: null }).eq("id", conv.id);
+    if (conv.lead_id) {
+      await sb.from("lead_notes").insert({ lead_id: conv.lead_id, content: `💬 Chat (Andrei): ${content}`, created_by: auth.userId && auth.userId !== "00000000-0000-0000-0000-000000000000" ? auth.userId : null });
+      await advanceStage(sb, conv.lead_id, content);
+    }
+    return json({ ok: true });
+  }
+  if (!uuid.test(leadId)) return json({ error: "invalid_input" }, 400);
   const { data: lead } = await sb.from("leads").select("id, name, email, crm_status").eq("id", leadId).maybeSingle();
   if (!lead) return json({ error: "lead_not_found" }, 404);
   const createdBy = auth.userId && auth.userId !== "00000000-0000-0000-0000-000000000000" ? auth.userId : null;
@@ -47,8 +61,16 @@ Deno.serve(async (req) => {
 
   const label = channel === "chat" ? "💬 Chat (Andrei)" : channel === "email" ? "✉️ E-mail trimis" : "📝 Notă";
   await sb.from("lead_notes").insert({ lead_id: leadId, content: `${label}: ${content}`, created_by: createdBy });
-  if (channel !== "note" && lead.crm_status === "nou_necontactat") {
-    await sb.from("leads").update({ crm_status: "contactat" }).eq("id", leadId);
-  }
+  if (channel !== "note") await advanceStage(sb, leadId, content);
   return json({ ok: true });
 });
+
+const OFFER_RE = /\d[\d.\s]*\s?(€|eur\b|euro)|randament|9[,.]4\s*%|15\s*[-–]\s*20\s*%|evaluare(a)? gratuit|\/proprietate\/|\/imobiliare|\bofert/i;
+
+// Nou → Contactat la orice mesaj trimis; → Ofertat când mesajul conține o ofertă concretă.
+async function advanceStage(sb: any, leadId: string, content: string) {
+  await sb.from("leads").update({ crm_status: "contactat" }).eq("id", leadId).eq("crm_status", "nou_necontactat");
+  if (OFFER_RE.test(content)) {
+    await sb.from("leads").update({ crm_status: "ofertat" }).eq("id", leadId).in("crm_status", ["nou_necontactat", "contactat"]);
+  }
+}
