@@ -176,7 +176,7 @@ Adapt your suggestions and tone to match the page context.`;
 
 // ─── Lead Detection ─────────────────────────────────────────
 
-async function detectAndSaveLead(message: string, conversationHistory: any[], pageContext = "/") {
+async function detectAndSaveLead(message: string, conversationHistory: any[], pageContext = "/", pageInfo?: { title: string; description: string; url: string }) {
   const phoneRegex = /(?:\+?40|0)7\d{2}[\s.-]?\d{3}[\s.-]?\d{3}/;
   const phone = message.match(phoneRegex)?.[0]?.replace(/[\s.-]/g, "") ?? "";
   const email = (message.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] ?? "").toLowerCase();
@@ -209,8 +209,11 @@ async function detectAndSaveLead(message: string, conversationHistory: any[], pa
       existing = data;
     }
 
-    const conversation = [...conversationHistory.filter((m: any) => m?.role === "user").map((m: any) => String(m.content ?? "")), message]
-      .filter(Boolean).join("\n").slice(-1500);
+    const pageBlock = pageInfo?.title
+      ? `📄 Anunț: ${pageInfo.title}${pageInfo.description ? `\n${pageInfo.description}` : ""}${pageInfo.url ? `\n🔗 ${pageInfo.url}` : ""}\n---\n`
+      : "";
+    const conversation = pageBlock + [...conversationHistory.filter((m: any) => m?.role === "user").map((m: any) => String(m.content ?? "")), message]
+      .filter(Boolean).join("\n").slice(-(1500 - pageBlock.length));
 
     if (existing) {
       await sb.from("leads").update({
@@ -299,7 +302,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, sessionId = "", language = "ro", conversationHistory = [], pageContext = "/", imageBase64, imagesArray, qualificationContext } = await req.json();
+    const { message, sessionId = "", language = "ro", conversationHistory = [], pageContext = "/", imageBase64, imagesArray, qualificationContext, pageTitle = "", pageDescription = "", pageUrl = "" } = await req.json();
 
     if ((!message && !imageBase64 && !imagesArray?.length) || (message && message.length > 2000)) {
       return new Response(JSON.stringify({ error: "invalid_message" }), {
@@ -308,7 +311,8 @@ serve(async (req) => {
     }
 
     // Async lead detection
-    detectAndSaveLead(message, conversationHistory, pageContext).catch(console.error);
+    const pageInfo = { title: String(pageTitle || "").replace(/[<>]/g, "").slice(0, 200), description: String(pageDescription || "").replace(/[<>]/g, "").slice(0, 300), url: /^https?:\/\/(www\.)?realtrust\.ro\//.test(String(pageUrl)) || String(pageUrl).startsWith("http://localhost") || /lovable\.app\//.test(String(pageUrl)) ? String(pageUrl).slice(0, 300) : "" };
+    detectAndSaveLead(message, conversationHistory, pageContext, pageInfo).catch(console.error);
     notifyChatLead(message, sessionId, pageContext, conversationHistory).catch(console.error);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -325,7 +329,12 @@ Când vizitatorul este proprietar sau întreabă despre vânzare, închiriere, e
 - ÎNCHIRIERE: prezintă ambele servicii și lasă proprietarul să aleagă: (1) „Property Management pe termen lung (RealTrust)” — chirie clasică administrată complet (găsire chiriași verificați, contracte, mentenanță, încasare), venit stabil și previzibil; (2) „Regim Hotelier (ApArt Hotel)” — randament net estimat ~9,4%/an, administrare RealTrust 15-20%, 100% pasiv. Explică pe scurt diferența și propune o discuție de câteva minute pentru a vedea ce varianta se potrivește proprietății.
 - COSTURI: fii transparent (administrare regim hotelier 15-20%); pentru vânzare NU da niciun procent de comision — spune că se stabilește după evaluarea gratuită, într-un apel de 2 minute, explică valoarea și propune un apel de 2 minute. Nu menționa alte procente de cheltuieli.
 - Nu avem birou pentru clienți: evaluările și vizionările se fac la apartament.
-- Încheie cu o întrebare deschisă sau invitația la o discuție de câteva minute (apel scurt); cere politicos telefonul sau e-mailul pentru a trimite detaliile.`;
+- Încheie cu o întrebare deschisă sau invitația la o discuție de câteva minute (apel scurt); cere politicos telefonul sau e-mailul pentru a trimite detaliile.
+
+=== FORMAT MOBIL (OBLIGATORIU) ===
+- Maximum 2-3 propoziții scurte (sub ~60 de cuvinte), fără liste lungi sau titluri.
+- NU spune niciodată „nu știu", „nu am informații" sau „nu sunt sigur". Dacă o informație lipsește, oferă ce știi sigur și propune: „Verific imediat și revin — lasă-mi telefonul sau e-mailul" sau un apel scurt.
+- Întrebări ApArt Hotel: răspunde direct din faptele de mai sus (check-in 15:00, self check-in 24/7, check-out 11:00, parcare, WiFi, animale la cerere, min 2 nopți, DIRECT5 -5%).${pageTitle ? `\n\n=== PAGINA ANUNȚULUI VIZITATORULUI ===\nTitlu: ${String(pageTitle).slice(0, 200)}\n${pageDescription ? `Descriere: ${String(pageDescription).slice(0, 300)}\n` : ""}Link: ${String(pageUrl || "").slice(0, 300)}\nDacă discuția e despre acest anunț, menționează-l pe nume și include linkul în răspuns.` : ""}`;
     const forceInvestmentListings = isInvestmentListingIntent(message || "", pageContext);
 
     // Enhance system prompt with qualification context and HostScan capabilities.
