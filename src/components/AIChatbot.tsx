@@ -757,6 +757,42 @@ const AIChatbot = () => {
     }
   }, []);
 
+  // Private thread: pull messages Andrei writes manually from Admin into this chat
+  useEffect(() => {
+    let sid = "";
+    try { sid = sessionStorage.getItem("rt_chat_sid") || ""; } catch { /* noop */ }
+    if (!sid) return;
+    const key = `rt_chat_agent_since_${sid}`;
+    let stopped = false;
+    const poll = async () => {
+      try {
+        const apiKey = getSupabasePublishableKey();
+        const since = localStorage.getItem(key) || new Date(Date.now() - 7 * 864e5).toISOString();
+        const r = await fetch(`${supabaseConfig.url}/functions/v1/chat-thread`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}`, apikey: apiKey },
+          body: JSON.stringify({ sessionId: sid, since }),
+        });
+        if (!r.ok || stopped) return;
+        const { messages: agentMsgs = [] } = await r.json();
+        if (!agentMsgs.length) return;
+        localStorage.setItem(key, agentMsgs[agentMsgs.length - 1].created_at);
+        setMessages(prev => {
+          const ids = new Set(prev.map(m => m.id));
+          const add = agentMsgs.filter((m: any) => !ids.has(m.id)).map((m: any) => ({
+            id: m.id, role: "assistant" as const, content: `👤 **Andrei (RealTrust):** ${m.content}`, timestamp: new Date(m.created_at),
+          }));
+          return add.length ? [...prev, ...add] : prev;
+        });
+        if (!isOpen) setHasUnread(true);
+      } catch { /* network hiccup — retry next tick */ }
+    };
+    poll();
+    const t = setInterval(poll, isOpen ? 8000 : 30000);
+    return () => { stopped = true; clearInterval(t); };
+  }, [isOpen, messages.length > 1]);
+
+
   // Persist messages
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-30))); } catch {}
