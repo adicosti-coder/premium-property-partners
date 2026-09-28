@@ -217,6 +217,10 @@ Deno.serve(async (req) => {
             window_expires_at: windowExp,
             wa_profile_name: profileName,
           }).eq("id", convId);
+          // Număr existent fără agent → preia Andrei AI.
+          await supabase.from("wa_conversations")
+            .update({ assigned_agent_id: "a0d7e1a1-0000-4000-8000-00000000a1a1" })
+            .eq("id", convId).is("assigned_agent_id", null);
         } else {
           // Try to link a prospect by phone (best-effort)
           let prospectId: string | null = null;
