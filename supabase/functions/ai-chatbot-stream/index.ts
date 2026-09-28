@@ -212,14 +212,31 @@ async function detectAndSaveLead(message: string, conversationHistory: any[], pa
     const pageBlock = pageInfo?.title
       ? `📄 Anunț: ${pageInfo.title}${pageInfo.description ? `\n${pageInfo.description}` : ""}${pageInfo.url ? `\n🔗 ${pageInfo.url}` : ""}\n---\n`
       : "";
-    const conversation = pageBlock + [...conversationHistory.filter((m: any) => m?.role === "user").map((m: any) => String(m.content ?? "")), message]
-      .filter(Boolean).join("\n").slice(-(1500 - pageBlock.length));
+    // Evaluare din chat: suprafață, camere, zonă și estimarea dată de bot
+    const fullText = conversationHistory.map((m: any) => String(m?.content ?? "")).join("\n") + "\n" + message;
+    const areaMatch = fullText.match(/(\d{2,4})\s*(?:mp|m²|m2|metri)/i);
+    const area = areaMatch ? parseInt(areaMatch[1], 10) : 0;
+    const roomsMatch = fullText.match(/(\d)\s*cam/i);
+    const estMatch = fullText.match(/(\d{1,3}(?:[.\s]\d{3})+)\s*(?:€|eur)?\s*[–-]\s*(\d{1,3}(?:[.\s]\d{3})+)\s*(?:€|eur)/i);
+    const zoneMatch = fullText.match(/\b(Cetate|Centru|Iosefin|Fabric|Dumbrăvița|Dumbravita|Aradului|Complex Studențesc|Complex Studentesc|Elisabetin|Girocului|Soarelui|Lipovei|Circumvala[țt]iunii|Take Ionescu|Braytim|Ring|NordOne)\b/i);
+    const evalBlock = area || estMatch
+      ? [
+          zoneMatch ? `• Zonă: ${zoneMatch[1]}` : null,
+          roomsMatch ? `• Camere: ${roomsMatch[1]} camere` : null,
+          area ? `• Suprafață: ${area} m²` : null,
+          estMatch ? `• Estimare: ${estMatch[1]} € – ${estMatch[2]} €` : null,
+        ].filter(Boolean).join("\n") + "\n---\n"
+      : "";
+    const head = pageBlock + evalBlock;
+    const conversation = head + [...conversationHistory.filter((m: any) => m?.role === "user").map((m: any) => String(m.content ?? "")), message]
+      .filter(Boolean).join("\n").slice(-(1500 - head.length));
 
     if (existing) {
       await sb.from("leads").update({
         email: existing.email || email || null,
         whatsapp_number: existing.whatsapp_number || phone || "-",
         message: conversation,
+        ...(area ? { property_area: area } : {}),
         lead_grade: "hot",
         engagement_status: "hot_lead",
         lead_score: 90,
@@ -233,7 +250,7 @@ async function detectAndSaveLead(message: string, conversationHistory: any[], pa
       email: email || null,
       message: conversation,
       property_type: propertyType,
-      property_area: propertyType === "studio" ? 35 : propertyType === "2_camere" ? 55 : 75,
+      property_area: area || (propertyType === "studio" ? 35 : propertyType === "2_camere" ? 55 : 75),
       source: `Chat Premium (${String(pageContext).slice(0, 80)})`,
       lead_grade: "hot",
       lead_score: 90,

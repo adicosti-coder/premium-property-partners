@@ -67,6 +67,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { value: "dashboard", label: "Dashboard", icon: LayoutDashboard, keywords: ["home", "start", "overview"] },
       { value: "leads", label: "Lead-uri", icon: Users, badgeKey: "newLeads" },
       { value: "chat-inbox", label: "Discuții chat", icon: MessageSquare, keywords: ["chat", "discutii", "inbox", "andrei", "raspunde", "premium"] },
+      { value: "wa-offers", label: "Oferte WhatsApp", icon: MessageSquare, keywords: ["oferte", "whatsapp", "ofertat", "andrei", "pret"] },
       { value: "contracts", label: "Contracte & Plăți", icon: FileText, keywords: ["contract", "semnare", "plata", "stripe", "onboarding"] },
       { value: "bookings", label: "Rezervări", icon: CalendarDays },
       { value: "booking-requests", label: "Cereri rezervare", icon: CalendarDays, keywords: ["cereri", "rezervare", "booking requests", "site", "oaspeti"] },
