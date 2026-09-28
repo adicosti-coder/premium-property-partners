@@ -610,14 +610,14 @@ const AIChatbot = () => {
 
     const currentImage = attachedImage;
     const assistantId = retryCount === 0 ? crypto.randomUUID() : undefined;
+    // Instant service answer is merged into Andrei's own bubble; his reply streams below it.
+    const instant = content ? getInstantReply(content, false) : null;
+    const prefix = instant ? instant.replace(/\s*(Andrei continuă\s*)?👇\s*$/u, "").trim() + "\n\n" : "";
     if (retryCount === 0) {
       setMessages(prev => [
         ...prev,
         { id: crypto.randomUUID(), role: "user", content: content || (language === "ro" ? "Am atașat o imagine cu proprietatea." : "I attached a property image."), timestamp: new Date(), imagePreview: currentImage || undefined },
-        ...(content && getInstantReply(content, !overrideMessage && language === "ro")
-          ? [{ id: crypto.randomUUID(), role: "assistant" as const, content: getInstantReply(content, !overrideMessage && language === "ro")!, timestamp: new Date() }]
-          : []),
-        { id: assistantId!, role: "assistant", content: "", isStreaming: true, timestamp: new Date() }
+        { id: assistantId!, role: "assistant", content: prefix, isStreaming: true, timestamp: new Date() }
       ]);
       setInput("");
       setAttachedImage(null);
@@ -689,7 +689,7 @@ const AIChatbot = () => {
               if (parsed.delta) {
                 acc += parsed.delta;
                 const id = retryCount === 0 ? assistantId! : targetId;
-                setMessages(prev => prev.map(m => m.id === id ? { ...m, content: acc } : m));
+                setMessages(prev => prev.map(m => m.id === id ? { ...m, content: prefix + acc } : m));
               }
             } catch (e) {
               if (e instanceof Error && (e.message === "rate_limit" || e.message === "network")) throw e;
@@ -706,7 +706,7 @@ const AIChatbot = () => {
         acc = cleanReportFromText(acc);
       }
       
-      setMessages(prev => prev.map(m => m.id === id ? { ...m, isStreaming: false, content: acc || text.error } : m));
+      setMessages(prev => prev.map(m => m.id === id ? { ...m, isStreaming: false, content: (prefix + acc).trim() || text.error } : m));
       // Show rating prompt after 3+ user messages
       setMessageCount(prev => {
         const next = prev + 1;
