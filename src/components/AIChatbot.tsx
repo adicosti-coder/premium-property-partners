@@ -282,6 +282,16 @@ MarkdownContent.displayName = "MarkdownContent";
 
 // Instant answers for quick-action buttons — shown immediately, AI follows with details
 const INSTANT_REPLIES: Array<[RegExp, string]> = [
+  // Întrebări frecvente ApArt Hotel (oaspeți) — răspuns instant, scurt
+  [/check.?in|sosire|ora.*(intrare|cazare)|arrival/i, "⚡ Check-in de la 15:00, self check-in 24/7 cu smart lock — codul îl primești în ziua sosirii."],
+  [/check.?out|plecare|departure/i, "⚡ Check-out până la ora 11:00. Liniște: 22:00–08:00."],
+  [/parcare|parking/i, "⚡ Da, avem parcare disponibilă la toate locațiile ApArt Hotel."],
+  [/animal|caine|câine|pisic|pet/i, "⚡ Animalele sunt acceptate la cerere — scrie-ne ce animal ai și confirmăm pe loc."],
+  [/wi.?fi|internet|netflix/i, "⚡ WiFi gratuit și Netflix în toate apartamentele, plus bucătărie complet echipată."],
+  [/fum|smok/i, "⚡ Apartamentele sunt non-fumători în interior."],
+  [/minim|cate nopti|câte nopți|min.*noapt/i, "⚡ Șederea minimă este de 2 nopți."],
+  [/reducere|discount|cod/i, "⚡ Rezervarea directă pe site are -5% cu codul DIRECT5."],
+
   [/randament|yield|roi/i, "⚡ Pe scurt: în regim hotelier, randamentul net estimat e ~9,4%/an, cu administrarea RealTrust de 15-20%. Andrei îți face imediat calculul exact 👇"],
   [/comision|commission|cost/i, "⚡ Administrarea RealTrust este de 15-20% din venit și include oaspeți, curățenie, chei și taxe — 100% pasiv pentru tine. Detaliile vin imediat 👇"],
   [/evaluare|evaluation|preț|pret|price/i, "⚡ Evaluarea este gratuită și se face la apartament. Lasă-ne un număr de telefon și te sunăm în 2 minute. Andrei continuă 👇"],
@@ -626,6 +636,9 @@ const AIChatbot = () => {
           language,
           conversationHistory: messages.slice(-10).map((m) => ({ role: m.role, content: m.content })),
           pageContext: currentPath,
+          pageTitle: /\/(proprietate|imobiliare|anunt|cazare)\//.test(currentPath) ? document.title : "",
+          pageDescription: /\/(proprietate|imobiliare|anunt|cazare)\//.test(currentPath) ? (document.querySelector('meta[name="description"]')?.getAttribute("content") || "") : "",
+          pageUrl: /\/(proprietate|imobiliare|anunt|cazare)\//.test(currentPath) ? window.location.href.split("#")[0] : "",
           imageBase64: hasImage ? currentImage : undefined,
           qualificationContext: qualificationData || undefined,
         }),

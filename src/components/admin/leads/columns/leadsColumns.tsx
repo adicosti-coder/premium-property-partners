@@ -33,6 +33,7 @@ import { LeadScoreBadge } from "./LeadScoreBadge";
 import LeadNotesDialog from "../../LeadNotesDialog";
 import type { LeadRow } from "../hooks/useLeads";
 import { ConversionCell } from "./ConversionCell";
+import { StageCell } from "./StageCell";
 
 export interface LeadRowLabels {
   perMonth: string;
@@ -234,6 +235,7 @@ export const LeadTableRow = ({
           <span className="text-muted-foreground text-xs">—</span>
         )}
       </TableCell>
+      <TableCell onClick={(e) => e.stopPropagation()}><StageCell key={`s-${lead.crm_status}`} lead={lead} /></TableCell>
       <TableCell onClick={(e) => e.stopPropagation()}><ConversionCell lead={lead} /></TableCell>
       <TableCell>{sourceBadge}</TableCell>
       <TableCell>
