@@ -217,6 +217,10 @@ Deno.serve(async (req) => {
             window_expires_at: windowExp,
             wa_profile_name: profileName,
           }).eq("id", convId);
+          // Număr existent fără agent → preia Andrei AI.
+          await supabase.from("wa_conversations")
+            .update({ assigned_agent_id: "a0d7e1a1-0000-4000-8000-00000000a1a1" })
+            .eq("id", convId).is("assigned_agent_id", null);
         } else {
           // Try to link a prospect by phone (best-effort)
           let prospectId: string | null = null;
@@ -618,6 +622,15 @@ Deno.serve(async (req) => {
         if (state === "failed") stUpdate = stUpdate.in("status", ["pending", "sending", "sent"]);
         const { error: qErr } = await stUpdate;
         if (qErr) console.error("[wa-webhook] status update failed:", qErr);
+        // „read” implică livrarea: dacă Meta nu a trimis separat „delivered”,
+        // completăm data livrării ca mesajul să intre în „Livrate (confirmat Meta)”.
+        if (state === "read") {
+          await supabase.from("wa_outbound_queue")
+            .update({ delivered_at: tsIso })
+            .eq("wa_message_id", waId)
+            .is("delivered_at", null);
+        }
+        console.log(`[wa-webhook] status ${state} for ${waId}`);
 
         // Aceeași confirmare se salvează și pe mesaj, ca să vedem în Admin
         // starea reală (trimis / livrat / citit) pentru fiecare mesaj trimis,
