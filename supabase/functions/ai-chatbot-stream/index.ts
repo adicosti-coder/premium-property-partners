@@ -176,12 +176,12 @@ Adapt your suggestions and tone to match the page context.`;
 
 // ─── Lead Detection ─────────────────────────────────────────
 
-async function detectAndSaveLead(message: string, conversationHistory: any[], pageContext = "/", pageInfo?: { title: string; description: string; url: string }) {
+async function detectAndSaveLead(message: string, conversationHistory: any[], pageContext = "/", pageInfo?: { title: string; description: string; url: string }): Promise<string | null> {
   const phoneRegex = /(?:\+?40|0)7\d{2}[\s.-]?\d{3}[\s.-]?\d{3}/;
   const phone = message.match(phoneRegex)?.[0]?.replace(/[\s.-]/g, "") ?? "";
   const email = (message.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] ?? "").toLowerCase();
   // Salvăm lead-ul dacă avem telefon SAU e-mail valid (telefonul nu e obligatoriu)
-  if (!phone && !email) return;
+  if (!phone && !email) return null;
 
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const allText = conversationHistory.map((m: any) => m.content).join(" ") + " " + message;
@@ -224,7 +224,7 @@ async function detectAndSaveLead(message: string, conversationHistory: any[], pa
         engagement_status: "hot_lead",
         lead_score: 90,
       }).eq("id", existing.id);
-      return;
+      return existing.id;
     }
 
     const { data: inserted } = await sb.from("leads").insert({
@@ -243,10 +243,12 @@ async function detectAndSaveLead(message: string, conversationHistory: any[], pa
     if (inserted?.id) {
       await sb.from("leads").update({ lead_grade: "hot", lead_score: 90, engagement_status: "hot_lead" }).eq("id", inserted.id);
     }
+    return inserted?.id ?? null;
 
   } catch (err) {
     console.error("[lead-save]", err);
   }
+  return null;
 }
 
 
@@ -312,7 +314,8 @@ serve(async (req) => {
 
     // Async lead detection
     const pageInfo = { title: String(pageTitle || "").replace(/[<>]/g, "").slice(0, 200), description: String(pageDescription || "").replace(/[<>]/g, "").slice(0, 300), url: /^https?:\/\/(www\.)?realtrust\.ro\//.test(String(pageUrl)) || String(pageUrl).startsWith("http://localhost") || /lovable\.app\//.test(String(pageUrl)) ? String(pageUrl).slice(0, 300) : "" };
-    detectAndSaveLead(message, conversationHistory, pageContext, pageInfo).catch(console.error);
+    const leadPromise = detectAndSaveLead(message, conversationHistory, pageContext, pageInfo).catch((e) => { console.error(e); return null; });
+    const logCtx = { leadPromise, pageInfo };
     notifyChatLead(message, sessionId, pageContext, conversationHistory).catch(console.error);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -516,7 +519,7 @@ When you complete a full property analysis, include a structured report at the e
         });
       }
 
-      return streamSSE(streamResponse, corsHeaders, (t) => logChat(String(sessionId).slice(0, 100), language, message, t));
+      return streamSSE(streamResponse, corsHeaders, (t) => logChat(String(sessionId).slice(0, 100), language, message, t, logCtx));
     }
 
     // ─── No tool calls: stream the initial response as SSE ──
@@ -542,7 +545,7 @@ When you complete a full property analysis, include a structured report at the e
         await writer.write(encoder.encode("data: [DONE]\n\n"));
       } finally {
         await writer.close();
-        await logChat(String(sessionId).slice(0, 100), language, message, content);
+        await logChat(String(sessionId).slice(0, 100), language, message, content, logCtx);
       }
     })();
 
@@ -559,13 +562,13 @@ When you complete a full property analysis, include a structured report at the e
 });
 
 // ─── Chat logging (feeds the Admin „Astăzi" counters) ────────
-async function logChat(sessionId: string, language: string, userMsg: string, assistantMsg: string) {
+async function logChat(sessionId: string, language: string, userMsg: string, assistantMsg: string, ctx?: { leadPromise: Promise<string | null>; pageInfo: { title: string; url: string } }) {
   try {
     if (!sessionId || !assistantMsg) return;
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    let { data: conv } = await sb.from("chat_conversations").select("id").eq("session_id", sessionId).maybeSingle();
+    let { data: conv } = await sb.from("chat_conversations").select("id, lead_id").eq("session_id", sessionId).maybeSingle();
     if (!conv) {
-      const ins = await sb.from("chat_conversations").insert({ session_id: sessionId, language }).select("id").single();
+      const ins = await sb.from("chat_conversations").insert({ session_id: sessionId, language }).select("id, lead_id").single();
       if (ins.error) { console.error("[chat-log] conv", ins.error); return; }
       conv = ins.data;
     } else {
@@ -576,6 +579,15 @@ async function logChat(sessionId: string, language: string, userMsg: string, ass
       { conversation_id: conv!.id, role: "assistant", content: assistantMsg.slice(0, 8000) },
     ]);
     if (error) console.error("[chat-log] msgs", error);
+    // Leagă conversația de lead + istoric anunț; primul răspuns al lui Andrei => etapa „Contactat"
+    const leadId = (await ctx?.leadPromise) || conv!.lead_id || null;
+    const patch: Record<string, unknown> = { summary_sent_at: null };
+    if (leadId) patch.lead_id = leadId;
+    if (ctx?.pageInfo?.title) { patch.page_title = ctx.pageInfo.title; patch.page_url = ctx.pageInfo.url || null; }
+    await sb.from("chat_conversations").update(patch).eq("id", conv!.id);
+    if (leadId) {
+      await sb.from("leads").update({ crm_status: "contactat" }).eq("id", leadId).eq("crm_status", "nou_necontactat");
+    }
   } catch (e) { console.error("[chat-log]", e); }
 }
 
