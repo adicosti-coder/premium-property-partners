@@ -376,6 +376,21 @@ Răspunde DOAR cu JSON: {"reply": "textul mesajului", "intent": "hot" | "interes
     } catch (e) { console.error("[wa-andrei-reply] auto conversion failed:", e); }
   }
 
+  // Andrei trimite o ofertă concretă pe WhatsApp (preț, randament, comision, evaluare, link anunț) → „Ofertat".
+  // Doar din Nou/Contactat — nu atinge Contractat, Pierdut, Vândut, Închiriat.
+  const OFFER_RE = /\d[\d.\s]*\s?(€|eur\b|euro)|randament|9[,.]4\s*%|15\s*[-–]\s*20\s*%|evaluare(a)? gratuit|\/proprietate\/|\/imobiliare|\/anunt|\bofert/i;
+  if (!autoOutcome && replyText && OFFER_RE.test(replyText) && conv?.phone_normalized) {
+    try {
+      const { data: lds } = await supabase.from("leads").select("id")
+        .eq("whatsapp_number", conv.phone_normalized).order("created_at", { ascending: false }).limit(1);
+      if (lds?.[0]) {
+        await supabase.from("leads").update({ crm_status: "ofertat" })
+          .eq("id", lds[0].id).in("crm_status", ["nou_necontactat", "contactat"]);
+      }
+    } catch (e) { console.error("[wa-andrei-reply] ofertat stage failed:", e); }
+  }
+
+
   // Check status again (a tool may have changed it)
   const { data: convAfter } = await supabase.from("wa_conversations")
     .select("status").eq("id", conversationId).maybeSingle();
