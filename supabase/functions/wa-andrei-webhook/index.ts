@@ -388,6 +388,49 @@ Deno.serve(async (req) => {
           }
         }
 
+        // Primul răspuns după mesajul de prospectare (prospect_intro_premium_v3):
+        // dacă nu există încă nicio cerere de acord, o creăm și punem automat
+        // întrebarea „DA PUBLIC”, ca Andrei să nu mai scrie manual.
+        if (
+          !publishIntent && outboundCount &&
+          quick?.kind !== "quick_no" && quick?.kind !== "quick_stop" &&
+          quick?.kind !== "publish_consent_request"
+        ) {
+          try {
+            const { count: existing } = await supabase
+              .from("wa_publish_consents")
+              .select("id", { count: "exact", head: true })
+              .eq("phone_normalized", from);
+            const { data: pr } = await supabase
+              .from("prospect_listings")
+              .select("id, title, zone, rooms")
+              .eq("phone_normalized", from)
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            if (!existing && pr?.id) {
+              const { error: insErr } = await supabase.from("wa_publish_consents").insert({
+                phone_normalized: from,
+                prospect_listing_id: pr.id,
+                status: "requested",
+                requested_at: new Date().toISOString(),
+                source: "whatsapp",
+                notes: "question_sent",
+              });
+              if (!insErr) {
+                quick = {
+                  kind: "publish_consent_request",
+                  text: publishConsentRequestText(pr),
+                };
+              } else {
+                console.error("[wa-webhook] auto consent request insert failed:", insErr);
+              }
+            }
+          } catch (e) {
+            console.error("[wa-webhook] auto consent request failed:", e);
+          }
+        }
+
 
 
         // Nu repetăm același răspuns automat la fiecare mesaj: dacă exact acest
