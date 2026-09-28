@@ -618,6 +618,15 @@ Deno.serve(async (req) => {
         if (state === "failed") stUpdate = stUpdate.in("status", ["pending", "sending", "sent"]);
         const { error: qErr } = await stUpdate;
         if (qErr) console.error("[wa-webhook] status update failed:", qErr);
+        // „read” implică livrarea: dacă Meta nu a trimis separat „delivered”,
+        // completăm data livrării ca mesajul să intre în „Livrate (confirmat Meta)”.
+        if (state === "read") {
+          await supabase.from("wa_outbound_queue")
+            .update({ delivered_at: tsIso })
+            .eq("wa_message_id", waId)
+            .is("delivered_at", null);
+        }
+        console.log(`[wa-webhook] status ${state} for ${waId}`);
 
         // Aceeași confirmare se salvează și pe mesaj, ca să vedem în Admin
         // starea reală (trimis / livrat / citit) pentru fiecare mesaj trimis,
