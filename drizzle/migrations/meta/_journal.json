@@ -512,6 +512,13 @@
       "when": 1790613956923,
       "tag": "0072_chat_private_thread",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1790617743990,
+      "tag": "0073_wa_default_agent_andrei_ai",
+      "breakpoints": true
     }
   ]
 }
