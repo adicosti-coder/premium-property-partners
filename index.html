@@ -228,6 +228,8 @@
          LCP paint by ~1.3s). main.tsx removes it only after the React hero
          image has actually painted. pointer-events:none so the real page
          underneath stays interactive. -->
+    <script>if(location.pathname!=="/"&&location.pathname!=="/index"){document.documentElement.classList.add("no-home-shell")}</script>
+    <style>.no-home-shell #app-shell-placeholder{display:none!important}</style>
     <div id="app-shell-placeholder">
         <div class="ash-bg">
           <picture>
