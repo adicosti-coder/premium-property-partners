@@ -9,7 +9,14 @@ const toUrl = (p: string) =>
   p.startsWith("http") || p.startsWith("/") ? p : supabase.storage.from("property-images").getPublicUrl(p).data.publicUrl;
 
 /** Suprascrie titlul/descrierea SEO (Andrei AI) și coperta din Admin peste lista statică de cazare. */
-export const useCazareOverrides = () => {
+export const useCazareOverrides = () => useCazareOverridesFull().apply;
+
+export const useCazareOverride = (slug?: string) => {
+  const { data } = useCazareOverridesFull();
+  return slug ? data?.[slug] : undefined;
+};
+
+const useCazareOverridesFull = () => {
   const qc = useQueryClient();
   const { data } = useQuery({
     queryKey: ["cazare-overrides"],
@@ -35,7 +42,7 @@ export const useCazareOverrides = () => {
     return () => { supabase.removeChannel(ch); };
   }, [qc]);
 
-  return (list: Property[]): Property[] =>
+  const apply = (list: Property[]): Property[] =>
     list.map((p) => {
       const o = data?.[p.slug];
       if (!o) return p;
@@ -47,4 +54,5 @@ export const useCazareOverrides = () => {
         images: cover ? [cover, ...p.images.filter((i) => i !== cover)] : p.images,
       };
     });
+  return { data, apply };
 };
