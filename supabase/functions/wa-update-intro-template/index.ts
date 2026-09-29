@@ -18,7 +18,7 @@ const json = (data: unknown, status = 200) =>
   });
 
 const SOURCE_TEMPLATE = "prospect_intro_premium_v3";
-const NEW_TEMPLATE = "prospect_intro_premium_v4";
+const NEW_TEMPLATE = "prospect_intro_premium_v5";
 
 // Formulări vechi (cu/diacritice) → formularea nouă, fără cifra fixă 9,4%.
 const OLD_PHRASES = [
