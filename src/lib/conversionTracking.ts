@@ -119,6 +119,8 @@ export type ConversionEvent =
   | "roi_calculator_lead"
   | "download_yield_report"
   | "owner_valuation_submit"
+  | "owner_cta_click"
+  | "owner_benefit_valuation_submit"
   | "newsletter_subscribe"
   | "whatsapp_click"
   | "phone_click"

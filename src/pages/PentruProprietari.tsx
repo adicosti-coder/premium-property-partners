@@ -1,3 +1,4 @@
+import { trackConversion } from "@/lib/conversionTracking";
 import { lazy, Suspense, useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { 
@@ -810,7 +811,7 @@ const PentruProprietari = () => {
                 <Link to="/calculator-roi">{language === "ro" ? "Deschide Calculatorul ROI" : "Open ROI Calculator"}</Link>
               </Button>
               <Button asChild variant="outline" size="lg">
-                <Link to="/evaluare-gratuita">{language === "ro" ? "Solicită evaluare gratuită" : "Request a free valuation"}</Link>
+                <Link to="/evaluare-gratuita?beneficiu=calculator_roi" onClick={() => trackConversion({ event: "owner_cta_click", source: "pentru_proprietari", benefit: "calculator_roi" })}>{language === "ro" ? "Solicită evaluare gratuită" : "Request a free valuation"}</Link>
               </Button>
             </div>
           </div>
@@ -853,7 +854,7 @@ const PentruProprietari = () => {
                 className="border-amber-500/50 text-amber-300 hover:bg-amber-500/10 hover:border-amber-400"
                 onClick={() => trackFormSubmit("owner_cta_bar_offer", { page: "pentru_proprietari", label: "request_offer" })}
               >
-                <Link to="/evaluare-gratuita">
+                <Link to="/evaluare-gratuita?beneficiu=bara_oferta" onClick={() => trackConversion({ event: "owner_cta_click", source: "pentru_proprietari", benefit: "bara_oferta" })}>
                   <Sparkles className="w-5 h-5 mr-2" />
                   {language === "ro" ? "Cere Ofertă Administrare" : "Request Management Quote"}
                 </Link>
@@ -1112,7 +1113,7 @@ const PentruProprietari = () => {
               : "Owner checklist, tax guidance and clear onboarding steps for full-service property management."}
           </p>
           <Button asChild variant="hero" size="lg">
-            <Link to="/evaluare-gratuita">{language === "ro" ? "Primește evaluarea gratuită" : "Get a free valuation"}</Link>
+            <Link to="/evaluare-gratuita?beneficiu=onboarding" onClick={() => trackConversion({ event: "owner_cta_click", source: "pentru_proprietari", benefit: "onboarding" })}>{language === "ro" ? "Primește evaluarea gratuită" : "Get a free valuation"}</Link>
           </Button>
         </div>
       </section>

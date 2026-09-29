@@ -1,4 +1,8 @@
 import { TrendingUp, Wallet, ShieldCheck, BarChart3, Search, Lock, Radio, EyeOff } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { trackConversion } from "@/lib/conversionTracking";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
@@ -133,6 +137,32 @@ const OwnerPmRevenueStack = () => {
   };
 
   const c = t[lang];
+  const ctas = {
+    ro: {
+      preturi_dinamice: { text: "Află cât poți câștiga cu prețuri dinamice", hint: "Evaluare gratuită, cu estimarea venitului pentru zona ta." },
+      co_hosting: { text: "Vezi cât încasezi direct în contul tău", hint: "Primești o estimare lunară transparentă, fără obligații." },
+      siguranta_smart_access: { text: "Evaluează-ți apartamentul pentru Smart Access", hint: "Îți spunem ce echipamente de siguranță se potrivesc proprietății tale." },
+    },
+    en: {
+      preturi_dinamice: { text: "See how much dynamic pricing can earn you", hint: "Free valuation with an income estimate for your area." },
+      co_hosting: { text: "See what lands directly in your account", hint: "Get a transparent monthly estimate, no obligations." },
+      siguranta_smart_access: { text: "Assess your apartment for Smart Access", hint: "We tell you which safety equipment suits your property." },
+    },
+  }[lang];
+  const Cta = ({ benefit }: { benefit: keyof typeof ctas }) => (
+    <div className="flex flex-col items-center gap-2 text-center mb-14">
+      <Button asChild variant="hero" size="lg" className="min-h-12">
+        <Link
+          to={`/evaluare-gratuita?beneficiu=${benefit}`}
+          onClick={() => trackConversion({ event: "owner_cta_click", source: "pentru_proprietari", benefit })}
+        >
+          {ctas[benefit].text}
+          <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
+        </Link>
+      </Button>
+      <p className="text-sm text-muted-foreground">{ctas[benefit].hint}</p>
+    </div>
+  );
   const iconCls = "w-6 h-6 text-primary";
 
   return (
@@ -157,7 +187,7 @@ const OwnerPmRevenueStack = () => {
           <TrendingUp className="w-5 h-5 text-gold" aria-hidden="true" />
           {c.revenueTitle}
         </h3>
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
           {c.revenueItems.map((item) => (
             <article key={item.title} className="bg-card rounded-xl border border-border p-6 shadow-sm">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
@@ -169,12 +199,14 @@ const OwnerPmRevenueStack = () => {
           ))}
         </div>
 
+        <Cta benefit="preturi_dinamice" />
+
         {/* Block 2 — Co-hosting transparency & direct payouts */}
         <h3 className="text-xl md:text-2xl font-semibold text-foreground mb-6 flex items-center gap-2">
           <Wallet className="w-5 h-5 text-gold" aria-hidden="true" />
           {c.cohostTitle}
         </h3>
-        <div className="grid md:grid-cols-2 gap-6 mb-12">
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
           {c.cohostItems.map((item) => (
             <article key={item.title} className="bg-card rounded-xl border border-gold/25 p-6 shadow-sm">
               <div className="w-12 h-12 rounded-lg bg-gold/10 flex items-center justify-center mb-4">
@@ -185,6 +217,8 @@ const OwnerPmRevenueStack = () => {
             </article>
           ))}
         </div>
+
+        <Cta benefit="co_hosting" />
 
         {/* Block 3 — Safety & Smart Access package */}
         <h3 className="text-xl md:text-2xl font-semibold text-foreground mb-6 flex items-center gap-2">
@@ -202,6 +236,7 @@ const OwnerPmRevenueStack = () => {
             </article>
           ))}
         </div>
+        <div className="mt-8"><Cta benefit="siguranta_smart_access" /></div>
       </div>
     </section>
   );
