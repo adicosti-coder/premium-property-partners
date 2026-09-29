@@ -5251,6 +5251,7 @@ export type Database = {
           display_order: number
           id: string
           image_path: string
+          is_cover_candidate: boolean
           is_primary: boolean
           is_published: boolean
           original_url: string | null
@@ -5261,6 +5262,7 @@ export type Database = {
           display_order?: number
           id?: string
           image_path: string
+          is_cover_candidate?: boolean
           is_primary?: boolean
           is_published?: boolean
           original_url?: string | null
@@ -5271,6 +5273,7 @@ export type Database = {
           display_order?: number
           id?: string
           image_path?: string
+          is_cover_candidate?: boolean
           is_primary?: boolean
           is_published?: boolean
           original_url?: string | null
@@ -5632,6 +5635,47 @@ export type Database = {
             foreignKeyName: "property_reviews_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_seo_suggestions: {
+        Row: {
+          applied_at: string | null
+          created_at: string
+          descriptions: Json
+          id: string
+          keywords: Json
+          property_id: string
+          titles: Json
+          updated_at: string
+        }
+        Insert: {
+          applied_at?: string | null
+          created_at?: string
+          descriptions?: Json
+          id?: string
+          keywords?: Json
+          property_id: string
+          titles?: Json
+          updated_at?: string
+        }
+        Update: {
+          applied_at?: string | null
+          created_at?: string
+          descriptions?: Json
+          id?: string
+          keywords?: Json
+          property_id?: string
+          titles?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_seo_suggestions_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: true
             referencedRelation: "properties"
             referencedColumns: ["id"]
           },
