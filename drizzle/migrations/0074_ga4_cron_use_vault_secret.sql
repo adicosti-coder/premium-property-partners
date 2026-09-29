@@ -5,7 +5,7 @@ SELECT cron.schedule(
   '0 4 * * *',
   $$SELECT net.http_post(
     url := 'https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/ga4-analytics-import',
-    headers := '{"Content-Type":"application/json","Authorization":"Bearer REDACTED-superseded-by-x-cron-secret"}'::jsonb,
+    headers := jsonb_build_object('Content-Type', 'application/json', 'x-cron-secret', public.get_cron_reconcile_secret()),
     body := '{"days":30}'::jsonb
   ) AS request_id;$$
 );

@@ -14,6 +14,8 @@ import POIPlaceholder from './POIPlaceholder';
 import { isWebGLSupported } from '@/utils/webglSupport';
 import { resolveExternalImageUrl } from '@/utils/resolveExternalImageUrl';
 import { motion, AnimatePresence } from 'framer-motion';
+
+const escHtml = (v: unknown) => String(v ?? "").replace(/[&<>"'`]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;", "`": "&#96;" }[c] as string));
 import { 
   Loader2, 
   MapPin, 
@@ -442,7 +444,7 @@ const InteractiveMapWithPOI = () => {
 
       const popup = new mapboxgl.Popup({ offset: 25, closeButton: true }).setHTML(`
         <a href="/proprietate/${apt.slug}" style="display: block; padding: 8px; text-align: center; min-width: 160px; text-decoration: none; cursor: pointer;">
-          <strong style="color: #c9a962; font-size: 13px;">${apt.name}</strong>
+          <strong style="color: #c9a962; font-size: 13px;">${escHtml(apt.name)}</strong>
           <br/>
           <span style="color: #b8963e; font-size: 11px; text-decoration: underline; margin-top: 4px; display: inline-block;">
             ${language === 'ro' ? 'Vezi detalii →' : 'View details →'}
@@ -548,10 +550,13 @@ const InteractiveMapWithPOI = () => {
         scrollToCard(poi.id);
       });
 
-      const name = language === 'ro' ? poi.name : poi.name_en;
-      const description = language === 'ro' ? poi.description : poi.description_en;
+      // Stored POI fields are escaped before being placed into popup HTML.
+      const name = escHtml(language === 'ro' ? poi.name : poi.name_en);
+      const rawDescription = language === 'ro' ? poi.description : poi.description_en;
+      const description = rawDescription ? escHtml(rawDescription) : '';
       const premiumLabel = 'Premium';
-      const popupImageUrl = poi.image_url ? resolveExternalImageUrl(poi.image_url) : null;
+      const rawImg = poi.image_url ? resolveExternalImageUrl(poi.image_url) : null;
+      const popupImageUrl = rawImg && /^(https?:\/\/|\/)/i.test(rawImg) ? escHtml(rawImg) : null;
 
       const poiPopup = new mapboxgl.Popup({
         offset: 25,
@@ -577,9 +582,9 @@ const InteractiveMapWithPOI = () => {
           <div style="padding: 12px;">
             <strong style="font-size: 14px; color: #1a1a1a;">${name}</strong>
             ${description ? `<p style="font-size: 12px; color: #666; margin: 6px 0 8px 0; line-height: 1.4;">${description}</p>` : ''}
-            ${poi.address ? `<p style="font-size: 11px; color: #888; margin: 0 0 6px 0;">📍 ${poi.address}</p>` : ''}
+            ${poi.address ? `<p style="font-size: 11px; color: #888; margin: 0 0 6px 0;">📍 ${escHtml(poi.address)}</p>` : ''}
             <button 
-              onclick="document.getElementById('poi-card-${poi.id}')?.scrollIntoView({behavior:'smooth',block:'nearest'}); document.getElementById('poi-card-${poi.id}')?.classList.add('ring-highlight');"
+              onclick="document.getElementById('poi-card-${escHtml(poi.id)}')?.scrollIntoView({behavior:'smooth',block:'nearest'}); document.getElementById('poi-card-${escHtml(poi.id)}')?.classList.add('ring-highlight');"
               style="font-size: 11px; color: white; background: #8b5cf6; border: none; cursor: pointer; padding: 6px 12px; border-radius: 6px; margin-top: 4px; display: inline-flex; align-items: center; gap: 4px;"
             >
               ↓ ${language === 'ro' ? 'Vezi cardul' : 'See card'}
@@ -901,7 +906,7 @@ const InteractiveMapWithPOI = () => {
             return (
               <motion.div
                 key={poi.id}
-                id={`poi-card-${poi.id}`}
+                id={`poi-card-${escHtml(poi.id)}`}
                 ref={(el) => { cardRefs.current[poi.id] = el; }}
                 layout
                 initial={{ opacity: 0, y: 20 }}

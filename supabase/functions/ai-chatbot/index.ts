@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/securityHeaders.ts";
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
 // Rate limiting configuration
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute window
@@ -266,6 +267,11 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // Legacy non-streaming endpoint: the public site uses ai-chatbot-stream.
+  // Restrict to internal/admin callers so anonymous visitors cannot burn AI credits.
+  const denied = await requireInternalOrAdmin(req, corsHeaders);
+  if (denied) return denied;
 
   // Apply rate limiting
   const clientIP = getClientIP(req);

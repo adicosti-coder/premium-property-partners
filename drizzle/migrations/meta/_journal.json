@@ -519,6 +519,13 @@
       "when": 1790617743990,
       "tag": "0073_wa_default_agent_andrei_ai",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1790660227790,
+      "tag": "0074_ga4_cron_use_vault_secret",
+      "breakpoints": true
     }
   ]
 }
