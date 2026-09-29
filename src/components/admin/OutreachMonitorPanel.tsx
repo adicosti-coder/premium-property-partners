@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useRealtimeChannel } from "@/hooks/admin/useRealtimeChannel";
 
 const fmt = (d?: string | null) =>
   d ? new Date(d).toLocaleString("ro-RO", { timeZone: "Europe/Bucharest", dateStyle: "short", timeStyle: "short" }) : "—";
@@ -12,7 +13,7 @@ async function countQ(table: string, apply: (q: any) => any) {
 }
 
 export default function OutreachMonitorPanel() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["outreach-monitor"],
     refetchInterval: 60_000,
     queryFn: async () => {
@@ -48,6 +49,12 @@ export default function OutreachMonitorPanel() {
       };
     },
   });
+
+  // „Livrate (confirmat Meta)” se reîmprospătează la fiecare confirmare reală de livrare.
+  useRealtimeChannel("outreach-monitor", [
+    { event: "UPDATE", table: "wa_outbound_queue", handler: () => void refetch() },
+  ]);
+
 
   const tiles = data
     ? [
