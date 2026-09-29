@@ -25,7 +25,7 @@ const OLD_PHRASES = [
   "cu un randament net de circa 9,4% pe an",
   "cu un randament net de circa 9.4% pe an",
 ];
-const NEW_PHRASE = "cu un randament net optimizat in functie de zona si dotari";
+const NEW_PHRASE = "cu un randament net optimizat în funcție de zonă și dotări";
 
 function replaceYieldPhrase(text: string): { text: string; replaced: boolean } {
   for (const old of OLD_PHRASES) {
@@ -79,7 +79,15 @@ Deno.serve(async (req) => {
     (t) => t.name === NEW_TEMPLATE,
   );
   if (existing) {
-    return json({ ok: true, already_exists: true, template: NEW_TEMPLATE, status: existing.status ?? "PENDING" });
+    // Ștergem varianta existentă ca să o recreăm cu textul final (Meta nu permite editarea).
+    const delResp = await fetch(`${base}?name=${NEW_TEMPLATE}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!delResp.ok) {
+      const delBody = await delResp.json().catch(() => ({}));
+      return json({ ok: false, step: "delete_existing", status: delResp.status, meta_error: delBody?.error ?? delBody });
+    }
   }
 
   // 3. Construim componentele noi cu textul înlocuit.
