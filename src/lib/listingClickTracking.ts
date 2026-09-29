@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabaseClient";
 
 /** Înregistrează clicuri din listele de anunțuri (fire-and-forget, fără date personale). */
 export const trackListingClick = (
-  ctaType: "listing_cazare_click" | "listing_details_click" | "listing_contact_click",
+  ctaType: "listing_cazare_click" | "listing_details_click" | "listing_contact_click" | "cazare_page_view",
   property?: { id: number | string; name: string },
 ) => {
   try {
