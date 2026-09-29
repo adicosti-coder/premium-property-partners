@@ -37,7 +37,10 @@ const mountApp = () => {
   // after the React hero image has painted, so the LCP candidate stays the
   // early-painted shell <img> instead of a late React re-render (~1.3s win).
   const removeShell = () => document.getElementById("app-shell-placeholder")?.remove();
+  const isHome = window.location.pathname === "/" || window.location.pathname === "/index" || window.location.pathname === "";
   const removeShellAfterHeroPaint = (attempts = 0) => {
+    // The shell mirrors the homepage hero only; never let it cover other pages.
+    if (!isHome) { removeShell(); return; }
     const heroImg = document.querySelector<HTMLImageElement>(
       '#root picture img, #root img[fetchpriority="high"]',
     );
