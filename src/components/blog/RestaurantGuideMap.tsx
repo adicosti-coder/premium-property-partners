@@ -20,6 +20,8 @@ import { toast } from 'sonner';
 import { trackConversion } from '@/lib/conversionTracking';
 import { applyPoiSocialMeta, resetPoiSocialMeta } from '@/utils/poiSocialMeta';
 import { buildPoiItemListSchema } from '@/utils/poiStructuredData';
+
+const escHtml = (v: unknown) => String(v ?? "").replace(/[&<>"'`]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;", "`": "&#96;" }[c] as string));
 import {
   Loader2,
   MapPin,
@@ -336,7 +338,7 @@ const RestaurantGuideMap: React.FC = () => {
         setDetailId(poi.id);
       });
       const popup = new gl.Popup({ offset: 18 }).setHTML(
-        `<strong>${poi.name}</strong><br/><span>${poi.walkMinutes} min pe jos de la ${poi.property}</span>`,
+        `<strong>${escHtml(poi.name)}</strong><br/><span>${escHtml(poi.walkMinutes)} min pe jos de la ${escHtml(poi.property)}</span>`,
       );
       markersRef.current.push(
         new gl.Marker({ element: el })

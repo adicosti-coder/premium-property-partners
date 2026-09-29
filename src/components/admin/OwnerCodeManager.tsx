@@ -129,11 +129,9 @@ const translations = {
 
 const generateRandomCode = () => {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "";
-  for (let i = 0; i < 8; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
+  // Cryptographically secure, unbiased (256 % 32 === 0) selection.
+  const bytes = crypto.getRandomValues(new Uint8Array(12));
+  return Array.from(bytes, (b) => chars[b % chars.length]).join("");
 };
 
 const OwnerCodeManager = () => {
