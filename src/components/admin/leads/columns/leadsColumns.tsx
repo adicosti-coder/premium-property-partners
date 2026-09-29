@@ -162,7 +162,12 @@ export const LeadTableRow = ({
           <Building2 className="w-4 h-4 text-muted-foreground" />
           <div>
             <span className="font-medium capitalize">{lead.property_type}</span>
-            <span className="text-muted-foreground ml-2">({lead.property_area || areaFromMessage(lead.message) || "—"} m²)</span>
+            {(() => {
+              const area = lead.property_area || areaFromMessage(lead.message);
+              return area > 0 ? (
+                <span className="text-muted-foreground ml-2">({area} m²)</span>
+              ) : null;
+            })()}
           </div>
         </div>
       </TableCell>
@@ -268,10 +273,12 @@ export const LeadTableRow = ({
             const cleaned = (lead.whatsapp_number || "").replace(/\D/g, "");
             const valid = cleaned.length >= 8 && lead.whatsapp_number !== "pending";
             if (!valid) return null;
+            const area = lead.property_area || areaFromMessage(lead.message);
+            const areaSuffix = area > 0 ? ` (${area} m²)` : "";
             const greeting =
               labels.language === "ro"
-                ? `Bună ziua, ${lead.name}! Vă contactez din partea RealTrust referitor la solicitarea dvs. pentru ${lead.property_type} (${lead.property_area} m²).`
-                : `Hello ${lead.name}! I'm reaching out from RealTrust regarding your inquiry about ${lead.property_type} (${lead.property_area} m²).`;
+                ? `Bună ziua, ${lead.name}! Vă contactez din partea RealTrust referitor la solicitarea dvs. pentru ${lead.property_type}${areaSuffix}.`
+                : `Hello ${lead.name}! I'm reaching out from RealTrust regarding your inquiry about ${lead.property_type}${areaSuffix}.`;
             const url = `https://wa.me/${cleaned}?text=${encodeURIComponent(greeting)}`;
             return (
               <Button

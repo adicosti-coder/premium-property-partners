@@ -125,9 +125,7 @@ const LeadDetailDialog = ({ lead, open, onOpenChange }: Props) => {
                 <MessageSquare className="w-4 h-4 text-muted-foreground" />
                 <span className="text-xs font-semibold text-muted-foreground uppercase">Mesaj</span>
               </div>
-              <p className="text-sm whitespace-pre-line">
-                {lead.message.replace(/^\[evaluare_gratuita\]\s*/i, "")}
-              </p>
+              <p className="text-sm whitespace-pre-line">{formatLeadMessage(lead.message)}</p>
             </div>
           )}
 
