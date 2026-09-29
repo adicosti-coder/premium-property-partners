@@ -476,7 +476,7 @@ function buildPropertyRoutes(properties: DbProperty[]): PrerenderRoute[] {
 
     return {
       path: `/proprietate/${p.slug}`,
-      title,
+      title: finalTitle,
       description,
       h1: `${type} de vânzare în ${zone}, Timișoara`,
       canonical,
