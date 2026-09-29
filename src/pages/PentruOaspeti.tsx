@@ -43,6 +43,8 @@ import {
   Navigation
 } from "lucide-react";
 import { getActiveProperties } from "@/data/properties";
+import { useCazareOverrides } from "@/hooks/useCazareOverrides";
+import { trackListingClick } from "@/lib/listingClickTracking";
 import PropertyCard from "@/components/PropertyCard";
 import { useFavorites } from "@/hooks/useFavorites";
 import { motion } from "framer-motion";
@@ -53,6 +55,7 @@ const PentruOaspeti = () => {
   const { toggleFavorite, isFavorite } = useFavorites();
   const [selectedProperty, setSelectedProperty] = useState<string | undefined>();
   const [activeMapTab, setActiveMapTab] = useState<string>("properties");
+  const applyOverrides = useCazareOverrides();
   const heroAnimation = useScrollAnimation({ threshold: 0.1 });
   const benefitsAnimation = useScrollAnimation({ threshold: 0.1 });
   const mapAnimation = useScrollAnimation({ threshold: 0.1 });
@@ -604,7 +607,7 @@ const PentruOaspeti = () => {
                   
                   {/* Property Cards - synced with map */}
                   <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {getActiveProperties().map((property, index) => (
+                    {applyOverrides(getActiveProperties()).map((property, index) => (
                       <PropertyCard key={property.id} property={property} index={index} isFavorite={isFavorite(String(property.id))} onToggleFavorite={(id) => toggleFavorite(id)} />
                     ))}
                   </div>
@@ -832,6 +835,15 @@ const PentruOaspeti = () => {
           </div>
         </section>
       </main>
+
+      {/* CTA mobil clar către formularul de contact */}
+      <div className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background p-3">
+        <Button asChild className="w-full min-h-12 text-base">
+          <Link to="/contact?subiect=cazare" onClick={() => trackListingClick("listing_contact_click")}>
+            {language === "ro" ? "Cere ofertă de cazare" : "Request a stay offer"}
+          </Link>
+        </Button>
+      </div>
 
       <Footer />
       <Suspense fallback={null}>
