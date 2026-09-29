@@ -138,7 +138,7 @@
          (0 bytes of network), eliminating the "white page" gap before the
          hero WebP arrives. The gradient mimics the warm dark tone of the
          hero photo so the swap is visually seamless. */
-      #app-shell-placeholder{position:relative;min-height:880px;overflow:hidden;display:flex;align-items:center;padding-top:7rem;contain:layout;background:radial-gradient(ellipse at 30% 40%,#3a2f1f 0%,#1f1812 55%,#100c08 100%)}
+      #app-shell-placeholder{position:absolute;top:0;left:0;right:0;z-index:20;pointer-events:none;min-height:880px;overflow:hidden;display:flex;align-items:center;padding-top:7rem;contain:layout;background:radial-gradient(ellipse at 30% 40%,#3a2f1f 0%,#1f1812 55%,#100c08 100%)}
       @media(min-width:768px){#app-shell-placeholder{min-height:100dvh;padding-top:8rem}}
       /* Hero shell text uses light tones so it reads against the warm gradient
          BEFORE the photo loads. Once the WebP paints, foreground text stays
@@ -216,10 +216,13 @@
 </head>
 
   <body>
-    <div id="root">
-      <!-- Static LCP shell — mirrors <Hero> structure & spacing so React hydration
-           is layout-identical (CLS ≈ 0). Paints H1 + LCP image at ~400ms. -->
-      <div id="app-shell-placeholder">
+    <!-- Static LCP shell — mirrors <Hero> structure & spacing. Lives OUTSIDE
+         #root as an absolute overlay so React's createRoot() does NOT wipe and
+         re-create the LCP <img> node (that node replacement used to delay the
+         LCP paint by ~1.3s). main.tsx removes it only after the React hero
+         image has actually painted. pointer-events:none so the real page
+         underneath stays interactive. -->
+    <div id="app-shell-placeholder">
         <div class="ash-bg">
           <img src="/images/hero-optimized-800w.webp" srcset="/images/hero-optimized-800w.webp 800w, /images/hero-cinematic-1600w.webp 1600w" sizes="100vw" alt="RealTrust Imobiliare Timișoara — investiții premium, vânzări, închirieri și administrare proprietăți. ROI 9.4% net verificat." width="800" height="447" fetchpriority="high" decoding="async" />
         </div>
