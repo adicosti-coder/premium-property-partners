@@ -1,0 +1,1 @@
+ALTER TABLE public.properties ADD COLUMN IF NOT EXISTS og_title text, ADD COLUMN IF NOT EXISTS og_description text, ADD COLUMN IF NOT EXISTS airbnb_url text, ADD COLUMN IF NOT EXISTS booking_com_url text;
