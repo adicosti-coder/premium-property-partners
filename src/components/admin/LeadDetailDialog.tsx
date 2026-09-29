@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { formatLeadMessage } from "@/lib/formatLeadMessage";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
 
