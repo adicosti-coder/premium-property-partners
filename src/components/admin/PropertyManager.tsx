@@ -33,6 +33,7 @@ import {
   type PropertyStatusFilter,
 } from "./property/hooks/useProperties";
 import { PropertyTableRow } from "./property/columns/propertyColumns";
+import PortfolioSeoPanel from "./property/PortfolioSeoPanel";
 import { PropertyEditor } from "./property/dialogs/PropertyEditor";
 
 export default function PropertyManager() {
@@ -269,6 +270,7 @@ export default function PropertyManager() {
         stats={statsBlock}
         filters={filtersBlock}
       >
+        <PortfolioSeoPanel />
         {/* Table */}
         <div className="bg-card rounded-xl border border-border overflow-hidden">
           {isLoading ? (
