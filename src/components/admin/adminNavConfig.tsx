@@ -226,6 +226,8 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { value: "tracking-qa", label: "Validare Tracking", icon: Activity, keywords: ["ga4", "meta", "capi", "pixel", "conversii", "test", "dry run"] },
       { value: "tracking-alerts", label: "Alerte Tracking", icon: Activity, keywords: ["ga4", "alerta", "scadere", "sesiuni", "email", "monitorizare"] },
       { value: "conversion-report", label: "Raport Conversii", icon: BarChart3, keywords: ["utm", "gclid", "atribuire", "sursa", "rata conversie", "saptamanal", "raport"] },
+      { value: "listing-conversions", label: "Conversii Anunțuri", icon: BarChart3, keywords: ["vizite", "cazare", "contact", "evaluare", "anunturi active", "conversii"] },
+      { value: "cover-rotation", label: "Rotire Coperți", icon: Star, keywords: ["coperta", "poze", "a/b", "cover", "imagini"] },
 
 
       { value: "funnel-analytics", label: "Funnel", icon: Target },
