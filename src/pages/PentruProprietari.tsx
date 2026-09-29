@@ -87,6 +87,7 @@ const OwnerSeasonalityChart = lazy(() => import("@/components/owners/OwnerSeason
 const OwnerEligibilityCriteria = lazy(() => import("@/components/owners/OwnerEligibilityCriteria"));
 const OwnerCompetitorComparison = lazy(() => import("@/components/owners/OwnerCompetitorComparison"));
 const OwnerAssociationPermits = lazy(() => import("@/components/owners/OwnerAssociationPermits"));
+const OwnerPmRevenueStack = lazy(() => import("@/components/owners/OwnerPmRevenueStack"));
 
 /**
  * Hook: loads a lazy component only after IntersectionObserver fires.
