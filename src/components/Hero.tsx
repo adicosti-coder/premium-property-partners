@@ -3,9 +3,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useState, useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-// Hero image served from public/ — single 800w variant (mobile-first, ~35KB).
-// Desktop CSS scales it. Avoids the 150KB 1920w fetch that PageSpeed mobile penalises.
-const HERO_IMAGE_PUBLIC = "/images/hero-optimized-800w.webp";
+const HERO_IMAGE_PUBLIC = "/images/hero-responsive-800w.webp";
 
 const fireHeroAnalyticsEvent = (eventName: string, params: Record<string, string>) => {
   if (typeof window === "undefined" || typeof window.gtag !== "function") return;
@@ -43,14 +41,22 @@ const Hero = () => {
     customCtaSecondary: null,
   });
 
-  // Defer video loading for better LCP - DESKTOP ONLY
+  // Preserve the responsive image as the stable LCP candidate. The decorative
+  // desktop video is requested only after genuine interaction, never on a timer.
   useEffect(() => {
     if (isMobile || isSlowConnection) {
       setShouldLoadVideo(false);
       return;
     }
-    const timer = setTimeout(() => setShouldLoadVideo(true), 2500);
-    return () => clearTimeout(timer);
+
+    const events = ["pointerdown", "keydown", "scroll"] as const;
+    const enableVideo = () => {
+      setShouldLoadVideo(true);
+      events.forEach(event => window.removeEventListener(event, enableVideo));
+    };
+
+    events.forEach(event => window.addEventListener(event, enableVideo, { once: true, passive: true }));
+    return () => events.forEach(event => window.removeEventListener(event, enableVideo));
   }, [isMobile, isSlowConnection]);
 
   // Fetch hero settings from database only after real interaction.
@@ -129,10 +135,17 @@ const Hero = () => {
             loading="eager"
           />
         ) : (
-          <picture>
+          <picture className="block w-full h-full">
+            <source
+              media="(max-width: 767px)"
+              srcSet="/images/hero-responsive-480w.webp 480w, /images/hero-responsive-800w.webp 800w"
+              sizes="100vw"
+              type="image/webp"
+            />
             <source
               media="(min-width: 768px)"
-              srcSet="/images/hero-cinematic-1600w.webp"
+              srcSet="/images/hero-responsive-960w.webp 960w, /images/hero-responsive-1280w.webp 1280w, /images/hero-responsive-1600w.webp 1600w"
+              sizes="100vw"
               type="image/webp"
             />
             <img
@@ -140,9 +153,8 @@ const Hero = () => {
               alt="RealTrust Imobiliare Timișoara — apartament premium regim hotelier cu design cinematic, ROI 9.4% net verificat."
               className="w-full h-full object-cover object-center hero-kenburns"
               width={800}
-              height={447}
+              height={504}
               {...({ fetchpriority: "high" } as Record<string, string>)}
-              decoding="async"
               loading="eager"
             />
           </picture>
