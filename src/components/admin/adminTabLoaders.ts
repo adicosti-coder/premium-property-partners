@@ -23,6 +23,7 @@ const loaders: Record<string, Loader> = {
   "tracking-qa": () => import("@/components/admin/TrackingQAPanel"),
   "conversion-report": () => import("@/components/admin/WeeklyConversionReport"),
   "listing-conversions": () => import("@/components/admin/ListingConversionReport"),
+  "channel-listings": () => import("@/components/admin/ChannelListingsPanel"),
   "cover-rotation": () => import("@/components/admin/CoverRotationPanel"),
   "tracking-alerts": () => import("@/components/admin/TrackingAlertsPanel"),
 

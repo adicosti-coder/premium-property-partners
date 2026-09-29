@@ -227,6 +227,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { value: "tracking-alerts", label: "Alerte Tracking", icon: Activity, keywords: ["ga4", "alerta", "scadere", "sesiuni", "email", "monitorizare"] },
       { value: "conversion-report", label: "Raport Conversii", icon: BarChart3, keywords: ["utm", "gclid", "atribuire", "sursa", "rata conversie", "saptamanal", "raport"] },
       { value: "listing-conversions", label: "Conversii Anunțuri", icon: BarChart3, keywords: ["vizite", "cazare", "contact", "evaluare", "anunturi active", "conversii"] },
+      { value: "channel-listings", label: "Anunțuri pe Canale", icon: BarChart3, keywords: ["booking", "airbnb", "canale", "titluri", "comparare"] },
       { value: "cover-rotation", label: "Rotire Coperți", icon: Star, keywords: ["coperta", "poze", "a/b", "cover", "imagini"] },
 
 
