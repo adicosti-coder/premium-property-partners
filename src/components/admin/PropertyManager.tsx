@@ -34,6 +34,7 @@ import {
 } from "./property/hooks/useProperties";
 import { PropertyTableRow } from "./property/columns/propertyColumns";
 import PortfolioSeoPanel from "./property/PortfolioSeoPanel";
+import CoverRotationPanel from "./CoverRotationPanel";
 import { PropertyEditor } from "./property/dialogs/PropertyEditor";
 
 export default function PropertyManager() {
@@ -271,6 +272,10 @@ export default function PropertyManager() {
         filters={filtersBlock}
       >
         <PortfolioSeoPanel />
+        <details className="bg-card rounded-xl border border-border mb-6 p-4">
+          <summary className="font-semibold text-foreground cursor-pointer min-h-12 flex items-center">Coperțile anunțurilor publicate (A/B rapid)</summary>
+          <div className="mt-4"><CoverRotationPanel compact /></div>
+        </details>
         {/* Table */}
         <div className="bg-card rounded-xl border border-border overflow-hidden">
           {isLoading ? (

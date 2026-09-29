@@ -22,6 +22,8 @@ const loaders: Record<string, Loader> = {
   "leads-analytics": () => import("@/components/admin/LeadsAnalyticsDashboard"),
   "tracking-qa": () => import("@/components/admin/TrackingQAPanel"),
   "conversion-report": () => import("@/components/admin/WeeklyConversionReport"),
+  "listing-conversions": () => import("@/components/admin/ListingConversionReport"),
+  "cover-rotation": () => import("@/components/admin/CoverRotationPanel"),
   "tracking-alerts": () => import("@/components/admin/TrackingAlertsPanel"),
 
 

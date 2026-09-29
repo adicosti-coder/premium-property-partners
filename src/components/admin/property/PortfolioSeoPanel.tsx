@@ -85,7 +85,7 @@ export default function PortfolioSeoPanel() {
     toast({ title: "Optimizare SEO finalizată", description: fails ? `${fails} apartamente nu au putut fi procesate.` : "Variantele sunt gata de aplicat." });
   };
 
-  const applyField = async (id: string, patch: { name?: string; long_description_ro?: string }) => {
+  const applyField = async (id: string, patch: { seo_title?: string; seo_description?: string; long_description_ro?: string }) => {
     setBusyId(id);
     const { error } = await supabase.from("properties").update(patch).eq("id", id);
     if (!error) await supabase.from("property_seo_suggestions").update({ applied_at: new Date().toISOString() }).eq("property_id", id);
@@ -169,13 +169,13 @@ export default function PortfolioSeoPanel() {
                         {s.titles.map((t) => (
                           <div key={t} className="flex items-center justify-between gap-2 rounded border border-border p-2">
                             <span>{t}</span>
-                            <Button size="sm" variant="ghost" onClick={() => applyField(p.id, { name: t })}>Aplică titlul</Button>
+                            <Button size="sm" variant="ghost" onClick={() => applyField(p.id, { seo_title: t })}>Aplică titlul</Button>
                           </div>
                         ))}
                         {s.descriptions.map((d, i) => (
                           <div key={i} className="rounded border border-border p-2 space-y-2">
                             <p className="whitespace-pre-line text-muted-foreground">{d}</p>
-                            <Button size="sm" variant="ghost" onClick={() => applyField(p.id, { long_description_ro: d })}>Aplică descrierea</Button>
+                            <Button size="sm" variant="ghost" onClick={() => applyField(p.id, { seo_description: d.split("\n")[0], long_description_ro: d })}>Aplică descrierea</Button>
                           </div>
                         ))}
                         {s.keywords.length > 0 && <p className="text-xs text-muted-foreground">Cuvinte-cheie: {s.keywords.join(", ")}</p>}

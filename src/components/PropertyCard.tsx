@@ -12,6 +12,7 @@ import { usePrefetch } from "@/hooks/usePrefetch";
 import ViewersBadge from "@/components/ViewersBadge";
 import PropertyImageLightbox from "@/components/PropertyImageLightbox";
 import { cn } from "@/lib/utils";
+import { trackListingClick } from "@/lib/listingClickTracking";
 
 interface PropertyCardProps {
   property: Property;
@@ -101,8 +102,9 @@ const PropertyCard = ({
   const hoverPrefetched = useRef(false);
 
   const openDirectBooking = useCallback(() => {
+    trackListingClick("listing_cazare_click", property);
     window.open(property.bookingUrl, "_blank", "noopener,noreferrer");
-  }, [property.bookingUrl]);
+  }, [property]);
 
   const handleCardHover = useCallback(() => {
     if (!hoverPrefetched.current && property.images[1]) {
@@ -131,7 +133,7 @@ const PropertyCard = ({
       }}
     >
       {/* Image */}
-      <div className="relative h-48 overflow-hidden cursor-pointer">
+      <div className="relative h-64 sm:h-48 overflow-hidden cursor-pointer">
         <OptimizedImage
           src={property.images[0]}
           alt={getImageAlt(property, 0, language as 'ro' | 'en')}
@@ -303,7 +305,7 @@ const PropertyCard = ({
               href={property.bookingUrl}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); trackListingClick("listing_cazare_click", property); }}
               aria-label={`${t.bookDirect} — ${property.name}`}
             >
               <Calendar className="w-4 h-4 mr-1" />
