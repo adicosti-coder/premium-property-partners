@@ -11,6 +11,7 @@ export type MakeRelayResult = {
 
 export function makeWebhookUrl(): string {
   return (
+    Deno.env.get("MAKE_ACTIVE_WEBHOOK_URL") ||
     Deno.env.get("MAKE_WA_WEBHOOK_URL") ||
     Deno.env.get("MAKE_WEBHOOK_URL") ||
     ""

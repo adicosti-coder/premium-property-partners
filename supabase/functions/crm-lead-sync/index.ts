@@ -115,7 +115,8 @@ Deno.serve(async (req) => {
     };
 
     // ---- 1. CRM webhook -----------------------------------------------------
-    const crmUrl = Deno.env.get("CRM_WEBHOOK_URL")
+    const crmUrl = Deno.env.get("MAKE_ACTIVE_WEBHOOK_URL")
+      || Deno.env.get("CRM_WEBHOOK_URL")
       || Deno.env.get("MAKE_WEBHOOK_URL")
       || Deno.env.get("LEAD_WEBHOOK_URL");
 
@@ -137,11 +138,17 @@ Deno.serve(async (req) => {
         { label: "crm-lead-sync", maxAttempts: 3 },
       );
       const took = Date.now() - t0;
+      const httpStatus = res.response?.status;
       if (res.ok) {
         crmStatus = "synced";
+      } else if (httpStatus === 410 || httpStatus === 404) {
+        // Webhook deleted/disabled: retrying can't succeed. The lead is already
+        // stored in Lead Manager, so mark as skipped (no retry loop).
+        crmStatus = "skipped";
+        crmError = `CRM webhook inactiv (HTTP ${httpStatus}) — lead păstrat în Lead Manager`;
       } else {
         crmStatus = "failed";
-        crmError = `CRM webhook ${res.response?.status ?? "network"}`.slice(0, 300);
+        crmError = `CRM webhook ${httpStatus ?? "network"}`.slice(0, 300);
       }
       await logLeadEvent({
         leadId: record.id,
