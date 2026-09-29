@@ -90,15 +90,15 @@
 
     <!-- Separate mobile/desktop LCP preloads keep high-DPR phones from ever
          selecting a desktop asset while still matching the responsive picture. -->
-    <link rel="preload" as="image" type="image/webp" fetchpriority="high"
+    <link rel="preload" as="image" type="image/avif" fetchpriority="high"
           media="(max-width: 767px)"
-          href="/images/hero-responsive-480w.webp"
-          imagesrcset="/images/hero-responsive-480w.webp 480w, /images/hero-responsive-800w.webp 800w"
+          href="/images/hero-responsive-480w.avif"
+          imagesrcset="/images/hero-responsive-480w.avif 480w, /images/hero-responsive-800w.avif 800w"
           imagesizes="100vw" />
-    <link rel="preload" as="image" type="image/webp" fetchpriority="high"
+    <link rel="preload" as="image" type="image/avif" fetchpriority="high"
           media="(min-width: 768px)"
-          href="/images/hero-responsive-1280w.webp"
-          imagesrcset="/images/hero-responsive-960w.webp 960w, /images/hero-responsive-1280w.webp 1280w, /images/hero-responsive-1600w.webp 1600w"
+          href="/images/hero-responsive-1280w.avif"
+          imagesrcset="/images/hero-responsive-960w.avif 960w, /images/hero-responsive-1280w.avif 1280w, /images/hero-responsive-1600w.avif 1600w"
           imagesizes="100vw" />
 
     <!-- Font preloads intentionally removed. The hero shell uses metric-matched
@@ -233,6 +233,8 @@
     <div id="app-shell-placeholder">
         <div class="ash-bg">
           <picture>
+            <source media="(max-width: 767px)" srcset="/images/hero-responsive-480w.avif 480w, /images/hero-responsive-800w.avif 800w" sizes="100vw" type="image/avif" />
+            <source media="(min-width: 768px)" srcset="/images/hero-responsive-960w.avif 960w, /images/hero-responsive-1280w.avif 1280w, /images/hero-responsive-1600w.avif 1600w" sizes="100vw" type="image/avif" />
             <source media="(max-width: 767px)" srcset="/images/hero-responsive-480w.webp 480w, /images/hero-responsive-800w.webp 800w" sizes="100vw" type="image/webp" />
             <source media="(min-width: 768px)" srcset="/images/hero-responsive-960w.webp 960w, /images/hero-responsive-1280w.webp 1280w, /images/hero-responsive-1600w.webp 1600w" sizes="100vw" type="image/webp" />
             <img src="/images/hero-responsive-800w.webp" alt="RealTrust Imobiliare Timișoara — investiții premium, vânzări, închirieri și administrare proprietăți. ROI 9.4% net verificat." width="800" height="504" fetchpriority="high" />

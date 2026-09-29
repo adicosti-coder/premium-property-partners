@@ -138,6 +138,18 @@ const Hero = () => {
           <picture className="block w-full h-full">
             <source
               media="(max-width: 767px)"
+              srcSet="/images/hero-responsive-480w.avif 480w, /images/hero-responsive-800w.avif 800w"
+              sizes="100vw"
+              type="image/avif"
+            />
+            <source
+              media="(min-width: 768px)"
+              srcSet="/images/hero-responsive-960w.avif 960w, /images/hero-responsive-1280w.avif 1280w, /images/hero-responsive-1600w.avif 1600w"
+              sizes="100vw"
+              type="image/avif"
+            />
+            <source
+              media="(max-width: 767px)"
               srcSet="/images/hero-responsive-480w.webp 480w, /images/hero-responsive-800w.webp 800w"
               sizes="100vw"
               type="image/webp"
