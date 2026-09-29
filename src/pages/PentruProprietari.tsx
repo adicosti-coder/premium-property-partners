@@ -964,6 +964,9 @@ const PentruProprietari = () => {
       {/* Service Options Comparison */}
       <ServiceOptionsComparison />
 
+      {/* Property Management: prețuri dinamice, co-hosting direct, Smart Access */}
+      <OwnerPmRevenueStack />
+
       {/* Explicit fees and packages */}
       <OwnerPricingPackages />
 
