@@ -33,6 +33,24 @@ const mountApp = () => {
   // to avoid a second H1 in the live DOM.
   document.getElementById("seo-prerender")?.remove();
 
+  // Static LCP shell lives OUTSIDE #root (absolute overlay). Remove it only
+  // after the React hero image has painted, so the LCP candidate stays the
+  // early-painted shell <img> instead of a late React re-render (~1.3s win).
+  const removeShell = () => document.getElementById("app-shell-placeholder")?.remove();
+  const removeShellAfterHeroPaint = (attempts = 0) => {
+    const heroImg = document.querySelector<HTMLImageElement>(
+      '#root picture img, #root img[fetchpriority="high"]',
+    );
+    if (heroImg && heroImg.complete && heroImg.naturalWidth > 0) {
+      // Two frames: let the React hero actually paint before dropping the shell.
+      requestAnimationFrame(() => requestAnimationFrame(removeShell));
+    } else if (attempts < 100) {
+      setTimeout(() => removeShellAfterHeroPaint(attempts + 1), 100);
+    } else {
+      removeShell(); // safety net — never leave the overlay stuck on screen
+    }
+  };
+
   const rootEl = document.getElementById("root");
   if (rootEl) {
     try {
@@ -44,6 +62,7 @@ const mountApp = () => {
             <App />
           </HelmetProvider>
         );
+        removeShellAfterHeroPaint();
       };
 
       if (rootEl.children.length > 0) {
@@ -52,6 +71,7 @@ const mountApp = () => {
         renderApp();
       }
     } catch (e: unknown) {
+      removeShell();
       const msg = e instanceof Error ? e.message : String(e);
       rootEl.innerHTML = '<div style="padding:2rem;color:red;font:16px monospace;"><h2>React mount error</h2><pre>' + msg + '</pre></div>';
       console.error('[main.tsx] React mount failed:', e);
