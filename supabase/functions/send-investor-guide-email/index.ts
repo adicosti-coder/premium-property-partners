@@ -2,6 +2,7 @@
 // who submit the InvestmentGuideLeadModal on /blog/ghid-investitii-imobiliare-timisoara-2026
 import { escapeHtml } from "../_shared/htmlEscape.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,6 +33,19 @@ serve(async (req) => {
         JSON.stringify({ error: "Name and email are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
+    }
+
+    // Bind the recipient to a lead just submitted through the guide form
+    // (submit-lead), so the endpoint cannot mail arbitrary inboxes.
+    const normEmail = String(email).trim().toLowerCase().slice(0, 254);
+    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const since = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const { data: recent } = await admin.from("leads").select("id")
+      .ilike("email", normEmail).eq("source", "lead_capture_form")
+      .gte("created_at", since).limit(1);
+    if (!recent || recent.length === 0) {
+      return new Response(JSON.stringify({ error: "Forbidden" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const resendApiKey = Deno.env.get("RESEND_API_KEY");

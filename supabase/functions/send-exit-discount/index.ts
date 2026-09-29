@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { escapeHtml } from "../_shared/htmlEscape.ts";
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
@@ -19,10 +20,17 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Only internal automations or admins may trigger outbound discount emails.
+  const denied = await requireInternalOrAdmin(req, corsHeaders);
+  if (denied) return denied;
+
   try {
     const { email, language = "ro" }: ExitDiscountRequest = await req.json();
-    
-    console.log(`Sending exit discount email to: ${email}, language: ${language}`);
+    if (typeof email !== "string" || !/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/i.test(email)) {
+      return new Response(JSON.stringify({ error: "Invalid email" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const discountCode = "WELCOME10";
     const expiryDate = new Date();
