@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import ChannelTab from "@/components/admin/property/ChannelTab";
 
@@ -20,6 +20,16 @@ export default function ChannelListingsPanel() {
   const [sugg, setSugg] = useState<Record<string, { airbnb?: Ch; booking?: Ch }>>({});
   const [stats, setStats] = useState<Record<string, Stat>>({});
   const [days, setDays] = useState(30);
+  const [busy, setBusy] = useState<string | null>(null);
+  const optimize = async (id: string) => {
+    setBusy(id);
+    const { data, error } = await supabase.functions.invoke("andrei-listing-seo", { body: { property_id: id } });
+    setBusy(null);
+    if (error) { toast({ title: "Andrei AI", description: error.message, variant: "destructive" }); return; }
+    const ch = (data?.channels ?? data?.suggestion?.channels) as { airbnb?: Ch; booking?: Ch } | undefined;
+    if (ch) setSugg((m) => ({ ...m, [id]: ch }));
+    toast({ title: "Texte noi generate" });
+  };
 
   useEffect(() => {
     supabase.from("properties").select("id, slug, name, image_path, airbnb_url, booking_com_url, booking_url").eq("is_active", true)
@@ -94,7 +104,12 @@ export default function ChannelListingsPanel() {
           <Card key={r.id}>
             <CardHeader className="flex flex-row gap-3 items-center">
               {r.image_path && <img src={r.image_path} alt={r.name} className="w-20 h-20 object-cover rounded" loading="lazy" />}
-              <CardTitle className="text-base">{r.name}</CardTitle>
+              <div className="space-y-2">
+                <CardTitle className="text-base">{r.name}</CardTitle>
+                <Button size="sm" disabled={busy === r.id} onClick={() => optimize(r.id)}>
+                  {busy === r.id ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Sparkles className="w-3 h-3 mr-1" />} Optimizează SEO cu Andrei AI
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-3">
               <Tabs defaultValue="booking">
