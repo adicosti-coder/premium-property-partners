@@ -4820,6 +4820,7 @@ export type Database = {
       }
       properties: {
         Row: {
+          airbnb_url: string | null
           amenities: string[] | null
           amenities_en: string[] | null
           annual_tax: number | null
@@ -4828,6 +4829,7 @@ export type Database = {
           base_price_per_night: number | null
           bathrooms: number | null
           bedrooms: number | null
+          booking_com_url: string | null
           booking_rating: number | null
           booking_review_count: number | null
           booking_url: string | null
@@ -4884,6 +4886,8 @@ export type Database = {
           monthly_maintenance: number | null
           name: string
           needs_review: boolean
+          og_description: string | null
+          og_title: string | null
           orientation: string | null
           original_description_raw: string | null
           original_source_url: string | null
@@ -4916,6 +4920,7 @@ export type Database = {
           year_built: number | null
         }
         Insert: {
+          airbnb_url?: string | null
           amenities?: string[] | null
           amenities_en?: string[] | null
           annual_tax?: number | null
@@ -4924,6 +4929,7 @@ export type Database = {
           base_price_per_night?: number | null
           bathrooms?: number | null
           bedrooms?: number | null
+          booking_com_url?: string | null
           booking_rating?: number | null
           booking_review_count?: number | null
           booking_url?: string | null
@@ -4980,6 +4986,8 @@ export type Database = {
           monthly_maintenance?: number | null
           name: string
           needs_review?: boolean
+          og_description?: string | null
+          og_title?: string | null
           orientation?: string | null
           original_description_raw?: string | null
           original_source_url?: string | null
@@ -5012,6 +5020,7 @@ export type Database = {
           year_built?: number | null
         }
         Update: {
+          airbnb_url?: string | null
           amenities?: string[] | null
           amenities_en?: string[] | null
           annual_tax?: number | null
@@ -5020,6 +5029,7 @@ export type Database = {
           base_price_per_night?: number | null
           bathrooms?: number | null
           bedrooms?: number | null
+          booking_com_url?: string | null
           booking_rating?: number | null
           booking_review_count?: number | null
           booking_url?: string | null
@@ -5076,6 +5086,8 @@ export type Database = {
           monthly_maintenance?: number | null
           name?: string
           needs_review?: boolean
+          og_description?: string | null
+          og_title?: string | null
           orientation?: string | null
           original_description_raw?: string | null
           original_source_url?: string | null
