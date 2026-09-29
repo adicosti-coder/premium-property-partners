@@ -39,11 +39,14 @@ async function pushToDlq(
   status: number | undefined,
   error: string,
 ) {
+  // 410/404 = webhook deleted/disabled: keep the data but don't queue retries.
+  const terminal = status === 410 || status === 404;
   try {
     await supabase.from("make_relay_dlq").insert({
       event,
       payload,
       attempts: 1,
+      ...(terminal ? { status: "failed" } : {}),
       last_status: status ?? null,
       last_error: error.slice(0, 500),
       next_attempt_at: nextAttemptAt(1),
@@ -156,7 +159,7 @@ export async function drainMakeRelayDlq(
       error = String(e).slice(0, 300);
     }
 
-    const exhausted = !ok && attempts >= MAX_RELAY_ATTEMPTS;
+    const exhausted = !ok && (attempts >= MAX_RELAY_ATTEMPTS || status === 410 || status === 404);
     if (ok) out.delivered += 1;
     else if (exhausted) out.failed += 1;
 
