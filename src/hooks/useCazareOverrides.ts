@@ -35,7 +35,7 @@ const useCazareOverridesFull = () => {
 
   useEffect(() => {
     const ch = supabase
-      .channel("cazare-overrides")
+      .channel(`cazare-overrides-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "properties" }, () =>
         qc.invalidateQueries({ queryKey: ["cazare-overrides"] }))
       .subscribe();
