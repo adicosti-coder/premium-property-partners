@@ -27,7 +27,7 @@ export default function ChannelListingsPanel() {
     supabase.from("property_seo_suggestions").select("property_id, channels, created_at").order("created_at", { ascending: false }).limit(500)
       .then(({ data }) => {
         const m: Record<string, { airbnb?: Ch; booking?: Ch }> = {};
-        (data ?? []).forEach((s: { property_id: string; channels: { airbnb?: Ch; booking?: Ch } | null }) => { if (!m[s.property_id] && s.channels) m[s.property_id] = s.channels; });
+        ((data ?? []) as unknown as { property_id: string; channels: { airbnb?: Ch; booking?: Ch } | null }[]).forEach((s) => { if (!m[s.property_id] && s.channels) m[s.property_id] = s.channels; });
         setSugg(m);
       });
   }, []);
