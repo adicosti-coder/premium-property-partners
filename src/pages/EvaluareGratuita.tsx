@@ -198,8 +198,20 @@ const EvaluareGratuita = () => {
       return;
     }
 
+    const benefit = searchParams.get("beneficiu");
+    if (benefit) {
+      trackConversion({
+        event: "owner_benefit_valuation_submit",
+        source: "pentru_proprietari",
+        benefit,
+        property_type: form.propertyType,
+        zone: form.zone,
+      });
+    }
+
     trackConversion({
       event: "roi_calculator_lead",
+      benefit: benefit ?? undefined,
       source: "evaluare_gratuita",
       property_type: form.propertyType,
       zone: form.zone,
