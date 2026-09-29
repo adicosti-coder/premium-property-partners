@@ -4899,6 +4899,8 @@ export type Database = {
           roi_percentage: string | null
           rooms: number | null
           sanitization_log: Json | null
+          seo_description: string | null
+          seo_title: string | null
           size: number | null
           slug: string | null
           source_platform: string | null
@@ -4993,6 +4995,8 @@ export type Database = {
           roi_percentage?: string | null
           rooms?: number | null
           sanitization_log?: Json | null
+          seo_description?: string | null
+          seo_title?: string | null
           size?: number | null
           slug?: string | null
           source_platform?: string | null
@@ -5087,6 +5091,8 @@ export type Database = {
           roi_percentage?: string | null
           rooms?: number | null
           sanitization_log?: Json | null
+          seo_description?: string | null
+          seo_title?: string | null
           size?: number | null
           slug?: string | null
           source_platform?: string | null
