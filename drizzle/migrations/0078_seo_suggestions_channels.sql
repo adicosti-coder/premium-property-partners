@@ -1,0 +1,1 @@
+ALTER TABLE public.property_seo_suggestions ADD COLUMN IF NOT EXISTS channels jsonb NOT NULL DEFAULT '{}'::jsonb;

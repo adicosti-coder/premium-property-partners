@@ -5649,6 +5649,7 @@ export type Database = {
       property_seo_suggestions: {
         Row: {
           applied_at: string | null
+          channels: Json
           created_at: string
           descriptions: Json
           id: string
@@ -5659,6 +5660,7 @@ export type Database = {
         }
         Insert: {
           applied_at?: string | null
+          channels?: Json
           created_at?: string
           descriptions?: Json
           id?: string
@@ -5669,6 +5671,7 @@ export type Database = {
         }
         Update: {
           applied_at?: string | null
+          channels?: Json
           created_at?: string
           descriptions?: Json
           id?: string

@@ -547,6 +547,13 @@
       "when": 1790709418304,
       "tag": "0077_properties_seo_overrides",
       "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1790709703005,
+      "tag": "0078_seo_suggestions_channels",
+      "breakpoints": true
     }
   ]
 }
