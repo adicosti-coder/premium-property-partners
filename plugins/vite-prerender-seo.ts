@@ -30,6 +30,9 @@ interface PrerenderRoute {
    *  Used to give crawlers like Firecrawl/Bing dense local-SEO content even
    *  before React hydrates. Safe HTML — built from trusted constants only. */
   seoBody?: string;
+  /** Optional social-preview overrides (Andrei AI). */
+  ogTitle?: string;
+  ogDescription?: string;
   /** Optional absolute image URL used for og:image / twitter:image. */
   image?: string;
   /** Emits `<meta name="robots" content="noindex, follow">` for gated pages. */
@@ -340,7 +343,7 @@ interface DbProperty {
  */
 async function fetchActiveProperties(): Promise<DbProperty[]> {
   try {
-    const url = `${SUPABASE_URL}/rest/v1/properties?is_active=eq.true&slug=not.is.null&select=slug,name,location,bedrooms,size,floor,roi_percentage,capital_necesar,listing_type,year_built,base_price_per_night,booking_url,seo_title,seo_description&order=display_order.asc`;
+    const url = `${SUPABASE_URL}/rest/v1/properties?is_active=eq.true&slug=not.is.null&select=slug,name,location,bedrooms,size,floor,roi_percentage,capital_necesar,listing_type,year_built,base_price_per_night,booking_url,seo_title,seo_description,og_title,og_description,image_path&order=display_order.asc`;
     const res = await fetch(url, {
       headers: {
         'apikey': SUPABASE_ANON_KEY,
@@ -398,6 +401,12 @@ function buildPropertyRoutes(properties: DbProperty[]): PrerenderRoute[] {
     const seoT = (p as { seo_title?: string | null }).seo_title?.trim();
     const seoD = (p as { seo_description?: string | null }).seo_description?.replace(/[✓\s]+/g, ' ').trim();
     const description = (seoD || descParts.join(' ')).slice(0, 160);
+    const pp = p as { og_title?: string | null; og_description?: string | null; image_path?: string | null };
+    const social = {
+      ogTitle: pp.og_title?.trim() || undefined,
+      ogDescription: pp.og_description?.trim() || undefined,
+      ...(pp.image_path && /^https?:\/\//.test(pp.image_path) ? { image: pp.image_path } : {}),
+    };
     const finalTitle = seoT ? `${seoT} | RealTrust`.slice(0, 70) : title;
 
     const canonical = `${BASE_URL}/proprietate/${p.slug}`;
@@ -429,6 +438,7 @@ function buildPropertyRoutes(properties: DbProperty[]): PrerenderRoute[] {
       const cazareBase = seoD || cazareDescRaw;
       const cazareDesc = cazareBase.length > 158 ? `${cazareBase.slice(0, 155).trimEnd()}…` : cazareBase;
       return {
+        ...social,
         path: `/proprietate/${p.slug}`,
         title: seoT ? `${seoT} | RealTrust`.slice(0, 70) : `${p.name} - Cazare Regim Hotelier Timișoara | RealTrust`,
         description: cazareDesc,
@@ -475,6 +485,7 @@ function buildPropertyRoutes(properties: DbProperty[]): PrerenderRoute[] {
     }
 
     return {
+      ...social,
       path: `/proprietate/${p.slug}`,
       title: finalTitle,
       description,
@@ -1743,12 +1754,14 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
     const tag = `<meta ${attr}="${key}" content="${escapeHtml(value)}" />`;
     html = re.test(html) ? html.replace(re, tag) : html.replace('</head>', `  ${tag}\n</head>`);
   };
-  setMeta('property', 'og:title', route.title);
-  setMeta('property', 'og:description', route.description);
+  const ogT = route.ogTitle || route.title;
+  const ogD = route.ogDescription || route.description;
+  setMeta('property', 'og:title', ogT);
+  setMeta('property', 'og:description', ogD);
   setMeta('property', 'og:url', route.canonical);
   setMeta('property', 'og:image', socialImage);
-  setMeta('name', 'twitter:title', route.title);
-  setMeta('name', 'twitter:description', route.description);
+  setMeta('name', 'twitter:title', ogT);
+  setMeta('name', 'twitter:description', ogD);
   setMeta('name', 'twitter:url', route.canonical);
   setMeta('name', 'twitter:image', socialImage);
 
