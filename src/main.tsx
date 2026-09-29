@@ -54,6 +54,20 @@ const mountApp = () => {
     }
   };
 
+  // Per-route static heading shell (listings/contact) — painted from HTML for an
+  // early FCP/LCP; dropped as soon as React renders the page's own H1, on first
+  // user tap, or after 3s at most so it can never cover the page.
+  const removeRouteShell = () => document.getElementById("route-shell")?.remove();
+  document.addEventListener("pointerdown", removeRouteShell, { once: true, passive: true });
+  const removeRouteShellWhenReady = (attempts = 0) => {
+    if (!document.getElementById("route-shell")) return;
+    if (document.querySelector("#root h1") || attempts >= 30) {
+      requestAnimationFrame(() => requestAnimationFrame(removeRouteShell));
+    } else {
+      setTimeout(() => removeRouteShellWhenReady(attempts + 1), 100);
+    }
+  };
+
   const rootEl = document.getElementById("root");
   if (rootEl) {
     try {
@@ -66,6 +80,7 @@ const mountApp = () => {
           </HelmetProvider>
         );
         removeShellAfterHeroPaint();
+        removeRouteShellWhenReady();
       };
 
       if (rootEl.children.length > 0) {
