@@ -12,6 +12,7 @@ import { usePrefetch } from "@/hooks/usePrefetch";
 import ViewersBadge from "@/components/ViewersBadge";
 import PropertyImageLightbox from "@/components/PropertyImageLightbox";
 import { cn } from "@/lib/utils";
+import { Link, useNavigate } from "react-router-dom";
 import { trackListingClick } from "@/lib/listingClickTracking";
 
 interface PropertyCardProps {
@@ -37,6 +38,7 @@ const PropertyCard = ({
   minimal = false,
 }: PropertyCardProps) => {
   const { language } = useLanguage();
+  const navigate = useNavigate();
   const { data: liveDataMap } = usePropertyLiveData();
   const { data: viewersMap } = useRealtimeViewers();
   const liveData = liveDataMap?.[property.slug];
@@ -103,8 +105,8 @@ const PropertyCard = ({
 
   const openDirectBooking = useCallback(() => {
     trackListingClick("listing_cazare_click", property);
-    window.open(property.bookingUrl, "_blank", "noopener,noreferrer");
-  }, [property]);
+    navigate(`/rezervare?apartament=${encodeURIComponent(property.slug)}`);
+  }, [property, navigate]);
 
   const handleCardHover = useCallback(() => {
     if (!hoverPrefetched.current && property.images[1]) {
@@ -301,16 +303,14 @@ const PropertyCard = ({
         {/* CTAs */}
         <div className="flex gap-2">
           <Button variant="default" size="sm" className="flex-1" asChild>
-            <a
-              href={property.bookingUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              to={`/rezervare?apartament=${encodeURIComponent(property.slug)}`}
               onClick={(e) => { e.stopPropagation(); trackListingClick("listing_cazare_click", property); }}
               aria-label={`${t.bookDirect} — ${property.name}`}
             >
               <Calendar className="w-4 h-4 mr-1" />
               {t.bookDirect}
-            </a>
+            </Link>
           </Button>
           <Button variant="booking" size="sm" asChild>
             <PrefetchLink

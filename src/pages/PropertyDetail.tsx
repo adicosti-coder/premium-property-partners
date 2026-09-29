@@ -16,6 +16,7 @@ import Footer from "@/components/Footer";
 import StickyPropertyCTA from "@/components/StickyPropertyCTA";
 import SEOHead from "@/components/SEOHead";
 import { useCazareOverride } from "@/hooks/useCazareOverrides";
+import { trackListingClick } from "@/lib/listingClickTracking";
 import NotFound from "@/pages/NotFound";
 import OptimizedImage from "@/components/OptimizedImage";
 import PropertyImageLightbox from "@/components/PropertyImageLightbox";
@@ -165,6 +166,7 @@ const syncInvestmentCopyWithRoi = (text: string, roi?: string | null) => {
 const PropertyDetail = () => {
   const { slug: paramSlug } = useParams<{ slug: string }>();
   const seoOverride = useCazareOverride(paramSlug);
+  useEffect(() => { if (paramSlug) trackListingClick("listing_view", { id: paramSlug, name: paramSlug }); }, [paramSlug]);
   const location = useLocation();
   // Support both /proprietate/:slug and top-level /:slug routes
   const slug = paramSlug || location.pathname.replace(/^\//, '');

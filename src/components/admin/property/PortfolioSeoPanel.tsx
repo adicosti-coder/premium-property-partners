@@ -13,7 +13,7 @@ interface Prop {
   features: string[] | null; amenities: string[] | null; image_path: string | null;
 }
 interface ChannelText { titles: string[]; description: string }
-interface Sugg { property_id: string; titles: string[]; descriptions: string[]; keywords: string[]; applied_at: string | null; channels?: { airbnb?: ChannelText; booking?: ChannelText } }
+interface Sugg { property_id: string; titles: string[]; descriptions: string[]; keywords: string[]; applied_at: string | null; channels?: { airbnb?: ChannelText; booking?: ChannelText; og?: { title: string; description: string } } }
 
 const imgUrl = (path: string) =>
   path.startsWith("http") ? path : supabase.storage.from("property-images").getPublicUrl(path).data.publicUrl;
@@ -88,7 +88,7 @@ export default function PortfolioSeoPanel() {
     toast({ title: "Optimizare SEO finalizată", description: fails ? `${fails} apartamente nu au putut fi procesate.` : "Variantele sunt gata de aplicat." });
   };
 
-  const applyField = async (id: string, patch: { seo_title?: string; seo_description?: string; long_description_ro?: string }) => {
+  const applyField = async (id: string, patch: { seo_title?: string; seo_description?: string; long_description_ro?: string; og_title?: string; og_description?: string }) => {
     setBusyId(id);
     const { error } = await supabase.from("properties").update(patch).eq("id", id);
     if (!error) await supabase.from("property_seo_suggestions").update({ applied_at: new Date().toISOString() }).eq("property_id", id);
@@ -173,6 +173,7 @@ export default function PortfolioSeoPanel() {
                           <TabsTrigger value="site" className="flex-1">Site propriu</TabsTrigger>
                           <TabsTrigger value="airbnb" className="flex-1">Airbnb</TabsTrigger>
                           <TabsTrigger value="booking" className="flex-1">Booking.com</TabsTrigger>
+                          <TabsTrigger value="og" className="flex-1">Preview link</TabsTrigger>
                         </TabsList>
                         <TabsContent value="site" className="space-y-3">
                       <>
@@ -193,6 +194,16 @@ export default function PortfolioSeoPanel() {
                         </TabsContent>
                         <TabsContent value="airbnb"><ChannelTab channel="airbnb" text={s.channels?.airbnb} /></TabsContent>
                         <TabsContent value="booking"><ChannelTab channel="booking" text={s.channels?.booking} /></TabsContent>
+                        <TabsContent value="og">
+                          {s.channels?.og?.title ? (
+                            <div className="rounded border border-border p-2 space-y-2">
+                              <p className="text-xs text-muted-foreground">Open Graph / Twitter (Facebook, WhatsApp, X)</p>
+                              <p className="font-medium text-foreground">{s.channels.og.title}</p>
+                              <p className="text-muted-foreground">{s.channels.og.description}</p>
+                              <Button size="sm" variant="ghost" onClick={() => applyField(p.id, { og_title: s.channels!.og!.title, og_description: s.channels!.og!.description })}>Aplică preview-ul</Button>
+                            </div>
+                          ) : <p className="text-xs text-muted-foreground py-2">Regenerează cu Andrei AI pentru metadatele de preview.</p>}
+                        </TabsContent>
                       </Tabs>
                     ) : <p className="text-xs text-muted-foreground">Nu există încă variante generate.</p>}
                     <div>
