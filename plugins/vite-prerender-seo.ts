@@ -426,10 +426,11 @@ function buildPropertyRoutes(properties: DbProperty[]): PrerenderRoute[] {
     // LodgingBusiness + HotelRoom structured data, not a sale listing.
     if ((p.listing_type || '').trim().toLowerCase() === 'cazare') {
       const cazareDescRaw = `Cazare regim hotelier în ${zone}, Timișoara. ${p.base_price_per_night ? `De la ${p.base_price_per_night}€/noapte. ` : ''}Parcare, Wi-Fi, self check-in. Rezervare directă, fără comision.`;
-      const cazareDesc = cazareDescRaw.length > 158 ? `${cazareDescRaw.slice(0, 155).trimEnd()}…` : cazareDescRaw;
+      const cazareBase = seoD || cazareDescRaw;
+      const cazareDesc = cazareBase.length > 158 ? `${cazareBase.slice(0, 155).trimEnd()}…` : cazareBase;
       return {
         path: `/proprietate/${p.slug}`,
-        title: `${p.name} - Cazare Regim Hotelier Timișoara | RealTrust`,
+        title: seoT ? `${seoT} | RealTrust`.slice(0, 70) : `${p.name} - Cazare Regim Hotelier Timișoara | RealTrust`,
         description: cazareDesc,
         h1: `${p.name} — cazare regim hotelier în ${zone}, Timișoara`,
         canonical,
