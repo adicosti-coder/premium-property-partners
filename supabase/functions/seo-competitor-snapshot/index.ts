@@ -60,7 +60,26 @@ function extractFromHtml(html: string): ExtractedSeo {
   };
 }
 
+// Only public http(s) destinations: blocks localhost, private/link-local ranges,
+// metadata endpoints and non-standard ports (SSRF guard).
+function assertPublicUrl(raw: string): URL {
+  const u = new URL(raw);
+  if (u.protocol !== "https:" && u.protocol !== "http:") throw new Error("URL not allowed");
+  if (u.username || u.password) throw new Error("URL not allowed");
+  if (u.port && u.port !== "80" && u.port !== "443") throw new Error("URL not allowed");
+  const h = u.hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  if (!h.includes(".") || h === "localhost" || /\.(localhost|local|internal|lan|home|corp)$/.test(h)) throw new Error("URL not allowed");
+  if (/^[\d.]+$/.test(h)) {
+    const [a, b] = h.split(".").map(Number);
+    if (a === 0 || a === 10 || a === 127 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) ||
+        (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127) || a >= 224) throw new Error("URL not allowed");
+  }
+  if (h.includes(":")) throw new Error("URL not allowed"); // raw IPv6 literals
+  return u;
+}
+
 async function fetchPage(url: string): Promise<{ html: string; markdown?: string }> {
+  url = assertPublicUrl(url).toString();
   if (FIRECRAWL_KEY) {
     try {
       const res = await fetch("https://api.firecrawl.dev/v2/scrape", {
@@ -76,8 +95,9 @@ async function fetchPage(url: string): Promise<{ html: string; markdown?: string
       console.warn("[competitor] Firecrawl failed, fallback to fetch:", (e as Error).message);
     }
   }
-  const r = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 RealTrustBot" } });
-  return { html: await r.text() };
+  const r = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 RealTrustBot" }, redirect: "manual" });
+  if (r.status >= 300 && r.status < 400) throw new Error("Redirects not allowed");
+  return { html: (await r.text()).slice(0, 2_000_000) };
 }
 
 async function aiGaps(ours: ExtractedSeo & { url: string }, competitors: Array<ExtractedSeo & { url: string }>): Promise<{ gaps: any[]; summary: string }> {

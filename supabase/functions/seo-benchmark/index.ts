@@ -149,6 +149,8 @@ async function fetchPageSpeed(url: string): Promise<any> {
   }
 }
 
+const UNSAFE_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
 function collectTypePropsWithValues(node: any, target: Record<string, Record<string, any>>) {
   if (!node || typeof node !== "object") return;
   if (Array.isArray(node)) { node.forEach((n) => collectTypePropsWithValues(n, target)); return; }
@@ -156,9 +158,10 @@ function collectTypePropsWithValues(node: any, target: Record<string, Record<str
   const types = Array.isArray(t) ? t : (t ? [t] : []);
   for (const tt of types) {
     const ts = String(tt);
-    if (!target[ts]) target[ts] = {};
+    if (UNSAFE_KEYS.has(ts)) continue;
+    if (!Object.prototype.hasOwnProperty.call(target, ts)) target[ts] = Object.create(null);
     for (const [k, v] of Object.entries(node)) {
-      if (k.startsWith("@")) continue;
+      if (k.startsWith("@") || UNSAFE_KEYS.has(k)) continue;
       if (target[ts][k] === undefined) target[ts][k] = v;
     }
   }
@@ -168,8 +171,8 @@ function collectTypePropsWithValues(node: any, target: Record<string, Record<str
 
 function buildBestInClassSchema(ours: Extracted, theirs: Extracted) {
   // Merge: take all types competitor has, prefer our values (title/url/meta), backfill props
-  const ourMap: Record<string, Record<string, any>> = {};
-  const theirMap: Record<string, Record<string, any>> = {};
+  const ourMap: Record<string, Record<string, any>> = Object.create(null);
+  const theirMap: Record<string, Record<string, any>> = Object.create(null);
   for (const b of ours.schema_raw) if (b.valid) collectTypePropsWithValues(b.json, ourMap);
   for (const b of theirs.schema_raw) if (b.valid) collectTypePropsWithValues(b.json, theirMap);
 
@@ -225,8 +228,8 @@ serve(async (req) => {
     const [oursPsi, theirsPsi] = await Promise.all([fetchPageSpeed(our_url), fetchPageSpeed(competitor_url)]);
 
     // Schema diff (which @type / properties competitor has and we don't)
-    const ourMap: Record<string, Record<string, any>> = {};
-    const theirMap: Record<string, Record<string, any>> = {};
+    const ourMap: Record<string, Record<string, any>> = Object.create(null);
+    const theirMap: Record<string, Record<string, any>> = Object.create(null);
     for (const b of ours.schema_raw) if (b.valid) collectTypePropsWithValues(b.json, ourMap);
     for (const b of theirs.schema_raw) if (b.valid) collectTypePropsWithValues(b.json, theirMap);
     const schema_gaps: Array<{ type: string; missing_props: string[]; we_have_type: boolean }> = [];
