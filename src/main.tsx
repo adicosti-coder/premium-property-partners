@@ -71,6 +71,7 @@ const mountApp = () => {
         renderApp();
       }
     } catch (e: unknown) {
+      removeShell();
       const msg = e instanceof Error ? e.message : String(e);
       rootEl.innerHTML = '<div style="padding:2rem;color:red;font:16px monospace;"><h2>React mount error</h2><pre>' + msg + '</pre></div>';
       console.error('[main.tsx] React mount failed:', e);
