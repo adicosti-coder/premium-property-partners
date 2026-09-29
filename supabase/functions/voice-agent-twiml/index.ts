@@ -956,7 +956,7 @@ serve(async (req) => {
         .is("archived_at", null)
         .maybeSingle();
       const lookupMs = Date.now() - lookupT0;
-      console.log(`[voice-twiml][memory-lookup] session=${sessionId} turn=${turn} phone=${phone} ms=${lookupMs} hit=${!!prof}`);
+      console.log(`[voice-twiml][memory-lookup] session=${sessionId} turn=${turn} phone=${phone ? `***${String(phone).slice(-3)}` : "none"} ms=${lookupMs} hit=${!!prof}`);
       if (lookupMs > 200) {
         console.warn(`[voice-twiml][memory-lookup][SLOW] session=${sessionId} ms=${lookupMs}`);
       }
