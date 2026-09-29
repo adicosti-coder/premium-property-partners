@@ -21,7 +21,7 @@ import PageSummary from "@/components/PageSummary";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Star, 
   Shield, 
@@ -56,6 +56,7 @@ const PentruOaspeti = () => {
   const [selectedProperty, setSelectedProperty] = useState<string | undefined>();
   const [activeMapTab, setActiveMapTab] = useState<string>("properties");
   const applyOverrides = useCazareOverrides();
+  useEffect(() => { trackListingClick("cazare_page_view"); }, []);
   const heroAnimation = useScrollAnimation({ threshold: 0.1 });
   const benefitsAnimation = useScrollAnimation({ threshold: 0.1 });
   const mapAnimation = useScrollAnimation({ threshold: 0.1 });

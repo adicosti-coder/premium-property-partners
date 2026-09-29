@@ -15,6 +15,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import StickyPropertyCTA from "@/components/StickyPropertyCTA";
 import SEOHead from "@/components/SEOHead";
+import { useCazareOverride } from "@/hooks/useCazareOverrides";
 import NotFound from "@/pages/NotFound";
 import OptimizedImage from "@/components/OptimizedImage";
 import PropertyImageLightbox from "@/components/PropertyImageLightbox";
@@ -163,6 +164,7 @@ const syncInvestmentCopyWithRoi = (text: string, roi?: string | null) => {
 
 const PropertyDetail = () => {
   const { slug: paramSlug } = useParams<{ slug: string }>();
+  const seoOverride = useCazareOverride(paramSlug);
   const location = useLocation();
   // Support both /proprietate/:slug and top-level /:slug routes
   const slug = paramSlug || location.pathname.replace(/^\//, '');
@@ -734,6 +736,9 @@ const PropertyDetail = () => {
           if ((lt === 'investitie' || lt === 'vanzare') && roi) {
             return `${displayName} | Randament ${roi} ROI — Investiție Timișoara`;
           }
+          if (normalizedListingType === 'cazare' && seoOverride?.seo_title?.trim()) {
+            return `${seoOverride.seo_title.trim()} | RealTrust`.slice(0, 70);
+          }
           if (normalizedListingType === 'cazare') {
             const shortName = displayName.replace(/\s+by RealTrust$/i, '').trim();
             const price = effectivePrice;
@@ -760,6 +765,10 @@ const PropertyDetail = () => {
             return parts.join(' ').slice(0, 160);
           }
           // Cazare (regim hotelier): zonă exactă + facilități principale, sub 160 caractere
+          if (normalizedListingType === 'cazare' && language === 'ro' && seoOverride?.seo_description?.trim()) {
+            const d = seoOverride.seo_description.replace(/[✓\s]+/g, ' ').trim();
+            return d.length > 158 ? d.slice(0, 155).trimEnd() + '…' : d;
+          }
           if (normalizedListingType === 'cazare' && language === 'ro') {
             const zone = property.location?.replace(/,?\s*(Timișoara|Timisoara)\s*/gi, '').trim() || 'Timișoara';
             const amenityText = amenityHighlights.length > 0

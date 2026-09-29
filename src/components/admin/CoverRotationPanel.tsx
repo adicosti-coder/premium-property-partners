@@ -14,6 +14,7 @@ export default function CoverRotationPanel({ compact = false }: { compact?: bool
   const [rows, setRows] = useState<Row[]>([]);
   const [extra, setExtra] = useState<Record<string, string[]>>({});
   const [busy, setBusy] = useState<string | null>(null);
+  const [rotateText, setRotateText] = useState(true);
 
   const load = useCallback(async () => {
     const { data } = await supabase
@@ -41,10 +42,21 @@ export default function CoverRotationPanel({ compact = false }: { compact?: bool
 
   const setCover = async (r: Row, path: string) => {
     setBusy(r.id);
-    const { error } = await supabase.from("properties").update({ image_path: path }).eq("id", r.id);
+    const patch: { image_path: string; seo_title?: string; seo_description?: string } = { image_path: path };
+    if (rotateText) {
+      const { data: sg } = await supabase.from("property_seo_suggestions").select("titles, descriptions").eq("property_id", r.id).maybeSingle();
+      const titles = (sg?.titles as string[] | null) ?? [];
+      const descs = (sg?.descriptions as string[] | null) ?? [];
+      if (titles.length) {
+        const i = (titles.indexOf(r.seo_title ?? "") + 1) % titles.length;
+        patch.seo_title = titles[i];
+        if (descs.length) patch.seo_description = descs[i % descs.length].split("\n")[0];
+      }
+    }
+    const { error } = await supabase.from("properties").update(patch).eq("id", r.id);
     setBusy(null);
     if (error) { toast({ title: "Eroare", description: error.message, variant: "destructive" }); return; }
-    setRows((rs) => rs.map((x) => (x.id === r.id ? { ...x, image_path: path } : x)));
+    setRows((rs) => rs.map((x) => (x.id === r.id ? { ...x, ...patch } : x)));
     toast({ title: "Coperta a fost schimbată", description: "Apare imediat pe realtrust.ro/cazare." });
   };
 
@@ -56,6 +68,10 @@ export default function CoverRotationPanel({ compact = false }: { compact?: bool
           <p className="text-sm text-muted-foreground">Apasă pe o poză ca s-o faci copertă. Schimbarea apare în timp real în lista de cazare.</p>
         </div>
       )}
+      <label className="flex items-center gap-2 text-sm text-foreground min-h-12">
+        <input type="checkbox" checked={rotateText} onChange={(e) => setRotateText(e.target.checked)} className="w-5 h-5" />
+        La schimbarea copertei, rotește și titlul + descrierea SEO Andrei AI (test A/B live)
+      </label>
       <div className="grid gap-4 lg:grid-cols-2">
         {rows.map((r) => {
           const st = staticProps.find((s) => s.slug === r.slug);

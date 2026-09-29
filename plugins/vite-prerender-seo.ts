@@ -340,7 +340,7 @@ interface DbProperty {
  */
 async function fetchActiveProperties(): Promise<DbProperty[]> {
   try {
-    const url = `${SUPABASE_URL}/rest/v1/properties?is_active=eq.true&slug=not.is.null&select=slug,name,location,bedrooms,size,floor,roi_percentage,capital_necesar,listing_type,year_built,base_price_per_night,booking_url&order=display_order.asc`;
+    const url = `${SUPABASE_URL}/rest/v1/properties?is_active=eq.true&slug=not.is.null&select=slug,name,location,bedrooms,size,floor,roi_percentage,capital_necesar,listing_type,year_built,base_price_per_night,booking_url,seo_title,seo_description&order=display_order.asc`;
     const res = await fetch(url, {
       headers: {
         'apikey': SUPABASE_ANON_KEY,
@@ -395,7 +395,10 @@ function buildPropertyRoutes(properties: DbProperty[]): PrerenderRoute[] {
       descParts.push(`Ideal pentru investiție cu un randament estimat de ${p.roi_percentage}.`);
     }
     descParts.push('Administrare prin RealTrust inclusă.');
-    const description = descParts.join(' ').slice(0, 160);
+    const seoT = (p as { seo_title?: string | null }).seo_title?.trim();
+    const seoD = (p as { seo_description?: string | null }).seo_description?.replace(/[✓\s]+/g, ' ').trim();
+    const description = (seoD || descParts.join(' ')).slice(0, 160);
+    const finalTitle = seoT ? `${seoT} | RealTrust`.slice(0, 70) : title;
 
     const canonical = `${BASE_URL}/proprietate/${p.slug}`;
 
@@ -423,10 +426,11 @@ function buildPropertyRoutes(properties: DbProperty[]): PrerenderRoute[] {
     // LodgingBusiness + HotelRoom structured data, not a sale listing.
     if ((p.listing_type || '').trim().toLowerCase() === 'cazare') {
       const cazareDescRaw = `Cazare regim hotelier în ${zone}, Timișoara. ${p.base_price_per_night ? `De la ${p.base_price_per_night}€/noapte. ` : ''}Parcare, Wi-Fi, self check-in. Rezervare directă, fără comision.`;
-      const cazareDesc = cazareDescRaw.length > 158 ? `${cazareDescRaw.slice(0, 155).trimEnd()}…` : cazareDescRaw;
+      const cazareBase = seoD || cazareDescRaw;
+      const cazareDesc = cazareBase.length > 158 ? `${cazareBase.slice(0, 155).trimEnd()}…` : cazareBase;
       return {
         path: `/proprietate/${p.slug}`,
-        title: `${p.name} - Cazare Regim Hotelier Timișoara | RealTrust`,
+        title: seoT ? `${seoT} | RealTrust`.slice(0, 70) : `${p.name} - Cazare Regim Hotelier Timișoara | RealTrust`,
         description: cazareDesc,
         h1: `${p.name} — cazare regim hotelier în ${zone}, Timișoara`,
         canonical,
@@ -472,7 +476,7 @@ function buildPropertyRoutes(properties: DbProperty[]): PrerenderRoute[] {
 
     return {
       path: `/proprietate/${p.slug}`,
-      title,
+      title: finalTitle,
       description,
       h1: `${type} de vânzare în ${zone}, Timișoara`,
       canonical,

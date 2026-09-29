@@ -316,7 +316,7 @@ const PropertyCard = ({
             <PrefetchLink
               to={`/proprietate/${property.slug}`}
               propertyId={String(property.id)}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); trackListingClick("listing_details_click", property); }}
               aria-label={language === "ro" ? `Vezi detalii ${property.name}` : `View details ${property.name}`}
             >
               <Eye className="w-4 h-4" />
