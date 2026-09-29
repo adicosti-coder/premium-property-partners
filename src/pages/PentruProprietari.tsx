@@ -88,6 +88,7 @@ const OwnerSeasonalityChart = lazy(() => import("@/components/owners/OwnerSeason
 const OwnerEligibilityCriteria = lazy(() => import("@/components/owners/OwnerEligibilityCriteria"));
 const OwnerCompetitorComparison = lazy(() => import("@/components/owners/OwnerCompetitorComparison"));
 const OwnerAssociationPermits = lazy(() => import("@/components/owners/OwnerAssociationPermits"));
+const OwnerVisibilityBoost = lazy(() => import("@/components/owners/OwnerVisibilityBoost"));
 const OwnerPmRevenueStack = lazy(() => import("@/components/owners/OwnerPmRevenueStack"));
 
 /**
@@ -967,6 +968,7 @@ const PentruProprietari = () => {
 
       {/* Property Management: prețuri dinamice, co-hosting direct, Smart Access */}
       <OwnerPmRevenueStack />
+      <OwnerVisibilityBoost />
 
       {/* Explicit fees and packages */}
       <OwnerPricingPackages />
