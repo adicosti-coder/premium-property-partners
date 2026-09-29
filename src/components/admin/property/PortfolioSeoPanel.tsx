@@ -85,7 +85,7 @@ export default function PortfolioSeoPanel() {
     toast({ title: "Optimizare SEO finalizată", description: fails ? `${fails} apartamente nu au putut fi procesate.` : "Variantele sunt gata de aplicat." });
   };
 
-  const applyField = async (id: string, patch: Record<string, string>) => {
+  const applyField = async (id: string, patch: { name?: string; long_description_ro?: string }) => {
     setBusyId(id);
     const { error } = await supabase.from("properties").update(patch).eq("id", id);
     if (!error) await supabase.from("property_seo_suggestions").update({ applied_at: new Date().toISOString() }).eq("property_id", id);
