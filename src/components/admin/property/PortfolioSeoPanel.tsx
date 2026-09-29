@@ -4,13 +4,16 @@ import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ChannelTab from "./ChannelTab";
 
 interface Img { id: string; image_path: string; is_primary: boolean; is_cover_candidate: boolean; is_published: boolean; display_order: number }
 interface Prop {
   id: string; name: string; description_ro: string; long_description_ro: string | null;
   features: string[] | null; amenities: string[] | null; image_path: string | null;
 }
-interface Sugg { property_id: string; titles: string[]; descriptions: string[]; keywords: string[]; applied_at: string | null }
+interface ChannelText { titles: string[]; description: string }
+interface Sugg { property_id: string; titles: string[]; descriptions: string[]; keywords: string[]; applied_at: string | null; channels?: { airbnb?: ChannelText; booking?: ChannelText } }
 
 const imgUrl = (path: string) =>
   path.startsWith("http") ? path : supabase.storage.from("property-images").getPublicUrl(path).data.publicUrl;
@@ -52,7 +55,7 @@ export default function PortfolioSeoPanel() {
       supabase.from("property_images")
         .select("id, property_id, image_path, is_primary, is_cover_candidate, is_published, display_order")
         .in("property_id", ids).order("display_order"),
-      supabase.from("property_seo_suggestions").select("property_id, titles, descriptions, keywords, applied_at").in("property_id", ids),
+      supabase.from("property_seo_suggestions").select("property_id, titles, descriptions, keywords, applied_at, channels").in("property_id", ids),
     ]);
     const byP: Record<string, Img[]> = {};
     (im ?? []).forEach((r: Img & { property_id: string }) => { (byP[r.property_id] ||= []).push(r); });
@@ -67,7 +70,7 @@ export default function PortfolioSeoPanel() {
   const generate = async (id: string) => {
     const { data, error } = await supabase.functions.invoke("andrei-listing-seo", { body: { property_id: id } });
     if (error || !data?.success) throw new Error(data?.error || "Generare eșuată");
-    setSugg((s) => ({ ...s, [id]: { property_id: id, titles: data.titles, descriptions: data.descriptions, keywords: data.keywords, applied_at: null } }));
+    setSugg((s) => ({ ...s, [id]: { property_id: id, titles: data.titles, descriptions: data.descriptions, keywords: data.keywords, channels: data.channels, applied_at: null } }));
   };
 
   const runAll = async () => {
@@ -165,6 +168,13 @@ export default function PortfolioSeoPanel() {
                 {isOpen && (
                   <div className="space-y-3 text-sm">
                     {s ? (
+                      <Tabs defaultValue="site">
+                        <TabsList className="w-full">
+                          <TabsTrigger value="site" className="flex-1">Site propriu</TabsTrigger>
+                          <TabsTrigger value="airbnb" className="flex-1">Airbnb</TabsTrigger>
+                          <TabsTrigger value="booking" className="flex-1">Booking.com</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="site" className="space-y-3">
                       <>
                         {s.titles.map((t) => (
                           <div key={t} className="flex items-center justify-between gap-2 rounded border border-border p-2">
@@ -180,6 +190,10 @@ export default function PortfolioSeoPanel() {
                         ))}
                         {s.keywords.length > 0 && <p className="text-xs text-muted-foreground">Cuvinte-cheie: {s.keywords.join(", ")}</p>}
                       </>
+                        </TabsContent>
+                        <TabsContent value="airbnb"><ChannelTab channel="airbnb" text={s.channels?.airbnb} /></TabsContent>
+                        <TabsContent value="booking"><ChannelTab channel="booking" text={s.channels?.booking} /></TabsContent>
+                      </Tabs>
                     ) : <p className="text-xs text-muted-foreground">Nu există încă variante generate.</p>}
                     <div>
                       <p className="text-xs uppercase text-muted-foreground mb-2">Coperți A/B (★ = coperta actuală; bifă = candidată)</p>
