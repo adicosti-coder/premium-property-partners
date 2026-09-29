@@ -393,9 +393,8 @@ const PentruOaspeti = () => {
           
           <div className="container mx-auto px-6 relative z-10">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={heroAnimation.isVisible ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6 }}
+              /* No entry fade: the hero text is the LCP element and must paint immediately. */
+              initial={false}
               className="text-center max-w-4xl mx-auto"
             >
               {/* Badge */}

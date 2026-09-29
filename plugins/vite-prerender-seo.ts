@@ -1799,9 +1799,21 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
       ${route.seoBody ?? ''}
     </div>`;
 
+  // Visible static heading shell for listing/contact pages: paints the page
+  // title before any JS so real-user FCP/LCP don't wait for the app bundle.
+  // Removed by src/main.tsx once React renders its own H1 (max 3s).
+  const ROUTE_SHELL_PATHS = new Set(['/imobiliare', '/cazare', '/contact']);
+  const routeShell = ROUTE_SHELL_PATHS.has(route.path)
+    ? `
+    <div id="route-shell" aria-hidden="true" style="position:absolute;top:0;left:0;right:0;z-index:20;pointer-events:none;min-height:100vh;background:hsl(var(--background,0 0% 100%));padding:9rem 1.5rem 3rem;text-align:center;font-family:'Inter Fallback',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:hsl(var(--foreground,222 47% 11%))">
+      <p style="font-family:'Playfair Fallback',Georgia,serif;font-weight:700;font-size:clamp(2.25rem,5vw,3.75rem);line-height:1.15;margin:0 auto 1.5rem;max-width:56rem">${escapeHtml(route.h1)}</p>
+      <p style="font-size:1.125rem;line-height:1.6;margin:0 auto;max-width:42rem;opacity:.75">${escapeHtml(route.description)}</p>
+    </div>`
+    : '';
+
   html = html.replace(
     '<div id="root">',
-    `${seoBlock}\n    <div id="root">`
+    `${seoBlock}${routeShell}\n    <div id="root">`
   );
 
   // Deduplicate CSS links: if a preload-swap tag already exists for the same
