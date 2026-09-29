@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { formatLeadMessage } from "@/lib/formatLeadMessage";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
 
@@ -99,7 +100,9 @@ const LeadDetailDialog = ({ lead, open, onOpenChange }: Props) => {
               <div className="flex items-center gap-2 text-sm">
                 <Building2 className="w-4 h-4 text-muted-foreground" />
                 <span className="capitalize">{lead.property_type}</span>
-                <span className="text-muted-foreground">• {lead.property_area} m²</span>
+                {lead.property_area > 0 && (
+                  <span className="text-muted-foreground">• {lead.property_area} m²</span>
+                )}
               </div>
               {lead.calculated_net_profit && (
                 <div className="flex items-center gap-2 text-sm">
@@ -123,7 +126,7 @@ const LeadDetailDialog = ({ lead, open, onOpenChange }: Props) => {
                 <MessageSquare className="w-4 h-4 text-muted-foreground" />
                 <span className="text-xs font-semibold text-muted-foreground uppercase">Mesaj</span>
               </div>
-              <p className="text-sm">{lead.message}</p>
+              <p className="text-sm whitespace-pre-line">{formatLeadMessage(lead.message)}</p>
             </div>
           )}
 
