@@ -41,7 +41,7 @@ serve(async (req) => {
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const since = new Date(Date.now() - 15 * 60 * 1000).toISOString();
     const { data: recent } = await admin.from("leads").select("id")
-      .ilike("email", normEmail).eq("source", "lead_capture_form")
+      .ilike("email", normEmail.replace(/[\\%_]/g, (c) => "\\" + c)).eq("source", "lead_capture_form")
       .gte("created_at", since).limit(1);
     if (!recent || recent.length === 0) {
       return new Response(JSON.stringify({ error: "Forbidden" }),
@@ -152,7 +152,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         from: "RealTrust <info@realtrust.ro>",
-        to: [email],
+        to: [normEmail],
         subject,
         html,
         reply_to: "info@realtrust.ro",
