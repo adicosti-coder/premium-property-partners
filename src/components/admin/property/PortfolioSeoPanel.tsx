@@ -129,7 +129,7 @@ export default function PortfolioSeoPanel() {
         </button>
         <Button onClick={runAll} disabled={running || !props.length} className="min-h-12">
           {running ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
-          Optimizează SEO cu Andrei AI
+          Optimizează toate cu Andrei AI
         </Button>
       </div>
       {running && <div className="px-4 pb-3"><Progress value={(done / Math.max(props.length, 1)) * 100} /><p className="text-xs text-muted-foreground mt-1">{done}/{props.length} apartamente</p></div>}
@@ -151,12 +151,12 @@ export default function PortfolioSeoPanel() {
                   {list.length} poze · {(p.amenities?.length ?? 0) + (p.features?.length ?? 0)} facilități · descriere SEO {s?.applied_at ? "activă" : "neaplicată"}
                 </p>
                 <div className="flex gap-2 flex-wrap">
-                  <Button size="sm" variant="outline" disabled={busyId === p.id} onClick={async () => {
+                  <Button size="sm" disabled={busyId === p.id} onClick={async () => {
                     setBusyId(p.id);
                     try { await generate(p.id); setExpanded(p.id); } catch (e) { toast({ title: "Andrei AI", description: (e as Error).message, variant: "destructive" }); }
                     setBusyId(null);
                   }}>
-                    <Sparkles className="w-3 h-3 mr-1" /> {s ? "Regenerează" : "Generează"}
+                    {busyId === p.id ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Sparkles className="w-3 h-3 mr-1" />} Optimizează SEO cu Andrei AI
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => setExpanded(isOpen ? null : p.id)}>
                     {isOpen ? "Ascunde" : "Variante & coperți"}

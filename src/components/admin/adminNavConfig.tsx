@@ -145,6 +145,8 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       },
       { value: "properties", label: "Proprietăți", icon: Building },
       { value: "cazare", label: "Cazare", icon: Hotel },
+      { value: "channel-listings", label: "Anunțuri pe Canale", icon: BarChart3, keywords: ["booking", "airbnb", "canale", "titluri", "comparare", "seo", "andrei"] },
+      { value: "cover-rotation", label: "Rotire Coperți", icon: Star, keywords: ["coperta", "poze", "a/b", "cover", "imagini"] },
       { value: "investitii-premium", label: "Investiții Premium", icon: TrendingUp },
       { value: "complexes", label: "Complexe", icon: Building2 },
       { value: "catalogs", label: "Cataloage PDF", icon: FileText },
@@ -227,8 +229,6 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { value: "tracking-alerts", label: "Alerte Tracking", icon: Activity, keywords: ["ga4", "alerta", "scadere", "sesiuni", "email", "monitorizare"] },
       { value: "conversion-report", label: "Raport Conversii", icon: BarChart3, keywords: ["utm", "gclid", "atribuire", "sursa", "rata conversie", "saptamanal", "raport"] },
       { value: "listing-conversions", label: "Conversii Anunțuri", icon: BarChart3, keywords: ["vizite", "cazare", "contact", "evaluare", "anunturi active", "conversii"] },
-      { value: "channel-listings", label: "Anunțuri pe Canale", icon: BarChart3, keywords: ["booking", "airbnb", "canale", "titluri", "comparare"] },
-      { value: "cover-rotation", label: "Rotire Coperți", icon: Star, keywords: ["coperta", "poze", "a/b", "cover", "imagini"] },
 
 
       { value: "funnel-analytics", label: "Funnel", icon: Target },
