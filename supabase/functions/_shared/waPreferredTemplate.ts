@@ -3,7 +3,7 @@
 // Astfel trecerea se face singură, fără intervenție manuală.
 import { WA_API_VERSION, WA_BUSINESS_ACCOUNT_ID, waToken } from "./waConfig.ts";
 
-export const WA_PREMIUM_TEMPLATE = "prospect_intro_premium_v3";
+export const WA_PREMIUM_TEMPLATE = "prospect_intro_premium_v4";
 export const WA_LEGACY_TEMPLATE = "prospect_intro_premium_v3";
 
 let cached: { name: string; at: number } | null = null;
