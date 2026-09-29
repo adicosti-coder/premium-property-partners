@@ -30,6 +30,7 @@ import PropertyPremiumFields, {
   PremiumFieldsData,
   defaultPremiumFields,
 } from "../../PropertyPremiumFields";
+import AndreiSeoAssistant from "../AndreiSeoAssistant";
 import MapLocationPicker from "../../MapLocationPicker";
 
 interface PropertyImage {
@@ -618,6 +619,11 @@ export function PropertyEditor({ open, mode, propertyId, onOpenChange, onSaved }
             </div>
 
             {/* Descriptions */}
+            <AndreiSeoAssistant
+              property={{ ...formData }}
+              onUseTitle={(title) => setFormData((prev) => ({ ...prev, name: title }))}
+              onUseDescription={(d) => setFormData((prev) => ({ ...prev, description_ro: d }))}
+            />
             <div className="space-y-2">
               <Label>{t.admin.properties?.descriptionRo || "Descriere (Română)"}</Label>
               <Textarea
