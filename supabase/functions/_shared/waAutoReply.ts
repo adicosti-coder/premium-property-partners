@@ -137,7 +137,7 @@ export async function loadProspectContext(
 
 /**
  * Răspunsurile automate pentru butoanele din primul mesaj WhatsApp
- * („Vânzare asistată”, „Administrare hotelieră”, „Nu, mulțumesc”) și pentru
+ * („Colaborare vânzare”, „Închiriere clasică”, „Regim hotelier”) și pentru
  * mesajele scrise care spun același lucru. Folosit atât de webhook-ul Meta,
  * cât și de puntea Make.com, ca textul să fie identic.
  */
@@ -281,6 +281,16 @@ export function quickReplyText(raw: string): { kind: string; text: string } | nu
         "sedinta foto profesionala si promovare, apoi aducem doar clienti verificati la vizionari si " +
         "pregatim dosarul pana la notar.\n\nCa sa va trimit estimarea de preț, imi confirmati zona, " +
         "numarul de camere si suprafata? Va raspundem intre 09:00 si 20:00.",
+    };
+  }
+  if (/inchiriere clasica/.test(t)) {
+    return {
+      kind: "quick_classic_rent",
+      text:
+        "Perfect, vă putem ajuta cu închirierea clasică: evaluare gratuită a chiriei, promovare, " +
+        "selecția chiriașilor, contract și administrarea relației pe durata închirierii.\n\n" +
+        "Ca să vă trimit estimarea, îmi confirmați zona, numărul de camere și suprafața? " +
+        "Vă răspundem prin WhatsApp între 09:00 și 20:00.",
     };
   }
   if (/administrare|hotel/.test(t)) {

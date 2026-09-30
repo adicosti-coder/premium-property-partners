@@ -44,3 +44,12 @@
 - [x] Rating actualizat la 9,0 Superb din 4 evaluări
 - [x] Chat mobil ridicat peste bara fixă de contact
 - [x] Typecheck 0 erori
+
+## WhatsApp prospect_intro_premium_v6 (30 sep 2026)
+- [x] Șablon trimis la Meta cu zonă dinamică și 3 butoane; status APPROVED
+- [x] Activare automată v6 cu fallback v5/v3
+- [x] Limite live: 1 mesaj/oră, luni–sâmbătă 09:00–20:00
+- [x] Maximum două reamintiri la 24h și 72h
+- [x] Deduplicare 6h și oprire la interacțiune anterioară/STOP
+- [x] Răspuns dedicat pentru butonul „Închiriere clasică”
+- [x] Typecheck 0 erori și publicare solicitată
