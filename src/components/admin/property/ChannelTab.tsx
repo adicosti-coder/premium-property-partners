@@ -2,7 +2,7 @@ import { Copy, RefreshCw, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 
-type Channel = "airbnb" | "booking";
+type Channel = "airbnb" | "booking" | "google";
 
 const CFG: Record<Channel, { label: string; max: number; url: string; photos: string[] }> = {
   airbnb: {
@@ -29,6 +29,19 @@ const CFG: Record<Channel, { label: string; max: number; url: string; photos: st
       "4. Baia",
       "5. Bucătăria și dotările (mașină de spălat, cafetieră)",
       "6. Parcare / acces / self check-in, apoi împrejurimi",
+    ],
+  },
+  google: {
+    label: "Google Maps",
+    max: 60,
+    url: "https://business.google.com/locations",
+    photos: [
+      "1. Fațada / intrarea clădirii — Google o arată prima în rezultate",
+      "2. Livingul, fotografie orizontală luminoasă",
+      "3. Dormitorul principal",
+      "4. Bucătăria echipată",
+      "5. Baia",
+      "6. Zona / reperele apropiate (centru, parc, parcare)",
     ],
   },
 };
