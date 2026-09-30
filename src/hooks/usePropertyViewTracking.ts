@@ -26,13 +26,21 @@ export const usePropertyViewTracking = (propertyId: string | undefined) => {
           data: { user },
         } = await supabase.auth.getUser();
 
+        // Păstrăm sursa marcată (utm_source) în page_path, ca raportul pe anunțuri
+        // să poată număra vizitele venite din Booking.com / Airbnb.
+        const utmSource = new URLSearchParams(window.location.search).get("utm_source");
+        const cleanSource = (utmSource || "").toLowerCase().replace(/[^a-z0-9_.-]/g, "").slice(0, 40);
+        const pagePath = cleanSource
+          ? `${window.location.pathname}?utm_source=${cleanSource}`
+          : window.location.pathname;
+
         await supabase.from("property_views").insert({
           property_id: propertyId,
           user_id: user?.id || null,
           session_id: getSessionId(),
           referrer: document.referrer || null,
           user_agent: navigator.userAgent,
-          page_path: window.location.pathname,
+          page_path: pagePath,
         });
 
         // Also feed into AI Memory (cross-function visitor tracker)
