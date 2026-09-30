@@ -124,6 +124,7 @@ Deno.serve(async (req) => {
     allow_template?: boolean;
     template_name?: string;
     template_language?: string;
+    zone?: string;
     profile_name?: string;
     wa_message_id?: string;
     property_id?: string;
@@ -1232,7 +1233,7 @@ Deno.serve(async (req) => {
                   type: "body",
                   parameters: [{
                     type: "text",
-                    text: String(lead.property_area || "Timișoara").trim() || "Timișoara",
+                    text: "Timișoara",
                   }],
                 }],
               }
