@@ -3,9 +3,12 @@
 // hello_world (pas 2). Admin-only sau apel intern.
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
-const PHONE_NUMBER_ID = "1357718887419757";
-const WABA_ID = "1734901587779217";
-const API_VERSION = "v25.0";
+import { WA_PHONE_NUMBER_ID, WA_BUSINESS_ACCOUNT_ID, WA_API_VERSION } from "../_shared/waConfig.ts";
+
+// Expeditorul este mereu numărul oficial de companie (secret META_WHATSAPP_PHONE_NUMBER_ID).
+const PHONE_NUMBER_ID = WA_PHONE_NUMBER_ID;
+const WABA_ID = WA_BUSINESS_ACCOUNT_ID;
+const API_VERSION = WA_API_VERSION;
 const PIN = "654321";
 const TEST_RECIPIENT = "+40723154520";
 
