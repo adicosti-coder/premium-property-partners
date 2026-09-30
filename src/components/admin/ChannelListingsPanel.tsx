@@ -69,7 +69,7 @@ export default function ChannelListingsPanel() {
       (pv.data ?? []).forEach((r: { page_path: string | null }) => {
         const src = utmSourceFromPath(r.page_path);
         if (!src) return;
-        const slug = /^\/cazare\/([^?]+)/.exec(r.page_path ?? "")?.[1];
+        const slug = /^\/(?:cazare|proprietate)\/([^?]+)/.exec(r.page_path ?? "")?.[1];
         if (!slug) return;
         const s = get(slug);
         if (src === "airbnb") s.visitsAirbnb++; else s.visitsBooking++;
