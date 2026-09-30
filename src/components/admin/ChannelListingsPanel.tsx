@@ -5,13 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Sparkles, Loader2 } from "lucide-react";
+import { ExternalLink, Sparkles, Loader2, Copy } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import ChannelTab from "@/components/admin/property/ChannelTab";
+import { listingUtmUrl, utmSourceFromPath } from "@/lib/listingUtm";
 
 type Ch = { titles: string[]; description: string };
+type Channels = { airbnb?: Ch; booking?: Ch; google?: Ch };
 type Row = { id: string; slug: string; name: string; image_path: string | null; airbnb_url: string | null; booking_com_url: string | null; booking_url: string | null };
-type Stat = { views: number; cazare: number; contact: number; direct: number; fromBooking: number; fromAirbnb: number };
+type Stat = { views: number; cazare: number; contact: number; direct: number; fromBooking: number; fromAirbnb: number; visitsBooking: number; visitsAirbnb: number };
 
 const cazareSlugs = new Set(staticProps.map((p) => p.slug));
 
