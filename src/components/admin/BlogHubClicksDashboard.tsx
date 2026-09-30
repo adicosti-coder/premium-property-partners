@@ -217,7 +217,7 @@ const BlogHubClicksDashboard = () => {
       r.uniqueTotal,
       r.ctr.toFixed(2),
     ]);
-    const csv = [headers.join(";"), ...csvRows.map((r) => r.join(";"))].join("\n");
+    const csv = [headers.map(csvCell).join(";"), ...csvRows.map((r) => r.map(csvCell).join(";"))].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -240,7 +240,7 @@ const BlogHubClicksDashboard = () => {
         r.session_id ?? "",
       ];
     });
-    const csv = [headers.join(";"), ...csvRows.map((r) => r.join(";"))].join("\n");
+    const csv = [headers.map(csvCell).join(";"), ...csvRows.map((r) => r.map(csvCell).join(";"))].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -509,5 +509,12 @@ const StatCard = ({ icon, label, value }: { icon: React.ReactNode; label: string
     </CardContent>
   </Card>
 );
+
+/** Neutralize spreadsheet formulas and quote CSV cells (untrusted analytics metadata). */
+const csvCell = (v: unknown): string => {
+  let t = String(v ?? "");
+  if (/^[=+\-@\t\r]/.test(t)) t = "'" + t;
+  return /[";\n\r]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t;
+};
 
 export default BlogHubClicksDashboard;
