@@ -955,6 +955,25 @@ Deno.serve(async (req) => {
     const nowIso = new Date().toISOString();
     const windowExp = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
 
+    // Anti-buclă: Make retrimite uneori același mesaj de zeci de ori. Același
+    // text de la același număr în ultimele 6 ore (sau același wa_message_id)
+    // se ignoră complet — fără salvare, fără răspuns automat, fără e-mail.
+    {
+      const since = new Date(Date.now() - 6 * 3600 * 1000).toISOString();
+      const { data: convs } = await supabase
+        .from("wa_conversations").select("id").eq("phone_normalized", phone);
+      const ids = (convs ?? []).map((c: any) => c.id);
+      if (ids.length) {
+        let q = supabase.from("wa_messages").select("id", { count: "exact", head: true })
+          .in("conversation_id", ids).eq("direction", "inbound");
+        q = body.wa_message_id
+          ? q.eq("wa_message_id", body.wa_message_id)
+          : q.eq("content", text).gte("created_at", since);
+        const { count: dup } = await q;
+        if (dup) return json({ ok: true, deduped: true, note: "duplicate_inbound_ignored" });
+      }
+    }
+
     const { data: existingConv } = await supabase
       .from("wa_conversations")
       .select("id")
