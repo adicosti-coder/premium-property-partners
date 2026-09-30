@@ -441,6 +441,8 @@ Deno.serve(async (req) => {
           .update({
             status: "sent",
             sent_at: new Date().toISOString(),
+            // Salvăm șablonul efectiv trimis, pentru raportul de eficiență pe șablon.
+            template_name: selectedTemplate,
             conversation_id: conversationId,
             wa_message_id: waMessageId,
             last_error: null,
