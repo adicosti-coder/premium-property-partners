@@ -7,15 +7,10 @@ export const WA_PREMIUM_TEMPLATE = "prospect_intro_premium_v6";
 export const WA_PREVIOUS_TEMPLATE = "prospect_intro_premium_v5";
 export const WA_LEGACY_TEMPLATE = "prospect_intro_premium_v3";
 
-let cached: { name: string; at: number } | null = null;
-const TTL_MS = 10 * 60_000;
-
 /** Numele șablonului aprobat care trebuie folosit la primul mesaj. */
 export async function preferredIntroTemplate(): Promise<string> {
   const envOverride = Deno.env.get("WA_OUTBOUND_TEMPLATE") || Deno.env.get("WA_DEFAULT_TEMPLATE");
   if (envOverride) return envOverride.trim();
-
-  if (cached && Date.now() - cached.at < TTL_MS) return cached.name;
 
   const token = waToken();
   if (!token) return WA_LEGACY_TEMPLATE;
@@ -36,7 +31,6 @@ export async function preferredIntroTemplate(): Promise<string> {
       : isApproved(WA_PREVIOUS_TEMPLATE)
         ? WA_PREVIOUS_TEMPLATE
         : WA_LEGACY_TEMPLATE;
-    cached = { name, at: Date.now() };
     return name;
   } catch {
     return WA_LEGACY_TEMPLATE;
