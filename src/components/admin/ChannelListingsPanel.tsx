@@ -130,10 +130,24 @@ export default function ChannelListingsPanel() {
             </CardHeader>
             <CardContent className="space-y-3">
               <Tabs defaultValue="booking">
-                <TabsList className="w-full"><TabsTrigger value="booking" className="flex-1">Booking.com</TabsTrigger><TabsTrigger value="airbnb" className="flex-1">Airbnb</TabsTrigger></TabsList>
+                <TabsList className="w-full"><TabsTrigger value="booking" className="flex-1">Booking.com</TabsTrigger><TabsTrigger value="airbnb" className="flex-1">Airbnb</TabsTrigger><TabsTrigger value="google" className="flex-1">Google Maps</TabsTrigger></TabsList>
                 <TabsContent value="booking"><ChannelTab channel="booking" text={sugg[r.id]?.booking} /></TabsContent>
                 <TabsContent value="airbnb"><ChannelTab channel="airbnb" text={sugg[r.id]?.airbnb} /></TabsContent>
+                <TabsContent value="google"><ChannelTab channel="google" text={sugg[r.id]?.google} /></TabsContent>
               </Tabs>
+              <div className="rounded border border-border p-2 space-y-2">
+                <p className="text-xs font-semibold">Linkuri marcate spre realtrust.ro (lipește-le în anunțuri)</p>
+                {(["booking", "airbnb"] as const).map((src) => {
+                  const url = listingUtmUrl(r.slug, src);
+                  return (
+                    <div key={src} className="flex items-center gap-2">
+                      <code className="text-xs break-all flex-1">{url}</code>
+                      <Button size="icon" variant="ghost" aria-label={`Copiază linkul pentru ${src}`} onClick={() => copyText(url, "Linkul")}><Copy className="w-3 h-3" /></Button>
+                      <Button asChild size="icon" variant="outline" aria-label="Deschide linkul marcat"><a href={url} target="_blank" rel="noopener noreferrer"><ExternalLink className="w-3 h-3" /></a></Button>
+                    </div>
+                  );
+                })}
+              </div>
               {(["booking_com_url", "airbnb_url"] as const).map((f) => {
                 const val = r[f] ?? (f === "booking_com_url" && r.booking_url?.includes("booking.com") ? r.booking_url : "");
                 return (
