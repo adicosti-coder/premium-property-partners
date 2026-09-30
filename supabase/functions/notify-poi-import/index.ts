@@ -259,8 +259,16 @@ serve(async (req) => {
     }
 
     // Prepare notification content
-    const name = rawName || 'Cineva';
-    const count = importedCount;
+    // Only signed-in importers may attach their own display name/count;
+    // anonymous callers get a generic, non-spoofable message.
+    let name = 'Cineva';
+    if (importerId) {
+      const { data: prof } = await supabase.from('profiles').select('full_name').eq('id', importerId).maybeSingle();
+      const n = (prof as { full_name?: string } | null)?.full_name?.trim();
+      if (n) name = n.slice(0, 80);
+    }
+    void rawName;
+    const count = importerId ? importedCount : 1;
     
     let pushSentCount = 0;
     let emailSent = false;

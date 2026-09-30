@@ -34,8 +34,25 @@ const handler = async (req: Request): Promise<Response> => {
   if (!auth.ok) return auth.response!;
 
   try {
-    const payload: ReviewReplyRequest = await req.json();
-    const guestEmail = payload.guestEmail;
+    const payload: ReviewReplyRequest & { reviewId?: string } = await req.json();
+    // Recipient is always taken from the stored review, never from the request.
+    const reviewId = typeof payload.reviewId === "string" ? payload.reviewId : "";
+    if (!/^[0-9a-f-]{36}$/i.test(reviewId)) {
+      return new Response(JSON.stringify({ error: "reviewId required" }), {
+        status: 400, headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+    const sbAdmin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data: reviewRow } = await sbAdmin.from("property_reviews")
+      .select("guest_email, admin_reply").eq("id", reviewId).maybeSingle();
+    if (!reviewRow || !reviewRow.admin_reply) {
+      return new Response(JSON.stringify({ error: "Review not found" }), {
+        status: 404, headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+    const guestEmail = (reviewRow.guest_email as string | null) || "";
+    payload.adminReply = reviewRow.admin_reply as string;
     const guestName = escapeHtml(payload.guestName);
     const propertyName = escapeHtml(payload.propertyName);
     const reviewTitle = payload.reviewTitle ? escapeHtml(payload.reviewTitle) : payload.reviewTitle;
