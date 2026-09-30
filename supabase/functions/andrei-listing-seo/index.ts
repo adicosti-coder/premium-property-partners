@@ -91,6 +91,7 @@ serve(async (req) => {
       airbnb: { titles: cut(strArr(ch("airbnb").titles, 3), 50), description: String(ch("airbnb").description ?? "").trim() },
       og: { title: String(ch("og").title ?? "").trim().slice(0, 70), description: String(ch("og").description ?? "").trim().slice(0, 160) },
       booking: { titles: cut(strArr(ch("booking").titles, 3), 70), description: String(ch("booking").description ?? "").trim() },
+      google: { titles: cut(strArr(ch("google").titles, 3), 60), description: String(ch("google").description ?? "").trim() },
     };
     const out = {
       titles: strArr(ch("site").titles, 3),
