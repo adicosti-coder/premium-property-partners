@@ -19,7 +19,7 @@ const cazareSlugs = new Set(staticProps.map((p) => p.slug));
 
 export default function ChannelListingsPanel() {
   const [rows, setRows] = useState<Row[]>([]);
-  const [sugg, setSugg] = useState<Record<string, { airbnb?: Ch; booking?: Ch }>>({});
+  const [sugg, setSugg] = useState<Record<string, Channels>>({});
   const [stats, setStats] = useState<Record<string, Stat>>({});
   const [days, setDays] = useState(30);
   const [busy, setBusy] = useState<string | null>(null);
@@ -28,7 +28,7 @@ export default function ChannelListingsPanel() {
     const { data, error } = await supabase.functions.invoke("andrei-listing-seo", { body: { property_id: id } });
     setBusy(null);
     if (error) { toast({ title: "Andrei AI", description: error.message, variant: "destructive" }); return; }
-    const ch = (data?.channels ?? data?.suggestion?.channels) as { airbnb?: Ch; booking?: Ch } | undefined;
+    const ch = (data?.channels ?? data?.suggestion?.channels) as Channels | undefined;
     if (ch) setSugg((m) => ({ ...m, [id]: ch }));
     toast({ title: "Texte noi generate" });
   };
@@ -38,8 +38,8 @@ export default function ChannelListingsPanel() {
       .then(({ data }) => setRows(((data ?? []) as Row[]).filter((r) => cazareSlugs.has(r.slug) || /apart|residence|suite|studio/i.test(r.slug))));
     supabase.from("property_seo_suggestions").select("property_id, channels, created_at").order("created_at", { ascending: false }).limit(500)
       .then(({ data }) => {
-        const m: Record<string, { airbnb?: Ch; booking?: Ch }> = {};
-        ((data ?? []) as unknown as { property_id: string; channels: { airbnb?: Ch; booking?: Ch } | null }[]).forEach((s) => { if (!m[s.property_id] && s.channels) m[s.property_id] = s.channels; });
+        const m: Record<string, Channels> = {};
+        ((data ?? []) as unknown as { property_id: string; channels: Channels | null }[]).forEach((s) => { if (!m[s.property_id] && s.channels) m[s.property_id] = s.channels; });
         setSugg(m);
       });
   }, []);
@@ -49,13 +49,14 @@ export default function ChannelListingsPanel() {
     Promise.all([
       supabase.from("cta_analytics").select("cta_type, property_name").in("cta_type", ["listing_view", "listing_cazare_click", "listing_contact_click"]).gte("created_at", since).limit(10000),
       supabase.from("booking_requests").select("property_slug, source, utm").gte("created_at", since).limit(5000),
-    ]).then(([cta, br]) => {
+      supabase.from("property_views").select("page_path").gte("viewed_at", since).like("page_path", "%utm_source=%").limit(20000),
+    ]).then(([cta, br, pv]) => {
       const m: Record<string, Stat> = {};
       const keyOf = (n: string | null) => {
         const sp = staticProps.find((p) => p.slug === n || p.name === n);
         return sp?.slug ?? n ?? "—";
       };
-      const get = (k: string) => (m[k] ||= { views: 0, cazare: 0, contact: 0, direct: 0, fromBooking: 0, fromAirbnb: 0 });
+      const get = (k: string) => (m[k] ||= { views: 0, cazare: 0, contact: 0, direct: 0, fromBooking: 0, fromAirbnb: 0, visitsBooking: 0, visitsAirbnb: 0 });
       (cta.data ?? []).forEach((r: { cta_type: string; property_name: string | null }) => {
         const s = get(keyOf(r.property_name));
         if (r.cta_type === "listing_view") s.views++; else if (r.cta_type === "listing_cazare_click") s.cazare++; else s.contact++;
@@ -64,6 +65,14 @@ export default function ChannelListingsPanel() {
         const s = get(r.property_slug ?? "—");
         const src = `${r.utm?.utm_source ?? ""} ${r.source ?? ""}`.toLowerCase();
         if (src.includes("airbnb")) s.fromAirbnb++; else if (src.includes("booking")) s.fromBooking++; else s.direct++;
+      });
+      (pv.data ?? []).forEach((r: { page_path: string | null }) => {
+        const src = utmSourceFromPath(r.page_path);
+        if (!src) return;
+        const slug = /^\/cazare\/([^?]+)/.exec(r.page_path ?? "")?.[1];
+        if (!slug) return;
+        const s = get(slug);
+        if (src === "airbnb") s.visitsAirbnb++; else s.visitsBooking++;
       });
       setStats(m);
     });
