@@ -190,6 +190,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { value: "voice-agent", label: "Voice Agent", icon: Phone, subgroup: "AI Tools", keywords: ["voice", "apel ai"] },
       { value: "whatsapp-andrei", label: "Andrei WhatsApp", icon: MessageSquare, subgroup: "WhatsApp & Andrei", keywords: ["whatsapp", "wa", "andrei", "chat"] },
       { value: "whatsapp-queue", label: "Coadă WhatsApp", icon: MessageSquare, subgroup: "WhatsApp & Andrei", keywords: ["whatsapp", "coada", "queue", "outbound", "template", "rate limit"] },
+      { value: "whatsapp-test", label: "Test mesaj WhatsApp", icon: MessageSquare, subgroup: "WhatsApp & Andrei", keywords: ["test", "sablon", "șablon", "v6", "trimite", "proprietar", "butoane"] },
       { value: "whatsapp-history", label: "Istoric WhatsApp", icon: MessageSquare, subgroup: "WhatsApp & Andrei", keywords: ["whatsapp", "istoric", "mesaje", "trimise", "erori", "meta", "log"] },
       { value: "whatsapp-dashboard", label: "Dashboard WhatsApp", icon: MessageSquare, subgroup: "WhatsApp & Andrei", keywords: ["whatsapp", "dashboard", "coada", "trimise", "esuate", "meta", "statistici", "make"] },
       { value: "make-leads", label: "Lead-uri Make", icon: MessageSquare, subgroup: "WhatsApp & Andrei", keywords: ["make", "lead", "agent", "automatizare", "webhook", "raspunsuri", "transfer"] },
