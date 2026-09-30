@@ -13,6 +13,7 @@ import { WA_PHONE_NUMBER_ID, WA_API_VERSION, waToken } from "../_shared/waConfig
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { relayToMake } from "../_shared/makeRelay.ts";
 import { ACK_MESSAGE, buildIntakeMessage, loadProspectContext } from "../_shared/waAutoReply.ts";
+import { preferredIntroTemplate } from "../_shared/waPreferredTemplate.ts";
 
 /**
  * Apartamentul discutat cu clientul, dacă nu e trimis explicit `property_id`:
@@ -123,6 +124,7 @@ Deno.serve(async (req) => {
     allow_template?: boolean;
     template_name?: string;
     template_language?: string;
+    zone?: string;
     profile_name?: string;
     wa_message_id?: string;
     property_id?: string;
@@ -759,14 +761,22 @@ Deno.serve(async (req) => {
     if (!windowOpen && body.allow_template) {
       // Cerere explicită din Make: trimitem șablonul aprobat, marcat clar ca
       // șablon (nu pretindem că textul agentului a ajuns la client).
-      const tplName = body.template_name ||
-        Deno.env.get("WA_DEFAULT_TEMPLATE") || "prospect_intro_premium_v3";
+      const tplName = body.template_name || await preferredIntroTemplate();
       const tplLang = body.template_language || "ro";
+      const tplParams = tplName === "prospect_intro_premium_v6"
+        ? [{ type: "text", text: String(body.zone || "Timișoara").trim() || "Timișoara" }]
+        : [];
       const sentTpl = await sendToMeta({
         messaging_product: "whatsapp",
         to: phone.replace(/^\+/, ""),
         type: "template",
-        template: { name: tplName, language: { code: tplLang } },
+        template: {
+          name: tplName,
+          language: { code: tplLang },
+          ...(tplParams.length > 0
+            ? { components: [{ type: "body", parameters: tplParams }] }
+            : {}),
+        },
       });
       const tplMsgId = sentTpl.body?.messages?.[0]?.id ?? null;
 
@@ -1209,13 +1219,25 @@ Deno.serve(async (req) => {
     // pe WhatsApp direct din sistem, ca prospectul să nu rămână fără răspuns.
     let waResult: Record<string, unknown> | null = null;
     if (phone && (body.also_whatsapp || !relay.ok)) {
+      const introTemplate = await preferredIntroTemplate();
       const sent = await sendToMeta({
         messaging_product: "whatsapp",
         to: phone.replace(/^\+/, ""),
         type: "template",
         template: {
-          name: Deno.env.get("WA_DEFAULT_TEMPLATE") || "prospect_intro_premium_v3",
+          name: introTemplate,
           language: { code: "ro" },
+          ...(introTemplate === "prospect_intro_premium_v6"
+            ? {
+                components: [{
+                  type: "body",
+                  parameters: [{
+                    type: "text",
+                    text: "Timișoara",
+                  }],
+                }],
+              }
+            : {}),
         },
       });
       waResult = {

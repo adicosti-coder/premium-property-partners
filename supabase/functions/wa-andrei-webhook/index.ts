@@ -392,7 +392,7 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Primul răspuns după mesajul de prospectare (prospect_intro_premium_v3):
+        // Primul răspuns după mesajul de prospectare premium:
         // dacă nu există încă nicio cerere de acord, o creăm și punem automat
         // întrebarea „DA PUBLIC”, ca Andrei să nu mai scrie manual.
         if (

@@ -4,6 +4,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { isExpressOptOut } from "../_shared/dncPolicy.ts";
+import { preferredIntroTemplate } from "../_shared/waPreferredTemplate.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,8 +18,6 @@ const json = (body: unknown, status = 200) =>
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
-
-const DEFAULT_TEMPLATE = Deno.env.get("WA_OUTBOUND_TEMPLATE") || "prospect_intro_premium_v3";
 
 /** RO phone → +40XXXXXXXXX, or null when unusable. */
 function normalizePhone(raw?: string | null): string | null {
@@ -51,7 +50,7 @@ Deno.serve(async (req) => {
     return json({ error: "Invalid JSON" }, 400);
   }
 
-  const templateName = (body.template_name || DEFAULT_TEMPLATE).trim();
+  const templateName = (body.template_name || await preferredIntroTemplate()).trim();
   const templateLanguage = (body.template_language || "ro").trim();
   const priority = Number.isFinite(body.priority) ? Number(body.priority) : 0;
   const limit = Math.min(200, Math.max(1, Number(body.limit) || 50));
