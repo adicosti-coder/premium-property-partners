@@ -69,6 +69,7 @@ Deno.serve(async (req) => {
       language: existing.language ?? TEMPLATE_LANGUAGE,
       category: existing.category ?? "MARKETING",
       status: existing.status ?? "UNKNOWN",
+      components: existing.components ?? null,
     });
   }
 
