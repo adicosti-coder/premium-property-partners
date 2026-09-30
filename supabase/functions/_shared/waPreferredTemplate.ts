@@ -9,9 +9,6 @@ export const WA_LEGACY_TEMPLATE = "prospect_intro_premium_v3";
 
 /** Numele șablonului aprobat care trebuie folosit la primul mesaj. */
 export async function preferredIntroTemplate(): Promise<string> {
-  const envOverride = Deno.env.get("WA_OUTBOUND_TEMPLATE") || Deno.env.get("WA_DEFAULT_TEMPLATE");
-  if (envOverride) return envOverride.trim();
-
   const token = waToken();
   if (!token) return WA_LEGACY_TEMPLATE;
 
