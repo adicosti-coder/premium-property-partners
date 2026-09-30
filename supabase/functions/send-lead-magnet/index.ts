@@ -1,3 +1,4 @@
+import { escapeHtml as eh } from "../_shared/htmlEscape.ts";
 // Lead Magnet Edge Function - v3.0 - Simplified imports
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -136,15 +137,15 @@ serve(async (req) => {
             from: "RealTrust <info@realtrust.ro>",
             reply_to: "info@realtrust.ro",
             to: ["info@realtrust.ro"],
-            subject: `🎯 Lead Magnet: ${name} vrea Ghidul Investitorului 2026`,
+            subject: `🎯 Lead Magnet: ${eh(name)} vrea Ghidul Investitorului 2026`,
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                 <h1 style="color: #1e3a5f;">🎯 Lead Magnet Nou!</h1>
-                <p><strong>Nume:</strong> ${name}</p>
-                <p><strong>Email:</strong> ${email}</p>
-                ${phone ? `<p><strong>Telefon:</strong> ${phone}</p>` : ""}
-                ${budget ? `<p><strong>Buget:</strong> ${budget}</p>` : ""}
-                <p><strong>Sursă:</strong> ${source}</p>
+                <p><strong>Nume:</strong> ${eh(name)}</p>
+                <p><strong>Email:</strong> ${eh(email)}</p>
+                ${phone ? `<p><strong>Telefon:</strong> ${eh(phone)}</p>` : ""}
+                ${budget ? `<p><strong>Buget:</strong> ${eh(budget)}</p>` : ""}
+                <p><strong>Sursă:</strong> ${eh(source)}</p>
                 <p><strong>Limbă:</strong> ${language === "ro" ? "Română" : "English"}</p>
               </div>
             `,
