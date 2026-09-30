@@ -93,7 +93,19 @@ Deno.serve(async (req) => {
     let emailSent = false;
     let ownerEmailMs: number | null = null;
     const resendKey = Deno.env.get("RESEND_API_KEY");
-    if (ownerEmail && resendKey) {
+    // Bind delivery to a lead submitted in the last 30 minutes with the SAME
+    // email and phone, so callers cannot mail arbitrary inboxes or tag other leads.
+    const digits9 = ownerPhone.replace(/[^\d]/g, "").slice(-9);
+    let boundLead: { id: string; report_pdf_path: string | null } | null = null;
+    if (ownerEmail && digits9.length >= 9) {
+      const { data } = await admin.from("leads").select("id, report_pdf_path")
+        .ilike("email", ownerEmail.replace(/[\\%_]/g, (c) => "\\" + c))
+        .ilike("whatsapp_number", `%${digits9}%`)
+        .gte("created_at", new Date(Date.now() - 30 * 60 * 1000).toISOString())
+        .order("created_at", { ascending: false }).limit(1).maybeSingle();
+      boundLead = (data as typeof boundLead) ?? null;
+    }
+    if (boundLead && ownerEmail && resendKey) {
       const tMail = Date.now();
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
@@ -121,18 +133,7 @@ Deno.serve(async (req) => {
     // Link the report back to the freshest matching lead so the team dashboard
     // can open the exact PDF the owner received.
     try {
-      const digits = ownerPhone.replace(/[^\d]/g, "").slice(-9);
-      let q = admin
-        .from("leads")
-        .select("id, report_pdf_path")
-        .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-        .order("created_at", { ascending: false })
-        .limit(1);
-      if (digits.length >= 9) q = q.ilike("whatsapp_number", `%${digits}%`);
-      else if (ownerEmail) q = q.eq("email", ownerEmail);
-      else q = q.eq("id", "00000000-0000-0000-0000-000000000000");
-
-      const { data: leadRow } = await q.maybeSingle();
+      const leadRow = boundLead;
       if (leadRow?.id) {
         // Never overwrite an already delivered report: a caller who guesses a
         // phone/email must not be able to replace someone else's document.

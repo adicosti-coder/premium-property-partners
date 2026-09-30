@@ -2,6 +2,7 @@
 // extracts title/meta/h1/schema and asks Gemini to surface the gaps vs our page.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { assertSafePublicUrl, isOwnSiteUrl } from "../_shared/ssrfGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -80,6 +81,7 @@ function assertPublicUrl(raw: string): URL {
 
 async function fetchPage(url: string): Promise<{ html: string; markdown?: string }> {
   url = assertPublicUrl(url).toString();
+  url = (await assertSafePublicUrl(url)).toString();
   if (FIRECRAWL_KEY) {
     try {
       const res = await fetch("https://api.firecrawl.dev/v2/scrape", {
@@ -165,6 +167,7 @@ serve(async (req) => {
     if (!our_url || !Array.isArray(competitor_urls) || competitor_urls.length === 0) {
       return json({ error: "our_url (or our_url_path) and competitor_url(s) required" }, 400);
     }
+    if (!isOwnSiteUrl(our_url)) return json({ error: "our_url must be on realtrust.ro" }, 400);
     const ourPage = await fetchPage(our_url);
     const oursSeo = { ...extractFromHtml(ourPage.html), url: our_url };
 

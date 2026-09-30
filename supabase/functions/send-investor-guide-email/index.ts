@@ -44,8 +44,9 @@ serve(async (req) => {
       .ilike("email", normEmail.replace(/[\\%_]/g, (c) => "\\" + c)).eq("source", "lead_capture_form")
       .gte("created_at", since).limit(1);
     if (!recent || recent.length === 0) {
-      return new Response(JSON.stringify({ error: "Forbidden" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      // Same response as a real send so the endpoint cannot be used to probe leads.
+      return new Response(JSON.stringify({ success: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const resendApiKey = Deno.env.get("RESEND_API_KEY");

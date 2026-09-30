@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isOwnSiteUrl } from "../_shared/ssrfGuard.ts";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { analyzeLocalGeo } from "./localGeo.ts";
 import { isClearlyBrokenScrape, isObviouslyInvalidCachedAudit, pickBestScrapeResult } from "./scrapeQuality.ts";
@@ -98,6 +99,8 @@ serve(async (req) => {
     // ============= SINGLE AUDIT =============
     const { url, language = "ro", forceRefresh = false }: RequestBody = rawBody;
     if (!url || !/^https?:\/\//.test(url)) return json({ error: "URL invalid" }, 400);
+    // The optimizer audits our own pages only — never arbitrary destinations.
+    if (!isOwnSiteUrl(url)) return json({ error: "URL must be on realtrust.ro" }, 400);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");

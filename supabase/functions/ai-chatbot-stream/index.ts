@@ -231,18 +231,9 @@ async function detectAndSaveLead(message: string, conversationHistory: any[], pa
     const conversation = head + [...conversationHistory.filter((m: any) => m?.role === "user").map((m: any) => String(m.content ?? "")), message]
       .filter(Boolean).join("\n").slice(-(1500 - head.length));
 
-    if (existing) {
-      await sb.from("leads").update({
-        email: existing.email || email || null,
-        whatsapp_number: existing.whatsapp_number || phone || "-",
-        message: conversation,
-        ...(area ? { property_area: area } : {}),
-        lead_grade: "hot",
-        engagement_status: "hot_lead",
-        lead_score: 90,
-      }).eq("id", existing.id);
-      return existing.id;
-    }
+    // A public caller cannot prove ownership of an existing lead, so never
+    // overwrite it: the chat is stored as a new lead row instead.
+    void existing;
 
     const { data: inserted } = await sb.from("leads").insert({
       name,

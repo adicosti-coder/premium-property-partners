@@ -332,7 +332,7 @@ const ReviewsManager = () => {
         try {
           await supabase.functions.invoke("send-review-reply-notification", {
             body: {
-              guestEmail: review.guest_email,
+              reviewId: id,
               guestName: review.guest_name,
               propertyName: review.property?.name || "proprietatea noastră",
               reviewTitle: review.title,
