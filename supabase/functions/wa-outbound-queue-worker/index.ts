@@ -292,10 +292,37 @@ Deno.serve(async (req) => {
       continue;
     }
 
+    // Orice interacțiune inbound anterioară oprește definitiv primul contact
+    // automat. Include răspunsurile la alte conversații ale aceluiași număr.
+    const isFollowup = item.source === "followup" || item.source === "followup2";
+    if (!isFollowup) {
+      const { data: priorConversations } = await supabase
+        .from("wa_conversations")
+        .select("last_inbound_at, status")
+        .eq("phone_normalized", item.phone_normalized);
+      const hadPriorInteraction = priorConversations?.some((conversation) => conversation.last_inbound_at);
+      const stopped = priorConversations?.some((conversation) =>
+        ["closed", "handoff", "opted_out"].includes(String(conversation.status || ""))
+      );
+      if (hadPriorInteraction || stopped) {
+        await supabase
+          .from("wa_outbound_queue")
+          .update({
+            status: "cancelled",
+            last_error: stopped
+              ? "blocat: conversație închisă, transferată sau dezabonată"
+              : "blocat: există o interacțiune anterioară de la acest număr",
+          })
+          .eq("id", item.id)
+          .in("status", ["pending", "failed"]);
+        results.push({ id: item.id, status: stopped ? "blocked_stopped" : "blocked_prior_interaction" });
+        continue;
+      }
+    }
+
     // ── Deduplicare: niciun mesaj activ/trimis către același număr în 72h ─────
     // Excepție: follow-up-urile sunt intenționat un al doilea mesaj către
     // același număr, deci nu intră în regula de deduplicare.
-    const isFollowup = item.source === "followup";
     const dedupSince = new Date(Date.now() - 72 * 3_600_000).toISOString();
     const { count: recentCount } = isFollowup
       ? { count: 0 }
@@ -364,6 +391,21 @@ Deno.serve(async (req) => {
         conversationId = conv.id;
       }
 
+      const selectedTemplate = item.source === "followup" || item.source === "followup2"
+        ? item.template_name
+        : await preferredIntroTemplate();
+      let templateParams = Array.isArray(item.template_params) ? item.template_params : [];
+      if (selectedTemplate === "prospect_intro_premium_v6" && templateParams.length === 0) {
+        const { data: prospect } = item.prospect_listing_id
+          ? await supabase
+            .from("prospect_listings")
+            .select("zone")
+            .eq("id", item.prospect_listing_id)
+            .maybeSingle()
+          : { data: null };
+        templateParams = [String(prospect?.zone || "Timișoara").trim() || "Timișoara"];
+      }
+
       const send = await fetchWithRetry(
         `${supabaseUrl}/functions/v1/wa-andrei-send`,
         {
@@ -378,11 +420,9 @@ Deno.serve(async (req) => {
             // Primul contact folosește șablonul premium aprobat; mesajele de
             // follow-up (sau alte surse cu șablon propriu) își păstrează șablonul,
             // altfel proprietarul ar primi de două ori mesajul de prezentare.
-            template_name: item.source === "followup" && item.template_name
-              ? item.template_name
-              : await preferredIntroTemplate(),
+            template_name: selectedTemplate,
             template_language: item.template_language || "ro",
-            template_params: Array.isArray(item.template_params) ? item.template_params : [],
+            template_params: templateParams,
           }),
         },
         { label: "wa-outbound-worker", maxAttempts: 3, timeoutMs: 20_000 },
@@ -416,7 +456,7 @@ Deno.serve(async (req) => {
           prospect_listing_id: item.prospect_listing_id,
           status: "sent",
           outcome: "template_sent",
-          metadata: { template: item.template_name, attempts },
+           metadata: { template: selectedTemplate, attempts },
         });
 
         // Notifică scenariul Make.com (dacă e configurat webhook-ul).
@@ -426,7 +466,7 @@ Deno.serve(async (req) => {
           phone: item.phone_normalized,
           prospect_listing_id: item.prospect_listing_id,
           conversation_id: conversationId,
-          template_name: item.template_name,
+           template_name: selectedTemplate,
           template_language: item.template_language || "ro",
           wa_message_id: waMessageId,
           queue_source: item.source,

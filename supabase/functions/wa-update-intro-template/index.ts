@@ -1,7 +1,6 @@
-// wa-update-intro-template — creează varianta actualizată a șablonului de prim
-// contact (prospect_intro_premium_v4) pornind de la componentele șablonului
-// aprobat prospect_intro_premium_v3, cu textul despre randament înlocuit cu o
-// formulare bazată pe estimare personalizată. Internal/admin only.
+// wa-update-intro-template — creează varianta v6 a șablonului de prim contact,
+// cu zonă dinamică și răspunsuri rapide pentru cele trei tipuri de colaborare.
+// Internal/admin only.
 import { WA_BUSINESS_ACCOUNT_ID, WA_API_VERSION, waToken } from "../_shared/waConfig.ts";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
@@ -17,29 +16,25 @@ const json = (data: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-const SOURCE_TEMPLATE = "prospect_intro_premium_v3";
-const NEW_TEMPLATE = "prospect_intro_premium_v5";
-
-// Formulări vechi (cu/diacritice) → formularea nouă, fără cifra fixă 9,4%.
-const OLD_PHRASES = [
-  "cu un randament net de circa 9,4% pe an",
-  "cu un randament net de circa 9.4% pe an",
+const NEW_TEMPLATE = "prospect_intro_premium_v6";
+const TEMPLATE_LANGUAGE = "ro";
+const TEMPLATE_BODY =
+  "Bună ziua! Am văzut anunțul dumneavoastră pentru apartamentul din {{1}}. Sunt Andrei de la RealTrust Timișoara. Vă propunem o colaborare în vederea vânzării, respectiv a închirierii (în sistem clasic sau în regim hotelier, pentru un randament maxim). Vă pot trimite o evaluare gratuită de preț și chirie pentru apartamentul dumneavoastră?";
+const TEMPLATE_COMPONENTS = [
+  {
+    type: "BODY",
+    text: TEMPLATE_BODY,
+    example: { body_text: [["Zona centrală"]] },
+  },
+  {
+    type: "BUTTONS",
+    buttons: [
+      { type: "QUICK_REPLY", text: "Colaborare vânzare" },
+      { type: "QUICK_REPLY", text: "Închiriere clasică" },
+      { type: "QUICK_REPLY", text: "Regim hotelier" },
+    ],
+  },
 ];
-const NEW_PHRASE = "cu un randament net optimizat în funcție de zonă și dotări";
-
-function replaceYieldPhrase(text: string): { text: string; replaced: boolean } {
-  for (const old of OLD_PHRASES) {
-    if (text.includes(old)) {
-      return { text: text.split(old).join(NEW_PHRASE), replaced: true };
-    }
-  }
-  // Fallback generic: orice „randament net de circa X% pe an" → formularea nouă.
-  const re = /cu un randament net de circa\s+\d+[.,]?\d*%\s*pe an/i;
-  if (re.test(text)) {
-    return { text: text.replace(re, NEW_PHRASE), replaced: true };
-  }
-  return { text, replaced: false };
-}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -53,70 +48,36 @@ Deno.serve(async (req) => {
 
   const base = `https://graph.facebook.com/${WA_API_VERSION}/${WA_BUSINESS_ACCOUNT_ID}/message_templates`;
 
-  // 1. Citim șablonul sursă cu toate componentele.
-  const readResp = await fetch(
-    `${base}?fields=name,status,language,category,components&name=${SOURCE_TEMPLATE}&limit=10`,
-    { headers: { Authorization: `Bearer ${token}` } },
-  );
-  const readBody = await readResp.json().catch(() => ({}));
-  if (!readResp.ok) {
-    return json({ ok: false, step: "read_source", status: readResp.status, meta_error: readBody?.error ?? readBody });
-  }
-  const source = (readBody?.data as Array<Record<string, unknown>> | undefined)?.find(
-    (t) => t.name === SOURCE_TEMPLATE,
-  );
-  if (!source) {
-    return json({ ok: false, step: "read_source", error: "source_template_not_found", source: SOURCE_TEMPLATE });
-  }
-
-  // 2. Verificăm dacă varianta nouă există deja.
+  // 1. Verificăm dacă varianta nouă există deja. Nu o ștergem: o cerere aflată
+  // deja la verificare trebuie lăsată intactă, iar funcția rămâne idempotentă.
   const existResp = await fetch(
-    `${base}?fields=name,status,language&name=${NEW_TEMPLATE}&limit=10`,
+    `${base}?fields=name,status,language,category,components&name=${NEW_TEMPLATE}&limit=10`,
     { headers: { Authorization: `Bearer ${token}` } },
   );
   const existBody = await existResp.json().catch(() => ({}));
-  const existing = (existBody?.data as Array<{ name?: string; status?: string }> | undefined)?.find(
+  if (!existResp.ok) {
+    return json({ ok: false, step: "check_existing", status: existResp.status, meta_error: existBody?.error ?? existBody });
+  }
+  const existing = (existBody?.data as Array<Record<string, unknown>> | undefined)?.find(
     (t) => t.name === NEW_TEMPLATE,
   );
   if (existing) {
-    // Ștergem varianta existentă ca să o recreăm cu textul final (Meta nu permite editarea).
-    const delResp = await fetch(`${base}?name=${NEW_TEMPLATE}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!delResp.ok) {
-      const delBody = await delResp.json().catch(() => ({}));
-      return json({ ok: false, step: "delete_existing", status: delResp.status, meta_error: delBody?.error ?? delBody });
-    }
-  }
-
-  // 3. Construim componentele noi cu textul înlocuit.
-  const components = (source.components as Array<Record<string, unknown>> | undefined) ?? [];
-  let anyReplaced = false;
-  const newComponents = components.map((comp) => {
-    if (comp.type === "BODY" && typeof comp.text === "string") {
-      const { text, replaced } = replaceYieldPhrase(comp.text);
-      if (replaced) anyReplaced = true;
-      return { ...comp, text };
-    }
-    return comp;
-  });
-
-  if (!anyReplaced) {
     return json({
-      ok: false,
-      step: "build_components",
-      error: "yield_phrase_not_found_in_body",
-      source_body: components.find((c) => c.type === "BODY")?.text ?? null,
+      ok: true,
+      existing: true,
+      template: NEW_TEMPLATE,
+      language: existing.language ?? TEMPLATE_LANGUAGE,
+      category: existing.category ?? "MARKETING",
+      status: existing.status ?? "UNKNOWN",
     });
   }
 
-  // 4. Trimitem noul șablon spre aprobare Meta.
+  // 2. Trimitem noul șablon spre aprobare Meta.
   const payload = {
     name: NEW_TEMPLATE,
-    category: source.category ?? "MARKETING",
-    language: source.language ?? "ro",
-    components: newComponents,
+    category: "MARKETING",
+    language: TEMPLATE_LANGUAGE,
+    components: TEMPLATE_COMPONENTS,
   };
   const createResp = await fetch(base, {
     method: "POST",
@@ -135,6 +96,6 @@ Deno.serve(async (req) => {
     language: payload.language,
     category: payload.category,
     status: createBody?.status ?? "PENDING",
-    new_body: newComponents.find((c) => c.type === "BODY")?.text ?? null,
+    new_body: TEMPLATE_BODY,
   });
 });

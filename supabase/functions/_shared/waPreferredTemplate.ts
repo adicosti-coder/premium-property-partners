@@ -3,7 +3,8 @@
 // Astfel trecerea se face singură, fără intervenție manuală.
 import { WA_API_VERSION, WA_BUSINESS_ACCOUNT_ID, waToken } from "./waConfig.ts";
 
-export const WA_PREMIUM_TEMPLATE = "prospect_intro_premium_v5";
+export const WA_PREMIUM_TEMPLATE = "prospect_intro_premium_v6";
+export const WA_PREVIOUS_TEMPLATE = "prospect_intro_premium_v5";
 export const WA_LEGACY_TEMPLATE = "prospect_intro_premium_v3";
 
 let cached: { name: string; at: number } | null = null;
@@ -27,10 +28,14 @@ export async function preferredIntroTemplate(): Promise<string> {
     if (!resp.ok) return WA_LEGACY_TEMPLATE;
     const body = await resp.json();
     const rows: { name?: string; status?: string }[] = body?.data ?? [];
-    const premiumOk = rows.some(
-      (t) => t.name === WA_PREMIUM_TEMPLATE && String(t.status).toUpperCase() === "APPROVED",
+    const isApproved = (name: string) => rows.some(
+      (t) => t.name === name && String(t.status).toUpperCase() === "APPROVED",
     );
-    const name = premiumOk ? WA_PREMIUM_TEMPLATE : WA_LEGACY_TEMPLATE;
+    const name = isApproved(WA_PREMIUM_TEMPLATE)
+      ? WA_PREMIUM_TEMPLATE
+      : isApproved(WA_PREVIOUS_TEMPLATE)
+        ? WA_PREVIOUS_TEMPLATE
+        : WA_LEGACY_TEMPLATE;
     cached = { name, at: Date.now() };
     return name;
   } catch {
