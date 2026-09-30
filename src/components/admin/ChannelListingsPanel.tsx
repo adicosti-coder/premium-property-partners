@@ -84,7 +84,12 @@ export default function ChannelListingsPanel() {
     if (!error) setRows((r) => r.map((x) => (x.id === id ? { ...x, ...patch } : x)));
   };
 
-  const totals = useMemo(() => Object.values(stats).reduce((a, s) => ({ views: a.views + s.views, cazare: a.cazare + s.cazare, contact: a.contact + s.contact, rez: a.rez + s.direct + s.fromBooking + s.fromAirbnb }), { views: 0, cazare: 0, contact: 0, rez: 0 }), [stats]);
+  const totals = useMemo(() => Object.values(stats).reduce((a, s) => ({ views: a.views + s.views, cazare: a.cazare + s.cazare, contact: a.contact + s.contact, rez: a.rez + s.direct + s.fromBooking + s.fromAirbnb, visits: a.visits + s.visitsBooking + s.visitsAirbnb }), { views: 0, cazare: 0, contact: 0, rez: 0, visits: 0 }), [stats]);
+
+  const copyText = async (text: string, what: string) => {
+    try { await navigator.clipboard.writeText(text); toast({ title: `${what} copiat` }); }
+    catch { toast({ title: "Nu am putut copia", variant: "destructive" }); }
+  };
 
   return (
     <div className="space-y-6">
