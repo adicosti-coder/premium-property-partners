@@ -140,21 +140,32 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // 2. A răspuns între timp? (mesaj inbound în conversație)
-      if (item.conversation_id) {
-        const { data: conv } = await supabase
-          .from("wa_conversations")
-          .select("last_inbound_at, status")
-          .eq("id", item.conversation_id)
-          .maybeSingle();
-        if (conv?.last_inbound_at) {
-          results.push({ phone, stage: stage.source, skipped: "replied" });
-          continue;
-        }
-        if (conv?.status && ["closed", "handoff", "opted_out"].includes(conv.status)) {
-          results.push({ phone, stage: stage.source, skipped: `conversation_${conv.status}` });
-          continue;
-        }
+      // 2. A răspuns între timp? Verificăm TOATE conversațiile acestui număr,
+      //    nu doar cea legată de mesaj — oricine a scris nu mai primește memento.
+      const { data: convs } = await supabase
+        .from("wa_conversations")
+        .select("last_inbound_at, status")
+        .eq("phone_normalized", phone);
+      if (convs?.some((c) => c.last_inbound_at)) {
+        results.push({ phone, stage: stage.source, skipped: "replied" });
+        continue;
+      }
+      const blocked = convs?.find((c) => c.status && ["closed", "handoff", "opted_out"].includes(c.status));
+      if (blocked) {
+        results.push({ phone, stage: stage.source, skipped: `conversation_${blocked.status}` });
+        continue;
+      }
+
+      // 2b. Nu trimitem memento dacă numărul a primit orice alt mesaj în ultimele 24h.
+      const { count: recent } = await supabase
+        .from("wa_outbound_queue")
+        .select("id", { count: "exact", head: true })
+        .eq("phone_normalized", phone)
+        .in("status", ["sent", "pending", "processing"])
+        .gte("created_at", new Date(Date.now() - 24 * 3_600_000).toISOString());
+      if ((recent ?? 0) > 0) {
+        results.push({ phone, stage: stage.source, skipped: "recent_message" });
+        continue;
       }
 
       // 3. Un singur memento per etapă și per număr — niciodată mai mult de două în total.
