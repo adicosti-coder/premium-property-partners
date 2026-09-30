@@ -141,9 +141,7 @@ serve(async (req) => {
   const webhookSecret = (req.headers.get("x-webhook-secret") || "").trim();
   const isInternal =
     (SERVICE_KEY.length > 0 && bearer === SERVICE_KEY) ||
-    (SERVICE_KEY.length > 0 && webhookSecret === SERVICE_KEY) ||
-    // Tolerate non-JWT tokens that aren't user JWTs — looks like a service/secret key
-    (bearer.length > 0 && !bearer.includes(".") && bearer.startsWith("sb_"));
+    (SERVICE_KEY.length > 0 && webhookSecret === SERVICE_KEY);
   if (!isInternal) {
     const adminCheck = await requireAdmin(req, corsHeaders);
     if (!adminCheck.ok) return adminCheck.response!;
