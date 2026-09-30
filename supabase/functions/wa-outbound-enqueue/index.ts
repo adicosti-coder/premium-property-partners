@@ -114,8 +114,9 @@ Deno.serve(async (req) => {
       prospect_listing_id: p.id,
       template_name: templateName,
       template_language: templateLanguage,
-      // Șablonul de prim contact nu are variabile → fără parametri.
-      template_params: [],
+      // v6 personalizează primul mesaj cu zona proprietății. Worker-ul păstrează
+      // compatibilitatea cu șabloanele vechi până când Meta aprobă v6.
+      template_params: [String(p.zone || "Timișoara").trim() || "Timișoara"],
       status: "pending",
       priority,
       source: "scraper",
