@@ -9,7 +9,7 @@ export const SITE_URL = "https://realtrust.ro";
 export type ListingUtmSource = "airbnb" | "booking";
 
 export const listingUtmUrl = (slug: string, source: ListingUtmSource): string =>
-  `${SITE_URL}/cazare/${slug}?utm_source=${source}&utm_medium=listing&utm_campaign=cazare_timisoara`;
+  `${SITE_URL}/proprietate/${slug}?utm_source=${source}&utm_medium=listing&utm_campaign=cazare_timisoara`;
 
 /** Citește sursa marcată dintr-un page_path salvat (ex. „/cazare/helios?utm_source=airbnb”). */
 export const utmSourceFromPath = (path: string | null): ListingUtmSource | null => {
