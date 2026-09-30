@@ -95,16 +95,17 @@ export default function ChannelListingsPanel() {
         </CardHeader>
         <CardContent className="overflow-x-auto">
           <p className="text-xs text-muted-foreground mb-3">
-            Vizitele și clicurile sunt cele de pe realtrust.ro. Coloanele Booking.com / Airbnb arată rezervările directe venite prin linkuri marcate cu sursa respectivă (utm_source=booking / airbnb).
+            Vizitele și clicurile sunt cele de pe realtrust.ro. „Vin din Booking / Airbnb” numără vizitatorii care au deschis apartamentul prin linkul marcat lipit în anunțul de pe platforma respectivă,
+            iar „Rezervări” arată câți dintre ei au trimis o cerere — diferența dintre cele două este pierderea pe drum.
             Vizitele din interiorul Booking.com și Airbnb se văd doar în panourile acelor platforme.
           </p>
           <table className="w-full text-sm">
-            <thead><tr className="text-left text-muted-foreground"><th className="py-1">Apartament</th><th>Vizite</th><th>Clic „Cazare”</th><th>Clic contact</th><th>Rezervări site</th><th>Din Booking.com</th><th>Din Airbnb</th></tr></thead>
+            <thead><tr className="text-left text-muted-foreground"><th className="py-1">Apartament</th><th>Vizite</th><th>Clic „Cazare”</th><th>Clic contact</th><th>Rezervări site</th><th>Vin din Booking.com</th><th>Rezervări Booking.com</th><th>Vin din Airbnb</th><th>Rezervări Airbnb</th></tr></thead>
             <tbody>
               {staticProps.map((p) => { const s = stats[p.slug]; return (
-                <tr key={p.slug} className="border-t border-border"><td className="py-1">{p.name}</td><td>{s?.views ?? 0}</td><td>{s?.cazare ?? 0}</td><td>{s?.contact ?? 0}</td><td>{s?.direct ?? 0}</td><td>{s?.fromBooking ?? 0}</td><td>{s?.fromAirbnb ?? 0}</td></tr>
+                <tr key={p.slug} className="border-t border-border"><td className="py-1">{p.name}</td><td>{s?.views ?? 0}</td><td>{s?.cazare ?? 0}</td><td>{s?.contact ?? 0}</td><td>{s?.direct ?? 0}</td><td>{s?.visitsBooking ?? 0}</td><td>{s?.fromBooking ?? 0}</td><td>{s?.visitsAirbnb ?? 0}</td><td>{s?.fromAirbnb ?? 0}</td></tr>
               ); })}
-              <tr className="border-t border-border font-medium"><td className="py-1">Total</td><td>{totals.views}</td><td>{totals.cazare}</td><td>{totals.contact}</td><td colSpan={3}>{totals.rez} cereri de rezervare</td></tr>
+              <tr className="border-t border-border font-medium"><td className="py-1">Total</td><td>{totals.views}</td><td>{totals.cazare}</td><td>{totals.contact}</td><td colSpan={5}>{totals.rez} cereri de rezervare · {totals.visits} vizite venite din Booking.com și Airbnb</td></tr>
             </tbody>
           </table>
         </CardContent>
