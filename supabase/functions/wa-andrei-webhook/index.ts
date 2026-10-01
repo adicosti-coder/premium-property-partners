@@ -325,6 +325,39 @@ Deno.serve(async (req) => {
 
         let quick = outboundCount ? autoReplyText(text) : null;
 
+        // Răspuns personalizat pe zonă (Admin → Răspunsuri automate pe zonă)
+        // pentru butoanele mesajului de prim contact.
+        const intentMap: Record<string, string> = {
+          quick_sale: "vanzare", quick_classic_rent: "clasic", quick_management: "hotelier",
+        };
+        if (quick && intentMap[quick.kind]) {
+          try {
+            const { data: lastQ } = await supabase
+              .from("wa_outbound_queue")
+              .select("template_params")
+              .eq("phone_normalized", from)
+              .eq("status", "sent")
+              .order("sent_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            const params = (lastQ?.template_params ?? []) as unknown[];
+            const zone = String((Array.isArray(params) ? params[0] : "") || "Timișoara").trim();
+            const { data: rules } = await supabase
+              .from("wa_zone_auto_replies")
+              .select("zone, message")
+              .eq("intent", intentMap[quick.kind])
+              .eq("enabled", true);
+            const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+            const rule = (rules ?? []).find((r: any) => norm(r.zone) === norm(zone))
+              ?? (rules ?? []).find((r: any) => r.zone === "*");
+            if (rule?.message) {
+              quick = { kind: `${quick.kind}_zone`, text: String(rule.message).replaceAll("{zona}", zone) };
+            }
+          } catch (e) {
+            console.error("[wa-webhook] zone auto reply failed:", e);
+          }
+        }
+
         // Acordul proprietarului pentru preluarea anunțului pe realtrust.ro
         // („DA PUBLIC”) sau retragerea acordului („RETRAG”) — are prioritate
         // față de orice alt răspuns automat și declanșează publicarea/retragerea.
