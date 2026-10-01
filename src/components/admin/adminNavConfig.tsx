@@ -31,7 +31,7 @@ export interface AdminGroup {
   subgroupOrder?: string[];
 }
 
-export const ADMIN_GROUPS: AdminGroup[] = [
+const RAW_GROUPS: AdminGroup[] = [
   {
     id: "flux",
     label: "Flux zilnic",
@@ -278,12 +278,37 @@ export const ADMIN_GROUPS: AdminGroup[] = [
   },
 ];
 
-export const ALL_TABS: AdminTab[] = ADMIN_GROUPS.flatMap((g) => g.items);
+/** Pagini combinate: înlocuiesc în meniu paginile listate în `views` (adresele vechi rămân valide). */
+const HUB_TABS: Array<{ group: string; before: string; tab: AdminTab; views: string[] }> = [
+  { group: "operational", before: "bookings", tab: { value: "hub-bookings", label: "Rezervări", icon: CalendarDays, keywords: ["rezervari", "cereri", "ical"] }, views: ["bookings", "booking-requests", "ical-sync"] },
+  { group: "operational", before: "make-queue", tab: { value: "hub-make", label: "Make.com", icon: Zap, keywords: ["make", "coada", "webhook", "scenariu"] }, views: ["make-queue", "make-status", "make-leads"] },
+  { group: "operational", before: "reviews", tab: { value: "hub-reviews", label: "Recenzii", icon: Star, keywords: ["recenzii", "reviews", "booking", "poi", "moderare"] }, views: ["reviews", "poi-reviews", "poi-review-notifications", "booking-scrape", "booking-reviews"] },
+  { group: "properties", before: "saved-listings", tab: { value: "hub-market-listings", label: "Piața anunțurilor", icon: Clock, keywords: ["salvate", "extern", "expirate", "scaderi", "preturi", "platforma"] }, views: ["saved-listings", "external-published", "price-drops", "daily-price-trends", "platform-daily", "expired-listings"] },
+  { group: "ai-scraper", before: "whatsapp-andrei", tab: { value: "hub-wa-conversations", label: "Conversații WhatsApp", icon: MessageSquare, subgroup: "WhatsApp & Andrei", keywords: ["whatsapp", "chat", "andrei", "discutii", "live"] }, views: ["whatsapp-andrei", "whatsapp-live", "whatsapp-chat", "whatsapp-threads"] },
+  { group: "ai-scraper", before: "whatsapp-queue", tab: { value: "hub-wa-sending", label: "Trimiteri WhatsApp", icon: MessageSquare, subgroup: "WhatsApp & Andrei", keywords: ["coada", "istoric", "test", "v6", "emailuri"] }, views: ["whatsapp-queue", "whatsapp-history", "whatsapp-test", "whatsapp-daily-emails"] },
+  { group: "ai-scraper", before: "whatsapp-dashboard", tab: { value: "hub-wa-reports", label: "Rapoarte WhatsApp", icon: BarChart3, subgroup: "WhatsApp & Andrei", keywords: ["raport", "eficienta", "dashboard", "surse", "oferte", "tranzactii"] }, views: ["whatsapp-template-efficiency", "whatsapp-activity-report", "whatsapp-daily-report", "whatsapp-dashboard", "whatsapp-live-dashboard", "whatsapp-analytics", "whatsapp-sources", "whatsapp-offers", "whatsapp-transactions"] },
+  { group: "marketing", before: "leads-analytics", tab: { value: "hub-conversions", label: "Conversii & Funnel", icon: Target, keywords: ["conversii", "funnel", "cta", "vizualizari", "utm"] }, views: ["conversion-report", "listing-conversions", "leads-analytics", "funnel-analytics", "cta-analytics", "property-views", "evaluare-engagement"] },
+  { group: "marketing", before: "tracking-qa", tab: { value: "hub-tracking", label: "Tracking", icon: Activity, keywords: ["ga4", "meta", "tracking", "alerte"] }, views: ["tracking-qa", "tracking-alerts"] },
+];
+
+const HIDDEN = new Set(HUB_TABS.flatMap((h) => h.views));
+
+export const ADMIN_GROUPS: AdminGroup[] = RAW_GROUPS.map((g) => {
+  const items: AdminTab[] = [];
+  for (const it of g.items) {
+    for (const h of HUB_TABS) if (h.group === g.id && h.before === it.value) items.push(h.tab);
+    if (!HIDDEN.has(it.value)) items.push(it);
+  }
+  return { ...g, items };
+});
+
+/** Include și paginile ascunse din meniu, ca adresele vechi și taburile din pagini combinate să aibă titlu. */
+export const ALL_TABS: AdminTab[] = [...ADMIN_GROUPS.flatMap((g) => g.items), ...RAW_GROUPS.flatMap((g) => g.items).filter((t) => HIDDEN.has(t.value))];
 
 export function findTab(value: string): AdminTab | undefined {
   return ALL_TABS.find((t) => t.value === value);
 }
 
 export function findGroupOf(value: string): AdminGroup | undefined {
-  return ADMIN_GROUPS.find((g) => g.items.some((i) => i.value === value));
+  return ADMIN_GROUPS.find((g) => g.items.some((i) => i.value === value)) ?? RAW_GROUPS.find((g) => g.items.some((i) => i.value === value));
 }
