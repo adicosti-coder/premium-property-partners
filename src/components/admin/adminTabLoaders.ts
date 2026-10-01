@@ -118,6 +118,13 @@ const loaders: Record<string, Loader> = {
   "auto-publish-logs": () => import("@/components/admin/AutoPublishLogsDashboard"),
 };
 
+for (const key of [
+  "hub-wa-conversations", "hub-wa-sending", "hub-wa-reports", "hub-make",
+  "hub-market-listings", "hub-bookings", "hub-reviews", "hub-conversions", "hub-tracking",
+]) {
+  loaders[key] = () => import("@/components/admin/AdminHub").then((m) => ({ default: m.makeHub(key) as ComponentType<unknown> }));
+}
+
 const cache = new Map<string, LazyExoticComponent<ComponentType<unknown>>>();
 
 export function getAdminTabComponent(value: string): LazyExoticComponent<ComponentType<unknown>> | null {
