@@ -11556,6 +11556,33 @@ export type Database = {
           },
         ]
       }
+      wa_zone_auto_replies: {
+        Row: {
+          enabled: boolean
+          id: string
+          intent: string
+          message: string
+          updated_at: string
+          zone: string
+        }
+        Insert: {
+          enabled?: boolean
+          id?: string
+          intent: string
+          message: string
+          updated_at?: string
+          zone?: string
+        }
+        Update: {
+          enabled?: boolean
+          id?: string
+          intent?: string
+          message?: string
+          updated_at?: string
+          zone?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       booking_availability: {
