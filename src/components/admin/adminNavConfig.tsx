@@ -206,6 +206,8 @@ const RAW_GROUPS: AdminGroup[] = [
       { value: "whatsapp-offers", label: "Oferte livrate", icon: MessageSquare, subgroup: "WhatsApp & Andrei", keywords: ["oferte", "livrate", "ofertă", "apartament", "agent", "data", "fir", "whatsapp"] },
       { value: "whatsapp-daily-report", label: "Raport zilnic discuții", icon: MessageSquare, subgroup: "WhatsApp & Andrei", keywords: ["raport", "zilnic", "discutii", "mesaje", "clienti", "agent", "oferte", "intalniri", "activitate", "whatsapp"] },
       { value: "whatsapp-template-efficiency", label: "Eficiență mesaj WhatsApp", icon: MessageSquare, subgroup: "WhatsApp & Andrei", keywords: ["eficienta", "sablon", "v6", "rata raspuns", "butoane", "whatsapp", "prim contact"] },
+      { value: "whatsapp-zone-report", label: "Mesaje v6 pe zonă", icon: MessageSquare, subgroup: "WhatsApp & Andrei", keywords: ["zona", "v6", "raspunsuri", "cartier", "whatsapp", "prim contact"] },
+      { value: "whatsapp-zone-replies", label: "Răspunsuri automate pe zonă", icon: MessageSquare, subgroup: "WhatsApp & Andrei", keywords: ["raspuns automat", "zona", "butoane", "v6", "whatsapp"] },
       { value: "whatsapp-activity-report", label: "Raport WhatsApp", icon: MessageSquare, subgroup: "WhatsApp & Andrei", keywords: ["raport", "whatsapp", "mesaje", "trimise", "primite", "automate", "activitate", "trimite pe whatsapp"] },
       { value: "whatsapp-meetings", label: "Vizite confirmate", icon: CalendarDays, subgroup: "WhatsApp & Andrei", keywords: ["vizite", "vizionare", "confirmate", "data", "ora", "apartament", "intalnire", "whatsapp"] },
       { value: "booking-scrape", label: "Note Booking", icon: Sparkles, subgroup: "Booking", keywords: ["booking", "note", "recenzii", "rating", "preluare", "scrape", "istoric"] },

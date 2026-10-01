@@ -55,13 +55,13 @@ export const HUBS: Record<string, { title: string; description: string; views: s
   "hub-wa-sending": {
     title: "Trimiteri WhatsApp",
     description: "Coada de mesaje, istoricul trimiterilor, testele și rezumatele pe e-mail.",
-    views: ["whatsapp-queue", "whatsapp-history", "whatsapp-test", "whatsapp-daily-emails"],
+    views: ["whatsapp-queue", "whatsapp-history", "whatsapp-test", "whatsapp-zone-replies", "whatsapp-daily-emails"],
   },
   "hub-wa-reports": {
     title: "Rapoarte WhatsApp",
     description: "Eficiența mesajelor, activitatea zilnică, surse, oferte și tranzacții.",
     views: [
-      "whatsapp-template-efficiency", "whatsapp-activity-report", "whatsapp-daily-report",
+      "whatsapp-template-efficiency", "whatsapp-zone-report", "whatsapp-activity-report", "whatsapp-daily-report",
       "whatsapp-dashboard", "whatsapp-live-dashboard", "whatsapp-analytics",
       "whatsapp-sources", "whatsapp-offers", "whatsapp-transactions",
     ],
