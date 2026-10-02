@@ -1149,7 +1149,7 @@ async function directOlxSearch(query: string, max: number): Promise<FreeResult[]
     while ((pm = pathRe.exec(html))) {
       const path = pm[0].replace(/\\\//g, '/');
       const href = path.startsWith('http') ? path : `https://www.olx.ro${path}`;
-      if (!/\.html?$/i.test(href) && !/-[A-Za-z0-9]{6,}$/.test(href)) continue;
+      if (!/\/d\/oferta\/[A-Za-z0-9\-_%.]+-ID[A-Za-z0-9]{4,}\.html?$/i.test(href)) continue;
       if (seen.has(href)) continue;
       seen.add(href);
       candidates.push(href);
