@@ -555,6 +555,8 @@ async function fetchHtml(url: string, timeoutMs = 6000, referer?: string): Promi
  * randată din JS. Deblocarea se face prin proxy real: Scrape.do (render JS,
  * IP rezidențial RO) și, ca rezervă, Firecrawl cu proxy stealth.
  */
+const APIFY_STATS = { attempts: 0, ok: 0, lastStatus: 0, lastError: '', missingToken: false };
+
 async function proxyFetchHtml(
   url: string,
   timeoutMs = 25000,
@@ -587,10 +589,12 @@ async function proxyFetchHtml(
       if (resp.ok) {
         const items = await resp.json().catch(() => []);
         const html = Array.isArray(items) && typeof items[0]?.html === 'string' ? items[0].html : '';
-        if (html.length > 500) return { ok: true, status: 200, html, via: 'apify' };
+        if (html.length > 500) { APIFY_STATS.ok++; return { ok: true, status: 200, html, via: 'apify' }; }
+        APIFY_STATS.lastStatus = 200;
         console.warn(JSON.stringify({ kind: 'proxy_apify_empty', url, len: html.length }));
       } else {
         const body = await resp.text().catch(() => '');
+        APIFY_STATS.lastStatus = resp.status; APIFY_STATS.lastError = body.slice(0, 200);
         console.warn(JSON.stringify({ kind: 'proxy_apify_failed', url, status: resp.status, body: body.slice(0, 200) }));
       }
     } catch (e) {
@@ -2146,6 +2150,7 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    Object.assign(APIFY_STATS, { attempts: 0, ok: 0, lastStatus: 0, lastError: '', missingToken: false });
 
     // Buget de apeluri prin proxy pe rulare: puține pagini de căutare (scumpe,
     // rezultate repetitive) și mai multe pagini de anunț (aduc preț/telefon).
