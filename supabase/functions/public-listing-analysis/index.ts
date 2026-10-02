@@ -53,7 +53,7 @@ function htmlToText(html: string): string {
 }
 
 async function fetchListingText(url: string): Promise<string> {
-  const scrapeKey = Deno.env.get("SCRAPE_DO_TOKEN") || Deno.env.get("SCRAPEDO_API_KEY");
+  const scrapeKey = Deno.env.get("SCRAPE_DO_API_KEY") || Deno.env.get("SCRAPE_DO_TOKEN") || Deno.env.get("SCRAPEDO_API_KEY");
   if (scrapeKey) {
     try {
       const params = new URLSearchParams({
