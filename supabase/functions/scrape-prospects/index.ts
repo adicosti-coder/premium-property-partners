@@ -1013,7 +1013,7 @@ async function olxApiSearch(query: string, max: number): Promise<FreeResult[]> {
   const terms = /timi[sș]oara/i.test(clean) ? clean : `${clean} timisoara`;
   const limit = Math.min(Math.max(max * 3, 20), 40);
   const apiUrl = `https://www.olx.ro/api/v1/offers/?offset=0&limit=${limit}` +
-    `&query=${encodeURIComponent(terms)}&sort_by=created_at%3Adesc`;
+    `&query=${encodeURIComponent(terms)}&sort_by=created_at%3Adesc&filter_enum_private_business%5B0%5D=private`;
 
   const { ok, html } = await fetchHtmlUnblockable(apiUrl, 25000, 'https://www.olx.ro/', {
     alwaysProxy: true,
@@ -1114,11 +1114,11 @@ async function directOlxSearch(query: string, max: number): Promise<FreeResult[]
   // Probăm 2 pattern-uri URL OLX (categorie imobiliare + cautare globală) ca să prindem mai multe rezultate.
   // Proxy-ul costă, deci mergem pe cel mai productiv URL mai întâi și ne oprim
   // imediat ce avem suficiente rezultate.
-  const targetedUrl = `https://www.olx.ro/imobiliare/${category}-${transaction}/timisoara/q-${encodeURIComponent(slug)}/?search%5Bprivate_business%5D=1`;
-  // Lista generică (fără termen) aduce aceleași anunțuri la fiecare rulare și
-  // consumă proxy degeaba → o folosim doar ca rezervă, când căutarea țintită
-  // nu a returnat aproape nimic.
-  const genericUrl = `https://www.olx.ro/imobiliare/${category}-${transaction}/timisoara/?search%5Bprivate_business%5D=1&search%5Border%5D=created_at:desc`;
+  // Doar persoane fizice (private) și cele mai noi anunțuri întâi.
+  const OLX_FILTERS = 'search%5Bprivate_business%5D=private&search%5Border%5D=created_at:desc';
+  const targetedUrl = `https://www.olx.ro/imobiliare/${category}-${transaction}/timisoara/q-${encodeURIComponent(slug)}/?${OLX_FILTERS}`;
+  // Lista generică: rezervă când căutarea țintită nu a returnat aproape nimic.
+  const genericUrl = `https://www.olx.ro/imobiliare/${category}-${transaction}/timisoara/?${OLX_FILTERS}`;
   const out: FreeResult[] = [];
   const seen = new Set<string>();
   const urls = [targetedUrl];
@@ -1149,7 +1149,7 @@ async function directOlxSearch(query: string, max: number): Promise<FreeResult[]
     while ((pm = pathRe.exec(html))) {
       const path = pm[0].replace(/\\\//g, '/');
       const href = path.startsWith('http') ? path : `https://www.olx.ro${path}`;
-      if (!/\.html?$/i.test(href) && !/-[A-Za-z0-9]{6,}$/.test(href)) continue;
+      if (!/\/d\/oferta\/[A-Za-z0-9\-_%.]+-ID[A-Za-z0-9]{4,}\.html?$/i.test(href)) continue;
       if (seen.has(href)) continue;
       seen.add(href);
       candidates.push(href);
@@ -1903,6 +1903,9 @@ function isGenericSearchPage(url: string | null | undefined, title: string | nul
   if (/facebook\.com\/(groups\/\d+\/?$|marketplace\/\d+\/?$|marketplace\/[a-z]+\/?$)/i.test(u)) return true;
   if (/facebook\.com\/groups\/[^/]+\/?$/i.test(u)) return true;
   if (/facebook\.com\/marketplace\/[^/]+\/(propertyforsale|propertyforrent)\/?$/i.test(u)) return true;
+
+  // 2b. OLX: doar anunțuri individuale /d/oferta/<slug>-ID<cod>.html; orice altă pagină OLX (căutare, categorie, rezultate) → respinsă
+  if (/olx\.ro/i.test(u) && !/olx\.ro\/d\/oferta\/[a-z0-9\-_%.]+-id[a-z0-9]{4,}\.html?(?:[?#]|$)/i.test(u)) return true;
 
   // 3. Allow recognized individual-ad URL patterns
   const isIndividualAd =
