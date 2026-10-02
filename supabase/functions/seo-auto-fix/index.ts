@@ -1227,8 +1227,19 @@ async function oneClickCanonicalFix(sb: any, body: AnyBody, userId: string) {
     if (typeof p === "string" && p.startsWith("/")) urlSet.add(normalizePath(p));
   }
 
-  // Fallback sitemap ingestion (server-side) when explicitly asked.
-  if (body.include_sitemap) {
+  // Toate paginile de apartamente active din baza de date, chiar dacă nu au audit încă.
+  const { data: activeProps } = await sb
+    .from("properties")
+    .select("slug")
+    .eq("is_active", true)
+    .not("slug", "is", null)
+    .limit(1000);
+  for (const pr of activeProps || []) {
+    if (pr.slug) urlSet.add(normalizePath(`/proprietate/${pr.slug}`));
+  }
+
+  // Sitemap (cartiere, blog etc.) — implicit activ; se poate opri cu include_sitemap:false.
+  if (body.include_sitemap !== false) {
     try {
       const res = await fetch(`${BASE_URL}/sitemap.xml`, { redirect: "follow" });
       if (res.ok) {
