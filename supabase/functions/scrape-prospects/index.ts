@@ -555,6 +555,8 @@ async function fetchHtml(url: string, timeoutMs = 6000, referer?: string): Promi
  * randată din JS. Deblocarea se face prin proxy real: Scrape.do (render JS,
  * IP rezidențial RO) și, ca rezervă, Firecrawl cu proxy stealth.
  */
+const APIFY_STATS = { attempts: 0, ok: 0, lastStatus: 0, lastError: '', missingToken: false };
+
 async function proxyFetchHtml(
   url: string,
   timeoutMs = 25000,
@@ -563,7 +565,9 @@ async function proxyFetchHtml(
   // Apify: Actor apify~playwright-scraper cu proxy rezidențial RO; întoarce HTML-ul
   // randat, ca parserele existente (OLX/Storia) să rămână neschimbate.
   const apifyToken = Deno.env.get('APIFY_API_TOKEN') || '';
+  if (!apifyToken) APIFY_STATS.missingToken = true;
   if (apifyToken) {
+    APIFY_STATS.attempts++;
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), Math.max(timeoutMs, 60000));
     try {
@@ -585,10 +589,12 @@ async function proxyFetchHtml(
       if (resp.ok) {
         const items = await resp.json().catch(() => []);
         const html = Array.isArray(items) && typeof items[0]?.html === 'string' ? items[0].html : '';
-        if (html.length > 500) return { ok: true, status: 200, html, via: 'apify' };
+        if (html.length > 500) { APIFY_STATS.ok++; return { ok: true, status: 200, html, via: 'apify' }; }
+        APIFY_STATS.lastStatus = 200;
         console.warn(JSON.stringify({ kind: 'proxy_apify_empty', url, len: html.length }));
       } else {
         const body = await resp.text().catch(() => '');
+        APIFY_STATS.lastStatus = resp.status; APIFY_STATS.lastError = body.slice(0, 200);
         console.warn(JSON.stringify({ kind: 'proxy_apify_failed', url, status: resp.status, body: body.slice(0, 200) }));
       }
     } catch (e) {
@@ -2144,6 +2150,7 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    Object.assign(APIFY_STATS, { attempts: 0, ok: 0, lastStatus: 0, lastError: '', missingToken: false });
 
     // Buget de apeluri prin proxy pe rulare: puține pagini de căutare (scumpe,
     // rezultate repetitive) și mai multe pagini de anunț (aduc preț/telefon).
@@ -3074,6 +3081,41 @@ Deno.serve(async (req) => {
         blacklisted_skipped: blacklistedSkipped,
       });
       // No inter-batch sleep: free engines hit different hosts, no shared quota.
+    }
+
+    // Alertă Admin (Sănătate scraper) când Apify eșuează la toate paginile sau lipsește cheia.
+    try {
+      const target = 'apify_olx';
+      const failedAll = APIFY_STATS.missingToken || (APIFY_STATS.attempts > 0 && APIFY_STATS.ok === 0);
+      const { data: openInc } = await supabase.from('scraper_health_incidents')
+        .select('id, occurrences').eq('target', target).eq('status', 'open').limit(1).maybeSingle();
+      if (failedAll) {
+        const authBad = APIFY_STATS.lastStatus === 401 || APIFY_STATS.lastStatus === 403;
+        const remediation = APIFY_STATS.missingToken
+          ? 'Cheia APIFY_API_TOKEN lipsește. Salveaz-o din nou.'
+          : authBad
+            ? 'Apify respinge cheia (cheie greșită sau expirată). Creează o cheie nouă în contul Apify.'
+            : APIFY_STATS.lastStatus === 402
+              ? 'Contul Apify nu mai are credite. Adaugă credite.'
+              : `Apify a eșuat la toate paginile OLX (cod ${APIFY_STATS.lastStatus || 'rețea'}).`;
+        const detail = { ...APIFY_STATS, at: new Date().toISOString() };
+        if (openInc) {
+          await supabase.from('scraper_health_incidents').update({
+            occurrences: (openInc.occurrences ?? 1) + 1, last_seen_at: new Date().toISOString(), detail, remediation,
+          }).eq('id', openInc.id);
+        } else {
+          await supabase.from('scraper_health_incidents').insert({
+            kind: APIFY_STATS.missingToken || authBad ? 'apify_auth_failed' : 'apify_failed',
+            target, severity: 'critical', detail, remediation,
+          });
+        }
+      } else if (openInc && APIFY_STATS.ok > 0) {
+        await supabase.from('scraper_health_incidents').update({
+          status: 'resolved', resolved_at: new Date().toISOString(),
+        }).eq('id', openInc.id);
+      }
+    } catch (e) {
+      console.warn(JSON.stringify({ kind: 'apify_alert_error', message: (e as Error).message }));
     }
 
     const payload = {
