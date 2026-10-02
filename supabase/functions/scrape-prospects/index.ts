@@ -563,7 +563,9 @@ async function proxyFetchHtml(
   // Apify: Actor apify~playwright-scraper cu proxy rezidențial RO; întoarce HTML-ul
   // randat, ca parserele existente (OLX/Storia) să rămână neschimbate.
   const apifyToken = Deno.env.get('APIFY_API_TOKEN') || '';
+  if (!apifyToken) APIFY_STATS.missingToken = true;
   if (apifyToken) {
+    APIFY_STATS.attempts++;
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), Math.max(timeoutMs, 60000));
     try {
@@ -3074,6 +3076,41 @@ Deno.serve(async (req) => {
         blacklisted_skipped: blacklistedSkipped,
       });
       // No inter-batch sleep: free engines hit different hosts, no shared quota.
+    }
+
+    // Alertă Admin (Sănătate scraper) când Apify eșuează la toate paginile sau lipsește cheia.
+    try {
+      const target = 'apify_olx';
+      const failedAll = APIFY_STATS.missingToken || (APIFY_STATS.attempts > 0 && APIFY_STATS.ok === 0);
+      const { data: openInc } = await supabase.from('scraper_health_incidents')
+        .select('id, occurrences').eq('target', target).eq('status', 'open').limit(1).maybeSingle();
+      if (failedAll) {
+        const authBad = APIFY_STATS.lastStatus === 401 || APIFY_STATS.lastStatus === 403;
+        const remediation = APIFY_STATS.missingToken
+          ? 'Cheia APIFY_API_TOKEN lipsește. Salveaz-o din nou.'
+          : authBad
+            ? 'Apify respinge cheia (cheie greșită sau expirată). Creează o cheie nouă în contul Apify.'
+            : APIFY_STATS.lastStatus === 402
+              ? 'Contul Apify nu mai are credite. Adaugă credite.'
+              : `Apify a eșuat la toate paginile OLX (cod ${APIFY_STATS.lastStatus || 'rețea'}).`;
+        const detail = { ...APIFY_STATS, at: new Date().toISOString() };
+        if (openInc) {
+          await supabase.from('scraper_health_incidents').update({
+            occurrences: (openInc.occurrences ?? 1) + 1, last_seen_at: new Date().toISOString(), detail, remediation,
+          }).eq('id', openInc.id);
+        } else {
+          await supabase.from('scraper_health_incidents').insert({
+            kind: APIFY_STATS.missingToken || authBad ? 'apify_auth_failed' : 'apify_failed',
+            target, severity: 'critical', detail, remediation,
+          });
+        }
+      } else if (openInc && APIFY_STATS.ok > 0) {
+        await supabase.from('scraper_health_incidents').update({
+          status: 'resolved', resolved_at: new Date().toISOString(),
+        }).eq('id', openInc.id);
+      }
+    } catch (e) {
+      console.warn(JSON.stringify({ kind: 'apify_alert_error', message: (e as Error).message }));
     }
 
     const payload = {
