@@ -1013,7 +1013,7 @@ async function olxApiSearch(query: string, max: number): Promise<FreeResult[]> {
   const terms = /timi[sș]oara/i.test(clean) ? clean : `${clean} timisoara`;
   const limit = Math.min(Math.max(max * 3, 20), 40);
   const apiUrl = `https://www.olx.ro/api/v1/offers/?offset=0&limit=${limit}` +
-    `&query=${encodeURIComponent(terms)}&sort_by=created_at%3Adesc`;
+    `&query=${encodeURIComponent(terms)}&sort_by=created_at%3Adesc&filter_enum_private_business%5B0%5D=private`;
 
   const { ok, html } = await fetchHtmlUnblockable(apiUrl, 25000, 'https://www.olx.ro/', {
     alwaysProxy: true,
