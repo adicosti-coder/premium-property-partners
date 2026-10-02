@@ -559,25 +559,45 @@ async function proxyFetchHtml(
   url: string,
   timeoutMs = 25000,
   opts?: { raw?: boolean },
-): Promise<{ ok: boolean; status: number; html: string; via: 'scrapedo' | 'firecrawl' | 'none' }> {
-  const scrapeDoKey = Deno.env.get('SCRAPE_DO_API_KEY') || '';
-  if (scrapeDoKey) {
+): Promise<{ ok: boolean; status: number; html: string; via: 'apify' | 'firecrawl' | 'none' }> {
+  // Apify: Actor apify~playwright-scraper cu proxy rezidențial RO; întoarce HTML-ul
+  // randat, ca parserele existente (OLX/Storia) să rămână neschimbate.
+  const apifyToken = Deno.env.get('APIFY_API_TOKEN') || '';
+  if (apifyToken) {
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    const timer = setTimeout(() => ctrl.abort(), Math.max(timeoutMs, 60000));
     try {
-      const endpoint = `https://api.scrape.do/?token=${encodeURIComponent(scrapeDoKey)}` +
-        `&url=${encodeURIComponent(url)}&render=true&super=true&geoCode=ro&waitUntil=domcontentloaded&customWait=2500`;
-      const resp = await fetch(endpoint, { signal: ctrl.signal });
-      const html = resp.ok ? await resp.text() : '';
-      if (resp.ok && html.length > 500) {
-        return { ok: true, status: 200, html, via: 'scrapedo' };
+      const endpoint = `https://api.apify.com/v2/acts/apify~playwright-scraper/run-sync-get-dataset-items?timeout=55&memory=2048`;
+      const resp = await fetch(endpoint, {
+        method: 'POST',
+        signal: ctrl.signal,
+        headers: { Authorization: `Bearer ${apifyToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          startUrls: [{ url }],
+          maxRequestsPerCrawl: 1,
+          maxConcurrency: 1,
+          launcher: 'chromium',
+          headless: true,
+          proxyConfiguration: { useApifyProxy: true, apifyProxyGroups: ['RESIDENTIAL'], apifyProxyCountry: 'RO' },
+          pageFunction: `async function pageFunction(context) { const { page } = context; await page.waitForTimeout(2500); return { html: await page.content() }; }`,
+        }),
+      });
+      if (resp.ok) {
+        const items = await resp.json().catch(() => []);
+        const html = Array.isArray(items) && typeof items[0]?.html === 'string' ? items[0].html : '';
+        if (html.length > 500) return { ok: true, status: 200, html, via: 'apify' };
+        console.warn(JSON.stringify({ kind: 'proxy_apify_empty', url, len: html.length }));
+      } else {
+        const body = await resp.text().catch(() => '');
+        console.warn(JSON.stringify({ kind: 'proxy_apify_failed', url, status: resp.status, body: body.slice(0, 200) }));
       }
-      console.warn(JSON.stringify({ kind: 'proxy_scrapedo_failed', url, status: resp.status, len: html.length }));
     } catch (e) {
-      console.warn(JSON.stringify({ kind: 'proxy_scrapedo_error', url, message: (e as Error).message }));
+      console.warn(JSON.stringify({ kind: 'proxy_apify_error', url, message: (e as Error).message }));
     } finally {
       clearTimeout(timer);
     }
+  } else {
+    console.warn(JSON.stringify({ kind: 'proxy_apify_missing_token' }));
   }
 
   const fcKey = Deno.env.get('FIRECRAWL_API_KEY') || '';
