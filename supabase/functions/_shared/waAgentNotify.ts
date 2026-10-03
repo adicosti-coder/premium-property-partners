@@ -157,3 +157,58 @@ export async function notifyAgentOffer(
     return { sent: false, error: String(e).slice(0, 300), agent };
   }
 }
+
+
+const HANDOVER_LABEL: Record<string, string> = {
+  owner_viewing: "vrea VIZIONARE",
+  owner_collab_yes: "acceptă COLABORAREA",
+  owner_call_request: "cere să fie SUNAT",
+};
+
+/** Alertă imediată: proprietarul s-a arătat interesat → preia un om. */
+export async function notifyOwnerHandover(
+  supabase: any,
+  input: {
+    phone: string;
+    profile_name?: string | null;
+    message: string;
+    kind: string;
+    conversation_id?: string | null;
+    prospect?: ProspectContext | null;
+  },
+) {
+  const agent = await resolveAgent(supabase, input.conversation_id ?? null);
+  const label = HANDOVER_LABEL[input.kind] ?? "este interesat";
+  const p = input.prospect ?? null;
+  const price = p?.price ? `${Math.round(Number(p.price)).toLocaleString("ro-RO")} ${String(p.currency || "EUR").toUpperCase() === "RON" ? "lei" : "€"}` : "—";
+  const wa = `https://wa.me/${input.phone.replace(/\D/g, "")}`;
+  const html = `
+    <div style="font-family:Arial,Helvetica,sans-serif;color:#111;max-width:620px">
+      <h2 style="margin:0 0 6px;color:#b45309">🔥 Proprietar ${esc(label)}</h2>
+      <p style="margin:0 0 12px">Preia conversația acum — Andrei a confirmat automat și a spus că revine un coleg.</p>
+      <table style="border-collapse:collapse;font-size:14px">
+        <tr><td style="padding:4px 10px 4px 0"><b>Nume</b></td><td>${esc(input.profile_name || p?.contact_name || "—")}</td></tr>
+        <tr><td style="padding:4px 10px 4px 0"><b>Telefon</b></td><td>${esc(input.phone)}</td></tr>
+        <tr><td style="padding:4px 10px 4px 0"><b>Anunț</b></td><td>${esc(p?.title || "—")}</td></tr>
+        <tr><td style="padding:4px 10px 4px 0"><b>Zonă / camere</b></td><td>${esc(p?.zone || p?.location || "—")} / ${esc(p?.rooms ?? "—")}</td></tr>
+        <tr><td style="padding:4px 10px 4px 0"><b>Preț anunț</b></td><td>${esc(price)}</td></tr>
+      </table>
+      <p style="margin:14px 0 6px"><b>Mesajul proprietarului:</b></p>
+      <blockquote style="margin:0;padding:8px 12px;border-left:3px solid #D4AF37;background:#faf7ee">${esc(input.message)}</blockquote>
+      <p style="margin:16px 0"><a href="${wa}" style="background:#25D366;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Răspunde pe WhatsApp</a></p>
+    </div>`;
+  const recipients = Array.from(new Set([agent.email, FALLBACK_AGENT_EMAIL]));
+  for (const to of recipients) {
+    try {
+      await sendTeamEmail({
+        to,
+        subject: `URGENT — proprietar ${label}: ${input.profile_name || input.phone}`,
+        html,
+        leadId: null,
+        source: "wa-owner-handover",
+      }, supabase);
+    } catch (e) {
+      console.error("[wa-owner-handover] email failed:", e);
+    }
+  }
+}

@@ -9,6 +9,9 @@ export type ProspectContext = {
   location?: string | null;
   rooms?: number | null;
   size?: number | null;
+  price?: number | null;
+  currency?: string | null;
+  contact_name?: string | null;
 } | null;
 
 // `prospect_type` din scraper descrie CINE publică anunțul (proprietar/agenție),
@@ -124,7 +127,7 @@ export async function loadProspectContext(
   try {
     const { data } = await supabase
       .from("prospect_listings")
-      .select("prospect_type, category, title, zone, location, rooms, size")
+      .select("prospect_type, category, title, zone, location, rooms, size, price, currency, contact_name")
       .eq("phone_normalized", phone)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -312,8 +315,14 @@ export function quickReplyText(raw: string): { kind: string; text: string } | nu
  * mesaj, cifrele 1/2/3, întrebările de preț, rezervările, vizionările și STOP.
  * Rulează pe server (webhook Meta), deci funcționează cu site-ul închis.
  */
-export function autoReplyText(raw: string): { kind: string; text: string } | null {
+export function autoReplyText(
+  raw: string,
+  ctx: ProspectContext = null,
+): { kind: string; text: string } | null {
   const quick = quickReplyText(raw);
+  if (quick && /^(publish_|quick_no)/.test(quick.kind)) return quick;
+  const owner = ownerReplyText(raw, ctx);
+  if (owner) return owner;
   if (quick) return quick;
 
   const t = stripDiacritics(raw);
@@ -431,6 +440,130 @@ export function autoReplyText(raw: string): { kind: string; text: string } | nul
         "Vizita dureaza circa 30 de minute, veniti insotit de cine doriti si nu implica nicio obligatie.\n\n" +
         "Imi spuneti ziua si ora care va sunt comode? Confirmam adresa exacta si va trimitem un mesaj " +
         "cu data si ora blocate.",
+    };
+  }
+
+  return null;
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Răspunsuri pentru proprietari: obiecții (comision, preț, „fără agenții”) și
+// interes de vizionare/colaborare. Personalizate cu zona, camerele și prețul
+// din anunț. Reguli: doar Property Management 15–20%, vizionarea se face la
+// apartament (nu avem birou), orașul este Timișoara.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Tipurile de răspuns care înseamnă „proprietarul vrea să continue” → predare către om. */
+export const OWNER_HANDOVER_KINDS = new Set(["owner_viewing", "owner_collab_yes", "owner_call_request"]);
+
+function ownerRef(ctx: ProspectContext): string {
+  const parts: string[] = [];
+  if (ctx?.rooms) parts.push(`${ctx.rooms} ${ctx.rooms === 1 ? "cameră" : "camere"}`);
+  const where = ctx?.zone || ctx?.location;
+  const base = parts.length ? `apartamentul de ${parts.join(", ")}` : "apartamentul dumneavoastră";
+  return where ? `${base} din ${where}` : base;
+}
+
+function ownerPrice(ctx: ProspectContext): string | null {
+  const v = Number(ctx?.price);
+  if (!v || !Number.isFinite(v)) return null;
+  const sym = String(ctx?.currency || "EUR").toUpperCase() === "RON" ? "lei" : "€";
+  return `${Math.round(v).toLocaleString("ro-RO")} ${sym}`;
+}
+
+function ownerHello(ctx: ProspectContext): string {
+  const n = String(ctx?.contact_name ?? "").trim().split(/\s+/)[0];
+  return n && n.length > 1 && !/proprietar|privat|persoan/i.test(n) ? `${n}, ` : "";
+}
+
+const VIEWING_CLOSE =
+  "Pot veni la apartament pentru o vizionare scurtă (20–30 min), fără nicio obligație. " +
+  "Vă convine mâine sau poimâine? Spuneți-mi ziua și ora (09:00–20:00) și confirm imediat.";
+
+export function ownerReplyText(raw: string, ctx: ProspectContext = null): { kind: string; text: string } | null {
+  const t = stripDiacritics(raw);
+  if (!t) return null;
+  const ref = ownerRef(ctx);
+  const hi = ownerHello(ctx);
+  const price = ownerPrice(ctx);
+
+  // 1) Interes de vizionare / întâlnire la apartament.
+  if (/vizion|sa veniti|puteti veni|veniti sa|sa vedeti apartament|cand puteti|cand veniti|ne vedem|programare|programam/.test(t)) {
+    return {
+      kind: "owner_viewing",
+      text:
+        `Perfect, ${hi}mulțumesc! Organizăm vizionarea direct la ${ref}.\n\n` +
+        "Spuneți-mi ziua și ora care vă convin (luni–sâmbătă, 09:00–20:00) — un coleg vă confirmă " +
+        "personal programarea în cel mai scurt timp. Durează 20–30 de minute, fără nicio obligație.",
+    };
+  }
+
+  // 2) Cerere de apel.
+  if (/sunati|suna-ma|sunati-ma|ma puteti suna|un telefon|apelati|vorbim la telefon|prefer telefon/.test(t)) {
+    return {
+      kind: "owner_call_request",
+      text:
+        `Sigur, ${hi}vă sună un coleg RealTrust în cel mai scurt timp (09:00–20:00). ` +
+        "Dacă preferați o oră anume, scrieți-mi aici și o respectăm.",
+    };
+  }
+
+  // 3) Obiecție: „nu lucrez cu agenții / intermediari”.
+  if (/nu (colaborez|lucrez|vreau|doresc)\s+(cu\s+)?(agenti|agentii|agentie|intermediar)|fara agent|fara intermediar|nu vreau agentie/.test(t)) {
+    return {
+      kind: "owner_obj_agency",
+      text:
+        `Înțeleg perfect, ${hi}mulți proprietari au avut experiențe neplăcute cu agențiile. ` +
+        "Noi nu cerem exclusivitate și nu vă blocăm cu contracte lungi — puteți vinde sau închiria și singur(ă) oricând.\n\n" +
+        `Pentru ${ref} vă trimit gratuit o estimare de preț și de chirie, ca să aveți o cifră de comparat. ` +
+        "Vreți să o primiți aici, pe WhatsApp?",
+    };
+  }
+
+  // 4) Obiecție: comision prea mare / nu vreau să plătesc comision.
+  if (/comision.*(mare|mult|scump)|(mare|mult|scump).*comision|nu (platesc|dau|vreau) comision|fara comision|prea scump|prea mult/.test(t)) {
+    return {
+      kind: "owner_obj_fee",
+      text:
+        `Înțeleg întrebarea, ${hi}e normal să vreți să știți exact ce plătiți. ` +
+        "Administrarea RealTrust este între 15% și 20% din încasări și se aplică doar pe venitul realizat — " +
+        "dacă apartamentul nu produce, nu plătiți nimic. Nu există abonament fix și nici costuri ascunse.\n\n" +
+        "În schimb ne ocupăm de anunțuri, prețuri dinamice, oaspeți, curățenie, mentenanță și raport lunar, " +
+        "iar prețurile dinamice aduc de obicei mai mult decât diferența de comision.\n\n" + VIEWING_CLOSE,
+    };
+  }
+
+  // 5) Obiecție: preț (estimarea noastră e prea mică / prețul cerut e ferm).
+  if (/pret.*(mic|mica|jos|ferm|fix|nenegociabil)|(prea|e) (mic|putin|jos)|sub (pret|piata)|nu (las|scad|negociez)|merita mai mult|vreau mai mult|valoreaza mai mult|pretul (e|este) ferm/.test(t)) {
+    return {
+      kind: "owner_obj_price",
+      text:
+        `Corect, ${hi}prețul îl stabiliți dumneavoastră. ` +
+        (price ? `Pornim de la ${price}, cât ați cerut în anunț, ` : "Pornim de la prețul dumneavoastră, ") +
+        `și vă arătăm comparativ ce s-a vândut și închiriat recent pentru apartamente similare cu ${ref}, ` +
+        "ca să decideți pe cifre reale, nu pe estimări.\n\n" + VIEWING_CLOSE,
+    };
+  }
+
+  // 6) Obiecție: are deja agenție / administrator.
+  if (/am deja (agent|agentie|administrator|pe cineva)|lucrez deja cu|deja (inchiriat|vandut|dat)/.test(t)) {
+    return {
+      kind: "owner_obj_already",
+      text:
+        `Mulțumesc că mi-ați spus, ${hi}nu insist. ` +
+        "Dacă situația se schimbă sau doriți o a doua părere pe preț ori pe venitul în regim hotelier, " +
+        "ne scrieți oricând aici. O zi bună!",
+    };
+  }
+
+  // 7) Acord clar de colaborare.
+  if (/^(da|sigur|ok|bine|de acord|accept)\b.*(colabor|intereseaza|interesat|sunt de acord|hai|putem)|sunt interesat|ma intereseaza|vreau sa colaboram|hai sa colaboram|da,? (ma|sunt)/.test(t)) {
+    return {
+      kind: "owner_collab_yes",
+      text:
+        `Excelent, ${hi}mulțumesc! Pentru ${ref}` + (price ? ` (${price})` : "") +
+        " pregătim evaluarea gratuită și pașii următori.\n\n" + VIEWING_CLOSE,
     };
   }
 
