@@ -569,9 +569,11 @@ async function proxyFetchHtml(
   if (apifyToken) {
     APIFY_STATS.attempts++;
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), Math.max(timeoutMs, 60000));
+    const timer = setTimeout(() => ctrl.abort(), Math.max(timeoutMs, 95000));
     try {
-      const endpoint = `https://api.apify.com/v2/acts/apify~playwright-scraper/run-sync-get-dataset-items?timeout=55&memory=2048`;
+      // Cheerio (fără browser) pornește în câteva secunde; Playwright depășea
+      // limita de 55s (TIMED-OUT). OLX/Storia au datele în HTML-ul brut.
+      const endpoint = `https://api.apify.com/v2/acts/apify~cheerio-scraper/run-sync-get-dataset-items?timeout=90&memory=1024`;
       const resp = await fetch(endpoint, {
         method: 'POST',
         signal: ctrl.signal,
@@ -580,10 +582,9 @@ async function proxyFetchHtml(
           startUrls: [{ url }],
           maxRequestsPerCrawl: 1,
           maxConcurrency: 1,
-          launcher: 'chromium',
-          headless: true,
+          maxRequestRetries: 2,
           proxyConfiguration: { useApifyProxy: true, apifyProxyGroups: ['RESIDENTIAL'], apifyProxyCountry: 'RO' },
-          pageFunction: `async function pageFunction(context) { const { page } = context; await page.waitForTimeout(2500); return { html: await page.content() }; }`,
+          pageFunction: `async function pageFunction(context) { return { html: context.body ? context.body.toString() : context.$.html() }; }`,
         }),
       });
       if (resp.ok) {
