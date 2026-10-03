@@ -7,13 +7,14 @@ import {
   buildIntakeMessage,
   loadProspectContext,
   autoReplyText,
+  OWNER_HANDOVER_KINDS,
   detectPublishIntent,
   PUBLISH_CONSENT_ACK,
   PUBLISH_REVOKE_ACK,
   publishConsentRequestText,
 } from "../_shared/waAutoReply.ts";
 import { notifyClientChatLink } from "../_shared/waClientEmail.ts";
-import { notifyAgentInbound } from "../_shared/waAgentNotify.ts";
+import { notifyAgentInbound, notifyOwnerHandover } from "../_shared/waAgentNotify.ts";
 import { notifyConsentReply } from "../_shared/waPublishConsentNotify.ts";
 
 const corsHeaders = {
@@ -323,7 +324,25 @@ Deno.serve(async (req) => {
           .eq("conversation_id", convId)
           .eq("direction", "outbound");
 
-        let quick = outboundCount ? autoReplyText(text) : null;
+        const ownerCtx = outboundCount ? await loadProspectContext(supabase, from) : null;
+        let quick = outboundCount ? autoReplyText(text, ownerCtx) : null;
+
+        // Predare către om: proprietarul vrea vizionare / colaborare / apel.
+        if (quick && OWNER_HANDOVER_KINDS.has(quick.kind)) {
+          try {
+            await notifyOwnerHandover(supabase, {
+              phone: from,
+              profile_name: profileName,
+              message: text,
+              kind: quick.kind,
+              conversation_id: convId,
+              prospect: ownerCtx,
+            });
+            await supabase.from("prospect_listings").update({ lifecycle_status: "interested" }).eq("phone_normalized", from);
+          } catch (e) {
+            console.error("[wa-webhook] owner handover failed:", e);
+          }
+        }
 
         // Răspuns personalizat pe zonă (Admin → Răspunsuri automate pe zonă)
         // pentru butoanele mesajului de prim contact.
@@ -429,7 +448,7 @@ Deno.serve(async (req) => {
         // dacă nu există încă nicio cerere de acord, o creăm și punem automat
         // întrebarea „DA PUBLIC”, ca Andrei să nu mai scrie manual.
         if (
-          !publishIntent && outboundCount &&
+          !publishIntent && outboundCount && !String(quick?.kind ?? "").startsWith("owner_") &&
           quick?.kind !== "quick_no" && quick?.kind !== "quick_stop" &&
           quick?.kind !== "publish_consent_request"
         ) {
