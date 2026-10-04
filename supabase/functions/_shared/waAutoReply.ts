@@ -20,6 +20,8 @@ export type ConversationMessage = {
   tool_call?: { auto_reply?: string } | null;
 };
 
+type ClientReply = { kind: string; text: string };
+
 // `prospect_type` din scraper descrie CINE publică anunțul (proprietar/agenție),
 // nu tipul de imobil — nu îl folosim niciodată ca tip de imobil în mesaj.
 const PERSON_TYPES = new Set([
@@ -355,8 +357,8 @@ export function autoReplyText(
 
   if (/profit|cat imi ramane|cat castig|cat scot|randament net|venit net|net pe luna/.test(t)) {
     return {
-      kind: "auto_profit",
-      text: "Aici contează cifra care vă rămâne, nu doar încasarea. Estimarea medie este de circa 9,4% net pe an, dar o calculăm realist pentru fiecare apartament. În ce zonă este?",
+      kind: "client_hotel_income_ask_zone",
+      text: "Sigur — calculăm realist, nu din promisiuni. În ce zonă este apartamentul?",
     };
   }
 
@@ -390,8 +392,8 @@ export function autoReplyText(
 
   if (/pret|preț|cat cost|cat face|valoare|estimare|oferta/.test(t)) {
     return {
-      kind: "auto_price",
-      text: "Sigur. Vă oferim o estimare realistă, gratuit și fără obligații. În ce zonă este apartamentul?",
+      kind: "client_price_ask_zone",
+      text: "Sigur — vă ajut să găsiți un preț potrivit. În ce zonă căutați?",
     };
   }
 
@@ -412,6 +414,13 @@ const CLIENT_VIEWING_STEPS = new Set([
   "client_viewing_ask_time",
 ]);
 
+const CLIENT_ZONE_STEPS = new Set([
+  "client_viewing_ask_zone",
+  "client_price_ask_zone",
+  "client_rent_ask_zone",
+  "client_hotel_income_ask_zone",
+]);
+
 function answerAfter(messages: ConversationMessage[], autoKind: string): string | null {
   const promptIndex = messages.findLastIndex(
     (message) => message.direction === "outbound" && message.tool_call?.auto_reply === autoKind,
@@ -419,6 +428,72 @@ function answerAfter(messages: ConversationMessage[], autoKind: string): string 
   if (promptIndex < 0) return null;
   const answer = messages.slice(promptIndex + 1).find((message) => message.direction === "inbound");
   return String(answer?.content ?? "").trim() || null;
+}
+
+/** Zona oferită de client este păstrată din ultimul răspuns la o întrebare de zonă. */
+export function rememberedClientZone(messages: ConversationMessage[]): string | null {
+  for (let i = messages.length - 1; i >= 0; i -= 1) {
+    const message = messages[i];
+    const kind = message.direction === "outbound" ? message.tool_call?.auto_reply ?? "" : "";
+    if (!CLIENT_ZONE_STEPS.has(kind)) continue;
+    const answer = messages.slice(i + 1).find((item) => item.direction === "inbound");
+    const zone = String(answer?.content ?? "").trim();
+    if (zone && zone.length <= 80) return zone;
+  }
+  return null;
+}
+
+function clientIntent(raw: string): "viewing" | "rent" | "hotel_income" | "price" | null {
+  const t = stripDiacritics(raw);
+  if (/vizionare|vizite|vizit[ăa]|sa vad|vedem|intalni|cand pot veni|programare|programam/.test(t)) return "viewing";
+  if (/venit hotelier|regim hotelier|randament|cat produce|cat as castiga|cat castig/.test(t)) return "hotel_income";
+  if (/chirie|de inchiriat|inchiriere|cat e chiria|cat costa chiria/.test(t)) return "rent";
+  if (/pret|preț|cat cost|cat face|valoare|estimare|oferta/.test(t)) return "price";
+  return null;
+}
+
+function replyForKnownZone(intent: NonNullable<ReturnType<typeof clientIntent>>, zone: string): ClientReply {
+  if (intent === "viewing") {
+    return { kind: "client_viewing_ask_rooms", text: `Cu drag. Am păstrat zona ${zone}. Câte camere doriți?` };
+  }
+  if (intent === "rent") {
+    return { kind: "client_rent_ask_rooms", text: `Perfect, am păstrat zona ${zone}. Câte camere vi s-ar potrivi?` };
+  }
+  if (intent === "hotel_income") {
+    return { kind: "client_hotel_income_ask_rooms", text: `Sigur. Pentru ${zone}, câte camere are apartamentul?` };
+  }
+  return { kind: "client_price_ask_goal", text: `Sigur. Pentru ${zone}, vă interesează cumpărarea sau închirierea?` };
+}
+
+/** Răspunsuri scurte pentru clienți, reutilizând zona deja spusă în conversație. */
+export function clientPreparedReply(raw: string, messages: ConversationMessage[]): ClientReply | null {
+  const lastOutbound = [...messages].reverse().find((message) => message.direction === "outbound");
+  const lastKind = lastOutbound?.tool_call?.auto_reply ?? "";
+  const zone = rememberedClientZone(messages);
+
+  if (CLIENT_ZONE_STEPS.has(lastKind) && zone) {
+    if (lastKind === "client_viewing_ask_zone") return replyForKnownZone("viewing", zone);
+    if (lastKind === "client_rent_ask_zone") return replyForKnownZone("rent", zone);
+    if (lastKind === "client_hotel_income_ask_zone") return replyForKnownZone("hotel_income", zone);
+    return replyForKnownZone("price", zone);
+  }
+
+  const viewingStep = clientViewingStepReply(messages);
+  if (viewingStep) return viewingStep;
+
+  const intent = clientIntent(raw);
+  if (!intent) return null;
+  if (zone) return replyForKnownZone(intent, zone);
+  if (intent === "viewing") {
+    return { kind: "client_viewing_ask_zone", text: "Cu drag. În ce zonă doriți vizionarea?" };
+  }
+  if (intent === "rent") {
+    return { kind: "client_rent_ask_zone", text: "Sigur, găsim ceva potrivit. În ce zonă căutați?" };
+  }
+  if (intent === "hotel_income") {
+    return { kind: "client_hotel_income_ask_zone", text: "Sigur — calculăm realist, nu din promisiuni. În ce zonă este apartamentul?" };
+  }
+  return { kind: "client_price_ask_zone", text: "Sigur — vă ajut să găsiți un preț potrivit. În ce zonă căutați?" };
 }
 
 /** Continuă vizionarea unui client cu exact o întrebare per mesaj. */
