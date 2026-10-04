@@ -84,21 +84,21 @@ export function prospectSummary(p: ProspectContext): string | null {
 }
 
 /** Textul EXACT al primului mesaj de calificare (text aprobat de utilizator). */
-export const INTAKE_MESSAGE = `Bună ziua! Mulțumim pentru mesaj. 🏢
+export const INTAKE_MESSAGE = `Salut! Sunt Andrei de la RealTrust. 🏢
 
-Pentru a vă direcționa rapid către colegul potrivit, vă rugăm să ne spuneți cu ce vă putem ajuta:
+Pentru a vă conecta direct cu colegul potrivit, spuneți-ne pe scurt:
 
-Sunteți PROPRIETAR?
+PROPRIETAR
 
-1. Doresc administrare în Regim Hotelier
+1️⃣ Regim Hotelier (Venit maxim, administrare 100% inclusă)
 
-2. Doresc închiriere pe Termen Lung sau Vânzare
+2️⃣ Închiriere Termen Lung sau Vânzare (Chiriași verificați / Cumpărători serioși)
 
-Sunteți CLIENT / OASPETE?
+CLIENT / OASPETE
 
-3. Caut să Cumpăr sau să Închiriez o locuință
+3️⃣ Doresc să Închiriez sau să Cumpăr o proprietate
 
-Răspundeți simplu cu cifra dorită (1, 2 sau 3) sau scrieți-ne pe scurt câteva detalii!`;
+👉 Trimiteți doar cifra (1, 2 sau 3) și revenim în max. 5 minute!`;
 
 /** Mesajul de calificare (prima interacțiune) — text fix, identic pentru toți. */
 export function buildIntakeMessage(_p: ProspectContext = null): string {
