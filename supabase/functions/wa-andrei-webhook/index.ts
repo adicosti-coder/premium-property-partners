@@ -350,7 +350,8 @@ Deno.serve(async (req) => {
               conversation_id: convId,
               prospect: ownerCtx,
             });
-            await supabase.from("prospect_listings").update({ lifecycle_status: "interested" }).eq("phone_normalized", from);
+              await supabase.from("prospect_listings").update({ lifecycle_status: "interested" }).eq("phone_normalized", from);
+            }
           } catch (e) {
             console.error("[wa-webhook] owner handover failed:", e);
           }
