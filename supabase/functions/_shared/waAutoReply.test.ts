@@ -1,5 +1,11 @@
 import { expect, test } from "bun:test";
-import { autoReplyText, clientViewingStepReply, type ConversationMessage } from "./waAutoReply.ts";
+import {
+  autoReplyText,
+  clientPreparedReply,
+  clientViewingStepReply,
+  rememberedClientZone,
+  type ConversationMessage,
+} from "./waAutoReply.ts";
 
 const outbound = (kind: string, content = "întrebare"): ConversationMessage => ({
   direction: "outbound",
@@ -35,4 +41,23 @@ test("nu preia conversațiile care nu sunt în fluxul de vizionare client", () =
 
 test("STOP rămâne disponibil în timpul oricărui flux", () => {
   expect(autoReplyText("STOP", null)?.kind).toBe("quick_stop");
+});
+
+test("reține zona și nu o cere din nou la o nouă intenție", () => {
+  const messages: ConversationMessage[] = [
+    outbound("client_viewing_ask_zone"),
+    inbound("Iosefin"),
+    outbound("client_viewing_confirmed", "Am notat zona."),
+  ];
+  expect(rememberedClientZone(messages)).toBe("Iosefin");
+  expect(clientPreparedReply("Cât este chiria?", messages)).toEqual({
+    kind: "client_rent_ask_rooms",
+    text: "Perfect, am păstrat zona Iosefin. Câte camere vi s-ar potrivi?",
+  });
+});
+
+test("pregătește răspunsuri empatice pentru preț, chirie și venit hotelier", () => {
+  expect(clientPreparedReply("Care este prețul?", [])?.kind).toBe("client_price_ask_zone");
+  expect(clientPreparedReply("Caut chirie", [])?.kind).toBe("client_rent_ask_zone");
+  expect(clientPreparedReply("Ce venit hotelier pot obține?", [])?.kind).toBe("client_hotel_income_ask_zone");
 });
