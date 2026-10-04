@@ -345,8 +345,9 @@ Deno.serve(async (req) => {
         const isSafetyReply = standardQuick && [
           "quick_no", "quick_stop", "publish_consent", "publish_revoke",
         ].includes(standardQuick.kind);
+        const preferClient = clientPreparedQuick && !(clientPreparedQuick.kind === "client_goal_ask" && standardQuick);
         let quick = outboundCount
-          ? (isSafetyReply ? standardQuick : (clientPreparedQuick ?? standardQuick))
+          ? (isSafetyReply ? standardQuick : (preferClient ? clientPreparedQuick : standardQuick))
           : { kind: "intake", text: buildIntakeMessage() };
 
         // Predare către om: proprietarul vrea vizionare / colaborare / apel.
