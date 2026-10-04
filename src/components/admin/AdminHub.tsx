@@ -61,7 +61,7 @@ export const HUBS: Record<string, { title: string; description: string; views: s
     title: "Rapoarte WhatsApp",
     description: "Eficiența mesajelor, activitatea zilnică, surse, oferte și tranzacții.",
     views: [
-      "whatsapp-template-efficiency", "whatsapp-zone-report", "whatsapp-activity-report", "whatsapp-daily-report",
+      "whatsapp-funnel", "whatsapp-template-efficiency", "whatsapp-zone-report", "whatsapp-activity-report", "whatsapp-daily-report",
       "whatsapp-dashboard", "whatsapp-live-dashboard", "whatsapp-analytics",
       "whatsapp-sources", "whatsapp-offers", "whatsapp-transactions",
     ],
