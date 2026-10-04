@@ -335,8 +335,8 @@ export function autoReplyText(
     return {
       kind: "quick_stop",
       text:
-        "Am inteles, nu va mai trimitem mesaje. Va mulțumim pentru timpul acordat! " +
-        "Daca aveti nevoie de noi pe viitor, ne scrieti oricand aici.",
+        "Am înțeles, nu vă mai trimitem mesaje. Vă mulțumim pentru timpul acordat! " +
+        "Dacă aveți nevoie de noi pe viitor, ne scrieți oricând aici.",
     };
   }
 
@@ -344,15 +344,12 @@ export function autoReplyText(
     return {
       kind: "auto_property_management",
       text:
-        "Property Management RealTrust inseamna ca ne ocupam noi de tot:\n" +
-        "• Anunturi si sincronizare pe Booking, Airbnb si Expedia.\n" +
-        "• Prețuri dinamice, ca apartamentul sa fie ocupat la tariful cel mai bun.\n" +
-        "• Comunicare cu oaspetii, check-in automatizat si asistenta pe toata durata sederii.\n" +
-        "• Curatenie profesionala, lenjerie si consumabile intre oaspeti.\n" +
-        "• Mentenanta, declaratii lunare si raport financiar detaliat.\n\n" +
-        "Property Management RealTrust: 15-20% din incasari, aplicat doar pe venitul realizat — daca " +
-        "apartamentul nu produce, nu plătiti administrare.\n\n" +
-        "Imi spuneti zona, numarul de camere si suprafata, ca sa va trimit estimarea de venit?",
+        "Pe scurt: dumneavoastră încasați, noi ne ocupăm de tot.\n" +
+        "• Anunțuri pe Booking, Airbnb și Expedia, cu prețuri dinamice.\n" +
+        "• Oaspeți, check-in automat, curățenie, lenjerie și mentenanță.\n" +
+        "• Raport financiar lunar, ca să vedeți exact cifrele.\n\n" +
+        "Administrarea e 15–20% doar din încasări — dacă apartamentul nu produce, nu plătiți nimic.\n\n" +
+        "Vreți să vă calculez venitul pentru apartamentul dumneavoastră? Îmi spuneți doar zona și numărul de camere.",
     };
   }
 
@@ -360,12 +357,10 @@ export function autoReplyText(
     return {
       kind: "auto_fee",
       text:
-        "Property Management RealTrust: 15-20% din incasari, in functie de tipul apartamentului si de " +
-        "volumul de munca. Se aplica doar pe venitul realizat, nu exista abonament fix.\n\n" +
-        "In acest procent intra anunturile pe Booking si Airbnb, prețurile dinamice, comunicarea cu " +
-        "oaspetii, check-in-ul, curatenia, lenjeria, mentenanta si raportul lunar.\n\n" +
-        "Restul costurilor reale le discutam deschis la telefon sau la vizionare, ca sa vedeti cifrele exacte " +
-        "pentru apartamentul dvs.",
+        "Transparent: administrarea RealTrust e 15–20% din încasări, în funcție de apartament. " +
+        "Se aplică doar pe venitul realizat — fără abonament și fără costuri în avans.\n\n" +
+        "Include anunțurile, prețurile dinamice, oaspeții, check-in-ul, curățenia, mentenanța și raportul lunar.\n\n" +
+        "Vreți să vedeți cât v-ar rămâne net pentru apartamentul dumneavoastră? Îmi spuneți zona și numărul de camere.",
     };
   }
 
@@ -373,10 +368,9 @@ export function autoReplyText(
     return {
       kind: "auto_profit",
       text:
-        "Profitul net estimat este de circa 9,4% pe an din valoarea apartamentului — o estimare medie, care " +
-        "depinde de gradul real de ocupare si de costurile reale.\n\n" + FINANCE_BLOCK + "\n\n" +
-        "Imi spuneti zona, numarul de camere si suprafata, ca sa va calculam profitul net exact pentru " +
-        "apartamentul dvs.?",
+        "Media e un profit net de circa 9,4% pe an din valoarea apartamentului — cifra exactă depinde de ocuparea reală.\n\n" +
+        FINANCE_BLOCK + "\n\n" +
+        "Vă calculez cifra exactă pentru apartamentul dumneavoastră? Îmi spuneți zona și numărul de camere.",
     };
   }
 
@@ -384,9 +378,8 @@ export function autoReplyText(
     return {
       kind: "auto_real_estate",
       text:
-        "Perfect, ne ocupam de partea imobiliara: vanzare asistata, achizitie sau inchiriere in Timisoara.\n\n" +
-        "Ca sa va trimit o estimare corecta, imi spuneti zona, numarul de camere si suprafata? " +
-        "Va raspundem intre 09:00 si 20:00, luni–sambata.",
+        "Perfect, vă ajutăm cu vânzarea, cumpărarea sau închirierea în Timișoara.\n\n" +
+        "Ca să pornim corect: e vorba de vânzare sau de închiriere, și în ce zonă?",
     };
   }
 
@@ -394,9 +387,9 @@ export function autoReplyText(
     return {
       kind: "auto_management",
       text:
-        "Excelent. In administrare regim hotelier randamentul net este de circa 9,4% pe an: anunturi pe " +
-        "Booking si Airbnb, prețuri dinamice, curatenie, check-in si raportare lunara.\n\n" +
-        "Imi confirmati zona, numarul de camere si suprafata, ca sa va trimit estimarea de venit lunar?\n\n" +
+        "Excelent! În regim hotelier randamentul net estimat e de circa 9,4% pe an, iar noi ne ocupăm de tot: " +
+        "Booking, Airbnb, prețuri dinamice, oaspeți, curățenie și raport lunar.\n\n" +
+        "Ca să vă calculez venitul lunar, câte camere are apartamentul și în ce zonă e?\n\n" +
         FINANCE_BLOCK,
     };
   }
@@ -405,9 +398,8 @@ export function autoReplyText(
     return {
       kind: "auto_booking",
       text:
-        "Cu placere! Pentru cazare in regim hotelier verificati disponibilitatea si prețurile aici: " +
-        "https://realtrust.ro/rezervare\n\n" +
-        "Daca imi spuneti perioada si numarul de persoane, va confirmam noi un apartament potrivit.",
+        "Cu plăcere! Disponibilitatea și prețurile le vedeți aici: https://realtrust.ro/rezervare\n\n" +
+        "Sau îmi spuneți perioada și câte persoane sunteți, și vă propun eu apartamentul potrivit.",
     };
   }
 
@@ -415,13 +407,13 @@ export function autoReplyText(
     return {
       kind: "auto_after_offer",
       text:
-        "Dupa ofertă pașii sunt clari:\n" +
-        "1) Vizionare — direct la apartament, in intervalul 09:00–20:00, luni–sambata.\n" +
-        "2) Negociere — transmitem oferta dvs. proprietarului si revenim cu decizia.\n" +
-        "3) Antecontract — stabilim avansul si termenele, cu toate actele verificate.\n" +
-        "4) Notar — semnare, plata finala si predarea cheilor.\n" +
-        "5) Dupa achizitie, daca doriti, preluam administrarea in regim hotelier.\n\n" +
-        "Nu aveti nicio obligatie pana la antecontract. Imi spuneti ziua potrivita pentru vizionare?",
+        "Pașii sunt simpli și clari:\n" +
+        "1) Vizionare la apartament (luni–sâmbătă, 09:00–20:00).\n" +
+        "2) Negociere — transmitem oferta și revenim cu răspunsul.\n" +
+        "3) Antecontract — avans și termene, cu actele verificate.\n" +
+        "4) Notar — semnare, plată și predarea cheilor.\n" +
+        "5) Opțional, preluăm administrarea în regim hotelier.\n\n" +
+        "Până la antecontract nu aveți nicio obligație. Vă e mai comodă o vizionare în timpul săptămânii sau sâmbătă?",
     };
   }
 
@@ -429,9 +421,8 @@ export function autoReplyText(
     return {
       kind: "auto_price",
       text:
-        "Va trimitem imediat cifrele reale. Imi spuneti, va rog, zona, numarul de camere si suprafata " +
-        "apartamentului?\n\nPrimiti estimarea de preț de vanzare si estimarea de venit in regim hotelier, " +
-        "fara nicio obligatie.\n\n" + FINANCE_BLOCK,
+        "Vă trimit cifrele reale, gratuit și fără obligații. " +
+        "Câte camere are apartamentul și în ce zonă e?\n\n" + FINANCE_BLOCK,
     };
   }
 
@@ -439,10 +430,8 @@ export function autoReplyText(
     return {
       kind: "auto_meeting",
       text:
-        "Sigur, organizam vizionarea direct la apartament, in intervalul 09:00–20:00, luni–sambata. " +
-        "Vizita dureaza circa 30 de minute, veniti insotit de cine doriti si nu implica nicio obligatie.\n\n" +
-        "Imi spuneti ziua si ora care va sunt comode? Confirmam adresa exacta si va trimitem un mesaj " +
-        "cu data si ora blocate.",
+        "Sigur! Vizionarea se face direct la apartament, durează circa 30 de minute și nu vă obligă la nimic.\n\n" +
+        "Ce vă e mai comod: în timpul săptămânii sau sâmbătă? Vă confirmăm imediat adresa și ora.",
     };
   }
 
