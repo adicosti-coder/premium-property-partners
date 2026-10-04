@@ -447,7 +447,7 @@ function clientIntent(raw: string): "viewing" | "rent" | "hotel_income" | "price
   const t = stripDiacritics(raw);
   if (/vizionare|vizite|vizit[ăa]|sa vad|vedem|intalni|cand pot veni|programare|programam/.test(t)) return "viewing";
   if (/venit hotelier|regim hotelier|randament|cat produce|cat as castiga|cat castig/.test(t)) return "hotel_income";
-  if (/chirie|de inchiriat|inchiriere|cat e chiria|cat costa chiria/.test(t)) return "rent";
+  if (/chirie|chiria|de inchiriat|inchiriere|cat e chiria|cat costa chiria/.test(t)) return "rent";
   if (/pret|preț|cat cost|cat face|valoare|estimare|oferta/.test(t)) return "price";
   return null;
 }
