@@ -525,6 +525,7 @@ export function ownerReplyText(raw: string, ctx: ProspectContext = null): { kind
   const ref = ownerRef(ctx);
   const hi = ownerHello(ctx);
   const price = ownerPrice(ctx);
+  const mode = listingMode(ctx);
 
   // 1) Interes de vizionare / întâlnire la apartament.
   if (/vizion|sa veniti|puteti veni|veniti sa|sa vedeti apartament|cand puteti|cand veniti|ne vedem|programare|programam/.test(t)) {
