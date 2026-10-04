@@ -56,7 +56,7 @@
 
 ## Răspunsuri automate pe zonă + teste (4 oct 2026)
 - [x] Răspunsuri pe zonă extinse la toate intențiile Andrei (butoane + text scris), zone fallback din prospect_listings, potrivire parțială, variabile {zona}/{camere}/{pret}; wa-andrei-webhook redeployat
-- [ ] Test end-to-end: mesaj de pe numărul de test → confirmare e-mail urgent + răspuns Andrei
-- [ ] Alerta urgentă de vizionare/colaborare trimisă și pe WhatsApp (nu doar e-mail)
-- [ ] Scanare OLX pornită din Admin → Import anunțuri + verificare că anunțurile noi ajung cu toate datele (nu doar linkul)
-- [ ] Raport conversii în Admin: anunțuri vizionate / citite / duse la vizionare
+- [x] Alerta urgentă de vizionare/colaborare trimisă și pe WhatsApp (număr admin), nu doar e-mail; wa-andrei-webhook redeployat
+- [x] Scanare OLX pornită (job 1362f2a2): 6 interogări, 0 erori, 0 anunțuri noi — 10 duplicate, 5 blocate, 33 arhivate; anunțurile recente au titlu/zonă/camere/preț complete
+- [x] Raport conversii în Admin: „Conversii prospectare" (trimise → livrate → citite → răspunsuri → interesați), pe zonă, în Rapoarte WhatsApp
+- [ ] Test end-to-end: utilizatorul trimite mesaj de pe numărul de test → confirmare e-mail + WhatsApp urgent + răspuns Andrei (numai utilizatorul poate trimite de pe telefonul lui)
