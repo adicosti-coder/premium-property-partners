@@ -754,7 +754,7 @@ Deno.serve(async (req) => {
 
   // Când agentul AI e activ, butoanele de interes (vânzare / administrare) și
   // primul răspuns merg la Andrei AI; refuzul/STOP/acordul rămân pe regulile fixe.
-  const SAFETY_KINDS = new Set(["quick_no", "quick_stop", "publish_consent", "publish_revoke", "publish_consent_request"]);
+  const SAFETY_KINDS = new Set(["intake", "quick_no", "quick_stop", "publish_consent", "publish_revoke", "publish_consent_request"]);
   if (agentEnabled) {
     for (const [convId, quick] of [...quickReplyConversations]) {
       if (!SAFETY_KINDS.has(quick.kind)) { quickReplyConversations.delete(convId); conversationsToReply.add(convId); }
