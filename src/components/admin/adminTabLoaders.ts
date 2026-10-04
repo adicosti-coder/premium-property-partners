@@ -98,6 +98,7 @@ const loaders: Record<string, Loader> = {
   "whatsapp-template-efficiency": () => import("@/components/admin/WhatsappTemplateEfficiency"),
   "whatsapp-zone-report": () => import("@/components/admin/WhatsappZoneReport"),
   "whatsapp-andrei-log": () => import("@/components/admin/WhatsappAndreiLog"),
+  "whatsapp-client-viewings": () => import("@/components/admin/WhatsappClientViewings"),
   "whatsapp-funnel": () => import("@/components/admin/WhatsappProspectFunnel"),
   "whatsapp-zone-replies": () => import("@/components/admin/WhatsappZoneAutoReplies"),
   "whatsapp-activity-report": () => import("@/components/admin/WhatsappActivityReport"),
