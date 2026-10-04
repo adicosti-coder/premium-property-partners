@@ -483,9 +483,10 @@ function ownerHello(ctx: ProspectContext): string {
   return n && n.length > 1 && !/proprietar|privat|persoan/i.test(n) ? `${n}, ` : "";
 }
 
+// Închidere cu alegere între două variante ușoare (pas mic, fără obligație).
 const VIEWING_CLOSE =
-  "Pot veni la apartament pentru o vizionare scurtă (20–30 min), fără nicio obligație. " +
-  "Vă convine mâine sau poimâine? Spuneți-mi ziua și ora (09:00–20:00) și confirm imediat.";
+  "Cel mai simplu e să vedem apartamentul 20 de minute, fără nicio obligație. " +
+  "Vă e mai comod mâine sau poimâine (09:00–20:00)?";
 
 /** Tipul anunțului proprietarului: vânzare / închiriere termen lung / regim hotelier. */
 type ListingMode = "vanzare" | "inchiriere" | "hotelier" | null;
@@ -527,105 +528,99 @@ export function ownerReplyText(raw: string, ctx: ProspectContext = null): { kind
   const price = ownerPrice(ctx);
   const mode = listingMode(ctx);
 
-  // 1) Interes de vizionare / întâlnire la apartament.
+  // 1) Interes de vizionare — confirmare caldă + alegere simplă (zi), fără efort.
   if (/vizion|sa veniti|puteti veni|veniti sa|sa vedeti apartament|cand puteti|cand veniti|ne vedem|programare|programam/.test(t)) {
     return {
       kind: "owner_viewing",
       text:
-        `Perfect, ${hi}mulțumesc! Organizăm vizionarea direct la ${ref}.\n\n` +
-        "Spuneți-mi ziua și ora care vă convin (luni–sâmbătă, 09:00–20:00) — un coleg vă confirmă " +
-        "personal programarea în cel mai scurt timp. Durează 20–30 de minute, fără nicio obligație.",
+        `Super, ${hi}mulțumesc! Venim noi la ${ref}, durează 20–30 de minute și nu vă obligă la nimic.\n\n` +
+        "Ce vă e mai comod: dimineața (09–13) sau după-amiaza (14–20)? " +
+        "Un coleg vă confirmă personal ora exactă.",
     };
   }
 
-  // 2) Cerere de apel.
+  // 2) Cerere de apel — confirmăm și cerem doar intervalul preferat.
   if (/sunati|suna-ma|sunati-ma|ma puteti suna|un telefon|apelati|vorbim la telefon|prefer telefon/.test(t)) {
     return {
       kind: "owner_call_request",
       text:
-        `Sigur, ${hi}vă sună un coleg RealTrust în cel mai scurt timp (09:00–20:00). ` +
-        "Dacă preferați o oră anume, scrieți-mi aici și o respectăm.",
+        `Sigur, ${hi}vă sună un coleg RealTrust astăzi, între 09:00 și 20:00. ` +
+        "Vă convine mai mult înainte de prânz sau după?",
     };
   }
 
-  // 3) Obiecție: „nu lucrez cu agenții / intermediari”.
+  // 3) „Nu lucrez cu agenții” — validare, reducerea riscului, pas mic.
   if (/nu (colaborez|lucrez|vreau|doresc)\s+(cu\s+)?(agenti|agentii|agentie|intermediar)|fara agent|fara intermediar|nu vreau agentie/.test(t)) {
     return {
       kind: "owner_obj_agency",
       text:
-        `Înțeleg perfect, ${hi}mulți proprietari au avut experiențe neplăcute cu agențiile. ` +
-        "Noi nu cerem exclusivitate și nu vă blocăm cu contracte lungi — puteți vinde sau închiria și singur(ă) oricând.\n\n" +
-        modeValueLine(mode, ref) + " " +
-        "Vreți să o primiți aici, pe WhatsApp?",
+        `Vă înțeleg perfect, ${hi}și e o decizie bună să fiți atent(ă). ` +
+        "La noi nu există exclusivitate și nici contract lung — rămâneți liber(ă) să vindeți sau să închiriați singur(ă).\n\n" +
+        modeValueLine(mode, ref) + "\n\n" +
+        "Fără nicio obligație — v-o trimit aici?",
     };
   }
 
-  // 4) Obiecție: comision prea mare / nu vreau să plătesc comision.
+  // 4) Comision — validare, risc zero, valoare concretă, apoi pas mic.
   if (/comision.*(mare|mult|scump)|(mare|mult|scump).*comision|nu (platesc|dau|vreau) comision|fara comision|prea scump|prea mult/.test(t)) {
     return {
       kind: "owner_obj_fee",
       text:
-        `Înțeleg întrebarea, ${hi}e normal să vreți să știți exact ce plătiți. ` +
+        `Întrebare foarte corectă, ${hi}contează ce vă rămâne în buzunar, nu procentul. ` +
         (mode === "vanzare"
-          ? "La vânzare asistată comisionul se plătește o singură dată, la finalizarea tranzacției, " +
-            "și doar dacă vânzarea se realizează — nu plătiți nimic în avans și nici dacă nu se vinde.\n\n" +
-            "În schimb aducem cumpărători verificați, organizăm vizionările și pregătim dosarul până la notar."
+          ? "La vânzare plătiți doar dacă se vinde, o singură dată, la notar — nimic în avans.\n\n" +
+            "Noi filtrăm cumpărătorii, ne ocupăm de vizionări și de acte, ca să vindeți mai repede și fără bătăi de cap."
           : mode === "inchiriere"
-            ? "La închirierea pe termen lung comisionul se plătește o singură dată, la semnarea contractului, " +
-              "și doar după ce găsim chiriașul verificat — nu plătiți nimic în avans.\n\n" +
-              "Ne ocupăm de promovare, selecția chiriașilor, contract și verificări, ca să nu riscați restanțe."
-            : "Administrarea RealTrust este între 15% și 20% din încasări și se aplică doar pe venitul realizat — " +
-              "dacă apartamentul nu produce, nu plătiți nimic. Nu există abonament fix și nici costuri ascunse.\n\n" +
-              "În schimb ne ocupăm de anunțuri, prețuri dinamice, oaspeți, curățenie, mentenanță și raport lunar, " +
-              "iar prețurile dinamice aduc de obicei mai mult decât diferența de comision.") +
+            ? "La închiriere plătiți o singură dată, doar după ce avem chiriașul verificat și contractul semnat — nimic în avans.\n\n" +
+              "Noi verificăm chiriașii și facem contractul, ca să nu riscați restanțe sau luni fără chirie."
+            : "Administrarea e 15–20% și se aplică doar pe încasări — dacă apartamentul nu produce, nu plătiți nimic. " +
+              "Fără abonament, fără costuri ascunse.\n\n" +
+              "Prețurile dinamice și ocuparea mai mare acoperă de obicei diferența, iar dumneavoastră nu vă mai ocupați de nimic.") +
         "\n\n" + VIEWING_CLOSE,
     };
   }
 
-  // 5) Obiecție: preț (estimarea noastră e prea mică / prețul cerut e ferm).
+  // 5) Preț — autonomia proprietarului + dovadă pe date reale.
   if (/pret.*(mic|mica|jos|ferm|fix|nenegociabil)|(prea|e) (mic|putin|jos)|sub (pret|piata)|nu (las|scad|negociez)|merita mai mult|vreau mai mult|valoreaza mai mult|pretul (e|este) ferm/.test(t)) {
     return {
       kind: "owner_obj_price",
       text:
-        `Corect, ${hi}prețul îl stabiliți dumneavoastră. ` +
-        (price ? `Pornim de la ${price}, cât ați cerut în anunț, ` : "Pornim de la prețul dumneavoastră, ") +
+        `Absolut, ${hi}prețul îl decideți dumneavoastră. ` +
+        (price ? `Pornim de la ${price}, cât ați cerut în anunț. ` : "Pornim de la prețul cerut de dumneavoastră. ") +
         (mode === "vanzare"
-          ? `și vă arătăm comparativ ce s-a vândut recent din apartamente similare cu ${ref}, ` +
-            "ca să decideți pe tranzacții reale, nu pe estimări."
+          ? `Vă arătăm doar ce s-a vândut recent, similar cu ${ref}, ca să aveți argumente la negociere.`
           : mode === "inchiriere"
-            ? `și vă arătăm comparativ la ce chirii s-au închiriat recent apartamente similare cu ${ref}, ` +
-              "ca să fixați o chirie care se încasează sigur, fără luni de gol."
-            : `și vă arătăm comparativ veniturile reale în regim hotelier pentru apartamente similare cu ${ref}, ` +
-              "ca să decideți pe cifre reale, nu pe estimări.") +
+            ? `Vă arătăm la ce chirii s-au închiriat recent apartamente similare cu ${ref}, ca să încasați fără luni de gol.`
+            : `Vă arătăm veniturile reale în regim hotelier pentru apartamente similare cu ${ref}, ca să comparați pe cifre.`) +
         "\n\n" + VIEWING_CLOSE,
     };
   }
 
-  // 6) Obiecție: are deja agenție / administrator.
+  // 6) Are deja pe cineva — retragere elegantă, ușa rămâne deschisă.
   if (/am deja (agent|agentie|administrator|pe cineva)|lucrez deja cu|deja (inchiriat|vandut|dat)/.test(t)) {
     return {
       kind: "owner_obj_already",
       text:
-        `Mulțumesc că mi-ați spus, ${hi}nu insist. ` +
+        `Mulțumesc că mi-ați spus, ${hi}nu insist și vă doresc mult succes! ` +
         (mode === "vanzare"
-          ? "Dacă situația se schimbă sau doriți o a doua părere pe prețul de vânzare, ne scrieți oricând aici. O zi bună!"
+          ? "Dacă vreți vreodată o a doua părere pe preț, ne scrieți aici. O zi frumoasă!"
           : mode === "inchiriere"
-            ? "Dacă situația se schimbă sau doriți o a doua părere pe chirie ori pe venitul în regim hotelier, ne scrieți oricând aici. O zi bună!"
-            : "Dacă situația se schimbă sau doriți o a doua părere pe venitul în regim hotelier, ne scrieți oricând aici. O zi bună!"),
+            ? "Dacă vreți vreodată o a doua părere pe chirie sau pe venitul în regim hotelier, ne scrieți aici. O zi frumoasă!"
+            : "Dacă vreți vreodată o a doua părere pe venitul în regim hotelier, ne scrieți aici. O zi frumoasă!"),
     };
   }
 
-  // 7) Acord clar de colaborare.
+  // 7) Acord de colaborare — confirmare + următorul pas concret.
   if (/^(da|sigur|ok|bine|de acord|accept)\b.*(colabor|intereseaza|interesat|sunt de acord|hai|putem)|sunt interesat|ma intereseaza|vreau sa colaboram|hai sa colaboram|da,? (ma|sunt)/.test(t)) {
     return {
       kind: "owner_collab_yes",
       text:
-        `Excelent, ${hi}mulțumesc! Pentru ${ref}` + (price ? ` (${price})` : "") +
+        `Mă bucur, ${hi}mulțumesc! Pentru ${ref}` + (price ? ` (${price})` : "") +
         (mode === "vanzare"
-          ? " pregătim evaluarea gratuită de preț de vânzare și pașii următori."
+          ? " pregătim evaluarea gratuită de preț de vânzare."
           : mode === "inchiriere"
-            ? " pregătim evaluarea gratuită de chirie și pașii următori."
-            : " pregătim evaluarea gratuită de venit în regim hotelier și pașii următori.") +
+            ? " pregătim evaluarea gratuită de chirie."
+            : " pregătim evaluarea gratuită de venit în regim hotelier.") +
         "\n\n" + VIEWING_CLOSE,
     };
   }
