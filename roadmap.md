@@ -62,5 +62,5 @@
 - [ ] Test end-to-end: utilizatorul trimite mesaj de pe numărul de test → confirmare e-mail + WhatsApp urgent + răspuns Andrei (numai utilizatorul poate trimite de pe telefonul lui)
 
 ## Conversații Andrei — rafinare (4 oct 2026)
-- [ ] Răspunsuri pregătite mai scurte, empatice și cu un singur pas următor
-- [ ] Buton de apel direct lângă WhatsApp în jurnalul conversațiilor
+- [x] Răspunsuri pregătite mai scurte, empatice și cu un singur pas următor
+- [x] Buton de apel direct lângă WhatsApp în jurnalul conversațiilor
