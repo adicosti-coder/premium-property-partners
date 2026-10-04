@@ -487,12 +487,45 @@ const VIEWING_CLOSE =
   "Pot veni la apartament pentru o vizionare scurtă (20–30 min), fără nicio obligație. " +
   "Vă convine mâine sau poimâine? Spuneți-mi ziua și ora (09:00–20:00) și confirm imediat.";
 
+/** Tipul anunțului proprietarului: vânzare / închiriere termen lung / regim hotelier. */
+type ListingMode = "vanzare" | "inchiriere" | "hotelier" | null;
+
+function listingMode(ctx: ProspectContext): ListingMode {
+  const cat = stripDiacritics(String(ctx?.category ?? ""));
+  if (/vanzare|sale/.test(cat)) return "vanzare";
+  if (/hotelier|hotel/.test(cat)) return "hotelier";
+  if (/inchiri|rent/.test(cat)) return "inchiriere";
+  const title = stripDiacritics(String(ctx?.title ?? ""));
+  if (/de vanzare|vand|vânzare/.test(title)) return "vanzare";
+  if (/regim hotelier/.test(title)) return "hotelier";
+  if (/de inchiriat|inchiriez|chirie/.test(title)) return "inchiriere";
+  return null;
+}
+
+/** Fraza de valoare potrivită tipului de anunț, folosită în răspunsurile la obiecții. */
+function modeValueLine(mode: ListingMode, ref: string): string {
+  switch (mode) {
+    case "vanzare":
+      return `Pentru ${ref} vă trimit gratuit o estimare de preț de vânzare, ` +
+        "cu comparații pe vânzările recente din zonă, ca să aveți o cifră reală de comparație.";
+    case "inchiriere":
+      return `Pentru ${ref} vă trimit gratuit o estimare de chirie pe termen lung, ` +
+        "cu chiriași verificați și contract solid, ca să știți exact cât puteți încasa lunar.";
+    case "hotelier":
+      return `Pentru ${ref} vă trimit gratuit o estimare de venit în regim hotelier ` +
+        "(randament net circa 9,4% pe an), ca să comparați cu închirierea clasică.";
+    default:
+      return `Pentru ${ref} vă trimit gratuit o estimare de preț și de chirie, ca să aveți o cifră de comparat.`;
+  }
+}
+
 export function ownerReplyText(raw: string, ctx: ProspectContext = null): { kind: string; text: string } | null {
   const t = stripDiacritics(raw);
   if (!t) return null;
   const ref = ownerRef(ctx);
   const hi = ownerHello(ctx);
   const price = ownerPrice(ctx);
+  const mode = listingMode(ctx);
 
   // 1) Interes de vizionare / întâlnire la apartament.
   if (/vizion|sa veniti|puteti veni|veniti sa|sa vedeti apartament|cand puteti|cand veniti|ne vedem|programare|programam/.test(t)) {
@@ -522,7 +555,7 @@ export function ownerReplyText(raw: string, ctx: ProspectContext = null): { kind
       text:
         `Înțeleg perfect, ${hi}mulți proprietari au avut experiențe neplăcute cu agențiile. ` +
         "Noi nu cerem exclusivitate și nu vă blocăm cu contracte lungi — puteți vinde sau închiria și singur(ă) oricând.\n\n" +
-        `Pentru ${ref} vă trimit gratuit o estimare de preț și de chirie, ca să aveți o cifră de comparat. ` +
+        modeValueLine(mode, ref) + " " +
         "Vreți să o primiți aici, pe WhatsApp?",
     };
   }
@@ -533,10 +566,19 @@ export function ownerReplyText(raw: string, ctx: ProspectContext = null): { kind
       kind: "owner_obj_fee",
       text:
         `Înțeleg întrebarea, ${hi}e normal să vreți să știți exact ce plătiți. ` +
-        "Administrarea RealTrust este între 15% și 20% din încasări și se aplică doar pe venitul realizat — " +
-        "dacă apartamentul nu produce, nu plătiți nimic. Nu există abonament fix și nici costuri ascunse.\n\n" +
-        "În schimb ne ocupăm de anunțuri, prețuri dinamice, oaspeți, curățenie, mentenanță și raport lunar, " +
-        "iar prețurile dinamice aduc de obicei mai mult decât diferența de comision.\n\n" + VIEWING_CLOSE,
+        (mode === "vanzare"
+          ? "La vânzare asistată comisionul se plătește o singură dată, la finalizarea tranzacției, " +
+            "și doar dacă vânzarea se realizează — nu plătiți nimic în avans și nici dacă nu se vinde.\n\n" +
+            "În schimb aducem cumpărători verificați, organizăm vizionările și pregătim dosarul până la notar."
+          : mode === "inchiriere"
+            ? "La închirierea pe termen lung comisionul se plătește o singură dată, la semnarea contractului, " +
+              "și doar după ce găsim chiriașul verificat — nu plătiți nimic în avans.\n\n" +
+              "Ne ocupăm de promovare, selecția chiriașilor, contract și verificări, ca să nu riscați restanțe."
+            : "Administrarea RealTrust este între 15% și 20% din încasări și se aplică doar pe venitul realizat — " +
+              "dacă apartamentul nu produce, nu plătiți nimic. Nu există abonament fix și nici costuri ascunse.\n\n" +
+              "În schimb ne ocupăm de anunțuri, prețuri dinamice, oaspeți, curățenie, mentenanță și raport lunar, " +
+              "iar prețurile dinamice aduc de obicei mai mult decât diferența de comision.") +
+        "\n\n" + VIEWING_CLOSE,
     };
   }
 
@@ -547,8 +589,15 @@ export function ownerReplyText(raw: string, ctx: ProspectContext = null): { kind
       text:
         `Corect, ${hi}prețul îl stabiliți dumneavoastră. ` +
         (price ? `Pornim de la ${price}, cât ați cerut în anunț, ` : "Pornim de la prețul dumneavoastră, ") +
-        `și vă arătăm comparativ ce s-a vândut și închiriat recent pentru apartamente similare cu ${ref}, ` +
-        "ca să decideți pe cifre reale, nu pe estimări.\n\n" + VIEWING_CLOSE,
+        (mode === "vanzare"
+          ? `și vă arătăm comparativ ce s-a vândut recent din apartamente similare cu ${ref}, ` +
+            "ca să decideți pe tranzacții reale, nu pe estimări."
+          : mode === "inchiriere"
+            ? `și vă arătăm comparativ la ce chirii s-au închiriat recent apartamente similare cu ${ref}, ` +
+              "ca să fixați o chirie care se încasează sigur, fără luni de gol."
+            : `și vă arătăm comparativ veniturile reale în regim hotelier pentru apartamente similare cu ${ref}, ` +
+              "ca să decideți pe cifre reale, nu pe estimări.") +
+        "\n\n" + VIEWING_CLOSE,
     };
   }
 
@@ -558,8 +607,11 @@ export function ownerReplyText(raw: string, ctx: ProspectContext = null): { kind
       kind: "owner_obj_already",
       text:
         `Mulțumesc că mi-ați spus, ${hi}nu insist. ` +
-        "Dacă situația se schimbă sau doriți o a doua părere pe preț ori pe venitul în regim hotelier, " +
-        "ne scrieți oricând aici. O zi bună!",
+        (mode === "vanzare"
+          ? "Dacă situația se schimbă sau doriți o a doua părere pe prețul de vânzare, ne scrieți oricând aici. O zi bună!"
+          : mode === "inchiriere"
+            ? "Dacă situația se schimbă sau doriți o a doua părere pe chirie ori pe venitul în regim hotelier, ne scrieți oricând aici. O zi bună!"
+            : "Dacă situația se schimbă sau doriți o a doua părere pe venitul în regim hotelier, ne scrieți oricând aici. O zi bună!"),
     };
   }
 
@@ -569,7 +621,12 @@ export function ownerReplyText(raw: string, ctx: ProspectContext = null): { kind
       kind: "owner_collab_yes",
       text:
         `Excelent, ${hi}mulțumesc! Pentru ${ref}` + (price ? ` (${price})` : "") +
-        " pregătim evaluarea gratuită și pașii următori.\n\n" + VIEWING_CLOSE,
+        (mode === "vanzare"
+          ? " pregătim evaluarea gratuită de preț de vânzare și pașii următori."
+          : mode === "inchiriere"
+            ? " pregătim evaluarea gratuită de chirie și pașii următori."
+            : " pregătim evaluarea gratuită de venit în regim hotelier și pașii următori.") +
+        "\n\n" + VIEWING_CLOSE,
     };
   }
 
