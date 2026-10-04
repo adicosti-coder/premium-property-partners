@@ -29,10 +29,10 @@ test("continuă vizionarea în ordinea zonă, camere, zi, oră", () => {
   messages.push(outbound("client_viewing_ask_day"), inbound("Joi"));
   expect(clientViewingStepReply(messages)?.kind).toBe("client_viewing_ask_time");
   messages.push(outbound("client_viewing_ask_time"), inbound("17:30"));
-  expect(clientViewingStepReply(messages)).toEqual({
+  expect(clientViewingStepReply(messages)).toMatchObject({
     kind: "client_viewing_confirmed",
-    text: "Perfect, am notat: Iosefin · 2 camere · Joi · 17:30. Un coleg RealTrust confirmă vizionarea aici.",
   });
+  expect(clientViewingStepReply(messages)?.text).toContain("Iosefin · 2 camere · Joi · 17:30");
 });
 
 test("nu preia conversațiile care nu sunt în fluxul de vizionare client", () => {
@@ -60,4 +60,9 @@ test("pregătește răspunsuri empatice pentru preț, chirie și venit hotelier"
   expect(clientPreparedReply("Care este prețul?", [])?.kind).toBe("client_price_ask_zone");
   expect(clientPreparedReply("Caut chirie", [])?.kind).toBe("client_rent_ask_zone");
   expect(clientPreparedReply("Ce venit hotelier pot obține?", [])?.kind).toBe("client_hotel_income_ask_zone");
+});
+test("apel cerut de client: subiect, apoi interval", () => {
+  expect(clientPreparedReply("Mă puteți suna?", [])?.kind).toBe("client_call_ask_topic");
+  expect(clientPreparedReply("comision", [outbound("client_call_ask_topic")])?.kind).toBe("client_call_fee");
+  expect(clientPreparedReply("preț", [outbound("client_call_ask_topic")])?.kind).toBe("client_call_price");
 });

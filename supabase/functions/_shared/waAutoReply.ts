@@ -483,6 +483,20 @@ export function clientPreparedReply(raw: string, messages: ConversationMessage[]
 
   const t = stripDiacritics(raw);
 
+  // Cerere de apel de la client: confirmăm, apoi un singur subiect.
+  if (/sunati|suna-ma|sunati-ma|ma puteti suna|un telefon|apelati|vorbim la telefon|prefer telefon|ma sunati/.test(t)) {
+    return { kind: "client_call_ask_topic", text: "Sigur, vă sună un coleg RealTrust. Ca să fie pregătit: vorbim despre vizionare, preț sau comision?" };
+  }
+  if (lastKind === "client_call_ask_topic") {
+    if (/vizion|vad|programa/.test(t)) return { kind: "client_call_viewing", text: "Perfect. Colegul vă sună cu variantele de vizionare. Vă este mai comod înainte de prânz sau după?" };
+    if (/pret|cost|buget|chiri/.test(t)) return { kind: "client_call_price", text: "Perfect. Colegul vă sună cu prețuri reale din zonă. Ce buget aproximativ aveți în minte?" };
+    if (/comision/.test(t)) return { kind: "client_call_fee", text: "Perfect. Colegul vă explică la telefon comisionul, transparent, înainte de orice pas. Înainte de prânz sau după?" };
+    return { kind: "client_call_time", text: "Am notat. Vă este mai comod înainte de prânz sau după?" };
+  }
+  if (["client_call_viewing", "client_call_price", "client_call_fee"].includes(lastKind)) {
+    return { kind: "client_call_time", text: "Mulțumesc, am notat. Colegul vă sună în intervalul ales." };
+  }
+
   // Obiecții clienți: validare scurtă + o singură întrebare.
   if (/prea scump|e scump|cam scump|prea mult|prea mare pretul|pret mare|nu-mi permit|buget mic|mai ieftin/.test(t)) {
     return { kind: "client_obj_price", text: zone
@@ -554,8 +568,8 @@ export function clientViewingStepReply(
   return {
     kind: "client_viewing_confirmed",
     text: details
-      ? `Perfect, am notat: ${details}. Un coleg RealTrust confirmă vizionarea aici.`
-      : "Perfect, am notat cererea. Un coleg RealTrust confirmă vizionarea aici.",
+      ? `Perfect, am notat vizionarea: ${details}. Ne întâlnim direct la apartament; un coleg RealTrust vă trimite aici adresa exactă cu o zi înainte. Pregătiți doar un act de identitate și întrebările dvs. Dacă intervine ceva, scrieți-ne oricând.`
+      : "Perfect, am notat vizionarea. Ne întâlnim direct la apartament; un coleg RealTrust vă trimite aici adresa și ora exactă. Pregătiți doar un act de identitate și întrebările dvs.",
   };
 }
 
