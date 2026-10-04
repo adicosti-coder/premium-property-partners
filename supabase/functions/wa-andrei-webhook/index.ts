@@ -6,6 +6,7 @@ import {
   ACK_MESSAGE,
   buildIntakeMessage,
   clientPreparedReply,
+  clientCallSummary,
   loadProspectContext,
   autoReplyText,
   OWNER_HANDOVER_KINDS,
@@ -15,7 +16,7 @@ import {
   publishConsentRequestText,
 } from "../_shared/waAutoReply.ts";
 import { notifyClientChatLink } from "../_shared/waClientEmail.ts";
-import { notifyAgentInbound, notifyOwnerHandover } from "../_shared/waAgentNotify.ts";
+import { notifyAgentInbound, notifyOwnerHandover, notifyClientCallRequest } from "../_shared/waAgentNotify.ts";
 import { notifyConsentReply } from "../_shared/waPublishConsentNotify.ts";
 
 const corsHeaders = {
@@ -337,7 +338,16 @@ Deno.serve(async (req) => {
             .eq("conversation_id", convId)
             .order("created_at", { ascending: false })
             .limit(40);
-          clientPreparedQuick = clientPreparedReply(text, [...(recentMessages ?? [])].reverse() as any);
+          const chronological = [...(recentMessages ?? [])].reverse() as any[];
+          clientPreparedQuick = clientPreparedReply(text, chronological);
+          if (clientPreparedQuick?.kind === "client_call_noted") {
+            try {
+              await notifyClientCallRequest(supabase, {
+                phone: from, profile_name: profileName, conversation_id: convId,
+                summary: clientCallSummary(chronological, text),
+              });
+            } catch (e) { console.error("[wa-webhook] client call notify failed:", e); }
+          }
         }
         // Prima interacțiune → trimitem DIRECT textul fix de calificare (fără AI),
         // ca răspunsul să fie mereu exact cel aprobat.

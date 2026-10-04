@@ -493,8 +493,8 @@ export function clientPreparedReply(raw: string, messages: ConversationMessage[]
     if (/comision/.test(t)) return { kind: "client_call_fee", text: "Perfect. Colegul vă explică la telefon comisionul, transparent, înainte de orice pas. Înainte de prânz sau după?" };
     return { kind: "client_call_time", text: "Am notat. Vă este mai comod înainte de prânz sau după?" };
   }
-  if (["client_call_viewing", "client_call_price", "client_call_fee"].includes(lastKind)) {
-    return { kind: "client_call_time", text: "Mulțumesc, am notat. Colegul vă sună în intervalul ales." };
+  if (["client_call_viewing", "client_call_price", "client_call_fee", "client_call_time"].includes(lastKind)) {
+    return { kind: "client_call_noted", text: "Mulțumesc, am notat. Colegul vă sună în intervalul ales." };
   }
 
   // Obiecții clienți: validare scurtă + o singură întrebare.
@@ -568,8 +568,8 @@ export function clientViewingStepReply(
   return {
     kind: "client_viewing_confirmed",
     text: details
-      ? `Perfect, am notat vizionarea: ${details}. Ne întâlnim direct la apartament; un coleg RealTrust vă trimite aici adresa exactă cu o zi înainte. Pregătiți doar un act de identitate și întrebările dvs. Dacă intervine ceva, scrieți-ne oricând.`
-      : "Perfect, am notat vizionarea. Ne întâlnim direct la apartament; un coleg RealTrust vă trimite aici adresa și ora exactă. Pregătiți doar un act de identitate și întrebările dvs.",
+      ? `Perfect, am notat vizionarea: ${details}. Un coleg RealTrust vă trimite aici adresa exactă cu o zi înainte.`
+      : "Perfect, am notat vizionarea. Un coleg RealTrust vă trimite aici adresa exactă cu o zi înainte.",
   };
 }
 
@@ -722,4 +722,21 @@ export function ownerReplyText(raw: string, ctx: ProspectContext = null): { kind
   }
 
   return null;
+}
+
+
+/** Rezumatul unei cereri de apel: subiect, interval și detaliile deja spuse de client. */
+export function clientCallSummary(messages: ConversationMessage[], interval: string) {
+  const topicKind = [...messages].reverse().find((m) =>
+    m.direction === "outbound" && ["client_call_viewing", "client_call_price", "client_call_fee", "client_call_time"].includes(m.tool_call?.auto_reply ?? ""),
+  )?.tool_call?.auto_reply ?? "";
+  const topic = topicKind === "client_call_viewing" ? "vizionare" : topicKind === "client_call_price" ? "preț" : topicKind === "client_call_fee" ? "comision" : "general";
+  return {
+    topic,
+    interval: interval.trim().slice(0, 80) || null,
+    zone: rememberedClientZone(messages),
+    rooms: answerAfter(messages, "client_viewing_ask_rooms") ?? answerAfter(messages, "client_obj_followup_rooms"),
+    day: answerAfter(messages, "client_viewing_ask_day"),
+    time: answerAfter(messages, "client_viewing_ask_time"),
+  };
 }
