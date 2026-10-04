@@ -336,7 +336,7 @@ Deno.serve(async (req) => {
             .select("direction, content, tool_call, created_at")
             .eq("conversation_id", convId)
             .order("created_at", { ascending: false })
-            .limit(12);
+            .limit(40);
           clientPreparedQuick = clientPreparedReply(text, [...(recentMessages ?? [])].reverse() as any);
         }
         // Prima interacțiune → trimitem DIRECT textul fix de calificare (fără AI),

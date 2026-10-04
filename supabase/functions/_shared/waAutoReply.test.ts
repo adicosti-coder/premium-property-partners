@@ -44,7 +44,11 @@ test("STOP rămâne disponibil în timpul oricărui flux", () => {
 });
 
 test("reține zona și nu o cere din nou la o nouă intenție", () => {
-  const messages: ConversationMessage[] = [outbound("client_viewing_ask_zone"), inbound("Iosefin")];
+  const messages: ConversationMessage[] = [
+    outbound("client_viewing_ask_zone"),
+    inbound("Iosefin"),
+    outbound("client_viewing_confirmed", "Am notat zona."),
+  ];
   expect(rememberedClientZone(messages)).toBe("Iosefin");
   expect(clientPreparedReply("Cât este chiria?", messages)).toEqual({
     kind: "client_rent_ask_rooms",
