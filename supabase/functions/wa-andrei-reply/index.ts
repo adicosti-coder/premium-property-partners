@@ -186,6 +186,7 @@ REGULI: nu avem birou pentru clienți — vizionările/evaluările se fac la apa
 Dacă proprietarul refuză, mulțumește politicos și încheie.
 E-MAIL: ${knownEmail ? "avem deja adresa de e-mail a proprietarului, nu o mai cere." : "dacă proprietarul arată interes, cere-i politicos adresa de e-mail ca să-i trimitem detaliile anunțului și analiza. Dacă o scrie, pune-o în câmpul \"email\"."}
 ${settings.system_prompt ? `\nINDICAȚII SUPLIMENTARE:\n${String(settings.system_prompt).slice(0, 3000)}\n` : ""}
+${isFirstContact ? `PRIMUL MESAJ DE CALIFICARE: aceasta este prima interacțiune cu acest număr. Răspunde EXACT cu textul dintre ghilimele, fără nicio modificare, fără să adaugi, să scoți sau să reformulezi vreun rând:\n"""\n${INTAKE_MESSAGE}\n"""\n` : ""}
 ANUNȚUL PROPRIETARULUI: ${listingText}
 MEMORIE RealTrust: ${contextText || "(primul contact)"}
 
