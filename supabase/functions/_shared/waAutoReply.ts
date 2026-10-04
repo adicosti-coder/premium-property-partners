@@ -277,8 +277,8 @@ export function quickReplyText(raw: string): { kind: string; text: string } | nu
     return {
       kind: "quick_no",
       text:
-        "Am inteles, va mulțumim pentru raspuns! Nu va mai contactam pe aceasta tema. " +
-        "Daca pe viitor doriti o estimare de preț sau de venit pentru apartament, ne scrieti oricand aici.",
+        "Am înțeles, vă mulțumim pentru răspuns și nu vă mai deranjăm. " +
+        "Dacă vreodată vă ajută o estimare de preț sau de venit, ne scrieți oricând aici. O zi frumoasă!",
     };
   }
 
@@ -286,30 +286,27 @@ export function quickReplyText(raw: string): { kind: string; text: string } | nu
     return {
       kind: "quick_sale",
       text:
-        "Perfect, ne ocupam de vanzare asistata. Pasii sunt simpli: evaluare gratuita a apartamentului, " +
-        "sedinta foto profesionala si promovare, apoi aducem doar clienti verificati la vizionari si " +
-        "pregatim dosarul pana la notar.\n\nCa sa va trimit estimarea de preț, imi confirmati zona, " +
-        "numarul de camere si suprafata? Va raspundem intre 09:00 si 20:00.",
+        "Perfect! La vânzare ne ocupăm de tot: evaluare gratuită, poze profesionale, promovare, " +
+        "doar cumpărători verificați la vizionări și actele până la notar.\n\n" +
+        "Ca să vă trimit estimarea de preț, câte camere are apartamentul și în ce zonă e?",
     };
   }
   if (/inchiriere clasica/.test(t)) {
     return {
       kind: "quick_classic_rent",
       text:
-        "Perfect, vă putem ajuta cu închirierea clasică: evaluare gratuită a chiriei, promovare, " +
-        "selecția chiriașilor, contract și administrarea relației pe durata închirierii.\n\n" +
-        "Ca să vă trimit estimarea, îmi confirmați zona, numărul de camere și suprafața? " +
-        "Vă răspundem prin WhatsApp între 09:00 și 20:00.",
+        "Perfect! La închiriere găsim chiriași verificați, facem contractul și ne ocupăm de relația cu ei, " +
+        "ca să încasați liniștit, fără luni de gol.\n\n" +
+        "Ca să vă trimit estimarea de chirie, câte camere are apartamentul și în ce zonă e?",
     };
   }
   if (/administrare|hotel/.test(t)) {
     return {
       kind: "quick_management",
       text:
-        "Excelent, administrarea in regim hotelier inseamna randament net de circa 9,4% pe an: ne ocupam " +
-        "de anunturi pe Booking si Airbnb, prețuri dinamice, curatenie, check-in si raportare lunara, " +
-        "iar dvs. primiti venitul net.\n\nImi spuneti zona, numarul de camere si suprafata, ca sa va " +
-        "trimit estimarea de venit lunar? Va raspundem intre 09:00 si 20:00.\n\n" + FINANCE_BLOCK,
+        "Excelent! În regim hotelier ne ocupăm noi de tot — Booking, Airbnb, prețuri dinamice, oaspeți, " +
+        "curățenie — iar dumneavoastră primiți venitul și un raport lunar. Randamentul net estimat e de circa 9,4% pe an.\n\n" +
+        "Ca să vă calculez venitul lunar, câte camere are apartamentul și în ce zonă e?\n\n" + FINANCE_BLOCK,
     };
   }
   return null;
