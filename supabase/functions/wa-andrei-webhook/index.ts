@@ -326,12 +326,23 @@ Deno.serve(async (req) => {
           .eq("direction", "outbound");
 
         const ownerCtx = outboundCount ? await loadProspectContext(supabase, from) : null;
-        let quick = outboundCount ? autoReplyText(text, ownerCtx) : null;
+        // Prima interacțiune → trimitem DIRECT textul fix de calificare (fără AI),
+        // ca răspunsul să fie mereu exact cel aprobat.
+        let quick = outboundCount
+          ? autoReplyText(text, ownerCtx)
+          : { kind: "intake", text: buildIntakeMessage() };
 
         // Predare către om: proprietarul vrea vizionare / colaborare / apel.
+        // Alerta se trimite O SINGURĂ DATĂ per conversație (nu la fiecare mesaj repetat).
         if (quick && OWNER_HANDOVER_KINDS.has(quick.kind)) {
           try {
-            await notifyOwnerHandover(supabase, {
+            const { count: alreadyNotified } = await supabase
+              .from("wa_messages")
+              .select("id", { count: "exact", head: true })
+              .eq("conversation_id", convId)
+              .contains("tool_call", { auto_reply: quick.kind });
+            if (!alreadyNotified) {
+              await notifyOwnerHandover(supabase, {
               phone: from,
               profile_name: profileName,
               message: text,
@@ -339,7 +350,8 @@ Deno.serve(async (req) => {
               conversation_id: convId,
               prospect: ownerCtx,
             });
-            await supabase.from("prospect_listings").update({ lifecycle_status: "interested" }).eq("phone_normalized", from);
+              await supabase.from("prospect_listings").update({ lifecycle_status: "interested" }).eq("phone_normalized", from);
+            }
           } catch (e) {
             console.error("[wa-webhook] owner handover failed:", e);
           }
@@ -742,7 +754,7 @@ Deno.serve(async (req) => {
 
   // Când agentul AI e activ, butoanele de interes (vânzare / administrare) și
   // primul răspuns merg la Andrei AI; refuzul/STOP/acordul rămân pe regulile fixe.
-  const SAFETY_KINDS = new Set(["quick_no", "quick_stop", "publish_consent", "publish_revoke", "publish_consent_request"]);
+  const SAFETY_KINDS = new Set(["intake", "quick_no", "quick_stop", "publish_consent", "publish_revoke", "publish_consent_request"]);
   if (agentEnabled) {
     for (const [convId, quick] of [...quickReplyConversations]) {
       if (!SAFETY_KINDS.has(quick.kind)) { quickReplyConversations.delete(convId); conversationsToReply.add(convId); }
