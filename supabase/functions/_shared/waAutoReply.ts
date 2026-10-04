@@ -481,8 +481,40 @@ export function clientPreparedReply(raw: string, messages: ConversationMessage[]
   const viewingStep = clientViewingStepReply(messages);
   if (viewingStep) return viewingStep;
 
+  const t = stripDiacritics(raw);
+
+  // Obiecții clienți: validare scurtă + o singură întrebare.
+  if (/prea scump|e scump|cam scump|prea mult|prea mare pretul|pret mare|nu-mi permit|buget mic|mai ieftin/.test(t)) {
+    return { kind: "client_obj_price", text: zone
+      ? `Vă înțeleg, bugetul contează. Pentru ${zone}, ce sumă v-ar fi confortabilă?`
+      : "Vă înțeleg, bugetul contează. Ce sumă v-ar fi confortabilă?" };
+  }
+  if (/comision/.test(t)) {
+    return { kind: "client_obj_fee", text: "Întrebare corectă. Comisionul îl discutăm transparent înainte de orice pas. Căutați să cumpărați sau să închiriați?" };
+  }
+  if (/durat|perioad|minim|cat timp|termen|contract|luni minim|pe termen/.test(t) && !/vizion/.test(t)) {
+    return { kind: "client_obj_duration", text: "Sigur, găsim o durată potrivită pentru dumneavoastră. Pe câte luni v-ați gândi?" };
+  }
+
+  // Răspuns la pasul de obiectivul clientului.
+  if (lastKind === "client_goal_ask" || lastKind === "client_obj_fee") {
+    if (/cumpar|achizit|vanzare/.test(t)) return zone ? replyForKnownZone("price", zone) : { kind: "client_price_ask_zone", text: "Perfect. În ce zonă căutați?" };
+    if (/inchir|chiri/.test(t)) return zone ? replyForKnownZone("rent", zone) : { kind: "client_rent_ask_zone", text: "Perfect. În ce zonă căutați?" };
+    if (/cazare|noapte|sejur/.test(t)) return { kind: "client_stay_ask_dates", text: "Cu drag. Pentru ce perioadă căutați cazare?" };
+  }
+  if (lastKind === "client_obj_price" || lastKind === "client_obj_duration") {
+    return { kind: "client_obj_followup_rooms", text: "Perfect, am notat. Câte camere vă trebuie?" };
+  }
+  if (lastKind === "client_obj_followup_rooms") {
+    return { kind: "client_viewing_ask_day", text: "Super. Vreți să vedeți o variantă potrivită? Ce zi v-ar fi comodă?" };
+  }
+
   const intent = clientIntent(raw);
-  if (!intent) return null;
+  if (!intent) {
+    // Mesaj liber: un singur pas simplu, fără să repetăm întrebarea.
+    if (lastKind === "client_goal_ask" || raw.trim().length < 2) return null;
+    return { kind: "client_goal_ask", text: "Vă ajut cu drag. Căutați să cumpărați, să închiriați sau cazare?" };
+  }
   if (zone) return replyForKnownZone(intent, zone);
   if (intent === "viewing") {
     return { kind: "client_viewing_ask_zone", text: "Cu drag. În ce zonă doriți vizionarea?" };
