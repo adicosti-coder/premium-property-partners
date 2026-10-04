@@ -2,6 +2,7 @@
 // la campania WhatsApp; detectează Hot Lead. Internal-only, invocat de wa-andrei-webhook.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { relayToMake } from "../_shared/makeRelay.ts";
+import { INTAKE_MESSAGE } from "../_shared/waAutoReply.ts";
 
 const GEMINI_MODEL = "gemini-3.6-flash";
 
@@ -103,6 +104,12 @@ Deno.serve(async (req) => {
     .in("role", ["user", "assistant"])
     .order("created_at", { ascending: true })
     .limit(20);
+
+  // Primul mesaj de calificare: doar mesajul curent de la utilizator, fără vreun
+  // răspuns al nostru anterior — atunci Andrei trimite EXACT textul aprobat.
+  const isFirstContact =
+    (history ?? []).filter((m) => m.role === "user" && m.content).length === 1 &&
+    !(history ?? []).some((m) => m.role === "assistant");
 
   // 3. Prospect context (best-effort)
   let contextText = "";
