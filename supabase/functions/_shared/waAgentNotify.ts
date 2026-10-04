@@ -253,3 +253,40 @@ export async function notifyOwnerHandover(
     console.error("[wa-owner-handover] admin WA alert error:", e);
   }
 }
+
+
+/** Cerere de apel de la client („Mă puteți suna?”): colegul primește tot ce s-a notat. */
+export async function notifyClientCallRequest(
+  supabase: any,
+  input: { phone: string; profile_name?: string | null; conversation_id?: string | null; summary: { topic: string; interval: string | null; zone: string | null; rooms: string | null; day: string | null; time: string | null } },
+) {
+  const agent = await resolveAgent(supabase, input.conversation_id ?? null);
+  const s = input.summary;
+  const wa = `https://wa.me/${input.phone.replace(/\D/g, "")}`;
+  const lines = [
+    `📞 Apel cerut de client: ${s.topic}`,
+    `Nume: ${input.profile_name || "—"}`,
+    `Telefon: ${input.phone}`,
+    `Interval: ${s.interval || "—"}`,
+    `Zonă: ${s.zone || "—"} · Camere: ${s.rooms || "—"}`,
+    `Zi: ${s.day || "—"} · Ora: ${s.time || "—"}`,
+    `WhatsApp: ${wa}`,
+  ];
+  const html = `<div style="font-family:Arial,sans-serif">${lines.map((l) => `<p style="margin:4px 0">${esc(l)}</p>`).join("")}</div>`;
+  for (const to of Array.from(new Set([agent.email, FALLBACK_AGENT_EMAIL]))) {
+    try {
+      await sendTeamEmail({ to, subject: `Apel de făcut — ${s.topic}: ${input.profile_name || input.phone}`, html, leadId: null, source: "wa-client-call" }, supabase);
+    } catch (e) { console.error("[wa-client-call] email failed:", e); }
+  }
+  try {
+    const token = waToken();
+    if (token) {
+      const resp = await fetch(`https://graph.facebook.com/v20.0/${WA_PHONE_NUMBER_ID}/messages`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ messaging_product: "whatsapp", to: ADMIN_WA_ALERT_NUMBER, type: "text", text: { preview_url: false, body: lines.join("\n") } }),
+      });
+      if (!resp.ok) console.error("[wa-client-call] admin WA failed:", resp.status, (await resp.text()).slice(0, 300));
+    }
+  } catch (e) { console.error("[wa-client-call] admin WA error:", e); }
+}
