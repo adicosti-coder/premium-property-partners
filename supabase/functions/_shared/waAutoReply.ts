@@ -324,8 +324,14 @@ export function autoReplyText(
 ): { kind: string; text: string } | null {
   const quick = quickReplyText(raw);
   if (quick && /^(publish_|quick_no)/.test(quick.kind)) return quick;
-  const owner = ownerReplyText(raw, ctx);
-  if (owner) return owner;
+  // Răspunsurile de proprietar (vizionare la apartamentul lui, obiecții de
+  // comision/preț) se aplică DOAR când expeditorul e legat de un anunț din
+  // prospect_listings (ctx !== null). Altfel un cumpărător/chiriaș care zice
+  // „vizionare” sau „prea scump” ar primi răspunsul de proprietar.
+  if (ctx) {
+    const owner = ownerReplyText(raw, ctx);
+    if (owner) return owner;
+  }
   if (quick) return quick;
 
   const t = stripDiacritics(raw);
