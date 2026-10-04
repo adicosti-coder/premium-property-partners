@@ -136,7 +136,7 @@ export default function WhatsappAndreiLog() {
             </div>
           ))}
         </CardContent>
-      </card>
+      </Card>
     </AdminPageShell>
   );
 }
