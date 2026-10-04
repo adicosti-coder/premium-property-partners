@@ -73,4 +73,4 @@
 ## Răspunsuri clienți + zonă persistentă (4 oct 2026)
 - [x] Răspunsuri scurte și empatice pentru vizionare, preț, chirie și venit hotelier
 - [x] Zona cerută o singură dată și reutilizată în conversația clientului
-- [ ] Teste de regresie, verificare și redeploy WhatsApp
+- [x] Teste de regresie, verificare și redeploy WhatsApp
