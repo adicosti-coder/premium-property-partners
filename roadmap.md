@@ -64,3 +64,8 @@
 ## Conversații Andrei — rafinare (4 oct 2026)
 - [x] Răspunsuri pregătite mai scurte, empatice și cu un singur pas următor
 - [x] Buton de apel direct lângă WhatsApp în jurnalul conversațiilor
+
+## Vizionare clienți — pași conversaționali (4 oct 2026)
+- [ ] Colectare automată în ordine: zonă → camere → zi → oră
+- [ ] Separare strictă față de fluxul și alertele pentru proprietari
+- [ ] Teste de conversație și redeploy WhatsApp
