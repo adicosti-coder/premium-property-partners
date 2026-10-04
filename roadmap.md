@@ -69,3 +69,8 @@
 - [x] Colectare automată în ordine: zonă → camere → zi → oră
 - [x] Separare strictă față de fluxul și alertele pentru proprietari
 - [x] Teste de conversație și redeploy WhatsApp
+
+## Răspunsuri clienți + zonă persistentă (4 oct 2026)
+- [ ] Răspunsuri scurte și empatice pentru vizionare, preț, chirie și venit hotelier
+- [ ] Zona cerută o singură dată și reutilizată în conversația clientului
+- [ ] Teste de regresie, verificare și redeploy WhatsApp
