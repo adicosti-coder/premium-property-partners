@@ -5,6 +5,7 @@ import { relayToMake } from "../_shared/makeRelay.ts";
 import {
   ACK_MESSAGE,
   buildIntakeMessage,
+  clientViewingStepReply,
   loadProspectContext,
   autoReplyText,
   OWNER_HANDOVER_KINDS,
@@ -326,10 +327,22 @@ Deno.serve(async (req) => {
           .eq("direction", "outbound");
 
         const ownerCtx = outboundCount ? await loadProspectContext(supabase, from) : null;
+        // Pentru clienți, continuăm vizionarea în pași mici folosind mesajele
+        // deja salvate: zonă → camere → zi → oră. Proprietarii rămân pe fluxul lor.
+        let clientViewingQuick: { kind: string; text: string } | null = null;
+        if (outboundCount && !ownerCtx) {
+          const { data: recentMessages } = await supabase
+            .from("wa_messages")
+            .select("direction, content, tool_call, created_at")
+            .eq("conversation_id", convId)
+            .order("created_at", { ascending: false })
+            .limit(12);
+          clientViewingQuick = clientViewingStepReply([...(recentMessages ?? [])].reverse() as any);
+        }
         // Prima interacțiune → trimitem DIRECT textul fix de calificare (fără AI),
         // ca răspunsul să fie mereu exact cel aprobat.
         let quick = outboundCount
-          ? autoReplyText(text, ownerCtx)
+          ? (clientViewingQuick ?? autoReplyText(text, ownerCtx))
           : { kind: "intake", text: buildIntakeMessage() };
 
         // Predare către om: proprietarul vrea vizionare / colaborare / apel.

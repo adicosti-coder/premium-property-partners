@@ -14,6 +14,12 @@ export type ProspectContext = {
   contact_name?: string | null;
 } | null;
 
+export type ConversationMessage = {
+  direction: "inbound" | "outbound";
+  content?: string | null;
+  tool_call?: { auto_reply?: string } | null;
+};
+
 // `prospect_type` din scraper descrie CINE publică anunțul (proprietar/agenție),
 // nu tipul de imobil — nu îl folosim niciodată ca tip de imobil în mesaj.
 const PERSON_TYPES = new Set([
@@ -391,12 +397,59 @@ export function autoReplyText(
 
   if (/vizionare|vizite|vizit[ăa]|sa vad|vedem|intalni|cand pot veni|programare|programam/.test(t)) {
     return {
-      kind: "auto_meeting",
-      text: "Sigur. Vedem proprietatea fără grabă și fără obligații. Vă este mai comod în timpul săptămânii sau sâmbătă?",
+      kind: "client_viewing_ask_zone",
+      text: "Sigur, vă ajut cu vizionarea. În ce zonă căutați?",
     };
   }
 
   return null;
+}
+
+const CLIENT_VIEWING_STEPS = new Set([
+  "client_viewing_ask_zone",
+  "client_viewing_ask_rooms",
+  "client_viewing_ask_day",
+  "client_viewing_ask_time",
+]);
+
+function answerAfter(messages: ConversationMessage[], autoKind: string): string | null {
+  const promptIndex = messages.findLastIndex(
+    (message) => message.direction === "outbound" && message.tool_call?.auto_reply === autoKind,
+  );
+  if (promptIndex < 0) return null;
+  const answer = messages.slice(promptIndex + 1).find((message) => message.direction === "inbound");
+  return String(answer?.content ?? "").trim() || null;
+}
+
+/** Continuă vizionarea unui client cu exact o întrebare per mesaj. */
+export function clientViewingStepReply(
+  messages: ConversationMessage[],
+): { kind: string; text: string } | null {
+  const lastOutbound = [...messages].reverse().find((message) => message.direction === "outbound");
+  const lastKind = lastOutbound?.tool_call?.auto_reply ?? "";
+  if (!CLIENT_VIEWING_STEPS.has(lastKind)) return null;
+
+  if (lastKind === "client_viewing_ask_zone") {
+    return { kind: "client_viewing_ask_rooms", text: "Perfect. Câte camere doriți?" };
+  }
+  if (lastKind === "client_viewing_ask_rooms") {
+    return { kind: "client_viewing_ask_day", text: "Am înțeles. În ce zi v-ar fi comodă vizionarea?" };
+  }
+  if (lastKind === "client_viewing_ask_day") {
+    return { kind: "client_viewing_ask_time", text: "Sigur. La ce oră vă este comod?" };
+  }
+
+  const zone = answerAfter(messages, "client_viewing_ask_zone");
+  const rooms = answerAfter(messages, "client_viewing_ask_rooms");
+  const day = answerAfter(messages, "client_viewing_ask_day");
+  const time = answerAfter(messages, "client_viewing_ask_time");
+  const details = [zone, rooms, day, time].filter(Boolean).join(" · ");
+  return {
+    kind: "client_viewing_confirmed",
+    text: details
+      ? `Perfect, am notat: ${details}. Un coleg RealTrust confirmă vizionarea aici.`
+      : "Perfect, am notat cererea. Un coleg RealTrust confirmă vizionarea aici.",
+  };
 }
 
 
