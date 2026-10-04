@@ -60,3 +60,7 @@
 - [x] Scanare OLX pornită (job 1362f2a2): 6 interogări, 0 erori, 0 anunțuri noi — 10 duplicate, 5 blocate, 33 arhivate; anunțurile recente au titlu/zonă/camere/preț complete
 - [x] Raport conversii în Admin: „Conversii prospectare" (trimise → livrate → citite → răspunsuri → interesați), pe zonă, în Rapoarte WhatsApp
 - [ ] Test end-to-end: utilizatorul trimite mesaj de pe numărul de test → confirmare e-mail + WhatsApp urgent + răspuns Andrei (numai utilizatorul poate trimite de pe telefonul lui)
+
+## Conversații Andrei — rafinare (4 oct 2026)
+- [x] Răspunsuri pregătite mai scurte, empatice și cu un singur pas următor
+- [x] Buton de apel direct lângă WhatsApp în jurnalul conversațiilor
