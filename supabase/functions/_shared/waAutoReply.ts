@@ -276,37 +276,26 @@ export function quickReplyText(raw: string): { kind: string; text: string } | nu
   if (EXPLICIT_NO.test(t.trim()) && !INTEREST_HINT.test(t)) {
     return {
       kind: "quick_no",
-      text:
-        "Am înțeles, vă mulțumim pentru răspuns și nu vă mai deranjăm. " +
-        "Dacă vreodată vă ajută o estimare de preț sau de venit, ne scrieți oricând aici. O zi frumoasă!",
+      text: "Am înțeles. Nu vă mai deranjăm. Dacă vă pot ajuta altădată, îmi scrieți aici. O zi frumoasă!",
     };
   }
 
   if (/vanzare/.test(t)) {
     return {
       kind: "quick_sale",
-      text:
-        "Perfect! La vânzare ne ocupăm de tot: evaluare gratuită, poze profesionale, promovare, " +
-        "doar cumpărători verificați la vizionări și actele până la notar.\n\n" +
-        "Ca să vă trimit estimarea de preț, câte camere are apartamentul și în ce zonă e?",
+      text: "Perfect. Vă ajutăm să vindeți cu mai puține drumuri și doar cumpărători potriviți. În ce zonă este apartamentul?",
     };
   }
   if (/inchiriere clasica/.test(t)) {
     return {
       kind: "quick_classic_rent",
-      text:
-        "Perfect! La închiriere găsim chiriași verificați, facem contractul și ne ocupăm de relația cu ei, " +
-        "ca să încasați liniștit, fără luni de gol.\n\n" +
-        "Ca să vă trimit estimarea de chirie, câte camere are apartamentul și în ce zonă e?",
+      text: "Perfect. Selectăm chiriașii și protejăm încasarea, ca dumneavoastră să aveți liniște. În ce zonă este apartamentul?",
     };
   }
   if (/administrare|hotel/.test(t)) {
     return {
       kind: "quick_management",
-      text:
-        "Excelent! În regim hotelier ne ocupăm noi de tot — Booking, Airbnb, prețuri dinamice, oaspeți, " +
-        "curățenie — iar dumneavoastră primiți venitul și un raport lunar. Randamentul net estimat e de circa 9,4% pe an.\n\n" +
-        "Ca să vă calculez venitul lunar, câte camere are apartamentul și în ce zonă e?\n\n" + FINANCE_BLOCK,
+      text: "Excelent. Noi preluăm administrarea, iar dumneavoastră păstrați controlul și vedeți clar încasările. În ce zonă este apartamentul?",
     };
   }
   return null;
@@ -340,104 +329,70 @@ export function autoReplyText(
   if (/^stop\b|nu mai (vreau|doresc)|dezabon/.test(t)) {
     return {
       kind: "quick_stop",
-      text:
-        "Am înțeles, nu vă mai trimitem mesaje. Vă mulțumim pentru timpul acordat! " +
-        "Dacă aveți nevoie de noi pe viitor, ne scrieți oricând aici.",
+      text: "Am înțeles. Nu vă mai trimitem mesaje. Dacă aveți nevoie de noi, ne puteți scrie oricând aici.",
     };
   }
 
   if (/property management|ce include administrarea|ce faceti pentru|ce servicii|cu ce va ocupati|ce intra in administrare/.test(t)) {
     return {
       kind: "auto_property_management",
-      text:
-        "Pe scurt: dumneavoastră încasați, noi ne ocupăm de tot.\n" +
-        "• Anunțuri pe Booking, Airbnb și Expedia, cu prețuri dinamice.\n" +
-        "• Oaspeți, check-in automat, curățenie, lenjerie și mentenanță.\n" +
-        "• Raport financiar lunar, ca să vedeți exact cifrele.\n\n" +
-        "Administrarea e 15–20% doar din încasări — dacă apartamentul nu produce, nu plătiți nimic.\n\n" +
-        "Vreți să vă calculez venitul pentru apartamentul dumneavoastră? Îmi spuneți doar zona și numărul de camere.",
+      text: "Pe scurt: dumneavoastră încasați, noi gestionăm prețurile, oaspeții și apartamentul. Vreți să vedeți cât v-ar putea rămâne net?",
     };
   }
 
   if (/comision|cat luati|cat retineti|ce procent|procentul|taxa voastra|cat costa administrarea/.test(t)) {
     return {
       kind: "auto_fee",
-      text:
-        "Transparent: administrarea RealTrust e 15–20% din încasări, în funcție de apartament. " +
-        "Se aplică doar pe venitul realizat — fără abonament și fără costuri în avans.\n\n" +
-        "Include anunțurile, prețurile dinamice, oaspeții, check-in-ul, curățenia, mentenanța și raportul lunar.\n\n" +
-        "Vreți să vedeți cât v-ar rămâne net pentru apartamentul dumneavoastră? Îmi spuneți zona și numărul de camere.",
+      text: "E firesc să vă uitați la cost. Administrarea este 15–20% doar din încasări, fără abonament; important este cât vă rămâne net. Vreți o simulare?",
     };
   }
 
   if (/profit|cat imi ramane|cat castig|cat scot|randament net|venit net|net pe luna/.test(t)) {
     return {
       kind: "auto_profit",
-      text:
-        "Media e un profit net de circa 9,4% pe an din valoarea apartamentului — cifra exactă depinde de ocuparea reală.\n\n" +
-        FINANCE_BLOCK + "\n\n" +
-        "Vă calculez cifra exactă pentru apartamentul dumneavoastră? Îmi spuneți zona și numărul de camere.",
+      text: "Aici contează cifra care vă rămâne, nu doar încasarea. Estimarea medie este de circa 9,4% net pe an, dar o calculăm realist pentru fiecare apartament. În ce zonă este?",
     };
   }
 
   if (/^2\b|^3\b|imobiliar|vand|cumpar|achizi|inchiri/.test(t)) {
     return {
       kind: "auto_real_estate",
-      text:
-        "Perfect, vă ajutăm cu vânzarea, cumpărarea sau închirierea în Timișoara.\n\n" +
-        "Ca să pornim corect: e vorba de vânzare sau de închiriere, și în ce zonă?",
+      text: "Cu drag. Ca să vă îndrum corect, doriți să vindeți sau să închiriați?",
     };
   }
 
   if (/^1\b|regim hotelier|management|randament|venit/.test(t)) {
     return {
       kind: "auto_management",
-      text:
-        "Excelent! În regim hotelier randamentul net estimat e de circa 9,4% pe an, iar noi ne ocupăm de tot: " +
-        "Booking, Airbnb, prețuri dinamice, oaspeți, curățenie și raport lunar.\n\n" +
-        "Ca să vă calculez venitul lunar, câte camere are apartamentul și în ce zonă e?\n\n" +
-        FINANCE_BLOCK,
+      text: "Excelent. Noi preluăm operarea, iar dumneavoastră vedeți lunar exact ce produce apartamentul. În ce zonă este?",
     };
   }
 
   if (/rezerv|cazare|noapte|nopti|check.?in|disponibil/.test(t)) {
     return {
       kind: "auto_booking",
-      text:
-        "Cu plăcere! Disponibilitatea și prețurile le vedeți aici: https://realtrust.ro/rezervare\n\n" +
-        "Sau îmi spuneți perioada și câte persoane sunteți, și vă propun eu apartamentul potrivit.",
+      text: "Cu drag. Îmi spuneți perioada dorită, iar eu vă ajut cu opțiunea potrivită; disponibilitatea este și aici: https://realtrust.ro/rezervare",
     };
   }
 
   if (/dupa oferta|ce urmeaza|urmeaza dupa|pasii urmatori|ce se intampla|cum continua|dupa ce accept/.test(t)) {
     return {
       kind: "auto_after_offer",
-      text:
-        "Pașii sunt simpli și clari:\n" +
-        "1) Vizionare la apartament (luni–sâmbătă, 09:00–20:00).\n" +
-        "2) Negociere — transmitem oferta și revenim cu răspunsul.\n" +
-        "3) Antecontract — avans și termene, cu actele verificate.\n" +
-        "4) Notar — semnare, plată și predarea cheilor.\n" +
-        "5) Opțional, preluăm administrarea în regim hotelier.\n\n" +
-        "Până la antecontract nu aveți nicio obligație. Vă e mai comodă o vizionare în timpul săptămânii sau sâmbătă?",
+      text: "După vizionare, vă însoțim simplu prin ofertă, verificarea actelor și semnare, fără presiune. Vă este mai comod în timpul săptămânii sau sâmbătă?",
     };
   }
 
   if (/pret|preț|cat cost|cat face|valoare|estimare|oferta/.test(t)) {
     return {
       kind: "auto_price",
-      text:
-        "Vă trimit cifrele reale, gratuit și fără obligații. " +
-        "Câte camere are apartamentul și în ce zonă e?\n\n" + FINANCE_BLOCK,
+      text: "Sigur. Vă oferim o estimare realistă, gratuit și fără obligații. În ce zonă este apartamentul?",
     };
   }
 
   if (/vizionare|vizite|vizit[ăa]|sa vad|vedem|intalni|cand pot veni|programare|programam/.test(t)) {
     return {
       kind: "auto_meeting",
-      text:
-        "Sigur! Vizionarea se face direct la apartament, durează circa 30 de minute și nu vă obligă la nimic.\n\n" +
-        "Ce vă e mai comod: în timpul săptămânii sau sâmbătă? Vă confirmăm imediat adresa și ora.",
+      text: "Sigur. Vedem proprietatea fără grabă și fără obligații. Vă este mai comod în timpul săptămânii sau sâmbătă?",
     };
   }
 
@@ -477,8 +432,7 @@ function ownerHello(ctx: ProspectContext): string {
 
 // Închidere cu alegere între două variante ușoare (pas mic, fără obligație).
 const VIEWING_CLOSE =
-  "Cel mai simplu e să vedem apartamentul 20 de minute, fără nicio obligație. " +
-  "Vă e mai comod mâine sau poimâine (09:00–20:00)?";
+  "Dacă simțiți că merită, stabilim o vizionare fără obligații. Vă este mai comod dimineața sau după-amiaza?";
 
 /** Tipul anunțului proprietarului: vânzare / închiriere termen lung / regim hotelier. */
 type ListingMode = "vanzare" | "inchiriere" | "hotelier" | null;
@@ -499,16 +453,13 @@ function listingMode(ctx: ProspectContext): ListingMode {
 function modeValueLine(mode: ListingMode, ref: string): string {
   switch (mode) {
     case "vanzare":
-      return `Pentru ${ref} vă trimit gratuit o estimare de preț de vânzare, ` +
-        "cu comparații pe vânzările recente din zonă, ca să aveți o cifră reală de comparație.";
+      return `Pentru ${ref} vă trimit gratuit o estimare bazată pe vânzări recente din zonă.`;
     case "inchiriere":
-      return `Pentru ${ref} vă trimit gratuit o estimare de chirie pe termen lung, ` +
-        "cu chiriași verificați și contract solid, ca să știți exact cât puteți încasa lunar.";
+      return `Pentru ${ref} vă trimit gratuit o estimare realistă de chirie.`;
     case "hotelier":
-      return `Pentru ${ref} vă trimit gratuit o estimare de venit în regim hotelier ` +
-        "(randament net circa 9,4% pe an), ca să comparați cu închirierea clasică.";
+      return `Pentru ${ref} vă trimit gratuit o estimare de venit hotelier, ca să comparați opțiunile.`;
     default:
-      return `Pentru ${ref} vă trimit gratuit o estimare de preț și de chirie, ca să aveți o cifră de comparat.`;
+      return `Pentru ${ref} vă trimit gratuit o estimare realistă.`;
   }
 }
 
@@ -524,10 +475,7 @@ export function ownerReplyText(raw: string, ctx: ProspectContext = null): { kind
   if (/vizion|sa veniti|puteti veni|veniti sa|sa vedeti apartament|cand puteti|cand veniti|ne vedem|programare|programam/.test(t)) {
     return {
       kind: "owner_viewing",
-      text:
-        `Super, ${hi}mulțumesc! Venim noi la ${ref}, durează 20–30 de minute și nu vă obligă la nimic.\n\n` +
-        "Ce vă e mai comod: dimineața (09–13) sau după-amiaza (14–20)? " +
-        "Un coleg vă confirmă personal ora exactă.",
+      text: `Mă bucur, ${hi}mulțumesc! Vedem ${ref} fără grabă și fără obligații. Vă este mai comod dimineața sau după-amiaza?`,
     };
   }
 
@@ -535,9 +483,7 @@ export function ownerReplyText(raw: string, ctx: ProspectContext = null): { kind
   if (/sunati|suna-ma|sunati-ma|ma puteti suna|un telefon|apelati|vorbim la telefon|prefer telefon/.test(t)) {
     return {
       kind: "owner_call_request",
-      text:
-        `Sigur, ${hi}vă sună un coleg RealTrust astăzi, între 09:00 și 20:00. ` +
-        "Vă convine mai mult înainte de prânz sau după?",
+      text: `Sigur, ${hi}vă sună un coleg RealTrust. Vă este mai comod înainte de prânz sau după?`,
     };
   }
 
@@ -545,11 +491,7 @@ export function ownerReplyText(raw: string, ctx: ProspectContext = null): { kind
   if (/nu (colaborez|lucrez|vreau|doresc)\s+(cu\s+)?(agenti|agentii|agentie|intermediar)|fara agent|fara intermediar|nu vreau agentie/.test(t)) {
     return {
       kind: "owner_obj_agency",
-      text:
-        `Vă înțeleg perfect, ${hi}și e o decizie bună să fiți atent(ă). ` +
-        "La noi nu există exclusivitate și nici contract lung — rămâneți liber(ă) să vindeți sau să închiriați singur(ă).\n\n" +
-        modeValueLine(mode, ref) + "\n\n" +
-        "Fără nicio obligație — v-o trimit aici?",
+      text: `Vă înțeleg, ${hi}e important să păstrați controlul. La noi nu există exclusivitate; ${modeValueLine(mode, ref).toLowerCase()} V-o trimit aici?`,
     };
   }
 
@@ -558,17 +500,12 @@ export function ownerReplyText(raw: string, ctx: ProspectContext = null): { kind
     return {
       kind: "owner_obj_fee",
       text:
-        `Întrebare foarte corectă, ${hi}contează ce vă rămâne în buzunar, nu procentul. ` +
+        `Aveți dreptate să întrebați, ${hi}important este ce vă rămâne. ` +
         (mode === "vanzare"
-          ? "La vânzare plătiți doar dacă se vinde, o singură dată, la notar — nimic în avans.\n\n" +
-            "Noi filtrăm cumpărătorii, ne ocupăm de vizionări și de acte, ca să vindeți mai repede și fără bătăi de cap."
+          ? "La vânzare achitați doar dacă tranzacția se încheie, fără avans. Vreți întâi estimarea gratuită?"
           : mode === "inchiriere"
-            ? "La închiriere plătiți o singură dată, doar după ce avem chiriașul verificat și contractul semnat — nimic în avans.\n\n" +
-              "Noi verificăm chiriașii și facem contractul, ca să nu riscați restanțe sau luni fără chirie."
-            : "Administrarea e 15–20% și se aplică doar pe încasări — dacă apartamentul nu produce, nu plătiți nimic. " +
-              "Fără abonament, fără costuri ascunse.\n\n" +
-              "Prețurile dinamice și ocuparea mai mare acoperă de obicei diferența, iar dumneavoastră nu vă mai ocupați de nimic.") +
-        "\n\n" + VIEWING_CLOSE,
+            ? "La închiriere achitați doar după găsirea chiriașului și semnarea contractului, fără avans. Vreți întâi estimarea gratuită?"
+            : "Administrarea este 15–20% doar din încasări, fără abonament. Vreți să vedeți cât v-ar rămâne net?"),
     };
   }
 
@@ -577,14 +514,13 @@ export function ownerReplyText(raw: string, ctx: ProspectContext = null): { kind
     return {
       kind: "owner_obj_price",
       text:
-        `Absolut, ${hi}prețul îl decideți dumneavoastră. ` +
-        (price ? `Pornim de la ${price}, cât ați cerut în anunț. ` : "Pornim de la prețul cerut de dumneavoastră. ") +
+        `Desigur, ${hi}decizia rămâne la dumneavoastră. ` +
+        (price ? `Pornim de la ${price}. ` : "Pornim de la prețul cerut. ") +
         (mode === "vanzare"
-          ? `Vă arătăm doar ce s-a vândut recent, similar cu ${ref}, ca să aveți argumente la negociere.`
+          ? "Vreți să vă trimit comparațiile recente din zonă?"
           : mode === "inchiriere"
-            ? `Vă arătăm la ce chirii s-au închiriat recent apartamente similare cu ${ref}, ca să încasați fără luni de gol.`
-            : `Vă arătăm veniturile reale în regim hotelier pentru apartamente similare cu ${ref}, ca să comparați pe cifre.`) +
-        "\n\n" + VIEWING_CLOSE,
+            ? "Vreți să vă trimit chiriile recente din zonă?"
+            : "Vreți să vă trimit o comparație realistă de venit?"),
     };
   }
 
@@ -592,13 +528,7 @@ export function ownerReplyText(raw: string, ctx: ProspectContext = null): { kind
   if (/am deja (agent|agentie|administrator|pe cineva)|lucrez deja cu|deja (inchiriat|vandut|dat)/.test(t)) {
     return {
       kind: "owner_obj_already",
-      text:
-        `Mulțumesc că mi-ați spus, ${hi}nu insist și vă doresc mult succes! ` +
-        (mode === "vanzare"
-          ? "Dacă vreți vreodată o a doua părere pe preț, ne scrieți aici. O zi frumoasă!"
-          : mode === "inchiriere"
-            ? "Dacă vreți vreodată o a doua părere pe chirie sau pe venitul în regim hotelier, ne scrieți aici. O zi frumoasă!"
-            : "Dacă vreți vreodată o a doua părere pe venitul în regim hotelier, ne scrieți aici. O zi frumoasă!"),
+      text: `Mulțumesc că mi-ați spus, ${hi}nu insist. Dacă vă ajută cândva o a doua opinie, sunt aici. Mult succes!`,
     };
   }
 
@@ -609,10 +539,10 @@ export function ownerReplyText(raw: string, ctx: ProspectContext = null): { kind
       text:
         `Mă bucur, ${hi}mulțumesc! Pentru ${ref}` + (price ? ` (${price})` : "") +
         (mode === "vanzare"
-          ? " pregătim evaluarea gratuită de preț de vânzare."
+          ? " pregătim evaluarea de vânzare."
           : mode === "inchiriere"
-            ? " pregătim evaluarea gratuită de chirie."
-            : " pregătim evaluarea gratuită de venit în regim hotelier.") +
+            ? " pregătim evaluarea de chirie."
+            : " pregătim evaluarea de venit hotelier.") +
         "\n\n" + VIEWING_CLOSE,
     };
   }

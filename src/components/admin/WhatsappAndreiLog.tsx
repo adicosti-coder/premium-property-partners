@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MessageCircle, Phone } from "lucide-react";
 
 /** Jurnalul conversațiilor cu Andrei: mesaje trimise, răspunsuri, alerte URGENT. */
 const URGENT_KINDS = ["owner_viewing", "owner_collab_yes", "owner_call_request"];
@@ -129,7 +130,20 @@ export default function WhatsappAndreiLog() {
                 ))}
                 {m.delivery_status && <span>· {m.delivery_status}</span>}
                 {m.conv?.phone_normalized && (
-                  <a className="text-primary underline ml-auto" href={`https://wa.me/${m.conv.phone_normalized.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer">Deschide WhatsApp</a>
+                  <div className="ml-auto flex flex-wrap items-center gap-2">
+                    <Button asChild size="sm" variant="outline" className="h-12">
+                      <a href={`tel:${m.conv.phone_normalized.replace(/[^\d+]/g, "")}`} aria-label={`Sună ${m.conv.wa_profile_name || m.conv.phone_normalized}`}>
+                        <Phone className="mr-2 h-4 w-4" />
+                        Sună
+                      </a>
+                    </Button>
+                    <Button asChild size="sm" className="h-12">
+                      <a href={`https://wa.me/${m.conv.phone_normalized.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer">
+                        <MessageCircle className="mr-2 h-4 w-4" />
+                        Deschide WhatsApp
+                      </a>
+                    </Button>
+                  </div>
                 )}
               </div>
               <p className="text-sm whitespace-pre-wrap text-foreground">{m.content || (m.template_name ? `Șablon: ${m.template_name}` : "—")}</p>
