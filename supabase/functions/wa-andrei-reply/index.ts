@@ -2,6 +2,7 @@
 // la campania WhatsApp; detectează Hot Lead. Internal-only, invocat de wa-andrei-webhook.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { relayToMake } from "../_shared/makeRelay.ts";
+import { INTAKE_MESSAGE } from "../_shared/waAutoReply.ts";
 
 const GEMINI_MODEL = "gemini-3.6-flash";
 
@@ -104,6 +105,12 @@ Deno.serve(async (req) => {
     .order("created_at", { ascending: true })
     .limit(20);
 
+  // Primul mesaj de calificare: doar mesajul curent de la utilizator, fără vreun
+  // răspuns al nostru anterior — atunci Andrei trimite EXACT textul aprobat.
+  const isFirstContact =
+    (history ?? []).filter((m) => m.role === "user" && m.content).length === 1 &&
+    !(history ?? []).some((m) => m.role === "assistant");
+
   // 3. Prospect context (best-effort)
   let contextText = "";
   try {
@@ -179,6 +186,7 @@ REGULI: nu avem birou pentru clienți — vizionările/evaluările se fac la apa
 Dacă proprietarul refuză, mulțumește politicos și încheie.
 E-MAIL: ${knownEmail ? "avem deja adresa de e-mail a proprietarului, nu o mai cere." : "dacă proprietarul arată interes, cere-i politicos adresa de e-mail ca să-i trimitem detaliile anunțului și analiza. Dacă o scrie, pune-o în câmpul \"email\"."}
 ${settings.system_prompt ? `\nINDICAȚII SUPLIMENTARE:\n${String(settings.system_prompt).slice(0, 3000)}\n` : ""}
+${isFirstContact ? `PRIMUL MESAJ DE CALIFICARE: aceasta este prima interacțiune cu acest număr. Răspunde EXACT cu textul dintre ghilimele, fără nicio modificare, fără să adaugi, să scoți sau să reformulezi vreun rând:\n"""\n${INTAKE_MESSAGE}\n"""\n` : ""}
 ANUNȚUL PROPRIETARULUI: ${listingText}
 MEMORIE RealTrust: ${contextText || "(primul contact)"}
 
