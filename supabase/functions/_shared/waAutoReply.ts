@@ -83,20 +83,26 @@ export function prospectSummary(p: ProspectContext): string | null {
   return `Despre proprietatea din ${where}:`;
 }
 
-/** Mesajul de calificare (prima interacțiune), personalizat când avem contextul. */
-export function buildIntakeMessage(p: ProspectContext = null): string {
-  const summary = prospectSummary(p);
-  return [
-    "Bună ziua! Ați scris pe WhatsApp-ul ApArt Hotel by RealTrust (Timișoara).",
-    ...(summary ? ["", summary] : []),
-    "",
-    "Ca să vă putem ajuta rapid, spuneți-mi cu ce vă putem fi de folos:",
-    "1️⃣ Imobiliare — vânzare, achiziție sau închiriere",
-    "2️⃣ Administrare — regim hotelier sau termen mediu/lung",
-    "3️⃣ Rezervare regim hotelier — https://realtrust.ro/rezervare",
-    "",
-    "Răspundeți cu 1, 2 sau 3 (sau descrieți în câteva cuvinte) și continuăm.",
-  ].join("\n");
+/** Textul EXACT al primului mesaj de calificare (text aprobat de utilizator). */
+export const INTAKE_MESSAGE = `Bună ziua! Mulțumim pentru mesaj. 🏢
+
+Pentru a vă direcționa rapid către colegul potrivit, vă rugăm să ne spuneți cu ce vă putem ajuta:
+
+Sunteți PROPRIETAR?
+
+1. Doresc administrare în Regim Hotelier
+
+2. Doresc închiriere pe Termen Long sau Vânzare
+
+Sunteți CLIENT / OASPETE?
+
+3. Caut să Cumpăr sau să Închiriez o locuință
+
+Răspundeți simplu cu cifra dorită (1, 2 sau 3) sau scrieți-ne pe scurt câteva detalii!`;
+
+/** Mesajul de calificare (prima interacțiune) — text fix, identic pentru toți. */
+export function buildIntakeMessage(_p: ProspectContext = null): string {
+  return INTAKE_MESSAGE;
 }
 
 /** Confirmarea automată (mesajele următoare, când agentul nu răspunde imediat). */
@@ -114,7 +120,7 @@ export function buildReengageMessage(p: ProspectContext = null): string {
     ...(summary ? ["", summary] : []),
     "",
     "Am rămas la mesajul dvs. și vrem să ne asigurăm că nu ați rămas fără răspuns.",
-    "Dacă încă vă interesează, răspundeți cu 1 (imobiliare), 2 (administrare) sau 3 (rezervare) și continuăm.",
+    "Dacă încă vă interesează, răspundeți cu 1 (administrare regim hotelier), 2 (vânzare sau închiriere) sau 3 (cautați o locuință) și continuăm.",
     "Dacă nu mai doriți mesaje, scrieți STOP.",
   ].join("\n");
 }
