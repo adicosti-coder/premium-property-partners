@@ -70,7 +70,9 @@ export default function WhatsappZoneAutoReplies() {
           </div>
           <Textarea rows={4} maxLength={1500} placeholder="Ex.: Mulțumim! Pentru apartamentele din {zona} avem cereri active de la..."
             value={draft.message} onChange={(e) => setDraft({ ...draft, message: e.target.value })} />
-          <p className="text-xs text-muted-foreground">Scrie {"{zona}"} ca să apară numele zonei în mesaj.</p>
+          <p className="text-xs text-muted-foreground">
+            Poți folosi {"{zona}"} (zona anunțului), {"{camere}"} (numărul de camere) și {"{pret}"} (prețul din anunț) — se completează automat.
+          </p>
           <Button onClick={async () => { await save(draft); setDraft({ ...draft, message: "" }); }}>Salvează regula</Button>
         </CardContent>
       </Card>

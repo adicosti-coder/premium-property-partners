@@ -344,13 +344,17 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Răspuns personalizat pe zonă (Admin → Răspunsuri automate pe zonă)
-        // pentru butoanele mesajului de prim contact.
+        // Răspuns personalizat pe zonă (Admin → Răspunsuri automate pe zonă):
+        // butoanele din primul mesaj + intențiile detectate din textul scris
+        // de proprietar primesc răspunsul specific zonei anunțului.
         const intentMap: Record<string, string> = {
           quick_sale: "vanzare", quick_classic_rent: "clasic", quick_management: "hotelier",
+          auto_real_estate: "vanzare", auto_management: "hotelier",
+          auto_profit: "hotelier", auto_fee: "hotelier", auto_property_management: "hotelier",
         };
         if (quick && intentMap[quick.kind]) {
           try {
+            // Zona: ultimul șablon trimis → zona anunțului din prospect_listings → generic.
             const { data: lastQ } = await supabase
               .from("wa_outbound_queue")
               .select("template_params")
@@ -360,17 +364,28 @@ Deno.serve(async (req) => {
               .limit(1)
               .maybeSingle();
             const params = (lastQ?.template_params ?? []) as unknown[];
-            const zone = String((Array.isArray(params) ? params[0] : "") || "Timișoara").trim();
+            const zone = String(
+              (Array.isArray(params) ? params[0] : "") || ownerCtx?.zone || "Timișoara",
+            ).trim();
             const { data: rules } = await supabase
               .from("wa_zone_auto_replies")
               .select("zone, message")
               .eq("intent", intentMap[quick.kind])
               .eq("enabled", true);
             const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-            const rule = (rules ?? []).find((r: any) => norm(r.zone) === norm(zone))
-              ?? (rules ?? []).find((r: any) => r.zone === "*");
+            const zn = norm(zone);
+            // Potrivire exactă sau parțială (regula „Iosefin” prinde și „Zona Iosefin”).
+            const rule = (rules ?? []).find((r: any) => {
+              const rz = norm(r.zone);
+              return rz && rz !== "*" && (zn === rz || zn.includes(rz) || rz.includes(zn));
+            }) ?? (rules ?? []).find((r: any) => r.zone === "*");
             if (rule?.message) {
-              quick = { kind: `${quick.kind}_zone`, text: String(rule.message).replaceAll("{zona}", zone) };
+              const price = Number(ownerCtx?.price) || 0;
+              const text = String(rule.message)
+                .replaceAll("{zona}", zone)
+                .replaceAll("{camere}", ownerCtx?.rooms ? String(ownerCtx.rooms) : "")
+                .replaceAll("{pret}", price ? `${Math.round(price).toLocaleString("ro-RO")} €` : "");
+              quick = { kind: `${quick.kind}_zone`, text };
             }
           } catch (e) {
             console.error("[wa-webhook] zone auto reply failed:", e);
