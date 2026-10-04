@@ -92,7 +92,7 @@ Sunteți PROPRIETAR?
 
 1. Doresc administrare în Regim Hotelier
 
-2. Doresc închiriere pe Termen Long sau Vânzare
+2. Doresc închiriere pe Termen Lung sau Vânzare
 
 Sunteți CLIENT / OASPETE?
 
@@ -383,7 +383,7 @@ export function autoReplyText(
     };
   }
 
-  if (/^1\b|imobiliar|vand|cumpar|achizi|inchiri/.test(t)) {
+  if (/^2\b|^3\b|imobiliar|vand|cumpar|achizi|inchiri/.test(t)) {
     return {
       kind: "auto_real_estate",
       text:
@@ -393,7 +393,7 @@ export function autoReplyText(
     };
   }
 
-  if (/^2\b|regim hotelier|management|randament|venit/.test(t)) {
+  if (/^1\b|regim hotelier|management|randament|venit/.test(t)) {
     return {
       kind: "auto_management",
       text:
@@ -404,7 +404,7 @@ export function autoReplyText(
     };
   }
 
-  if (/^3\b|rezerv|cazare|noapte|nopti|check.?in|disponibil/.test(t)) {
+  if (/rezerv|cazare|noapte|nopti|check.?in|disponibil/.test(t)) {
     return {
       kind: "auto_booking",
       text:
