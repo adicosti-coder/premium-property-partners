@@ -2,6 +2,10 @@
 // care sosește mesajul clientului (nu doar în rezumatul zilnic de la 20:15).
 import { sendTeamEmail } from "./teamEmail.ts";
 import { prospectSummary, type ProspectContext } from "./waAutoReply.ts";
+import { WA_PHONE_NUMBER_ID, waToken } from "./waConfig.ts";
+
+/** Numărul de administrare care primește alertele urgente pe WhatsApp (număr personal de test/admin). */
+const ADMIN_WA_ALERT_NUMBER = "40723154520";
 
 const esc = (s: unknown) =>
   String(s ?? "").replace(/[&<>"]/g, (c) =>
