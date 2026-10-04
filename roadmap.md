@@ -53,3 +53,10 @@
 - [x] Deduplicare 6h și oprire la interacțiune anterioară/STOP
 - [x] Răspuns dedicat pentru butonul „Închiriere clasică”
 - [x] Typecheck 0 erori și publicare solicitată
+
+## Răspunsuri automate pe zonă + teste (4 oct 2026)
+- [x] Răspunsuri pe zonă extinse la toate intențiile Andrei (butoane + text scris), zone fallback din prospect_listings, potrivire parțială, variabile {zona}/{camere}/{pret}; wa-andrei-webhook redeployat
+- [ ] Test end-to-end: mesaj de pe numărul de test → confirmare e-mail urgent + răspuns Andrei
+- [ ] Alerta urgentă de vizionare/colaborare trimisă și pe WhatsApp (nu doar e-mail)
+- [ ] Scanare OLX pornită din Admin → Import anunțuri + verificare că anunțurile noi ajung cu toate datele (nu doar linkul)
+- [ ] Raport conversii în Admin: anunțuri vizionate / citite / duse la vizionare
