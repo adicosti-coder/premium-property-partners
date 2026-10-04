@@ -341,8 +341,12 @@ Deno.serve(async (req) => {
         }
         // Prima interacțiune → trimitem DIRECT textul fix de calificare (fără AI),
         // ca răspunsul să fie mereu exact cel aprobat.
+        const standardQuick = outboundCount ? autoReplyText(text, ownerCtx) : null;
+        const isSafetyReply = standardQuick && [
+          "quick_no", "quick_stop", "publish_consent", "publish_revoke",
+        ].includes(standardQuick.kind);
         let quick = outboundCount
-          ? (clientViewingQuick ?? autoReplyText(text, ownerCtx))
+          ? (isSafetyReply ? standardQuick : (clientViewingQuick ?? standardQuick))
           : { kind: "intake", text: buildIntakeMessage() };
 
         // Predare către om: proprietarul vrea vizionare / colaborare / apel.

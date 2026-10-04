@@ -32,3 +32,7 @@ test("continuă vizionarea în ordinea zonă, camere, zi, oră", () => {
 test("nu preia conversațiile care nu sunt în fluxul de vizionare client", () => {
   expect(clientViewingStepReply([outbound("owner_viewing"), inbound("Mâine")])).toBeNull();
 });
+
+test("STOP rămâne disponibil în timpul oricărui flux", () => {
+  expect(autoReplyText("STOP", null)?.kind).toBe("quick_stop");
+});
