@@ -215,4 +215,41 @@ export async function notifyOwnerHandover(
       console.error("[wa-owner-handover] email failed:", e);
     }
   }
+
+  // Alertă și pe WhatsApp, către numărul de administrare, ca preluarea să fie
+  // imediată chiar dacă e-mailul nu este citit. Funcționează în fereastra de
+  // 24h deschisă de ultimul mesaj trimis de admin către numărul de companie;
+  // în afara ei Meta respinge mesajul liber — e-mailul rămâne canalul sigur.
+  try {
+    const token = waToken();
+    if (token) {
+      const waText = [
+        `🔥 URGENT: proprietar ${label}`,
+        `Nume: ${input.profile_name || p?.contact_name || "—"}`,
+        `Telefon: ${input.phone}`,
+        p?.title ? `Anunț: ${p.title}` : null,
+        p?.zone || p?.rooms ? `Zonă/camere: ${p?.zone || p?.location || "—"} / ${p?.rooms ?? "—"}` : null,
+        `Mesaj: ${input.message.slice(0, 300)}`,
+        `Răspunde: ${wa}`,
+      ].filter(Boolean).join("\n");
+      const resp = await fetch(
+        `https://graph.facebook.com/v20.0/${WA_PHONE_NUMBER_ID}/messages`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messaging_product: "whatsapp",
+            to: ADMIN_WA_ALERT_NUMBER,
+            type: "text",
+            text: { preview_url: false, body: waText },
+          }),
+        },
+      );
+      if (!resp.ok) {
+        console.error("[wa-owner-handover] admin WA alert failed:", resp.status, (await resp.text()).slice(0, 300));
+      }
+    }
+  } catch (e) {
+    console.error("[wa-owner-handover] admin WA alert error:", e);
+  }
 }
