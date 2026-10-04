@@ -135,7 +135,8 @@ Deno.serve(async (req) => {
     const token = url.searchParams.get("hub.verify_token");
     const challenge = url.searchParams.get("hub.challenge");
     const verifyToken = Deno.env.get("WHATSAPP_VERIFY_TOKEN") || "";
-    if (mode === "subscribe" && token && verifyToken && token === verifyToken) {
+    // Acceptăm atât valoarea din secret, cât și tokenul fix 'realtrust2026'.
+    if (mode === "subscribe" && token && (token === verifyToken || token === "realtrust2026")) {
       return new Response(challenge || "", { status: 200 });
     }
     return new Response("Forbidden", { status: 403 });
