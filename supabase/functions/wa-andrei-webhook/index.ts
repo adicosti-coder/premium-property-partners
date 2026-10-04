@@ -752,15 +752,10 @@ Deno.serve(async (req) => {
     .maybeSingle();
   const agentEnabled = !!agentSettings?.enabled;
 
-  // Când agentul AI e activ, butoanele de interes (vânzare / administrare) și
-  // primul răspuns merg la Andrei AI; refuzul/STOP/acordul rămân pe regulile fixe.
-  const SAFETY_KINDS = new Set(["intake", "quick_no", "quick_stop", "publish_consent", "publish_revoke", "publish_consent_request"]);
-  if (agentEnabled) {
-    for (const [convId, quick] of [...quickReplyConversations]) {
-      if (!SAFETY_KINDS.has(quick.kind)) { quickReplyConversations.delete(convId); conversationsToReply.add(convId); }
-    }
-    for (const convId of [...intakeConversations.keys()]) { intakeConversations.delete(convId); conversationsToReply.add(convId); }
-  }
+  // Răspunsurile pregătite (vizionare, comision, preț, obiecții, butoane, calificare)
+  // se trimit MEREU exact, chiar dacă agentul AI e activ. AI-ul răspunde doar
+  // la mesajele pentru care nu există un răspuns pregătit — altfel ar da
+  // răspunsuri generice („căutați cazare?") la obiecții clare.
 
   // Răspuns automat la butoanele din primul mesaj (vânzare / administrare / refuz).
   for (const [convId, quick] of quickReplyConversations) {
