@@ -487,6 +487,38 @@ const VIEWING_CLOSE =
   "Pot veni la apartament pentru o vizionare scurtă (20–30 min), fără nicio obligație. " +
   "Vă convine mâine sau poimâine? Spuneți-mi ziua și ora (09:00–20:00) și confirm imediat.";
 
+/** Tipul anunțului proprietarului: vânzare / închiriere termen lung / regim hotelier. */
+type ListingMode = "vanzare" | "inchiriere" | "hotelier" | null;
+
+function listingMode(ctx: ProspectContext): ListingMode {
+  const cat = stripDiacritics(String(ctx?.category ?? ""));
+  if (/vanzare|sale/.test(cat)) return "vanzare";
+  if (/hotelier|hotel/.test(cat)) return "hotelier";
+  if (/inchiri|rent/.test(cat)) return "inchiriere";
+  const title = stripDiacritics(String(ctx?.title ?? ""));
+  if (/de vanzare|vand|vânzare/.test(title)) return "vanzare";
+  if (/regim hotelier/.test(title)) return "hotelier";
+  if (/de inchiriat|inchiriez|chirie/.test(title)) return "inchiriere";
+  return null;
+}
+
+/** Fraza de valoare potrivită tipului de anunț, folosită în răspunsurile la obiecții. */
+function modeValueLine(mode: ListingMode, ref: string): string {
+  switch (mode) {
+    case "vanzare":
+      return `Pentru ${ref} vă trimit gratuit o estimare de preț de vânzare, ` +
+        "cu comparații pe vânzările recente din zonă, ca să aveți o cifră reală de comparație.";
+    case "inchiriere":
+      return `Pentru ${ref} vă trimit gratuit o estimare de chirie pe termen lung, ` +
+        "cu chiriași verificați și contract solid, ca să știți exact cât puteți încasa lunar.";
+    case "hotelier":
+      return `Pentru ${ref} vă trimit gratuit o estimare de venit în regim hotelier ` +
+        "(randament net circa 9,4% pe an), ca să comparați cu închirierea clasică.";
+    default:
+      return `Pentru ${ref} vă trimit gratuit o estimare de preț și de chirie, ca să aveți o cifră de comparat.`;
+  }
+}
+
 export function ownerReplyText(raw: string, ctx: ProspectContext = null): { kind: string; text: string } | null {
   const t = stripDiacritics(raw);
   if (!t) return null;
