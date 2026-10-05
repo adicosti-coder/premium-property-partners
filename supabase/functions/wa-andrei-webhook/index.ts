@@ -715,11 +715,33 @@ Deno.serve(async (req) => {
         const patch: Record<string, unknown> = {};
         if (state === "delivered") patch.delivered_at = tsIso;
         else if (state === "read") patch.read_at = tsIso;
-        else if (state === "failed") {
+        const undeliverable = state === "failed" &&
+          (st?.errors ?? []).some((e: any) => Number(e?.code) === 131026);
+        if (state === "failed") {
           patch.status = "failed";
-          patch.last_error = `meta_status_failed: ${JSON.stringify(st?.errors ?? {}).slice(0, 400)}`;
+          patch.last_error = `${undeliverable ? "undeliverable_131026" : "meta_status_failed"}: ${JSON.stringify(st?.errors ?? {}).slice(0, 400)}`;
+          // 131026: fără alertă pe e-mail, rămâne doar în raportul Admin.
+          if (undeliverable) patch.alerted_at = new Date().toISOString();
         }
         if (!Object.keys(patch).length) continue;
+
+        // 131026 = număr fără WhatsApp / nelivrabil → blocăm orice contact viitor.
+        if (undeliverable && st?.recipient_id) {
+          const phone = String(st.recipient_id).replace(/\D/g, "");
+          try {
+            await supabase.from("wa_dnc_list").upsert({
+              phone_normalized: phone,
+              label: "fără WhatsApp / nelivrabil",
+              reason: "Meta 131026 — Message undeliverable",
+            }, { onConflict: "phone_normalized" });
+            await supabase.from("wa_outbound_queue")
+              .update({ status: "cancelled", last_error: "undeliverable_131026: număr fără WhatsApp" })
+              .in("phone_normalized", [phone, `+${phone}`])
+              .eq("status", "pending");
+          } catch (e) {
+            console.error("[wa-webhook] 131026 block failed:", e);
+          }
+        }
 
         // Un eșec raportat de Meta nu trebuie să șteargă starea „replied”
         // (clientul a răspuns deja) — altfel lead-ul dispare din rapoarte.
