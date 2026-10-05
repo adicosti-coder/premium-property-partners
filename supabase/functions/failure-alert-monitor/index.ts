@@ -42,6 +42,7 @@ Deno.serve(async (req) => {
       .select("id, phone_normalized, template_name, last_error, attempts, updated_at")
       .eq("status", "failed")
       .is("alerted_at", null)
+      .not("last_error", "like", "undeliverable_131026%")
       .gte("updated_at", since)
       .limit(50),
     supabase
