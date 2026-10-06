@@ -100,7 +100,8 @@ function computeScore(k: Keyword): number {
 
 function downloadCSV(filename: string, rows: (string | number | null | undefined)[][]) {
   const escape = (v: unknown) => {
-    const s = v === null || v === undefined ? "" : String(v);
+    const s0 = v === null || v === undefined ? "" : String(v);
+    const s = /^[=+\-@\t\r]/.test(s0) ? `'${s0}` : s0;
     return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   const csv = rows.map((r) => r.map(escape).join(",")).join("\n");
