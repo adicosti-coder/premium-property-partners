@@ -727,7 +727,10 @@ Deno.serve(async (req) => {
 
         // 131026 = număr fără WhatsApp / nelivrabil → blocăm orice contact viitor.
         if (undeliverable && st?.recipient_id) {
-          const phone = String(st.recipient_id).replace(/\D/g, "");
+          // Păstrăm formatul cu „+” folosit de toate verificările DNC din sistem
+          // (worker, follow-up, auto-offer) — altfel blocajul nu ar fi recunoscut.
+          const phoneDigits = String(st.recipient_id).replace(/\D/g, "");
+          const phone = `+${phoneDigits}`;
           try {
             await supabase.from("wa_dnc_list").upsert({
               phone_normalized: phone,
@@ -736,7 +739,7 @@ Deno.serve(async (req) => {
             }, { onConflict: "phone_normalized" });
             await supabase.from("wa_outbound_queue")
               .update({ status: "cancelled", last_error: "undeliverable_131026: număr fără WhatsApp" })
-              .in("phone_normalized", [phone, `+${phone}`])
+              .in("phone_normalized", [phone, phoneDigits])
               .eq("status", "pending");
           } catch (e) {
             console.error("[wa-webhook] 131026 block failed:", e);
