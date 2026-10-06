@@ -3,6 +3,7 @@
 // PageSpeed (Core Web Vitals) for mobile, local keyword presence, and a
 // "best-in-class" merged JSON-LD recommendation.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { assertSafePublicUrl, isOwnSiteUrl } from "../_shared/ssrfGuard.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {

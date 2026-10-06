@@ -1,6 +1,7 @@
 // Weekly on-page audit: scrapes top 25 pages from GSC via Firecrawl, extracts SEO signals,
 // computes health score, stores in seo_page_audits.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { assertSafePublicUrl, isOwnSiteUrl } from "../_shared/ssrfGuard.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
