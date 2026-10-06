@@ -607,6 +607,34 @@ async function proxyFetchHtml(
     console.warn(JSON.stringify({ kind: 'proxy_apify_missing_token' }));
   }
 
+  // Rezervă fără proxy: citire directă cu antete de browser. OLX/Storia au
+  // datele în HTML-ul brut; funcționează când actorul Apify e refuzat (403)
+  // sau nu e configurat.
+  if (APIFY_STATS.lastStatus === 403 || APIFY_STATS.missingToken) {
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+      const resp = await fetch(url, {
+        signal: ctrl.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'ro-RO,ro;q=0.9,en;q=0.8',
+        },
+      });
+      clearTimeout(timer);
+      if (resp.ok) {
+        const html = await resp.text();
+        if (html.length > 500) { APIFY_STATS.ok++; return { ok: true, status: 200, html, via: 'apify' }; }
+        console.warn(JSON.stringify({ kind: 'proxy_direct_empty', url, len: html.length }));
+      } else {
+        console.warn(JSON.stringify({ kind: 'proxy_direct_failed', url, status: resp.status }));
+      }
+    } catch (e) {
+      console.warn(JSON.stringify({ kind: 'proxy_direct_error', url, message: (e as Error).message }));
+    }
+  }
+
   const fcKey = Deno.env.get('FIRECRAWL_API_KEY') || '';
   if (!fcKey) return { ok: false, status: 0, html: '', via: 'none' };
   const ctrl = new AbortController();
