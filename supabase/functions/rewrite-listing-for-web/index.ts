@@ -22,7 +22,7 @@ const EMAIL = /[\w.%+\-]+@[\w.\-]+\.[a-z]{2,}/gi;
 const URL_RE = /\b(?:https?:\/\/|www\.)\S+|\b[\w\-]+\.(?:ro|com|eu|net|org)\b(?:\/\S*)?/gi;
 const STREET =
   /\b(?:str\.?|strada|bd\.?|bdul\.?|bulevardul|calea|aleea|splaiul|pia[țt]a|intrarea|[șs]os\.?|[șs]oseaua|drumul)\s+[^\n,.;]{2,40}?(?:\s*(?:nr\.?|num[aă]rul)\s*\d+[a-z]?)?(?=[\n,.;]|$)/gi;
-const BLOCK_APT = /\b(?:bl\.?|bloc(?:ul)?|sc\.?|scara|ap\.?|apartamentul|nr\.?)\s*(?:[A-Z]?\d+[A-Za-z]?|[A-Z]\d*)\b/gi;
+const BLOCK_APT = /\b(?:bl\.?|bloc(?:ul)?|sc\.?|scara|nr\.?)\s*(?:[A-Z]?\d+[A-Za-z]?|[A-Z]\d*)\b/gi;
 const FORBIDDEN = [
   "persoana fizica", "persoană fizică", "fara comision", "fără comision", "comision 0%", "comision 0 %",
   "0% comision", "agentii", "agenții", "agentie", "agenție", "agentia", "agenția", "imobiliare",
@@ -47,13 +47,13 @@ function sanitize(text: string, expandAbbrev = true): string {
   let out = String(text ?? "");
   out = out.replace(EMAIL, "").replace(URL_RE, "").replace(PHONE, (m) =>
     m.replace(/\D/g, "").length >= 9 ? "" : m);
-  out = out.replace(STREET, "").replace(BLOCK_APT, "");
+  out = out.replace(STREET, "").replace(BLOCK_APT, "").replace(/\b(?:ap\.?|apartamentul)\s*\d+[a-z]?\b(?!\s*(?:cam|camere|camera)\b)/gi, "");
   for (const w of FORBIDDEN.sort((a, b) => b.length - a.length)) {
     const flags = w === "PF" ? "g" : "giu";
     out = out.replace(new RegExp(`(?<![\\p{L}\\p{N}])${esc(w)}(?![\\p{L}\\p{N}])`, flags), "");
   }
   if (expandAbbrev) for (const [re, rep] of ABBREV) out = out.replace(re, rep);
-  return out.replace(/\(\s*\)/g, "").replace(/[ \t]+([,.;:!?])/g, "$1").replace(/[ \t]{2,}/g, " ")
+  return out.replace(/\(\s*\)/g, "").replace(/[ \t]+([,.;:!?])/g, "$1").replace(/([,.;:])(?:\s*[,.;:])+/g, "$1").replace(/[ \t]{2,}/g, " ")
     .replace(/\n{3,}/g, "\n\n").trim();
 }
 
