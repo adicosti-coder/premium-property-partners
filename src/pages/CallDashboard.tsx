@@ -431,7 +431,7 @@ export default function CallDashboard() {
       return;
     }
     const headers = ["Data", "Sursa", "Contact", "Telefon", "Proprietate", "Outcome", "Sentiment", "Tip Interes", "Lead Score", "Hot Score", "Sumar"];
-    const escape = (v: any) => `"${String(v ?? "").replace(/"/g, '""').replace(/\r?\n/g, " ")}"`;
+    const escape = (v: any) => { const r = String(v ?? ""); const s = /^[=+\-@\t\r]/.test(r) ? `'${r}` : r; return `"${s.replace(/"/g, '""').replace(/\r?\n/g, " ")}"`; };
     const lines = [headers.join(",")];
     filtered.forEach((r: any) => {
       lines.push([

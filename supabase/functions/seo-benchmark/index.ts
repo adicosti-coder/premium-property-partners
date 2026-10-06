@@ -104,6 +104,7 @@ function extract(html: string, url: string): Extracted {
 }
 
 async function fetchHtml(url: string): Promise<string> {
+  url = (await assertSafePublicUrl(url)).toString();
   if (FIRECRAWL_KEY) {
     try {
       const r = await fetch("https://api.firecrawl.dev/v2/scrape", {
@@ -116,8 +117,9 @@ async function fetchHtml(url: string): Promise<string> {
       if (html) return html;
     } catch (e) { console.warn("[benchmark] firecrawl fail", (e as Error).message); }
   }
-  const r = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 RealTrustBot" } });
-  return await r.text();
+  const r = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 RealTrustBot" }, redirect: "manual" });
+  if (r.status >= 300 && r.status < 400) throw new Error("Redirects not allowed");
+  return (await r.text()).slice(0, 2_000_000);
 }
 
 async function fetchPageSpeed(url: string): Promise<any> {
@@ -220,6 +222,7 @@ serve(async (req) => {
         return true;
       } catch { return false; }
     };
+    if (!isOwnSiteUrl(our_url)) return json({ error: "our_url trebuie să fie pe realtrust.ro" }, 400);
     if (!isPublicWebUrl(our_url) || !isPublicWebUrl(competitor_url)) return json({ error: "URL invalid (doar site-uri publice http/https)" }, 400);
 
     const [ourHtml, theirHtml] = await Promise.all([fetchHtml(our_url), fetchHtml(competitor_url)]);
