@@ -42,8 +42,16 @@ Deno.serve(async (req) => {
       );
     }
 
-    const src = sourceLang || "Romanian";
-    const tgt = targetLang || "English";
+    const LANGS: Record<string, string> = {
+      ro: "Romanian", romanian: "Romanian", en: "English", english: "English",
+      de: "German", german: "German", fr: "French", french: "French",
+      it: "Italian", italian: "Italian", es: "Spanish", spanish: "Spanish",
+      hu: "Hungarian", hungarian: "Hungarian",
+    };
+    const pick = (v: unknown, d: string) =>
+      typeof v === "string" && LANGS[v.trim().toLowerCase()] ? LANGS[v.trim().toLowerCase()] : d;
+    const src = pick(sourceLang, "Romanian");
+    const tgt = pick(targetLang, "English");
     const textHash = simpleHash(text);
 
     // --- DB cache check ---
