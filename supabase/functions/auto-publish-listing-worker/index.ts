@@ -357,6 +357,7 @@ Deno.serve(async (req) => {
         .eq("prospect_listing_id", prospect.id)
         .maybeSingle();
       if (insp?.status === "rejected") return safeJson({ success: true, published: false, reason: "admin_rejected" });
+      if (insp?.status === "pending" && insp?.clean_title) return safeJson({ success: true, published: false, reason: "admin_inspection_pending" });
       if (insp?.status !== "pending" && insp?.clean_title && insp?.clean_description) {
         finalTitle = String(insp.clean_title).substring(0, 200);
         finalFull = String(insp.clean_description);
