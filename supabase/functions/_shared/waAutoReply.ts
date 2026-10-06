@@ -466,6 +466,14 @@ function replyForKnownZone(intent: NonNullable<ReturnType<typeof clientIntent>>,
 }
 
 /** Răspunsuri scurte pentru clienți, reutilizând zona deja spusă în conversație. */
+/** Răspunsul arată ca un interval de apel (zi/oră/moment al zilei), nu ca o întrebare. */
+export function looksLikeCallInterval(raw: string): boolean {
+  if (/\?/.test(raw)) return false;
+  const t = stripDiacritics(raw).toLowerCase();
+  return /\b(pranz|dimineata|dimineat\w*|seara|searа|dupa[- ]?amiaza|dupa|inainte|ora|orele|azi|astazi|maine|poimaine|oricand|acum|luni|marti|miercuri|joi|vineri|sambata|duminica|weekend)\b/.test(t) ||
+    /\b([01]?\d|2[0-3])([:.][0-5]\d|\s?(h|am|pm))?\b/.test(t) && /\b([01]?\d|2[0-3])([:.][0-5]\d|\s?h)\b|\b(la|dupa|inainte de|intre)\s+([01]?\d|2[0-3])\b/.test(t);
+}
+
 export function clientPreparedReply(raw: string, messages: ConversationMessage[]): ClientReply | null {
   const lastOutbound = [...messages].reverse().find((message) => message.direction === "outbound");
   const lastKind = lastOutbound?.tool_call?.auto_reply ?? "";
@@ -496,8 +504,7 @@ export function clientPreparedReply(raw: string, messages: ConversationMessage[]
   // Notăm intervalul doar dacă răspunsul chiar arată ca un interval (nu o întrebare oarecare).
   if (
     ["client_call_viewing", "client_call_price", "client_call_fee", "client_call_time"].includes(lastKind) &&
-    !/\?/.test(raw) &&
-    /pranz|dimineat|seara|dupa|inainte|ora|azi|maine|oricand|acum|luni|marti|miercuri|joi|vineri|sambata|duminica|\d/.test(t)
+    looksLikeCallInterval(raw)
   ) {
     return { kind: "client_call_noted", text: "Mulțumesc, am notat. Colegul vă sună în intervalul ales." };
   }

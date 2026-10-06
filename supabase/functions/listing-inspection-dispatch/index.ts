@@ -2,7 +2,7 @@
 // + mesaj de inspecție pe WhatsApp-ul de administrare cu butoanele Aprob / Respinge.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
-import { missingCriticalFields, sendAdminWa } from "../_shared/listingInspection.ts";
+import { ensureInspectionTemplate, isOutsideWindowError, missingCriticalFields, sendAdminWa, sendInspectionTemplate } from "../_shared/listingInspection.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,6 +17,7 @@ Deno.serve(async (req) => {
   if (denied) return denied;
 
   const body = await req.json().catch(() => null);
+  if (body?.ensure_template) return json({ template_status: await ensureInspectionTemplate() });
   const prospectId = String(body?.prospect_id ?? "");
   if (!/^[0-9a-f-]{36}$/i.test(prospectId)) return json({ error: "prospect_id invalid" }, 400);
 
@@ -84,7 +85,7 @@ Deno.serve(async (req) => {
     "Răspundeți 1 / Aprob pentru publicare sau 2 / Respinge pentru arhivare.",
   ].join("\n").slice(0, 1020);
 
-  const sent = await sendAdminWa({
+  let sent = await sendAdminWa({
     type: "interactive",
     interactive: {
       type: "button",
@@ -97,6 +98,18 @@ Deno.serve(async (req) => {
       },
     },
   });
+
+  // În afara ferestrei de 24h: Meta permite doar șabloane aprobate → trimitem șablonul de inspecție.
+  if (!sent.ok && isOutsideWindowError(sent.error)) {
+    const t = await sendInspectionTemplate(insp.id, {
+      kind: isRent ? "Închiriere" : "Vânzare",
+      title: clean.clean_title,
+      price: priceTxt,
+      zone: clean.neighborhood || p.zone || "—",
+      note: missing.length ? `lipsește ${missing.join(" și ")}, răspundeți cu valoarea și decizia` : "date complete",
+    });
+    sent = t.ok ? t : { ok: false, error: `${sent.error} | ${t.error}` };
+  }
 
   await supabase.from("listing_inspections").update(
     sent.ok

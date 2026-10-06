@@ -36,6 +36,70 @@ export async function sendWaText(to: string, body: string): Promise<{ ok: boolea
   return { ok: true, id: j?.messages?.[0]?.id };
 }
 
+// ── Șablon Meta aprobat pentru inspecție, folosit când fereastra de 24h e închisă ──
+import { WA_BUSINESS_ACCOUNT_ID } from "./waConfig.ts";
+export const INSPECTION_TEMPLATE_NAME = "inspectie_anunt_v1";
+export const INSPECTION_TEMPLATE_LANG = "ro";
+
+/** Variabilele de șablon nu pot conține rânduri noi, tab-uri sau >4 spații la rând. */
+export function templateParam(v: unknown, max = 200): string {
+  const s = String(v ?? "").replace(/[\r\n\t]+/g, " ").replace(/\s{2,}/g, " ").replace(/[*_~`]/g, "").trim();
+  return (s || "—").slice(0, max);
+}
+
+const INSPECTION_TEMPLATE_DEF = {
+  name: INSPECTION_TEMPLATE_NAME,
+  language: INSPECTION_TEMPLATE_LANG,
+  category: "UTILITY",
+  components: [
+    {
+      type: "BODY",
+      text: "Anunț nou pentru verificare internă RealTrust ({{1}}): {{2}}. Preț: {{3}}. Zonă: {{4}}. Observații: {{5}}. Alegeți mai jos dacă anunțul este aprobat pentru publicare pe site sau arhivat.",
+      example: { body_text: [["Vânzare", "Apartament 2 camere luminos – Zona Iosefin", "75.000 €", "Iosefin", "date complete"]] },
+    },
+    { type: "BUTTONS", buttons: [{ type: "QUICK_REPLY", text: "Aprob" }, { type: "QUICK_REPLY", text: "Respinge" }] },
+  ],
+};
+
+async function graph(path: string, init: RequestInit = {}) {
+  const r = await fetch(`https://graph.facebook.com/v20.0/${path}`, {
+    ...init,
+    headers: { Authorization: `Bearer ${waToken()}`, "Content-Type": "application/json", ...(init.headers || {}) },
+  });
+  return { ok: r.ok, j: await r.json().catch(() => ({})) as any };
+}
+
+/** Status-ul șablonului de inspecție; îl trimite la aprobare Meta dacă nu există. */
+export async function ensureInspectionTemplate(): Promise<string> {
+  if (!waToken()) return "missing_wa_token";
+  const q = await graph(`${WA_BUSINESS_ACCOUNT_ID}/message_templates?name=${INSPECTION_TEMPLATE_NAME}&fields=name,status,language`);
+  const t = (q.j?.data || []).find((x: any) => x.name === INSPECTION_TEMPLATE_NAME && x.language === INSPECTION_TEMPLATE_LANG);
+  if (t) return String(t.status || "UNKNOWN");
+  const c = await graph(`${WA_BUSINESS_ACCOUNT_ID}/message_templates`, { method: "POST", body: JSON.stringify(INSPECTION_TEMPLATE_DEF) });
+  return c.ok ? String(c.j?.status || "PENDING") : `create_failed:${JSON.stringify(c.j).slice(0, 200)}`;
+}
+
+/** Trimite inspecția prin șablonul aprobat (permis și în afara ferestrei de 24h). */
+export async function sendInspectionTemplate(inspectionId: string, p: { kind: string; title: string; price: string; zone: string; note: string }) {
+  const status = await ensureInspectionTemplate();
+  if (status !== "APPROVED") return { ok: false, error: `template_${status.toLowerCase()}` };
+  return sendAdminWa({
+    type: "template",
+    template: {
+      name: INSPECTION_TEMPLATE_NAME,
+      language: { code: INSPECTION_TEMPLATE_LANG },
+      components: [
+        { type: "body", parameters: [p.kind, p.title, p.price, p.zone, p.note].map((v) => ({ type: "text", text: templateParam(v) })) },
+        { type: "button", sub_type: "quick_reply", index: "0", parameters: [{ type: "payload", payload: `insp_ok:${inspectionId}` }] },
+        { type: "button", sub_type: "quick_reply", index: "1", parameters: [{ type: "payload", payload: `insp_no:${inspectionId}` }] },
+      ],
+    },
+  });
+}
+
+/** Erori Meta care înseamnă „fereastra de 24h e închisă”. */
+export const isOutsideWindowError = (e?: string) => /131047|131051|re-engagement|24 hours/i.test(String(e || ""));
+
 export const OWNER_WAITING_ADMIN_TEXT =
   "Mulțumim! Anunțul dumneavoastră a fost trimis către echipa de verificare RealTrust și va fi vizibil pe site în cel mai scurt timp. Revenim cu link-ul direct!";
 export const ownerPublishedText = (slug: string) =>
@@ -61,7 +125,8 @@ function parsePriceValue(v: string): number | null {
 
 /** Recunoaște răspunsul adminului la un mesaj de inspecție. */
 export function parseInspectionReply(msg: any, text: string): Decision | null {
-  const btn = String(msg?.interactive?.button_reply?.id || "");
+  // Butoane interactive (în fereastra 24h) sau butoane de șablon aprobat (msg.button.payload).
+  const btn = String(msg?.interactive?.button_reply?.id || msg?.button?.payload || "");
   const m = btn.match(/^insp_(ok|no):([0-9a-f-]{36})$/i);
   if (m) return { action: m[1] === "ok" ? "approve" : "reject", inspectionId: m[2] };
   const t = text.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[.!]+$/, "");
