@@ -271,6 +271,13 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
           ? (data as { leadId?: string }).leadId
           : undefined);
 
+      try {
+        const reportToken = (data as { reportToken?: string } | null)?.reportToken;
+        if (leadId && reportToken) {
+          sessionStorage.setItem("rt_yield_report", JSON.stringify({ leadId, reportToken }));
+        }
+      } catch { /* storage unavailable */ }
+
       trackConversion({
         event: "roi_calculator_lead",
         source: "lead_capture_form",

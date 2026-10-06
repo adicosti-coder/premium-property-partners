@@ -99,7 +99,11 @@ const YieldReportDelivery = (props: Props) => {
       const base64 = doc.output("datauristring").split(",")[1] ?? "";
 
       const { data, error } = await supabase.functions.invoke("deliver-yield-report", {
-        body: { pdfBase64: base64, name: props.name, email: props.email, phone: props.phone },
+        body: (() => {
+          let cap: { leadId?: string; reportToken?: string } = {};
+          try { cap = JSON.parse(sessionStorage.getItem("rt_yield_report") || "{}"); } catch { /* ignore */ }
+          return { pdfBase64: base64, name: props.name, leadId: cap.leadId, reportToken: cap.reportToken };
+        })(),
       });
 
       const url = (data as { url?: string } | null)?.url;
