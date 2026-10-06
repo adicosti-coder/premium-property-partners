@@ -18,6 +18,7 @@ import {
 import { notifyClientChatLink } from "../_shared/waClientEmail.ts";
 import { notifyAgentInbound, notifyOwnerHandover, notifyClientCallRequest } from "../_shared/waAgentNotify.ts";
 import { notifyConsentReply } from "../_shared/waPublishConsentNotify.ts";
+import { ADMIN_INSPECTION_PHONE, parseInspectionReply, handleInspectionDecision } from "../_shared/listingInspection.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -264,6 +265,19 @@ Deno.serve(async (req) => {
           if ((msgErr as any).code === "23505") continue;
           console.error("[wa-webhook] msg insert failed:", msgErr);
           continue;
+        }
+
+        // Răspunsul adminului la inspecția unui anunț nou (1/Aprob, 2/Respinge).
+        if (from === ADMIN_INSPECTION_PHONE) {
+          const decision = parseInspectionReply(msg, text);
+          if (decision) {
+            try {
+              await handleInspectionDecision(supabase, msg, decision, { supabaseUrl, serviceKey });
+            } catch (e) {
+              console.error("[wa-webhook] inspection decision failed:", e);
+            }
+            continue;
+          }
         }
 
         // Fiecare mesaj primit (nu doar primul răspuns) merge în Make, ca agentul

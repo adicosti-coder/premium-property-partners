@@ -3538,6 +3538,72 @@ export type Database = {
         }
         Relationships: []
       }
+      listing_inspections: {
+        Row: {
+          clean_description: string | null
+          clean_title: string | null
+          created_at: string
+          decided_at: string | null
+          decision_note: string | null
+          error: string | null
+          id: string
+          neighborhood: string | null
+          price: number | null
+          property_type: string | null
+          prospect_listing_id: string
+          sent_at: string | null
+          status: string
+          wa_message_id: string | null
+        }
+        Insert: {
+          clean_description?: string | null
+          clean_title?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decision_note?: string | null
+          error?: string | null
+          id?: string
+          neighborhood?: string | null
+          price?: number | null
+          property_type?: string | null
+          prospect_listing_id: string
+          sent_at?: string | null
+          status?: string
+          wa_message_id?: string | null
+        }
+        Update: {
+          clean_description?: string | null
+          clean_title?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decision_note?: string | null
+          error?: string | null
+          id?: string
+          neighborhood?: string | null
+          price?: number | null
+          property_type?: string | null
+          prospect_listing_id?: string
+          sent_at?: string | null
+          status?: string
+          wa_message_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_inspections_prospect_listing_id_fkey"
+            columns: ["prospect_listing_id"]
+            isOneToOne: true
+            referencedRelation: "prospect_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_inspections_prospect_listing_id_fkey"
+            columns: ["prospect_listing_id"]
+            isOneToOne: true
+            referencedRelation: "v_prospect_funnel"
+            referencedColumns: ["prospect_id"]
+          },
+        ]
+      }
       local_tips: {
         Row: {
           created_at: string

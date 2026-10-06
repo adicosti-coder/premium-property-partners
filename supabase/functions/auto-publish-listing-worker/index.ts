@@ -350,6 +350,21 @@ Deno.serve(async (req) => {
       finalImages = rawImages;
     }
 
+    // Textul curățat și aprobat de admin pe WhatsApp (inspecție) are prioritate.
+    {
+      const { data: insp } = await supabase.from("listing_inspections")
+        .select("clean_title, clean_description, status")
+        .eq("prospect_listing_id", prospect.id)
+        .maybeSingle();
+      if (insp?.status === "rejected") return safeJson({ success: true, published: false, reason: "admin_rejected" });
+      if (insp?.status === "pending" && insp?.clean_title) return safeJson({ success: true, published: false, reason: "admin_inspection_pending" });
+      if (insp?.status !== "pending" && insp?.clean_title && insp?.clean_description) {
+        finalTitle = String(insp.clean_title).substring(0, 200);
+        finalFull = String(insp.clean_description);
+        finalShort = finalFull.replace(/^###.*$/gm, "").replace(/[*_`#>]/g, "").replace(/\s+/g, " ").trim().substring(0, 220);
+      }
+    }
+
     finalImages = Array.from(new Set(
       (finalImages || []).filter((u): u is string => typeof u === "string").map((u) => u.trim()).filter((u) => u.length > 0),
     ));
