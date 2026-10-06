@@ -466,6 +466,9 @@ Deno.serve(async (req) => {
       lifecycle_status: "to_call",
     }).eq("id", prospect.id);
 
+    await supabase.from("listing_inspections").update({ status: "published", decision_note: inserted.id })
+      .eq("prospect_listing_id", prospect.id);
+
     // Legăm acordul proprietarului de pagina publicată (pentru retragere rapidă).
     await supabase.from("wa_publish_consents").update({
       status: "published",
