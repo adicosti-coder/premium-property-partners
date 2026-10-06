@@ -350,14 +350,20 @@ Deno.serve(async (req) => {
       finalImages = rawImages;
     }
 
-    // Textul curățat și aprobat de admin pe WhatsApp (inspecție) are prioritate.
+    // Dublă condiție: aprobarea adminului pe WhatsApp („1”) ȘI acordul proprietarului („DA PUBLIC”).
     {
       const { data: insp } = await supabase.from("listing_inspections")
         .select("clean_title, clean_description, status")
         .eq("prospect_listing_id", prospect.id)
         .maybeSingle();
       if (insp?.status === "rejected") return safeJson({ success: true, published: false, reason: "admin_rejected" });
-      if (insp?.status === "pending" && insp?.clean_title) return safeJson({ success: true, published: false, reason: "admin_inspection_pending" });
+      if (!insp || !["approved", "approved_waiting_consent", "published"].includes(String(insp.status))) {
+        if (insp && consentRow) {
+          await supabase.from("listing_inspections").update({ decision_note: "consent_received_waiting_admin" })
+            .eq("prospect_listing_id", prospect.id);
+        }
+        return safeJson({ success: true, published: false, reason: "admin_inspection_pending" });
+      }
       if (insp?.status !== "pending" && insp?.clean_title && insp?.clean_description) {
         finalTitle = String(insp.clean_title).substring(0, 200);
         finalFull = String(insp.clean_description);
@@ -459,6 +465,9 @@ Deno.serve(async (req) => {
       admin_notes: `[worker] Publicat ca proprietate ${inserted.id} (q=${quality}).`,
       lifecycle_status: "to_call",
     }).eq("id", prospect.id);
+
+    await supabase.from("listing_inspections").update({ status: "published", decision_note: inserted.id })
+      .eq("prospect_listing_id", prospect.id);
 
     // Legăm acordul proprietarului de pagina publicată (pentru retragere rapidă).
     await supabase.from("wa_publish_consents").update({
