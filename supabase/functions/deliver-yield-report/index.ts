@@ -8,6 +8,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { applyRateLimit } from "../_shared/rateLimiter.ts";
 import { logLeadEvent } from "../_shared/leadEvents.ts";
+import { verifyLeadReportToken } from "../_shared/leadReportToken.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -47,7 +48,7 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => null);
     if (!body || typeof body !== "object") return json({ error: "Invalid body" }, 400);
 
-    const { pdfBase64, name, email, phone } = body as Record<string, unknown>;
+    const { pdfBase64, name, leadId, reportToken } = body as Record<string, unknown>;
 
     if (typeof pdfBase64 !== "string" || pdfBase64.length < 100 || pdfBase64.length > MAX_PDF_B64) {
       return json({ error: "Invalid PDF payload" }, 400);
@@ -55,8 +56,6 @@ Deno.serve(async (req) => {
     if (!/^[A-Za-z0-9+/=\s]+$/.test(pdfBase64)) return json({ error: "Invalid PDF encoding" }, 400);
 
     const safeName = typeof name === "string" ? name.trim().slice(0, 80) : "";
-    const ownerEmail = typeof email === "string" && EMAIL_RE.test(email.trim()) ? email.trim() : null;
-    const ownerPhone = typeof phone === "string" ? phone.replace(/[^\d+]/g, "").slice(0, 20) : "";
 
     const bytes = b64ToBytes(pdfBase64.replace(/\s/g, ""));
     if (bytes.length < 200) return json({ error: "Invalid PDF payload" }, 400);
@@ -93,18 +92,18 @@ Deno.serve(async (req) => {
     let emailSent = false;
     let ownerEmailMs: number | null = null;
     const resendKey = Deno.env.get("RESEND_API_KEY");
-    // Bind delivery to a lead submitted in the last 30 minutes with the SAME
-    // email and phone, so callers cannot mail arbitrary inboxes or tag other leads.
-    const digits9 = ownerPhone.replace(/[^\d]/g, "").slice(-9);
-    let boundLead: { id: string; report_pdf_path: string | null } | null = null;
-    if (ownerEmail && digits9.length >= 9) {
-      const { data } = await admin.from("leads").select("id, report_pdf_path")
-        .ilike("email", ownerEmail.replace(/[\\%_]/g, (c) => "\\" + c))
-        .ilike("whatsapp_number", `%${digits9}%`)
-        .gte("created_at", new Date(Date.now() - 30 * 60 * 1000).toISOString())
-        .order("created_at", { ascending: false }).limit(1).maybeSingle();
+    // Bind delivery to the lead only when the caller proves it submitted that
+    // lead (HMAC token returned by submit-lead). Email goes only to the
+    // address already stored on that lead.
+    let boundLead: { id: string; report_pdf_path: string | null; email: string | null } | null = null;
+    if (typeof leadId === "string" && typeof reportToken === "string" && await verifyLeadReportToken(leadId, reportToken)) {
+      const { data } = await admin.from("leads").select("id, report_pdf_path, email")
+        .eq("id", leadId)
+        .gte("created_at", new Date(Date.now() - 24 * 3600 * 1000).toISOString())
+        .maybeSingle();
       boundLead = (data as typeof boundLead) ?? null;
     }
+    const ownerEmail = boundLead?.email && EMAIL_RE.test(boundLead.email.trim()) ? boundLead.email.trim() : null;
     if (boundLead && ownerEmail && resendKey) {
       const tMail = Date.now();
       const res = await fetch("https://api.resend.com/emails", {

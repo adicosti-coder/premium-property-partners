@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createLeadReportToken } from "../_shared/leadReportToken.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/securityHeaders.ts";
 import { beginIdempotent } from "../_shared/idempotency.ts";
@@ -274,7 +275,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    const payload = { success: true, leadId };
+    const payload = { success: true, leadId, reportToken: await createLeadReportToken(leadId) };
     await idem.finish(payload);
 
     return new Response(JSON.stringify(payload), {
