@@ -784,7 +784,13 @@ Deno.serve(async (req) => {
             .eq("wa_message_id", waId)
             .is("delivered_at", null);
         }
-        console.log(`[wa-webhook] status ${state} for ${waId}`);
+        console.log(`[wa-webhook] status ${state} for ${waId}${state === "failed" ? ` errors=${JSON.stringify(st?.errors ?? [])}` : ""}`);
+        // Mesajele de inspecție (admin) nu stau în coadă: notăm eșecul pe inspecție, ca să fie vizibil.
+        if (state === "failed") {
+          await supabase.from("listing_inspections")
+            .update({ error: `wa_status_failed: ${JSON.stringify(st?.errors ?? []).slice(0, 380)}` })
+            .eq("wa_message_id", waId);
+        }
 
         // Aceeași confirmare se salvează și pe mesaj, ca să vedem în Admin
         // starea reală (trimis / livrat / citit) pentru fiecare mesaj trimis,

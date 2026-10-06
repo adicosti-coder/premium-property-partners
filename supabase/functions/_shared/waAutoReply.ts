@@ -493,7 +493,12 @@ export function clientPreparedReply(raw: string, messages: ConversationMessage[]
     if (/comision/.test(t)) return { kind: "client_call_fee", text: "Perfect. Colegul vă explică la telefon comisionul, transparent, înainte de orice pas. Înainte de prânz sau după?" };
     return { kind: "client_call_time", text: "Am notat. Vă este mai comod înainte de prânz sau după?" };
   }
-  if (["client_call_viewing", "client_call_price", "client_call_fee", "client_call_time"].includes(lastKind)) {
+  // Notăm intervalul doar dacă răspunsul chiar arată ca un interval (nu o întrebare oarecare).
+  if (
+    ["client_call_viewing", "client_call_price", "client_call_fee", "client_call_time"].includes(lastKind) &&
+    !/\?/.test(raw) &&
+    /pranz|dimineat|seara|dupa|inainte|ora|azi|maine|oricand|acum|luni|marti|miercuri|joi|vineri|sambata|duminica|\d/.test(t)
+  ) {
     return { kind: "client_call_noted", text: "Mulțumesc, am notat. Colegul vă sună în intervalul ales." };
   }
 
