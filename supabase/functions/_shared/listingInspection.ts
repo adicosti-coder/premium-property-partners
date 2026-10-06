@@ -21,7 +21,43 @@ export async function sendAdminWa(payload: Record<string, unknown>): Promise<{ o
 export const sendAdminText = (body: string) =>
   sendAdminWa({ type: "text", text: { preview_url: false, body: body.slice(0, 4000) } });
 
-type Decision = { action: "approve" | "reject"; inspectionId: string | null };
+/** Mesaj text simplu către orice număr (ex. proprietarul), din numărul oficial de companie. */
+export async function sendWaText(to: string, body: string): Promise<{ ok: boolean; id?: string; error?: string }> {
+  const token = waToken();
+  const digits = String(to || "").replace(/\D/g, "");
+  if (!token || !digits) return { ok: false, error: !token ? "missing_wa_token" : "missing_phone" };
+  const r = await fetch(`https://graph.facebook.com/v20.0/${WA_PHONE_NUMBER_ID}/messages`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ messaging_product: "whatsapp", to: digits, type: "text", text: { preview_url: true, body: body.slice(0, 4000) } }),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) return { ok: false, error: JSON.stringify(j).slice(0, 400) };
+  return { ok: true, id: j?.messages?.[0]?.id };
+}
+
+export const OWNER_WAITING_ADMIN_TEXT =
+  "Mulțumim! Anunțul dumneavoastră a fost trimis către echipa de verificare RealTrust și va fi vizibil pe site în cel mai scurt timp. Revenim cu link-ul direct!";
+export const ownerPublishedText = (slug: string) =>
+  `Anunțul dumneavoastră este acum publicat pe realtrust.ro: https://realtrust.ro/proprietate/${slug}\nPuteți retrage acordul oricând scriind RETRAG.`;
+
+/** Câmpurile critice care lipsesc din anunțul curățat. */
+export function missingCriticalFields(x: { price?: unknown; neighborhood?: unknown }): string[] {
+  const out: string[] = [];
+  if (!(Number(x.price) > 0)) out.push("preț");
+  if (!String(x.neighborhood ?? "").trim()) out.push("zonă");
+  return out;
+}
+
+type Decision = { action: "approve" | "reject"; inspectionId: string | null; price?: number; zone?: string };
+
+function parsePriceValue(v: string): number | null {
+  const m = v.replace(/€|eur(o)?/gi, "").trim().match(/^(\d{1,3}(?:[ .,]\d{3})+|\d+)(?:\s*(k|mii))?$/i);
+  if (!m) return null;
+  let n = Number(m[1].replace(/[ .,]/g, ""));
+  if (m[2]) n *= 1000;
+  return n > 0 ? n : null;
+}
 
 /** Recunoaște răspunsul adminului la un mesaj de inspecție. */
 export function parseInspectionReply(msg: any, text: string): Decision | null {
@@ -32,6 +68,17 @@ export function parseInspectionReply(msg: any, text: string): Decision | null {
   const quoted = !!msg?.context?.id;
   if (t === "aprob" || (quoted && t === "1")) return { action: "approve", inspectionId: null };
   if (t === "respinge" || t === "resping" || (quoted && t === "2")) return { action: "reject", inspectionId: null };
+  // Valoare lipsă + decizie, ex. „75000 1”, „75.000 aprob”, „Iosefin 1” (zona doar ca răspuns la mesaj).
+  const vm = text.trim().match(/^(.+?)\s+(1|2|aprob|respinge|resping)[.!]*$/i);
+  if (vm) {
+    const action = /^(1|aprob)$/i.test(vm[2]) ? "approve" : "reject";
+    const price = parsePriceValue(vm[1]);
+    if (price) return { action, inspectionId: null, price };
+    const zone = vm[1].trim();
+    if (quoted && zone.length >= 3 && zone.length <= 40 && !/\d{4,}/.test(zone)) {
+      return { action, inspectionId: null, zone: zone.charAt(0).toUpperCase() + zone.slice(1) };
+    }
+  }
   return null;
 }
 
@@ -56,6 +103,19 @@ export async function handleInspectionDecision(
     return;
   }
   const now = new Date().toISOString();
+
+  // Completăm valoarea lipsă trimisă de admin împreună cu decizia.
+  if (decision.price || decision.zone) {
+    const iu: Record<string, unknown> = {};
+    const pu: Record<string, unknown> = {};
+    if (decision.price) { iu.price = decision.price; pu.price = decision.price; }
+    if (decision.zone) { iu.neighborhood = decision.zone; pu.zone = decision.zone; }
+    await supabase.from("listing_inspections").update(iu).eq("id", insp.id);
+    await supabase.from("prospect_listings").update(pu).eq("id", insp.prospect_listing_id);
+    await sendAdminText(decision.price
+      ? `✏️ Preț setat: ${decision.price.toLocaleString("ro-RO")} €`
+      : `✏️ Zonă setată: ${decision.zone}`);
+  }
 
   if (decision.action === "reject") {
     await supabase.from("prospect_listings").update({ status: "archived" }).eq("id", insp.prospect_listing_id);

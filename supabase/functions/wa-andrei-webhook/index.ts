@@ -18,7 +18,7 @@ import {
 import { notifyClientChatLink } from "../_shared/waClientEmail.ts";
 import { notifyAgentInbound, notifyOwnerHandover, notifyClientCallRequest } from "../_shared/waAgentNotify.ts";
 import { notifyConsentReply } from "../_shared/waPublishConsentNotify.ts";
-import { ADMIN_INSPECTION_PHONE, parseInspectionReply, handleInspectionDecision } from "../_shared/listingInspection.ts";
+import { ADMIN_INSPECTION_PHONE, OWNER_WAITING_ADMIN_TEXT, parseInspectionReply, handleInspectionDecision } from "../_shared/listingInspection.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -47,7 +47,7 @@ async function handlePublishIntent(
     supabaseUrl: string;
     serviceKey: string;
   },
-): Promise<void> {
+): Promise<{ waitingAdmin: boolean }> {
   const { phone, intent, message, supabaseUrl, serviceKey } = args;
   const nowIso = new Date().toISOString();
 
@@ -76,7 +76,7 @@ async function handlePublishIntent(
         await supabase.from("properties").update({ is_active: false }).eq("id", c.property_id);
       }
     }
-    return;
+    return { waitingAdmin: false };
   }
 
   // Acord: salvăm dovada (idempotent pe telefon + anunț).
@@ -95,7 +95,11 @@ async function handlePublishIntent(
     .maybeSingle();
   if (cErr) console.error("[wa-webhook] consent upsert failed:", cErr);
 
-  if (!prospect?.id) return;
+  if (!prospect?.id) return { waitingAdmin: false };
+
+  const { data: insp } = await supabase.from("listing_inspections")
+    .select("status").eq("prospect_listing_id", prospect.id).maybeSingle();
+  const waitingAdmin = !!insp && !["approved", "approved_waiting_consent", "published", "rejected"].includes(String(insp.status));
 
   // Pornim preluarea pe site prin fluxul existent (curățare text, imagini, calitate).
   fetch(`${supabaseUrl}/functions/v1/auto-publish-listing-worker`, {
@@ -111,6 +115,7 @@ async function handlePublishIntent(
       consent_id: consent?.id ?? null,
     }),
   }).catch((e) => console.error("[wa-webhook] publish trigger failed:", e));
+  return { waitingAdmin };
 }
 
 async function verifySignature(rawBody: string, sigHeader: string, appSecret: string): Promise<boolean> {
@@ -456,13 +461,15 @@ Deno.serve(async (req) => {
             ? { kind: "publish_consent", text: PUBLISH_CONSENT_ACK }
             : { kind: "publish_revoke", text: PUBLISH_REVOKE_ACK };
           try {
-            await handlePublishIntent(supabase, {
+            const res = await handlePublishIntent(supabase, {
               phone: from,
               intent: publishIntent,
               message: text,
               supabaseUrl,
               serviceKey,
             });
+            // SLA: proprietarul află că anunțul e la verificare; link-ul vine automat la publicare.
+            if (res.waitingAdmin) quick = { kind: "publish_consent", text: OWNER_WAITING_ADMIN_TEXT };
           } catch (e) {
             console.error("[wa-webhook] publish consent handling failed:", e);
           }

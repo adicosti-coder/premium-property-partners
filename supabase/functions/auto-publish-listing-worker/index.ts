@@ -12,6 +12,7 @@
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { ownerPublishedText, sendWaText } from "../_shared/listingInspection.ts";
 import { loadImportConfig, sanitizeListingText, type ImportConfigRow } from "../_shared/listingSanitizer.ts";
 
 const corsHeaders = {
@@ -479,6 +480,16 @@ Deno.serve(async (req) => {
       property_id: inserted.id,
       published_at: new Date().toISOString(),
     }).eq("id", consentRow.id);
+
+    // Proprietarul primește automat link-ul direct către pagina publicată.
+    if (prospect.phone_normalized && inserted.slug) {
+      const sent = await sendWaText(String(prospect.phone_normalized), ownerPublishedText(inserted.slug))
+        .catch((e) => ({ ok: false, error: String(e) }));
+      if (!sent.ok) console.warn("[auto-publish] owner link WA failed:", sent.error);
+      else {
+        await supabase.from("wa_publish_consents").update({ notes: "owner_link_sent" }).eq("id", consentRow.id);
+      }
+    }
 
     // Fire-and-forget: image processing
     if (finalImages.length > 0) {
