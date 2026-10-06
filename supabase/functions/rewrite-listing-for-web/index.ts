@@ -22,7 +22,7 @@ const EMAIL = /[\w.%+\-]+@[\w.\-]+\.[a-z]{2,}/gi;
 const URL_RE = /\b(?:https?:\/\/|www\.)\S+|\b[\w\-]+\.(?:ro|com|eu|net|org)\b(?:\/\S*)?/gi;
 const STREET =
   /\b(?:str\.?|strada|bd\.?|bdul\.?|bulevardul|calea|aleea|splaiul|pia[țt]a|intrarea|[șs]os\.?|[șs]oseaua|drumul)\s+[^\n,.;]{2,40}?(?:\s*(?:nr\.?|num[aă]rul)\s*\d+[a-z]?)?(?=[\n,.;]|$)/gi;
-const BLOCK_APT = /\b(?:bl\.?|bloc(?:ul)?|sc\.?|scara|ap\.?\s*\d+|apartamentul\s+\d+|nr\.?\s*\d+[a-z]?)\s*[\w\-\/]*/gi;
+const BLOCK_APT = /\b(?:bl\.?|bloc(?:ul)?|sc\.?|scara|ap\.?|apartamentul|nr\.?)\s*(?:[A-Z]?\d+[A-Za-z]?|[A-Z]\d*)\b/g;
 const FORBIDDEN = [
   "persoana fizica", "persoană fizică", "fara comision", "fără comision", "comision 0%", "comision 0 %",
   "0% comision", "agentii", "agenții", "agentie", "agenție", "agentia", "agenția", "imobiliare",
