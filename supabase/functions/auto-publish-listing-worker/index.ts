@@ -355,9 +355,9 @@ Deno.serve(async (req) => {
       const { data: insp } = await supabase.from("listing_inspections")
         .select("clean_title, clean_description, status")
         .eq("prospect_listing_id", prospect.id)
-        .in("status", ["approved", "approved_waiting_consent", "published"])
         .maybeSingle();
-      if (insp?.clean_title && insp?.clean_description) {
+      if (insp?.status === "rejected") return safeJson({ success: true, published: false, reason: "admin_rejected" });
+      if (insp?.status !== "pending" && insp?.clean_title && insp?.clean_description) {
         finalTitle = String(insp.clean_title).substring(0, 200);
         finalFull = String(insp.clean_description);
         finalShort = finalFull.replace(/^###.*$/gm, "").replace(/[*_`#>]/g, "").replace(/\s+/g, " ").trim().substring(0, 220);
