@@ -2,7 +2,7 @@
 // + mesaj de inspecție pe WhatsApp-ul de administrare cu butoanele Aprob / Respinge.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
-import { sendAdminWa } from "../_shared/listingInspection.ts";
+import { missingCriticalFields, sendAdminWa } from "../_shared/listingInspection.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -60,6 +60,7 @@ Deno.serve(async (req) => {
     property_type: clean.property_type,
     price: clean.price,
     error: null,
+    decision_note: missing.length ? `missing:${missing.join(",")}` : null,
   }, { onConflict: "prospect_listing_id" }).select("id").single();
   if (iErr || !insp) return json({ error: iErr?.message ?? "save failed" }, 500);
 
@@ -68,10 +69,15 @@ Deno.serve(async (req) => {
     .replace(/^###.*$/gm, "").replace(/[*_#>`]/g, "").replace(/\s+/g, " ").trim().slice(0, 300);
   const isRent = String(p.category || "").toLowerCase() === "inchiriere";
   const priceTxt = clean.price ? `${Number(clean.price).toLocaleString("ro-RO")} €${isRent ? "/lună" : ""}` : "—";
+  const missing = missingCriticalFields({ price: clean.price, neighborhood: clean.neighborhood || p.zone });
+  const warn = missing.length
+    ? `⚠️ LIPSEȘTE: ${missing.join(" și ")}. Răspundeți la mesaj cu valoarea + decizia, ex. ${missing.includes("preț") ? "„75000 1”" : "„Iosefin 1”"}.`
+    : "";
   const bodyText = [
     isRent ? "🔎 Anunț nou de inspectat · ÎNCHIRIERE" : "🔎 Anunț nou de inspectat · VÂNZARE",
     `*${clean.clean_title}*`,
     `💶 ${priceTxt} · 📍 ${clean.neighborhood || p.zone || "—"}`,
+    warn,
     "",
     preview ? `${preview}…` : "",
     "",
