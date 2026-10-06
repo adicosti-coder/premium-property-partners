@@ -8,6 +8,7 @@
 // Uploads results to public `property-images` bucket under properties/{property_id}/.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { Image } from "https://deno.land/x/imagescript@1.2.17/mod.ts";
+import { toWebp } from "../_shared/webpEncode.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -307,10 +308,10 @@ Deno.serve(async (req) => {
           console.warn(`[process-listing-images] AI circuit opened: ${result.error}`);
         }
         try {
-          const cropped = await bottomCrop(raw, 0.12);
-          const path = `properties/${propertyId}/${Date.now()}-${i}-crop.jpg`;
-          const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, cropped, {
-            contentType: "image/jpeg", upsert: true, cacheControl: "31536000",
+          const cropped = await toWebp(await bottomCrop(raw, 0.12));
+          const path = `properties/${propertyId}/${Date.now()}-${i}-crop.${cropped.ext}`;
+          const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, cropped.bytes, {
+            contentType: cropped.contentType, upsert: true, cacheControl: "31536000",
           });
           if (upErr) {
             finalUrls.push(src);
@@ -329,9 +330,10 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      const path = `properties/${propertyId}/${Date.now()}-${i}.jpg`;
-      const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, result.out, {
-        contentType: "image/jpeg",
+      const stored = await toWebp(result.out);
+      const path = `properties/${propertyId}/${Date.now()}-${i}.${stored.ext}`;
+      const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, stored.bytes, {
+        contentType: stored.contentType,
         upsert: true,
         cacheControl: "31536000",
       });
