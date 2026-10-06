@@ -1,8 +1,8 @@
 // Edge Function: rewrite-listing-for-web
 // Curăță + rescrie un anunț brut înainte de publicarea pe realtrust.ro.
 // Sanitizare deterministă (înainte ȘI după AI) + rescriere prin Lovable AI (Responses, streaming).
-import { createOpenAI } from "npm:@ai-sdk/openai@2";
-import { streamText } from "npm:ai@5";
+import { createOpenAI } from "npm:@ai-sdk/openai@3";
+import { streamText } from "npm:ai@6";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 
 const corsHeaders = {
