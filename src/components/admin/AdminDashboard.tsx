@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import GooglePerformanceWidget from "./GooglePerformanceWidget";
 import SeoAutomationWidget from "./SeoAutomationWidget";
 import AdminUnifiedKpiBar from "./AdminUnifiedKpiBar";
+import ListingPipelineMetrics from "./ListingPipelineMetrics";
 
 import { toast } from "@/hooks/use-toast";
 import { MarkAsAgencyButton } from "@/components/admin/MarkAsAgencyButton";
@@ -400,6 +401,7 @@ const AdminDashboard = () => {
   return (
     <div className="space-y-6">
       <AdminUnifiedKpiBar />
+      <ListingPipelineMetrics />
       {/* Sync Section */}
 
       <Card>
