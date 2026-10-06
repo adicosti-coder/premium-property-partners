@@ -238,7 +238,8 @@ Deno.serve(async (req) => {
 
 
     const cat = String(prospect.category || "").toLowerCase().trim();
-    if (cat !== "vanzare") {
+    const isRent = cat === "inchiriere";
+    if (cat !== "vanzare" && !isRent) {
       await supabase.from("prospect_listings").update({
         tags: ["scrape-prospects", "recrutare-management", cat === "hotelier" ? "regim-hotelier" : "inchiriere-proprietar", "andrei-call-queue", "blocked-from-publish"],
         admin_notes: `NU se publică pe site. Lead Andrei: administrare ${cat === "hotelier" ? "regim hotelier" : "totală/parțială"}.`,
@@ -399,7 +400,7 @@ Deno.serve(async (req) => {
       return safeJson({ success: true, published: false, reason: "low_quality", quality });
     }
 
-    const listingType = "vanzare";
+    const listingType = isRent ? "inchiriere" : "vanzare";
     const platform = prospect.source_platform || "unknown";
 
     const propertyData: Record<string, any> = {
@@ -412,7 +413,7 @@ Deno.serve(async (req) => {
       long_description_en: "",
       features: Array.isArray(prospect.features) ? prospect.features : [],
       listing_type: listingType,
-      tag: "De Vânzare",
+      tag: isRent ? "De Închiriat" : "De Vânzare",
       // Fan-out mode: publish ACTIVE directly (admin can still un-publish from review).
       // Pending-review mode (backfill controlat): salvăm ca DRAFT inactiv (is_active=false)
       // ca anunțul să apară DOAR în Fast Review, nu live pe site.
@@ -461,7 +462,10 @@ Deno.serve(async (req) => {
     }
 
     await supabase.from("prospect_listings").update({
-      tags: ["scrape-prospects", "auto-import", "site-published"],
+      // Închirierile rămân și în recrutarea Andrei pentru serviciul de administrare.
+      tags: isRent
+        ? ["scrape-prospects", "auto-import", "site-published", "recrutare-management", "inchiriere-proprietar", "andrei-call-queue"]
+        : ["scrape-prospects", "auto-import", "site-published"],
       admin_notes: `[worker] Publicat ca proprietate ${inserted.id} (q=${quality}).`,
       lifecycle_status: "to_call",
     }).eq("id", prospect.id);

@@ -72,7 +72,8 @@ Returnează EXCLUSIV un obiect JSON valid, fără markdown, cu cheile:
   2) Dotări și specificații (listă cu „- ”)
   3) Avantajele zonei (vecinătăți, fără adresă exactă)
   4) Programează o vizionare (invitație către echipa RealTrust)
-- price: număr în EUR (fără simbol) sau null.`;
+- price: număr în EUR (fără simbol) sau null. Pentru tip_tranzactie „inchiriere”, price = chiria lunară în EUR (ex: 450), fără „/lună”.
+- La închiriere: nu menționa regim hotelier, randament sau investiție; descrie închirierea pe termen lung și chiria pe lună.`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
