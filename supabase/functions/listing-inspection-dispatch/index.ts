@@ -51,6 +51,7 @@ Deno.serve(async (req) => {
     return json({ error: "rewrite_failed", status: rw.status }, 502);
   }
 
+  const missing = missingCriticalFields({ price: clean.price, neighborhood: clean.neighborhood || p.zone });
   const { data: insp, error: iErr } = await supabase.from("listing_inspections").upsert({
     prospect_listing_id: p.id,
     status: "pending",
@@ -69,7 +70,6 @@ Deno.serve(async (req) => {
     .replace(/^###.*$/gm, "").replace(/[*_#>`]/g, "").replace(/\s+/g, " ").trim().slice(0, 300);
   const isRent = String(p.category || "").toLowerCase() === "inchiriere";
   const priceTxt = clean.price ? `${Number(clean.price).toLocaleString("ro-RO")} €${isRent ? "/lună" : ""}` : "—";
-  const missing = missingCriticalFields({ price: clean.price, neighborhood: clean.neighborhood || p.zone });
   const warn = missing.length
     ? `⚠️ LIPSEȘTE: ${missing.join(" și ")}. Răspundeți la mesaj cu valoarea + decizia, ex. ${missing.includes("preț") ? "„75000 1”" : "„Iosefin 1”"}.`
     : "";
