@@ -1,6 +1,7 @@
 // Weekly on-page audit: scrapes top 25 pages from GSC via Firecrawl, extracts SEO signals,
 // computes health score, stores in seo_page_audits.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { assertSafePublicUrl, isOwnSiteUrl } from "../_shared/ssrfGuard.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
@@ -111,6 +112,8 @@ function extractAudit(html: string, pageUrl: string): Audit {
 }
 
 async function fetchPage(url: string, firecrawlKey?: string): Promise<string> {
+  if (!isOwnSiteUrl(url)) throw new Error("Only realtrust.ro pages can be audited");
+  url = (await assertSafePublicUrl(url)).toString();
   if (firecrawlKey) {
     try {
       const res = await fetch("https://api.firecrawl.dev/v2/scrape", {
@@ -123,8 +126,9 @@ async function fetchPage(url: string, firecrawlKey?: string): Promise<string> {
       if (html) return html;
     } catch (_) {}
   }
-  const r = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 RealTrustBot" } });
-  return await r.text();
+  const r = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 RealTrustBot" }, redirect: "manual" });
+  if (r.status >= 300 && r.status < 400) throw new Error("Redirects not allowed");
+  return (await r.text()).slice(0, 2_000_000);
 }
 
 serve(async (req) => {
@@ -145,7 +149,7 @@ serve(async (req) => {
 
     let pages: string[] = [];
     if (explicitPages.length) {
-      pages = explicitPages.slice(0, limit);
+      pages = explicitPages.filter((p) => typeof p === "string" && isOwnSiteUrl(p)).slice(0, limit);
     } else {
       // Top pages by clicks last 28 days
       const end = new Date(); end.setUTCDate(end.getUTCDate() - 2);

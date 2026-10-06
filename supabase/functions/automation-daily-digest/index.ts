@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
 
   const reqBody = req.method === "POST" ? await req.json().catch(() => ({})) : {};
   const dryRun = reqBody?.dry_run === true;
-  const recipientOverride: string | null = typeof reqBody?.recipient_override === "string" && reqBody.recipient_override.includes("@")
+  const recipientOverride: string | null = typeof reqBody?.recipient_override === "string" && /^[a-z0-9._%+-]+@realtrust\.ro$/i.test(reqBody.recipient_override.trim())
     ? reqBody.recipient_override.trim()
     : null;
 

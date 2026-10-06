@@ -196,7 +196,7 @@ Deno.serve(async (req) => {
 
   if (dryRun) return json({ ok: true, dry_run: true, stats });
 
-  const recipient = body.recipient_override?.includes("@")
+  const recipient = typeof body.recipient_override === "string" && /^[a-z0-9._%+-]+@realtrust\.ro$/i.test(body.recipient_override.trim())
     ? body.recipient_override.trim()
     : "info@realtrust.ro";
 
