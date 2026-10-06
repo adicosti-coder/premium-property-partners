@@ -3,6 +3,7 @@
  * Now supports draft/published workflow — all original images are saved,
  * only selected ones are marked as published.
  */
+import { toWebp } from '../_shared/webpEncode.ts';
 
 /** Download an image from URL and upload to Supabase Storage */
 export async function downloadAndUploadImage(
@@ -20,17 +21,15 @@ export async function downloadAndUploadImage(
       return { storagePath: imageUrl, originalUrl: imageUrl };
     }
 
-    const contentType = response.headers.get('content-type') || 'image/jpeg';
-    const ext = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
-    const blob = await response.blob();
-    const arrayBuffer = await blob.arrayBuffer();
-    const uint8 = new Uint8Array(arrayBuffer);
+    const uint8 = new Uint8Array(await response.arrayBuffer());
+    // Passive WebP conversion (JPEG/PNG → WebP), falls back to original bytes.
+    const stored = await toWebp(uint8);
 
-    const filePath = `${propertyId}/imported-${index}.${ext}`;
+    const filePath = `${propertyId}/imported-${index}.${stored.ext}`;
 
     const { error } = await supabase.storage
       .from('property-images')
-      .upload(filePath, uint8, { contentType, upsert: true });
+      .upload(filePath, stored.bytes, { contentType: stored.contentType, upsert: true, cacheControl: '31536000' });
 
     if (error) {
       console.error(`Upload error for image ${index}:`, error.message);

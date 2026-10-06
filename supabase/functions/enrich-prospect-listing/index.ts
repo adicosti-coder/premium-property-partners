@@ -6,6 +6,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Image, decode } from "https://deno.land/x/imagescript@1.2.17/mod.ts";
 import { requireAdmin } from "../_shared/adminAuth.ts";
+import { toWebp } from "../_shared/webpEncode.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -253,9 +254,10 @@ async function enrichImages(
     const processed = await processImage(url, font);
     let optimized = url;
     if (processed) {
-      const path = `prospect-enriched/${prospectId}/${i}-${Date.now()}.jpg`;
-      const { error: upErr } = await sb.storage.from(BUCKET).upload(path, processed, {
-        contentType: "image/jpeg",
+      const stored = await toWebp(processed);
+      const path = `prospect-enriched/${prospectId}/${i}-${Date.now()}.${stored.ext}`;
+      const { error: upErr } = await sb.storage.from(BUCKET).upload(path, stored.bytes, {
+        contentType: stored.contentType,
         cacheControl: "31536000",
         upsert: true,
       });
