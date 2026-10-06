@@ -18,7 +18,7 @@ import {
 import { notifyClientChatLink } from "../_shared/waClientEmail.ts";
 import { notifyAgentInbound, notifyOwnerHandover, notifyClientCallRequest } from "../_shared/waAgentNotify.ts";
 import { notifyConsentReply } from "../_shared/waPublishConsentNotify.ts";
-import { ADMIN_INSPECTION_PHONE, parseInspectionReply, handleInspectionDecision } from "../_shared/listingInspection.ts";
+import { ADMIN_INSPECTION_PHONE, OWNER_WAITING_ADMIN_TEXT, parseInspectionReply, handleInspectionDecision } from "../_shared/listingInspection.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
