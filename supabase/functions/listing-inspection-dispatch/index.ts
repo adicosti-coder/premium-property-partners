@@ -66,9 +66,10 @@ Deno.serve(async (req) => {
   // 2) Mesaj de inspecție cu butoane (fereastra Meta de 24h trebuie să fie deschisă pe numărul admin).
   const preview = String(clean.clean_description || "")
     .replace(/^###.*$/gm, "").replace(/[*_#>`]/g, "").replace(/\s+/g, " ").trim().slice(0, 300);
-  const priceTxt = clean.price ? `${Number(clean.price).toLocaleString("ro-RO")} €` : "—";
+  const isRent = String(p.category || "").toLowerCase() === "inchiriere";
+  const priceTxt = clean.price ? `${Number(clean.price).toLocaleString("ro-RO")} €${isRent ? "/lună" : ""}` : "—";
   const bodyText = [
-    "🔎 Anunț nou de inspectat",
+    isRent ? "🔎 Anunț nou de inspectat · ÎNCHIRIERE" : "🔎 Anunț nou de inspectat · VÂNZARE",
     `*${clean.clean_title}*`,
     `💶 ${priceTxt} · 📍 ${clean.neighborhood || p.zone || "—"}`,
     "",

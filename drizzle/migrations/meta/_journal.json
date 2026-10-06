@@ -575,6 +575,13 @@
       "when": 1791267318735,
       "tag": "0081_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1791269402045,
+      "tag": "0082_listing_inspection_include_rent",
+      "breakpoints": true
     }
   ]
 }
