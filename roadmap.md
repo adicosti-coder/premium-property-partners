@@ -1,7 +1,8 @@
 
 ## Șablon acord proprietari (7 oct 2026)
-- [ ] Trimitere text identic la Meta pentru aprobare
-- [ ] Activare automată la retrimitere numai după aprobare + teste și deploy
+- [x] Text identic trimis la Meta: acord_publicare_proprietar_v1, MARKETING, PENDING
+- [x] Activare automată la retrimitere numai după aprobare + 54 teste și deploy
+- [ ] Aprobare externă Meta (șablon PENDING; fără trimiteri premature)
 
 ## Corecție portofoliu cazare (5 sep 2026)
 - [x] Recalculat numărul real de unități de cazare: 14 (13 cu link Pynbooking direct, MARA pe Booking.com)
