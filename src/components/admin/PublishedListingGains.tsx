@@ -38,16 +38,17 @@ export default function PublishedListingGains() {
   return (
     <div className="rounded-md border border-border p-3 space-y-2">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-medium">Câștig real pe anunț (de la publicarea pe realtrust.ro)</p>
+        <p className="text-sm font-medium">Toate anunțurile publicate pe realtrust.ro · {rows.length} · {rows.filter((r) => r.views === 0 || r.income === 0).length} cu lacună</p>
         <span className="text-sm font-semibold">{total.toLocaleString("ro-RO")} € total</span>
       </div>
       {q.isLoading ? <p className="text-xs text-muted-foreground">Se încarcă…</p> : rows.length === 0 ? (
-        <p className="text-xs text-muted-foreground">Încă niciun anunț preluat publicat.</p>
+        <p className="text-xs text-muted-foreground">Niciun anunț publicat.</p>
       ) : (
         <div className="divide-y divide-border text-xs">
           {rows.map((r) => (
-            <div key={r.id} className="flex flex-wrap gap-3 py-2">
-              <span className="flex-1 min-w-0 truncate font-medium">{r.name}</span>
+            <div key={r.id} className={`flex flex-wrap gap-3 py-2 ${r.views === 0 || r.income === 0 ? "bg-destructive/5" : ""}`}>
+              <span className="flex-1 min-w-0 truncate font-medium">{r.slug ? <a href={`https://realtrust.ro/proprietate/${r.slug}`} target="_blank" rel="noopener noreferrer" className="underline">{r.name}</a> : r.name}</span>
+              {(r.views === 0 || r.income === 0) && <span className="text-destructive">{r.views === 0 ? "fără vizite" : "fără venit"}</span>}
               <span className="text-muted-foreground">din {new Date(r.created_at).toLocaleDateString("ro-RO")}</span>
               <span>{r.views} vizite</span>
               <span>{r.requests} cereri</span>

@@ -36,9 +36,10 @@ Deno.serve(async (req) => {
   const out = await r.json().catch(() => ({}));
   if (r.ok && (out as any)?.published) {
     const { data: p } = await sb.from("prospect_listings").select("title, category").eq("id", prospectId).maybeSingle();
-    const link = (out as any)?.url || (out as any)?.slug ? `https://realtrust.ro/proprietate/${(out as any).slug}` : "";
+    const o = out as any;
+    const link = o?.url || (o?.slug ? `https://realtrust.ro/proprietate/${o.slug}` : "");
     await sendWaText(ADMIN_INSPECTION_NUMBER,
-      `ℹ️ Anunț publicat MANUAL pe realtrust.ro (acord obținut altfel decât „DA” pe WhatsApp):\n${p?.title ?? "Fără titlu"} · ${p?.category ?? "—"}${link ? `\n${(out as any).url || link}` : ""}`,
+      `ℹ️ Anunț publicat MANUAL pe realtrust.ro (acord obținut altfel decât „DA” pe WhatsApp):\n${p?.title ?? "Fără titlu"} · ${p?.category ?? "—"}${link ? `\n${link}` : ""}`,
     ).catch(() => null);
   }
   return json(out, r.ok ? 200 : 502);
