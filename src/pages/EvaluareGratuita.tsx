@@ -180,6 +180,7 @@ const EvaluareGratuita = () => {
         estimate ? `• Estimare: ${fmtEur(estimate.min)} – ${fmtEur(estimate.max)}` : null,
       ].filter(Boolean).join("\n"),
       source: "evaluare_gratuita",
+      viaServer: true,
       simulation_data: withCampaignTracking({
         zone: form.zone,
         zone_label: zoneLabel,
@@ -187,6 +188,15 @@ const EvaluareGratuita = () => {
         rooms: form.rooms,
       }) as never,
     });
+
+    if (result.ok === true) {
+      // Capability token so /multumire can email + attach the yield report.
+      try {
+        if (result.leadId && result.reportToken) {
+          sessionStorage.setItem("rt_yield_report", JSON.stringify({ leadId: result.leadId, reportToken: result.reportToken }));
+        }
+      } catch { /* storage unavailable */ }
+    }
 
     if (result.ok !== true) {
       setSubmitted(false);
