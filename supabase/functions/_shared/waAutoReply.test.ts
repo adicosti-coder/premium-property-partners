@@ -3,6 +3,8 @@ import {
   autoReplyText,
   clientPreparedReply,
   clientViewingStepReply,
+  detectPublishIntent,
+  publishConsentRequestText,
   rememberedClientZone,
   type ConversationMessage,
 } from "./waAutoReply.ts";
@@ -93,4 +95,43 @@ test("o întrebare după cererea de apel nu declanșează alerta", () => {
 test("un interval real după cererea de apel este notat", () => {
   const msgs: ConversationMessage[] = [outbound("client_call_fee"), inbound("după prânz")];
   expect(clientPreparedReply("după prânz", msgs)?.kind).toBe("client_call_noted");
+});
+
+// ── Acordul de publicare: text cerere + recunoaștere răspuns pozitiv ──
+
+test("cererea de acord arată beneficiile și cere „DA” / „De acord”", () => {
+  const text = publishConsentRequestText({ title: "Apartament 2 camere Iosefin" });
+  expect(text).toContain("Buna ziua! Suntem RealTrust din Timișoara.");
+  expect(text).toContain("Apartament 2 camere Iosefin");
+  expect(text).toContain("100% Gratuit");
+  expect(text).toContain("Fără exclusivitate");
+  expect(text).toContain("„DA” sau „De acord”");
+  expect(text).toContain("RETRAG");
+});
+
+test.each(["DA", "da", "De acord", "de acord", "ok", "OK", "publicati", "da public", "👍", "Da 👍"])(
+  "recunoaște acordul: %s",
+  (txt) => {
+    expect(detectPublishIntent(txt, { pendingConsent: true })).toBe("consent");
+  },
+);
+
+test("răspunsul pozitiv contează doar dacă i s-a cerut acordul", () => {
+  expect(detectPublishIntent("da")).toBeNull();
+  expect(detectPublishIntent("ok")).toBeNull();
+  expect(detectPublishIntent("👍")).toBeNull();
+  // „DA PUBLIC” rămâne acord oricând, chiar fără cerere înregistrată.
+  expect(detectPublishIntent("da public")).toBe("consent");
+});
+
+test.each(["De ce nu ajung anunțurile?", "Mâine?", "nu", "Nu, mulțumesc", "2 camere", ""])(
+  "NU ia drept acord: %s",
+  (txt) => {
+    expect(detectPublishIntent(txt, { pendingConsent: true })).not.toBe("consent");
+  },
+);
+
+test("RETRAG rămâne retragere de acord", () => {
+  expect(detectPublishIntent("RETRAG")).toBe("revoke");
+  expect(detectPublishIntent("nu mai public", { pendingConsent: true })).toBe("revoke");
 });
