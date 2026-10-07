@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink, PhoneOff, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import ManualProspectingStats from "@/components/admin/ManualProspectingStats";
 
 type Row = {
   id: string;
@@ -45,6 +46,7 @@ export default function ManualProspectingPanel() {
   const rows = q.data ?? [];
   return (
     <div className="space-y-4">
+      <ManualProspectingStats />
       <div className="flex items-center justify-between gap-2">
         <div>
           <h3 className="text-lg font-semibold flex items-center gap-2">
