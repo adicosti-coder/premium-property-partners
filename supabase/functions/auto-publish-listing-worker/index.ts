@@ -260,7 +260,9 @@ Deno.serve(async (req) => {
       .in("status", ["granted", "published"])
       .limit(1)
       .maybeSingle();
-    if (!consentRow) {
+    // Excepție: publicare manuală decisă explicit de un admin (buton Admin), doar prin admin-manual-publish.
+    const adminOverride = body?.admin_override === true;
+    if (!consentRow && !adminOverride) {
       return safeJson({
         success: true,
         published: false,
@@ -471,14 +473,16 @@ Deno.serve(async (req) => {
       .eq("prospect_listing_id", prospect.id);
 
     // Legăm acordul proprietarului de pagina publicată (pentru retragere rapidă).
-    await supabase.from("wa_publish_consents").update({
-      status: "published",
-      property_id: inserted.id,
-      published_at: new Date().toISOString(),
-    }).eq("id", consentRow.id);
+    if (consentRow) {
+      await supabase.from("wa_publish_consents").update({
+        status: "published",
+        property_id: inserted.id,
+        published_at: new Date().toISOString(),
+      }).eq("id", consentRow.id);
+    }
 
     // Proprietarul primește automat link-ul direct către pagina publicată.
-    if (prospect.phone_normalized && inserted.slug) {
+    if (consentRow && prospect.phone_normalized && inserted.slug) {
       const sent = await sendWaText(String(prospect.phone_normalized), ownerPublishedText(inserted.slug))
         .catch((e) => ({ ok: false, error: String(e) }));
       if (!sent.ok) console.warn("[auto-publish] owner link WA failed:", sent.error);
