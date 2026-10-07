@@ -143,5 +143,17 @@ Deno.serve(async (req) => {
       : { error: `wa_send: ${sent.error}`.slice(0, 400) },
   ).eq("id", insp.id);
 
-  return json({ ok: sent.ok, inspection_id: insp.id, wa_error: sent.ok ? undefined : sent.error });
+  // 3) Bot acord: cerem imediat acordul proprietarului (are mobil valid); la „DA” se publică automat.
+  let consent: unknown = null;
+  try {
+    const { data: cronSecret } = await supabase.rpc("get_cron_reconcile_secret");
+    const cr = await fetch(`${supabaseUrl}/functions/v1/wa-request-publish-consent`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-cron-secret": String(cronSecret || "") },
+      body: JSON.stringify({ prospect_ids: [p.id] }),
+    });
+    consent = (await cr.json().catch(() => ({})))?.results?.[0]?.status ?? cr.status;
+  } catch (e) { consent = String(e); }
+
+  return json({ ok: sent.ok, inspection_id: insp.id, consent, wa_error: sent.ok ? undefined : sent.error });
 });
