@@ -228,8 +228,15 @@ export function propertyFinanceBlock(p: {
  * Acordul proprietarului pentru preluarea anunțului pe realtrust.ro și retragerea lui.
  * Se verifică ÎNAINTEA regulilor de refuz, ca „da, publicați, mulțumesc” să fie citit corect.
  */
-const PUBLISH_CONSENT_RE =
+// Acord explicit de publicare (menționează publicarea) — contează oricând.
+const PUBLISH_CONSENT_STRONG_RE =
   /\bda\s*public\b|\bdapublic\b|accept(?:a|ati)?\s+publicarea|sunt de acord (?:cu|sa|să)?\s*public|acord(?:ul)?\s+(?:de|pentru)\s+publicare|pute?ti\s+(?:sa\s+)?publica|publicati\s+anuntul|da,?\s*publica(?:ti|ți)?/;
+// Răspuns pozitiv simplu („DA”, „De acord”, „ok”, „publicati”, 👍) — contează
+// ca acord doar dacă proprietarului i s-a cerut acordul (are o linie în
+// wa_publish_consents), ca un „da” dintr-o conversație obișnuită să nu fie
+// citit drept acord de publicare.
+const PUBLISH_CONSENT_SOFT_RE =
+  /^(?:da+|dapublic|de\s+acord|ok(?:ee?y)?|bine|sigur|desigur|aprob|publicati|publica)[\s!.,?]*$/;
 const PUBLISH_REVOKE_RE =
   /\bretrag\b|nu mai public|nu mai doresc publicarea|scoateti anuntul|stergeti anuntul|scoate anuntul de pe site/;
 
@@ -240,15 +247,21 @@ export function publishConsentRequestText(p?: {
   rooms?: number | null;
 } | null): string {
   const what = p?.title
-    ? `apartamentul „${p.title}”`
+    ? `„${p.title}”`
     : p?.zone
-      ? `apartamentul din ${p.zone}`
-      : "apartamentul dumneavoastra";
+      ? `apartamentul din zona ${p.zone}`
+      : "proprietății dumneavoastră";
   return [
-    `Buna ziua! Suntem RealTrust din Timisoara. Dorim sa preluam ${what} pe site-ul nostru, realtrust.ro, gratuit,`,
-    "ca sa ajunga la clientii care caută direct pe site (fara costuri si fara exclusivitate).",
+    "Buna ziua! Suntem RealTrust din Timișoara.",
     "",
-    "Daca sunteti de acord, raspundeti cu DA PUBLIC. Retrageti acordul oricand, scriind RETRAG.",
+    `Am văzut anunțul dumneavoastră pentru ${what} și am dori să îl promovăm gratuit pe site-ul nostru, realtrust.ro, pentru a-l aduce direct în fața clienților noștri activi.`,
+    "",
+    "• 100% Gratuit (fără comisioane ascunse)",
+    "• Fără exclusivitate (continuați să promovați unde doriți)",
+    "• Puteți solicita retragerea oricând",
+    "",
+    "Dacă sunteți de acord, dați-ne un simplu răspuns cu „DA” sau „De acord” și îl publicăm.",
+    "(Dacă doriți retragerea ulterioară, este suficient să ne scrieți „RETRAG”)",
   ].join("\n");
 }
 
@@ -259,14 +272,20 @@ export const PUBLISH_CONSENT_ACK =
 
 export const PUBLISH_REVOKE_ACK =
   "Am inteles, am retras acordul: anunțul nu mai apare pe realtrust.ro. " +
-  "Daca doriti sa il publicam din nou, ne scrieti aici DA PUBLIC.";
+  "Daca doriti sa il publicam din nou, ne scrieti aici „DA”.";
 
 /** „consent” / „revoke” / null pentru mesajul primit de la proprietar. */
-export function detectPublishIntent(raw: string): "consent" | "revoke" | null {
+export function detectPublishIntent(
+  raw: string,
+  opts?: { pendingConsent?: boolean },
+): "consent" | "revoke" | null {
   const t = stripDiacritics(raw);
   if (!t) return null;
   if (PUBLISH_REVOKE_RE.test(t)) return "revoke";
-  if (PUBLISH_CONSENT_RE.test(t)) return "consent";
+  if (PUBLISH_CONSENT_STRONG_RE.test(t)) return "consent";
+  if ((PUBLISH_CONSENT_SOFT_RE.test(t) || /👍/u.test(t)) && opts?.pendingConsent) {
+    return "consent";
+  }
   return null;
 }
 
