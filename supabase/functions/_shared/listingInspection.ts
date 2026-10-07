@@ -207,8 +207,29 @@ export async function handleInspectionDecision(
     await sendAdminText(`✅ Publicat pe realtrust.ro: ${insp.clean_title}\nhttps://realtrust.ro/proprietate/${r.slug ?? ""}`);
   } else if (r?.reason === "owner_consent_required") {
     await supabase.from("listing_inspections").update({ status: "approved_waiting_consent" }).eq("id", insp.id);
+    // Cerem automat acordul proprietarului (direct dacă fereastra e deschisă, altfel coada cu șablon aprobat).
+    let consentStatus = "neprocesat";
+    try {
+      const { data: cronSecret } = await supabase.rpc("get_cron_reconcile_secret");
+      const cr = await fetch(`${env.supabaseUrl}/functions/v1/wa-request-publish-consent`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-cron-secret": String(cronSecret || "") },
+        body: JSON.stringify({ prospect_ids: [insp.prospect_listing_id] }),
+      });
+      const cj = await cr.json().catch(() => ({}));
+      consentStatus = cj?.results?.[0]?.status || (cr.ok ? "trimis" : `eroare ${cr.status}`);
+    } catch (e) {
+      consentStatus = `eroare ${String(e)}`;
+    }
+    const label: Record<string, string> = {
+      sent: "cererea de acord a fost trimisă proprietarului",
+      queued: "cererea de acord a intrat în coada WhatsApp (șablon aprobat)",
+      already_queued: "proprietarul are deja un mesaj în coadă",
+      invalid_phone: "anunțul nu are un număr de telefon valid",
+      express_opt_out: "proprietarul a cerut să nu fie contactat",
+    };
     await sendAdminText(
-      `👍 Aprobat: ${insp.clean_title}\nSe publică automat imediat ce proprietarul răspunde „DA PUBLIC” pe WhatsApp.`,
+      `👍 Aprobat: ${insp.clean_title}\n${label[consentStatus] ?? `cerere acord: ${consentStatus}`}. Se publică automat după acordul proprietarului.`,
     );
   } else {
     await supabase.from("listing_inspections").update({ decision_note: String(r?.reason || r?.error || "publish_failed") }).eq("id", insp.id);
