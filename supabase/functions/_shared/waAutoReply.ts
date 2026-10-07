@@ -470,8 +470,10 @@ function replyForKnownZone(intent: NonNullable<ReturnType<typeof clientIntent>>,
 export function looksLikeCallInterval(raw: string): boolean {
   if (/\?/.test(raw)) return false;
   const t = stripDiacritics(raw).toLowerCase();
-  return /\b(pranz|dimineata|dimineat\w*|seara|searа|dupa[- ]?amiaza|dupa|inainte|ora|orele|azi|astazi|maine|poimaine|oricand|acum|luni|marti|miercuri|joi|vineri|sambata|duminica|weekend)\b/.test(t) ||
-    /\b([01]?\d|2[0-3])([:.][0-5]\d|\s?(h|am|pm))?\b/.test(t) && /\b([01]?\d|2[0-3])([:.][0-5]\d|\s?h)\b|\b(la|dupa|inainte de|intre)\s+([01]?\d|2[0-3])\b/.test(t);
+  // Cuvinte de zi / moment al zilei (cuvinte întregi, ca „ora” să nu prindă „oraș”).
+  if (/\b(pranz|dimineat\w*|seara|dupa-?amiaza|dupa|inainte|ora|orele|azi|astazi|maine|poimaine|oricand|acum|luni|marti|miercuri|joi|vineri|sambata|duminica|weekend)\b/.test(t)) return true;
+  // Oră explicită: „17:00”, „17.30”, „17h”, „la 5”, „între 10 și 12”. Cifrele simple (ex. „2 camere”) nu contează.
+  return /\b([01]?\d|2[0-3])([:.][0-5]\d|\s?h)\b/.test(t) || /\b(la|intre|pe la|dupa|inainte de)\s+([01]?\d|2[0-3])\b/.test(t);
 }
 
 export function clientPreparedReply(raw: string, messages: ConversationMessage[]): ClientReply | null {
