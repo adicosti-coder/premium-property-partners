@@ -7,6 +7,9 @@ import { ExternalLink, PhoneOff, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import ManualProspectingStats from "@/components/admin/ManualProspectingStats";
 import ManualConsentStats from "@/components/admin/ManualConsentStats";
+import ManualDailyIntake from "@/components/admin/ManualDailyIntake";
+import PublishedListingGains from "@/components/admin/PublishedListingGains";
+import ManualPublishList from "@/components/admin/ManualPublishList";
 
 type Row = {
   id: string;
@@ -49,6 +52,9 @@ export default function ManualProspectingPanel() {
     <div className="space-y-4">
       <ManualProspectingStats />
       <ManualConsentStats />
+      <ManualDailyIntake />
+      <PublishedListingGains />
+      <ManualPublishList />
       <div className="flex items-center justify-between gap-2">
         <div>
           <h3 className="text-lg font-semibold flex items-center gap-2">
