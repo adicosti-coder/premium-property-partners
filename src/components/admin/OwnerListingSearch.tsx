@@ -1,3 +1,4 @@
+import { SourceLink } from "@/components/admin/shared/SourceLink";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
@@ -1479,9 +1480,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                         NOU
                       </Badge>
                     )}
-                    <Badge variant="default" className="text-[10px] shrink-0">
-                      {listingPortal(l) || "platformă necunoscută"}
-                    </Badge>
+                    <SourceLink url={l.url} platform={listingPortal(l) || null} />
                     <Badge variant={ownerVerification(l) === "confirmed" ? "secondary" : "outline"} className="text-[10px] shrink-0">
                       {ownerVerification(l) === "confirmed" ? "Proprietar confirmat" : "De verificat"}
                     </Badge>

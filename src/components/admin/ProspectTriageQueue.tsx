@@ -1,3 +1,4 @@
+import { SourceLink } from "@/components/admin/shared/SourceLink";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -206,7 +207,7 @@ export default function ProspectTriageQueue() {
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <Badge variant="secondary" className="text-[10px]">{row.source_platform || "—"}</Badge>
+                        <SourceLink url={row.source_url} platform={row.source_platform} />
                         {row.prospect_type && (
                           <Badge variant="outline" className="text-[10px]">{row.prospect_type}</Badge>
                         )}
