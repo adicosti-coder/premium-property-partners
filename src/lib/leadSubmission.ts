@@ -36,12 +36,14 @@ export const leadInputSchema = z.object({
   simulation_data: z.unknown().optional(),
   /** When true, the phone is a sentinel (e.g. "-" / "PRECALC_NO_PHONE") and skipped from phone validation. */
   allowSentinelPhone: z.boolean().optional(),
+  /** Save via the submit-lead function, which returns leadId + yield-report token. */
+  viaServer: z.boolean().optional(),
 });
 
 export type LeadInput = z.infer<typeof leadInputSchema>;
 
 export type LeadSubmissionResult =
-  | { ok: true; duplicate: boolean }
+  | { ok: true; duplicate: boolean; leadId?: string; reportToken?: string }
   | { ok: false; reason: "validation"; errors: Record<string, string> }
   | { ok: false; reason: "network" | "unknown"; message: string };
 
@@ -66,6 +68,32 @@ export const submitLead = async (raw: LeadInput): Promise<LeadSubmissionResult> 
   if (!data.allowSentinelPhone || !SENTINEL_PHONES.has(phone)) {
     if (!isValidWhatsAppNumber(phone)) {
       return { ok: false, reason: "validation", errors: { whatsapp_number: "phone_invalid" } };
+    }
+  }
+
+  if (data.viaServer) {
+    try {
+      const { data: res, error } = await supabase.functions.invoke("submit-lead", {
+        body: {
+          name: data.name,
+          whatsapp_number: phone.replace(/\s/g, ""),
+          email: data.email || null,
+          message: data.message || null,
+          property_type: data.property_type,
+          property_area: data.property_area ?? 0,
+          source: data.source,
+          simulation_data: data.simulation_data ?? null,
+        },
+      });
+      if (error) {
+        reportError(error, { scope: `form:lead:${data.source}` });
+        return { ok: false, reason: "network", message: error.message };
+      }
+      const r = (res ?? {}) as { leadId?: string; reportToken?: string };
+      return { ok: true, duplicate: false, leadId: r.leadId, reportToken: r.reportToken };
+    } catch (err) {
+      reportError(err, { scope: `form:lead:${data.source}` });
+      return { ok: false, reason: "unknown", message: (err as Error)?.message ?? "unknown" };
     }
   }
 
