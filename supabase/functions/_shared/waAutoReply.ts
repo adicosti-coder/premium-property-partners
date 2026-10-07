@@ -295,9 +295,12 @@ const EXPLICIT_NO = /^nu\s*,?\s*(mult?umesc|mersi|nu doresc)?\s*[.!]?$/;
 const INTEREST_HINT =
   /oferta|pret|estimare|astept|aștept|vreau|doresc|interes|suna|sun[ăa]|vizion|apartament|camere|zona|administrare|hotel|vanzare|rezerv/;
 
-export function quickReplyText(raw: string): { kind: string; text: string } | null {
+export function quickReplyText(
+  raw: string,
+  opts?: { pendingConsent?: boolean },
+): { kind: string; text: string } | null {
   const t = stripDiacritics(raw);
-  const publishIntent = detectPublishIntent(raw);
+  const publishIntent = detectPublishIntent(raw, opts);
   if (publishIntent === "consent") return { kind: "publish_consent", text: PUBLISH_CONSENT_ACK };
   if (publishIntent === "revoke") return { kind: "publish_revoke", text: PUBLISH_REVOKE_ACK };
   if (EXPLICIT_NO.test(t.trim()) && !INTEREST_HINT.test(t)) {
@@ -337,8 +340,9 @@ export function quickReplyText(raw: string): { kind: string; text: string } | nu
 export function autoReplyText(
   raw: string,
   ctx: ProspectContext = null,
+  opts?: { pendingConsent?: boolean },
 ): { kind: string; text: string } | null {
-  const quick = quickReplyText(raw);
+  const quick = quickReplyText(raw, opts);
   if (quick && /^(publish_|quick_no)/.test(quick.kind)) return quick;
   // Răspunsurile de proprietar (vizionare la apartamentul lui, obiecții de
   // comision/preț) se aplică DOAR când expeditorul e legat de un anunț din
