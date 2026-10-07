@@ -1,4 +1,8 @@
 
+## Șablon acord proprietari (7 oct 2026)
+- [ ] Trimitere text identic la Meta pentru aprobare
+- [ ] Activare automată la retrimitere numai după aprobare + teste și deploy
+
 ## Corecție portofoliu cazare (5 sep 2026)
 - [x] Recalculat numărul real de unități de cazare: 14 (13 cu link Pynbooking direct, MARA pe Booking.com)
 - [x] Sincronizat DB `properties` (cazare) 1:1 cu sursa de adevăr `src/data/properties.ts`

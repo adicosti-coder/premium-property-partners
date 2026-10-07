@@ -7,7 +7,8 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { isExpressOptOut } from "../_shared/dncPolicy.ts";
 import { publishConsentRequestText } from "../_shared/waAutoReply.ts";
-import { resolveApprovedTemplate } from "../_shared/waPreferredTemplate.ts";
+import { preferredPublishConsentTemplate } from "../_shared/waPreferredTemplate.ts";
+import { WA_PUBLISH_CONSENT_TEMPLATE, consentPropertyLabel } from "../_shared/waPublishConsentTemplate.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -127,16 +128,13 @@ Deno.serve(async (req) => {
       results.push({ id: p.id, status: "already_queued" });
       continue;
     }
-    const tpl = await resolveApprovedTemplate(
-      Deno.env.get("WA_OUTBOUND_TEMPLATE") || "prospect_intro_premium_v3",
-      "ro",
-    );
+    const templateName = await preferredPublishConsentTemplate();
     const { error: qErr } = await supabase.from("wa_outbound_queue").insert({
       phone_normalized: phone,
       prospect_listing_id: p.id,
-      template_name: tpl.name,
+      template_name: templateName,
       template_language: "ro",
-      template_params: [],
+      template_params: templateName === WA_PUBLISH_CONSENT_TEMPLATE ? [consentPropertyLabel(p)] : [],
       status: "pending",
       priority: 5,
       source: "publish_consent_request",
