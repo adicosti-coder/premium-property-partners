@@ -66,3 +66,31 @@ test("apel cerut de client: subiect, apoi interval", () => {
   expect(clientPreparedReply("comision", [outbound("client_call_ask_topic")])?.kind).toBe("client_call_fee");
   expect(clientPreparedReply("preț", [outbound("client_call_ask_topic")])?.kind).toBe("client_call_price");
 });
+
+// ── Detectarea intervalului de apel: fără alerte false ──
+import { looksLikeCallInterval } from "./waAutoReply.ts";
+
+test.each([
+  "După prânz", "dimineața", "mâine", "Joi", "azi seara", "17:00", "la 5", "între 10 și 12", "17h", "oricând", "acum",
+])("recunoaște intervalul de apel: %s", (txt) => {
+  expect(looksLikeCallInterval(txt)).toBe(true);
+});
+
+test.each([
+  "De ce nu ajung anunțurile?", "Când mă sunați?", "Mâine?", "La ce oră?", "ok", "Mulțumesc", "2 camere",
+  "comision", "Sunt în oraș", "Da", "Vreau mai multe detalii", "",
+])("NU ia drept interval: %s", (txt) => {
+  expect(looksLikeCallInterval(txt)).toBe(false);
+});
+
+test("o întrebare după cererea de apel nu declanșează alerta", () => {
+  const msgs: ConversationMessage[] = [outbound("client_call_fee"), inbound("De ce nu ajung anunțurile?")];
+  expect(clientPreparedReply("De ce nu ajung anunțurile?", msgs)?.kind).not.toBe("client_call_noted");
+  const msgs2: ConversationMessage[] = [outbound("client_call_time"), inbound("ok")];
+  expect(clientPreparedReply("ok", msgs2)?.kind).not.toBe("client_call_noted");
+});
+
+test("un interval real după cererea de apel este notat", () => {
+  const msgs: ConversationMessage[] = [outbound("client_call_fee"), inbound("după prânz")];
+  expect(clientPreparedReply("după prânz", msgs)?.kind).toBe("client_call_noted");
+});
