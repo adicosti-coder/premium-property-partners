@@ -10,6 +10,7 @@ import ManualConsentStats from "@/components/admin/ManualConsentStats";
 import ManualDailyIntake from "@/components/admin/ManualDailyIntake";
 import PublishedListingGains from "@/components/admin/PublishedListingGains";
 import ManualPublishList from "@/components/admin/ManualPublishList";
+import AwaitingConsentTable from "@/components/admin/AwaitingConsentTable";
 
 type Row = {
   id: string;
@@ -54,6 +55,7 @@ export default function ManualProspectingPanel() {
       <ManualConsentStats />
       <ManualDailyIntake />
       <PublishedListingGains />
+      <AwaitingConsentTable />
       <ManualPublishList />
       <div className="flex items-center justify-between gap-2">
         <div>
