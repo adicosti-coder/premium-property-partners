@@ -368,9 +368,26 @@ Deno.serve(async (req) => {
             } catch (e) { console.error("[wa-webhook] client call notify failed:", e); }
           }
         }
+        // Răspunsurile pozitive simple („DA”, „De acord”, „ok”, 👍) contează ca
+        // acord de publicare doar pentru numerele cărora li s-a cerut acordul
+        // (au o linie în wa_publish_consents).
+        let pendingConsent = false;
+        if (outboundCount) {
+          try {
+            const { data: consentRow } = await supabase
+              .from("wa_publish_consents")
+              .select("id")
+              .eq("phone_normalized", from)
+              .limit(1)
+              .maybeSingle();
+            pendingConsent = !!consentRow;
+          } catch (e) {
+            console.error("[wa-webhook] pending consent check failed:", e);
+          }
+        }
         // Prima interacțiune → trimitem DIRECT textul fix de calificare (fără AI),
         // ca răspunsul să fie mereu exact cel aprobat.
-        const standardQuick = outboundCount ? autoReplyText(text, ownerCtx) : null;
+        const standardQuick = outboundCount ? autoReplyText(text, ownerCtx, { pendingConsent }) : null;
         const isSafetyReply = standardQuick && [
           "quick_no", "quick_stop", "publish_consent", "publish_revoke",
         ].includes(standardQuick.kind);
@@ -455,7 +472,7 @@ Deno.serve(async (req) => {
         // Acordul proprietarului pentru preluarea anunțului pe realtrust.ro
         // („DA PUBLIC”) sau retragerea acordului („RETRAG”) — are prioritate
         // față de orice alt răspuns automat și declanșează publicarea/retragerea.
-        const publishIntent = detectPublishIntent(text);
+        const publishIntent = detectPublishIntent(text, { pendingConsent });
         if (publishIntent) {
           quick = publishIntent === "consent"
             ? { kind: "publish_consent", text: PUBLISH_CONSENT_ACK }
