@@ -3,7 +3,8 @@ import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Inbox, Phone, Bot, Radar, ShieldCheck, FileText, Filter } from "lucide-react";
+import { Inbox, Phone, Bot, Radar, ShieldCheck, FileText, Filter, PhoneOff } from "lucide-react";
+import ManualProspectingPanel from "@/components/admin/ManualProspectingPanel";
 import ScraperLeads from "@/pages/ScraperLeads";
 import ProspectListings from "@/pages/ProspectListings";
 import ProspectManager from "@/components/admin/ProspectManager";
@@ -12,7 +13,7 @@ import { AgencyDetectionSettings } from "@/components/admin/AgencyDetectionSetti
 import OutreachTemplatesPanelB2C from "@/components/admin/outreach/OutreachTemplatesPanelB2C";
 import { useUnifiedPipelineFilters } from "./UnifiedPipelinePanel";
 
-const VALID_SUBTABS = ["leads", "hot", "templates", "bot", "status", "agency"] as const;
+const VALID_SUBTABS = ["leads", "hot", "manual", "templates", "bot", "status", "agency"] as const;
 type Subtab = (typeof VALID_SUBTABS)[number];
 const DEFAULT_SUBTAB: Subtab = "leads";
 
@@ -53,6 +54,7 @@ export default function ProspectPipelinePanel() {
     () => [
       { value: "leads", label: "Lead-uri Scorate", icon: Inbox },
       { value: "hot", label: "Hot Prospects (Call)", icon: Phone },
+      { value: "manual", label: "Prospectare Manuală (Fără Telefon)", icon: PhoneOff },
       { value: "templates", label: "Șabloane Outreach", icon: FileText },
       { value: "bot", label: "Configurare Bot", icon: Bot },
       { value: "status", label: "Status & Monitoring", icon: Radar },
@@ -104,6 +106,7 @@ export default function ProspectPipelinePanel() {
           const Content =
             t.value === "leads" ? <ScraperLeads embedded /> :
             t.value === "hot" ? <ProspectListings embedded /> :
+            t.value === "manual" ? <ManualProspectingPanel /> :
             t.value === "templates" ? <OutreachTemplatesPanelB2C /> :
             t.value === "bot" ? <ProspectManager /> :
             t.value === "status" ? <ScraperStatusDashboard /> :
