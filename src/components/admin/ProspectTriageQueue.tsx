@@ -1,3 +1,4 @@
+import { SourceLink } from "@/components/admin/shared/SourceLink";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
