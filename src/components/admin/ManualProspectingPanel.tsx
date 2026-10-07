@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ExternalLink, PhoneOff, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import ManualProspectingStats from "@/components/admin/ManualProspectingStats";
+import ManualConsentStats from "@/components/admin/ManualConsentStats";
 
 type Row = {
   id: string;
@@ -47,6 +48,7 @@ export default function ManualProspectingPanel() {
   return (
     <div className="space-y-4">
       <ManualProspectingStats />
+      <ManualConsentStats />
       <div className="flex items-center justify-between gap-2">
         <div>
           <h3 className="text-lg font-semibold flex items-center gap-2">
