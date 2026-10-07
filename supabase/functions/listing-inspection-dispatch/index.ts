@@ -25,14 +25,40 @@ Deno.serve(async (req) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
 
-  const { data: p } = await supabase.from("prospect_listings")
-    .select("id, title, description, zone, price, rooms, size, category, source_url")
-    .eq("id", prospectId).maybeSingle();
+  const SELECT = "id, title, description, zone, price, rooms, size, category, source_url, contact_phone, phone_normalized";
+  let { data: p } = await supabase.from("prospect_listings").select(SELECT).eq("id", prospectId).maybeSingle();
   if (!p) return json({ error: "not found" }, 404);
 
   const { data: existing } = await supabase.from("listing_inspections")
     .select("id, sent_at").eq("prospect_listing_id", p.id).maybeSingle();
   if (existing?.sent_at) return json({ skipped: "already_sent" });
+
+  // 0) Telefon obligatoriu: Andrei trebuie să poată cere acordul pe WhatsApp (mobil RO).
+  const mobile = (raw?: string | null) => {
+    let d = String(raw ?? "").replace(/\D/g, "");
+    if (d.startsWith("0040")) d = d.slice(2);
+    if (d.startsWith("40")) d = d.slice(2); else if (d.startsWith("0")) d = d.slice(1);
+    return /^7\d{8}$/.test(d) ? `+40${d}` : null;
+  };
+  let phone = mobile(p.phone_normalized) || mobile(p.contact_phone);
+  if (!phone && p.source_url) {
+    // Simulează „Arată telefonul” pe pagina originală (OLX/Storia/etc.).
+    await fetch(`${supabaseUrl}/functions/v1/prospect-recover-phone`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-webhook-secret": serviceKey },
+      body: JSON.stringify({ prospect_id: p.id }),
+    }).then((r) => r.text()).catch(() => null);
+    const again = await supabase.from("prospect_listings").select(SELECT).eq("id", p.id).maybeSingle();
+    if (again.data) p = again.data;
+    phone = mobile(p.phone_normalized) || mobile(p.contact_phone);
+  }
+  if (!phone) {
+    await supabase.from("listing_inspections").upsert({
+      prospect_listing_id: p.id, status: "no_phone",
+      error: "Fără telefon mobil extras — prospectare manuală", sent_at: null,
+    }, { onConflict: "prospect_listing_id" });
+    return json({ skipped: "no_phone" });
+  }
 
   // 1) Curățare + rescriere AI (apel intern; secretul de cron vine din trigger).
   const rw = await fetch(`${supabaseUrl}/functions/v1/rewrite-listing-for-web`, {
