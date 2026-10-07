@@ -8,8 +8,8 @@ export default function PublishedListingGains() {
     queryKey: ["published-listing-gains"],
     queryFn: async () => {
       const { data: props, error } = await (supabase.from("properties") as any)
-        .select("id, name, slug, created_at").not("migrated_from_prospect_id", "is", null)
-        .order("created_at", { ascending: false }).limit(100);
+        .select("id, name, slug, created_at").eq("is_active", true)
+        .order("created_at", { ascending: false }).limit(300);
       if (error) throw error;
       const list = (props ?? []) as any[];
       if (!list.length) return [] as Row[];

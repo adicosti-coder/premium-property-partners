@@ -1,6 +1,7 @@
 // admin-manual-publish — un admin publică manual un anunț pe realtrust.ro când „DA” nu vine.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireAdmin } from "../_shared/adminAuth.ts";
+import { sendWaText, ADMIN_INSPECTION_NUMBER } from "../_shared/listingInspection.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,5 +34,12 @@ Deno.serve(async (req) => {
     body: JSON.stringify({ prospect_id: prospectId, admin_override: true, triggered_by: "admin_manual" }),
   });
   const out = await r.json().catch(() => ({}));
+  if (r.ok && (out as any)?.published) {
+    const { data: p } = await sb.from("prospect_listings").select("title, category").eq("id", prospectId).maybeSingle();
+    const link = (out as any)?.url || (out as any)?.slug ? `https://realtrust.ro/proprietate/${(out as any).slug}` : "";
+    await sendWaText(ADMIN_INSPECTION_NUMBER,
+      `ℹ️ Anunț publicat MANUAL pe realtrust.ro (acord obținut altfel decât „DA” pe WhatsApp):\n${p?.title ?? "Fără titlu"} · ${p?.category ?? "—"}${link ? `\n${(out as any).url || link}` : ""}`,
+    ).catch(() => null);
+  }
   return json(out, r.ok ? 200 : 502);
 });
