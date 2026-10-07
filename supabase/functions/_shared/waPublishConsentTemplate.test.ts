@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 import { publishConsentRequestText } from "./waAutoReply.ts";
 import { WA_PUBLISH_CONSENT_BODY, WA_PUBLISH_CONSENT_TEMPLATE, consentPropertyLabel, isApprovedConsentTemplate } from "./waPublishConsentTemplate.ts";
 
@@ -19,6 +19,6 @@ describe("Owner consent template", () => {
   it("cleans property parameters and provides a zone fallback", () => {
     expect(consentPropertyLabel({ title: "Apartament\n  2 camere" })).toBe("Apartament 2 camere");
     expect(consentPropertyLabel({ zone: "Fabric" })).toBe("apartamentul din zona Fabric");
-    expect(consentPropertyLabel()).toBe("proprietății dumneavoavoastră".replace("dumneavoavoastră", "dumneavoastră"));
+    expect(consentPropertyLabel()).toBe("proprietății dumneavoastră");
   });
 });
