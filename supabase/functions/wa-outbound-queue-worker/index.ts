@@ -6,7 +6,8 @@ import { requireAdmin } from "../_shared/adminAuth.ts";
 import { isInternalCall } from "../_shared/cronAuth.ts";
 import { fetchWithRetry } from "../_shared/fetchRetry.ts";
 import { drainMakeRelayDlq, relayToMake } from "../_shared/makeRelay.ts";
-import { preferredIntroTemplate } from "../_shared/waPreferredTemplate.ts";
+import { preferredIntroTemplate, preferredPublishConsentTemplate } from "../_shared/waPreferredTemplate.ts";
+import { WA_PUBLISH_CONSENT_TEMPLATE, consentPropertyLabel } from "../_shared/waPublishConsentTemplate.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -393,17 +394,22 @@ Deno.serve(async (req) => {
 
       const selectedTemplate = item.source === "followup" || item.source === "followup2"
         ? item.template_name
-        : await preferredIntroTemplate();
+        : item.source === "publish_consent_request"
+          ? await preferredPublishConsentTemplate()
+          : await preferredIntroTemplate();
       let templateParams = Array.isArray(item.template_params) ? item.template_params : [];
-      if (selectedTemplate === "prospect_intro_premium_v6" && templateParams.length === 0) {
+      if (selectedTemplate === WA_PUBLISH_CONSENT_TEMPLATE ||
+        (selectedTemplate === "prospect_intro_premium_v6" && (templateParams.length === 0 || item.source === "publish_consent_request"))) {
         const { data: prospect } = item.prospect_listing_id
           ? await supabase
             .from("prospect_listings")
-            .select("zone")
+            .select("title, zone")
             .eq("id", item.prospect_listing_id)
             .maybeSingle()
           : { data: null };
-        templateParams = [String(prospect?.zone || "Timișoara").trim() || "Timișoara"];
+        templateParams = selectedTemplate === WA_PUBLISH_CONSENT_TEMPLATE
+          ? [consentPropertyLabel(prospect)]
+          : [String(prospect?.zone || "Timișoara").trim() || "Timișoara"];
       }
 
       const send = await fetchWithRetry(
