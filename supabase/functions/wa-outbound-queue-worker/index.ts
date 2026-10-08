@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     if (!auth.ok) return auth.response!;
   }
 
-  let body: { batch_size?: number; queue_id?: string; force?: boolean } = {};
+  let body: { batch_size?: number; queue_id?: string; force?: boolean; test_single?: boolean } = {};
   try {
     body = await req.json();
   } catch {
@@ -261,6 +261,9 @@ Deno.serve(async (req) => {
   }
 
   // ── Curățare: mesajele necontactate pentru anunțuri mai vechi de 10 zile se anulează ──
+  const testSingle = body.test_single === true;
+  const trace: { step: string; ok: boolean; detail: string }[] = [];
+  const T = (step: string, ok: boolean, detail: string) => { if (testSingle) trace.push({ step, ok, detail }); };
   if (!body.queue_id) {
     const cutoff = new Date(Date.now() - 10 * 86_400_000).toISOString();
     const { data: stale } = await supabase
@@ -305,9 +308,10 @@ Deno.serve(async (req) => {
   const queue = (candidates ?? [])
     .map((r: any) => ({ r, k: rank(r) }))
     .sort((a, b) => b.k.fresh - a.k.fresh || b.k.pri - a.k.pri || b.k.score - a.k.score || b.k.created - a.k.created)
-    .slice(0, body.queue_id ? 1 : allowance)
+    .slice(0, body.queue_id || testSingle ? 1 : allowance)
     .map(({ r }) => r);
-  if (!queue.length) return json({ ok: true, processed: 0 });
+  if (!queue.length) return json({ ok: true, processed: 0, test_single: testSingle, trace: [{ step: "Selectare anunț", ok: false, detail: "Niciun mesaj eligibil în coadă acum" }] });
+  if (testSingle) T("Selectare anunț", true, `Ales ${queue[0].id} · tel ${String(queue[0].phone_normalized).slice(0, 6)}*** · sursă ${queue[0].source ?? "—"}`);
 
   // ── Lock global: o singură rulare a cozii odată (anti-execuție paralelă) ──
   const LOCK_SCOPE = "wa-outbound-queue-worker";
@@ -321,7 +325,7 @@ Deno.serve(async (req) => {
     const { data: lockRow } = await supabase.from("request_idempotency")
       .select("expires_at").eq("scope", LOCK_SCOPE).eq("key", LOCK_KEY).maybeSingle();
     const stale = !lockRow || new Date(lockRow.expires_at).getTime() < Date.now();
-    if (!stale) return json({ ok: true, processed: 0, skipped: "already_running" });
+    if (!stale) return json({ ok: true, processed: 0, skipped: "already_running", trace: [...trace, { step: "Lock global", ok: false, detail: "O altă rulare e în curs — oprit" }] });
     const { data: retaken } = await supabase.from("request_idempotency")
       .update({ expires_at: lockExpires })
       .eq("scope", LOCK_SCOPE).eq("key", LOCK_KEY).eq("expires_at", lockRow.expires_at)
@@ -332,6 +336,7 @@ Deno.serve(async (req) => {
     await supabase.from("request_idempotency").delete()
       .eq("scope", LOCK_SCOPE).eq("key", LOCK_KEY).eq("expires_at", lockExpires);
   };
+  T("Lock global", true, "Obținut (nicio altă rulare în paralel)");
   const sessionPhones = new Set<string>();
 
   const results: Record<string, unknown>[] = [];
@@ -349,6 +354,7 @@ Deno.serve(async (req) => {
       .eq("phone_normalized", item.phone_normalized)
       .maybeSingle();
 
+    T("Listă excludere (DNC)", !dnc, dnc ? `Blocat: ${dnc.label}` : "Numărul nu e în listă");
     if (dnc) {
       await supabase
         .from("wa_outbound_queue")
@@ -374,6 +380,7 @@ Deno.serve(async (req) => {
       const stopped = priorConversations?.some((conversation) =>
         ["closed", "handoff", "opted_out"].includes(String(conversation.status || ""))
       );
+      T("Interacțiune anterioară / STOP", !(hadPriorInteraction || stopped), stopped ? "Conversație închisă/dezabonată" : hadPriorInteraction ? "Numărul a scris deja" : "Fără interacțiune anterioară");
       if (hadPriorInteraction || stopped) {
         await supabase
           .from("wa_outbound_queue")
@@ -391,6 +398,7 @@ Deno.serve(async (req) => {
     }
 
     // ── Lock per număr în aceeași sesiune: max 1 mesaj / număr / rulare ──────
+    T("Lock per număr în sesiune", !sessionPhones.has(item.phone_normalized), sessionPhones.has(item.phone_normalized) ? "Număr deja procesat în rulare" : "Primul mesaj către număr în această rulare");
     if (sessionPhones.has(item.phone_normalized)) {
       results.push({ id: item.id, status: "deferred", reason: "same_phone_this_session" });
       continue;
@@ -412,6 +420,8 @@ Deno.serve(async (req) => {
           .eq("status", "sending"),
         supabase.from("wa_conversations").select("id").eq("phone_normalized", item.phone_normalized),
       ]);
+      T("Coadă: trimis în ultimele 72h", (recentCount ?? 0) === 0, `${recentCount ?? 0} mesaje trimise/răspunse către număr`);
+      T("Coadă: în curs de trimitere", (inFlight ?? 0) === 0, `${inFlight ?? 0} mesaje „sending” către număr`);
       alreadySent = (recentCount ?? 0) > 0 || (inFlight ?? 0) > 0;
       if (!alreadySent && convs?.length) {
         // Verificare și pe mesajele efectiv livrate către Meta în ultimele 24h.
@@ -422,10 +432,13 @@ Deno.serve(async (req) => {
           .not("wa_message_id", "is", null)
           .gte("created_at", since24h);
         alreadySent = (msgCount ?? 0) > 0;
+        T("WhatsApp: livrat în ultimele 24h", !alreadySent, `${msgCount ?? 0} mesaje confirmate de Meta`);
       }
     }
 
+    if (isFollowup) T("Deduplicare prim contact", true, "Reamintire — exceptată intenționat");
     if (alreadySent) {
+      T("Rezultat deduplicare", false, "Duplicat → marcat „Trimis”, nu se retrimite");
       await supabase
         .from("wa_outbound_queue")
         .update({
@@ -657,5 +670,5 @@ Deno.serve(async (req) => {
   }
 
   await releaseLock();
-  return json({ ok: true, processed: results.length, results, make_relay_retry: makeRelayRetry });
+  return json({ ok: true, processed: results.length, results, make_relay_retry: makeRelayRetry, test_single: testSingle, trace });
 });
