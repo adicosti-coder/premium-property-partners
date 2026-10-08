@@ -11,7 +11,7 @@
 //
 // Internal-only: authenticated with the vault cron secret or the service role key.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { isInternalCall } from "../_shared/cronAuth.ts";
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { fetchWithRetry } from "../_shared/fetchRetry.ts";
 import { logLeadEvent } from "../_shared/leadEvents.ts";
 import { sendTeamEmail } from "../_shared/teamEmail.ts";
@@ -55,7 +55,8 @@ interface LeadRecord {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-  if (!(await isInternalCall(req))) return json({ error: "Unauthorized" }, 401);
+  const denied = await requireInternalOrAdmin(req, corsHeaders);
+  if (denied) return denied;
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -63,14 +64,26 @@ Deno.serve(async (req) => {
 
   try {
     const payload = await req.json();
-    const record: LeadRecord = payload.record ?? payload;
+    let record: LeadRecord = payload.record ?? payload;
+    // Re-sincronizare manuală din Admin: { lead_id, manual: true } → citim lead-ul din DB.
+    const isManual = !!payload?.manual && typeof payload?.lead_id === "string";
+    if (isManual) {
+      const { data: row, error: rowErr } = await admin.from("leads").select("*").eq("id", payload.lead_id).maybeSingle();
+      if (rowErr || !row) return json({ error: "Lead inexistent" }, 404);
+      record = row as LeadRecord;
+    }
     if (!record?.id) return json({ error: "Missing lead record" }, 400);
 
     const sim = (typeof record.simulation_data === "string"
       ? JSON.parse(record.simulation_data || "{}")
       : record.simulation_data ?? {}) as Record<string, unknown>;
 
-    const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim().slice(0, 200) : null);
+    const str = (v: unknown) =>
+      typeof v === "string" && v.trim() ? v.trim().slice(0, 200)
+      : typeof v === "number" && Number.isFinite(v) ? String(v) : null;
+    // CRM-ul respinge null: câmpurile text lipsă pleacă "" , cele numerice 0.
+    const s = (v: unknown) => str(v) ?? "";
+    const n = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : 0);
 
     const phoneRaw = (record.whatsapp_number || "").trim();
     const phoneValid = !SENTINELS.has(phoneRaw) && digits(phoneRaw).length >= 9;
@@ -95,23 +108,23 @@ Deno.serve(async (req) => {
       status_code: "nou_necontactat",
       lead: {
         id: record.id,
-        name: record.name,
-        phone: phoneValid ? phoneRaw : null,
+        name: s(record.name) || "Client",
+        phone: phoneValid ? phoneRaw : "",
         phone_valid: phoneValid,
-        whatsapp_link: waLink,
-        email: record.email ?? null,
-        neighbourhood: str(sim.zone_label) ?? str(sim.zona) ?? str(sim.zone) ?? null,
-        rooms: str(sim.rooms) ?? str(sim.camere) ?? null,
-        property_type: record.property_type ?? null,
-        property_area: record.property_area ?? null,
-        message: record.message ?? null,
-        source: record.source ?? "website",
-        lead_score: record.lead_score ?? null,
-        lead_grade: record.lead_grade ?? null,
-        estimated_net_profit: record.calculated_net_profit ?? null,
+        whatsapp_link: waLink ?? "",
+        email: s(record.email),
+        neighbourhood: s(sim.zone_label) || s(sim.zona) || s(sim.zone),
+        rooms: s(sim.rooms) || s(sim.camere),
+        property_type: s(record.property_type),
+        property_area: n(record.property_area),
+        message: (record.message ?? "").slice(0, 2000),
+        source: s(record.source) || "website",
+        lead_score: n(record.lead_score),
+        lead_grade: s(record.lead_grade),
+        estimated_net_profit: n(record.calculated_net_profit),
         created_at: record.created_at,
       },
-      attribution: utm,
+      attribution: Object.fromEntries(Object.entries(utm).map(([k, v]) => [k, v ?? ""])),
     };
 
     // ---- 1. CRM webhook -----------------------------------------------------
@@ -138,7 +151,7 @@ Deno.serve(async (req) => {
         { label: "crm-lead-sync", maxAttempts: 3 },
       );
       const took = Date.now() - t0;
-      const httpStatus = res.response?.status;
+      const httpStatus = res.status || undefined;
       if (res.ok) {
         crmStatus = "synced";
       } else if (httpStatus === 410 || httpStatus === 404) {
@@ -148,19 +161,22 @@ Deno.serve(async (req) => {
         crmError = `CRM webhook inactiv (HTTP ${httpStatus}) — lead păstrat în Lead Manager`;
       } else {
         crmStatus = "failed";
-        crmError = `CRM webhook ${httpStatus ?? "network"}`.slice(0, 300);
+        const body = (res.body || res.error || "").toString().trim();
+        crmError = (httpStatus
+          ? `CRM HTTP ${httpStatus}${body ? `: ${body}` : ""}${/queue is full/i.test(body) ? " (coada scenariului Make este plină — pornește/golește scenariul)" : ""}`
+          : `CRM eroare de rețea: ${body || "fără răspuns"}`).slice(0, 300);
       }
       await logLeadEvent({
         leadId: record.id,
         type: isRetry ? "crm_webhook_retry" : "crm_webhook",
         status: res.ok ? "success" : "error",
         message: res.ok
-          ? `Webhook CRM livrat (HTTP ${res.response?.status ?? 200})`
+          ? `Webhook CRM livrat (HTTP ${res.status || 200})`
           : crmError,
         durationMs: took,
         attempt: attemptNo,
         actor: "crm-lead-sync",
-        metadata: { http_status: res.response?.status ?? null, is_retry: isRetry },
+        metadata: { http_status: res.status || null, is_retry: isRetry, manual: isManual },
       }, admin);
     } else {
       crmError = "CRM_WEBHOOK_URL not configured";
@@ -204,6 +220,7 @@ Deno.serve(async (req) => {
         .limit(1);
       if (recent?.length) skipEmailReason = "cooldown_7d_same_phone";
     }
+    if (isManual && !skipEmailReason) skipEmailReason = "manual_resync";
     if (skipEmailReason) {
       emailStored = true; // nu e eșec — nu declanșa retry din cauza e-mailului
       await logLeadEvent({
@@ -278,6 +295,16 @@ Deno.serve(async (req) => {
     // row in `failed`, so the `retry-failed-crm-syncs` cron picks it up again
     // with exponential backoff (max 5 attempts).
     const transientFail = crmStatus === "failed" || (!emailSent && !emailStored);
+    if (isManual) {
+      await admin.from("leads").update({
+        crm_sync_status: crmStatus,
+        crm_synced_at: crmStatus === "synced" ? new Date().toISOString() : null,
+        crm_sync_error: crmError,
+        crm_next_retry_at: crmStatus === "failed" ? new Date(Date.now() + 3 * 60_000).toISOString() : null,
+        ...(crmStatus === "synced" ? { crm_sync_attempts: 0 } : {}),
+      }).eq("id", record.id);
+      return json({ ok: crmStatus === "synced", crm: crmStatus, error: crmError });
+    }
     const attempts = Number(isRetry ? (record as { crm_sync_attempts?: number }).crm_sync_attempts ?? 0 : 0);
 
     const update: Record<string, unknown> = {
