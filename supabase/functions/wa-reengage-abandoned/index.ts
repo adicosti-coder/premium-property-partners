@@ -11,6 +11,7 @@ import { WA_PHONE_NUMBER_ID, WA_API_VERSION, waToken } from "../_shared/waConfig
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { relayToMake } from "../_shared/makeRelay.ts";
 import { buildReengageMessage, loadProspectContext } from "../_shared/waAutoReply.ts";
+import { phoneVariants, releasePhoneSend, reservePhoneSend, toWaDigits } from "../_shared/waPhone.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -91,7 +92,9 @@ Deno.serve(async (req) => {
     if (results.length >= limit) break;
     if (c.status === "closed" || c.status === "opted_out") { skipped++; continue; }
 
-    const digits = String(c.phone_normalized || "").replace(/\D/g, "");
+    const digits = toWaDigits(c.phone_normalized) ?? "";
+    const variants = phoneVariants(c.phone_normalized);
+    if (!digits) { results.push({ conversation_id: c.id, skipped: "invalid_phone" }); skipped++; continue; }
     // Numerele interne (administrare / numerele RealTrust) nu primesc niciodată
     // mesaje de prospectare sau recontactare.
     if (isInternalWaNumber(digits)) {
@@ -104,7 +107,7 @@ Deno.serve(async (req) => {
     const { data: dnc } = await supabase
       .from("wa_dnc_list")
       .select("id")
-      .in("phone_normalized", [`+${digits}`, digits])
+      .in("phone_normalized", variants)
       .limit(1)
       .maybeSingle();
     if (dnc) { results.push({ conversation_id: c.id, skipped: "dnc" }); skipped++; continue; }
@@ -127,7 +130,7 @@ Deno.serve(async (req) => {
     const { data: prospect } = await supabase
       .from("prospect_listings")
       .select("id, do_not_call, do_not_call_reason")
-      .eq("phone_normalized", c.phone_normalized)
+      .in("phone_normalized", variants)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -162,6 +165,11 @@ Deno.serve(async (req) => {
       continue;
     }
 
+    // Rezervare ÎNAINTE de apelul Meta: max 1 recontactare / număr / 7 zile,
+    // indiferent de câte rulări pornesc în paralel.
+    const reserved = await reservePhoneSend(supabase, digits, "reengage", 7 * 24 * 3600 * 1000, { conversation_id: c.id });
+    if (!reserved) { results.push({ conversation_id: c.id, skipped: "already_reserved" }); skipped++; continue; }
+
     const tplName = null as string | null;
     const meta = await sendToMeta({
       messaging_product: "whatsapp",
@@ -170,6 +178,7 @@ Deno.serve(async (req) => {
       text: { preview_url: false, body: text },
     });
     const waMsgId = meta.body?.messages?.[0]?.id ?? null;
+    if (!meta.ok && meta.error === "missing_meta_token") await releasePhoneSend(supabase, digits, "reengage");
 
     await supabase.from("wa_messages").insert({
       conversation_id: c.id,

@@ -8,6 +8,7 @@ import { isInternalCall } from "../_shared/cronAuth.ts";
 import { fetchWithRetry } from "../_shared/fetchRetry.ts";
 import { drainMakeRelayDlq, relayToMake } from "../_shared/makeRelay.ts";
 import { preferredIntroTemplate, preferredPublishConsentTemplate } from "../_shared/waPreferredTemplate.ts";
+import { canonicalWaPhone, markPhoneSent, phoneVariants, releasePhoneSend, reservePhoneSend, toWaDigits } from "../_shared/waPhone.ts";
 import { WA_PUBLISH_CONSENT_TEMPLATE, consentPropertyLabel } from "../_shared/waPublishConsentTemplate.ts";
 
 const corsHeaders = {
@@ -48,18 +49,20 @@ Deno.serve(async (req) => {
   const internalSecret = Deno.env.get("WA_ANDREI_INTERNAL_SECRET") || "";
   const supabase = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
 
-  // ── Deblocare: mesaje rămase „în trimitere” după un timeout de funcție ─────
-  // Fără asta, rândul rămâne blocat pentru totdeauna și proprietarul nu e contactat.
+  // ── Mesaje rămase „în trimitere” după un timeout de funcție ────────────────
+  // NU le mai repunem automat în coadă: apelul către Meta poate să fi plecat
+  // deja, iar retrimiterea ar produce exact mesajul duplicat. Le marcăm
+  // „eșuat — verifică manual”; din Admin se pot retrimite conștient.
   try {
     const staleBefore = new Date(Date.now() - 15 * 60_000).toISOString();
     const { data: unstuck } = await supabase
       .from("wa_outbound_queue")
-      .update({ status: "pending", last_error: "reluat: trimitere întreruptă" })
+      .update({ status: "failed", last_error: "trimitere întreruptă — posibil trimis, nu se retrimite automat" })
       .eq("status", "sending")
       .lt("updated_at", staleBefore)
       .select("id");
     if (unstuck?.length) {
-      console.warn(`[wa-outbound-worker] reset ${unstuck.length} stuck 'sending' rows`);
+      console.warn(`[wa-outbound-worker] ${unstuck.length} stuck 'sending' rows → failed (no auto-resend)`);
     }
   } catch (e) {
     console.error("[wa-outbound-worker] stuck reset failed:", e);
@@ -329,7 +332,7 @@ Deno.serve(async (req) => {
     if (!stale) return json({ ok: true, processed: 0, skipped: "already_running", trace: [...trace, { step: "Lock global", ok: false, detail: "O altă rulare e în curs — oprit" }] });
     const { data: retaken } = await supabase.from("request_idempotency")
       .update({ expires_at: lockExpires })
-      .eq("scope", LOCK_SCOPE).eq("key", LOCK_KEY).eq("expires_at", lockRow.expires_at)
+      .eq("scope", LOCK_SCOPE).eq("key", LOCK_KEY).eq("expires_at", lockRow?.expires_at ?? "")
       .select("key");
     if (!retaken?.length) return json({ ok: true, processed: 0, skipped: "already_running" });
   }
@@ -348,14 +351,32 @@ Deno.serve(async (req) => {
   const TIME_BUDGET_MS = 40_000;
 
   for (const [idx, item] of queue.entries()) {
+    // ── Normalizare unică E.164: "0733…", "+40733…", "40733…" = același număr ──
+    const rawPhone = item.phone_normalized;
+    const canon = canonicalWaPhone(rawPhone);
+    const phoneDigits = toWaDigits(rawPhone);
+    const variants = phoneVariants(rawPhone);
+    T("Normalizare număr", !!canon, canon ? `${String(rawPhone)} → ${phoneDigits}` : `Număr invalid: ${String(rawPhone)}`);
+    if (!canon || !phoneDigits) {
+      await supabase.from("wa_outbound_queue")
+        .update({ status: "cancelled", last_error: "număr de telefon invalid (nu poate fi normalizat)" })
+        .eq("id", item.id).in("status", ["pending", "failed"]);
+      results.push({ id: item.id, status: "invalid_phone" });
+      continue;
+    }
+    if (canon !== rawPhone) {
+      await supabase.from("wa_outbound_queue").update({ phone_normalized: canon }).eq("id", item.id);
+      item.phone_normalized = canon;
+    }
     // ── Listă excludere (DNC / agenții / refuzuri) ───────────────────────────
     const { data: dnc } = await supabase
       .from("wa_dnc_list")
       .select("reason, label")
-      .eq("phone_normalized", item.phone_normalized)
-      .maybeSingle();
+      .in("phone_normalized", variants)
+        .limit(1)
+        .maybeSingle();
 
-    const internalNo = isInternalWaNumber(item.phone_normalized);
+    const internalNo = isInternalWaNumber(phoneDigits);
     T("Listă excludere (DNC)", !dnc && !internalNo, internalNo ? "Blocat: număr intern RealTrust" : dnc ? `Blocat: ${dnc.label}` : "Numărul nu e în listă");
     if (dnc || internalNo) {
       await supabase
@@ -377,7 +398,7 @@ Deno.serve(async (req) => {
       const { data: priorConversations } = await supabase
         .from("wa_conversations")
         .select("last_inbound_at, status")
-        .eq("phone_normalized", item.phone_normalized);
+        .in("phone_normalized", variants);
       const hadPriorInteraction = priorConversations?.some((conversation) => conversation.last_inbound_at);
       const stopped = priorConversations?.some((conversation) =>
         ["closed", "handoff", "opted_out"].includes(String(conversation.status || ""))
@@ -400,12 +421,12 @@ Deno.serve(async (req) => {
     }
 
     // ── Lock per număr în aceeași sesiune: max 1 mesaj / număr / rulare ──────
-    T("Lock per număr în sesiune", !sessionPhones.has(item.phone_normalized), sessionPhones.has(item.phone_normalized) ? "Număr deja procesat în rulare" : "Primul mesaj către număr în această rulare");
-    if (sessionPhones.has(item.phone_normalized)) {
+    T("Lock per număr în sesiune", !sessionPhones.has(phoneDigits), sessionPhones.has(phoneDigits) ? "Număr deja procesat în rulare" : "Primul mesaj către număr în această rulare");
+    if (sessionPhones.has(phoneDigits)) {
       results.push({ id: item.id, status: "deferred", reason: "same_phone_this_session" });
       continue;
     }
-    sessionPhones.add(item.phone_normalized);
+    sessionPhones.add(phoneDigits);
 
     // ── Deduplicare: prim contact deja trimis către același număr ────────────
     // Follow-up-urile sunt intenționat un al doilea mesaj, deci sunt exceptate.
@@ -415,12 +436,12 @@ Deno.serve(async (req) => {
       const since24h = new Date(Date.now() - 24 * 3_600_000).toISOString();
       const [{ count: recentCount }, { count: inFlight }, { data: convs }] = await Promise.all([
         supabase.from("wa_outbound_queue").select("id", { count: "exact", head: true })
-          .eq("phone_normalized", item.phone_normalized).neq("id", item.id)
+          .in("phone_normalized", variants).neq("id", item.id)
           .in("status", ["sent", "replied"]).gte("sent_at", dedupSince),
         supabase.from("wa_outbound_queue").select("id", { count: "exact", head: true })
-          .eq("phone_normalized", item.phone_normalized).neq("id", item.id)
+          .in("phone_normalized", variants).neq("id", item.id)
           .eq("status", "sending"),
-        supabase.from("wa_conversations").select("id").eq("phone_normalized", item.phone_normalized),
+        supabase.from("wa_conversations").select("id").in("phone_normalized", variants),
       ]);
       T("Coadă: trimis în ultimele 72h", (recentCount ?? 0) === 0, `${recentCount ?? 0} mesaje trimise/răspunse către număr`);
       T("Coadă: în curs de trimitere", (inFlight ?? 0) === 0, `${inFlight ?? 0} mesaje „sending” către număr`);
@@ -475,6 +496,22 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (!claimed) continue;
 
+    // ── Rezervare număr ÎNAINTE de apelul către Meta ─────────────────────────
+    // Orice altă rulare (paralelă sau ulterioară) vede imediat că numărul e
+    // „în curs de trimitere / trimis” și nu mai trimite, chiar dacă
+    // confirmarea Meta întârzie. Reamintirile au propria cheie.
+    const reserveKind = isFollowup ? `queue-${item.source}` : "queue-first-contact";
+    const reserved = await reservePhoneSend(supabase, phoneDigits, reserveKind, 23 * 3_600_000, { queue_id: item.id });
+    T("Rezervare număr înainte de trimitere", reserved, reserved ? "Număr marcat „în curs de trimitere”" : "Număr deja rezervat de altă trimitere în ultimele 23h");
+    if (!reserved) {
+      await supabase.from("wa_outbound_queue")
+        .update({ status: "sent", last_error: "duplicat: număr deja în curs de trimitere / trimis — nu se retrimite" })
+        .eq("id", item.id).eq("status", "sending");
+      results.push({ id: item.id, status: "skipped_duplicate_reserved" });
+      continue;
+    }
+    let apiCalled = false;
+
 
     try {
       // Conversație (creează sau refolosește)
@@ -518,6 +555,7 @@ Deno.serve(async (req) => {
           : [String(prospect?.zone || "Timișoara").trim() || "Timișoara"];
       }
 
+      apiCalled = true;
       const send = await fetchWithRetry(
         `${supabaseUrl}/functions/v1/wa-andrei-send`,
         {
@@ -537,12 +575,14 @@ Deno.serve(async (req) => {
             template_params: templateParams,
           }),
         },
-        { label: "wa-outbound-worker", maxAttempts: 3, timeoutMs: 20_000 },
+        // O singură încercare: o reîncercare după timeout poate trimite de două ori.
+        { label: "wa-outbound-worker", maxAttempts: 1, timeoutMs: 25_000 },
       );
 
       const attempts = (item.attempts ?? 0) + 1;
 
       if (send.ok) {
+        await markPhoneSent(supabase, phoneDigits, reserveKind, { queue_id: item.id });
         let waMessageId: string | null = null;
         try {
           waMessageId = JSON.parse(send.body || "{}")?.wa_message_id ?? null;
@@ -590,6 +630,16 @@ Deno.serve(async (req) => {
         results.push({ id: item.id, status: "sent" });
       } else {
         const err = (send.error ?? `http_${send.status}`).slice(0, 500);
+        // Fără răspuns (timeout/rețea) = nu știm dacă a plecat → nu retrimitem automat.
+        if (send.status === 0) {
+          await supabase.from("wa_outbound_queue")
+            .update({ status: "failed", last_error: `fără răspuns de la WhatsApp — posibil trimis, nu se retrimite automat (${err})`.slice(0, 500), conversation_id: conversationId })
+            .eq("id", item.id);
+          results.push({ id: item.id, status: "failed_uncertain", error: err });
+          continue;
+        }
+        // Meta a respins clar mesajul → nimic nu a plecat, eliberăm rezervarea.
+        await releasePhoneSend(supabase, phoneDigits, reserveKind);
         // Eroarea 132001 = șablonul nu există la Meta; reîncercarea nu ajută.
         const permanent = /132001|does not exist in the translation|Template name does not exist|http_404/i.test(err);
         const exhausted = permanent || attempts >= MAX_ATTEMPTS;
@@ -659,6 +709,15 @@ Deno.serve(async (req) => {
       const attempts = (item.attempts ?? 0) + 1;
       const exhausted = attempts >= MAX_ATTEMPTS;
       console.error(`wa-outbound-queue item ${item.id} failed:`, e);
+      if (apiCalled) {
+        // Eroare după apelul către Meta: nu știm sigur dacă a plecat → fără retrimitere automată.
+        await supabase.from("wa_outbound_queue")
+          .update({ status: "failed", last_error: `eroare după trimitere — posibil trimis, nu se retrimite automat: ${String(e)}`.slice(0, 500) })
+          .eq("id", item.id);
+        results.push({ id: item.id, status: "failed_uncertain", error: String(e) });
+        continue;
+      }
+      await releasePhoneSend(supabase, phoneDigits, reserveKind);
       await supabase
         .from("wa_outbound_queue")
         .update({

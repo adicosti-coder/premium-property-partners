@@ -6,6 +6,7 @@ import { isInternalWaNumber } from "../_shared/waInternalNumbers.ts";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { isInternalCall } from "../_shared/cronAuth.ts";
 import { resolveApprovedTemplate } from "../_shared/waPreferredTemplate.ts";
+import { canonicalWaPhone, phoneVariants } from "../_shared/waPhone.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -127,14 +128,16 @@ Deno.serve(async (req) => {
 
     for (const item of candidates) {
       if (queued >= maxPerRun) break;
-      const phone = item.phone_normalized as string | null;
+      const phone = canonicalWaPhone(item.phone_normalized as string | null);
       if (!phone) continue;
+      const variants = phoneVariants(phone);
 
       // 1. Lista de excludere (DNC / agenții / refuzuri)
       const { data: dnc } = await supabase
         .from("wa_dnc_list")
         .select("id")
-        .eq("phone_normalized", phone)
+        .in("phone_normalized", variants)
+        .limit(1)
         .maybeSingle();
       if (dnc || isInternalWaNumber(phone)) {
         results.push({ phone, stage: stage.source, skipped: "dnc" });
@@ -146,7 +149,7 @@ Deno.serve(async (req) => {
       const { data: convs } = await supabase
         .from("wa_conversations")
         .select("last_inbound_at, status")
-        .eq("phone_normalized", phone);
+        .in("phone_normalized", variants);
       if (convs?.some((c) => c.last_inbound_at)) {
         results.push({ phone, stage: stage.source, skipped: "replied" });
         continue;
@@ -161,7 +164,7 @@ Deno.serve(async (req) => {
       const { count: recent } = await supabase
         .from("wa_outbound_queue")
         .select("id", { count: "exact", head: true })
-        .eq("phone_normalized", phone)
+        .in("phone_normalized", variants)
         .in("status", ["sent", "pending", "processing"])
         .gte("created_at", new Date(Date.now() - 24 * 3_600_000).toISOString());
       if ((recent ?? 0) > 0) {
@@ -173,7 +176,7 @@ Deno.serve(async (req) => {
       const { count: existing } = await supabase
         .from("wa_outbound_queue")
         .select("id", { count: "exact", head: true })
-        .eq("phone_normalized", phone)
+        .in("phone_normalized", variants)
         .eq("source", stage.source);
       if ((existing ?? 0) > 0) {
         results.push({ phone, stage: stage.source, skipped: "already_sent_this_stage" });
