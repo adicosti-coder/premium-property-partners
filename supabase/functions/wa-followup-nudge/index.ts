@@ -137,6 +137,7 @@ Deno.serve(async (req) => {
         .from("wa_dnc_list")
         .select("id")
         .in("phone_normalized", variants)
+        .limit(1)
         .maybeSingle();
       if (dnc || isInternalWaNumber(phone)) {
         results.push({ phone, stage: stage.source, skipped: "dnc" });

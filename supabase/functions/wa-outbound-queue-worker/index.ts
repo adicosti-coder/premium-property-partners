@@ -373,7 +373,8 @@ Deno.serve(async (req) => {
       .from("wa_dnc_list")
       .select("reason, label")
       .in("phone_normalized", variants)
-      .maybeSingle();
+        .limit(1)
+        .maybeSingle();
 
     const internalNo = isInternalWaNumber(phoneDigits);
     T("Listă excludere (DNC)", !dnc && !internalNo, internalNo ? "Blocat: număr intern RealTrust" : dnc ? `Blocat: ${dnc.label}` : "Numărul nu e în listă");
