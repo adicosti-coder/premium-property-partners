@@ -362,7 +362,7 @@ Deno.serve(async (req) => {
         .from("wa_outbound_queue")
         .update({
           status: "cancelled",
-          last_error: `blocat: număr în lista de excludere (${dnc.label}${dnc.reason ? ` — ${dnc.reason}` : ""})`,
+          last_error: internalNo ? "blocat: număr intern RealTrust" : `blocat: număr în lista de excludere (${dnc!.label}${dnc!.reason ? ` — ${dnc!.reason}` : ""})`,
         })
         .eq("id", item.id)
         .in("status", ["pending", "failed"]);
