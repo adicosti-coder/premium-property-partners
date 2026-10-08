@@ -3128,6 +3128,9 @@ export type Database = {
           crm_sync_status: string | null
           crm_synced_at: string | null
           email: string | null
+          email_notification_grade: string | null
+          email_notification_sent: boolean
+          email_notification_sent_at: string | null
           engagement_status: string
           follow_up_date: string | null
           id: string
@@ -3168,6 +3171,9 @@ export type Database = {
           crm_sync_status?: string | null
           crm_synced_at?: string | null
           email?: string | null
+          email_notification_grade?: string | null
+          email_notification_sent?: boolean
+          email_notification_sent_at?: string | null
           engagement_status?: string
           follow_up_date?: string | null
           id?: string
@@ -3208,6 +3214,9 @@ export type Database = {
           crm_sync_status?: string | null
           crm_synced_at?: string | null
           email?: string | null
+          email_notification_grade?: string | null
+          email_notification_sent?: boolean
+          email_notification_sent_at?: string | null
           engagement_status?: string
           follow_up_date?: string | null
           id?: string
