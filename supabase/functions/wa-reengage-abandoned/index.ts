@@ -26,6 +26,9 @@ const json = (body: unknown, status = 200) =>
 
 const REENGAGE_MARK = "[recontactare]";
 
+// Numărul personal de administrare și numerele companiei — niciodată destinatari.
+const INTERNAL_NUMBERS = new Set(["40723154520", "40733783540", "40799069256"]);
+
 async function sendToMeta(payload: Record<string, unknown>) {
   const token = waToken();
   if (!token) return { ok: false, error: "missing_meta_token", body: {} as any };
@@ -174,7 +177,7 @@ Deno.serve(async (req) => {
       wa_message_id: waMsgId,
       direction: "outbound",
       role: "assistant",
-      content: `${REENGAGE_MARK} [șablon ${tplName}] ${text}`,
+      content: `${REENGAGE_MARK} ${text}`,
       template_name: tplName,
       error: meta.ok ? null : String(meta.error).slice(0, 500),
     });
