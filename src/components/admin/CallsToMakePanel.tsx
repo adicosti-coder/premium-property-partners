@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import SourceLink from "@/components/admin/shared/SourceLink";
+import { SourceLink } from "@/components/admin/shared/SourceLink";
 
 type Row = { id: string; title: string | null; price: number | null; zone: string | null; location: string | null; phone_normalized: string | null; contact_phone: string | null; source_url: string | null; reason: "no_mobile" | "no_reply" };
 const isMobile = (p?: string | null) => /^\+407\d{8}$/.test(p ?? "");
