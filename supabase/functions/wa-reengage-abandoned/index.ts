@@ -6,6 +6,7 @@
 //
 // Acces: apel intern (x-cron-secret / service role) sau Admin JWT.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { isInternalWaNumber } from "../_shared/waInternalNumbers.ts";
 import { WA_PHONE_NUMBER_ID, WA_API_VERSION, waToken } from "../_shared/waConfig.ts";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { relayToMake } from "../_shared/makeRelay.ts";
@@ -26,8 +27,6 @@ const json = (body: unknown, status = 200) =>
 
 const REENGAGE_MARK = "[recontactare]";
 
-// Numărul personal de administrare și numerele companiei — niciodată destinatari.
-const INTERNAL_NUMBERS = new Set(["40723154520", "40733783540", "40799069256"]);
 
 async function sendToMeta(payload: Record<string, unknown>) {
   const token = waToken();
@@ -95,7 +94,7 @@ Deno.serve(async (req) => {
     const digits = String(c.phone_normalized || "").replace(/\D/g, "");
     // Numerele interne (administrare / numerele RealTrust) nu primesc niciodată
     // mesaje de prospectare sau recontactare.
-    if (INTERNAL_NUMBERS.has(digits)) {
+    if (isInternalWaNumber(digits)) {
       results.push({ conversation_id: c.id, skipped: "internal_number" });
       skipped++;
       continue;

@@ -5,6 +5,7 @@
 //
 // Acces: apel intern (x-cron-secret / service role) sau Admin JWT.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { isInternalWaNumber } from "../_shared/waInternalNumbers.ts";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { isInternalCall } from "../_shared/cronAuth.ts";
 
@@ -87,7 +88,7 @@ Deno.serve(async (req) => {
       .select("id")
       .eq("phone_normalized", phone)
       .maybeSingle();
-    if (dnc) {
+    if (dnc || isInternalWaNumber(phone)) {
       results.push({ conversationId, skipped: "dnc" });
       continue;
     }
@@ -196,7 +197,7 @@ Deno.serve(async (req) => {
       .select("id")
       .eq("phone_normalized", phone)
       .maybeSingle();
-    if (dnc) {
+    if (dnc || isInternalWaNumber(phone)) {
       results.push({ conversationId, step: "offer_confirm", skipped: "dnc" });
       continue;
     }
@@ -314,7 +315,7 @@ Deno.serve(async (req) => {
         .select("id")
         .eq("phone_normalized", phone)
         .maybeSingle();
-      if (dnc) {
+      if (dnc || isInternalWaNumber(phone)) {
         results.push({ conversationId, step: stage.next, skipped: "dnc" });
         continue;
       }

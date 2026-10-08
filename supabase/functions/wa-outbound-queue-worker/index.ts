@@ -2,6 +2,7 @@
 // către proprietarii extrași de scraper. Rulează pe cron sau manual din Admin.
 // Internal-only (cron secret / service role) sau admin.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { isInternalWaNumber } from "../_shared/waInternalNumbers.ts";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { isInternalCall } from "../_shared/cronAuth.ts";
 import { fetchWithRetry } from "../_shared/fetchRetry.ts";
@@ -354,8 +355,9 @@ Deno.serve(async (req) => {
       .eq("phone_normalized", item.phone_normalized)
       .maybeSingle();
 
-    T("Listă excludere (DNC)", !dnc, dnc ? `Blocat: ${dnc.label}` : "Numărul nu e în listă");
-    if (dnc) {
+    const internalNo = isInternalWaNumber(item.phone_normalized);
+    T("Listă excludere (DNC)", !dnc && !internalNo, internalNo ? "Blocat: număr intern RealTrust" : dnc ? `Blocat: ${dnc.label}` : "Numărul nu e în listă");
+    if (dnc || internalNo) {
       await supabase
         .from("wa_outbound_queue")
         .update({
