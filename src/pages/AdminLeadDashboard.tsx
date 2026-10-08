@@ -234,18 +234,17 @@ const AdminLeadDashboard = () => {
   /** Re-queues a failed CRM/email delivery; the retry cron picks it up in ≤10 min. */
   const requeueMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("leads")
-        .update({ crm_sync_attempts: 0, crm_next_retry_at: new Date().toISOString() })
-        .eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      invalidate();
-      toast({
-        title: "Retrimitere programată",
-        description: "Lead-ul va fi retrimis automat în CRM în maximum 10 minute.",
+      const { data, error } = await supabase.functions.invoke("crm-lead-sync", {
+        body: { lead_id: id, manual: true },
       });
+      if (error) throw error;
+      return data as { ok?: boolean; error?: string | null };
+    },
+    onSuccess: (d) => {
+      invalidate();
+      toast(d?.ok
+        ? { title: "Sincronizat în CRM", description: "Lead-ul a ajuns în CRM." }
+        : { title: "Sincronizarea a eșuat", description: d?.error ?? "Eroare necunoscută", variant: "destructive" });
     },
     onError: (e: Error) =>
       toast({ title: "Reprogramare eșuată", description: e.message, variant: "destructive" }),
@@ -547,7 +546,9 @@ const AdminLeadDashboard = () => {
                                   : "outline"
                             }
                           >
-                            {lead.crm_sync_status ?? "—"}
+                            {lead.crm_sync_status === "synced" ? "Sincronizat"
+                              : lead.crm_sync_status === "failed" ? "Eșuat"
+                              : lead.crm_sync_status === "skipped" ? "Omis" : "Nesincronizat"}
                           </Badge>
                           <p className="mt-1 text-muted-foreground">
                             {lead.crm_sync_status === "failed"
@@ -628,16 +629,16 @@ const AdminLeadDashboard = () => {
                                 </a>
                               </Button>
                             )}
-                            {lead.crm_sync_status === "failed" && (
+                            {lead.crm_sync_status !== "synced" && (
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => requeueMutation.mutate(lead.id)}
-                                disabled={requeueMutation.isPending}
-                                aria-label={`Reprogramează trimiterea în CRM pentru ${lead.name}`}
+                                disabled={requeueMutation.isPending && requeueMutation.variables === lead.id}
+                                aria-label={`Re-sincronizează în CRM lead-ul ${lead.name}`}
                               >
                                 <RefreshCw className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
-                                Retrimite
+                                Re-sincronizează în CRM
                               </Button>
                             )}
                             {lead.retention_expires_at && !lead.anonymized_at && (
