@@ -158,27 +158,45 @@ Deno.serve(async (req) => {
   // ── Health check pre-run: rata de livrare + erori consecutive Meta ─────────
   if (autoPauseEnabled && !force) {
     const since = new Date(Date.now() - 24 * 3_600_000).toISOString();
+
+    // Protecția numărului: erorile Meta de calitate/spam opresc imediat coada.
+    const { data: riskRows } = await supabase
+      .from("wa_outbound_queue")
+      .select("last_error")
+      .eq("status", "failed")
+      .gte("updated_at", since)
+      .limit(100);
+    const META_RISK = /\b(131048|131056|368|130497|131031|130429)\b/;
+    const risky = (riskRows ?? []).filter((r) => META_RISK.test(r.last_error ?? ""));
+    if (risky.length) {
+      await autoPause("meta_quality_risk", {
+        errors: risky.length,
+        sample: String(risky[0].last_error ?? "").slice(0, 200),
+      });
+      return json({ ok: true, processed: 0, paused: true, meta_quality_risk: risky.length });
+    }
+
     const { data: recent } = await supabase
       .from("wa_outbound_queue")
-      .select("status, delivered_at, read_at, replied_at, sent_at")
+      .select("status, delivered_at, read_at, replied_at, sent_at, last_error")
       .gte("sent_at", since)
       .not("sent_at", "is", null)
       .order("sent_at", { ascending: false })
       .limit(200);
 
-    const sentRows = recent ?? [];
-    // Confirmările de livrare vin de la Meta prin webhook. Dacă nu avem NICIO
-    // confirmare, rata calculată ar fi 0% și coada s-ar opri degeaba — deci
-    // aplicăm regula doar când chiar primim confirmări.
-    const hasDeliveryData = sentRows.some((r) => r.delivered_at || r.read_at || r.replied_at);
-    if (sentRows.length >= 10 && hasDeliveryData) {
-      const delivered = sentRows.filter((r) => r.delivered_at || r.read_at || r.replied_at).length;
-      const rate = Math.round((delivered / sentRows.length) * 100);
+    // Rata de livrare se calculează doar pe mesajele cu rezultat cunoscut
+    // (confirmate livrate sau respinse de Meta). Confirmările lipsă nu sunt eșecuri.
+    const rows = recent ?? [];
+    const delivered = rows.filter((r) => r.delivered_at || r.read_at || r.replied_at).length;
+    const rejected = rows.filter((r) => r.status === "failed" && !/131026/.test(r.last_error ?? "")).length;
+    const known = delivered + rejected;
+    if (known >= 10) {
+      const rate = Math.round((delivered / known) * 100);
       if (rate < minDeliveryRate) {
         await autoPause("delivery_rate_low", {
           delivery_rate: rate,
           threshold: minDeliveryRate,
-          sample: sentRows.length,
+          sample: known,
         });
         return json({ ok: true, processed: 0, paused: true, delivery_rate: rate });
       }
