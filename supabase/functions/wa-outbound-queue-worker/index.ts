@@ -260,11 +260,29 @@ Deno.serve(async (req) => {
     }
   }
 
-  let query = supabase
-    .from("wa_outbound_queue")
-    .select(
-      "id, phone_normalized, prospect_listing_id, template_name, template_language, template_params, attempts, conversation_id, source",
-    );
+  // ── Curățare: mesajele necontactate pentru anunțuri mai vechi de 10 zile se anulează ──
+  if (!body.queue_id) {
+    const cutoff = new Date(Date.now() - 10 * 86_400_000).toISOString();
+    const { data: stale } = await supabase
+      .from("wa_outbound_queue")
+      .select("id, created_at, prospect_listing_id, prospect_listings(created_at)")
+      .eq("status", "pending")
+      .is("sent_at", null)
+      .limit(500);
+    const staleIds = (stale ?? [])
+      .filter((r: any) => (r.prospect_listings?.created_at ?? r.created_at) < cutoff)
+      .map((r: any) => r.id);
+    if (staleIds.length) {
+      await supabase
+        .from("wa_outbound_queue")
+        .update({ status: "cancelled", last_error: "stale_over_10_days", updated_at: new Date().toISOString() })
+        .in("id", staleIds);
+    }
+  }
+
+  const SELECT_COLS =
+    "id, phone_normalized, prospect_listing_id, template_name, template_language, template_params, attempts, conversation_id, source, priority, scheduled_at, prospect_listings(created_at, lead_score)";
+  let query = supabase.from("wa_outbound_queue").select(SELECT_COLS);
 
   if (body.queue_id) {
     query = query.eq("id", body.queue_id).in("status", ["pending", "failed"]);
@@ -272,16 +290,24 @@ Deno.serve(async (req) => {
     query = query
       .eq("status", "pending")
       .lte("scheduled_at", new Date().toISOString())
-      .order("priority", { ascending: false })
-      .order("scheduled_at", { ascending: true })
-      .limit(allowance);
+      .limit(300);
   }
 
-  const { data: queue, error } = await query;
-
+  const { data: candidates, error } = await query;
 
   if (error) return json({ error: error.message }, 500);
-  if (!queue?.length) return json({ ok: true, processed: 0 });
+  // Prioritate: anunțuri din ultimele 48h, apoi prioritatea cozii, scorul, cele mai noi primele.
+  const recentCut = Date.now() - 48 * 3_600_000;
+  const rank = (r: any) => {
+    const created = Date.parse(r.prospect_listings?.created_at ?? "") || 0;
+    return { fresh: created >= recentCut ? 1 : 0, pri: Number(r.priority ?? 0), score: Number(r.prospect_listings?.lead_score ?? 0), created };
+  };
+  const queue = (candidates ?? [])
+    .map((r: any) => ({ r, k: rank(r) }))
+    .sort((a, b) => b.k.fresh - a.k.fresh || b.k.pri - a.k.pri || b.k.score - a.k.score || b.k.created - a.k.created)
+    .slice(0, body.queue_id ? 1 : allowance)
+    .map(({ r }) => r);
+  if (!queue.length) return json({ ok: true, processed: 0 });
 
   const results: Record<string, unknown>[] = [];
   const startedAt = Date.now();
