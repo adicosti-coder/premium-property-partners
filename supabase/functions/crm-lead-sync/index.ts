@@ -181,7 +181,39 @@ Deno.serve(async (req) => {
     let emailSent = false;
     let emailStored = false;
 
-    {
+    // ---- Deduplicare: un singur e-mail „Lead nou” per lead (și per număr, 7 zile).
+    // Retry-urile CRM și mesajele noi în chat NU mai retrimit e-mailul; excepție:
+    // lead-ul devine „hot” după ce notificarea anterioară nu era hot.
+    const COOLDOWN_MS = 7 * 24 * 3600_000;
+    const { data: notifState } = await admin.from("leads")
+      .select("email_notification_sent, email_notification_sent_at, email_notification_grade, lead_grade")
+      .eq("id", record.id).maybeSingle();
+    let skipEmailReason: string | null = null;
+    const becameCritical = notifState?.lead_grade === "hot" && notifState?.email_notification_grade !== "hot";
+    if (notifState?.email_notification_sent && !becameCritical) {
+      skipEmailReason = "already_sent_for_lead";
+    } else if (phoneValid && !becameCritical) {
+      const since = new Date(Date.now() - COOLDOWN_MS).toISOString();
+      const tail = digits(phoneRaw).slice(-9);
+      const { data: recent } = await admin.from("leads")
+        .select("id")
+        .neq("id", record.id)
+        .eq("email_notification_sent", true)
+        .gte("email_notification_sent_at", since)
+        .ilike("whatsapp_number", `%${tail}`)
+        .limit(1);
+      if (recent?.length) skipEmailReason = "cooldown_7d_same_phone";
+    }
+    if (skipEmailReason) {
+      emailStored = true; // nu e eșec — nu declanșa retry din cauza e-mailului
+      await logLeadEvent({
+        leadId: record.id, type: "team_email", status: "info",
+        message: `E-mail „Lead nou” omis (${skipEmailReason}) — conversația e actualizată în Admin`,
+        actor: "crm-lead-sync",
+      }, admin);
+    }
+
+    if (!skipEmailReason) {
       const rows: Array<[string, string]> = [
         ["Nume", record.name],
         ["Telefon", phoneValid ? phoneRaw : "—"],
@@ -217,6 +249,13 @@ Deno.serve(async (req) => {
       }, admin);
       emailSent = mail.sent;
       emailStored = !!mail.storedFallback;
+      if (mail.sent) {
+        await admin.from("leads").update({
+          email_notification_sent: true,
+          email_notification_sent_at: new Date().toISOString(),
+          email_notification_grade: notifState?.lead_grade ?? record.lead_grade ?? null,
+        }).eq("id", record.id);
+      }
       if (!mail.sent && !crmError) crmError = mail.error ?? "team email failed";
       await logLeadEvent({
         leadId: record.id,
