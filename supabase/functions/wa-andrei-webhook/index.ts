@@ -699,6 +699,35 @@ Deno.serve(async (req) => {
                 .eq("id", pendingReply.prospect_listing_id)
                 .in("lifecycle_status", ["new", "scoring", "calling", "callback", "to_review"]);
               if (plErr) console.error("[wa-webhook] prospect status update failed:", plErr);
+
+              // Fereastra de 24h e deschisă acum → cerem direct acordul de publicare,
+              // fără aprobare intermediară. Nu pentru refuz/STOP, nici dacă acordul e deja cerut.
+              const NEGATIVE = /\b(stop|nu|nu,? mul[țt]umesc|nu sunt interesat|dezabonare|nu ma intereseaz|v[âa]ndut|[îi]nchiriat)\b/i;
+              if (pendingReply.source !== "publish_consent_request" && !NEGATIVE.test(text || "")) {
+                try {
+                  const { data: existingConsent } = await supabase
+                    .from("wa_publish_consents")
+                    .select("id")
+                    .eq("prospect_listing_id", pendingReply.prospect_listing_id)
+                    .limit(1)
+                    .maybeSingle();
+                  if (!existingConsent) {
+                    const { data: cronSecret } = await supabase.rpc("get_cron_reconcile_secret");
+                    // Mică pauză ca cererea să ajungă după răspunsul lui Andrei.
+                    const task = new Promise((r) => setTimeout(r, 8000)).then(() =>
+                      fetch(`${supabaseUrl}/functions/v1/wa-request-publish-consent`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", "x-cron-secret": String(cronSecret ?? "") },
+                        body: JSON.stringify({ prospect_ids: [pendingReply.prospect_listing_id] }),
+                      })
+                    ).catch((e) => console.error("[wa-webhook] auto consent request failed:", e));
+                    // deno-lint-ignore no-explicit-any
+                    (globalThis as any).EdgeRuntime?.waitUntil?.(task);
+                  }
+                } catch (e) {
+                  console.error("[wa-webhook] auto consent check failed:", e);
+                }
+              }
             }
 
             const relay = await relayToMake("wa_inbound_lead", {
