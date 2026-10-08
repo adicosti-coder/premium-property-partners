@@ -2,6 +2,7 @@
 // proprietarii care au primit primul mesaj WhatsApp și nu au răspuns.
 // Rulează pe cron (automation-orchestrator) sau manual din Admin.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { isInternalWaNumber } from "../_shared/waInternalNumbers.ts";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { isInternalCall } from "../_shared/cronAuth.ts";
 import { resolveApprovedTemplate } from "../_shared/waPreferredTemplate.ts";
@@ -135,7 +136,7 @@ Deno.serve(async (req) => {
         .select("id")
         .eq("phone_normalized", phone)
         .maybeSingle();
-      if (dnc) {
+      if (dnc || isInternalWaNumber(phone)) {
         results.push({ phone, stage: stage.source, skipped: "dnc" });
         continue;
       }
