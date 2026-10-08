@@ -11,6 +11,7 @@ import ManualDailyIntake from "@/components/admin/ManualDailyIntake";
 import PublishedListingGains from "@/components/admin/PublishedListingGains";
 import ManualPublishList from "@/components/admin/ManualPublishList";
 import AwaitingConsentTable from "@/components/admin/AwaitingConsentTable";
+import ControlledSendTest from "@/components/admin/ControlledSendTest";
 
 type Row = {
   id: string;
@@ -51,6 +52,7 @@ export default function ManualProspectingPanel() {
   const rows = q.data ?? [];
   return (
     <div className="space-y-4">
+      <ControlledSendTest />
       <ManualProspectingStats />
       <ManualConsentStats />
       <ManualDailyIntake />
