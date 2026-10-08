@@ -332,7 +332,7 @@ Deno.serve(async (req) => {
     if (!stale) return json({ ok: true, processed: 0, skipped: "already_running", trace: [...trace, { step: "Lock global", ok: false, detail: "O altă rulare e în curs — oprit" }] });
     const { data: retaken } = await supabase.from("request_idempotency")
       .update({ expires_at: lockExpires })
-      .eq("scope", LOCK_SCOPE).eq("key", LOCK_KEY).eq("expires_at", lockRow.expires_at)
+      .eq("scope", LOCK_SCOPE).eq("key", LOCK_KEY).eq("expires_at", lockRow?.expires_at ?? "")
       .select("key");
     if (!retaken?.length) return json({ ok: true, processed: 0, skipped: "already_running" });
   }
