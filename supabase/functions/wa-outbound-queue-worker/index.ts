@@ -8,6 +8,7 @@ import { isInternalCall } from "../_shared/cronAuth.ts";
 import { fetchWithRetry } from "../_shared/fetchRetry.ts";
 import { drainMakeRelayDlq, relayToMake } from "../_shared/makeRelay.ts";
 import { preferredIntroTemplate, preferredPublishConsentTemplate } from "../_shared/waPreferredTemplate.ts";
+import { canonicalWaPhone, markPhoneSent, phoneVariants, releasePhoneSend, reservePhoneSend, toWaDigits } from "../_shared/waPhone.ts";
 import { WA_PUBLISH_CONSENT_TEMPLATE, consentPropertyLabel } from "../_shared/waPublishConsentTemplate.ts";
 
 const corsHeaders = {
@@ -48,18 +49,20 @@ Deno.serve(async (req) => {
   const internalSecret = Deno.env.get("WA_ANDREI_INTERNAL_SECRET") || "";
   const supabase = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
 
-  // ── Deblocare: mesaje rămase „în trimitere” după un timeout de funcție ─────
-  // Fără asta, rândul rămâne blocat pentru totdeauna și proprietarul nu e contactat.
+  // ── Mesaje rămase „în trimitere” după un timeout de funcție ────────────────
+  // NU le mai repunem automat în coadă: apelul către Meta poate să fi plecat
+  // deja, iar retrimiterea ar produce exact mesajul duplicat. Le marcăm
+  // „eșuat — verifică manual”; din Admin se pot retrimite conștient.
   try {
     const staleBefore = new Date(Date.now() - 15 * 60_000).toISOString();
     const { data: unstuck } = await supabase
       .from("wa_outbound_queue")
-      .update({ status: "pending", last_error: "reluat: trimitere întreruptă" })
+      .update({ status: "failed", last_error: "trimitere întreruptă — posibil trimis, nu se retrimite automat" })
       .eq("status", "sending")
       .lt("updated_at", staleBefore)
       .select("id");
     if (unstuck?.length) {
-      console.warn(`[wa-outbound-worker] reset ${unstuck.length} stuck 'sending' rows`);
+      console.warn(`[wa-outbound-worker] ${unstuck.length} stuck 'sending' rows → failed (no auto-resend)`);
     }
   } catch (e) {
     console.error("[wa-outbound-worker] stuck reset failed:", e);
