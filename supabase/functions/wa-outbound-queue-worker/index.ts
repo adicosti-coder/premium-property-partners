@@ -309,6 +309,31 @@ Deno.serve(async (req) => {
     .map(({ r }) => r);
   if (!queue.length) return json({ ok: true, processed: 0 });
 
+  // ── Lock global: o singură rulare a cozii odată (anti-execuție paralelă) ──
+  const LOCK_SCOPE = "wa-outbound-queue-worker";
+  const LOCK_KEY = "global-run-lock";
+  const lockExpires = new Date(Date.now() + 90_000).toISOString();
+  const { error: lockErr } = await supabase
+    .from("request_idempotency")
+    .insert({ scope: LOCK_SCOPE, key: LOCK_KEY, expires_at: lockExpires });
+  if (lockErr) {
+    if (lockErr.code !== "23505") return json({ error: "lock_failed" }, 500);
+    const { data: lockRow } = await supabase.from("request_idempotency")
+      .select("expires_at").eq("scope", LOCK_SCOPE).eq("key", LOCK_KEY).maybeSingle();
+    const stale = !lockRow || new Date(lockRow.expires_at).getTime() < Date.now();
+    if (!stale) return json({ ok: true, processed: 0, skipped: "already_running" });
+    const { data: retaken } = await supabase.from("request_idempotency")
+      .update({ expires_at: lockExpires })
+      .eq("scope", LOCK_SCOPE).eq("key", LOCK_KEY).eq("expires_at", lockRow.expires_at)
+      .select("key");
+    if (!retaken?.length) return json({ ok: true, processed: 0, skipped: "already_running" });
+  }
+  const releaseLock = async () => {
+    await supabase.from("request_idempotency").delete()
+      .eq("scope", LOCK_SCOPE).eq("key", LOCK_KEY).eq("expires_at", lockExpires);
+  };
+  const sessionPhones = new Set<string>();
+
   const results: Record<string, unknown>[] = [];
   const startedAt = Date.now();
   let consecutiveFailures = 0;
@@ -365,30 +390,52 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── Deduplicare: niciun mesaj activ/trimis către același număr în 72h ─────
-    // Excepție: follow-up-urile sunt intenționat un al doilea mesaj către
-    // același număr, deci nu intră în regula de deduplicare.
-    const dedupSince = new Date(Date.now() - 72 * 3_600_000).toISOString();
-    const { count: recentCount } = isFollowup
-      ? { count: 0 }
-      : await supabase
-        .from("wa_outbound_queue")
-        .select("id", { count: "exact", head: true })
-        .eq("phone_normalized", item.phone_normalized)
-        .neq("id", item.id)
-        .in("status", ["sending", "sent", "replied"])
-        .gte("sent_at", dedupSince);
+    // ── Lock per număr în aceeași sesiune: max 1 mesaj / număr / rulare ──────
+    if (sessionPhones.has(item.phone_normalized)) {
+      results.push({ id: item.id, status: "deferred", reason: "same_phone_this_session" });
+      continue;
+    }
+    sessionPhones.add(item.phone_normalized);
 
-    if ((recentCount ?? 0) > 0) {
+    // ── Deduplicare: prim contact deja trimis către același număr ────────────
+    // Follow-up-urile sunt intenționat un al doilea mesaj, deci sunt exceptate.
+    let alreadySent = false;
+    if (!isFollowup) {
+      const dedupSince = new Date(Date.now() - 72 * 3_600_000).toISOString();
+      const since24h = new Date(Date.now() - 24 * 3_600_000).toISOString();
+      const [{ count: recentCount }, { count: inFlight }, { data: convs }] = await Promise.all([
+        supabase.from("wa_outbound_queue").select("id", { count: "exact", head: true })
+          .eq("phone_normalized", item.phone_normalized).neq("id", item.id)
+          .in("status", ["sent", "replied"]).gte("sent_at", dedupSince),
+        supabase.from("wa_outbound_queue").select("id", { count: "exact", head: true })
+          .eq("phone_normalized", item.phone_normalized).neq("id", item.id)
+          .eq("status", "sending"),
+        supabase.from("wa_conversations").select("id").eq("phone_normalized", item.phone_normalized),
+      ]);
+      alreadySent = (recentCount ?? 0) > 0 || (inFlight ?? 0) > 0;
+      if (!alreadySent && convs?.length) {
+        // Verificare și pe mesajele efectiv livrate către Meta în ultimele 24h.
+        const { count: msgCount } = await supabase
+          .from("wa_messages").select("id", { count: "exact", head: true })
+          .in("conversation_id", convs.map((c: any) => c.id))
+          .eq("direction", "outbound").is("error", null)
+          .not("wa_message_id", "is", null)
+          .gte("created_at", since24h);
+        alreadySent = (msgCount ?? 0) > 0;
+      }
+    }
+
+    if (alreadySent) {
       await supabase
         .from("wa_outbound_queue")
         .update({
-          status: "cancelled",
-          last_error: "duplicat: mesaj deja trimis către acest număr în ultimele 72h",
+          status: "sent",
+          last_error: "duplicat: prim contact deja trimis către acest număr — nu se retrimite",
+          updated_at: new Date().toISOString(),
         })
         .eq("id", item.id)
         .in("status", ["pending", "failed"]);
-      results.push({ id: item.id, status: "skipped_duplicate" });
+      results.push({ id: item.id, status: "skipped_duplicate_marked_sent" });
       continue;
     }
 
@@ -609,5 +656,6 @@ Deno.serve(async (req) => {
     }
   }
 
+  await releaseLock();
   return json({ ok: true, processed: results.length, results, make_relay_retry: makeRelayRetry });
 });
