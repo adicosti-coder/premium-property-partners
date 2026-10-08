@@ -714,13 +714,15 @@ Deno.serve(async (req) => {
                   if (!existingConsent) {
                     const { data: cronSecret } = await supabase.rpc("get_cron_reconcile_secret");
                     // Mică pauză ca cererea să ajungă după răspunsul lui Andrei.
-                    setTimeout(() => {
+                    const task = new Promise((r) => setTimeout(r, 8000)).then(() =>
                       fetch(`${supabaseUrl}/functions/v1/wa-request-publish-consent`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json", "x-cron-secret": String(cronSecret ?? "") },
                         body: JSON.stringify({ prospect_ids: [pendingReply.prospect_listing_id] }),
-                      }).catch((e) => console.error("[wa-webhook] auto consent request failed:", e));
-                    }, 8000);
+                      })
+                    ).catch((e) => console.error("[wa-webhook] auto consent request failed:", e));
+                    // deno-lint-ignore no-explicit-any
+                    (globalThis as any).EdgeRuntime?.waitUntil?.(task);
                   }
                 } catch (e) {
                   console.error("[wa-webhook] auto consent check failed:", e);
