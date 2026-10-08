@@ -89,6 +89,24 @@ Deno.serve(async (req) => {
     if (results.length >= limit) break;
     if (c.status === "closed" || c.status === "opted_out") { skipped++; continue; }
 
+    const digits = String(c.phone_normalized || "").replace(/\D/g, "");
+    // Numerele interne (administrare / numerele RealTrust) nu primesc niciodată
+    // mesaje de prospectare sau recontactare.
+    if (INTERNAL_NUMBERS.has(digits)) {
+      results.push({ conversation_id: c.id, skipped: "internal_number" });
+      skipped++;
+      continue;
+    }
+
+    // Lista de excludere (DNC / STOP / nelivrabil) — blocaj permanent.
+    const { data: dnc } = await supabase
+      .from("wa_dnc_list")
+      .select("id")
+      .in("phone_normalized", [`+${digits}`, digits])
+      .limit(1)
+      .maybeSingle();
+    if (dnc) { results.push({ conversation_id: c.id, skipped: "dnc" }); skipped++; continue; }
+
     // Ultima activitate a noastră mai nouă decât ultimul mesaj al clientului
     // și tot fără răspuns → tot abandonată, dar nu insistăm dacă e recentă.
     if (!onlyConversation && c.last_outbound_at && c.last_outbound_at > cutoff) { skipped++; continue; }
@@ -122,6 +140,18 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Recontactarea se face DOAR ca mesaj liber, în fereastra de 24h deschisă
+    // de client. În afara ferestrei, singurul șablon aprobat este cel de prim
+    // contact — retrimiterea lui ar însemna un mesaj de prim contact duplicat
+    // către cineva care ne-a scris deja, deci nu trimitem nimic.
+    const windowOpen = !!c.last_inbound_at &&
+      Date.now() - new Date(c.last_inbound_at).getTime() < 23.5 * 3600 * 1000;
+    if (!windowOpen) {
+      results.push({ conversation_id: c.id, skipped: "window_closed_no_duplicate_intro" });
+      skipped++;
+      continue;
+    }
+
     const ctx = await loadProspectContext(supabase, c.phone_normalized);
     const text = buildReengageMessage(ctx);
 
@@ -130,13 +160,12 @@ Deno.serve(async (req) => {
       continue;
     }
 
-    // Fereastra de 24h e închisă → doar șablonul aprobat poate fi livrat.
-    const tplName = Deno.env.get("WA_DEFAULT_TEMPLATE") || "prospect_intro_premium_v3";
+    const tplName = null as string | null;
     const meta = await sendToMeta({
       messaging_product: "whatsapp",
-      to: c.phone_normalized.replace(/^\+/, ""),
-      type: "template",
-      template: { name: tplName, language: { code: "ro" } },
+      to: digits,
+      type: "text",
+      text: { preview_url: false, body: text },
     });
     const waMsgId = meta.body?.messages?.[0]?.id ?? null;
 
