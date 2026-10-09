@@ -11,3 +11,4 @@
 - The Advisor injects mandatory geography from stored property GPS or explicitly approximate district references and versions its cache when geography rules change — prevents stale or invented compass positioning.
 - Admin „Publică acum” calls `publish-consented-listing` (consent check, per-prospect lock, retries on 5xx, audit) instead of the worker directly — prevents double or silently failed publications.
 - Lead inserts in edge functions never chain `.single()` after insert — the dedupe trigger returns 0 rows on merge and `.single()` makes the API roll the merge back.
+- /analiza-anunt extracts listing data via `public-listing-analysis` and scores it deterministically in `listing-market-score` (scraper comparables, last 180 days) — keeps price/negotiation numbers reproducible instead of AI-invented.
