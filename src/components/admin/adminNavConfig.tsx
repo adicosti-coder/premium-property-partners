@@ -226,6 +226,8 @@ const RAW_GROUPS: AdminGroup[] = [
 
       // 🔍 Scraper Pipeline — ecran UNIFICAT (observabilitate + prospecți + aprobare/publicare)
       { value: "unified-pipeline", label: "Pipeline Unificat", icon: Radar, badgeKey: "prospectPipeline", subgroup: "Scraper Pipeline", keywords: ["pipeline", "unificat", "prospects", "scraper", "monitor", "keywords", "aprobare", "publicare", "leads", "bot", "hot", "agentii"] },
+      { value: "anunturi-preluate", label: "Anunțuri Preluate Automat", icon: BadgeCheck, subgroup: "Scraper Pipeline", keywords: ["anunturi preluate", "acorduri whatsapp", "acord", "da public", "publicate", "proprietari", "prospectare", "pipeline", "preluate automat"] },
+
 
     ],
   },
