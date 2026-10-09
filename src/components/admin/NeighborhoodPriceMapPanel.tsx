@@ -26,6 +26,7 @@ export default function NeighborhoodPriceMapPanel() {
   const [medians, setMedians] = useState<{ ppm: number; n: number }[]>([]);
   const [analysed, setAnalysed] = useState<Analysed[]>([]);
   const [sel, setSel] = useState<number | null>(null);
+  const [cityPpm, setCityPpm] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -36,10 +37,13 @@ export default function NeighborhoodPriceMapPanel() {
         (supabase.from("analyzed_listings") as any).select("id, url, extracted_data").order("created_at", { ascending: false }).limit(200),
       ]);
       const buckets: number[][] = ZONES.map(() => []);
+      const all: number[] = [];
       for (const r of sale ?? []) {
         const z = zoneOf(r.zone || ""); const ppm = Number(r.price) / Number(r.size);
+        if (ppm > 600 && ppm < 6000) all.push(ppm);
         if (z >= 0 && ppm > 600 && ppm < 6000) buckets[z].push(ppm);
       }
+      setCityPpm(Math.round(median(all)));
       setMedians(buckets.map((b) => ({ ppm: Math.round(median(b)), n: b.length })));
       const seen = new Set<string>();
       setAnalysed((an ?? []).flatMap((r: any) => {
@@ -62,7 +66,7 @@ export default function NeighborhoodPriceMapPanel() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Hartă prețuri Timișoara (€/m², vânzare, 6 luni)</CardTitle>
+        <CardTitle>Hartă prețuri Timișoara (€/m², vânzare, 6 luni){cityPpm ? ` · media orașului ${cityPpm.toLocaleString("ro-RO")} €/m²` : ""}</CardTitle>
         <p className="text-sm text-muted-foreground">Mediana pe cartier din anunțurile scraperului, comparată cu anunțurile analizate. Apasă un cartier pentru detalii.</p>
       </CardHeader>
       <CardContent className="grid gap-4 lg:grid-cols-[1fr_320px]">
@@ -78,7 +82,7 @@ export default function NeighborhoodPriceMapPanel() {
                 <text x={x} y={y + 13} textAnchor="middle" className="fill-foreground text-[12px]">{ok ? `${m.ppm.toLocaleString("ro-RO")} €/m²` : "date puține"}</text>
                 {pins.slice(0, 6).map((p, k) => (
                   <circle key={p.id} cx={x + 30 + k * 9} cy={y - 26} r={5}
-                    className={ok && p.ppm > m.ppm ? "fill-destructive" : "fill-accent"} stroke="hsl(var(--background))" strokeWidth={1.5} />
+                    className={p.ppm > (ok ? m.ppm : cityPpm) ? "fill-destructive" : "fill-accent"} stroke="hsl(var(--background))" strokeWidth={1.5} />
                 ))}
               </g>
             );
@@ -88,13 +92,14 @@ export default function NeighborhoodPriceMapPanel() {
         <div className="space-y-2 text-sm max-h-[520px] overflow-y-auto">
           <div className="font-medium">{sel === null ? "Toate anunțurile analizate" : ZONES[sel].label} ({list.length})</div>
           {list.map((a) => {
-            const m = medians[a.zone]; const diff = m?.ppm ? Math.round(((a.ppm - m.ppm) / m.ppm) * 100) : null;
+            const m = medians[a.zone]; const zoneOk = !!m && m.n >= 5;
+            const ref = zoneOk ? m.ppm : cityPpm; const diff = ref ? Math.round(((a.ppm - ref) / ref) * 100) : null;
             return (
               <a key={a.id} href={a.url} target="_blank" rel="noopener noreferrer" className="block rounded-md border p-2 hover:bg-muted">
                 <div className="truncate font-medium">{a.title}</div>
                 <div className="text-xs text-muted-foreground">
                   {ZONES[a.zone].label} · {a.ppm.toLocaleString("ro-RO")} €/m²
-                  {diff !== null && m.n >= 5 && <> · <span className={diff > 0 ? "text-destructive" : "text-primary"}>{diff > 0 ? "+" : ""}{diff}% față de mediană</span></>}
+                  {diff !== null && <> · <span className={diff > 0 ? "text-destructive" : "text-primary"}>{diff > 0 ? "+" : ""}{diff}% față de mediana {zoneOk ? "cartierului" : "orașului"}</span></>}
                 </div>
               </a>
             );
