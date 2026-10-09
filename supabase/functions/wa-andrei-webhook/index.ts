@@ -849,6 +849,20 @@ Deno.serve(async (req) => {
             .eq("wa_message_id", waId);
         }
 
+        // Alertele pentru investitori: statusul real Meta pe livrare.
+        {
+          const ip: Record<string, unknown> = {};
+          if (state === "delivered") { ip.status = "delivered"; ip.delivered_at = tsIso; }
+          if (state === "read") { ip.status = "read"; ip.read_at = tsIso; }
+          if (state === "failed") { ip.status = "failed"; ip.error = `meta_status_failed: ${JSON.stringify(st?.errors ?? []).slice(0, 380)}`; }
+          if (Object.keys(ip).length) {
+            await supabase.from("investor_alert_deliveries").update(ip).eq("wa_message_id", waId);
+            if (state === "read") {
+              await supabase.from("investor_alert_deliveries").update({ delivered_at: tsIso }).eq("wa_message_id", waId).is("delivered_at", null);
+            }
+          }
+        }
+
         // Aceeași confirmare se salvează și pe mesaj, ca să vedem în Admin
         // starea reală (trimis / livrat / citit) pentru fiecare mesaj trimis,
         // nu doar pentru cele plecate din coadă.
