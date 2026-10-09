@@ -9,3 +9,5 @@
 - The auto-consented listings view joins prospect/contact data with normalized WhatsApp profile names, shares tested formatting/search helpers, and exports the filtered rows — avoids invented owner data and mismatched CSV results.
 - Automatic property publishing prepares a cropped stored cover before activation and derives bedrooms from original source descriptions via a shared deterministic helper — prevents raw portal footers and living rooms counted as bedrooms.
 - The Advisor injects mandatory geography from stored property GPS or explicitly approximate district references and versions its cache when geography rules change — prevents stale or invented compass positioning.
+- Admin „Publică acum” calls `publish-consented-listing` (consent check, per-prospect lock, retries on 5xx, audit) instead of the worker directly — prevents double or silently failed publications.
+- Lead inserts in edge functions never chain `.single()` after insert — the dedupe trigger returns 0 rows on merge and `.single()` makes the API roll the merge back.
