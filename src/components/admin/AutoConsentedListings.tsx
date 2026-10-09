@@ -55,7 +55,7 @@ export default function AutoConsentedListings() {
       const [{ data: prospects }, { data: props }] = await Promise.all([
         prospectIds.length
           ? (supabase.from("prospect_listings") as any)
-              .select("id, title, zone, price, category, rooms, owner_name, phone")
+              .select("id, title, zone, price, category, rooms, contact_name, contact_phone")
               .in("id", prospectIds)
           : Promise.resolve({ data: [] }),
         propertyIds.length
@@ -78,7 +78,7 @@ export default function AutoConsentedListings() {
           details: [rooms, zone].filter(Boolean).join(" · ") || "—",
           price: prospect?.price ?? null,
           rent: String(prospect?.category || "").startsWith("inchiriere"),
-          ownerName: prospect?.owner_name || null,
+          ownerName: prospect?.contact_name || null,
           slug: prop?.slug || null,
           published,
         };
