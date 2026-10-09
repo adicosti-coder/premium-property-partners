@@ -29,21 +29,24 @@ Deno.serve(async (req) => {
   const sb = createClient(url, key, { auth: { persistSession: false } });
 
   const { data: consent } = await sb.from("wa_publish_consents")
-    .select("id, status").eq("prospect_listing_id", prospectId)
-    .in("status", ["consented", "approved", "published"]).limit(1).maybeSingle();
+    .select("id, status, property_id").eq("prospect_listing_id", prospectId)
+    .in("status", ["granted", "published"]).limit(1).maybeSingle();
   if (!consent) return json({ success: false, error: "Nu există acord „DA” pentru acest anunț" }, 409);
 
   // Already published? Return the existing page instead of publishing twice.
-  const { data: existing } = await sb.from("properties").select("id, slug, is_active")
-    .eq("prospect_listing_id", prospectId).eq("is_active", true).limit(1).maybeSingle();
+  const { data: existing } = consent.property_id
+    ? await sb.from("properties").select("id, slug, is_active").eq("id", consent.property_id).eq("is_active", true).maybeSingle()
+    : { data: null };
   if (existing?.slug) {
     return json({ success: true, published: true, already: true, property_id: existing.id, slug: existing.slug, url: `https://realtrust.ro/proprietate/${existing.slug}` });
   }
 
   // Lock: one publish per prospect per 3 minutes (double click / parallel tabs).
   const lockKey = `publish-consented:${prospectId}`;
-  await sb.from("request_idempotency").delete().eq("key", lockKey).lt("created_at", new Date(Date.now() - 180_000).toISOString());
-  const { error: lockErr } = await sb.from("request_idempotency").insert({ key: lockKey });
+  const scope = "publish-consented";
+  await sb.from("request_idempotency").delete().eq("scope", scope).eq("key", lockKey).lt("expires_at", new Date().toISOString());
+  const { error: lockErr } = await sb.from("request_idempotency")
+    .insert({ scope, key: lockKey, expires_at: new Date(Date.now() + 180_000).toISOString() });
   if (lockErr) return json({ success: false, error: "Publicarea este deja în curs pentru acest anunț" }, 409);
 
   let last: { status: number; body: any } = { status: 0, body: null };
@@ -63,7 +66,7 @@ Deno.serve(async (req) => {
       if (attempt < 3) await sleep(attempt * 2000);
     }
   } finally {
-    await sb.from("request_idempotency").delete().eq("key", lockKey);
+    await sb.from("request_idempotency").delete().eq("scope", scope).eq("key", lockKey);
   }
 
   await sb.from("admin_audit_log").insert({
