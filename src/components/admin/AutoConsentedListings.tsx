@@ -107,19 +107,19 @@ export default function AutoConsentedListings({ title = "Anunțuri Preluate Auto
     },
   });
 
-  const publishNow = async (prospectId: string | null) => {
+  const publishNow = async (prospectId: string | null, republish = false) => {
     if (!prospectId) return toast.error("Anunțul nu are prospect asociat");
     setBusy(prospectId);
     try {
       const { data, error } = await supabase.functions.invoke("publish-consented-listing", {
-        body: { prospect_id: prospectId },
+        body: { prospect_id: prospectId, republish },
       });
       if (error) {
         const details = error instanceof FunctionsHttpError ? await error.context.text() : error.message;
         throw new Error(details);
       }
       if (!data?.success) throw new Error(data?.error || data?.reason || "Publicarea a eșuat");
-      if (data.published) toast.success("Anunț publicat pe realtrust.ro");
+      if (data.published) toast.success(republish ? "Anunț re-publicat pe realtrust.ro" : "Anunț publicat pe realtrust.ro");
       else toast.info(`Nepublicat: ${data.reason ?? "motiv necunoscut"}`);
       await q.refetch();
     } catch (error) {
@@ -227,7 +227,7 @@ export default function AutoConsentedListings({ title = "Anunțuri Preluate Auto
                     ) : null}
                     {r.published && (
                       <Button size="sm" variant="outline" className="min-h-12" disabled={busy !== null || !r.prospect_listing_id}
-                        onClick={() => { if (window.confirm("Re-publici anunțul pe realtrust.ro? Conținutul și pozele se regenerează.")) void publishNow(r.prospect_listing_id); }}>
+                        onClick={() => { if (window.confirm("Re-publici anunțul pe realtrust.ro? Conținutul și pozele se regenerează.")) void publishNow(r.prospect_listing_id, true); }}>
                         <RefreshCw className="h-4 w-4 mr-1" />
                         {busy !== null && busy === r.prospect_listing_id ? "Se re-publică…" : "Re-publică"}
                       </Button>
