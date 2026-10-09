@@ -29,16 +29,19 @@ export function AppAdminSidebar({
   activeTab, onSelect, pinned, onTogglePin, onOpenCommand, counters, recent = [],
 }: Props) {
   const navigate = useNavigate();
-  const { state } = useSidebar();
+  const { state, isMobile, setOpenMobile } = useSidebar();
   const collapsed = state === "collapsed";
 
   const handleClick = (tab: AdminTab) => {
     if (tab.externalRoute) {
       navigate(tab.externalRoute);
-      return;
+    } else {
+      onSelect(tab.value);
     }
-    onSelect(tab.value);
+    // Pe mobil meniul e un sertar: se închide după selectare, ca să se vadă ecranul ales.
+    if (isMobile) setOpenMobile(false);
   };
+
 
   /** Prefetch chunk-ul lazy când utilizatorul intenționează să dea click. */
   const handleHover = (tab: AdminTab) => {
