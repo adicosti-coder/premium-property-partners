@@ -83,7 +83,7 @@ const AnalizaAnunt = () => {
       const mRes = await fetch(fnUrl("listing-market-score"), {
         method: "POST",
         headers: headers(),
-        body: JSON.stringify({ zone: a.zona, rooms: a.camere, size: a.suprafata, price: a.pret_listare, source_url: url.trim(), title: a.titlu, phone: phone.trim() || null }),
+        body: JSON.stringify({ zone: [a.zona, a.titlu].filter(Boolean).join(" "), rooms: a.camere, size: a.suprafata, price: a.pret_listare, source_url: url.trim(), title: a.titlu, phone: phone.trim() || null }),
       });
       const m = await mRes.json().catch(() => ({}));
       if (!mRes.ok || !m?.ok) {

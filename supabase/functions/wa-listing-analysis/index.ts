@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
     const mRes = await fetch(`${base}/functions/v1/listing-market-score`, {
       method: "POST", headers: h,
       body: JSON.stringify({
-        zone: a.zona, rooms: a.camere, size: a.suprafata, price: a.pret_listare,
+        zone: [a.zona, a.titlu].filter(Boolean).join(" "), rooms: a.camere, size: a.suprafata, price: a.pret_listare,
         channel: "whatsapp", phone, source_url: url, title: a.titlu,
       }),
     });
