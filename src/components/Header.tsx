@@ -226,6 +226,7 @@ const Header = () => {
         { href: "/pentru-proprietari", label: language === "ro" ? "Pentru Proprietari" : "For Owners", isPage: true, icon: <BuildingIcon /> },
         { href: "/preturi", label: language === "ro" ? "Prețuri & Pachete" : "Pricing & Packages", isPage: true, icon: <TrendingIcon /> },
         { href: "/hostscan-ai", label: language === "ro" ? "HostScan AI" : "HostScan AI", isPage: true, icon: <ScanIcon /> },
+        { href: "/analiza-anunt", label: language === "ro" ? "Analizează un anunț" : "Analyze a listing", isPage: true, icon: <ScanIcon /> },
       ],
     },
     {
