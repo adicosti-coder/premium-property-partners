@@ -375,7 +375,7 @@ Deno.serve(async (req) => {
     }
 
     finalImages = Array.from(new Set(
-      (finalImages || []).filter((u): u is string => typeof u === "string").map((u) => u.trim()).filter((u) => u.length > 0),
+      (finalImages || []).filter((u): u is string => typeof u === "string").map((u) => u.trim()).filter(isValidPropertyImageUrl),
     ));
 
     if (finalImages.length === 0) {
