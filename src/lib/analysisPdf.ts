@@ -35,6 +35,19 @@ export interface AnalysisPdfInput {
   photoCount?: number;
   shareUrl?: string | null;
   createdAt?: string | null;
+  market?: {
+    total_score: number;
+    scores: Record<string, number>;
+    negotiation_eur: number;
+    target_low: number;
+    target_high: number;
+    asking_ppm: number;
+    median_ppm: number;
+    comparables: number;
+    classic_rent_month: number;
+    hotel_net_month: number;
+    hotel_yield_pct: number;
+  } | null;
 }
 
 export function generateAnalysisPdf(input: AnalysisPdfInput): jsPDF {
@@ -260,6 +273,21 @@ export function generateAnalysisPdf(input: AnalysisPdfInput): jsPDF {
     8,
   );
   if (input.shareUrl) paragraph(`Link analiza: ${input.shareUrl}`, 8);
+
+  // ---- 5. Scor de piata, negociere si pret tinta ----
+  const m = input.market;
+  if (m) {
+    heading("5. Scor de piata si negociere");
+    paragraph(`Scor general: ${m.total_score}/100`, 13, NAVY);
+    bullets(
+      Object.entries(m.scores).map(([k, v]) => `${k.replace(/_/g, " ")}: ${v}/100`),
+      "-",
+    );
+    paragraph(`Pret cerut: ${num(a.pret_listare, " EUR")} (${m.asking_ppm} EUR/m2, mediana ${m.median_ppm} EUR/m2, ${m.comparables} anunturi comparabile)`, 10, NAVY);
+    paragraph(`Spatiu de negociere: ~${num(m.negotiation_eur, " EUR")}`, 12, NAVY);
+    paragraph(`Pret tinta recomandat: ${num(m.target_low, " EUR")} - ${num(m.target_high, " EUR")}`, 12, NAVY);
+    paragraph(`Chirie clasica estimata: ${num(m.classic_rent_month, " EUR")}/luna; regim hotelier RealTrust: ~${num(m.hotel_net_month, " EUR")}/luna net (randament tinta ${m.hotel_yield_pct}%).`, 10);
+  }
 
   // ---- Footer on every page ----
   const pages = doc.getNumberOfPages();

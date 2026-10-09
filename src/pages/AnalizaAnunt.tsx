@@ -83,7 +83,7 @@ const AnalizaAnunt = () => {
       const mRes = await fetch(fnUrl("listing-market-score"), {
         method: "POST",
         headers: headers(),
-        body: JSON.stringify({ zone: a.zona, rooms: a.camere, size: a.suprafata, price: a.pret_listare }),
+        body: JSON.stringify({ zone: a.zona, rooms: a.camere, size: a.suprafata, price: a.pret_listare, source_url: url.trim(), title: a.titlu, phone: phone.trim() || null }),
       });
       const m = await mRes.json().catch(() => ({}));
       if (!mRes.ok || !m?.ok) {
@@ -118,7 +118,7 @@ const AnalizaAnunt = () => {
   const downloadPdf = async () => {
     if (!analysis) return;
     const { downloadAnalysisPdf } = await import("@/lib/analysisPdf");
-    downloadAnalysisPdf({ analysis, sourceUrl, mode: "url", createdAt: new Date().toISOString() });
+    downloadAnalysisPdf({ analysis, sourceUrl, mode: "url", createdAt: new Date().toISOString(), market });
   };
 
   const waText = encodeURIComponent(
