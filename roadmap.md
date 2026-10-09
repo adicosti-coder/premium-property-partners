@@ -79,3 +79,8 @@
 - [x] Răspunsuri scurte și empatice pentru vizionare, preț, chirie și venit hotelier
 - [x] Zona cerută o singură dată și reutilizată în conversația clientului
 - [x] Teste de regresie, verificare și redeploy WhatsApp
+
+## Tabel acorduri WhatsApp (9 oct 2026)
+- [x] Date proprietar, dată completă și sursă originală
+- [x] Linkuri, stare site și publicare manuală existentă
+- [x] Căutare, export CSV și verificare (4 teste + Admin autentificat, fără publicare reală)

@@ -6,3 +6,4 @@
 - Client qualification derives its saved zone and next step from WhatsApp history, never asks the zone twice, and keeps owner handover logic separate.
 - Owner-consent queue messages resolve their dedicated template against Meta's approved Romanian body at send time; use the existing intro resolver until approval so inspection templates never reach owners.
 - WhatsApp sends normalize phones via `_shared/waPhone.ts` (all format variants in DB lookups) and reserve the number in `request_idempotency` before calling Meta; no automatic resend after timeouts — prevents duplicate messages from parallel or delayed runs.
+- The auto-consented listings view joins prospect/contact data with normalized WhatsApp profile names, shares tested formatting/search helpers, and exports the filtered rows — avoids invented owner data and mismatched CSV results.
