@@ -84,3 +84,9 @@
 - [x] Date proprietar, dată completă și sursă originală
 - [x] Linkuri, stare site și publicare manuală existentă
 - [x] Căutare, export CSV și verificare (4 teste + Admin autentificat, fără publicare reală)
+
+## Corectitudine pagini automate (9 oct 2026)
+- [ ] Cover fără watermark de portal în fluxul automat
+- [ ] Separare camere/dormitoare la publicare
+- [ ] Context geografic verificat în The Advisor
+- [ ] Teste și activarea funcțiilor modificate
