@@ -8,7 +8,7 @@ import { supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient"
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
 
-type Zone = { label: string; lat: number; lng: number; n: number; ppm: number | null };
+type Zone = { label: string; lat: number; lng: number; n: number; ppm: number | null; rent_ppm?: number; classic_yield_pct?: number | null; hotel_yield_pct?: number };
 const W = 640, H = 520, LAT = [45.715, 45.805], LNG = [21.19, 21.315];
 const xy = (lat: number, lng: number) => ({ x: ((lng - LNG[0]) / (LNG[1] - LNG[0])) * W, y: H - ((lat - LAT[0]) / (LAT[1] - LAT[0])) * H });
 
@@ -17,6 +17,7 @@ const HartaPreturi = () => {
   const [city, setCity] = useState(0);
   const [sample, setSample] = useState(0);
   const [sel, setSel] = useState<number | null>(null);
+  const [mode, setMode] = useState<"pret" | "randament">("pret");
 
   useEffect(() => {
     fetch(`${supabaseConfig.url}/functions/v1/zone-price-map`, {
@@ -37,7 +38,7 @@ const HartaPreturi = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Harta prețurilor apartamentelor din Timișoara pe cartiere | RealTrust"
+        title="Harta prețurilor și randamentelor din Timișoara pe cartiere | RealTrust"
         description="Prețul mediu pe m² la vânzare în fiecare cartier din Timișoara, calculat din anunțurile reale din ultimele 6 luni."
         url="https://realtrust.ro/harta-preturi"
       />
@@ -51,7 +52,11 @@ const HartaPreturi = () => {
           </p>
         </section>
         <div className="mx-auto mt-10 grid max-w-6xl gap-6 lg:grid-cols-[1fr_340px]">
-          <Card><CardContent className="p-3">
+          <Card><CardContent className="p-3 space-y-3">
+            <div className="flex gap-2" role="group" aria-label="Ce afișează harta">
+              <Button size="sm" className="min-h-12" variant={mode === "pret" ? "default" : "outline"} aria-pressed={mode === "pret"} onClick={() => setMode("pret")}>Preț mediu €/m²</Button>
+              <Button size="sm" className="min-h-12" variant={mode === "randament" ? "default" : "outline"} aria-pressed={mode === "randament"} onClick={() => setMode("randament")}>Randament chirie vs. hotelier</Button>
+            </div>
             <svg viewBox={`0 0 ${W} ${H}`} className="w-full rounded-lg bg-muted/30" role="img" aria-label="Hartă prețuri medii pe cartiere în Timișoara">
               {zones.map((z, i) => {
                 const { x, y } = xy(z.lat, z.lng);
@@ -60,7 +65,7 @@ const HartaPreturi = () => {
                     <circle cx={x} cy={y} r={z.ppm ? 34 + Math.min(z.n, 200) / 10 : 26} className={z.ppm ? "fill-primary" : "fill-muted-foreground"}
                       fillOpacity={z.ppm ? op(z.ppm) : 0.2} stroke="hsl(var(--foreground))" strokeWidth={sel === i ? 3 : 0} />
                     <text x={x} y={y - 4} textAnchor="middle" className="fill-foreground text-[13px] font-semibold">{z.label}</text>
-                    <text x={x} y={y + 13} textAnchor="middle" className="fill-foreground text-[12px]">{z.ppm ? fmt(z.ppm) : "date puține"}</text>
+                    <text x={x} y={y + 13} textAnchor="middle" className="fill-foreground text-[12px]">{!z.ppm ? "date puține" : mode === "pret" ? fmt(z.ppm) : `chirie ${z.classic_yield_pct ?? "—"}% · hotel ${z.hotel_yield_pct ?? 9.4}%`}</text>
                   </g>
                 );
               })}
@@ -75,21 +80,28 @@ const HartaPreturi = () => {
                     ? `${fmt(zones[sel].ppm!)} · ${Math.round(((zones[sel].ppm! - city) / city) * 100)}% față de media orașului · ${zones[sel].n} anunțuri`
                     : "Prea puține anunțuri recente pentru o medie sigură."}
                 </p>
+                {zones[sel].ppm && (
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                    <div className="rounded-md border p-2"><div className="text-muted-foreground">Chirie lungă</div><div className="font-semibold">{zones[sel].classic_yield_pct}% net/an</div><div className="text-xs text-muted-foreground">~{zones[sel].rent_ppm} €/m²/lună</div></div>
+                    <div className="rounded-md border border-primary p-2"><div className="text-muted-foreground">Regim hotelier</div><div className="font-semibold text-primary">~{zones[sel].hotel_yield_pct ?? 9.4}% net/an</div><div className="text-xs text-muted-foreground">administrare RealTrust</div></div>
+                  </div>
+                )}
               </CardContent></Card>
             )}
             <Card><CardContent className="p-4 space-y-2">
-              <div className="font-semibold text-foreground">Clasament cartiere</div>
+              <div className="font-semibold text-foreground">Clasament cartiere{mode === "randament" ? " (chirie lungă / hotelier)" : ""}</div>
               {sorted.map((z) => (
-                <div key={z.label} className="flex justify-between text-sm"><span>{z.label}</span><span className="font-medium">{fmt(z.ppm!)}</span></div>
+                <div key={z.label} className="flex justify-between text-sm"><span>{z.label}</span><span className="font-medium">{mode === "pret" ? fmt(z.ppm!) : `${z.classic_yield_pct}% / ${z.hotel_yield_pct ?? 9.4}%`}</span></div>
               ))}
             </CardContent></Card>
             <Card><CardContent className="p-4 space-y-3">
               <p className="text-sm text-muted-foreground">Ai găsit un anunț? Află dacă prețul e corect și cât poți negocia.</p>
               <Button asChild className="w-full min-h-12"><Link to="/analiza-anunt">Analizează un anunț</Link></Button>
+              <Button asChild variant="outline" className="w-full min-h-12"><Link to="/alerte-oportunitati">Alerte oportunități sub piață</Link></Button>
             </CardContent></Card>
           </div>
         </div>
-        <p className="mx-auto mt-6 max-w-6xl text-xs text-muted-foreground">Pozițiile cartierelor sunt aproximative. Mediile se actualizează automat.</p>
+        <p className="mx-auto mt-6 max-w-6xl text-xs text-muted-foreground">Pozițiile cartierelor sunt aproximative. Randamentul la chirie lungă = chiria medie din zonă × 12 luni × 90%, raportat la prețul mediu. Regimul hotelier folosește randamentul țintă RealTrust de 9,4% net. Mediile se actualizează automat.</p>
       </main>
       <Suspense fallback={null}><Footer /></Suspense>
     </div>
