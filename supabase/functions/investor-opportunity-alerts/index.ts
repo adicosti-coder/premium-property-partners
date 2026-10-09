@@ -5,6 +5,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { isInternalCall } from "../_shared/cronAuth.ts";
 import { isInternalWaNumber } from "../_shared/waInternalNumbers.ts";
+import { phoneVariants } from "../_shared/waPhone.ts";
 
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { "Content-Type": "application/json" } });
 const eur = (n: number) => `${Math.round(n).toLocaleString("ro-RO")} €`;
@@ -45,8 +46,8 @@ Deno.serve(async (req) => {
   let sent = 0, queued = 0;
   for (const s of subs ?? []) {
     if (isInternalWaNumber(s.phone_normalized)) continue;
-    const { data: dnc } = await sb.from("wa_do_not_contact").select("phone").eq("phone", s.phone_normalized).maybeSingle().then((r: any) => r, () => ({ data: null }));
-    if (dnc) continue;
+    const { data: dnc } = await sb.from("wa_dnc_list").select("id").in("phone_normalized", phoneVariants(s.phone_normalized)).limit(1);
+    if (dnc?.length) continue;
     const mine = opps.filter((o) => (!s.zones?.length || s.zones.includes(o.label)) && (!s.max_price || o.price <= s.max_price));
     let count = 0;
     for (const o of mine) {
