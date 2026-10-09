@@ -610,6 +610,13 @@
       "when": 1791584170610,
       "tag": "0086_analyzed_listings_tracking",
       "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1791585543219,
+      "tag": "0087_investor_opportunity_alerts",
+      "breakpoints": true
     }
   ]
 }
