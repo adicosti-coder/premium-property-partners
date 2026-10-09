@@ -106,8 +106,8 @@ export default function AutoConsentedListings() {
     if (!prospectId) return toast.error("Anunțul nu are prospect asociat");
     setBusy(prospectId);
     try {
-      const { data, error } = await supabase.functions.invoke("auto-publish-listing-worker", {
-        body: { prospect_id: prospectId, triggered_by: "admin_publish_now" },
+      const { data, error } = await supabase.functions.invoke("publish-consented-listing", {
+        body: { prospect_id: prospectId },
       });
       if (error) {
         const details = error instanceof FunctionsHttpError ? await error.context.text() : error.message;

@@ -171,31 +171,38 @@ const handler = async (req: Request): Promise<Response> => {
         email,
         message,
       })
-      .select("id")
-      .single();
+      .select("id");
+    // No .single(): when leads_dedupe_upsert merges into an existing lead the
+    // insert returns 0 rows, and .single() would make the API roll back that merge.
 
-    let leadId: string | null = insertedLead?.id ?? null;
+    let leadId: string | null = insertedLead?.[0]?.id ?? null;
 
     if (error || !leadId) {
       // PGRST116 = 0 rows: the leads_dedupe_upsert trigger found an existing
       // lead (same phone/email), updated it and skipped the insert. That is a
       // SUCCESS for the visitor — recover the existing lead id and continue.
-      if (error?.code === "PGRST116") {
-        const phoneDigits = whatsappNumber.replace(/\D/g, "").replace(/^00/, "");
-        const e164 = phoneDigits.startsWith("40") ? `+${phoneDigits}` : phoneDigits.length === 9 ? `+40${phoneDigits}` : null;
-        const variants = [...new Set([whatsappNumber, phoneDigits, e164].filter(Boolean))] as string[];
+      if (!error) {
+        // Same number in every stored format (0723…, 723…, 40723…, +40723…, 0040723…).
+        let d = whatsappNumber.replace(/\D/g, "").replace(/^00/, "");
+        if (/^0\d{9}$/.test(d)) d = `40${d.slice(1)}`;
+        else if (/^\d{9}$/.test(d)) d = `40${d}`;
+        const national = d.startsWith("40") ? d.slice(2) : d;
+        const variants = [...new Set([whatsappNumber, d, `+${d}`, `00${d}`, `0${national}`, national].filter(Boolean))];
+        // Double-quote values: a bare "+" in a PostgREST filter is decoded as a space.
+        const q = (v: string) => `"${v.replace(/"/g, "")}"`;
         const orParts = [
-          ...variants.map((v) => `whatsapp_number.eq.${v}`),
-          ...(email ? [`email.ilike.${email.toLowerCase()}`] : []),
+          ...variants.map((v) => `whatsapp_number.eq.${q(v)}`),
+          ...(email ? [`email.ilike.${q(email.toLowerCase())}`] : []),
         ];
         if (orParts.length) {
-          const { data: existing } = await supabase
+          const { data: existing, error: lookupErr } = await supabase
             .from("leads")
             .select("id")
             .or(orParts.join(","))
             .order("created_at", { ascending: false })
             .limit(1)
             .maybeSingle();
+          if (lookupErr) console.error("dedupe lookup failed:", lookupErr);
           leadId = existing?.id ?? null;
         }
       }
