@@ -49,7 +49,11 @@ const headers = () => ({
 });
 
 const AnalizaAnunt = () => {
-  const [url, setUrl] = useState("");
+  // Linkurile din alertele WhatsApp pentru investitori vin cu ?url=… precompletat.
+  const [url, setUrl] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return new URLSearchParams(window.location.search).get("url")?.slice(0, 500) ?? "";
+  });
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState<ListingAnalysis | null>(null);

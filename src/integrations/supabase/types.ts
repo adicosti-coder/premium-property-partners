@@ -2989,30 +2989,45 @@ export type Database = {
       investor_alert_deliveries: {
         Row: {
           created_at: string
+          delivered_at: string | null
           error: string | null
           id: string
           prospect_listing_id: string
+          read_at: string | null
           score: number | null
+          sent_at: string | null
           status: string
           subscriber_id: string
+          template_name: string | null
+          wa_message_id: string | null
         }
         Insert: {
           created_at?: string
+          delivered_at?: string | null
           error?: string | null
           id?: string
           prospect_listing_id: string
+          read_at?: string | null
           score?: number | null
+          sent_at?: string | null
           status?: string
           subscriber_id: string
+          template_name?: string | null
+          wa_message_id?: string | null
         }
         Update: {
           created_at?: string
+          delivered_at?: string | null
           error?: string | null
           id?: string
           prospect_listing_id?: string
+          read_at?: string | null
           score?: number | null
+          sent_at?: string | null
           status?: string
           subscriber_id?: string
+          template_name?: string | null
+          wa_message_id?: string | null
         }
         Relationships: [
           {

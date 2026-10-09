@@ -1,15 +1,17 @@
 // investor-opportunity-alerts — hourly cron. New sale listings (last 26h) priced clearly
 // under their district median (opportunity score > 80 ≈ ≥10% below median) are sent to
-// investor subscribers on WhatsApp. Free-form messages only go out inside Meta's 24h
-// window; otherwise the delivery is kept as „needs_template” (no template is used).
+// investor subscribers via the Meta-approved template „alerta_investitor_oportunitate”
+// (works outside the 24h window). Status: sending → sent → delivered/read | failed.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { isInternalCall } from "../_shared/cronAuth.ts";
 import { isInternalWaNumber } from "../_shared/waInternalNumbers.ts";
 import { phoneVariants } from "../_shared/waPhone.ts";
+import { WA_BUSINESS_ACCOUNT_ID, WA_API_VERSION, waToken } from "../_shared/waConfig.ts";
 
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { "Content-Type": "application/json" } });
 const eur = (n: number) => `${Math.round(n).toLocaleString("ro-RO")} €`;
 const MAX_PER_SUB = 3;
+const TEMPLATE = "alerta_investitor_oportunitate";
 
 Deno.serve(async (req) => {
   if (!(await isInternalCall(req))) return json({ error: "unauthorized" }, 401);
@@ -42,9 +44,21 @@ Deno.serve(async (req) => {
     return score > 80 && l.source_url ? [{ ...l, label: label ?? "Timișoara", median, ppm, diff, score }] : [];
   });
 
+  // Șablonul Meta trebuie să fie APROBAT și să aibă exact 8 variabile în corp;
+  // altfel nu trimitem nimic (Meta ar respinge oricum trimiterea).
+  const token = waToken();
+  const tplRes = token ? await fetch(`https://graph.facebook.com/${WA_API_VERSION}/${WA_BUSINESS_ACCOUNT_ID}/message_templates?name=${TEMPLATE}&fields=name,status,language,components&limit=20`,
+    { headers: { Authorization: `Bearer ${token}` } }).then((r) => r.json()).catch(() => null) : null;
+  const tpl = (tplRes?.data ?? []).find((t: any) => t.name === TEMPLATE && t.status === "APPROVED" &&
+    new Set((t.components?.find((c: any) => c.type === "BODY")?.text ?? "").match(/\{\{\d+\}\}/g) ?? []).size === 8);
+  if (!tpl) {
+    console.error(`[investor-alerts] template ${TEMPLATE} not approved/usable`, JSON.stringify(tplRes).slice(0, 300));
+  }
+
   const { data: subs } = await sb.from("investor_alert_subscribers").select("id, phone_normalized, zones, max_price").is("unsubscribed_at", null);
-  let sent = 0, queued = 0;
+  let sent = 0, failed = 0;
   for (const s of subs ?? []) {
+    if (!tpl) break;
     if (isInternalWaNumber(s.phone_normalized)) continue;
     const { data: dnc } = await sb.from("wa_dnc_list").select("id").in("phone_normalized", phoneVariants(s.phone_normalized)).limit(1);
     if (dnc?.length) continue;
@@ -52,32 +66,42 @@ Deno.serve(async (req) => {
     let count = 0;
     for (const o of mine) {
       if (count >= MAX_PER_SUB) break;
-      const { error: dup } = await sb.from("investor_alert_deliveries").insert({ subscriber_id: s.id, prospect_listing_id: o.id, score: o.score });
-      if (dup) continue; // already delivered/recorded
+      // Rezervarea unică (abonat, anunț) previne retrimiterea aceluiași anunț.
+      const { error: dup } = await sb.from("investor_alert_deliveries")
+        .insert({ subscriber_id: s.id, prospect_listing_id: o.id, score: o.score, status: "sending", template_name: TEMPLATE });
+      if (dup) continue;
       count++;
-      const { data: conv } = await sb.from("wa_conversations").select("id, window_expires_at").eq("phone_normalized", s.phone_normalized).limit(1).maybeSingle();
-      const open = conv?.window_expires_at && new Date(conv.window_expires_at).getTime() > Date.now();
-      if (!open) {
-        await sb.from("investor_alert_deliveries").update({ status: "needs_template" }).eq("subscriber_id", s.id).eq("prospect_listing_id", o.id);
-        queued++;
-        continue;
+      const mark = (patch: Record<string, unknown>) => sb.from("investor_alert_deliveries").update(patch).eq("subscriber_id", s.id).eq("prospect_listing_id", o.id);
+
+      let { data: conv } = await sb.from("wa_conversations").select("id").in("phone_normalized", phoneVariants(s.phone_normalized)).limit(1).maybeSingle();
+      if (!conv) {
+        ({ data: conv } = await sb.from("wa_conversations").insert({ phone_normalized: s.phone_normalized }).select("id").maybeSingle());
       }
-      const text = [
-        `🔔 Oportunitate sub prețul pieței (scor ${o.score}/100)`,
-        `${o.title || "Apartament"} · ${o.label}`,
-        `${eur(o.price)} · ${Math.round(o.ppm)} €/m² (${Math.round(o.diff * 100)}% față de mediana ${Math.round(o.median)} €/m²)`,
-        o.source_url,
-        "Răspundeți STOP pentru dezabonare.",
-      ].join("\n");
+      if (!conv) { await mark({ status: "failed", error: "conversation_create_failed" }); failed++; continue; }
+
+      const clean = (v: string) => v.replace(/[\r\n\t]+/g, " ").replace(/ {4,}/g, " ").trim().slice(0, 120) || "-";
+      const type = o.rooms ? `Apartament ${o.rooms} ${Number(o.rooms) === 1 ? "cameră" : "camere"}` : (o.title || "Apartament");
+      const hotelMonthly = (Number(o.price) * 0.094) / 12;
+      const params = [
+        o.label, type, eur(o.price), `${Math.round(o.ppm)} €/m²`, String(o.score),
+        `${Math.abs(Math.round(o.diff * 100))}%`, `${eur(hotelMonthly)}/lună`,
+        `https://realtrust.ro/analiza-anunt?url=${encodeURIComponent(o.source_url)}`,
+      ].map((p) => clean(String(p)));
+
       const res = await fetch(`${base}/functions/v1/wa-andrei-send`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, apikey: key, "x-internal-secret": Deno.env.get("WA_ANDREI_INTERNAL_SECRET") || "" },
-        body: JSON.stringify({ conversation_id: conv!.id, text, auto_kind: `investor_opp_${o.id}` }),
+        body: JSON.stringify({ conversation_id: conv.id, template_name: TEMPLATE, template_language: tpl.language || "ro", template_params: params, auto_kind: `investor_opp_${o.id}` }),
       }).catch(() => null);
-      await sb.from("investor_alert_deliveries").update({ status: res?.ok ? "sent" : "failed", error: res?.ok ? null : `http_${res?.status ?? "network"}` })
-        .eq("subscriber_id", s.id).eq("prospect_listing_id", o.id);
-      if (res?.ok) sent++;
+      const out = res ? await res.json().catch(() => ({})) : {};
+      if (res?.ok) {
+        await mark({ status: "sent", error: null, wa_message_id: out?.wa_message_id ?? null, sent_at: new Date().toISOString() });
+        sent++;
+      } else {
+        await mark({ status: "failed", error: `http_${res?.status ?? "network"}: ${JSON.stringify(out?.details ?? out).slice(0, 300)}` });
+        failed++;
+      }
     }
   }
-  return json({ ok: true, opportunities: opps.length, subscribers: subs?.length ?? 0, sent, needs_template: queued });
+  return json({ ok: true, template: tpl ? "approved" : "not_approved", opportunities: opps.length, subscribers: subs?.length ?? 0, sent, failed });
 });
