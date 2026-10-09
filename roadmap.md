@@ -86,7 +86,7 @@
 - [x] Căutare, export CSV și verificare (4 teste + Admin autentificat, fără publicare reală)
 
 ## Corectitudine pagini automate (9 oct 2026)
-- [ ] Cover fără watermark de portal în fluxul automat
-- [ ] Separare camere/dormitoare la publicare
-- [ ] Context geografic verificat în The Advisor
-- [ ] Teste și activarea funcțiilor modificate
+- [x] Cover decupat jos înainte de publicare; logo-urile centrale rămân pentru curățarea manuală
+- [x] Separare camere/dormitoare la publicare, cu excepții explicite în sursă
+- [x] Context geografic GPS/reper aproximativ în The Advisor și reînnoirea cache-ului vechi
+- [x] 17 teste + probe JPEG/WebP și activarea funcțiilor modificate
