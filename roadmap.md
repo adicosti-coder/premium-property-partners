@@ -81,6 +81,6 @@
 - [x] Teste de regresie, verificare și redeploy WhatsApp
 
 ## Tabel acorduri WhatsApp (9 oct 2026)
-- [ ] Date proprietar, dată completă și sursă originală
-- [ ] Linkuri, stare site și publicare manuală existentă
-- [ ] Căutare, export CSV și verificare
+- [x] Date proprietar, dată completă și sursă originală
+- [x] Linkuri, stare site și publicare manuală existentă
+- [x] Căutare, export CSV și verificare (4 teste + Admin autentificat, fără publicare reală)
