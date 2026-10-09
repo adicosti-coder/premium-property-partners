@@ -2986,6 +2986,83 @@ export type Database = {
         }
         Relationships: []
       }
+      investor_alert_deliveries: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          prospect_listing_id: string
+          score: number | null
+          status: string
+          subscriber_id: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          prospect_listing_id: string
+          score?: number | null
+          status?: string
+          subscriber_id: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          prospect_listing_id?: string
+          score?: number | null
+          status?: string
+          subscriber_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_alert_deliveries_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "investor_alert_subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_alert_subscribers: {
+        Row: {
+          consent_text: string
+          consented_at: string
+          created_at: string
+          id: string
+          max_price: number | null
+          min_score: number
+          name: string | null
+          phone_normalized: string
+          unsubscribed_at: string | null
+          zones: string[]
+        }
+        Insert: {
+          consent_text: string
+          consented_at?: string
+          created_at?: string
+          id?: string
+          max_price?: number | null
+          min_score?: number
+          name?: string | null
+          phone_normalized: string
+          unsubscribed_at?: string | null
+          zones?: string[]
+        }
+        Update: {
+          consent_text?: string
+          consented_at?: string
+          created_at?: string
+          id?: string
+          max_price?: number | null
+          min_score?: number
+          name?: string | null
+          phone_normalized?: string
+          unsubscribed_at?: string | null
+          zones?: string[]
+        }
+        Relationships: []
+      }
       keyword_radar_queries: {
         Row: {
           category: string

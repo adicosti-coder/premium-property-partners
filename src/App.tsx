@@ -112,6 +112,7 @@ const PiataImobiliara = lazyWithRetry(() => import("./pages/PiataImobiliara"));
 const EvaluareGratuita = lazyWithRetry(() => import("./pages/EvaluareGratuita"));
 const AnalizaAnunt = lazyWithRetry(() => import("./pages/AnalizaAnunt"));
 const HartaPreturi = lazyWithRetry(() => import("./pages/HartaPreturi"));
+const AlerteOportunitati = lazyWithRetry(() => import("./pages/AlerteOportunitati"));
 const ThankYou = lazyWithRetry(() => import("./pages/ThankYou"));
 const SemnareContract = lazyWithRetry(() => import("./pages/SemnareContract"));
 const StatusLead = lazyWithRetry(() => import("./pages/StatusLead"));
@@ -319,6 +320,7 @@ const App = () => (
                     <Route path="/evaluare-gratuita" element={<EvaluareGratuita />} />
                     <Route path="/analiza-anunt" element={<AnalizaAnunt />} />
                     <Route path="/harta-preturi" element={<HartaPreturi />} />
+                    <Route path="/alerte-oportunitati" element={<AlerteOportunitati />} />
                     <Route path="/multumire" element={<ThankYou />} />
                     <Route path="/contract/:token" element={<SemnareContract />} />
                     <Route path="/status-lead" element={<StatusLead />} />

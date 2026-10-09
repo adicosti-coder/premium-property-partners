@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { neighborhoods } from "@/data/neighborhoods";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { trackConversion, formatPhoneInput } from "@/lib/conversionTracking";
+const OwnerIncomeQuickCalc = lazy(() => import("@/components/OwnerIncomeQuickCalc"));
 
 const EVAL_FAQS = [
   {
@@ -534,6 +535,7 @@ const EvaluareGratuita = () => {
             </Accordion>
           </section>
         </div>
+        <Suspense fallback={null}><OwnerIncomeQuickCalc /></Suspense>
       </main>
       <Footer />
     </Suspense>

@@ -28,8 +28,23 @@ Deno.serve(async (req) => {
   }
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const since = new Date(Date.now() - 180 * 86400_000).toISOString();
-  const { data, error } = await sb.from("prospect_listings").select("zone, price, size").eq("category", "vanzare")
-    .gte("created_at", since).gte("price", 20000).lte("price", 1500000).gte("size", 15).limit(3000);
+  const [{ data, error }, { data: rent }] = await Promise.all([
+    sb.from("prospect_listings").select("zone, price, size").eq("category", "vanzare")
+      .gte("created_at", since).gte("price", 20000).lte("price", 1500000).gte("size", 15).limit(3000),
+    sb.from("prospect_listings").select("zone, price, size").eq("category", "inchiriere")
+      .gte("created_at", since).gte("price", 150).lte("price", 5000).gte("size", 15).limit(2000),
+  ]);
+  const zoneIdx = (z: string) => { const n = norm(z || ""); return ZONES.findIndex((x) => x.keys.some((k) => n.includes(k))); };
+  const rentB: number[][] = ZONES.map(() => []);
+  const rentAll: number[] = [];
+  for (const r of rent ?? []) {
+    const ppm = Number(r.price) / Number(r.size);
+    if (!(ppm > 3 && ppm < 40)) continue;
+    rentAll.push(ppm);
+    const i = zoneIdx(r.zone);
+    if (i >= 0) rentB[i].push(ppm);
+  }
+  const cityRent = median(rentAll) || 9;
   if (error) return new Response(JSON.stringify({ error: "db_error" }), { status: 500, headers: { ...cors, "Content-Type": "application/json" } });
   const buckets: number[][] = ZONES.map(() => []);
   const all: number[] = [];
@@ -45,7 +60,19 @@ Deno.serve(async (req) => {
     ok: true,
     city_ppm: Math.round(median(all)),
     sample: all.length,
-    zones: ZONES.map((z, i) => ({ label: z.label, lat: z.lat, lng: z.lng, n: buckets[i].length, ppm: buckets[i].length >= 5 ? Math.round(median(buckets[i])) : null })),
+    city_rent_ppm: Math.round(cityRent * 10) / 10,
+    hotel_yield_pct: 9.4,
+    zones: ZONES.map((z, i) => {
+      const ppm = buckets[i].length >= 5 ? Math.round(median(buckets[i])) : null;
+      const rentPpm = rentB[i].length >= 5 ? median(rentB[i]) : cityRent;
+      return {
+        label: z.label, lat: z.lat, lng: z.lng, n: buckets[i].length, ppm,
+        rent_ppm: Math.round(rentPpm * 10) / 10, rent_n: rentB[i].length,
+        // Randament net chirie lungă: 12 luni × 90% (gol/costuri) / preț pe m².
+        classic_yield_pct: ppm ? Math.round(((rentPpm * 12 * 0.9) / ppm) * 1000) / 10 : null,
+        hotel_yield_pct: 9.4,
+      };
+    }),
     updated_at: new Date().toISOString(),
   });
   cache = { at: Date.now(), body };
