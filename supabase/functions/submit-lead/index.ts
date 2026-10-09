@@ -40,7 +40,7 @@ const VALID_PROPERTY_TYPES = [
 const VALID_SOURCES = [
   "calculator", "quick_form", "lead_capture_form",
   "rental-calculator", "advanced-rental-calculator", "city_of_mara_landing",
-  "pagina_contact", "apel_2_minute", "evaluare_gratuita",
+  "pagina_contact", "apel_2_minute", "evaluare_gratuita", "analiza_anunt",
 ];
 
 const handler = async (req: Request): Promise<Response> => {
