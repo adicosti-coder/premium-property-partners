@@ -174,15 +174,39 @@ const handler = async (req: Request): Promise<Response> => {
       .select("id")
       .single();
 
-    if (error || !insertedLead) {
-      console.error("Error inserting lead:", error);
-      return new Response(JSON.stringify({ error: "Failed to save lead" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    let leadId: string | null = insertedLead?.id ?? null;
 
-    const leadId = insertedLead.id;
+    if (error || !leadId) {
+      // PGRST116 = 0 rows: the leads_dedupe_upsert trigger found an existing
+      // lead (same phone/email), updated it and skipped the insert. That is a
+      // SUCCESS for the visitor — recover the existing lead id and continue.
+      if (error?.code === "PGRST116") {
+        const phoneDigits = whatsappNumber.replace(/\D/g, "").replace(/^00/, "");
+        const e164 = phoneDigits.startsWith("40") ? `+${phoneDigits}` : phoneDigits.length === 9 ? `+40${phoneDigits}` : null;
+        const variants = [...new Set([whatsappNumber, phoneDigits, e164].filter(Boolean))] as string[];
+        const orParts = [
+          ...variants.map((v) => `whatsapp_number.eq.${v}`),
+          ...(email ? [`email.ilike.${email.toLowerCase()}`] : []),
+        ];
+        if (orParts.length) {
+          const { data: existing } = await supabase
+            .from("leads")
+            .select("id")
+            .or(orParts.join(","))
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          leadId = existing?.id ?? null;
+        }
+      }
+      if (!leadId) {
+        console.error("Error inserting lead:", error);
+        return new Response(JSON.stringify({ error: "Failed to save lead" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     // --- Mirror into prospect_listings for the Unified Pipeline (best-effort) ---
     // Only when we have a zone selected (owner ROI calculator flow).
