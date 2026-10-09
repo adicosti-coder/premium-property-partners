@@ -3613,6 +3613,60 @@ export type Database = {
           },
         ]
       }
+      listing_market_analyses: {
+        Row: {
+          channel: string
+          created_at: string
+          id: string
+          negotiation_eur: number | null
+          phone: string | null
+          price: number | null
+          result: Json | null
+          rooms: number | null
+          size: number | null
+          source_url: string | null
+          target_high: number | null
+          target_low: number | null
+          title: string | null
+          total_score: number | null
+          zone: string | null
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          id?: string
+          negotiation_eur?: number | null
+          phone?: string | null
+          price?: number | null
+          result?: Json | null
+          rooms?: number | null
+          size?: number | null
+          source_url?: string | null
+          target_high?: number | null
+          target_low?: number | null
+          title?: string | null
+          total_score?: number | null
+          zone?: string | null
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          id?: string
+          negotiation_eur?: number | null
+          phone?: string | null
+          price?: number | null
+          result?: Json | null
+          rooms?: number | null
+          size?: number | null
+          source_url?: string | null
+          target_high?: number | null
+          target_low?: number | null
+          title?: string | null
+          total_score?: number | null
+          zone?: string | null
+        }
+        Relationships: []
+      }
       local_tips: {
         Row: {
           created_at: string
