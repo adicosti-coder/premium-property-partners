@@ -1,5 +1,3 @@
-import { lazy as lazyQc, Suspense as SuspenseQc } from "react";
-const OwnerIncomeQuickCalc = lazyQc(() => import("@/components/OwnerIncomeQuickCalc"));
 import { useState, lazy, Suspense, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -17,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { neighborhoods } from "@/data/neighborhoods";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { trackConversion, formatPhoneInput } from "@/lib/conversionTracking";
+const OwnerIncomeQuickCalc = lazy(() => import("@/components/OwnerIncomeQuickCalc"));
 
 const EVAL_FAQS = [
   {
@@ -536,7 +535,7 @@ const EvaluareGratuita = () => {
             </Accordion>
           </section>
         </div>
-        <SuspenseQc fallback={null}><OwnerIncomeQuickCalc /></SuspenseQc>
+        <Suspense fallback={null}><OwnerIncomeQuickCalc /></Suspense>
       </main>
       <Footer />
     </Suspense>
