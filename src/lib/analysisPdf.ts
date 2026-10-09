@@ -80,7 +80,7 @@ export function generateAnalysisPdf(input: AnalysisPdfInput): jsPDF {
     y += 14;
   };
 
-  const paragraph = (text: string, size = 10, color = GREY) => {
+  const paragraph = (text: string, size = 10, color: readonly number[] = GREY) => {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(size);
     doc.setTextColor(color[0], color[1], color[2]);
