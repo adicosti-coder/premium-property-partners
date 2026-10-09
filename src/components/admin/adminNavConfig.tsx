@@ -230,6 +230,8 @@ const RAW_GROUPS: AdminGroup[] = [
       { value: "whatsapp-edit-listing", label: "Editează din WhatsApp", icon: BadgeCheck, subgroup: "Scraper Pipeline", keywords: ["editeaza", "whatsapp", "anunt", "proprietar", "conversatie"] },
       { value: "anunturi-preluate", label: "Anunțuri Preluate Automat", icon: BadgeCheck, subgroup: "Scraper Pipeline", keywords: ["anunturi preluate", "acorduri whatsapp", "acord", "da public", "publicate", "proprietari", "prospectare", "pipeline", "preluate automat"] },
       { value: "analize-anunturi", label: "Analize (Analizează un anunț)", icon: Radar, subgroup: "Scraper Pipeline", keywords: ["analize", "analizeaza un anunt", "analiza anunt", "scor", "pret tinta", "negociere", "evaluare"] },
+      { value: "rapoarte-pdf-analize", label: "Rapoarte PDF descărcate", icon: Radar, subgroup: "Scraper Pipeline", keywords: ["pdf", "rapoarte", "descarcari", "raport"] },
+      { value: "harta-preturi", label: "Hartă prețuri cartiere", icon: Radar, subgroup: "Scraper Pipeline", keywords: ["harta", "pret mp", "cartiere", "mediana"] },
 
 
     ],

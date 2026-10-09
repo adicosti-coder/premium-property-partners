@@ -143,6 +143,11 @@ const AnalizaAnunt = () => {
     if (!analysis) return;
     const { downloadAnalysisPdf } = await import("@/lib/analysisPdf");
     downloadAnalysisPdf({ analysis, sourceUrl, mode: "url", createdAt: new Date().toISOString(), market });
+    fetch(fnUrl("analyzed-listing"), {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({ action: "pdf", url: url.trim() || sourceUrl }),
+    }).catch(() => undefined);
   };
 
   const waText = encodeURIComponent(

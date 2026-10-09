@@ -53,6 +53,14 @@ Deno.serve(async (req) => {
     return json({ ok: true, hit: true, analysis: data.extracted_data, market: data.market_result, created_at: data.created_at });
   }
 
+  if (body?.action === "pdf") {
+    const { data: last } = await sb.from("analyzed_listings").select("id, pdf_downloads")
+      .eq("url", url).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (!last) return json({ ok: true, tracked: false });
+    await sb.from("analyzed_listings").update({ pdf_downloads: (last.pdf_downloads ?? 0) + 1, pdf_downloaded_at: new Date().toISOString() }).eq("id", last.id);
+    return json({ ok: true, tracked: true });
+  }
+
   if (body?.action !== "save") return json({ error: "invalid_action" }, 400);
   const a = (body?.analysis && typeof body.analysis === "object") ? body.analysis as Record<string, unknown> : {};
   const m = (body?.market && typeof body.market === "object") ? body.market as Record<string, unknown> : null;
@@ -62,8 +70,12 @@ Deno.serve(async (req) => {
   const negotiation = m?.ok ? { target_low: num(m.target_low), target_high: num(m.target_high), negotiation_eur: num(m.negotiation_eur) } : {};
   const phone = str(body?.phone, 30);
 
+  const bare = url.replace(/^https:\/\/www\./, "https://");
+  const { data: prospect } = await sb.from("prospect_listings").select("id")
+    .in("source_url", [url, bare, bare.replace("https://", "https://www.")]).limit(1).maybeSingle();
+  const channel = body?.channel === "whatsapp" ? "whatsapp" : "web";
   const { data: row, error } = await sb.from("analyzed_listings").insert({
-    url, phone_number: phone, extracted_data: extracted, calculated_score: score,
+    url, phone_number: phone, channel, prospect_listing_id: prospect?.id ?? null, extracted_data: extracted, calculated_score: score,
     negotiation_range: negotiation, market_result: m,
   }).select("id, created_at").maybeSingle();
   if (error) return json({ error: "db_error" }, 500);

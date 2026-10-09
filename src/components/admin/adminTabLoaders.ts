@@ -117,6 +117,8 @@ const loaders: Record<string, Loader> = {
   "unified-pipeline": () => import("@/components/admin/UnifiedPipelinePanel"),
   "anunturi-preluate": () => import("@/components/admin/AutoConsentedListingsPanel"),
   "analize-anunturi": () => import("@/components/admin/ListingMarketAnalysesPanel"),
+  "rapoarte-pdf-analize": () => import("@/components/admin/AnalysisPdfReportsPanel"),
+  "harta-preturi": () => import("@/components/admin/NeighborhoodPriceMapPanel"),
   "publicate-realtrust": () => import("@/components/admin/RealtrustPublishedPanel"),
   "whatsapp-edit-listing": () => import("@/components/admin/WhatsappEditListing"),
 

@@ -506,32 +506,50 @@ export type Database = {
       analyzed_listings: {
         Row: {
           calculated_score: number | null
+          channel: string
           created_at: string
           extracted_data: Json
           id: string
           market_result: Json | null
           negotiation_range: Json
+          pdf_downloaded_at: string | null
+          pdf_downloads: number
           phone_number: string | null
+          price_alert_price: number | null
+          price_alert_sent_at: string | null
+          prospect_listing_id: string | null
           url: string
         }
         Insert: {
           calculated_score?: number | null
+          channel?: string
           created_at?: string
           extracted_data?: Json
           id?: string
           market_result?: Json | null
           negotiation_range?: Json
+          pdf_downloaded_at?: string | null
+          pdf_downloads?: number
           phone_number?: string | null
+          price_alert_price?: number | null
+          price_alert_sent_at?: string | null
+          prospect_listing_id?: string | null
           url: string
         }
         Update: {
           calculated_score?: number | null
+          channel?: string
           created_at?: string
           extracted_data?: Json
           id?: string
           market_result?: Json | null
           negotiation_range?: Json
+          pdf_downloaded_at?: string | null
+          pdf_downloads?: number
           phone_number?: string | null
+          price_alert_price?: number | null
+          price_alert_sent_at?: string | null
+          prospect_listing_id?: string | null
           url?: string
         }
         Relationships: []
