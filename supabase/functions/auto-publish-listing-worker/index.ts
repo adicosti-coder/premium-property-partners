@@ -15,6 +15,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { ownerPublishedText, sendWaText } from "../_shared/listingInspection.ts";
 import { loadImportConfig, sanitizeListingText, type ImportConfigRow } from "../_shared/listingSanitizer.ts";
 import { resolveListingBedrooms } from "../_shared/listingRooms.ts";
+import { prepareListingCover } from "../_shared/listingCover.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -404,6 +405,16 @@ Deno.serve(async (req) => {
     const listingType = isRent ? "inchiriere" : "vanzare";
     const platform = prospect.source_platform || "unknown";
 
+    // Prepare a cropped cover BEFORE making the page active (no raw-logo flash).
+    const cover = await prepareListingCover(finalImages, prospect.id, supabase.storage);
+    if (!cover) {
+      await supabase.from("prospect_listings").update({
+        admin_notes: "[worker] Fotografia principală nu a putut fi prelucrată; publicarea așteaptă o fotografie validă.",
+      }).eq("id", prospect.id);
+      return safeJson({ success: true, published: false, reason: "cover_processing_failed" });
+    }
+    finalImages[0] = cover;
+
     const propertyData: Record<string, any> = {
       name: finalTitle.substring(0, 200),
       slug: `${slugify(finalTitle)}-${prospect.id.substring(0, 6)}`,
@@ -498,7 +509,7 @@ Deno.serve(async (req) => {
       const proc = fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/process-listing-images`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
-        body: JSON.stringify({ property_id: inserted.id }),
+        body: JSON.stringify({ property_id: inserted.id, offset: 1 }),
       }).catch((e) => console.warn("process-listing-images dispatch failed", e?.message));
       // @ts-ignore EdgeRuntime
       if (typeof EdgeRuntime !== "undefined" && (EdgeRuntime as any).waitUntil) EdgeRuntime.waitUntil(proc);

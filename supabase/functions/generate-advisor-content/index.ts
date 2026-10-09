@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireAdmin } from "../_shared/adminAuth.ts";
+import { ADVISOR_GEO_VERSION, buildAdvisorGeoContext } from "../_shared/advisorGeo.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -124,17 +125,24 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const sb = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Read actual GPS from the property, rather than trusting AI to place its district.
+    const { data: storedProperty } = await sb.from("properties")
+      .select("latitude, longitude, location")
+      .eq(propertySlug ? "slug" : "name", propertySlug || propertyName)
+      .limit(1).maybeSingle();
+    const geoContext = buildAdvisorGeoContext(storedProperty?.location || location || propertyName || "", storedProperty?.latitude, storedProperty?.longitude);
+
     // --- Check cache first (unless forceRegenerate=true from admin) ---
     if (!forceRegenerate) {
       try {
         const { data: cached } = await sb
           .from("advisor_cache")
-          .select("content")
+          .select("content, updated_at")
           .eq("property_slug", cacheSlug)
           .eq("language", lang)
           .maybeSingle();
 
-        if (cached?.content) {
+        if (cached?.content && cached.updated_at >= "2026-10-09T05:58:00Z") {
           console.log("Cache HIT for", cacheSlug, lang);
           return new Response(JSON.stringify(cached.content), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -228,6 +236,7 @@ Răspunde DOAR cu JSON valid.`;
           { role: "system", content: lang === "en"
               ? (listingType === "inchiriere" ? SYSTEM_PROMPT_RENTAL_EN : SYSTEM_PROMPT_DEFAULT_EN)
               : (listingType === "inchiriere" ? SYSTEM_PROMPT_RENTAL : SYSTEM_PROMPT_DEFAULT) },
+          { role: "system", content: `${ADVISOR_GEO_VERSION}\n${geoContext}` },
           { role: "user", content: userPrompt },
         ],
         response_format: { type: "json_object" },
