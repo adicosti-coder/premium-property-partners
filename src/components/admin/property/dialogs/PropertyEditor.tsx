@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { filterPropertyImages } from "@/utils/propertyImageFilter";
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
