@@ -14,6 +14,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { ownerPublishedText, sendWaText } from "../_shared/listingInspection.ts";
 import { loadImportConfig, sanitizeListingText, type ImportConfigRow } from "../_shared/listingSanitizer.ts";
+import { resolveListingBedrooms } from "../_shared/listingRooms.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -111,6 +112,7 @@ REGULI STRICTE:
 - NU folosi: "proprietar", "persoană fizică", "fără comision", "comision 0", "direct proprietar".
 - Limbaj profesional de agenție, accent pe avantaje și potențial de investiție.`;
   const userPrompt = `Rescrie descrierea pentru un anunț de ${listingType === "inchiriere" ? "închiriere" : "vânzare"}.
+Camerele nu sunt dormitoare: 2 camere = 1 dormitor + 1 living, exceptând descrierea originală care precizează explicit 2 dormitoare separate. Nu inventa compartimentarea.
 Răspunde STRICT în formatul: ---TITLU---\\n[titlu]\\n---SCURT---\\n[descriere scurtă <200 char]\\n---COMPLET---\\n[descriere completă markdown]
 ${hintBlock}
 TITLU ORIGINAL: ${title}
@@ -437,7 +439,7 @@ Deno.serve(async (req) => {
       },
       migrated_from_prospect_id: prospect.id,
       rooms: prospect.rooms,
-      bedrooms: prospect.rooms,
+      bedrooms: resolveListingBedrooms(prospect.rooms, prospect.description || rawMd),
       size: prospect.size,
       capacity: prospect.rooms ? prospect.rooms * 2 : 2,
       bathrooms: 1,
