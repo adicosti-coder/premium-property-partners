@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
     const m = await mRes.json().catch(() => ({}));
     await fetch(`${base}/functions/v1/analyzed-listing`, {
       method: "POST", headers: h,
-      body: JSON.stringify({ action: "save", url, phone, analysis: a, market: m?.ok ? m : null }),
+      body: JSON.stringify({ action: "save", channel: "whatsapp", url, phone, analysis: a, market: m?.ok ? m : null }),
     }).catch(() => undefined);
     if (!m?.ok) {
       text = "Am citit anunțul, dar lipsesc prețul sau suprafața, așa că nu pot calcula estimarea. Ne puteți scrie prețul și suprafața aici?";
