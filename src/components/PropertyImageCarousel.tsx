@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight, ImageIcon } from "lucide-react";
+import { filterPropertyImages, PROPERTY_IMAGE_PLACEHOLDER } from "@/utils/propertyImageFilter";
 import OptimizedImage from "./OptimizedImage";
 import { useImagePreload } from "@/hooks/useImagePreload";
 import { Property, getImageAlt } from "@/data/properties";
@@ -48,7 +49,9 @@ const PropertyImageCarousel = ({ images, propertyName, property, className = "" 
   const [canScrollNext, setCanScrollNext] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
 
-  const displayImages = images; // Show all images
+  const [broken, setBroken] = useState<Set<string>>(new Set());
+  const valid = filterPropertyImages(images, broken);
+  const displayImages = valid.length > 0 ? valid : [PROPERTY_IMAGE_PLACEHOLDER];
 
   // Use the reusable preload hook
   const { preloadAround } = useImagePreload(displayImages, {
@@ -119,6 +122,10 @@ const PropertyImageCarousel = ({ images, propertyName, property, className = "" 
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
                 priority={index === 0}
                 onLoad={() => handleImageLoad(index)}
+                onError={() => {
+                  if (image === PROPERTY_IMAGE_PLACEHOLDER) return handleImageLoad(index);
+                  setBroken(prev => new Set(prev).add(image));
+                }}
               />
             </div>
           ))}

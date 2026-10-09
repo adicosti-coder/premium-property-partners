@@ -1,3 +1,4 @@
+import { filterPropertyImages, PROPERTY_IMAGE_PLACEHOLDER } from "@/utils/propertyImageFilter";
 import { useEffect, useState, useCallback, useRef, lazy, Suspense, useMemo } from "react";
 
 import { useParams, Link, useLocation } from "react-router-dom";
@@ -426,9 +427,18 @@ const PropertyDetail = () => {
     return data.publicUrl;
   };
 
-  const galleryImages = dbImages.length > 0 
-    ? dbImages.map(img => getPublicUrl(img.image_path))
-    : property?.images || [];
+  const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
+  const markBroken = useCallback((url: string) => {
+    setBrokenImages(prev => (prev.has(url) ? prev : new Set(prev).add(url)));
+  }, []);
+  const galleryImages = useMemo(() => {
+    const valid = filterPropertyImages(
+      dbImages.length > 0 ? dbImages.map(img => getPublicUrl(img.image_path)) : property?.images || [],
+      brokenImages,
+    );
+    return valid.length > 0 ? valid : [PROPERTY_IMAGE_PLACEHOLDER];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dbImages, property?.images, brokenImages]);
 
   // AI image captions
   const imageCaptions = useImageCaptions(galleryImages, property?.name || "", language);
@@ -822,7 +832,7 @@ const PropertyDetail = () => {
               imageUrl={galleryImages[currentImageIndex] || galleryImages[0]}
               description={normalizedListingType === 'inchiriere' ? `${property.name} — apartament de închiriat Timișoara | RealTrust` : `${property.name} — investiție imobiliară Timișoara, randament regim hotelier, property management | RealTrust`}
             />
-            <OptimizedImage src={galleryImages[currentImageIndex] || galleryImages[0]} alt={(dbProperty?.image_alts?.[currentImageIndex]) || (staticProperty ? getImageAlt(staticProperty, currentImageIndex, language as 'ro' | 'en') : normalizedListingType === 'inchiriere' ? `${property.name} — apartament de închiriat ${property.location}` : `${property.name} — investiție imobiliară Timișoara, cazare regim hotelier ${property.location}`)} className="w-full h-full object-cover" priority={true} />
+            <OptimizedImage src={galleryImages[currentImageIndex] || galleryImages[0]} onError={() => markBroken(galleryImages[currentImageIndex] || galleryImages[0])} alt={(dbProperty?.image_alts?.[currentImageIndex]) || (staticProperty ? getImageAlt(staticProperty, currentImageIndex, language as 'ro' | 'en') : normalizedListingType === 'inchiriere' ? `${property.name} — apartament de închiriat ${property.location}` : `${property.name} — investiție imobiliară Timișoara, cazare regim hotelier ${property.location}`)} className="w-full h-full object-cover" priority={true} />
             <div className="absolute bottom-4 right-4"><Badge variant="secondary">{galleryImages.length} Foto</Badge></div>
             {/* Navigation arrows on hero */}
             {galleryImages.length > 1 && (
@@ -842,7 +852,7 @@ const PropertyDetail = () => {
                     className={`w-20 h-14 sm:w-24 sm:h-16 rounded-lg overflow-hidden border-2 transition-all ${idx === currentImageIndex ? 'border-primary ring-2 ring-primary/30' : 'border-border opacity-70 hover:opacity-100'}`}
                     aria-label={`${language === 'ro' ? 'Fotografie' : 'Photo'} ${idx + 1}`}
                   >
-                    <OptimizedImage src={img} alt={(dbProperty?.image_alts?.[idx]) || (staticProperty ? getImageAlt(staticProperty, idx, language as 'ro' | 'en') : normalizedListingType === 'inchiriere' ? `${property.name} — apartament de închiriat foto ${idx + 1}` : `${property.name} — investiție imobiliară Timișoara, randament regim hotelier foto ${idx + 1}`)} className="w-full h-full object-cover" />
+                    <OptimizedImage src={img} onError={() => markBroken(img)} alt={(dbProperty?.image_alts?.[idx]) || (staticProperty ? getImageAlt(staticProperty, idx, language as 'ro' | 'en') : normalizedListingType === 'inchiriere' ? `${property.name} — apartament de închiriat foto ${idx + 1}` : `${property.name} — investiție imobiliară Timișoara, randament regim hotelier foto ${idx + 1}`)} className="w-full h-full object-cover" />
                   </button>
                   <p className="text-[10px] text-muted-foreground text-center mt-1 max-w-20 sm:max-w-24 line-clamp-2 leading-tight">{getDisplayCaption(idx)}</p>
                 </div>

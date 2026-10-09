@@ -11,6 +11,7 @@
  * Output: 200 JSON { success, published, property_id?, quality?, reason? }
  */
 
+import { isValidPropertyImageUrl } from "../_shared/propertyImageFilter.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { ownerPublishedText, sendWaText } from "../_shared/listingInspection.ts";
 import { loadImportConfig, sanitizeListingText, type ImportConfigRow } from "../_shared/listingSanitizer.ts";
