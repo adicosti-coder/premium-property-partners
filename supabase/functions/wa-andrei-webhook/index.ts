@@ -588,7 +588,7 @@ Deno.serve(async (req) => {
           fetch(`${supabaseUrl}/functions/v1/wa-listing-analysis`, {
             method: "POST",
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${serviceKey}`, "x-internal-secret": Deno.env.get("WA_ANDREI_INTERNAL_SECRET") || "" },
-            body: JSON.stringify({ conversation_id: convId, url: listingLink.replace(/[).,]+$/, ""), phone: from }),
+            body: JSON.stringify({ conversation_id: convId, url: listingLink.replace(/[).,]+$/, ""), phone: from, detailed: /evaluare\s+detaliat/i.test(text) }),
           }).catch((e) => console.error("[wa-webhook] listing analysis failed:", e));
         }
 

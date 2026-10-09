@@ -90,11 +90,11 @@ Deno.serve(async (req) => {
           ? "\n\nAm notat cererea de evaluare detaliată — un consultant RealTrust vă scrie aici în curând. Sunteți proprietarul? Răspundeți „DA” și vă ajutăm cu vânzarea sau administrarea."
           : "\nSunteți proprietarul? Vă putem ajuta cu vânzarea sau administrarea — răspundeți „DA” și vă contactăm.";
       if (detailed && !variants.includes("+" + ADMIN_WA)) {
-        const tok = Deno.env.get("WHATSAPP_ACCESS_TOKEN") || Deno.env.get("WA_ACCESS_TOKEN") || "";
-        void tok;
-        await fetch(`${base}/functions/v1/wa-andrei-send`, {
+        const { data: adminConv } = await sb.from("wa_conversations").select("id")
+          .eq("phone_normalized", "+" + ADMIN_WA).limit(1).maybeSingle();
+        if (adminConv) await fetch(`${base}/functions/v1/wa-andrei-send`, {
           method: "POST", headers: { ...h, "x-internal-secret": secret },
-          body: JSON.stringify({ to_phone: ADMIN_WA, text: `🔔 Cerere evaluare detaliată de la ${phone}\n${url}\nScor ${m.total_score}/100 · țintă ${eur(m.target_low)}–${eur(m.target_high)}`, auto_kind: "admin_detailed_eval" }),
+          body: JSON.stringify({ conversation_id: adminConv.id, text: `🔔 Cerere evaluare detaliată de la ${phone}\n${url}\nScor ${m.total_score}/100 · țintă ${eur(m.target_low)}–${eur(m.target_high)}`, auto_kind: "admin_detailed_eval" }),
         }).catch(() => undefined);
         await sb.from("user_notifications").insert(
           ((await sb.from("user_roles").select("user_id").eq("role", "admin")).data ?? []).map((r: any) => ({
