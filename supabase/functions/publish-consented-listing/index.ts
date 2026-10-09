@@ -37,7 +37,8 @@ Deno.serve(async (req) => {
   const { data: existing } = consent.property_id
     ? await sb.from("properties").select("id, slug, is_active").eq("id", consent.property_id).eq("is_active", true).maybeSingle()
     : { data: null };
-  if (existing?.slug) {
+  const republish = body?.republish === true;
+  if (existing?.slug && !republish) {
     return json({ success: true, published: true, already: true, property_id: existing.id, slug: existing.slug, url: `https://realtrust.ro/proprietate/${existing.slug}` });
   }
 
