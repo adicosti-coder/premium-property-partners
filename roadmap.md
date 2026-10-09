@@ -90,3 +90,10 @@
 - [x] Separare camere/dormitoare la publicare, cu excepții explicite în sursă
 - [x] Context geografic GPS/reper aproximativ în The Advisor și reînnoirea cache-ului vechi
 - [x] 17 teste + probe JPEG/WebP și activarea funcțiilor modificate
+
+## Analizează un anunț — următoarele (cerute 10.10)
+- [ ] Alertă (fără publicare) când un anunț scade la prețul țintă
+- [ ] Buton „Publică pe realtrust.ro” doar în Admin → Analize, cu verificarea acordului „DA”
+- [ ] Tab Admin rapoarte PDF descărcate
+- [ ] Hartă Timișoara preț mediu/m² pe cartier vs. anunț analizat
+- [ ] Bot pentru „Cere o evaluare detaliată” + linkuri WhatsApp → Anunțuri Preluate Automat
