@@ -34,6 +34,7 @@ import Hero from "@/components/Hero";
 const Header = lazy(() => import("@/components/Header"));
 const QuickLeadForm = lazy(() => import("@/components/QuickLeadForm"));
 const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
+const OwnerIncomeQuickCalc = lazy(() => import("@/components/OwnerIncomeQuickCalc"));
 const Testimonials = lazy(() => import("@/components/Testimonials"));
 const FAQ = lazy(() => import("@/components/FAQ"));
 const OwnerFearsFAQ = lazy(() => import("@/components/OwnerFearsFAQ"));
@@ -89,6 +90,7 @@ const NearFoldSection = () => {
       <div ref={calcRef} style={{ minHeight: calcVisible ? undefined : '200px' }}>
         {calcVisible && (
           <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
+            <OwnerIncomeQuickCalc />
             <ProfitCalculator />
             <QuickLeadForm />
           </Suspense>

@@ -1,3 +1,5 @@
+import { lazy as lazyQc, Suspense as SuspenseQc } from "react";
+const OwnerIncomeQuickCalc = lazyQc(() => import("@/components/OwnerIncomeQuickCalc"));
 import { useState, lazy, Suspense, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -534,6 +536,7 @@ const EvaluareGratuita = () => {
             </Accordion>
           </section>
         </div>
+        <SuspenseQc fallback={null}><OwnerIncomeQuickCalc /></SuspenseQc>
       </main>
       <Footer />
     </Suspense>
