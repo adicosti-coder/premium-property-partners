@@ -14,6 +14,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { ownerPublishedText, sendWaText } from "../_shared/listingInspection.ts";
 import { loadImportConfig, sanitizeListingText, type ImportConfigRow } from "../_shared/listingSanitizer.ts";
+import { resolveListingBedrooms } from "../_shared/listingRooms.ts";
+import { prepareListingCover } from "../_shared/listingCover.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -111,6 +113,7 @@ REGULI STRICTE:
 - NU folosi: "proprietar", "persoană fizică", "fără comision", "comision 0", "direct proprietar".
 - Limbaj profesional de agenție, accent pe avantaje și potențial de investiție.`;
   const userPrompt = `Rescrie descrierea pentru un anunț de ${listingType === "inchiriere" ? "închiriere" : "vânzare"}.
+Camerele nu sunt dormitoare: 2 camere = 1 dormitor + 1 living, exceptând descrierea originală care precizează explicit 2 dormitoare separate. Nu inventa compartimentarea.
 Răspunde STRICT în formatul: ---TITLU---\\n[titlu]\\n---SCURT---\\n[descriere scurtă <200 char]\\n---COMPLET---\\n[descriere completă markdown]
 ${hintBlock}
 TITLU ORIGINAL: ${title}
@@ -402,6 +405,16 @@ Deno.serve(async (req) => {
     const listingType = isRent ? "inchiriere" : "vanzare";
     const platform = prospect.source_platform || "unknown";
 
+    // Prepare a cropped cover BEFORE making the page active (no raw-logo flash).
+    const cover = await prepareListingCover(finalImages, prospect.id, supabase.storage);
+    if (!cover) {
+      await supabase.from("prospect_listings").update({
+        admin_notes: "[worker] Fotografia principală nu a putut fi prelucrată; publicarea așteaptă o fotografie validă.",
+      }).eq("id", prospect.id);
+      return safeJson({ success: true, published: false, reason: "cover_processing_failed" });
+    }
+    finalImages[0] = cover;
+
     const propertyData: Record<string, any> = {
       name: finalTitle.substring(0, 200),
       slug: `${slugify(finalTitle)}-${prospect.id.substring(0, 6)}`,
@@ -437,7 +450,7 @@ Deno.serve(async (req) => {
       },
       migrated_from_prospect_id: prospect.id,
       rooms: prospect.rooms,
-      bedrooms: prospect.rooms,
+      bedrooms: resolveListingBedrooms(prospect.rooms, prospect.description || rawMd),
       size: prospect.size,
       capacity: prospect.rooms ? prospect.rooms * 2 : 2,
       bathrooms: 1,
@@ -496,7 +509,7 @@ Deno.serve(async (req) => {
       const proc = fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/process-listing-images`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
-        body: JSON.stringify({ property_id: inserted.id }),
+        body: JSON.stringify({ property_id: inserted.id, offset: 1 }),
       }).catch((e) => console.warn("process-listing-images dispatch failed", e?.message));
       // @ts-ignore EdgeRuntime
       if (typeof EdgeRuntime !== "undefined" && (EdgeRuntime as any).waitUntil) EdgeRuntime.waitUntil(proc);

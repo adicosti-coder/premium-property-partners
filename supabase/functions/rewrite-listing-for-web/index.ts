@@ -63,6 +63,7 @@ Reguli stricte:
 - Nu folosi cuvintele: proprietar, persoană fizică, PF, fără comision, agenție, agenții, imobiliare, comision 0%.
 - Scrie cuvintele întregi (decomandat, confort 1, apartament, etajul), fără prescurtări.
 - Nu inventa date: folosește doar informațiile din anunț. Dacă lipsește ceva, omite.
+- Nu confunda camerele cu dormitoarele: „2 camere” = 1 dormitor + 1 living, nu 2 dormitoare. Excepție numai dacă descrierea originală precizează explicit 2 dormitoare separate.
 - Zona trebuie să fie un cartier din Timișoara (ex: Cetate, Iosefin, Fabric, Elisabetin, Dumbrăvița, Calea Aradului).
 Returnează EXCLUSIV un obiect JSON valid, fără markdown, cu cheile:
 {"clean_title": string, "clean_description": string, "neighborhood": string|null, "property_type": string|null, "price": number|null}

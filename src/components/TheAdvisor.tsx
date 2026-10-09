@@ -179,7 +179,7 @@ const TheAdvisor = ({
         setError(false);
         setIsLoading(true);
       }
-      const cacheKey = `advisor_v2_${propertySlug || propertyName}_${location}_${language}`;
+      const cacheKey = `advisor_geo_v3_${propertySlug || propertyName}_${location}_${language}`;
       const cached = sessionStorage.getItem(cacheKey);
       if (cached && !isRetry) {
         try {

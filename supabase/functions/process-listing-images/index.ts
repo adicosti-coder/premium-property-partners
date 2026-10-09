@@ -259,7 +259,7 @@ Deno.serve(async (req) => {
   const sources = allSources.slice(offset, offset + limit);
   if (sources.length === 0) {
     await supabase.from("properties").update({
-      images_processing_status: "skipped",
+      images_processing_status: offset > 0 ? "completed" : "skipped",
       images_processed_at: new Date().toISOString(),
       images_processing_log: { reason: "no_source_images" },
     }).eq("id", propertyId);
@@ -380,6 +380,7 @@ Deno.serve(async (req) => {
 
   await supabase.from("properties").update({
     images: mergedImages,
+    image_path: mergedImages[0] || null,
     images_processing_status: reportedStatus,
     images_processed_at: new Date().toISOString(),
     images_processing_log: {
