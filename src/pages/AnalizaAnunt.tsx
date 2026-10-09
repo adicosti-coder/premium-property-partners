@@ -66,31 +66,55 @@ const AnalizaAnunt = () => {
     setAnalysis(null);
     setMarket(null);
     try {
-      const res = await fetch(fnUrl("public-listing-analysis"), {
+      let a: ListingAnalysis;
+      let m: any = {};
+      // Cache: același link analizat în ultimele 48h → afișăm direct rezultatul salvat.
+      const cRes = await fetch(fnUrl("analyzed-listing"), {
         method: "POST",
         headers: headers(),
-        body: JSON.stringify({ mode: "url", url: url.trim() }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data?.analysis) {
-        toast.error(data?.message || "Nu am putut citi anunțul. Încearcă din nou.");
-        return;
-      }
-      const a = data.analysis as ListingAnalysis;
-      setAnalysis(a);
-      setSourceUrl(data.source_url ?? url.trim());
-
-      const mRes = await fetch(fnUrl("listing-market-score"), {
-        method: "POST",
-        headers: headers(),
-        body: JSON.stringify({ zone: [a.zona, a.titlu].filter(Boolean).join(" "), rooms: a.camere, size: a.suprafata, price: a.pret_listare, source_url: url.trim(), title: a.titlu, phone: phone.trim() || null }),
-      });
-      const m = await mRes.json().catch(() => ({}));
-      if (!mRes.ok || !m?.ok) {
-        toast.error(m?.message || "Nu am putut compara cu piața. Prețul sau suprafața lipsesc din anunț.");
+        body: JSON.stringify({ action: "lookup", url: url.trim() }),
+      }).catch(() => null);
+      const c = cRes?.ok ? await cRes.json().catch(() => null) : null;
+      if (c?.hit && c.analysis) {
+        a = c.analysis as ListingAnalysis;
+        m = c.market ?? {};
+        setAnalysis(a);
+        setSourceUrl(url.trim());
+        if (m?.ok) setMarket(m as Market);
+        toast.success("Rezultat salvat din ultimele 48 de ore.");
       } else {
-        setMarket(m as Market);
+        const res = await fetch(fnUrl("public-listing-analysis"), {
+          method: "POST",
+          headers: headers(),
+          body: JSON.stringify({ mode: "url", url: url.trim() }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data?.analysis) {
+          toast.error(data?.message || "Nu am putut citi anunțul. Încearcă din nou.");
+          return;
+        }
+        a = data.analysis as ListingAnalysis;
+        setAnalysis(a);
+        setSourceUrl(data.source_url ?? url.trim());
+
+        const mRes = await fetch(fnUrl("listing-market-score"), {
+          method: "POST",
+          headers: headers(),
+          body: JSON.stringify({ zone: [a.zona, a.titlu].filter(Boolean).join(" "), rooms: a.camere, size: a.suprafata, price: a.pret_listare, source_url: url.trim(), title: a.titlu, phone: phone.trim() || null }),
+        });
+        m = await mRes.json().catch(() => ({}));
+        if (!mRes.ok || !m?.ok) {
+          toast.error(m?.message || "Nu am putut compara cu piața. Prețul sau suprafața lipsesc din anunț.");
+        } else {
+          setMarket(m as Market);
+        }
+        fetch(fnUrl("analyzed-listing"), {
+          method: "POST",
+          headers: headers(),
+          body: JSON.stringify({ action: "save", url: url.trim(), phone: phone.trim() || null, analysis: a, market: m?.ok ? m : null }),
+        }).catch(() => undefined);
       }
+
 
       if (phone.trim()) {
         submitLead({

@@ -503,6 +503,39 @@ export type Database = {
         }
         Relationships: []
       }
+      analyzed_listings: {
+        Row: {
+          calculated_score: number | null
+          created_at: string
+          extracted_data: Json
+          id: string
+          market_result: Json | null
+          negotiation_range: Json
+          phone_number: string | null
+          url: string
+        }
+        Insert: {
+          calculated_score?: number | null
+          created_at?: string
+          extracted_data?: Json
+          id?: string
+          market_result?: Json | null
+          negotiation_range?: Json
+          phone_number?: string | null
+          url: string
+        }
+        Update: {
+          calculated_score?: number | null
+          created_at?: string
+          extracted_data?: Json
+          id?: string
+          market_result?: Json | null
+          negotiation_range?: Json
+          phone_number?: string | null
+          url?: string
+        }
+        Relationships: []
+      }
       article_votes: {
         Row: {
           created_at: string
