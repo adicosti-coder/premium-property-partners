@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ExternalLink, Rocket, Download, Search } from "lucide-react";
+import { ExternalLink, Rocket, Download, Search, Pencil, RefreshCw } from "lucide-react";
+import { PropertyEditor } from "./property/dialogs/PropertyEditor";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import { csvFileName, downloadCsv } from "@/utils/exportCsv";
 import { consentDate, consentPhone, consentPhoneVariants, listingSource, matchesConsentSearch, originalListingUrl } from "./autoConsentedListingUtils";
@@ -41,8 +42,12 @@ const sourceStyle = (source: string) => source === "OLX"
   : "bg-muted text-muted-foreground";
 
 /** Anunțuri pentru care proprietarul a dat acordul de publicare pe WhatsApp. */
-export default function AutoConsentedListings() {
+type StatusFilter = "all" | "published" | "pending";
+
+export default function AutoConsentedListings({ title = "Anunțuri Preluate Automat", defaultStatus = "all" }: { title?: string; defaultStatus?: StatusFilter } = {}) {
   const [busy, setBusy] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(defaultStatus);
+  const [editId, setEditId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
   const q = useQuery({
@@ -123,7 +128,7 @@ export default function AutoConsentedListings() {
   };
 
   const rows = q.data ?? [];
-  const visibleRows = rows.filter((r) => matchesConsentSearch(r, search));
+  const visibleRows = rows.filter((r) => matchesConsentSearch(r, search) && (statusFilter === "all" || (statusFilter === "published") === r.published));
   const exportRows = () => downloadCsv(csvFileName("acorduri-whatsapp"),
     ["Data acordului", "Proprietar", "Telefon", "Titlu", "Detalii", "Preț EUR", "Tip", "Status publicare", "Sursa originală", "Link original", "Link realtrust.ro", "Canal acord"],
     visibleRows.map((r) => [consentDate(r.consented_at), r.ownerName || "Nume neînregistrat", consentPhone(r.phone_normalized), r.title, r.details, r.price, r.rent ? "Închiriere" : "Vânzare", r.published ? "Publicat" : "Așteaptă publicare", r.originalSource, r.sourceUrl, r.published && r.slug ? `https://realtrust.ro/proprietate/${r.slug}` : "", "WhatsApp"]));
@@ -135,9 +140,14 @@ export default function AutoConsentedListings() {
   return (
     <div className="rounded-lg border bg-card">
       <div className="p-4 border-b flex flex-wrap items-center gap-3">
-        <h3 className="font-semibold">Anunțuri Preluate Automat</h3>
+        <h3 className="font-semibold">{title}</h3>
         <Badge variant="secondary">Total anunțuri preluate: {rows.length}</Badge>
         <Badge>Publicate azi: {publishedToday}</Badge>
+        <div className="flex flex-wrap gap-2 ml-auto" role="group" aria-label="Filtru status publicare">
+          {([["all", "Toate"], ["published", `Publicate (${rows.filter((r) => r.published).length})`], ["pending", `În așteptare (${rows.filter((r) => !r.published).length})`]] as const).map(([v, l]) => (
+            <Button key={v} size="sm" className="min-h-12" variant={statusFilter === v ? "default" : "outline"} aria-pressed={statusFilter === v} onClick={() => setStatusFilter(v)}>{l}</Button>
+          ))}
+        </div>
       </div>
       <div className="p-4 border-b flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
@@ -214,7 +224,20 @@ export default function AutoConsentedListings() {
                           Vezi pe realtrust.ro
                         </a>
                       </Button>
-                    ) : (
+                    ) : null}
+                    {r.published && (
+                      <Button size="sm" variant="outline" className="min-h-12" disabled={busy !== null || !r.prospect_listing_id}
+                        onClick={() => { if (window.confirm("Re-publici anunțul pe realtrust.ro? Conținutul și pozele se regenerează.")) void publishNow(r.prospect_listing_id); }}>
+                        <RefreshCw className="h-4 w-4 mr-1" />
+                        {busy !== null && busy === r.prospect_listing_id ? "Se re-publică…" : "Re-publică"}
+                      </Button>
+                    )}
+                    {r.property_id && (
+                      <Button size="sm" variant="outline" className="min-h-12" onClick={() => setEditId(r.property_id)}>
+                        <Pencil className="h-4 w-4 mr-1" />Editează
+                      </Button>
+                    )}
+                    {!r.published && (
                       <Button
                         size="sm"
                         className="min-h-12"
@@ -233,6 +256,7 @@ export default function AutoConsentedListings() {
           </table>
         </div>
       )}
+      <PropertyEditor open={!!editId} mode="edit" propertyId={editId ?? undefined} onOpenChange={(o) => { if (!o) setEditId(null); }} onSaved={() => q.refetch()} />
     </div>
   );
 }
