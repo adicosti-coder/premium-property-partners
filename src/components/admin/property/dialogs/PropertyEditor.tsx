@@ -175,11 +175,21 @@ export function PropertyEditor({ open, mode, propertyId, onOpenChange, onSaved }
             .maybeSingle();
           const contact: any = contactRow || {};
 
-          const { data: images } = await supabase
+          let { data: images } = await supabase
             .from("property_images")
             .select("*")
             .eq("property_id", propertyId)
             .order("display_order", { ascending: true });
+
+          // Imported listings keep photos only in properties.images — seed the editable gallery from them.
+          if ((!images || images.length === 0)) {
+            const urls = filterPropertyImages([...(property.images || []), property.image_path]);
+            if (urls.length > 0) {
+              const rows = urls.map((u, i) => ({ property_id: propertyId, image_path: u, display_order: i, is_primary: i === 0 }));
+              const { data: seeded } = await supabase.from("property_images").insert(rows as any).select("*");
+              images = (seeded || []).sort((a: any, b: any) => a.display_order - b.display_order);
+            }
+          }
 
           if (cancelled) return;
           setEditingProperty(property);
