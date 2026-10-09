@@ -1,6 +1,7 @@
 // analyzed-price-watch — hourly cron. When a listing analysed on /analiza-anunt
 // drops to its target price (target_high) in the scraper data, alert the admin
-// (in-app notification + WhatsApp). Never publishes anything.
+// (in-app notification + WhatsApp). Publishes automatically ONLY when the owner
+// already gave the WhatsApp „DA” consent (via publish-consented-listing).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { isInternalCall } from "../_shared/cronAuth.ts";
 
@@ -22,7 +23,7 @@ Deno.serve(async (req) => {
     .order("created_at", { ascending: false }).limit(500);
 
   const seen = new Set<string>();
-  const hits: Array<{ id: string; url: string; title: string; asked: number; now: number; low: number; high: number }> = [];
+  const hits: Array<{ prospectId: string | null; id: string; url: string; title: string; asked: number; now: number; low: number; high: number }> = [];
   for (const r of rows ?? []) {
     if (seen.has(r.url)) continue;
     seen.add(r.url);
@@ -30,11 +31,11 @@ Deno.serve(async (req) => {
     const asked = Number((r.extracted_data as any)?.pret_listare) || 0;
     if (!high || !asked) continue;
     const bare = r.url.replace(/^https:\/\/www\./, "https://");
-    const { data: p } = await sb.from("prospect_listings").select("price")
+    const { data: p } = await sb.from("prospect_listings").select("id, price")
       .in("source_url", [r.url, bare, bare.replace("https://", "https://www.")]).limit(1).maybeSingle();
     const now = Number(p?.price) || 0;
     if (now > 0 && now < asked && now <= high) {
-      hits.push({ id: r.id, url: r.url, title: String((r.extracted_data as any)?.titlu || "Anunț"), asked, now, low: Number((r.negotiation_range as any)?.target_low) || high, high });
+      hits.push({ prospectId: p?.id ?? null, id: r.id, url: r.url, title: String((r.extracted_data as any)?.titlu || "Anunț"), asked, now, low: Number((r.negotiation_range as any)?.target_low) || high, high });
     }
   }
 
@@ -42,7 +43,21 @@ Deno.serve(async (req) => {
     const { data: admins } = await sb.from("user_roles").select("user_id").eq("role", "admin");
     const { data: conv } = await sb.from("wa_conversations").select("id").eq("phone_normalized", ADMIN_PHONE).limit(1).maybeSingle();
     for (const h of hits) {
-      const msg = `${h.title}: ${eur(h.asked)} → ${eur(h.now)} (țintă ${eur(h.low)}–${eur(h.high)}). ${h.url}`;
+      let published = false;
+      if (h.prospectId) {
+        const { data: c } = await sb.from("wa_publish_consents").select("id")
+          .eq("prospect_listing_id", h.prospectId).not("consented_at", "is", null).is("revoked_at", null)
+          .is("published_at", null).limit(1).maybeSingle();
+        if (c) {
+          const res = await fetch(`${base}/functions/v1/publish-consented-listing`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, apikey: key },
+            body: JSON.stringify({ prospect_id: h.prospectId }),
+          }).catch(() => null);
+          published = !!(res && res.ok && (await res.json().catch(() => ({})))?.success);
+        }
+      }
+      const msg = (published ? "✅ Publicat automat (acord DA). " : "") + `${h.title}: ${eur(h.asked)} → ${eur(h.now)} (țintă ${eur(h.low)}–${eur(h.high)}). ${h.url}`;
       await sb.from("user_notifications").insert((admins ?? []).map((a: any) => ({
         user_id: a.user_id, type: "info", title: "📉 Anunț ajuns la prețul țintă", message: msg.slice(0, 500),
       })));
