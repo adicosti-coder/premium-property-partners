@@ -617,6 +617,13 @@
       "when": 1791585543219,
       "tag": "0087_investor_opportunity_alerts",
       "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "7",
+      "when": 1791586283611,
+      "tag": "0088_migration",
+      "breakpoints": true
     }
   ]
 }
