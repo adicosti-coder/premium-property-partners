@@ -229,6 +229,7 @@ const RAW_GROUPS: AdminGroup[] = [
       { value: "publicate-realtrust", label: "Publicate pe realtrust.ro", icon: BadgeCheck, subgroup: "Scraper Pipeline", keywords: ["publicate", "realtrust", "re-publicare", "asteptare", "site"] },
       { value: "whatsapp-edit-listing", label: "Editează din WhatsApp", icon: BadgeCheck, subgroup: "Scraper Pipeline", keywords: ["editeaza", "whatsapp", "anunt", "proprietar", "conversatie"] },
       { value: "anunturi-preluate", label: "Anunțuri Preluate Automat", icon: BadgeCheck, subgroup: "Scraper Pipeline", keywords: ["anunturi preluate", "acorduri whatsapp", "acord", "da public", "publicate", "proprietari", "prospectare", "pipeline", "preluate automat"] },
+      { value: "analize-anunturi", label: "Analize (Analizează un anunț)", icon: Radar, subgroup: "Scraper Pipeline", keywords: ["analize", "analizeaza un anunt", "analiza anunt", "scor", "pret tinta", "negociere", "evaluare"] },
 
 
     ],

@@ -580,6 +580,17 @@ Deno.serve(async (req) => {
             console.error("[wa-webhook] auto consent request failed:", e);
           }
         }
+        // Bot „Analizează anunțul meu”: un link Storia/OLX/Publi24/Imobiliare.ro
+        // în mesaj → confirmare imediată + estimarea trimisă separat (~1 min).
+        const listingLink = text.match(/https:\/\/(?:www\.)?[^\s/]*(?:storia|olx|publi24|imobiliare)\.ro\/\S+/i)?.[0];
+        if (listingLink && !publishIntent && quick?.kind !== "quick_stop") {
+          quick = { kind: `listing_analysis_ack_${Date.now()}`, text: "Mulțumim! Analizăm anunțul acum — în aproximativ un minut vă trimitem aici scorul, spațiul de negociere și prețul țintă." };
+          fetch(`${supabaseUrl}/functions/v1/wa-listing-analysis`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${serviceKey}`, "x-internal-secret": Deno.env.get("WA_ANDREI_INTERNAL_SECRET") || "" },
+            body: JSON.stringify({ conversation_id: convId, url: listingLink.replace(/[).,]+$/, ""), phone: from }),
+          }).catch((e) => console.error("[wa-webhook] listing analysis failed:", e));
+        }
 
 
 

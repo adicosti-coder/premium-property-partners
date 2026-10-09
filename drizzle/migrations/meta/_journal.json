@@ -589,6 +589,13 @@
       "when": 1791459277493,
       "tag": "0083_lead_email_notification_flag",
       "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1791582117280,
+      "tag": "0084_listing_market_analyses",
+      "breakpoints": true
     }
   ]
 }
