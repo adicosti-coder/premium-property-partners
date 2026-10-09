@@ -89,6 +89,7 @@ const Footer = () => {
     { href: "/despre-noi", label: language === "ro" ? "Despre Noi" : "About Us" },
     { href: "/hostscan-ai", label: "HostScan AI" },
     { href: "/analiza-anunt", label: "Analizează un anunț" },
+    { href: "/harta-preturi", label: "Harta prețurilor" },
     { href: "/catalog-investitii", label: language === "ro" ? "Catalog 2026" : "Catalog 2026" },
     { href: "/calculator-roi", label: "Calculator ROI" },
     { href: "/analiza-roi-apartament", label: language === "ro" ? "Analiza ROI Apartament" : "Apartment ROI Analysis" },
