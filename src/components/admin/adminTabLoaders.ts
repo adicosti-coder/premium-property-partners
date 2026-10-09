@@ -116,6 +116,8 @@ const loaders: Record<string, Loader> = {
   "scraper-monitor": () => import("@/components/admin/ScraperMonitorPanel"),
   "unified-pipeline": () => import("@/components/admin/UnifiedPipelinePanel"),
   "anunturi-preluate": () => import("@/components/admin/AutoConsentedListingsPanel"),
+  "publicate-realtrust": () => import("@/components/admin/RealtrustPublishedPanel"),
+  "whatsapp-edit-listing": () => import("@/components/admin/WhatsappEditListing"),
 
   "investment-analysis": () => import("@/components/admin/InvestmentAnalysisManager"),
   "ai-security": () => import("@/components/admin/AISecurityPanel"),
