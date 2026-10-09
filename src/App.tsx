@@ -110,6 +110,7 @@ const AnalizaROIApartament = lazyWithRetry(() => import("./pages/AnalizaROIApart
 const CityOfMaraTimisoara = lazyWithRetry(() => import("./pages/CityOfMaraTimisoara"));
 const PiataImobiliara = lazyWithRetry(() => import("./pages/PiataImobiliara"));
 const EvaluareGratuita = lazyWithRetry(() => import("./pages/EvaluareGratuita"));
+const AnalizaAnunt = lazyWithRetry(() => import("./pages/AnalizaAnunt"));
 const ThankYou = lazyWithRetry(() => import("./pages/ThankYou"));
 const SemnareContract = lazyWithRetry(() => import("./pages/SemnareContract"));
 const StatusLead = lazyWithRetry(() => import("./pages/StatusLead"));
@@ -315,6 +316,7 @@ const App = () => (
                     <Route path="/analiza-roi-apartament" element={<AnalizaROIApartament />} />
                     <Route path="/piata-imobiliara-timisoara" element={<PiataImobiliara />} />
                     <Route path="/evaluare-gratuita" element={<EvaluareGratuita />} />
+                    <Route path="/analiza-anunt" element={<AnalizaAnunt />} />
                     <Route path="/multumire" element={<ThankYou />} />
                     <Route path="/contract/:token" element={<SemnareContract />} />
                     <Route path="/status-lead" element={<StatusLead />} />
