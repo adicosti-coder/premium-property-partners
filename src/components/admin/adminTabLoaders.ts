@@ -115,6 +115,8 @@ const loaders: Record<string, Loader> = {
   "prospect-pipeline": () => import("@/components/admin/ProspectPipelinePanel"),
   "scraper-monitor": () => import("@/components/admin/ScraperMonitorPanel"),
   "unified-pipeline": () => import("@/components/admin/UnifiedPipelinePanel"),
+  "anunturi-preluate": () => import("@/components/admin/AutoConsentedListingsPanel"),
+
   "investment-analysis": () => import("@/components/admin/InvestmentAnalysisManager"),
   "ai-security": () => import("@/components/admin/AISecurityPanel"),
   "seo-guide-generator": () => import("@/components/admin/SeoGuideGenerator"),
