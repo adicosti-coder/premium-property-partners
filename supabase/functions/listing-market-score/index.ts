@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
   const negotiation = round500(price - (targetLow + targetHigh) / 2);
 
   // Hotel vs classic rent (EUR/month).
-  const classicRent = round500(0) + Math.round((size * (scope === "zona" && profile.r > 80 ? 10 : 9)) / 10) * 10;
+  const classicRent = Math.round((size * (scope === "zona" && profile.r > 80 ? 10 : 9)) / 10) * 10;
   const classicNetYear = Math.round(classicRent * 12 * 0.9);
   const hotelNetYear = Math.round(price * 0.094);
 
