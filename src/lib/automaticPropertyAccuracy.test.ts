@@ -12,6 +12,7 @@ describe("Source bedroom mapping", () => {
   });
   it("does not treat a negation as an explicit bedroom count", () => {
     expect(resolveListingBedrooms(2, "Nu 2 dormitoare, ci living și dormitor")).toBe(1);
+    expect(resolveListingBedrooms(2, "Nu are 2 dormitoare separate")).toBe(1);
   });
   it("handles missing rooms and other room counts", () => {
     expect(resolveListingBedrooms(null, "Apartament")).toBeNull();
