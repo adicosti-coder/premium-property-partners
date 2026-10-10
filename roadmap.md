@@ -102,3 +102,10 @@
 - [ ] Tab Admin rapoarte PDF descărcate
 - [ ] Hartă Timișoara preț mediu/m² pe cartier vs. anunț analizat
 - [ ] Bot pentru „Cere o evaluare detaliată” + linkuri WhatsApp → Anunțuri Preluate Automat
+
+## Acord opt-in + retragere (10 oct 2026)
+- [x] Mesaj nou de acord + retragere STOP/RETRAG/ȘTERGE/judecată/NU
+- [x] Șablon Meta acord_publicare_proprietar_v3 trimis (PENDING)
+- [x] Poze sincronizate în galerie la publicare; Admin arhivă + retragere manuală
+- [x] Analiză: histogramă, trend, anunțuri similare, indicatori financiari
+- [ ] Test DA → publicare → STOP (așteaptă răspunsul utilizatorului pe WhatsApp)
