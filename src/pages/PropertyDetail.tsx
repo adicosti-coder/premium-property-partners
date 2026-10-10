@@ -1345,6 +1345,18 @@ const PropertyDetail = () => {
                 })()
               )}
 
+              {/* Oferta reală: preț anunț, comision RealTrust, profit net estimat */}
+              <PropertyOfferBox
+                name={property.name}
+                price={
+                  (dbProperty?.capital_necesar ??
+                    (dbProperty?.price_per_sqm && dbProperty?.size
+                      ? Math.round(Number(dbProperty.price_per_sqm) * Number(dbProperty.size))
+                      : null)) as number | null
+                }
+                language={language}
+              />
+
               {/* Calculator Investiție detaliat */}
               {!staticProperty && (normalizedListingType === 'investitie' || normalizedListingType === 'cazare') && (() => {
                 const baseRentForEngine = dbProperty?.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
