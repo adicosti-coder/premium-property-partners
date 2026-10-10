@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { GoogleMapButton } from "@/components/maps/GoogleMapEmbed";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -102,6 +103,7 @@ export default function ListingMarketAnalysesPanel() {
                   <td className="p-2 max-w-xs">
                     <div className="font-medium truncate">{r.title || "—"}</div>
                     <div className="text-xs text-muted-foreground">{[r.zone, r.rooms ? `${r.rooms} cam.` : null, r.size ? `${r.size} m²` : null].filter(Boolean).join(" · ")}</div>
+                    <GoogleMapButton query={r.zone} title={r.title || "Locație anunț"} />
                     {r.source_url && (
                       <a href={r.source_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
                         {new URL(r.source_url).hostname.replace(/^www\./, "")} <ExternalLink className="h-3 w-3" />
