@@ -27,10 +27,42 @@ export function buildGoogleMapEmbedUrl({ latitude, longitude, query, zoom = 15 }
   return `https://www.google.com/maps/embed/v1/place?key=${GOOGLE_MAPS_BROWSER_KEY}&q=${encodeURIComponent(q)}&zoom=${hasCoords ? zoom : 14}&language=ro`;
 }
 
+/** Clean fallback shown when the Maps key is missing/rejected — no black error screens. */
+const MapFallback = ({ title, query }: { title: string; query?: string | null }) => {
+  const href = query?.trim()
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${query.trim()}${/timi[sș]oara/i.test(query) ? "" : ", Timișoara"}`)}`
+    : "https://www.google.com/maps/search/?api=1&query=Timi%C8%99oara";
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4 text-center">
+      <MapPin className="h-6 w-6 text-primary" />
+      <p className="text-sm font-medium text-foreground">{title}</p>
+      <p className="text-xs text-muted-foreground">Harta interactivă nu este disponibilă momentan.</p>
+      <a href={href} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-primary hover:underline">
+        Deschide în Google Maps →
+      </a>
+    </div>
+  );
+};
+
+/** One-time key probe: a 1x1 Static Maps image fails when the key is invalid/restricted. */
+let keyProbe: Promise<boolean> | null = null;
+function isMapsKeyValid(): Promise<boolean> {
+  if (!keyProbe) {
+    keyProbe = new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(true);
+      img.onerror = () => resolve(false);
+      img.src = `https://maps.googleapis.com/maps/api/staticmap?center=45.7489,21.227&zoom=1&size=1x1&key=${GOOGLE_MAPS_BROWSER_KEY}`;
+    });
+  }
+  return keyProbe;
+}
+
 /** Lazy Google Maps Embed — mounts only when near the viewport (keeps LCP fast). */
 const GoogleMapEmbed = ({ title = "Hartă locație", className = "h-72", ...rest }: Props) => {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
+  const [keyOk, setKeyOk] = useState<boolean | null>(null);
   const src = buildGoogleMapEmbedUrl(rest);
 
   useEffect(() => {
@@ -41,11 +73,20 @@ const GoogleMapEmbed = ({ title = "Hartă locație", className = "h-72", ...rest
     return () => io.disconnect();
   }, [visible]);
 
+  useEffect(() => {
+    if (!visible || keyOk !== null) return;
+    let alive = true;
+    void isMapsKeyValid().then((ok) => { if (alive) setKeyOk(ok); });
+    return () => { alive = false; };
+  }, [visible, keyOk]);
+
   if (!src) return null;
   return (
     <div ref={ref} className={`relative w-full overflow-hidden rounded-xl border border-border bg-muted ${className}`}>
-      {visible ? (
+      {visible && keyOk ? (
         <iframe title={title} src={src} className="h-full w-full" style={{ border: 0 }} loading="lazy" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
+      ) : visible && keyOk === false ? (
+        <MapFallback title={title} query={rest.query} />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center gap-2 text-sm text-muted-foreground">
           <MapPin className="h-5 w-5 text-primary" /> {title}
