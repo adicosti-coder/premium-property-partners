@@ -28,7 +28,8 @@ interface Market {
   target_high: number;
   classic_rent_month: number;
   classic_yield_pct: number;
-  hotel_net_month: number;
+  hotel_net_month_min: number;
+  hotel_net_month_max: number;
   hotel_yield_pct: number;
 }
 
@@ -264,7 +265,7 @@ const AnalizaAnunt = () => {
                     </div>
                     <div className="rounded-lg border border-primary p-4">
                       <p className="text-sm text-muted-foreground">Administrare RealTrust (regim hotelier)</p>
-                      <p className="text-2xl font-semibold text-primary">≈ {eur(market.hotel_net_month)}/lună net</p>
+                      <p className="text-2xl font-semibold text-primary">≈ {eur(market.hotel_net_month_min)}–{eur(market.hotel_net_month_max)}/lună net</p>
                       <p className="text-sm text-muted-foreground">Randament țintă ~{market.hotel_yield_pct}%/an</p>
                     </div>
                     <p className="sm:col-span-2 text-xs text-muted-foreground">
