@@ -631,6 +631,13 @@
       "when": 1791620118647,
       "tag": "0089_investor_portal_access",
       "breakpoints": true
+    },
+    {
+      "idx": 90,
+      "version": "7",
+      "when": 1791620132980,
+      "tag": "0090_drop_investor_prospect_policy",
+      "breakpoints": true
     }
   ]
 }
