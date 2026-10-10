@@ -309,7 +309,7 @@ export function quickReplyText(
   const t = stripDiacritics(raw);
   const publishIntent = detectPublishIntent(raw, opts);
   if (publishIntent === "consent") return { kind: "publish_consent", text: PUBLISH_CONSENT_ACK };
-  if (publishIntent === "revoke") return { kind: "publish_revoke", text: PUBLISH_REVOKE_ACK };
+  if (publishIntent === "revoke" && !/^\s*stop\b/.test(t)) return { kind: "publish_revoke", text: PUBLISH_REVOKE_ACK };
   if (EXPLICIT_NO.test(t.trim()) && !INTEREST_HINT.test(t)) {
     return {
       kind: "quick_no",
