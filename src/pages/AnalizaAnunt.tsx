@@ -30,7 +30,7 @@ interface Market {
   classic_yield_pct: number;
   hotel_net_month_min: number;
   hotel_net_month_max: number;
-  hotel_yield_pct: number;
+  hotel_yield_pct: string | number;
 }
 
 const CRITERIA: Array<[keyof Market["scores"], string]> = [

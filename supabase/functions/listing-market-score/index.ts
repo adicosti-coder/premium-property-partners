@@ -139,7 +139,7 @@ Deno.serve(async (req) => {
     classic_yield_pct: Math.round((classicNetYear / price) * 1000) / 10,
     hotel_net_month_min: Math.round(hotelNetYearMin / 12),
     hotel_net_month_max: Math.round(hotelNetYearMax / 12),
-    hotel_yield_pct: 9.4,
+    hotel_yield_pct: "6,5–9,4",
   };
 
   const channel = body?.channel === "whatsapp" ? "whatsapp" : "web";

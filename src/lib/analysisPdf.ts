@@ -47,7 +47,7 @@ export interface AnalysisPdfInput {
     classic_rent_month: number;
     hotel_net_month_min: number;
     hotel_net_month_max: number;
-    hotel_yield_pct: number;
+    hotel_yield_pct: string | number;
   } | null;
 }
 
