@@ -99,14 +99,21 @@ test("un interval real după cererea de apel este notat", () => {
 
 // ── Acordul de publicare: text cerere + recunoaștere răspuns pozitiv ──
 
-test("cererea de acord arată beneficiile și cere „DA” / „De acord”", () => {
-  const text = publishConsentRequestText({ title: "Apartament 2 camere Iosefin" });
-  expect(text).toContain("Buna ziua! Suntem RealTrust din Timișoara.");
+test("cererea de acord arată analiza gratuită și cere „DA”", () => {
+  const text = publishConsentRequestText({ title: "Apartament 2 camere Iosefin", source_url: "https://www.olx.ro/d/oferta/apartament-2-camere-iosefin-IDabc.html?x=1&y=2" });
+  expect(text).toContain("Bună ziua! Am văzut anunțul dumneavoastră");
   expect(text).toContain("Apartament 2 camere Iosefin");
-  expect(text).toContain("100% Gratuit");
-  expect(text).toContain("Fără exclusivitate");
-  expect(text).toContain("„DA” sau „De acord”");
-  expect(text).toContain("RETRAG");
+  expect(text).toContain("evaluare de piață gratuită");
+  expect(text).toContain("https://realtrust.ro/analiza-anunt?url=https%3A%2F%2Fwww.olx.ro%2Fd%2Foferta%2Fapartament-2-camere-iosefin-IDabc.html%3Fx%3D1%26y%3D2");
+  expect(text).toContain("Comision 0%");
+  expect(text).toContain("fără exclusivitate");
+  expect(text).toContain("răspundeți doar cu „DA”");
+});
+
+test("cererea de acord fără link de anunț folosește pagina de analiză simplă", () => {
+  const text = publishConsentRequestText({ zone: "Iosefin" });
+  expect(text).toContain("https://realtrust.ro/analiza-anunt\n");
+  expect(text).not.toContain("url=");
 });
 
 test.each(["DA", "da", "De acord", "de acord", "ok", "OK", "publicati", "da public", "👍", "Da 👍"])(
