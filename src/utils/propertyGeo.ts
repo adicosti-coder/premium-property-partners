@@ -42,8 +42,14 @@ const normalize = (value?: string | null) =>
     .replace(/[^a-z0-9]+/g, ' ')
     .trim();
 
+// Piața Victoriei default stored by imports when geocoding failed — not a real position.
+const isPlaceholderCenter = (latitude: number, longitude: number) =>
+  Math.abs(latitude - 45.7537) < 0.0003 && Math.abs(longitude - 21.2246) < 0.0003;
+
 const hasFiniteCoordinates = (latitude?: number | null, longitude?: number | null) =>
-  Number.isFinite(latitude) && Number.isFinite(longitude);
+  latitude != null && longitude != null &&
+  Number.isFinite(latitude) && Number.isFinite(longitude) &&
+  !isPlaceholderCenter(latitude as number, longitude as number);
 
 const exactCoordinatesBySlug: Record<string, [number, number]> = {
   'nordone-apart-hotel-premium': [21.217955, 45.756134],
