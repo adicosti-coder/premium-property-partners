@@ -3,6 +3,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { ensureInspectionTemplate, isOutsideWindowError, missingCriticalFields, sendAdminWa, sendInspectionTemplate } from "../_shared/listingInspection.ts";
+import { detectZone } from "../_shared/detectZone.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -78,6 +79,13 @@ Deno.serve(async (req) => {
     return json({ error: "rewrite_failed", status: rw.status }, 502);
   }
 
+  if (!clean.neighborhood && !p.zone) {
+    const z = detectZone(p.title, clean.clean_title, p.description, clean.clean_description);
+    if (z) {
+      clean.neighborhood = z;
+      await supabase.from("prospect_listings").update({ zone: z }).eq("id", p.id);
+    }
+  }
   const missing = missingCriticalFields({ price: clean.price, neighborhood: clean.neighborhood || p.zone });
   const { data: insp, error: iErr } = await supabase.from("listing_inspections").upsert({
     prospect_listing_id: p.id,
