@@ -123,14 +123,14 @@ export const drawFinancialPage = (ctx: PdfContext) => {
         { label: "Ocupare medie", h: "75%", c: "100%" },
         { label: "Venit brut/lună", h: "€1.460", c: "€450" },
         { label: "Cheltuieli/lună", h: "€365", c: "€50" },
-        { label: "ROI anual", h: "9,4%", c: "3,4%" },
+        { label: "ROI anual", h: "6,5–9,4%", c: "3,4%" },
       ]
     : [
         { label: "Avg price/night", h: "€65", c: "—" },
         { label: "Avg occupancy", h: "75%", c: "100%" },
         { label: "Gross income/mo", h: "€1,460", c: "€450" },
         { label: "Costs/mo", h: "€365", c: "€50" },
-        { label: "Annual ROI", h: "9.4%", c: "3.4%" },
+        { label: "Annual ROI", h: "6.5–9.4%", c: "3.4%" },
       ];
 
   const colWidths = [contentWidth * 0.4, contentWidth * 0.3, contentWidth * 0.3];

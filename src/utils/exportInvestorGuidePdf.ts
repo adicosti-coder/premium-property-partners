@@ -154,12 +154,12 @@ export const exportInvestorGuidePdf = async ({ language = "ro" }: ExportOptions 
   
   const stats = isRo 
     ? [
-        { value: "9.4%", label: "ROI Mediu" },
+        { value: "6,5–9,4%", label: "ROI net estimat / an" },
         { value: "+30%", label: "vs Clasic" },
         { value: "85%", label: "Ocupare" }
       ]
     : [
-        { value: "9.4%", label: "Avg ROI" },
+        { value: "6.5–9.4%", label: "Estimated net ROI / yr" },
         { value: "+30%", label: "vs Classic" },
         { value: "85%", label: "Occupancy" }
       ];
@@ -294,7 +294,7 @@ export const exportInvestorGuidePdf = async ({ language = "ro" }: ExportOptions 
     { label: isRo ? "Cheltuieli operaționale" : "Operating costs", hotelier: "-€365", clasic: "-€50" },
     { label: isRo ? "Venit net/lună" : "Net income/month", hotelier: "€1,095", clasic: "€400" },
     { label: isRo ? "Venit net/an" : "Net income/year", hotelier: "€13,140", clasic: "€4,800" },
-    { label: isRo ? "ROI (valoare €140k)" : "ROI (€140k value)", hotelier: "9.4%", clasic: "3.4%" }
+    { label: isRo ? "ROI (valoare €140k)" : "ROI (€140k value)", hotelier: "6,5–9,4%", clasic: "3.4%" }
   ]);
   
   drawHighlightBox(
