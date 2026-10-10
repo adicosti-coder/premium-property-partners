@@ -11,6 +11,7 @@ type Props = {
   size?: number | string | null;
   floor?: string | number | null;
   bedrooms?: number | null;
+  rooms?: number | null;
   capacity?: number | null;
   language?: string;
 };
@@ -23,6 +24,7 @@ const PropertyQuickFacts = ({
   size,
   floor,
   bedrooms,
+  rooms,
   capacity,
   language = "ro",
 }: Props) => {
@@ -39,6 +41,7 @@ const PropertyQuickFacts = ({
   const facts = [
     size ? { icon: Maximize, label: ro ? "Suprafață" : "Size", value: `${size} m²` } : null,
     floorLabel ? { icon: Building2, label: ro ? "Etaj" : "Floor", value: floorLabel } : null,
+    rooms ? { icon: Building2, label: ro ? "Camere (cu living)" : "Rooms (incl. living)", value: String(rooms) } : null,
     bedrooms
       ? {
           icon: BedDouble,
@@ -58,6 +61,7 @@ const PropertyQuickFacts = ({
     [
       size ? `${size} m²` : null,
       floorLabel,
+      rooms ? `${rooms} ${ro ? "camere (cu living)" : "rooms (incl. living)"}` : null,
       bedrooms ? `${bedrooms} ${ro ? (bedrooms === 1 ? "dormitor" : "dormitoare") : "bedrooms"}` : null,
       location,
     ]

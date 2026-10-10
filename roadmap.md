@@ -1,4 +1,9 @@
 
+## Corecții pagină proprietate (10 oct 2026)
+- [x] Localizare Iosefin și proximități calculate din aceeași poziție
+- [x] Indicatori și ofertă calculați unitar la 6,5–9,4%, camere distincte de dormitoare
+- [x] 14 teste de regresie, afișare ofertă/specificații și build OK; hărțile Google necesită verificarea utilizatorului pe domeniul autorizat
+
 ## Șablon acord proprietari (7 oct 2026)
 - [x] Text identic trimis la Meta: acord_publicare_proprietar_v1, MARKETING, PENDING
 - [x] Activare automată la retrimitere numai după aprobare + 54 teste și deploy

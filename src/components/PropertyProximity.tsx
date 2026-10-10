@@ -78,7 +78,7 @@ const PropertyProximity = ({ propertySlug, propertyName, propertyLocation, prope
           const modeLabel = item.mode === "walk"
             ? (language === "ro" ? "mers pe jos" : "walk")
             : (language === "ro" ? "cu mașina" : "drive");
-          const distanceText = `${item.minutes} min ${modeLabel}`;
+           const distanceText = `≈ ${item.minutes} min ${modeLabel}`;
           // Check if this POI has an internal link
           const searchQuery = poiSearchMapping[item.labelRo] || poiSearchMapping[item.labelEn];
           const internalLink = searchQuery ? `/oaspeti?near=${encodeURIComponent(searchQuery)}` : null;
@@ -92,7 +92,7 @@ const PropertyProximity = ({ propertySlug, propertyName, propertyLocation, prope
               itemType="https://schema.org/LocationFeatureSpecification"
             >
               <meta itemProp="name" content={item.labelEn} />
-              <meta itemProp="value" content={`${item.minutes} min ${item.mode === "walk" ? "walking" : "driving"}`} />
+              <meta itemProp="value" content={`Approximately ${item.minutes} min ${item.mode === "walk" ? "walking" : "driving"}`} />
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                 <Icon className="w-5 h-5 text-primary" />
               </div>

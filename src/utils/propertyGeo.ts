@@ -80,6 +80,19 @@ const exactCoordinatesBySlug: Record<string, [number, number]> = {
 
 const profiles: GeoProfile[] = [
   {
+    key: 'iosefin',
+    aliases: ['iosefin'],
+    // District reference only; a listing's real GPS always takes precedence.
+    center: { lng: 21.207, lat: 45.747 },
+    scores: { transport: 8.4, education: 8.1, lifestyle: 8.5, overallLabelRo: 'Foarte Bun', overallLabelEn: 'Very Good' },
+    pois: [
+      { name: 'Gara de Nord', nameEn: 'North Railway Station', lng: 21.207, lat: 45.749, category: 'transport', emoji: '🚂', minutes: 0, mode: 'walk' },
+      { name: 'Piața Victoriei', nameEn: 'Victory Square', lng: 21.2246, lat: 45.7537, category: 'tourist', emoji: '🏛️', minutes: 0, mode: 'walk' },
+      { name: 'Piața Unirii', nameEn: 'Union Square', lng: 21.2265, lat: 45.7571, category: 'tourist', emoji: '🏛️', minutes: 0, mode: 'walk' },
+      { name: 'Iulius Town', nameEn: 'Iulius Town', lng: 21.227, lat: 45.7695, category: 'mall', emoji: '🛍️', minutes: 0, mode: 'drive' },
+    ],
+  },
+  {
     key: 'city_of_mara',
     aliases: ['city of mara', 'circumvalatiunii 1', 'circumvalatiunii', 'sinaia 2b', 'fullview', 'avenue of mara', 'sunset da ra', 'apartament premium 2 camere'],
     center: { lng: 21.2148126, lat: 45.753754 },
@@ -369,7 +382,16 @@ export const getNeighborhoodScores = (input: GeoInput) => {
   };
 };
 
-export const getPropertyPois = (input: GeoInput) => getPropertyGeoProfile(input).pois;
+export const getPropertyPois = (input: GeoInput) => {
+  const { pois, resolvedCoordinates: { lat, lng } } = getPropertyGeoProfile(input);
+  return pois.map((poi) => {
+    const km = haversineKm(lat, lng, poi.lat, poi.lng);
+    // Straight-line distance adjusted for indirect streets; not live routing.
+    const routeFactor = poi.mode === 'walk' ? 1.3 : 1.4;
+    const speedKmh = poi.mode === 'walk' ? 4.5 : 25;
+    return { ...poi, minutes: Math.max(1, Math.ceil(km * routeFactor / speedKmh * 60)) };
+  }).sort((a, b) => a.minutes - b.minutes);
+};
 
 export const getDisplayLocation = (input: GeoInput) => {
   const rawLocation = input.location?.trim();
@@ -377,6 +399,8 @@ export const getDisplayLocation = (input: GeoInput) => {
 
   const profile = getPropertyGeoProfile(input);
   switch (profile.key) {
+    case 'iosefin':
+      return 'Iosefin, Timișoara';
     case 'city_of_mara':
       return 'City of Mara / Circumvalațiunii, Timișoara';
     case 'vivalia_take_ionescu':

@@ -1,4 +1,5 @@
 import { Coins, Percent, TrendingUp, MessageCircle } from "lucide-react";
+import { getPropertyInvestmentMetrics } from "@/lib/propertyInvestmentMetrics";
 
 /**
  * „Oferta reală" de pe pagina apartamentului: prețul din anunț, comisionul
@@ -12,23 +13,19 @@ type Props = {
 };
 
 const WA_NUMBER = "40799069256";
-const NET_YIELD_MIN = 0.065;
-const NET_YIELD_MAX = 0.094;
 const FEE_MIN = 0.15;
 const FEE_MAX = 0.2;
 
 const PropertyOfferBox = ({ name, price, language = "ro" }: Props) => {
   const ro = language !== "en";
   const value = Number(price) || 0;
-  if (!value) return null;
+  const metrics = getPropertyInvestmentMetrics(value);
+  if (!metrics) return null;
 
   const eur = (v: number) =>
     `${Math.round(v).toLocaleString(ro ? "ro-RO" : "en-US")} €`;
 
-  const netYearMin = value * NET_YIELD_MIN;
-  const netYearMax = value * NET_YIELD_MAX;
-  const netMonthMin = netYearMin / 12;
-  const netMonthMax = netYearMax / 12;
+  const { annualNetMin: netYearMin, annualNetMax: netYearMax, monthlyNetMin: netMonthMin, monthlyNetMax: netMonthMax } = metrics;
   const grossMonth = netMonthMax / 0.73;
 
   const rows = [
