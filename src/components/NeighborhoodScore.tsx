@@ -13,8 +13,12 @@ interface NeighborhoodScoreProps {
 }
 
 const ScoreBar = ({ value, max = 10 }: { value: number; max?: number }) => {
-  const pct = (value / max) * 100;
-  const color = value >= 9 ? "bg-primary" : value >= 8 ? "bg-accent" : "bg-muted-foreground/40";
+  // Scorurile reale se situează între ~6 și 10; rescala vizuală face diferențele lizibile,
+  // valoarea numerică afișată rămâne cea reală (ex. 8.2 / 10).
+  const min = 6;
+  const pct = Math.min(100, Math.max(4, ((value - min) / (max - min)) * 100));
+  const color =
+    value >= 9.3 ? "bg-primary" : value >= 8.6 ? "bg-accent" : value >= 8 ? "bg-accent/60" : "bg-muted-foreground/40";
   return (
     <div className="flex items-center gap-2 flex-1">
       <div className="h-2 flex-1 rounded-full bg-muted overflow-hidden">
