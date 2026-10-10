@@ -42,7 +42,7 @@ const PropertyQuickFacts = ({
     bedrooms
       ? {
           icon: BedDouble,
-          label: ro ? "Camere" : "Rooms",
+          label: ro ? "Dormitoare" : "Bedrooms",
           value: `${bedrooms}${capacity ? ` · ${capacity} ${ro ? "pers." : "guests"}` : ""}`,
         }
       : null,
@@ -58,7 +58,7 @@ const PropertyQuickFacts = ({
     [
       size ? `${size} m²` : null,
       floorLabel,
-      bedrooms ? `${bedrooms} ${ro ? "camere" : "rooms"}` : null,
+      bedrooms ? `${bedrooms} ${ro ? (bedrooms === 1 ? "dormitor" : "dormitoare") : "bedrooms"}` : null,
       location,
     ]
       .filter(Boolean)

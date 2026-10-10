@@ -110,8 +110,8 @@ const PropertyPremiumSpecs = ({ specs, className }: PropertyPremiumSpecsProps) =
   if (specs.land_area) items.push({ icon: <Grid3X3 className="w-4 h-4" />, label: isRo ? "Suprafață teren" : "Land area", value: `${specs.land_area} m²` });
 
   // Camere
-  if (specs.rooms) items.push({ icon: <Layers className="w-4 h-4" />, label: isRo ? "Nr. camere" : "Rooms", value: String(specs.rooms) });
-  if (specs.bedrooms) items.push({ icon: <BedDouble className="w-4 h-4" />, label: isRo ? "Dormitoare" : "Bedrooms", value: String(specs.bedrooms) });
+  if (specs.rooms) items.push({ icon: <Layers className="w-4 h-4" />, label: isRo ? "Camere (total, cu living)" : "Rooms (incl. living)", value: String(specs.rooms) });
+  if (specs.bedrooms) items.push({ icon: <BedDouble className="w-4 h-4" />, label: isRo ? "Dormitoare (doar pentru somn)" : "Bedrooms (sleeping only)", value: String(specs.bedrooms) });
   if (specs.bathrooms) items.push({ icon: <Bath className="w-4 h-4" />, label: isRo ? "Băi" : "Bathrooms", value: String(specs.bathrooms) });
   if (specs.kitchens) items.push({ icon: <Home className="w-4 h-4" />, label: isRo ? "Bucătării" : "Kitchens", value: String(specs.kitchens) });
   if (specs.capacity) items.push({ icon: <Users className="w-4 h-4" />, label: isRo ? "Capacitate" : "Capacity", value: `${specs.capacity} ${isRo ? "pers." : "pers."}` });
