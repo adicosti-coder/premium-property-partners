@@ -42,11 +42,11 @@ export const BLOG_CATEGORIES: BlogCategoryMeta[] = [
     dbCategories: ["Investiții", "Imobiliare", "market-insights", "analize", "piață"],
     title: "Investiții Imobiliare Timișoara — Randament, ROI, Studii de Caz",
     description:
-      "Analize de piață, ROI 9.4% net, studii de caz reale și ghiduri pentru investitori imobiliari în Timișoara — inclusiv regim hotelier.",
+      "Analize de piață, ROI net estimat 6,5–9,4% pe an, studii de caz reale și ghiduri pentru investitori imobiliari în Timișoara — inclusiv regim hotelier.",
     intro:
       "Strategii verificate de investiții imobiliare în Timișoara: de la calcul randament până la exit strategy.",
     hubIntro:
-      "Piața imobiliară din Timișoara oferă în 2026 unul dintre cele mai atractive raporturi randament/risc din România — cu ROI net documentat de 9.2–9.4% pe an în regim hotelier profesionist și o cerere susținută de digital nomads, angajați corporate (Continental, Hella, Nokia, Flex) și studenți. Articolele din acest pilon acoperă infrastructură (Autostrada A1 Lugoj–Deva), dobânzi (IRCC 2026 vs credit fix), zone cu potențial (Cetate, Iosefin, Fabric, Dumbrăvița) și studii de caz complete cu cifre reale.",
+      "Piața imobiliară din Timișoara oferă în 2026 unul dintre cele mai atractive raporturi randament/risc din România — cu ROI net estimat de 6,5–9,4% pe an în regim hotelier profesionist și o cerere susținută de digital nomads, angajați corporate (Continental, Hella, Nokia, Flex) și studenți. Articolele din acest pilon acoperă infrastructură (Autostrada A1 Lugoj–Deva), dobânzi (IRCC 2026 vs credit fix), zone cu potențial (Cetate, Iosefin, Fabric, Dumbrăvița) și studii de caz complete cu cifre reale.",
     hubKeywords: [
       "randament apartament Timișoara",
       "ROI regim hotelier",

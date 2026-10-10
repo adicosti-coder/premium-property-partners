@@ -260,7 +260,7 @@ const CatalogInvestitii = () => {
         {
           question: "Ce ROI pot obține din investiții în regim hotelier vs. chirie clasică?",
           answer:
-            "Apartamentele administrate în regim hotelier de RealTrust au un ROI net estimat de 8–11% (referință medie 9,4%), comparativ cu 3–4% pe modelul chirie clasică pe termen lung. Estimarea depinde de ocupare și de costurile reale; pentru un apartament de 140.000 EUR diferența anuală este de aproximativ +8.340 EUR.",
+            "Apartamentele administrate în regim hotelier de RealTrust au un ROI net estimat de 6,5–9,4% pe an, comparativ cu 3–4% pe modelul chirie clasică pe termen lung. Estimarea depinde de ocupare și de costurile reale; pentru un apartament de 140.000 EUR diferența anuală este de aproximativ +5.800–8.300 EUR.",
         },
         {
           question: "Care este structura de comision RealTrust?",
@@ -292,7 +292,7 @@ const CatalogInvestitii = () => {
         {
           question: "What ROI can I get from hotel-style vs. classic rental?",
           answer:
-            "Apartments managed in hotel-style by RealTrust generate verified net ROI of 8–11% (average 9.4%), versus 3–4% on long-term classic rental. The yearly difference for a 140,000 EUR apartment is approximately +8,340 EUR.",
+            "Apartments managed in hotel-style by RealTrust generate an estimated net ROI of 6.5–9.4% per year, versus 3–4% on long-term classic rental. The yearly difference for a 140,000 EUR apartment is approximately +5,800–8,300 EUR.",
         },
         {
           question: "What is RealTrust's commission structure?",
@@ -386,7 +386,7 @@ const CatalogInvestitii = () => {
               <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto">
                 {[
                   { value: loading ? "—" : String(properties.length), label: isRo ? "Proprietăți" : "Properties" },
-                  { value: "9.4%", label: isRo ? "ROI Mediu" : "Avg ROI" },
+                  { value: "6,5–9,4%", label: isRo ? "ROI net estimat / an" : "Estimated net ROI / yr" },
                   { value: "85%", label: isRo ? "Ocupare" : "Occupancy" },
                 ].map((stat, i) => (
                   <motion.div
