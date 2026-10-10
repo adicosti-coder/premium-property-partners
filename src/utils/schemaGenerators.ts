@@ -134,7 +134,7 @@ export const generateLocalBusinessSchema = () => ({
         "itemOffered": {
           "@type": "Service",
           "name": "Property Management",
-          "description": "Complete hands-off property management with 9.2-9.4% net ROI",
+          "description": "Complete hands-off property management with 6.5-9.4% estimated net ROI",
         },
         "priceSpecification": {
           "@type": "PriceSpecification",

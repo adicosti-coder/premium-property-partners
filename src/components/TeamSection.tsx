@@ -49,7 +49,7 @@ const TeamSection = () => {
       ],
       founderStats: [
         { value: "25+", suffix: "", label: "Ani experiență în imobiliare Timișoara", icon: "clock" as const },
-        { value: "9.4", suffix: "%", label: "Randament mediu net pentru proprietari", icon: "trending" as const },
+        { value: "6,5–9,4", suffix: "%", label: "Randament net estimat pentru proprietari, pe an", icon: "trending" as const },
         { value: "100", suffix: "%", label: "Administrare completă, de la A la Z", icon: "shield" as const },
       ],
       founderQuote:
@@ -74,7 +74,7 @@ const TeamSection = () => {
       ],
       founderStats: [
         { value: "25+", suffix: "", label: "Years of real estate experience in Timișoara", icon: "clock" as const },
-        { value: "9.4", suffix: "%", label: "Average net yield for owners", icon: "trending" as const },
+        { value: "6.5–9.4", suffix: "%", label: "Estimated net yield for owners, per year", icon: "trending" as const },
         { value: "100", suffix: "%", label: "End-to-end management, from A to Z", icon: "shield" as const },
       ],
       founderQuote:

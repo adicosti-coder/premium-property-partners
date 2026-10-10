@@ -34,7 +34,7 @@ const CalculatorROI = () => {
   const faqItems = [
     {
       question: "Ce randament (ROI) este considerat bun pentru o investiție imobiliară în Timișoara?",
-      answer: "Pentru chirie clasică în Timișoara, un ROI net de 6-8% este considerat solid. În regim hotelier administrat de RealTrust, ținta este 9,4% net, calculat pe ipoteze publice (ocupare 75%, costuri și taxe).",
+      answer: "Pentru chirie clasică în Timișoara, un ROI net de 6-8% este considerat solid. În regim hotelier administrat de RealTrust, randamentul net estimat este între 6,5% și 9,4% pe an, calculat pe ipoteze publice (ocupare 75%, costuri și taxe).",
     },
     {
       question: "Cum afectează impozitul pe proprietate ROI-ul?",
@@ -42,11 +42,11 @@ const CalculatorROI = () => {
     },
     {
       question: "Care este diferența între ROI și cash flow?",
-      answer: "ROI măsoară randamentul anual ca procent din investiția totală (de ex. 9,4%). Cash flow-ul este venitul net lunar sau anual disponibil după toate costurile. O proprietate poate avea ROI bun și cash flow mai mic dacă există rată ipotecară.",
+      answer: "ROI măsoară randamentul anual ca procent din investiția totală (de ex. 6,5–9,4%). Cash flow-ul este venitul net lunar sau anual disponibil după toate costurile. O proprietate poate avea ROI bun și cash flow mai mic dacă există rată ipotecară.",
     },
     {
       question: "În cât timp se amortizează o investiție imobiliară?",
-      answer: "La un ROI net de 9,4%, recuperarea capitalului propriu se face în aproximativ 10-11 ani. Dacă proprietatea se apreciază cu 5-8% pe an, randamentul total (yield + apreciere) ajunge la 14-17% pe an, în funcție de zonă.",
+      answer: "La un ROI net între 6,5% și 9,4%, recuperarea capitalului propriu se face în aproximativ 10-15 ani. Dacă proprietatea se apreciază cu 5-8% pe an, randamentul total (yield + apreciere) ajunge la 11-17% pe an, în funcție de zonă.",
     },
     {
       question: "Ce costuri operaționale sunt incluse în calcul?",
@@ -193,7 +193,7 @@ const CalculatorROI = () => {
                 <strong>Cash flow lunar</strong> = venit brut − management − utilități − mentenanță − rată credit (dacă există) − taxe. Pentru un apartament achiziționat cash în ISHO, cash flow-ul net se situează tipic la 700-900 €/lună.
               </p>
               <p className="text-muted-foreground">
-                <strong>Amortizarea investiției:</strong> la un ROI net de 9,4%, recuperarea capitalului se face în aproximativ 10-11 ani. Adăugând aprecierea proprietății (5-8% pe an în Timișoara), randamentul total ajunge la 14-17% pe an.
+                <strong>Amortizarea investiției:</strong> la un ROI net între 6,5% și 9,4%, recuperarea capitalului se face în aproximativ 10-15 ani. Adăugând aprecierea proprietății (5-8% pe an în Timișoara), randamentul total ajunge la 11-17% pe an.
               </p>
             </div>
 

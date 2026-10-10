@@ -261,12 +261,12 @@ export const en: Translations = {
       // Profit & ROI
       { 
         question: "What net return can I realistically expect from my apartment in Timișoara?", 
-        answer: "Estimates start from current market data: average nightly rate (ADR) around €55 and average occupancy 65%. For apartments managed by us (ATENEO, GREEN FOREST, Cross Square House, HELIOS) in areas near Iulius Mall, Amazonia Aquapark or the Old Town, our target net return is 9.4%, calculated on public assumptions (75% occupancy). The exact figure for your property comes after the evaluation." 
+        answer: "Estimates start from current market data: average nightly rate (ADR) around €55 and average occupancy 65%. Properties in our portfolio reach an estimated net yield between 6.5% and 9.4% per year, depending on occupancy, location and fit-out. The exact figure for your property comes after the evaluation." 
       },
       // Yield transparency
       {
-        question: "How exactly is the 9.4% net return calculated?",
-        answer: "We start from gross accommodation revenue (nightly rate × occupied nights, at 75% occupancy). From it we subtract operating costs (consumables, linen) and RealTrust Property Management, 15-20% of revenue. The cleaning fee costs you nothing: guests pay it separately at booking time. Only after that do we subtract fixed costs (utilities, internet, maintenance) and our management commission — which is why 9.4% is net income, not gross. Your final figure is set after the free valuation."
+        question: "How exactly is the estimated 6.5–9.4% net return calculated?",
+        answer: "We start from gross accommodation revenue (nightly rate × occupied nights, at 75% occupancy). From it we subtract operating costs (consumables, linen) and RealTrust Property Management, 15-20% of revenue. The cleaning fee costs you nothing: guests pay it separately at booking time. Only after that do we subtract fixed costs (utilities, internet, maintenance) — which is why the result is net income, not gross. The 6.5–9.4% yearly range depends on occupancy, location and fit-out; your final figure is set after the free valuation."
       },
       // Services included
       { 
