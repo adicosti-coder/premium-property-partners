@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const since = new Date(Date.now() - 180 * 86400_000).toISOString();
   const [{ data: sale, error }, { data: rent }, { data: pois }] = await Promise.all([
-    sb.from("prospect_listings").select("zone, price, size, rooms").eq("category", "vanzare")
+    sb.from("prospect_listings").select("zone, price, size, rooms, created_at").eq("category", "vanzare")
       .gte("created_at", since).gte("price", 20_000).lte("price", 1_500_000).gte("size", 15).limit(3000),
     sb.from("prospect_listings").select("zone, price, size").eq("category", "inchiriere")
       .gte("created_at", since).gte("price", 150).lte("price", 5000).gte("size", 15).limit(2000),
@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
   if (error) return json({ error: "db_error" }, 500);
 
   const inZone = (z: string) => keys.some((k) => z.includes(k));
-  const saleRows = (sale ?? []).map((r: any) => ({ z: norm(r.zone || ""), ppm: Number(r.price) / Number(r.size), rooms: Number(r.rooms) || null }))
+  const saleRows = (sale ?? []).map((r: any) => ({ z: norm(r.zone || ""), ppm: Number(r.price) / Number(r.size), rooms: Number(r.rooms) || null, price: Number(r.price), size: Number(r.size), at: String(r.created_at || "") }))
     .filter((r) => r.ppm > 600 && r.ppm < 6000);
   const rentRows = (rent ?? []).map((r: any) => ({ z: norm(r.zone || ""), ppm: Number(r.price) / Number(r.size) }))
     .filter((r) => r.ppm > 3 && r.ppm < 40);
@@ -119,8 +119,33 @@ Deno.serve(async (req) => {
   const hotelNetYearMin = Math.round(price * 0.065);
   const hotelNetYearMax = Math.round(price * 0.094);
 
+  // Distribuția prețurilor/m² din comparabile (anonimizat: fără linkuri, poze sau contacte).
+  const sorted = pool.map((r) => r.ppm).sort((a, b) => a - b);
+  const q = (p: number) => sorted.length ? Math.round(sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))]) : 0;
+  const lo = Math.floor(Math.min(q(0.05), askPpm) / 250) * 250, hi = Math.ceil(Math.max(q(0.95), askPpm) / 250) * 250;
+  const histogram: Array<{ from: number; to: number; count: number }> = [];
+  for (let b = lo; b < hi && histogram.length < 16; b += 250) {
+    histogram.push({ from: b, to: b + 250, count: sorted.filter((v) => v >= b && v < b + 250).length });
+  }
+  const sample = (similar.length >= 3 ? similar : pool)
+    .slice().sort((a, b) => Math.abs(a.ppm - askPpm) - Math.abs(b.ppm - askPpm)).slice(0, 8)
+    .map((r) => ({ rooms: r.rooms, size: Math.round(r.size), price: Math.round(r.price), ppm: Math.round(r.ppm) }));
+  const monthly: Record<string, number[]> = {};
+  for (const r of pool) { const m = r.at.slice(0, 7); if (m) (monthly[m] ??= []).push(r.ppm); }
+  const trend = Object.keys(monthly).sort().slice(-6).map((m) => ({ month: m, median_ppm: Math.round(median(monthly[m])), count: monthly[m].length }));
+  const grossYieldPct = Math.round(((classicRent * 12) / price) * 1000) / 10;
+  const finance = {
+    gross_yield_pct: grossYieldPct,
+    price_to_rent_years: classicRent ? Math.round((price / (classicRent * 12)) * 10) / 10 : null,
+    payback_classic_years: classicNetYear ? Math.round((price / classicNetYear) * 10) / 10 : null,
+    payback_hotel_years_min: Math.round((price / hotelNetYearMax) * 10) / 10,
+    payback_hotel_years_max: Math.round((price / hotelNetYearMin) * 10) / 10,
+    fair_value_eur: round500(medPpm * size),
+  };
+
   const result = {
     ok: true,
+    p25_ppm: q(0.25), p75_ppm: q(0.75), histogram, sample, trend, finance,
     zone_label: zone?.label ?? "Timișoara",
     scope,
     comparables: pool.length,
