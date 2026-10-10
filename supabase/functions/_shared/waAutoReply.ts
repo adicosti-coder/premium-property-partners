@@ -241,7 +241,7 @@ const PUBLISH_CONSENT_STRONG_RE =
 const PUBLISH_CONSENT_SOFT_RE =
   /^(?:da+|dapublic|de\s+acord|ok(?:ee?y)?|bine|sigur|desigur|aprob|publicati|publica)[\s!.,?]*$/;
 const PUBLISH_REVOKE_RE =
-  /\bretrag\b|nu mai public|nu mai doresc publicarea|scoateti anuntul|stergeti anuntul|scoate anuntul de pe site/;
+  /\bretrag\b|\bstop\b|\bsterge(?:ti)?\b|dau\s+in\s+judecata|nu mai public|nu mai doresc publicarea|scoateti anuntul|stergeti anuntul|scoate anuntul de pe site/;
 
 /** Textul standard prin care cerem acordul de publicare pe realtrust.ro. */
 export function publishConsentRequestText(p?: {
@@ -261,16 +261,13 @@ export function publishConsentRequestText(p?: {
     || (p?.source_url
       ? `https://realtrust.ro/analiza-anunt?url=${encodeURIComponent(p.source_url)}`
       : "https://realtrust.ro/analiza-anunt");
+  void what;
   return [
-    `Bună ziua! Am văzut anunțul dumneavoastră pentru ${what}.`,
+    `Bună ziua! Am generat o evaluare gratuită de piață pentru proprietatea dvs.: ${analysisUrl}`,
     "",
-    "Am rulat o evaluare de piață gratuită pentru proprietate: prețul estimat în zonă și randamentul potențial sunt disponibile în raportul de mai jos.",
+    "Reprezint RealTrust Timișoara și avem investitori activi. Promovarea este 100% gratuită (Comision 0% pentru dvs., fără exclusivitate).",
     "",
-    `📊 Vezi analiza gratuită: ${analysisUrl}`,
-    "",
-    "P.S. Reprezint RealTrust Timișoara și avem cumpărători/investitori activi în bază. Dorim să vă promovăm anunțul gratuit pe site-ul nostru (Comision 0% pentru dumneavoastră, fără exclusivitate).",
-    "",
-    "Dacă doriți să îl afișăm, răspundeți doar cu „DA” și îl publicăm în 2 minute.",
+    "Dacă doriți să publicăm anunțul complet cu poze pe site-ul nostru, răspundeți doar cu „DA” și îl activăm în 2 minute.",
   ].join("\n");
 }
 
@@ -280,8 +277,7 @@ export const PUBLISH_CONSENT_ACK =
   "Puteti retrage acordul oricand, scriind RETRAG, iar anunțul este scos imediat de pe site.";
 
 export const PUBLISH_REVOKE_ACK =
-  "Am inteles, am retras acordul: anunțul nu mai apare pe realtrust.ro. " +
-  "Daca doriti sa il publicam din nou, ne scrieti aici „DA”.";
+  "Anunțul dumneavoastră a fost eliminat definitiv de pe realtrust.ro.";
 
 /** „consent” / „revoke” / null pentru mesajul primit de la proprietar. */
 export function detectPublishIntent(
@@ -291,6 +287,8 @@ export function detectPublishIntent(
   const t = stripDiacritics(raw);
   if (!t) return null;
   if (PUBLISH_REVOKE_RE.test(t)) return "revoke";
+  // „NU” simplu = retragere doar ca răspuns la cererea noastră de acord.
+  if (/^nu+[\s!.,]*$/.test(t) && opts?.pendingConsent) return "revoke";
   if (PUBLISH_CONSENT_STRONG_RE.test(t)) return "consent";
   if ((PUBLISH_CONSENT_SOFT_RE.test(t) || /👍/u.test(t)) && opts?.pendingConsent) {
     return "consent";
