@@ -29,7 +29,7 @@ export default function OwnerIncomeQuickCalc() {
 
   const wa = encodeURIComponent(
     `Bună! Vreau o ofertă de administrare pentru apartamentul meu: ${zone}, ${rooms} camere, ${size} m².` +
-      (r ? ` Calculatorul arată chirie clasică ~${eur(r.classic)}/lună vs. regim hotelier ~${eur(r.hotel)}/lună net.` : ""),
+      (r ? ` Calculatorul arată chirie clasică ~${eur(r.classic)}/lună vs. regim hotelier ~${eur(r.hotelMin)}–${eur(r.hotelMax)}/lună net.` : ""),
   );
 
   return (
@@ -69,8 +69,8 @@ export default function OwnerIncomeQuickCalc() {
               <div className="mt-1 text-3xl font-bold text-foreground">{r ? `${eur(r.classic)}/lună` : "…"}</div>
             </div>
             <div className="rounded-xl border border-primary bg-primary/5 p-5">
-              <div className="text-sm text-muted-foreground">Regim hotelier RealTrust (~9,4% net/an)</div>
-              <div className="mt-1 text-3xl font-bold text-primary">{r ? `${eur(r.hotel)}/lună` : "…"}</div>
+              <div className="text-sm text-muted-foreground">Regim hotelier RealTrust (6,5–9,4% net/an)</div>
+              <div className="mt-1 text-3xl font-bold text-primary">{r ? `${eur(r.hotelMin)}–${eur(r.hotelMax)}/lună` : "…"}</div>
               {r && r.diff > 0 && <div className="mt-1 text-sm text-foreground">+{eur(r.diff)}/lună față de chiria clasică</div>}
             </div>
           </div>
