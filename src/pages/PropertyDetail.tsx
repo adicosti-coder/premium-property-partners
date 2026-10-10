@@ -1136,6 +1136,7 @@ const PropertyDetail = () => {
                   yearBuilt={dbProperty?.year_built}
                   energyClass={dbProperty?.energy_class}
                   roi={dbProperty?.roi_percentage}
+                  salePrice={(dbProperty?.capital_necesar ?? (dbProperty?.price_per_sqm && dbProperty?.size ? Math.round(Number(dbProperty.price_per_sqm) * Number(dbProperty.size)) : null)) as number | null}
                   expertInsightOverride={language === "en" ? (dbProperty as any)?.expert_insight_en : (dbProperty as any)?.expert_insight_ro}
                 />
               </Suspense>

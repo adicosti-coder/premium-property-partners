@@ -27,6 +27,8 @@ interface TheAdvisorProps {
   yearBuilt?: number | null;
   energyClass?: string | null;
   roi?: string | null;
+  /** Sale price (EUR) — used to derive 6.5–9.4% net yield & rent multiplier */
+  salePrice?: number | null;
   expertInsightOverride?: string | null;
 }
 
@@ -132,6 +134,7 @@ const TheAdvisor = ({
   yearBuilt,
   energyClass,
   roi,
+  salePrice,
   expertInsightOverride,
 }: TheAdvisorProps) => {
   const { language } = useLanguage();
@@ -262,6 +265,20 @@ const TheAdvisor = ({
     }
   }, [error, content, isLoading]);
 
+  // Sale listings: same 6.5–9.4% net range as „Oferta pentru acest apartament”.
+  const saleMetrics = salePrice && salePrice > 0
+    ? (() => {
+        const fmt = (n: number) => n.toLocaleString(language === "en" ? "en-US" : "ro-RO", { maximumFractionDigits: 1 });
+        const lowM = Math.round((salePrice * 0.065) / 12);
+        const highM = Math.round((salePrice * 0.094) / 12);
+        return {
+          yieldText: "6,5–9,4%",
+          // Years of net rent needed to recover the price
+          multiplierText: `${fmt(salePrice / (highM * 12))}–${fmt(salePrice / (lowM * 12))}x`,
+        };
+      })()
+    : null;
+
   return (
     <section className="space-y-6" aria-label="The Advisor">
 
@@ -348,7 +365,7 @@ const TheAdvisor = ({
                       <CardContent className="p-5">
                         <TrendingUp className="w-6 h-6 text-primary mx-auto mb-2" />
                         <p className="text-2xl font-bold text-foreground">
-                          {roi ? (roi.includes('%') ? roi : `${roi}%`) : (content.investmentMetrics.netYield || "").replace(/[^0-9.,%-]/g, "").trim() || content.investmentMetrics.netYield}
+                          {saleMetrics ? saleMetrics.yieldText : (roi ? (roi.includes('%') ? roi : `${roi}%`) : (content.investmentMetrics.netYield || "").replace(/[^0-9.,%-]/g, "").trim() || content.investmentMetrics.netYield)}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">
                           {t.netYield}
@@ -359,7 +376,7 @@ const TheAdvisor = ({
                       <CardContent className="p-5">
                         <Calculator className="w-6 h-6 text-primary mx-auto mb-2" />
                         <p className="text-2xl font-bold text-foreground">
-                          {content.investmentMetrics.rentMultiplier}
+                          {saleMetrics ? saleMetrics.multiplierText : content.investmentMetrics.rentMultiplier}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">
                           {t.rentMultiplier}
