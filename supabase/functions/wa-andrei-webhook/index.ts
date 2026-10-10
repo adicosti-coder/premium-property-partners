@@ -2,6 +2,7 @@
 // Public endpoint (verify_jwt = false). Validates signature via WHATSAPP_APP_SECRET.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { relayToMake } from "../_shared/makeRelay.ts";
+import { canonicalWaPhone, phoneVariants } from "../_shared/waPhone.ts";
 import {
   ACK_MESSAGE,
   buildIntakeMessage,
@@ -27,10 +28,11 @@ const corsHeaders = {
 };
 
 function normalizeRoPhone(raw: string): string {
-  let c = (raw || "").replace(/[^\d+]/g, "");
-  if (!c) return "";
-  if (c.startsWith("+")) return c;
-  return `+${c}`;
+  // Numerele românești → +40XXXXXXXXX (curăță 0040 / 40 / 07…); restul rămân +cifre.
+  const ro = canonicalWaPhone(raw);
+  if (ro) return ro;
+  const c = (raw || "").replace(/[^\d]/g, "");
+  return c ? `+${c}` : "";
 }
 
 /**
@@ -51,20 +53,42 @@ async function handlePublishIntent(
   const { phone, intent, message, supabaseUrl, serviceKey } = args;
   const nowIso = new Date().toISOString();
 
-  // Anunțul proprietarului la care se referă acordul (cel mai recent pentru acest număr).
-  const { data: prospect } = await supabase
-    .from("prospect_listings")
-    .select("id, title, zone")
-    .eq("phone_normalized", phone)
-    .order("created_at", { ascending: false })
+  // Potrivim numărul în toate formele salvate (+407…, 407…, 07…).
+  const variants = phoneVariants(phone);
+  // 1) Anunțul pentru care s-a cerut acordul (cea mai recentă cerere deschisă).
+  const { data: pendingConsent } = await supabase
+    .from("wa_publish_consents")
+    .select("prospect_listing_id")
+    .in("phone_normalized", variants)
+    .not("prospect_listing_id", "is", null)
+    .is("revoked_at", null)
+    .in("status", ["requested", "granted"])
+    .order("requested_at", { ascending: false, nullsFirst: false })
     .limit(1)
     .maybeSingle();
+  let prospect: { id: string; title?: string; zone?: string } | null = null;
+  if (pendingConsent?.prospect_listing_id) {
+    const { data } = await supabase.from("prospect_listings")
+      .select("id, title, zone").eq("id", pendingConsent.prospect_listing_id).maybeSingle();
+    prospect = data;
+  }
+  // 2) Altfel, cel mai recent anunț al acestui număr (oricare format).
+  if (!prospect) {
+    const { data } = await supabase
+      .from("prospect_listings")
+      .select("id, title, zone")
+      .or(variants.flatMap((v) => [`phone_normalized.eq.${v}`, `contact_phone.eq.${v}`]).join(","))
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    prospect = data;
+  }
 
   if (intent === "revoke") {
     const { data: consents } = await supabase
       .from("wa_publish_consents")
       .select("id, property_id")
-      .eq("phone_normalized", phone)
+      .in("phone_normalized", variants)
       .neq("status", "revoked");
 
     for (const c of consents ?? []) {
