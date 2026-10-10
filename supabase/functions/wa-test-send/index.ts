@@ -99,12 +99,12 @@ Deno.serve(async (req) => {
         template: {
           name: body.template_name,
           language: { code: body.template_language || "en_US" },
-          ...(body.template_params?.length
+          ...(templateParams.length
             ? {
                 components: [
                   {
                     type: "body",
-                    parameters: body.template_params.map((p) => ({ type: "text", text: p })),
+                    parameters: templateParams.map((p) => ({ type: "text", text: p })),
                   },
                 ],
               }
@@ -115,7 +115,7 @@ Deno.serve(async (req) => {
         messaging_product: "whatsapp",
         to: to.replace(/^\+/, ""),
         type: "text",
-        text: { preview_url: false, body: body.text || "Mesaj de test RealTrust." },
+        text: { preview_url: false, body: text || "Mesaj de test RealTrust." },
       };
 
   const resp = await fetch(`https://graph.facebook.com/v20.0/${phoneId}/messages`, {
@@ -132,8 +132,8 @@ Deno.serve(async (req) => {
     direction: "outbound",
     role: "system",
     content: useTemplate
-      ? `[template:${body.template_name}] ${(body.template_params ?? []).join(" | ")}`
-      : body.text || "Mesaj de test RealTrust.",
+      ? `[template:${body.template_name}] ${templateParams.join(" | ")}`
+      : text || "Mesaj de test RealTrust.",
     wa_message_id: waMessageId,
     delivery_status: resp.ok ? "sent" : null,
     error: resp.ok ? null : metaBody?.error?.message ?? `meta_${resp.status}`,
