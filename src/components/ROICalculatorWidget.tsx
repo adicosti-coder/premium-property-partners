@@ -103,8 +103,10 @@ const ROICalculatorWidget = () => {
           management_tier: selectedTier,
           classic_rent: calculations.classicRent,
           realtrust_income: calculations.realtrustIncome,
-          target_net_yield: TARGET_NET_YIELD,
-          target_net_annual: calculations.targetNetAnnual,
+          target_net_yield_min: TARGET_NET_YIELD_MIN,
+          target_net_yield_max: TARGET_NET_YIELD_MAX,
+          target_net_annual_min: calculations.targetNetAnnualMin,
+          target_net_annual_max: calculations.targetNetAnnualMax,
         }) as never,
       });
 
@@ -137,8 +139,10 @@ const ROICalculatorWidget = () => {
             managementTier: selectedTier,
             classicRent: calculations.classicRent,
             realtrustIncome: calculations.realtrustIncome,
-            targetNetAnnual: calculations.targetNetAnnual,
-            targetNetMonthly: calculations.targetNetMonthly,
+            targetNetAnnualMin: calculations.targetNetAnnualMin,
+            targetNetAnnualMax: calculations.targetNetAnnualMax,
+            targetNetMonthlyMin: calculations.targetNetMonthlyMin,
+            targetNetMonthlyMax: calculations.targetNetMonthlyMax,
             source: "calculator_roi_widget",
           },
         });
@@ -258,7 +262,7 @@ const ROICalculatorWidget = () => {
             </p>
           </div>
 
-          {/* Randament net de referință 9,4% */}
+          {/* Randament net de referință 6,5–9,4% */}
           <div className="bg-muted/20 border border-border rounded-xl p-4">
             <p className="text-sm text-muted-foreground mb-1">
               Estimare la randamentul net de referință RealTrust (9,4%)
