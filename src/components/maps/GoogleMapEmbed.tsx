@@ -44,18 +44,14 @@ const MapFallback = ({ title, query }: { title: string; query?: string | null })
   );
 };
 
-/** One-time key probe: a 1x1 Static Maps image fails when the key is invalid/restricted. */
-let keyProbe: Promise<boolean> | null = null;
+/** Key probe on every mount: a 1x1 Static Maps image fails when the key is invalid/restricted. */
 function isMapsKeyValid(): Promise<boolean> {
-  if (!keyProbe) {
-    keyProbe = new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => resolve(true);
-      img.onerror = () => resolve(false);
-      img.src = `https://maps.googleapis.com/maps/api/staticmap?center=45.7489,21.227&zoom=1&size=1x1&key=${GOOGLE_MAPS_BROWSER_KEY}`;
-    });
-  }
-  return keyProbe;
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(true);
+    img.onerror = () => resolve(false);
+    img.src = `https://maps.googleapis.com/maps/api/staticmap?center=45.7489,21.227&zoom=1&size=1x1&key=${GOOGLE_MAPS_BROWSER_KEY}&_=${Date.now()}`;
+  });
 }
 
 /** Lazy Google Maps Embed — mounts only when near the viewport (keeps LCP fast). */
