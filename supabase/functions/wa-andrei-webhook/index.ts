@@ -521,7 +521,7 @@ Deno.serve(async (req) => {
             if (pending && pending.notes !== "question_sent") {
               const { data: pr } = await supabase
                 .from("prospect_listings")
-                .select("title, zone, rooms")
+                .select("title, zone, rooms, source_url")
                 .eq("id", pending.prospect_listing_id ?? "")
                 .maybeSingle();
               quick = {
@@ -553,7 +553,7 @@ Deno.serve(async (req) => {
               .eq("phone_normalized", from);
             const { data: pr } = await supabase
               .from("prospect_listings")
-              .select("id, title, zone, rooms")
+              .select("id, title, zone, rooms, source_url")
               .eq("phone_normalized", from)
               .order("created_at", { ascending: false })
               .limit(1)
