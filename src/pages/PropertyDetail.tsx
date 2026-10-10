@@ -981,6 +981,7 @@ const PropertyDetail = () => {
                 bookingRating={dbProperty?.booking_rating ?? null}
                 reviewCount={dbProperty?.booking_review_count ?? null}
                 bedrooms={property.bedrooms}
+                rooms={dbProperty?.rooms ?? null}
                 capacity={property.capacity}
                 amenities={(property as any).amenities ?? null}
                 size={(property as any).size ?? null}

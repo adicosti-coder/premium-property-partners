@@ -11,6 +11,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { TrendingUp, Shield, Calculator, Lightbulb, HelpCircle } from "lucide-react";
+import { getPropertyInvestmentMetrics } from "@/lib/propertyInvestmentMetrics";
 
 interface TheAdvisorProps {
   propertyName: string;
@@ -49,7 +50,7 @@ function generateFallbackContent(
   const { propertyName, location, size, bedrooms, bathrooms, capacity, pricePerNight, listingType, yearBuilt, roi, amenities } = props;
   const isInvestment = listingType === "investitie" || listingType === "investment";
   const isRental = listingType === "inchiriere";
-  const estimatedYield = roi || "9.4%";
+  const estimatedYield = lang === "ro" ? "6,5–9,4%" : "6.5–9.4%";
   const sizeText = size ? `${size} mp` : "";
   const bedsText = bedrooms ? `${bedrooms}` : "N/A";
   const amenitiesText = amenities?.slice(0, 5).join(", ") || "";
@@ -266,18 +267,12 @@ const TheAdvisor = ({
   }, [error, content, isLoading]);
 
   // Sale listings: same 6.5–9.4% net range as „Oferta pentru acest apartament”.
-  const saleMetrics = salePrice && salePrice > 0
-    ? (() => {
-        const fmt = (n: number) => n.toLocaleString(language === "en" ? "en-US" : "ro-RO", { maximumFractionDigits: 1 });
-        const lowM = Math.round((salePrice * 0.065) / 12);
-        const highM = Math.round((salePrice * 0.094) / 12);
-        return {
-          yieldText: "6,5–9,4%",
-          // Years of net rent needed to recover the price
-          multiplierText: `${fmt(salePrice / (highM * 12))}–${fmt(salePrice / (lowM * 12))}x`,
-        };
-      })()
-    : null;
+  const metrics = getPropertyInvestmentMetrics(salePrice);
+  const fmt = (n: number) => n.toLocaleString(language === "en" ? "en-US" : "ro-RO", { maximumFractionDigits: 1 });
+  const saleMetrics = metrics ? {
+    yieldText: `${fmt(metrics.yieldMin)}–${fmt(metrics.yieldMax)}%`,
+    multiplierText: `${fmt(metrics.multiplierMin)}–${fmt(metrics.multiplierMax)}x`,
+  } : null;
 
   return (
     <section className="space-y-6" aria-label="The Advisor">
@@ -381,6 +376,7 @@ const TheAdvisor = ({
                         <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">
                           {t.rentMultiplier}
                         </p>
+                        {saleMetrics && <p className="text-xs text-muted-foreground mt-2">{language === "ro" ? "Preț / venit net anual estimat" : "Price / estimated annual net income"}</p>}
                       </CardContent>
                     </Card>
                     <Card className="text-center border-primary/10 hover:border-primary/30 transition-colors">
