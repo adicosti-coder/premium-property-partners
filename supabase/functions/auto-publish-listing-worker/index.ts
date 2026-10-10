@@ -187,6 +187,7 @@ Deno.serve(async (req) => {
     const triggeredBy: string = body?.triggered_by || "fan_out";
     const useAiRewrite: boolean = body?.use_ai_rewrite !== false;
     const pendingReviewOnly: boolean = body?.pending_review_only === true;
+    const republish: boolean = body?.republish === true;
     const idempotencyKey: string | undefined =
       body?.idempotency_key || req.headers.get("x-idempotency-key") || undefined;
     if (!prospectId) return safeJson({ success: false, error: "missing prospect_id" }, 400);
@@ -201,7 +202,7 @@ Deno.serve(async (req) => {
       .select("id, slug")
       .eq("migrated_from_prospect_id", prospectId)
       .maybeSingle();
-    if (existingProp) {
+    if (existingProp && !republish) {
       return safeJson({
         success: true, published: false, reason: "idempotent_skip_existing",
         property_id: existingProp.id, idempotency_key: idempotencyKey,
