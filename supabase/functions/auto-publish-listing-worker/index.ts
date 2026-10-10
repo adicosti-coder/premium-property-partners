@@ -494,7 +494,8 @@ Deno.serve(async (req) => {
         ? ["scrape-prospects", "auto-import", "site-published", "recrutare-management", "inchiriere-proprietar", "andrei-call-queue"]
         : ["scrape-prospects", "auto-import", "site-published"],
       admin_notes: `[worker] Publicat ca proprietate ${inserted.id} (q=${quality}).`,
-      lifecycle_status: "to_call",
+      // Publicat pe site → status „posted” (published) automat, fără aprobare Admin.
+      lifecycle_status: "posted",
     }).eq("id", prospect.id);
 
     await supabase.from("listing_inspections").update({ status: "published", decision_note: inserted.id })
