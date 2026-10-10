@@ -22,8 +22,9 @@ export default function OwnerIncomeQuickCalc() {
     if (!data || !z) return null;
     const value = m2 * (z.ppm ?? data.city_ppm);
     const classic = m2 * z.rent_ppm;
-    const hotel = (value * 0.094) / 12;
-    return { value, classic, hotel, diff: hotel - classic };
+    const hotelMin = (value * 0.065) / 12;
+    const hotelMax = (value * 0.094) / 12;
+    return { value, classic, hotelMin, hotelMax, diff: hotelMin - classic };
   }, [data, zone, size]);
 
   const wa = encodeURIComponent(

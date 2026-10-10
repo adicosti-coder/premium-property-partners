@@ -36,8 +36,10 @@ const GRAY = [110, 116, 128] as const;
 const GREEN = [22, 163, 74] as const;
 const LIGHT = [249, 247, 242] as const;
 
-/** Standard net-yield assumption communicated across the site. */
-const NET_YIELD_TARGET = 9.4;
+/** Standard net-yield range communicated across the site: 6,5–9,4% pe an. */
+const NET_YIELD_MIN = 6.5;
+const NET_YIELD_MAX = 9.4;
+const NET_YIELD_RANGE = `${NET_YIELD_MIN}–${NET_YIELD_MAX}`;
 /** Operational deduction (platform commissions + effective income tax + consumables). */
 const OPERATIONAL_DEDUCTION = 27;
 

@@ -27,8 +27,9 @@ import { supabase } from "@/lib/supabaseClient";
 import { withCampaignTracking } from "@/lib/campaignAttribution";
 import { trackConversion, formatPhoneInput } from "@/lib/conversionTracking";
 
-/** Randament net de referință RealTrust (ocupare 75%). */
-const TARGET_NET_YIELD = 0.094;
+/** Randament net de referință RealTrust: interval 6,5–9,4% pe an (ocupare 75%). */
+const TARGET_NET_YIELD_MIN = 0.065;
+const TARGET_NET_YIELD_MAX = 0.094;
 
 const TIERS = [
   { value: 15, label: "15%" },
