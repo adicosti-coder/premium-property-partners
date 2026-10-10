@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import GoogleMapEmbed from "@/components/maps/GoogleMapEmbed";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Same district reference points as listing-market-score (approximate centers).
@@ -20,13 +21,14 @@ const median = (a: number[]) => { if (!a.length) return 0; const s = [...a].sort
 const W = 640, H = 520, LAT = [45.715, 45.805], LNG = [21.19, 21.315];
 const xy = (lat: number, lng: number) => ({ x: ((lng - LNG[0]) / (LNG[1] - LNG[0])) * W, y: H - ((lat - LAT[0]) / (LAT[1] - LAT[0])) * H });
 
-type Analysed = { id: string; zone: number; ppm: number; title: string; url: string };
+type Analysed = { id: string; zone: number; ppm: number; title: string; url: string; q: string; lat?: number; lng?: number };
 
 export default function NeighborhoodPriceMapPanel() {
   const [medians, setMedians] = useState<{ ppm: number; n: number }[]>([]);
   const [analysed, setAnalysed] = useState<Analysed[]>([]);
   const [sel, setSel] = useState<number | null>(null);
   const [cityPpm, setCityPpm] = useState(0);
+  const [pin, setPin] = useState<Analysed | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -50,7 +52,7 @@ export default function NeighborhoodPriceMapPanel() {
         if (seen.has(r.url)) return []; seen.add(r.url);
         const d = r.extracted_data || {}; const ppm = Number(d.pret_listare) / Number(d.suprafata);
         const z = zoneOf([d.zona, d.titlu].filter(Boolean).join(" "));
-        return z >= 0 && ppm > 0 && Number.isFinite(ppm) ? [{ id: r.id, zone: z, ppm: Math.round(ppm), title: d.titlu || "Anunț", url: r.url }] : [];
+        return z >= 0 && ppm > 0 && Number.isFinite(ppm) ? [{ id: r.id, zone: z, ppm: Math.round(ppm), title: d.titlu || "Anunț", url: r.url, q: [d.adresa, d.strada, d.zona].filter(Boolean).join(", ") || ZONES[z].label, lat: Number(d.latitude ?? d.lat) || undefined, lng: Number(d.longitude ?? d.lng) || undefined }] : [];
       }));
     })();
   }, []);
@@ -95,16 +97,21 @@ export default function NeighborhoodPriceMapPanel() {
             const m = medians[a.zone]; const zoneOk = !!m && m.n >= 5;
             const ref = zoneOk ? m.ppm : cityPpm; const diff = ref ? Math.round(((a.ppm - ref) / ref) * 100) : null;
             return (
-              <a key={a.id} href={a.url} target="_blank" rel="noopener noreferrer" className="block rounded-md border p-2 hover:bg-muted">
-                <div className="truncate font-medium">{a.title}</div>
+              <div key={a.id} role="button" tabIndex={0} onClick={() => setPin(a)} onKeyDown={(e) => e.key === "Enter" && setPin(a)} className={`block cursor-pointer rounded-md border p-2 hover:bg-muted ${pin?.id === a.id ? "border-primary" : ""}`}>
+                <div className="truncate font-medium">{a.title} <a href={a.url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-xs text-primary underline">sursă</a></div>
                 <div className="text-xs text-muted-foreground">
                   {ZONES[a.zone].label} · {a.ppm.toLocaleString("ro-RO")} €/m²
                   {diff !== null && <> · <span className={diff > 0 ? "text-destructive" : "text-primary"}>{diff > 0 ? "+" : ""}{diff}% față de mediana {zoneOk ? "cartierului" : "orașului"}</span></>}
                 </div>
-              </a>
+              </div>
             );
           })}
           {!list.length && <p className="text-muted-foreground">Niciun anunț analizat în această zonă.</p>}
+        </div>
+        <div className="lg:col-span-2">
+          {pin ? (
+            <GoogleMapEmbed key={pin.id} latitude={pin.lat} longitude={pin.lng} query={pin.q} title={`${pin.title} — ${pin.q}`} className="h-96" />
+          ) : <p className="text-sm text-muted-foreground">Apasă un anunț din listă ca să-l vezi pe harta Google, la adresa extrasă din anunț.</p>}
         </div>
       </CardContent>
     </Card>
