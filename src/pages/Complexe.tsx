@@ -57,7 +57,7 @@ const Complexe = () => {
   const translations = {
     ro: {
       title: "Complexe Rezidențiale Timișoara | Management Regim Hotelier",
-      metaDescription: "Apartamente în regim hotelier în 12 complexe rezidențiale din Timișoara: ISHO, ATENEO, City of Mara, Fructus Plaza, XCity Towers și altele. ROI 9.4%.",
+      metaDescription: "Apartamente în regim hotelier în 12 complexe rezidențiale din Timișoara: ISHO, ATENEO, City of Mara, Fructus Plaza, XCity Towers și altele. Randament net estimat 6,5–9,4% pe an.",
       heroTitle: "Complexe Rezidențiale",
       heroTitleHighlight: "Timișoara",
       heroSubtitle: "Administrăm proprietăți în cele mai exclusiviste ansambluri rezidențiale din Timișoara. Descoperă complexul tău și află potențialul de venit.",
@@ -67,7 +67,7 @@ const Complexe = () => {
       neighborhoodsList: ["Centru", "Nord", "Sud", "Est", "Vest", "Pădurea Verde"],
       statsTitle: "Rezultate Demonstrate",
       avgRoi: "ROI Mediu",
-      avgRoiValue: "9.4%",
+      avgRoiValue: "6,5–9,4%",
       occupancy: "Ocupare Medie",
       occupancyValue: "95%",
       totalProperties: "Proprietăți",
@@ -90,13 +90,13 @@ const Complexe = () => {
         { question: "Care este stadiul construcției pentru complexele noi (ATENEO, City of Mara)?", answer: "Stadiul exact al construcției — în construcție, în curs de finalizare sau finalizat — este actualizat pe pagina dedicată fiecărui complex. Verificați pagina complexului pentru termenele de livrare și disponibilitatea unităților." },
         { question: "Aveți apartamente cu grădină în Timișoara?", answer: "Da, în mai multe complexe noi (în special Dumbrăvița, Ghiroda și zona Braytim) sunt disponibile apartamente la parter cu grădină privată — ideale pentru familii sau ca investiție diferențiată în regim hotelier." },
         { question: "Ce zone și cartiere acoperiți?", answer: "Acoperim toate cartierele majore din Timișoara: Centru, Iosefin, Fabric, Mehala, Circumvalațiunii, Complex Studențesc, Soarelui, Girocului, Braytim, Calea Aradului, plus zonele metropolitane Dumbrăvița, Ghiroda, Moșnița Nouă, Chișoda și Giroc." },
-        { question: "Ce randament pot obține printr-un complex rezidențial administrat de RealTrust?", answer: "Randamentul net de referință este de circa 9,4% pe an în regim hotelier — o estimare medie, calculată la o ocupare de aproximativ 75% și după costurile reale de administrare (Property Management RealTrust 15-25% din încasări, curățenie, utilități, taxe). Rezultatul efectiv depinde de apartament și de sezon." },
+        { question: "Ce randament pot obține printr-un complex rezidențial administrat de RealTrust?", answer: "Randamentul net estimat este între 6,5% și 9,4% pe an în regim hotelier — calculat la o ocupare de aproximativ 75% și după costurile reale de administrare (Property Management RealTrust 15-25% din încasări, curățenie, utilități, taxe). Rezultatul efectiv depinde de apartament și de sezon." },
         { question: "Pot obține credit ipotecar pentru un apartament într-un complex nou?", answer: "Da, oferim consultanță pentru credit ipotecar prin partenerii noștri bancari, cu pre-aprobare în 48h pentru apartamentele din complexele listate." },
       ],
     },
     en: {
       title: "Residential Complexes Timișoara | Short-Term Rental Management",
-      metaDescription: "Professional short-term rental management for Timișoara's most sought-after residential complexes: Fructus Plaza, City of Mara, Ateneo, Ring, Vivalia and more. 9.4%+ ROI.",
+      metaDescription: "Professional short-term rental management for Timișoara's most sought-after residential complexes: Fructus Plaza, City of Mara, Ateneo, Ring, Vivalia and more. Estimated 6.5–9.4% net yearly ROI.",
       heroTitle: "Residential Complexes",
       heroTitleHighlight: "Timișoara",
       heroSubtitle: "We manage properties in Timișoara's most exclusive residential complexes. Discover your complex and find out your income potential.",
@@ -106,7 +106,7 @@ const Complexe = () => {
       neighborhoodsList: ["Center", "North", "South", "East", "West", "Green Forest"],
       statsTitle: "Proven Results",
       avgRoi: "Average ROI",
-      avgRoiValue: "9.4%",
+      avgRoiValue: "6.5–9.4%",
       occupancy: "Avg Occupancy",
       occupancyValue: "95%",
       totalProperties: "Properties",
@@ -129,7 +129,7 @@ const Complexe = () => {
         { question: "What is the construction status for new complexes (ATENEO, City of Mara)?", answer: "The exact construction status — under construction, near completion, or completed — is updated on each complex's dedicated page. Check the complex page for delivery deadlines and unit availability." },
         { question: "Do you have apartments with a garden in Timișoara?", answer: "Yes, several new complexes (especially in Dumbrăvița, Ghiroda and the Braytim area) offer ground-floor apartments with private gardens — ideal for families or as a differentiated short-term rental investment." },
         { question: "What areas and neighborhoods do you cover?", answer: "We cover all major neighborhoods in Timișoara: Centru, Iosefin, Fabric, Mehala, Circumvalațiunii, Complex Studențesc, Soarelui, Girocului, Braytim, Calea Aradului, plus the metropolitan areas Dumbrăvița, Ghiroda, Moșnița Nouă, Chișoda and Giroc." },
-        { question: "What yield can I get through a residential complex managed by RealTrust?", answer: "The average verified net yield is 9.4% annually via short-term rental, with an average 95% occupancy in managed complexes. The calculation includes all costs (management, cleaning, platform commissions)." },
+        { question: "What yield can I get through a residential complex managed by RealTrust?", answer: "The estimated net yield is 6.5–9.4% annually via short-term rental, calculated at roughly 75% occupancy and after real management costs (management, cleaning, platform commissions)." },
         { question: "Can I get a mortgage for an apartment in a new complex?", answer: "Yes, we offer mortgage consulting through our banking partners, with pre-approval in 48h for apartments in the listed complexes." },
       ],
     },
@@ -249,8 +249,8 @@ const Complexe = () => {
       <main className="min-h-screen bg-background">
         <div className="container mx-auto px-6 pt-24">
           <PageSummary
-            summaryRo="Complexe rezidențiale din Timișoara administrate de RealTrust. Apartamente moderne în regim hotelier cu facilități premium, locații centrale și randament net estimat de circa 9,4% pe an."
-            summaryEn="Residential complexes in Timișoara managed by RealTrust. Modern short-term rental apartments with premium amenities, central locations and an estimated net yield of about 9.4% per year."
+            summaryRo="Complexe rezidențiale din Timișoara administrate de RealTrust. Apartamente moderne în regim hotelier cu facilități premium, locații centrale și randament net estimat de 6,5–9,4% pe an."
+            summaryEn="Residential complexes in Timișoara managed by RealTrust. Modern short-term rental apartments with premium amenities, central locations and an estimated net yield of 6.5–9.4% per year."
           />
         </div>
         {/* Hero Section */}
@@ -390,7 +390,7 @@ const Complexe = () => {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1 text-sm text-primary">
                             <TrendingUp className="w-4 h-4" />
-                            <span className="font-medium">ROI 9.4%+</span>
+                            <span className="font-medium">ROI 6,5–9,4%</span>
                           </div>
                           <span className="text-sm text-primary flex items-center gap-1 group-hover:gap-2 transition-all">
                             {t.viewDetails}
