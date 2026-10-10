@@ -15,6 +15,7 @@ import { relayToMake } from "../_shared/makeRelay.ts";
 import { ACK_MESSAGE, buildIntakeMessage, loadProspectContext } from "../_shared/waAutoReply.ts";
 import { preferredIntroTemplate } from "../_shared/waPreferredTemplate.ts";
 import { isInternalWaNumber } from "../_shared/waInternalNumbers.ts";
+import { phoneVariants } from "../_shared/waPhone.ts";
 
 /**
  * Apartamentul discutat cu clientul, dacă nu e trimis explicit `property_id`:
@@ -736,7 +737,7 @@ Deno.serve(async (req) => {
     const { data: dncHit } = await supabase
       .from("wa_dnc_list")
       .select("label")
-      .eq("phone_normalized", phone.replace(/^\+/, ""))
+      .in("phone_normalized", phoneVariants(phone))
       .limit(1)
       .maybeSingle();
     if (dncHit) {

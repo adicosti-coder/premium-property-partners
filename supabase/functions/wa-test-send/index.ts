@@ -7,6 +7,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { WA_PHONE_NUMBER_ID } from "../_shared/waConfig.ts";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
+import { isInternalWaNumber } from "../_shared/waInternalNumbers.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -55,6 +56,15 @@ Deno.serve(async (req) => {
 
   const to = normalizeRo(String(body.to ?? ""));
   if (!to) return json({ error: "invalid_phone", detail: "Format acceptat: 07xxxxxxxx sau +407xxxxxxxx" }, 400);
+
+  // Endpoint de test: destinatarul este limitat la numerele interne RealTrust,
+  // ca să nu poată fi folosit pentru mesaje către orice număr.
+  if (!isInternalWaNumber(to)) {
+    return json({ error: "recipient_not_allowed", detail: "Trimiterile de test sunt permise doar către numerele interne RealTrust." }, 403);
+  }
+
+  const text = (body.text ?? "").slice(0, 1000);
+  const templateParams = (body.template_params ?? []).slice(0, 8).map((p) => String(p).slice(0, 200));
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
