@@ -26,9 +26,13 @@ Deno.serve(async (req) => {
   const name = typeof b?.name === "string" ? b.name.trim().slice(0, 80) || null : null;
 
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  // Link to the signed-in investor account (for /investitori), when present.
+  const jwt = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
+  const { data: u } = jwt ? await sb.auth.getUser(jwt) : { data: null };
   const { error } = await sb.from("investor_alert_subscribers").upsert({
     phone_normalized: phone, name, zones, max_price: maxPrice, consent_text: CONSENT_TEXT,
     consented_at: new Date().toISOString(), unsubscribed_at: null,
+    ...(u?.user?.id ? { user_id: u.user.id } : {}),
   }, { onConflict: "phone_normalized" });
   if (error) return json({ error: "db_error" }, 500);
   return json({ ok: true });

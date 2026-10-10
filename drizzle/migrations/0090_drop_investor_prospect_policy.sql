@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Investors read prospects in their alerts" ON public.prospect_listings;
