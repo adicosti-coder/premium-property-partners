@@ -248,23 +248,29 @@ export function publishConsentRequestText(p?: {
   title?: string | null;
   zone?: string | null;
   rooms?: number | null;
+  source_url?: string | null;
+  /** Suprascrie link-ul de analiză (folosit de șablonul Meta cu {{2}}). */
+  analysisUrl?: string;
 } | null): string {
   const what = p?.title
     ? `„${p.title}”`
     : p?.zone
       ? `apartamentul din zona ${p.zone}`
-      : "proprietății dumneavoastră";
+      : "proprietatea dumneavoastră";
+  const analysisUrl = p?.analysisUrl
+    || (p?.source_url
+      ? `https://realtrust.ro/analiza-anunt?url=${encodeURIComponent(p.source_url)}`
+      : "https://realtrust.ro/analiza-anunt");
   return [
-    "Buna ziua! Suntem RealTrust din Timișoara.",
+    `Bună ziua! Am văzut anunțul dumneavoastră pentru ${what}.`,
     "",
-    `Am văzut anunțul dumneavoastră pentru ${what} și am dori să îl promovăm gratuit pe site-ul nostru, realtrust.ro, pentru a-l aduce direct în fața clienților noștri activi.`,
+    "Am rulat o evaluare de piață gratuită pentru proprietate: prețul estimat în zonă și randamentul potențial sunt disponibile în raportul de mai jos.",
     "",
-    "• 100% Gratuit (fără comisioane ascunse)",
-    "• Fără exclusivitate (continuați să promovați unde doriți)",
-    "• Puteți solicita retragerea oricând",
+    `📊 Vezi analiza gratuită: ${analysisUrl}`,
     "",
-    "Dacă sunteți de acord, dați-ne un simplu răspuns cu „DA” sau „De acord” și îl publicăm.",
-    "(Dacă doriți retragerea ulterioară, este suficient să ne scrieți „RETRAG”)",
+    "P.S. Reprezint RealTrust Timișoara și avem cumpărători/investitori activi în bază. Dorim să vă promovăm anunțul gratuit pe site-ul nostru (Comision 0% pentru dumneavoastră, fără exclusivitate).",
+    "",
+    "Dacă doriți să îl afișăm, răspundeți doar cu „DA” și îl publicăm în 2 minute.",
   ].join("\n");
 }
 
