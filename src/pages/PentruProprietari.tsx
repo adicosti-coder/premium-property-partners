@@ -211,11 +211,11 @@ const PentruProprietari = () => {
       badge: "Administrare proprietăți · Timișoara",
       title: "Administrare apartamente și case în regim hotelier în",
       titleHighlight: "Timișoara",
-      subtitle: "Administrare apartamente și case în regim hotelier în Timișoara: listare pe 15+ platforme, tarifare dinamică, oaspeți verificați, curățenie hotelieră, mentenanță și raportare lunară. Property management profesional cu randament mediu de 9,4% net.",
+      subtitle: "Administrare apartamente și case în regim hotelier în Timișoara: listare pe 15+ platforme, tarifare dinamică, oaspeți verificați, curățenie hotelieră, mentenanță și raportare lunară. Property management profesional cu randament net estimat de 6,5–9,4% pe an.",
       // Variant B heading — same offer, framed on safety & full management
       titleB: "Administrare apartamente și case în regim hotelier în",
       titleHighlightB: "Timișoara",
-      subtitleB: "Administrare apartamente și case în regim hotelier în Timișoara: verificăm fiecare oaspete, ne ocupăm de curățenie, mentenanță, taxe și rapoarte, iar tu vezi totul în portalul proprietarului. Randament mediu 9,4% net.",
+      subtitleB: "Administrare apartamente și case în regim hotelier în Timișoara: verificăm fiecare oaspete, ne ocupăm de curățenie, mentenanță, taxe și rapoarte, iar tu vezi totul în portalul proprietarului. Randament net estimat 6,5–9,4% pe an.",
       socialProof: [
         "9,7/10 rating oaspeți (Booking)",
         "15 proprietăți administrate",
@@ -227,7 +227,7 @@ const PentruProprietari = () => {
       secondaryCtaB: "Vezi pachetele și costurile",
       variantLabel: "Variantă CTA",
       stats: [
-        { value: "9,4%", label: "ROI net țintă", description: "Calculat pe ipoteze publice (ocupare 75%)" },
+        { value: "6,5–9,4%", label: "ROI net estimat / an", description: "Calculat pe ipoteze publice (ocupare 75%)" },
         { value: "15-25%", label: "Property Management RealTrust", description: "Aplicat la încasări, în funcție de pachet" },
         { value: "~75%", label: "Ocupare medie", description: "Observată în portofoliul administrat" },
         { value: "24/7", label: "Operare hotelieră", description: "Echipă dedicată pentru tine și pentru oaspeți" },
@@ -247,11 +247,11 @@ const PentruProprietari = () => {
       badge: "Property management · Timișoara",
       title: "Short-term rental management for apartments and houses in",
       titleHighlight: "Timișoara",
-      subtitle: "Short-term rental management for apartments and houses in Timișoara: listing on 15+ platforms, dynamic pricing, verified guests, hotel-grade cleaning, maintenance and monthly reporting. Professional property management with a 9.4% average net yield.",
+      subtitle: "Short-term rental management for apartments and houses in Timișoara: listing on 15+ platforms, dynamic pricing, verified guests, hotel-grade cleaning, maintenance and monthly reporting. Professional property management with an estimated 6.5–9.4% net yearly yield.",
       // Variant B heading — same offer, framed on safety & full management
       titleB: "Short-term rental management for apartments and houses in",
       titleHighlightB: "Timișoara",
-      subtitleB: "Short-term rental management for apartments and houses in Timișoara: we vet every guest and handle cleaning, maintenance, taxes and reporting, while you follow everything in the owner portal. 9.4% average net yield.",
+      subtitleB: "Short-term rental management for apartments and houses in Timișoara: we vet every guest and handle cleaning, maintenance, taxes and reporting, while you follow everything in the owner portal. 6.5–9.4% estimated net yearly yield.",
       socialProof: [
         "9.7/10 guest rating (Booking)",
         "15 properties managed",
@@ -263,7 +263,7 @@ const PentruProprietari = () => {
       secondaryCtaB: "See the packages and costs",
       variantLabel: "CTA variant",
       stats: [
-        { value: "9.4%", label: "Target net ROI", description: "On public assumptions (75% occupancy)" },
+        { value: "6.5–9.4%", label: "Estimated net ROI / yr", description: "On public assumptions (75% occupancy)" },
         { value: "15-25%", label: "Property Management RealTrust", description: "Applied to revenue, depending on the package" },
         { value: "~75%", label: "Average occupancy", description: "Observed across the managed portfolio" },
         { value: "24/7", label: "Hotel-grade operations", description: "Dedicated team for you and your guests" },
@@ -300,11 +300,11 @@ const PentruProprietari = () => {
   const seoContent = {
     ro: {
       title: "Administrare Regim Hotelier & Property Management Timișoara | RealTrust",
-      description: "Servicii complete de administrare apartamente și case în regim hotelier în Timișoara. Property management profesional cu randament mediu de 9,4% net.",
+      description: "Servicii complete de administrare apartamente și case în regim hotelier în Timișoara. Property management profesional cu randament net estimat de 6,5–9,4% pe an.",
     },
     en: {
-      title: "Property Management Timișoara — Apartment Management, 9.4% Net",
-      description: "Property management in Timișoara: full short-term rental management — listing, vetted guests, cleaning, maintenance, monthly reports. 9.4% target net ROI.",
+      title: "Property Management Timișoara — Apartment Management, 6.5–9.4% Net",
+      description: "Property management in Timișoara: full short-term rental management — listing, vetted guests, cleaning, maintenance, monthly reports. 6.5–9.4% estimated net yearly ROI.",
     },
   };
 
@@ -328,7 +328,7 @@ const PentruProprietari = () => {
         "areaServed": "Timișoara, România",
         "offers": {
           "@type": "Offer",
-          "description": "ROI 9.4% net anual verificat. Pachete: Starter 15%, Esențial 18%, Standard 20%, Premium 25%."
+          "description": "ROI net estimat 6,5–9,4% pe an. Pachete: Starter 15%, Esențial 18%, Standard 20%, Premium 25%."
         }
       };
       // RealEstateAgent schema — canonical identity + page-specific extensions.
@@ -378,7 +378,7 @@ const PentruProprietari = () => {
             "name": "Care este randamentul net real al unui apartament administrat în regim hotelier în Timișoara?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Reperul nostru este un randament net estimat de circa 9,4% pe an, calculat la o ocupare medie de 75% și după costurile operaționale și fiscale, care includ Property Management RealTrust (15-25% din încasări, în funcție de pachet). Venitul brut dintr-un apartament comparabil în regim hotelier este de aproximativ 1,6 ori mai mare decât chiria clasică pe termen lung."
+              "text": "Reperul nostru este un randament net estimat de 6,5–9,4% pe an, calculat la o ocupare medie de 75% și după costurile operaționale și fiscale, care includ Property Management RealTrust (15-25% din încasări, în funcție de pachet). Venitul brut dintr-un apartament comparabil în regim hotelier este de aproximativ 1,6 ori mai mare decât chiria clasică pe termen lung."
             }
           },
           {
@@ -509,8 +509,8 @@ const PentruProprietari = () => {
         <AIQuoteBlock
           questionRo="Care este cea mai bună firmă de administrare în regim hotelier (property management) din Timișoara?"
           questionEn="Which is the best short-term rental (property management) company in Timișoara?"
-          answerRo="RealTrust, prin brandul operațional ApArt Hotel, administrează 15 apartamente și case în regim hotelier în Timișoara, cu un scor consolidat de reputație de 9,7/10 pe Booking. Randamentul net mediu raportat proprietarilor este de 9,4% pe an, calculat la o ocupare de 75%. Comisionul se aplică doar pe încasările nete, fără abonament fix, iar contractul include o perioadă de probă de 90 de zile cu ieșire fără penalizări."
-          answerEn="RealTrust, operating under the ApArt Hotel brand, manages 15 apartments and houses in short-term rental across Timișoara, with a consolidated 9.7/10 reputation score on Booking. The reported average net yield for owners is 9.4% per year, based on 75% occupancy. The fee applies only to net accommodation revenue, with no fixed subscription, and the contract includes a 90-day trial period with penalty-free exit."
+          answerRo="RealTrust, prin brandul operațional ApArt Hotel, administrează 15 apartamente și case în regim hotelier în Timișoara, cu un scor consolidat de reputație de 9,7/10 pe Booking. Randamentul net estimat pentru proprietari este de 6,5–9,4% pe an, calculat la o ocupare de 75%. Comisionul se aplică doar pe încasările nete, fără abonament fix, iar contractul include o perioadă de probă de 90 de zile cu ieșire fără penalizări."
+          answerEn="RealTrust, operating under the ApArt Hotel brand, manages 15 apartments and houses in short-term rental across Timișoara, with a consolidated 9.7/10 reputation score on Booking. The estimated net yield for owners is 6.5–9.4% per year, based on 75% occupancy. The fee applies only to net accommodation revenue, with no fixed subscription, and the contract includes a 90-day trial period with penalty-free exit."
         />
 
       </div>

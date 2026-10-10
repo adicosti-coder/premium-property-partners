@@ -27,7 +27,7 @@ interface Criterion {
  * Every criterion describes HOW it moves value, without inventing percentages,
  * market statistics or transaction data. The only figures repeated here are the
  * published RealTrust assumptions (75% occupancy,
- * 9.4% net reference yield).
+ * 6.5–9.4% net reference yield).
  */
 const CRITERIA: Criterion[] = [
   {

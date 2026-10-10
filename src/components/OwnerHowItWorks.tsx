@@ -16,7 +16,7 @@ type CityKey =
   | "lugoj";
 
 // Baseline: 1-bedroom (2-camere) in Iosefin, October 2025.
-// Multipliers tuned to internal portfolio data (75–85% occupancy, 9.4% net annual ROI).
+// Multipliers tuned to internal portfolio data (75–85% occupancy, 6.5–9.4% estimated net annual ROI).
 const TYPE_MULTIPLIER: Record<ApartmentType, { adr: number; revenue: number; cleaning: number; net: number }> = {
   garsoniera: { adr: 0.78, revenue: 0.72, cleaning: 0.85, net: 0.7 },
   "2-camere": { adr: 1, revenue: 1, cleaning: 1, net: 1 },

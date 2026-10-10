@@ -9,7 +9,7 @@ import { useZonePrices } from "@/hooks/useZonePrices";
 
 const eur = (n: number) => `${Math.round(n).toLocaleString("ro-RO")} €`;
 
-/** Calculator rapid de venit pentru proprietari: chirie clasică vs. regim hotelier RealTrust (9,4% net). */
+/** Calculator rapid de venit pentru proprietari: chirie clasică vs. regim hotelier RealTrust (6,5–9,4% net/an). */
 export default function OwnerIncomeQuickCalc() {
   const data = useZonePrices();
   const [zone, setZone] = useState("Centru / Cetate");
