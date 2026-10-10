@@ -128,9 +128,11 @@ serve(async (req) => {
 
     /* ── SUMMARIZE: AI-generate chatbot summary + infer prefs ── */
     if (action === "summarize") {
-      // Rate-limit AI summarization per IP to prevent credit drain abuse
-      const rl = checkRateLimit(`vm-sum:${getClientIp(req)}`, { maxRequests: 10, windowMs: 60_000 });
-      if (!rl.allowed) {
+      // Rate-limit AI summarization per IP (3/min) și per sesiune (5/zi)
+      // pentru a preveni consumul abuziv de credite AI de către anonimi.
+      const rl = checkRateLimit(`vm-sum:${getClientIp(req)}`, { maxRequests: 3, windowMs: 60_000 });
+      const rlSession = checkRateLimit(`vm-sum-sess:${sessionId}`, { maxRequests: 5, windowMs: 86_400_000 });
+      if (!rl.allowed || !rlSession.allowed) {
         return new Response(JSON.stringify({ error: "rate_limit" }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
