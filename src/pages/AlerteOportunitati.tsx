@@ -28,9 +28,11 @@ const AlerteOportunitati = () => {
     if (!consent) { toast.error("Bifează acordul pentru alerte pe WhatsApp."); return; }
     setLoading(true);
     try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data: sess } = await supabase.auth.getSession();
       const res = await fetch(`${supabaseConfig.url}/functions/v1/investor-alert-subscribe`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", apikey: getSupabasePublishableKey(), Authorization: `Bearer ${getSupabasePublishableKey()}` },
+        headers: { "Content-Type": "application/json", apikey: getSupabasePublishableKey(), Authorization: `Bearer ${sess.session?.access_token || getSupabasePublishableKey()}` },
         body: JSON.stringify({ phone, name, zones, max_price: Number(maxPrice) || null, consent }),
       });
       const d = await res.json().catch(() => ({}));
