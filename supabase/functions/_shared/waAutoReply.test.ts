@@ -101,13 +101,11 @@ test("un interval real după cererea de apel este notat", () => {
 
 test("cererea de acord arată analiza gratuită și cere „DA”", () => {
   const text = publishConsentRequestText({ title: "Apartament 2 camere Iosefin", source_url: "https://www.olx.ro/d/oferta/apartament-2-camere-iosefin-IDabc.html?x=1&y=2" });
-  expect(text).toContain("Bună ziua! Am văzut anunțul dumneavoastră");
-  expect(text).toContain("Apartament 2 camere Iosefin");
-  expect(text).toContain("evaluare de piață gratuită");
+  expect(text).toContain("Bună ziua! Am generat o evaluare gratuită de piață");
   expect(text).toContain("https://realtrust.ro/analiza-anunt?url=https%3A%2F%2Fwww.olx.ro%2Fd%2Foferta%2Fapartament-2-camere-iosefin-IDabc.html%3Fx%3D1%26y%3D2");
   expect(text).toContain("Comision 0%");
   expect(text).toContain("fără exclusivitate");
-  expect(text).toContain("răspundeți doar cu „DA”");
+  expect(text).toContain("răspundeți doar cu „DA” și îl activăm în 2 minute");
 });
 
 test("cererea de acord fără link de anunț folosește pagina de analiză simplă", () => {
@@ -141,4 +139,12 @@ test.each(["De ce nu ajung anunțurile?", "Mâine?", "nu", "Nu, mulțumesc", "2 
 test("RETRAG rămâne retragere de acord", () => {
   expect(detectPublishIntent("RETRAG")).toBe("revoke");
   expect(detectPublishIntent("nu mai public", { pendingConsent: true })).toBe("revoke");
+});
+
+test.each(["STOP", "Sterge", "ȘTERGEȚI", "dau in judecata"])("retragere: %s", (t) => {
+  expect(detectPublishIntent(t)).toBe("revoke");
+});
+test("NU retrage doar ca răspuns la cerere", () => {
+  expect(detectPublishIntent("Nu", { pendingConsent: true })).toBe("revoke");
+  expect(detectPublishIntent("Nu")).toBeNull();
 });

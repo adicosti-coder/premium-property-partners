@@ -97,7 +97,7 @@ async function handlePublishIntent(
         .update({ status: "revoked", revoked_at: nowIso, notes: message.slice(0, 500) })
         .eq("id", c.id);
       if (c.property_id) {
-        await supabase.from("properties").update({ is_active: false, status: "archived" }).eq("id", c.property_id);
+        await supabase.from("properties").update({ is_active: false }).eq("id", c.property_id);
       }
     }
     return { waitingAdmin: false };
