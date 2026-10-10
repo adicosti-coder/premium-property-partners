@@ -265,14 +265,14 @@ const ROICalculatorWidget = () => {
           {/* Randament net de referință 6,5–9,4% */}
           <div className="bg-muted/20 border border-border rounded-xl p-4">
             <p className="text-sm text-muted-foreground mb-1">
-              Estimare la randamentul net de referință RealTrust (9,4%)
+              Estimare la randamentul net de referință RealTrust (6,5–9,4%)
             </p>
             <p className="text-xl font-bold text-foreground">
-              {calculations.targetNetAnnual.toLocaleString("ro-RO")} €
+              {calculations.targetNetAnnualMin.toLocaleString("ro-RO")}–{calculations.targetNetAnnualMax.toLocaleString("ro-RO")} €
               <span className="text-sm font-normal text-muted-foreground">/an net</span>
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              ≈ {calculations.targetNetMonthly.toLocaleString("ro-RO")} €/lună · ipoteze: ocupare 75%, costuri operaționale și taxe
+              ≈ {calculations.targetNetMonthlyMin.toLocaleString("ro-RO")}–{calculations.targetNetMonthlyMax.toLocaleString("ro-RO")} €/lună · ipoteze: ocupare 75%, costuri operaționale și taxe
             </p>
           </div>
 
