@@ -498,9 +498,11 @@ Deno.serve(async (req) => {
         // față de orice alt răspuns automat și declanșează publicarea/retragerea.
         const publishIntent = detectPublishIntent(text, { pendingConsent });
         if (publishIntent) {
+          const wasStop = quick?.kind === "quick_stop";
           quick = publishIntent === "consent"
             ? { kind: "publish_consent", text: PUBLISH_CONSENT_ACK }
-            : { kind: "publish_revoke", text: PUBLISH_REVOKE_ACK };
+            // STOP păstrează și blocarea mesajelor (DNC), dar confirmă eliminarea.
+            : { kind: wasStop ? "quick_stop" : "publish_revoke", text: PUBLISH_REVOKE_ACK };
           try {
             const res = await handlePublishIntent(supabase, {
               phone: from,
