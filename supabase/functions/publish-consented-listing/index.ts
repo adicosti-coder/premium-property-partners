@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
         const r = await fetch(`${url}/functions/v1/auto-publish-listing-worker`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-          body: JSON.stringify({ prospect_id: prospectId, triggered_by: "admin_publish_now" }),
+          body: JSON.stringify({ prospect_id: prospectId, triggered_by: "admin_publish_now", republish }),
         });
         last = { status: r.status, body: await r.json().catch(() => ({})) };
         if (r.ok || r.status < 500) break; // 4xx / business result: don't retry
