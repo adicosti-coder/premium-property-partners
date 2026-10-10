@@ -62,7 +62,7 @@ const AboutUs = () => {
       story: {
         title: "Povestea Noastră",
         subtitle: "De la prima tranzacție la 15 proprietăți administrate",
-        intro: "Am început în Timișoara ca o agenție imobiliară locală, axată pe tranzacții corecte și pe relații pe termen lung. Cu peste 15 ani de experiență directă pe piața imobiliară Timișoara, urmărim zilnic evoluția prețurilor apartamente Timișoara pe fiecare cartier — de la Centru și Iosefin la ISHO, Dumbrăvița și Complex Studențesc — și oferim consultanță credit ipotecar prin parteneriate cu brokeri și bănci (BCR, BT, ING, Raiffeisen, BRD). Pe măsură ce piața s-a maturizat, am observat că tot mai mulți proprietari căutau venituri pasive fără bătăi de cap — așa s-a născut ApArt Hotel, divizia noastră de regim hotelier. Astăzi gestionăm 15 apartamente cu un ROI net verificat de 9,4% și un rating consolidat de 9,7/10.",
+        intro: "Am început în Timișoara ca o agenție imobiliară locală, axată pe tranzacții corecte și pe relații pe termen lung. Cu peste 15 ani de experiență directă pe piața imobiliară Timișoara, urmărim zilnic evoluția prețurilor apartamente Timișoara pe fiecare cartier — de la Centru și Iosefin la ISHO, Dumbrăvița și Complex Studențesc — și oferim consultanță credit ipotecar prin parteneriate cu brokeri și bănci (BCR, BT, ING, Raiffeisen, BRD). Pe măsură ce piața s-a maturizat, am observat că tot mai mulți proprietari căutau venituri pasive fără bătăi de cap — așa s-a născut ApArt Hotel, divizia noastră de regim hotelier. Astăzi gestionăm 15 apartamente cu un randament net estimat de 6,5–9,4% pe an și un rating consolidat de 9,7/10.",
         realEstate: {
           title: "Servicii Imobiliare Complete",
           description: "Sub brandul RealTrust, oferim un spectru complet de servicii imobiliare care acoperă toate nevoile proprietarilor și investitorilor:",
@@ -158,7 +158,7 @@ const AboutUs = () => {
           { value: "15", label: "Proprietăți administrate" },
           { value: "75%", label: "Ocupare medie anuală" },
           { value: "9,7/10", label: "Rating consolidat oaspeți" },
-          { value: "9,4%", label: "Randament net țintă" }
+          { value: "6,5–9,4%", label: "Randament net estimat / an" }
         ]
       },
       company: {
@@ -204,7 +204,7 @@ const AboutUs = () => {
       story: {
         title: "Our Story",
         subtitle: "From the first transaction to 15 properties managed",
-        intro: "We started in Timișoara as a local real estate agency, focused on fair transactions and long-term relationships. As the market matured, we noticed more owners sought passive income without hassle — that's how ApArt Hotel was born, our short-term rental division. Today we manage 15 apartments with a verified 9.4% net ROI and a consolidated 9.7/10 rating.",
+        intro: "We started in Timișoara as a local real estate agency, focused on fair transactions and long-term relationships. As the market matured, we noticed more owners sought passive income without hassle — that's how ApArt Hotel was born, our short-term rental division. Today we manage 15 apartments with an estimated 6.5–9.4% net yearly ROI and a consolidated 9.7/10 rating.",
         realEstate: {
           title: "Complete Real Estate Services",
           description: "Under the RealTrust brand, we offer a complete spectrum of real estate services covering all needs of owners and investors:",
@@ -300,7 +300,7 @@ const AboutUs = () => {
           { value: "15", label: "Properties under management" },
           { value: "75%", label: "Average annual occupancy" },
           { value: "9.7/10", label: "Consolidated guest rating" },
-          { value: "9.4%", label: "Target net yield" }
+          { value: "6.5–9.4%", label: "Estimated net yield / yr" }
         ]
       },
       company: {
@@ -336,11 +336,11 @@ const AboutUs = () => {
   const seoContent = {
     ro: {
       title: "Despre RealTrust: Imobiliare & Regim Hotelier Timișoara",
-      description: "Echipa RealTrust: experți în imobiliare și regim hotelier Timișoara. 15 proprietăți administrate cu ROI 9.4% net. Contactează-ne acum!"
+      description: "Echipa RealTrust: experți în imobiliare și regim hotelier Timișoara. 15 proprietăți administrate cu randament net estimat 6,5–9,4% pe an. Contactează-ne acum!"
     },
     en: {
       title: "About RealTrust: Real Estate & Short-Term Rentals Timișoara",
-      description: "RealTrust team: real estate and short-term rental experts in Timișoara. 15 properties managed with 9.4% net ROI. Contact us today!"
+      description: "RealTrust team: real estate and short-term rental experts in Timișoara. 15 properties managed with an estimated 6.5–9.4% net yearly ROI. Contact us today!"
     }
   };
 
@@ -705,7 +705,7 @@ const AboutUs = () => {
                   {language === "ro" ? "Studiu de Caz · ROI Verificat" : "Case Study · Verified ROI"}
                 </Badge>
                 <h2 className="text-3xl md:text-4xl font-bold mb-3">
-                  {language === "ro" ? "Cum am ajuns la 9,4% ROI net" : "How we reached 9.4% net ROI"}
+                  {language === "ro" ? "Cum ajungem la 6,5–9,4% ROI net" : "How we reach 6.5–9.4% net ROI"}
                 </h2>
                 <p className="text-muted-foreground">
                   {language === "ro"
@@ -733,7 +733,7 @@ const AboutUs = () => {
                       <li className="flex justify-between border-b border-border py-2"><span className="text-muted-foreground">{language === "ro" ? "Comision platforme" : "Platform fees"}</span><span className="font-medium">−€2.520</span></li>
                       <li className="flex justify-between border-b border-border py-2"><span className="text-muted-foreground">{language === "ro" ? "Curățenie + utilități" : "Cleaning + utilities"}</span><span className="font-medium">−€2.400</span></li>
                       <li className="flex justify-between border-b border-border py-2"><span className="text-muted-foreground">{language === "ro" ? "Management 20%" : "Management 20%"}</span><span className="font-medium">−€2.156</span></li>
-                      <li className="flex justify-between py-2 text-base"><span className="font-semibold">{language === "ro" ? "Profit net" : "Net profit"}</span><span className="font-bold text-primary">€9.724 · 9,4%</span></li>
+                      <li className="flex justify-between py-2 text-base"><span className="font-semibold">{language === "ro" ? "Profit net" : "Net profit"}</span><span className="font-bold text-primary">€6.700–9.700 · 6,5–9,4%</span></li>
                     </ul>
                   </div>
                   <div className="md:col-span-2 flex flex-col sm:flex-row gap-3 pt-4 border-t border-border">
