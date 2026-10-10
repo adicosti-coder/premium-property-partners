@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { GoogleMapButton } from "@/components/maps/GoogleMapEmbed";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -94,6 +95,7 @@ export default function AutoConsentedListings({ title = "Anunțuri Preluate Auto
         return {
           ...r,
           title: prop?.name || prospect?.title || "—",
+          zone,
           details: [rooms, zone].filter(Boolean).join(" · ") || "—",
           price: prospect?.price ?? null,
           rent: String(prospect?.category || "").startsWith("inchiriere"),
@@ -193,6 +195,7 @@ export default function AutoConsentedListings({ title = "Anunțuri Preluate Auto
                   <td className="p-3 max-w-xs">
                     <span className="block truncate" title={r.title}>{r.title}</span>
                     <span className="text-xs text-muted-foreground">{r.details}</span>
+                    <GoogleMapButton query={r.zone} title={r.title} />
                   </td>
                   <td className="p-3 whitespace-nowrap">
                     {r.price ? `${Number(r.price).toLocaleString("ro-RO")} €${r.rent ? "/lună" : ""}` : "—"}

@@ -1,4 +1,5 @@
 import { filterPropertyImages, PROPERTY_IMAGE_PLACEHOLDER } from "@/utils/propertyImageFilter";
+import GoogleMapEmbed from "@/components/maps/GoogleMapEmbed";
 import { useEffect, useState, useCallback, useRef, lazy, Suspense, useMemo } from "react";
 
 import { useParams, Link, useLocation } from "react-router-dom";
@@ -1161,6 +1162,7 @@ const PropertyDetail = () => {
                     : 'Discover restaurants, shops, parks and attractions near the apartment.'}
                 </p>
                 <PropertyNeighborhoodMap propertySlug={property.slug} propertyName={property.name} propertyLocation={property.location} propertyLatitude={resolvedCoordinates?.[1] ?? null} propertyLongitude={resolvedCoordinates?.[0] ?? null} />
+                <GoogleMapEmbed latitude={resolvedCoordinates?.[1] ?? null} longitude={resolvedCoordinates?.[0] ?? null} query={property.location} title={`Hartă Google — ${property.name}`} className="h-72 md:h-96" />
               </div>
 
               {/* ═══════════════════════════════════════════════════════

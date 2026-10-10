@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState } from "react";
+import GoogleMapEmbed from "@/components/maps/GoogleMapEmbed";
 import { toast } from "sonner";
 import { Loader2, Search, FileDown, MessageCircle, TrendingDown, Target, Hotel, Gauge } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
@@ -252,6 +253,7 @@ const AnalizaAnunt = () => {
                       {market.scope === "zona" ? `în ${market.zone_label}` : "în Timișoara"} ({market.diff_pct > 0 ? "+" : ""}{market.diff_pct}%),
                       din {market.comparables} anunțuri comparabile din ultimele 6 luni.
                     </p>
+                    <GoogleMapEmbed query={analysis.zona || market.zone_label} title="Zona anunțului pe Google Maps" className="h-64" />
                   </CardContent>
                 </Card>
 

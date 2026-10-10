@@ -1,4 +1,5 @@
 import { SourceLink } from "@/components/admin/shared/SourceLink";
+import { GoogleMapButton } from "@/components/maps/GoogleMapEmbed";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -215,6 +216,7 @@ export default function ProspectTriageQueue() {
                           <Badge variant="destructive" className="text-[10px]">{row.rejection_reason}</Badge>
                         )}
                         {row.zone && <span className="text-xs text-muted-foreground">📍 {row.zone}</span>}
+                        <GoogleMapButton query={row.location || row.zone} title={row.title || "Locație prospect"} />
                         {row.price && <span className="text-xs font-medium">€{row.price.toLocaleString()}</span>}
                       </div>
                       <div className="text-sm font-medium line-clamp-2">{row.title || "(fără titlu)"}</div>
