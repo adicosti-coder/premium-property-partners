@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
       const hotelMonthlyMax = (Number(o.price) * 0.094) / 12;
       const params = [
         o.label, type, eur(o.price), `${Math.round(o.ppm)} €/m²`, String(o.score),
-        `${Math.abs(Math.round(o.diff * 100))}%`, `${eur(hotelMonthly)}/lună`,
+        `${Math.abs(Math.round(o.diff * 100))}%`, `${eur(hotelMonthlyMin)}–${eur(hotelMonthlyMax)}/lună`,
         `https://realtrust.ro/analiza-anunt?url=${encodeURIComponent(o.source_url)}`,
       ].map((p) => clean(String(p)));
 

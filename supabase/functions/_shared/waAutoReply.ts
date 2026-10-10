@@ -212,7 +212,7 @@ export function propertyFinanceLines(p: {
     `• Preț din anunț: ${eur(price)}.`,
     `• Venit brut estimat: circa ${eur(grossMonth)} pe luna, la o ocupare medie de 75%.`,
     `• Property Management RealTrust: 15-20% din incasari, adica ${eur(feeMin)}–${eur(feeMax)} pe luna (anunturi, prețuri dinamice, comunicare cu oaspetii, curatenie, mentenanta).`,
-    `• Profit net estimat: circa ${eur(netMonth)} pe luna, adica ${eur(netYear)} pe an — un randament net de circa 9,4% pe an.`,
+    `• Profit net estimat: circa ${eur(netMonthMin)}–${eur(netMonthMax)} pe luna, adica ${eur(netYearMin)}–${eur(netYearMax)} pe an — un randament net de circa 6,5–9,4% pe an.`,
     "Cifrele sunt o estimare medie si depind de gradul real de ocupare si de costurile reale de administrare. Primiti lunar un raport cu incasarile, cheltuielile si profitul net.",
   ];
 }
