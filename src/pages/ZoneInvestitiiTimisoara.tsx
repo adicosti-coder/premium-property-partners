@@ -283,7 +283,7 @@ const ZoneInvestitiiTimisoara = () => {
               Centru/Cetate și Fabric nu au încă un indice de preț propriu, așa că am lăsat coloana
               necompletată în loc să estimăm. Randamentele folosite în simulări pornesc de la
               ipotezele publice: ocupare 75%, randament net de referință
-              9,4%.
+              6,5–9,4%.
             </p>
           </aside>
 
