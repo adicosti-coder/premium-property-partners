@@ -40,9 +40,11 @@ export function buildClientOfferEmail(
   const price = Number(prop.price) || 0;
   const money = (v: number | null) =>
     v && v > 0 ? `${Math.round(v).toLocaleString("ro-RO")} €` : null;
-  const netYear = price ? price * 0.094 : null;
-  const netMonth = netYear ? netYear / 12 : null;
-  const grossMonth = netMonth ? netMonth / 0.73 : null;
+  const netYearMin = price ? price * 0.065 : null;
+  const netYearMax = price ? price * 0.094 : null;
+  const netMonthMin = netYearMin ? netYearMin / 12 : null;
+  const netMonthMax = netYearMax ? netYearMax / 12 : null;
+  const grossMonth = netMonthMax ? netMonthMax / 0.73 : null;
   const feeMin = grossMonth ? money(grossMonth * 0.15) : null;
   const feeMax = grossMonth ? money(grossMonth * 0.20) : null;
 

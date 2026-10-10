@@ -178,8 +178,9 @@ export const FINANCE_BLOCK = [
 /** Comisionul de administrare RealTrust (procent din încasări). */
 export const MGMT_FEE_MIN = 0.15;
 export const MGMT_FEE_MAX = 0.20;
-/** Randamentul net estimat pe an, ca medie (ocupare reală + costuri reale). */
-export const NET_YIELD = 0.094;
+/** Randamentul net estimat pe an, ca interval (ocupare reală + costuri reale). */
+export const NET_YIELD_MIN = 0.065;
+export const NET_YIELD_MAX = 0.094;
 
 const eur = (v: number) => `${Math.round(v).toLocaleString("ro-RO")} €`;
 
@@ -197,10 +198,12 @@ export function propertyFinanceLines(p: {
   const price = Number(p?.price) || 0;
   if (!price) return FINANCE_BLOCK.split("\n");
 
-  const netYear = price * NET_YIELD;
-  const netMonth = netYear / 12;
+  const netYearMin = price * NET_YIELD_MIN;
+  const netYearMax = price * NET_YIELD_MAX;
+  const netMonthMin = netYearMin / 12;
+  const netMonthMax = netYearMax / 12;
   // Venitul brut din care rezultă netul, la comisioane și costuri obișnuite.
-  const grossMonth = netMonth / 0.73;
+  const grossMonth = netMonthMax / 0.73;
   const feeMin = grossMonth * MGMT_FEE_MIN;
   const feeMax = grossMonth * MGMT_FEE_MAX;
 

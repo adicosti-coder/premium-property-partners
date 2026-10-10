@@ -116,7 +116,8 @@ Deno.serve(async (req) => {
 
   const classicRent = Math.round((size * rentPpm) / 10) * 10;
   const classicNetYear = Math.round(classicRent * 12 * 0.9);
-  const hotelNetYear = Math.round(price * 0.094);
+  const hotelNetYearMin = Math.round(price * 0.065);
+  const hotelNetYearMax = Math.round(price * 0.094);
 
   const result = {
     ok: true,
