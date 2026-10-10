@@ -9,7 +9,7 @@ import { fetchWithRetry } from "../_shared/fetchRetry.ts";
 import { drainMakeRelayDlq, relayToMake } from "../_shared/makeRelay.ts";
 import { preferredIntroTemplate, preferredPublishConsentTemplate } from "../_shared/waPreferredTemplate.ts";
 import { canonicalWaPhone, markPhoneSent, phoneVariants, releasePhoneSend, reservePhoneSend, toWaDigits } from "../_shared/waPhone.ts";
-import { WA_PUBLISH_CONSENT_TEMPLATE, consentPropertyLabel } from "../_shared/waPublishConsentTemplate.ts";
+import { WA_PUBLISH_CONSENT_TEMPLATE, consentAnalysisUrl } from "../_shared/waPublishConsentTemplate.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -546,12 +546,12 @@ Deno.serve(async (req) => {
         const { data: prospect } = item.prospect_listing_id
           ? await supabase
             .from("prospect_listings")
-            .select("title, zone")
+            .select("title, zone, source_url")
             .eq("id", item.prospect_listing_id)
             .maybeSingle()
           : { data: null };
         templateParams = selectedTemplate === WA_PUBLISH_CONSENT_TEMPLATE
-          ? [consentPropertyLabel(prospect)]
+          ? [consentAnalysisUrl(prospect)]
           : [String(prospect?.zone || "Timișoara").trim() || "Timișoara"];
       }
 

@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
 import { submitLead } from "@/lib/leadSubmission";
+import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { ListingAnalysis } from "@/components/analiza/AiListingAnalyzer";
 
 const Header = lazy(() => import("@/components/Header"));
@@ -32,6 +33,15 @@ interface Market {
   hotel_net_month_min: number;
   hotel_net_month_max: number;
   hotel_yield_pct: string | number;
+  p25_ppm?: number;
+  p75_ppm?: number;
+  histogram?: Array<{ from: number; to: number; count: number }>;
+  sample?: Array<{ rooms: number | null; size: number; price: number; ppm: number }>;
+  trend?: Array<{ month: string; median_ppm: number; count: number }>;
+  finance?: {
+    gross_yield_pct: number; price_to_rent_years: number | null; payback_classic_years: number | null;
+    payback_hotel_years_min: number; payback_hotel_years_max: number; fair_value_eur: number;
+  };
 }
 
 const CRITERIA: Array<[keyof Market["scores"], string]> = [
@@ -275,6 +285,76 @@ const AnalizaAnunt = () => {
                     </p>
                   </CardContent>
                 </Card>
+
+                {market.histogram && market.histogram.length > 0 && (
+                  <Card className="md:col-span-2">
+                    <CardHeader><CardTitle>Prețuri/m² ale anunțurilor comparabile</CardTitle></CardHeader>
+                    <CardContent>
+                      <p className="mb-3 text-sm text-muted-foreground">
+                        Bara evidențiată conține prețul acestui anunț ({eur(market.asking_ppm)}/m²). Jumătate din comparabile sunt între {eur(market.p25_ppm || 0)} și {eur(market.p75_ppm || 0)}/m².
+                      </p>
+                      <div className="h-56">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={market.histogram.map((h) => ({ ...h, label: `${h.from}` }))}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                            <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                            <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={28} />
+                            <Tooltip formatter={(v: number) => [`${v} anunțuri`, "Număr"]} labelFormatter={(l) => `${l}–${Number(l) + 250} €/m²`} />
+                            <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                              {market.histogram.map((h) => (
+                                <Cell key={h.from} fill={market.asking_ppm >= h.from && market.asking_ppm < h.to ? "hsl(var(--primary))" : "hsl(var(--muted-foreground) / 0.35)"} />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                      {market.trend && market.trend.length > 1 && (
+                        <div className="mt-6 h-48">
+                          <p className="mb-2 text-sm font-medium">Evoluția medianei preț/m² (ultimele luni)</p>
+                          <ResponsiveContainer width="100%" height="90%">
+                            <LineChart data={market.trend}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                              <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                              <YAxis tick={{ fontSize: 11 }} width={40} domain={["auto", "auto"]} />
+                              <Tooltip formatter={(v: number) => [`${v} €/m²`, "Mediană"]} />
+                              <Line type="monotone" dataKey="median_ppm" stroke="hsl(var(--primary))" strokeWidth={2} />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+
+                {market.sample && market.sample.length > 0 && (
+                  <Card>
+                    <CardHeader><CardTitle>Anunțuri similare din {market.scope === "zona" ? market.zone_label : "Timișoara"}</CardTitle></CardHeader>
+                    <CardContent>
+                      <table className="w-full text-sm">
+                        <thead><tr className="text-left text-muted-foreground"><th className="py-1">Camere</th><th>m²</th><th>Preț</th><th>€/m²</th></tr></thead>
+                        <tbody>
+                          {market.sample.map((r, i) => (
+                            <tr key={i} className="border-t"><td className="py-1.5">{r.rooms ?? "—"}</td><td>{r.size}</td><td>{eur(r.price)}</td><td>{eur(r.ppm)}</td></tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      <p className="mt-2 text-xs text-muted-foreground">Date agregate din ultimele 6 luni, fără date de contact.</p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {market.finance && (
+                  <Card>
+                    <CardHeader><CardTitle>Indicatori financiari</CardTitle></CardHeader>
+                    <CardContent className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="rounded-lg bg-muted p-3"><p className="text-muted-foreground">Valoare de piață estimată</p><p className="text-lg font-semibold">{eur(market.finance.fair_value_eur)}</p></div>
+                      <div className="rounded-lg bg-muted p-3"><p className="text-muted-foreground">Randament brut chirie</p><p className="text-lg font-semibold">{market.finance.gross_yield_pct}%/an</p></div>
+                      <div className="rounded-lg bg-muted p-3"><p className="text-muted-foreground">Multiplicator chirie</p><p className="text-lg font-semibold">{market.finance.price_to_rent_years ?? "—"} ani</p></div>
+                      <div className="rounded-lg bg-muted p-3"><p className="text-muted-foreground">Amortizare chirie clasică</p><p className="text-lg font-semibold">{market.finance.payback_classic_years ?? "—"} ani</p></div>
+                      <div className="col-span-2 rounded-lg border border-primary p-3"><p className="text-muted-foreground">Amortizare în regim hotelier (6,5–9,4%)</p><p className="text-lg font-semibold text-primary">{market.finance.payback_hotel_years_min}–{market.finance.payback_hotel_years_max} ani</p></div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             )}
 

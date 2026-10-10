@@ -4,8 +4,9 @@ import { WA_PUBLISH_CONSENT_BODY, WA_PUBLISH_CONSENT_TEMPLATE, consentPropertyLa
 
 describe("Owner consent template", () => {
   it("is identical to the direct request with its property variable filled", () => {
-    const title = "Apartament 2 camere – Iosefin";
-    expect(WA_PUBLISH_CONSENT_BODY.replace("{{1}}", title)).toBe(publishConsentRequestText({ title }));
+    const u = "https://www.olx.ro/d/oferta/x?a=1";
+    const link = `https://realtrust.ro/analiza-anunt?url=${encodeURIComponent(u)}`;
+    expect(WA_PUBLISH_CONSENT_BODY.replace("{{1}}", link)).toBe(publishConsentRequestText({ source_url: u }));
   });
   it("never enables pending, rejected, wrong-language or altered templates", () => {
     const row = { name: WA_PUBLISH_CONSENT_TEMPLATE, status: "APPROVED", language: "ro", components: [{ type: "BODY", text: WA_PUBLISH_CONSENT_BODY }] };

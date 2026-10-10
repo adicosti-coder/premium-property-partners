@@ -1,13 +1,12 @@
 import { publishConsentRequestText } from "./waAutoReply.ts";
 
-export const WA_PUBLISH_CONSENT_TEMPLATE = "acord_publicare_proprietar_v2";
+export const WA_PUBLISH_CONSENT_TEMPLATE = "acord_publicare_proprietar_v3";
 export const WA_PUBLISH_CONSENT_LANGUAGE = "ro";
-export const WA_PUBLISH_CONSENT_BODY = publishConsentRequestText({ title: "{{1}}", analysisUrl: "{{2}}" });
+export const WA_PUBLISH_CONSENT_BODY = publishConsentRequestText({ analysisUrl: "{{1}}" });
 export const WA_PUBLISH_CONSENT_COMPONENTS = [{
   type: "BODY",
   text: WA_PUBLISH_CONSENT_BODY,
   example: { body_text: [[
-    "Apartament 2 camere – Iosefin",
     "https://realtrust.ro/analiza-anunt?url=https%3A%2F%2Fwww.olx.ro%2Fd%2Foferta%2Fexemplu",
   ]] },
 }];

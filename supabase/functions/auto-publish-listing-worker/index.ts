@@ -488,6 +488,17 @@ Deno.serve(async (req) => {
       inserted = ins;
     }
 
+    // Galeria editabilă (property_images) primește aceleași poze, cu coperta prima.
+    try {
+      await supabase.from("property_images").delete().eq("property_id", inserted.id);
+      const rows = finalImages.filter(Boolean).slice(0, 25).map((src: string, i: number) => ({
+        property_id: inserted!.id, image_path: src, display_order: i, is_primary: i === 0, is_published: true,
+      }));
+      if (rows.length) await supabase.from("property_images").insert(rows);
+    } catch (e) {
+      console.warn("[auto-publish] gallery sync failed:", (e as Error)?.message);
+    }
+
     await supabase.from("prospect_listings").update({
       // Închirierile rămân și în recrutarea Andrei pentru serviciul de administrare.
       tags: isRent
