@@ -55,6 +55,25 @@ Deno.serve(async (req) => {
     console.error(`[investor-alerts] template ${TEMPLATE} not approved/usable`, JSON.stringify(tplRes).slice(0, 300));
   }
 
+  // Test mode: one alert to the personal admin number only (no delivery record).
+  const reqBody = await req.json().catch(() => ({}));
+  if (reqBody?.test_admin === true) {
+    if (!tpl) return json({ ok: false, template: "not_approved" });
+    const ADMIN = "+40723154520";
+    const o: any = opps[0] ?? { label: "Iosefin", rooms: 2, price: 89000, ppm: 1620, score: 86, diff: -0.18, source_url: "https://www.storia.ro/ro/oferta/exemplu" };
+    let { data: conv } = await sb.from("wa_conversations").select("id").in("phone_normalized", phoneVariants(ADMIN)).limit(1).maybeSingle();
+    if (!conv) ({ data: conv } = await sb.from("wa_conversations").insert({ phone_normalized: ADMIN }).select("id").maybeSingle());
+    const params = [o.label, o.rooms ? `Apartament ${o.rooms} camere` : "Apartament", eur(o.price), `${Math.round(o.ppm)} €/m²`, String(o.score),
+      `${Math.abs(Math.round(o.diff * 100))}%`, `${eur(o.price * 0.065 / 12)}–${eur(o.price * 0.094 / 12)}/lună`,
+      `https://realtrust.ro/analiza-anunt?url=${encodeURIComponent(o.source_url)}`];
+    const res = await fetch(`${base}/functions/v1/wa-andrei-send`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, apikey: key, "x-internal-secret": Deno.env.get("WA_ANDREI_INTERNAL_SECRET") || "" },
+      body: JSON.stringify({ conversation_id: conv?.id, template_name: TEMPLATE, template_language: tpl.language || "ro", template_params: params, auto_kind: `investor_opp_test_${Date.now()}` }),
+    }).catch(() => null);
+    return json({ ok: !!res?.ok, test: true, status: res?.status, result: res ? await res.json().catch(() => null) : null });
+  }
+
   const { data: subs } = await sb.from("investor_alert_subscribers").select("id, phone_normalized, zones, max_price").is("unsubscribed_at", null);
   let sent = 0, failed = 0;
   for (const s of subs ?? []) {
