@@ -97,6 +97,32 @@ Deno.serve(async (req) => {
     const windowOpen = conv?.window_expires_at &&
       new Date(conv.window_expires_at).getTime() > Date.now();
 
+    // Anti-dublură: rezervă (telefon+anunț) înainte de trimitere și sari
+    // dacă cererea a plecat deja în ultimele 24h (apeluri paralele/repetate).
+    const lockKey = `${phone}:${p.id}`;
+    await supabase.from("request_idempotency").delete()
+      .eq("scope", "publish-consent-request").eq("key", lockKey)
+      .lt("expires_at", new Date().toISOString());
+    const { error: lockErr } = await supabase.from("request_idempotency").insert({
+      scope: "publish-consent-request", key: lockKey,
+      expires_at: new Date(Date.now() + 24 * 3600_000).toISOString(),
+    });
+    if (lockErr) {
+      results.push({ id: p.id, status: "already_requested" });
+      continue;
+    }
+    if (conv?.id) {
+      const { data: prior } = await supabase.from("wa_messages").select("id")
+        .eq("conversation_id", conv.id).eq("direction", "outbound")
+        .contains("tool_call", { auto_reply: "publish_consent_request" })
+        .gte("created_at", new Date(Date.now() - 24 * 3600_000).toISOString())
+        .limit(1).maybeSingle();
+      if (prior) {
+        results.push({ id: p.id, status: "already_requested" });
+        continue;
+      }
+    }
+
     if (conv?.id && windowOpen) {
       const resp = await fetch(`${supabaseUrl}/functions/v1/wa-andrei-send`, {
         method: "POST",
