@@ -468,11 +468,24 @@ Deno.serve(async (req) => {
       source_url: null,
     };
 
-    const { data: inserted, error: insErr } = await supabase
-      .from("properties").insert(propertyData).select("id, slug, name").single();
-    if (insErr) {
-      const dup = (insErr.message || "").toLowerCase().includes("duplicate");
-      return safeJson({ success: !dup, published: false, reason: dup ? "duplicate" : "insert_error", error: insErr.message });
+    // Re-publicare: actualizăm proprietatea existentă (păstrăm slug-ul/URL-ul
+    // și o reactivăm), în loc să inserăm una nouă.
+    let inserted: { id: string; slug: string; name: string } | null = null;
+    if (republish && existingProp) {
+      const { slug: _dropSlug, migrated_from_prospect_id: _dropMig, ...updateData } = propertyData;
+      const { data: updated, error: updErr } = await supabase
+        .from("properties").update({ ...updateData, is_active: true }).eq("id", existingProp.id)
+        .select("id, slug, name").single();
+      if (updErr) return safeJson({ success: false, published: false, reason: "update_error", error: updErr.message });
+      inserted = updated;
+    } else {
+      const { data: ins, error: insErr } = await supabase
+        .from("properties").insert(propertyData).select("id, slug, name").single();
+      if (insErr) {
+        const dup = (insErr.message || "").toLowerCase().includes("duplicate");
+        return safeJson({ success: !dup, published: false, reason: dup ? "duplicate" : "insert_error", error: insErr.message });
+      }
+      inserted = ins;
     }
 
     await supabase.from("prospect_listings").update({
@@ -497,7 +510,7 @@ Deno.serve(async (req) => {
     }
 
     // Proprietarul primește automat link-ul direct către pagina publicată.
-    if (consentRow && prospect.phone_normalized && inserted.slug) {
+    if (consentRow && prospect.phone_normalized && inserted.slug && !republish) {
       const sent = await sendWaText(String(prospect.phone_normalized), ownerPublishedText(inserted.slug))
         .catch((e) => ({ ok: false, error: String(e) }));
       if (!sent.ok) console.warn("[auto-publish] owner link WA failed:", sent.error);
