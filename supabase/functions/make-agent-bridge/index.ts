@@ -14,6 +14,7 @@ import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { relayToMake } from "../_shared/makeRelay.ts";
 import { ACK_MESSAGE, buildIntakeMessage, loadProspectContext } from "../_shared/waAutoReply.ts";
 import { preferredIntroTemplate } from "../_shared/waPreferredTemplate.ts";
+import { isInternalWaNumber } from "../_shared/waInternalNumbers.ts";
 
 /**
  * Apartamentul discutat cu clientul, dacă nu e trimis explicit `property_id`:
@@ -723,9 +724,24 @@ Deno.serve(async (req) => {
   // ---------------------------------------------------------------- agent_reply
   if (action === "agent_reply") {
     const phone = normalizeRoMobile(body.phone || "");
-    const text = (body.message || "").trim();
+    const text = (body.message || "").trim().slice(0, 4000);
     if (!phone) return json({ error: "phone_invalid" }, 400);
     if (!text) return json({ error: "message_required" }, 400);
+
+    // Destinatar bounded: nu trimitem niciodată către numere interne
+    // RealTrust sau către numere din lista de excludere (DNC/refuzuri).
+    if (isInternalWaNumber(phone)) {
+      return json({ error: "recipient_blocked", detail: "număr intern RealTrust" }, 403);
+    }
+    const { data: dncHit } = await supabase
+      .from("wa_dnc_list")
+      .select("label")
+      .eq("phone_normalized", phone.replace(/^\+/, ""))
+      .limit(1)
+      .maybeSingle();
+    if (dncHit) {
+      return json({ error: "recipient_blocked", detail: `număr în lista de excludere (${dncHit.label})` }, 403);
+    }
 
     // Conversația existentă sau una nouă, ca să rămână un thread complet.
     const { data: conv } = await supabase
