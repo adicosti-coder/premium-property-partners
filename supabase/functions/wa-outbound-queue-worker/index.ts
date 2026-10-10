@@ -546,7 +546,7 @@ Deno.serve(async (req) => {
         const { data: prospect } = item.prospect_listing_id
           ? await supabase
             .from("prospect_listings")
-            .select("title, zone")
+            .select("title, zone, source_url")
             .eq("id", item.prospect_listing_id)
             .maybeSingle()
           : { data: null };
