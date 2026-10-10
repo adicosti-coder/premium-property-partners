@@ -95,6 +95,7 @@ export default function AutoConsentedListings({ title = "Anunțuri Preluate Auto
         return {
           ...r,
           title: prop?.name || prospect?.title || "—",
+          zone,
           details: [rooms, zone].filter(Boolean).join(" · ") || "—",
           price: prospect?.price ?? null,
           rent: String(prospect?.category || "").startsWith("inchiriere"),
