@@ -57,12 +57,15 @@ const ROICalculatorWidget = () => {
     const classicROI = ((classicRent * 12) / propertyValue) * 100;
     const realtrustROI = ((realtrustIncome * 12) / propertyValue) * 100;
 
-    // Referință RealTrust: randament net țintă 9,4% pe an.
-    const targetNetAnnual = propertyValue * TARGET_NET_YIELD;
+    // Referință RealTrust: randament net țintă 6,5–9,4% pe an.
+    const targetNetAnnualMin = propertyValue * TARGET_NET_YIELD_MIN;
+    const targetNetAnnualMax = propertyValue * TARGET_NET_YIELD_MAX;
 
     return {
-      targetNetAnnual: Math.round(targetNetAnnual),
-      targetNetMonthly: Math.round(targetNetAnnual / 12),
+      targetNetAnnualMin: Math.round(targetNetAnnualMin),
+      targetNetAnnualMax: Math.round(targetNetAnnualMax),
+      targetNetMonthlyMin: Math.round(targetNetAnnualMin / 12),
+      targetNetMonthlyMax: Math.round(targetNetAnnualMax / 12),
       classicRent: Math.round(classicRent),
       realtrustIncome: Math.round(realtrustIncome),
       monthlyDelta: Math.round(monthlyDelta),
