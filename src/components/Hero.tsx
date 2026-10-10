@@ -123,7 +123,7 @@ const Hero = () => {
         {heroSettings.customFallbackImage ? (
           <img
             src={heroSettings.customFallbackImage}
-            alt="RealTrust Imobiliare Timișoara — apartamente premium regim hotelier, ROI 9.4% net verificat."
+            alt="RealTrust Imobiliare Timișoara — apartamente premium regim hotelier, randament net estimat 6,5–9,4% pe an."
             className="w-full h-full object-cover hero-kenburns"
             width={1600}
             height={894}
@@ -162,7 +162,7 @@ const Hero = () => {
             />
             <img
               src={HERO_IMAGE_PUBLIC}
-              alt="RealTrust Imobiliare Timișoara — apartament premium regim hotelier cu design cinematic, ROI 9.4% net verificat."
+              alt="RealTrust Imobiliare Timișoara — apartament premium regim hotelier cu design cinematic, randament net estimat 6,5–9,4% pe an."
               className="w-full h-full object-cover object-center hero-kenburns"
               width={800}
               height={504}
@@ -229,7 +229,7 @@ const Hero = () => {
       {!isMobile && (
         <div className="absolute bottom-44 right-6 lg:right-12 z-20 flex flex-col gap-3">
           <div className="px-5 py-3 bg-background/90 dark:bg-background/80 backdrop-blur-sm rounded-xl border border-primary/50 shadow-lg">
-            <span className="text-primary font-bold text-xl">{language === 'ro' ? 'Randament net 9,4%' : '9.4% net yield'}</span>
+            <span className="text-primary font-bold text-xl">{language === 'ro' ? 'Randament net 6,5–9,4%' : '6.5–9.4% net yield'}</span>
             <span className="text-xs text-muted-foreground block">{language === 'ro' ? 'Ipoteze transparente: ocupare 75%' : 'Transparent assumptions: 75% occupancy'}</span>
           </div>
           <div className="px-5 py-3 bg-background/90 dark:bg-background/80 backdrop-blur-sm rounded-xl border border-border shadow-lg">

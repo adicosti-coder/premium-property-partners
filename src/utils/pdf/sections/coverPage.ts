@@ -74,12 +74,12 @@ export const drawCoverPage = (ctx: PdfContext, saleProps: PropertyRow[], rentalP
   const stats = isRo
     ? [
         { value: String(totalProps), label: "Proprietăți\nAdministrate", icon: "🏠" },
-        { value: "9.4%", label: "ROI Mediu\nAnual", icon: "📈" },
+        { value: "6,5–9,4%", label: "ROI net estimat\nAnual", icon: "📈" },
         { value: "85%", label: "Rată de\nOcupare", icon: "📊" },
       ]
     : [
         { value: String(totalProps), label: "Managed\nProperties", icon: "🏠" },
-        { value: "9.4%", label: "Average\nAnnual ROI", icon: "📈" },
+        { value: "6.5–9.4%", label: "Estimated\nAnnual Net ROI", icon: "📈" },
         { value: "85%", label: "Occupancy\nRate", icon: "📊" },
       ];
 

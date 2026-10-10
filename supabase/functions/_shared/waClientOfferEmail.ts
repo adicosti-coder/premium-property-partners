@@ -40,9 +40,11 @@ export function buildClientOfferEmail(
   const price = Number(prop.price) || 0;
   const money = (v: number | null) =>
     v && v > 0 ? `${Math.round(v).toLocaleString("ro-RO")} €` : null;
-  const netYear = price ? price * 0.094 : null;
-  const netMonth = netYear ? netYear / 12 : null;
-  const grossMonth = netMonth ? netMonth / 0.73 : null;
+  const netYearMin = price ? price * 0.065 : null;
+  const netYearMax = price ? price * 0.094 : null;
+  const netMonthMin = netYearMin ? netYearMin / 12 : null;
+  const netMonthMax = netYearMax ? netYearMax / 12 : null;
+  const grossMonth = netMonthMax ? netMonthMax / 0.73 : null;
   const feeMin = grossMonth ? money(grossMonth * 0.15) : null;
   const feeMax = grossMonth ? money(grossMonth * 0.20) : null;
 
@@ -74,7 +76,7 @@ export function buildClientOfferEmail(
       <ul style="margin:0;padding-left:18px;font-size:14px;line-height:1.7;color:#374151">
         <li><strong>Venit brut estimat:</strong> ${money(grossMonth) ?? "tariful pe noapte × ocupare medie de 75%"} pe lună, la o ocupare medie de 75%.</li>
         <li><strong>Property Management RealTrust:</strong> 15-20% din încasări${feeMin && feeMax ? `, adică ${feeMin}–${feeMax} pe lună` : ""} — anunțuri, prețuri dinamice, comunicarea cu oaspeții, curățenie și mentenanță.</li>
-        <li><strong>Profit net estimat:</strong> ${money(netMonth) ? `${money(netMonth)} pe lună (${money(netYear)} pe an), ` : ""}circa 9,4% pe an din valoarea apartamentului — estimare medie, în funcție de gradul real de ocupare și de costurile reale de administrare.</li>
+        <li><strong>Profit net estimat:</strong> ${money(netMonthMin) ? `${money(netMonthMin)}–${money(netMonthMax)} pe lună (${money(netYearMin)}–${money(netYearMax)} pe an), ` : ""}circa 6,5–9,4% pe an din valoarea apartamentului — estimare orientativă, în funcție de gradul real de ocupare și de costurile reale de administrare.</li>
       </ul>
       <p style="margin:8px 0 0;font-size:13px;color:#6b7280">Primiți lunar un raport cu încasările, cheltuielile și profitul net.</p>
     </td></tr>

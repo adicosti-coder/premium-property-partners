@@ -9,7 +9,7 @@ import { useZonePrices } from "@/hooks/useZonePrices";
 
 const eur = (n: number) => `${Math.round(n).toLocaleString("ro-RO")} €`;
 
-/** Calculator rapid de venit pentru proprietari: chirie clasică vs. regim hotelier RealTrust (9,4% net). */
+/** Calculator rapid de venit pentru proprietari: chirie clasică vs. regim hotelier RealTrust (6,5–9,4% net/an). */
 export default function OwnerIncomeQuickCalc() {
   const data = useZonePrices();
   const [zone, setZone] = useState("Centru / Cetate");
@@ -22,13 +22,14 @@ export default function OwnerIncomeQuickCalc() {
     if (!data || !z) return null;
     const value = m2 * (z.ppm ?? data.city_ppm);
     const classic = m2 * z.rent_ppm;
-    const hotel = (value * 0.094) / 12;
-    return { value, classic, hotel, diff: hotel - classic };
+    const hotelMin = (value * 0.065) / 12;
+    const hotelMax = (value * 0.094) / 12;
+    return { value, classic, hotelMin, hotelMax, diff: hotelMin - classic };
   }, [data, zone, size]);
 
   const wa = encodeURIComponent(
     `Bună! Vreau o ofertă de administrare pentru apartamentul meu: ${zone}, ${rooms} camere, ${size} m².` +
-      (r ? ` Calculatorul arată chirie clasică ~${eur(r.classic)}/lună vs. regim hotelier ~${eur(r.hotel)}/lună net.` : ""),
+      (r ? ` Calculatorul arată chirie clasică ~${eur(r.classic)}/lună vs. regim hotelier ~${eur(r.hotelMin)}–${eur(r.hotelMax)}/lună net.` : ""),
   );
 
   return (
@@ -68,8 +69,8 @@ export default function OwnerIncomeQuickCalc() {
               <div className="mt-1 text-3xl font-bold text-foreground">{r ? `${eur(r.classic)}/lună` : "…"}</div>
             </div>
             <div className="rounded-xl border border-primary bg-primary/5 p-5">
-              <div className="text-sm text-muted-foreground">Regim hotelier RealTrust (~9,4% net/an)</div>
-              <div className="mt-1 text-3xl font-bold text-primary">{r ? `${eur(r.hotel)}/lună` : "…"}</div>
+              <div className="text-sm text-muted-foreground">Regim hotelier RealTrust (6,5–9,4% net/an)</div>
+              <div className="mt-1 text-3xl font-bold text-primary">{r ? `${eur(r.hotelMin)}–${eur(r.hotelMax)}/lună` : "…"}</div>
               {r && r.diff > 0 && <div className="mt-1 text-sm text-foreground">+{eur(r.diff)}/lună față de chiria clasică</div>}
             </div>
           </div>

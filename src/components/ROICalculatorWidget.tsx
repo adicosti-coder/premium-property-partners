@@ -27,8 +27,9 @@ import { supabase } from "@/lib/supabaseClient";
 import { withCampaignTracking } from "@/lib/campaignAttribution";
 import { trackConversion, formatPhoneInput } from "@/lib/conversionTracking";
 
-/** Randament net de referință RealTrust (ocupare 75%). */
-const TARGET_NET_YIELD = 0.094;
+/** Randament net de referință RealTrust: interval 6,5–9,4% pe an (ocupare 75%). */
+const TARGET_NET_YIELD_MIN = 0.065;
+const TARGET_NET_YIELD_MAX = 0.094;
 
 const TIERS = [
   { value: 15, label: "15%" },
@@ -56,12 +57,15 @@ const ROICalculatorWidget = () => {
     const classicROI = ((classicRent * 12) / propertyValue) * 100;
     const realtrustROI = ((realtrustIncome * 12) / propertyValue) * 100;
 
-    // Referință RealTrust: randament net țintă 9,4% pe an.
-    const targetNetAnnual = propertyValue * TARGET_NET_YIELD;
+    // Referință RealTrust: randament net țintă 6,5–9,4% pe an.
+    const targetNetAnnualMin = propertyValue * TARGET_NET_YIELD_MIN;
+    const targetNetAnnualMax = propertyValue * TARGET_NET_YIELD_MAX;
 
     return {
-      targetNetAnnual: Math.round(targetNetAnnual),
-      targetNetMonthly: Math.round(targetNetAnnual / 12),
+      targetNetAnnualMin: Math.round(targetNetAnnualMin),
+      targetNetAnnualMax: Math.round(targetNetAnnualMax),
+      targetNetMonthlyMin: Math.round(targetNetAnnualMin / 12),
+      targetNetMonthlyMax: Math.round(targetNetAnnualMax / 12),
       classicRent: Math.round(classicRent),
       realtrustIncome: Math.round(realtrustIncome),
       monthlyDelta: Math.round(monthlyDelta),
@@ -99,8 +103,10 @@ const ROICalculatorWidget = () => {
           management_tier: selectedTier,
           classic_rent: calculations.classicRent,
           realtrust_income: calculations.realtrustIncome,
-          target_net_yield: TARGET_NET_YIELD,
-          target_net_annual: calculations.targetNetAnnual,
+          target_net_yield_min: TARGET_NET_YIELD_MIN,
+          target_net_yield_max: TARGET_NET_YIELD_MAX,
+          target_net_annual_min: calculations.targetNetAnnualMin,
+          target_net_annual_max: calculations.targetNetAnnualMax,
         }) as never,
       });
 
@@ -133,8 +139,10 @@ const ROICalculatorWidget = () => {
             managementTier: selectedTier,
             classicRent: calculations.classicRent,
             realtrustIncome: calculations.realtrustIncome,
-            targetNetAnnual: calculations.targetNetAnnual,
-            targetNetMonthly: calculations.targetNetMonthly,
+            targetNetAnnualMin: calculations.targetNetAnnualMin,
+            targetNetAnnualMax: calculations.targetNetAnnualMax,
+            targetNetMonthlyMin: calculations.targetNetMonthlyMin,
+            targetNetMonthlyMax: calculations.targetNetMonthlyMax,
             source: "calculator_roi_widget",
           },
         });
@@ -254,17 +262,17 @@ const ROICalculatorWidget = () => {
             </p>
           </div>
 
-          {/* Randament net de referință 9,4% */}
+          {/* Randament net de referință 6,5–9,4% */}
           <div className="bg-muted/20 border border-border rounded-xl p-4">
             <p className="text-sm text-muted-foreground mb-1">
-              Estimare la randamentul net de referință RealTrust (9,4%)
+              Estimare la randamentul net de referință RealTrust (6,5–9,4%)
             </p>
             <p className="text-xl font-bold text-foreground">
-              {calculations.targetNetAnnual.toLocaleString("ro-RO")} €
+              {calculations.targetNetAnnualMin.toLocaleString("ro-RO")}–{calculations.targetNetAnnualMax.toLocaleString("ro-RO")} €
               <span className="text-sm font-normal text-muted-foreground">/an net</span>
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              ≈ {calculations.targetNetMonthly.toLocaleString("ro-RO")} €/lună · ipoteze: ocupare 75%, costuri operaționale și taxe
+              ≈ {calculations.targetNetMonthlyMin.toLocaleString("ro-RO")}–{calculations.targetNetMonthlyMax.toLocaleString("ro-RO")} €/lună · ipoteze: ocupare 75%, costuri operaționale și taxe
             </p>
           </div>
 

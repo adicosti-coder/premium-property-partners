@@ -20,7 +20,7 @@ const caseStudies: CaseStudy[] = [
     classicRent: 350,
     realtrustIncome: 900,
     occupancy: 75,
-    roi: "9.4%",
+    roi: "6,5–9,4%",
   },
   {
     type: "2 Camere 55m²",
@@ -29,7 +29,7 @@ const caseStudies: CaseStudy[] = [
     classicRent: 450,
     realtrustIncome: 1200,
     occupancy: 75,
-    roi: "9.4%",
+    roi: "6,5–9,4%",
   },
   {
     type: "3 Camere 75m²",
@@ -38,7 +38,7 @@ const caseStudies: CaseStudy[] = [
     classicRent: 550,
     realtrustIncome: 1600,
     occupancy: 75,
-    roi: "9.4%",
+    roi: "6,5–9,4%",
   },
 ];
 

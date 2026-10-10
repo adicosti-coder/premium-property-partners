@@ -296,10 +296,10 @@ const INSTANT_REPLIES: Array<[RegExp, string]> = [
   [/contract/i, "⚡ Ne ocupăm de tot: contract de administrare semnat electronic, apoi contractele cu chiriașii sau oaspeții, cu anexe și situații lunare. Primești exemplarul și raportarea pe e-mail. Andrei îți explică pașii 👇"],
   [/mentenan|repara|defec|avarie|instalator|electrician/i, "⚡ Mentenanța e inclusă în administrare: avem echipe proprii (instalator, electrician, zugrav) și intervenim rapid, fără costuri de deplasare pentru lucrări mici. Primești raport foto după fiecare intervenție. Detalii de la Andrei 👇"],
   [/chiria[șs]|tenant|gazd/i, "⚡ Chiriașii sunt verificați de noi: istoric, venituri, garanție și contract solid. La regim hotelier, oaspeții sunt verificați înainte de check-in. Tu doar încasezi. Andrei îți spune cum 👇"],
-  [/chirie|incasar|încasar|bani|plata|plată|venit/i, "⚡ Chiria ajunge în contul tău lunar, cu raport transparent pe fiecare lună: încasări, cheltuieli, ocupare. La regim hotelier randamentul net estimat e ~9,4%/an. Andrei îți face calculul pe apartamentul tău 👇"],
-  [/administr|property management|gestion/i, "⚡ RealTrust oferă două variante: Property Management pe termen lung (chirie clasică, administrată complet) sau Regim Hotelier ApArt Hotel (~9,4% randament net, comision 15-20%). Andrei te ajută să alegi 👇"],
+  [/chirie|incasar|încasar|bani|plata|plată|venit/i, "⚡ Chiria ajunge în contul tău lunar, cu raport transparent pe fiecare lună: încasări, cheltuieli, ocupare. La regim hotelier randamentul net estimat e 6,5–9,4%/an. Andrei îți face calculul pe apartamentul tău 👇"],
+  [/administr|property management|gestion/i, "⚡ RealTrust oferă două variante: Property Management pe termen lung (chirie clasică, administrată complet) sau Regim Hotelier ApArt Hotel (randament net estimat 6,5–9,4%/an, comision 15-20%). Andrei te ajută să alegi 👇"],
 
-  [/randament|yield|roi/i, "⚡ Pe scurt: în regim hotelier, randamentul net estimat e ~9,4%/an, cu administrarea RealTrust de 15-20%. Andrei îți face imediat calculul exact 👇"],
+  [/randament|yield|roi/i, "⚡ Pe scurt: în regim hotelier, randamentul net estimat e 6,5–9,4%/an, cu administrarea RealTrust de 15-20%. Andrei îți face imediat calculul exact 👇"],
   [/comision|commission|cost/i, "⚡ Administrarea RealTrust este de 15-20% din venit și include oaspeți, curățenie, chei și taxe — 100% pasiv pentru tine. Detaliile vin imediat 👇"],
   [/evaluare|evaluation|preț|pret|price/i, "⚡ Evaluarea este gratuită și se face la apartament. Lasă-ne numărul și îți scriem pe WhatsApp în câteva minute. Andrei continuă 👇"],
   [/disponibil|availability|libere|free now/i, "⚡ Verific disponibilitatea live acum. Rezervarea directă are -5% cu codul DIRECT5 👇"],

@@ -27,7 +27,7 @@ interface Criterion {
  * Every criterion describes HOW it moves value, without inventing percentages,
  * market statistics or transaction data. The only figures repeated here are the
  * published RealTrust assumptions (75% occupancy,
- * 9.4% net reference yield).
+ * 6.5–9.4% net reference yield).
  */
 const CRITERIA: Criterion[] = [
   {
@@ -88,7 +88,7 @@ const CRITERIA: Criterion[] = [
   },
   {
     name: "Randamentul investițional",
-    body: "Raportul dintre venitul net anual și capitalul total investit (preț de achiziție + renovare + mobilare + taxe de tranzacție). Pragul nostru de referință este 9,4% net pe an; îl folosim ca test, nu ca promisiune. Dacă un apartament nu îl atinge, spunem asta înainte de achiziție.",
+    body: "Raportul dintre venitul net anual și capitalul total investit (preț de achiziție + renovare + mobilare + taxe de tranzacție). Intervalul nostru de referință este 6,5–9,4% net pe an; îl folosim ca test, nu ca promisiune. Dacă un apartament nu îl atinge, spunem asta înainte de achiziție.",
   },
 ];
 
@@ -234,7 +234,7 @@ const GhidEvaluareApartament = () => {
               noastră de lucru, nu un raport de evaluare autorizat ANEVAR. Pentru credit ipotecar,
               partaj sau litigiu ai nevoie de un evaluator autorizat. Cifrele de randament folosite
               aici sunt ipotezele noastre publice (ocupare 75%, randament
-              net de referință 9,4%), nu rezultate garantate.
+              net de referință 6,5–9,4%), nu rezultate garantate.
             </p>
           </aside>
 
@@ -273,7 +273,7 @@ const GhidEvaluareApartament = () => {
             ]}
             assumptions={[
               "Ocupare 75%.",
-              "Randament net de referință 9,4% pe an, folosit ca test de decizie, nu ca promisiune.",
+              "Randament net de referință 6,5–9,4% pe an, folosit ca test de decizie, nu ca promisiune.",
             ]}
             calculations={[
               "Randament net = venit net anual / capital total investit (preț + taxe + renovare + mobilare) × 100.",

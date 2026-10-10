@@ -116,7 +116,7 @@ const Imobiliare = () => {
     },
     {
       question: "Ce randament am la o investiție imobiliară în Timișoara?",
-      answer: "Pentru regim hotelier administrat profesional: randament net estimat de circa 9,4% pe an (estimare medie, în funcție de ocupare și costurile reale). Pentru chirie clasică pe termen lung: 4-5% net. Cele mai bune randamente sunt în Complex Studențesc (cerere studenți UVT/UPT) și ISHO (proximitate Iulius Town și aeroport).",
+      answer: "Pentru regim hotelier administrat profesional: randament net estimat de 6,5–9,4% pe an (în funcție de ocupare și costurile reale). Pentru chirie clasică pe termen lung: 4-5% net. Cele mai bune randamente sunt în Complex Studențesc (cerere studenți UVT/UPT) și ISHO (proximitate Iulius Town și aeroport).",
     },
     {
       question: "Care sunt costurile la cumpărarea unui apartament în Timișoara?",
@@ -141,7 +141,7 @@ const Imobiliare = () => {
     },
     {
       question: "What yield can I get from a Timișoara real estate investment?",
-      answer: "Professionally managed hotel-style: 9.4% verified net ROI. Long-term classic rental: 4-5% net. Best yields are in Student Complex (UVT/UPT student demand) and ISHO (proximity to Iulius Town and airport).",
+      answer: "Professionally managed hotel-style: 6.5–9.4% estimated net yearly ROI. Long-term classic rental: 4-5% net. Best yields are in Student Complex (UVT/UPT student demand) and ISHO (proximity to Iulius Town and airport).",
     },
     {
       question: "What are the costs of buying an apartment in Timișoara?",

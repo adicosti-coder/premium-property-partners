@@ -45,8 +45,9 @@ export interface AnalysisPdfInput {
     median_ppm: number;
     comparables: number;
     classic_rent_month: number;
-    hotel_net_month: number;
-    hotel_yield_pct: number;
+    hotel_net_month_min: number;
+    hotel_net_month_max: number;
+    hotel_yield_pct: string | number;
   } | null;
 }
 
@@ -286,7 +287,7 @@ export function generateAnalysisPdf(input: AnalysisPdfInput): jsPDF {
     paragraph(`Pret cerut: ${num(a.pret_listare, " EUR")} (${m.asking_ppm} EUR/m2, mediana ${m.median_ppm} EUR/m2, ${m.comparables} anunturi comparabile)`, 10, NAVY);
     paragraph(`Spatiu de negociere: ~${num(m.negotiation_eur, " EUR")}`, 12, NAVY);
     paragraph(`Pret tinta recomandat: ${num(m.target_low, " EUR")} - ${num(m.target_high, " EUR")}`, 12, NAVY);
-    paragraph(`Chirie clasica estimata: ${num(m.classic_rent_month, " EUR")}/luna; regim hotelier RealTrust: ~${num(m.hotel_net_month, " EUR")}/luna net (randament tinta ${m.hotel_yield_pct}%).`, 10);
+    paragraph(`Chirie clasica estimata: ${num(m.classic_rent_month, " EUR")}/luna; regim hotelier RealTrust: ~${num(m.hotel_net_month_min, " EUR")}–${num(m.hotel_net_month_max, " EUR")}/luna net (randament tinta 6,5–9,4%).`, 10);
   }
 
   // ---- Footer on every page ----

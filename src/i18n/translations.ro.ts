@@ -45,7 +45,7 @@ export const ro = {
     },
     features: {
       payments: "Venit previzibil",
-      paymentsDesc: "9,4% net, cu ipotezele afișate — verifici tu calculul",
+      paymentsDesc: "6,5–9,4% net, cu ipotezele afișate — verifici tu calculul",
       model: "Zero implicare",
       modelDesc: "Nu răspunzi mesajelor, nu cauți oaspeți — încasezi lunar",
       response: "Echipă proprie în Timișoara",
@@ -70,7 +70,7 @@ export const ro = {
     items: [
       {
         title: "Venit net pe care îl poți verifica",
-        description: "• 9,4% net, cu ipotezele afișate public\n• Ocupare 75%",
+        description: "• 6,5–9,4% net, cu ipotezele afișate public\n• Ocupare 75%",
       },
       {
         title: "Tu nu faci nimic. Chiar nimic.",
@@ -93,7 +93,7 @@ export const ro = {
     commissionValue: "15-25%",
     commissionSuffix: "din încasările nete — fără taxe ascunse, fără costuri surpriză",
     items: [
-      { title: "9,4% net, cu ipotezele pe masă", description: "• Ocupare 75%" },
+      { title: "6,5–9,4% net, cu ipotezele pe masă", description: "• Ocupare 75%" },
       { title: "Zero muncă operațională pentru tine", description: "• Comunicarea cu oaspeții — la noi\n• Coordonarea echipelor — la noi\n• Tu primești doar raportul" },
       { title: "Transparență totală pe bani", description: "• Dashboard deschis oricând\n• RevPAR, ADR, ocupare\n• P&L lunar, linie cu linie" },
       { title: "Standard hotelier, nu improvizație", description: "• Echipă proprie, dedicată\n• Curățenie verificată după fiecare plecare\n• Mentenanță preventivă inclusă" },

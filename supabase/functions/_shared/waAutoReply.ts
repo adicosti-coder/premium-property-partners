@@ -178,8 +178,9 @@ export const FINANCE_BLOCK = [
 /** Comisionul de administrare RealTrust (procent din încasări). */
 export const MGMT_FEE_MIN = 0.15;
 export const MGMT_FEE_MAX = 0.20;
-/** Randamentul net estimat pe an, ca medie (ocupare reală + costuri reale). */
-export const NET_YIELD = 0.094;
+/** Randamentul net estimat pe an, ca interval (ocupare reală + costuri reale). */
+export const NET_YIELD_MIN = 0.065;
+export const NET_YIELD_MAX = 0.094;
 
 const eur = (v: number) => `${Math.round(v).toLocaleString("ro-RO")} €`;
 
@@ -197,10 +198,12 @@ export function propertyFinanceLines(p: {
   const price = Number(p?.price) || 0;
   if (!price) return FINANCE_BLOCK.split("\n");
 
-  const netYear = price * NET_YIELD;
-  const netMonth = netYear / 12;
+  const netYearMin = price * NET_YIELD_MIN;
+  const netYearMax = price * NET_YIELD_MAX;
+  const netMonthMin = netYearMin / 12;
+  const netMonthMax = netYearMax / 12;
   // Venitul brut din care rezultă netul, la comisioane și costuri obișnuite.
-  const grossMonth = netMonth / 0.73;
+  const grossMonth = netMonthMax / 0.73;
   const feeMin = grossMonth * MGMT_FEE_MIN;
   const feeMax = grossMonth * MGMT_FEE_MAX;
 
@@ -209,7 +212,7 @@ export function propertyFinanceLines(p: {
     `• Preț din anunț: ${eur(price)}.`,
     `• Venit brut estimat: circa ${eur(grossMonth)} pe luna, la o ocupare medie de 75%.`,
     `• Property Management RealTrust: 15-20% din incasari, adica ${eur(feeMin)}–${eur(feeMax)} pe luna (anunturi, prețuri dinamice, comunicare cu oaspetii, curatenie, mentenanta).`,
-    `• Profit net estimat: circa ${eur(netMonth)} pe luna, adica ${eur(netYear)} pe an — un randament net de circa 9,4% pe an.`,
+    `• Profit net estimat: circa ${eur(netMonthMin)}–${eur(netMonthMax)} pe luna, adica ${eur(netYearMin)}–${eur(netYearMax)} pe an — un randament net de circa 6,5–9,4% pe an.`,
     "Cifrele sunt o estimare medie si depind de gradul real de ocupare si de costurile reale de administrare. Primiti lunar un raport cu incasarile, cheltuielile si profitul net.",
   ];
 }

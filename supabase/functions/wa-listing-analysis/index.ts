@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
         `• Preț cerut: ${eur(a.pret_listare)} (${m.asking_ppm} €/m², mediana zonei ${m.median_ppm} €/m²)`,
         `• Spațiu de negociere: ~${eur(m.negotiation_eur)}`,
         `• Preț țintă: ${eur(m.target_low)} – ${eur(m.target_high)}`,
-        `• Chirie clasică ≈ ${eur(m.classic_rent_month)}/lună vs. regim hotelier RealTrust ≈ ${eur(m.hotel_net_month)}/lună net`,
+        `• Chirie clasică ≈ ${eur(m.classic_rent_month)}/lună vs. regim hotelier RealTrust ≈ ${eur(m.hotel_net_month_min)}–${eur(m.hotel_net_month_max)}/lună net`,
         "",
         "Estimare orientativă din anunțurile reale din Timișoara (ultimele 6 luni).",
       ].join("\n");

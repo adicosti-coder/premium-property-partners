@@ -81,10 +81,11 @@ Deno.serve(async (req) => {
 
       const clean = (v: string) => v.replace(/[\r\n\t]+/g, " ").replace(/ {4,}/g, " ").trim().slice(0, 120) || "-";
       const type = o.rooms ? `Apartament ${o.rooms} ${Number(o.rooms) === 1 ? "cameră" : "camere"}` : (o.title || "Apartament");
-      const hotelMonthly = (Number(o.price) * 0.094) / 12;
+      const hotelMonthlyMin = (Number(o.price) * 0.065) / 12;
+      const hotelMonthlyMax = (Number(o.price) * 0.094) / 12;
       const params = [
         o.label, type, eur(o.price), `${Math.round(o.ppm)} €/m²`, String(o.score),
-        `${Math.abs(Math.round(o.diff * 100))}%`, `${eur(hotelMonthly)}/lună`,
+        `${Math.abs(Math.round(o.diff * 100))}%`, `${eur(hotelMonthlyMin)}–${eur(hotelMonthlyMax)}/lună`,
         `https://realtrust.ro/analiza-anunt?url=${encodeURIComponent(o.source_url)}`,
       ].map((p) => clean(String(p)));
 

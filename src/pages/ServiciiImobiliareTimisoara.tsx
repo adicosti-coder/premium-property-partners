@@ -33,7 +33,7 @@ const ServiciiImobiliareTimisoara = () => {
     },
     {
       question: isRo ? "Ce ROI pot obține prin administrare în regim hotelier?" : "What ROI can I get with short-term rental management?",
-      answer: isRo ? "Randamentul standard folosit de RealTrust este 9.4% net, calculat pe baza ocupării medii de 75%, a costurilor de operare și a Property Management RealTrust (15-20% din încasări)." : "RealTrust uses a 9.4% net yield benchmark, calculated from occupancy, operational costs and management/tax deductions.",
+      answer: isRo ? "Randamentul net estimat folosit de RealTrust este 6,5–9,4% pe an, calculat pe baza ocupării medii de 75%, a costurilor de operare și a Property Management RealTrust (15-20% din încasări)." : "RealTrust uses a 6.5–9.4% estimated net yearly yield, calculated from occupancy, operational costs and management/tax deductions.",
     },
     {
       question: isRo ? "Pot începe cu o evaluare înainte să listez proprietatea?" : "Can I start with a valuation before listing my property?",
@@ -105,8 +105,8 @@ const ServiciiImobiliareTimisoara = () => {
       icon: Building2,
       title: isRo ? "Administrare Regim Hotelier" : "Short-Term Rental Management",
       desc: isRo
-        ? "Management complet apartamente Airbnb & Booking, cu randament net verificat de 9.4% ROI. Listing, check-in, curățenie, raportare lunară transparentă."
-        : "Full Airbnb & Booking apartment management with verified 9.4% net ROI. Listing, check-in, cleaning, transparent monthly reporting.",
+        ? "Management complet apartamente Airbnb & Booking, cu randament net estimat de 6,5–9,4% pe an. Listing, check-in, curățenie, raportare lunară transparentă."
+        : "Full Airbnb & Booking apartment management with an estimated 6.5–9.4% net yearly ROI. Listing, check-in, cleaning, transparent monthly reporting.",
       link: "/pentru-proprietari",
     },
     {
@@ -148,7 +148,7 @@ const ServiciiImobiliareTimisoara = () => {
         title={isRo ? "Vânzări Apartamente Timișoara și Închirieri Timișoara | RealTrust" : "Apartment Sales & Rentals in Timișoara | RealTrust"}
         description={isRo
           ? "RealTrust intermediază vânzări apartamente Timișoara și închirieri Timișoara: evaluare gratuită, promovare, contracte și administrare în regim hotelier. Agent imobiliar dedicat pentru fiecare cartier."
-          : "RealTrust pillar page: apartment and house sales Timișoara, rentals, short-term rental management (9.4% ROI). Dedicated Timișoara real estate agents and local market expertise."}
+          : "RealTrust pillar page: apartment and house sales Timișoara, rentals, short-term rental management (6.5–9.4% net ROI). Dedicated Timișoara real estate agents and local market expertise."}
         url={`${BASE_URL}/servicii-imobiliare`}
         jsonLd={jsonLd}
       />
@@ -197,7 +197,7 @@ const ServiciiImobiliareTimisoara = () => {
               {isRo ? (
                 <>
                   <p>
-                    Monitorizăm zilnic <strong>piața imobiliară Timișoara</strong> și actualizăm prețurile pe cartiere. Prețul mediu/m² variază între 1.700 € (Soarelui, Steaua, Mehala) și 2.600 € (Centru, ISHO, Iulius Town), iar randamentul net în regim hotelier ajunge la <strong>9,4% ROI verificat</strong>. Cartiere precum <strong>Braytim</strong> și Mehala câștigă teren la familii și investitori.
+                    Monitorizăm zilnic <strong>piața imobiliară Timișoara</strong> și actualizăm prețurile pe cartiere. Prețul mediu/m² variază între 1.700 € (Soarelui, Steaua, Mehala) și 2.600 € (Centru, ISHO, Iulius Town), iar randamentul net în regim hotelier este estimat la <strong>6,5–9,4% pe an</strong>. Cartiere precum <strong>Braytim</strong> și Mehala câștigă teren la familii și investitori.
                   </p>
                   <p>
                     Apartamente și case de vânzare lângă marii angajatori (<strong>Continental Automotive</strong>, Hella, Flex) sunt cele mai căutate pentru închirieri pe termen lung — un agent imobiliar Timișoara dedicat din echipa RealTrust te ghidează în alegere.

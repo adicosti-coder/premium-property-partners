@@ -36,8 +36,10 @@ const GRAY = [110, 116, 128] as const;
 const GREEN = [22, 163, 74] as const;
 const LIGHT = [249, 247, 242] as const;
 
-/** Standard net-yield assumption communicated across the site. */
-const NET_YIELD_TARGET = 9.4;
+/** Standard net-yield range communicated across the site: 6,5–9,4% pe an. */
+const NET_YIELD_MIN = 6.5;
+const NET_YIELD_MAX = 9.4;
+const NET_YIELD_RANGE = `${NET_YIELD_MIN}–${NET_YIELD_MAX}`;
 /** Operational deduction (platform commissions + effective income tax + consumables). */
 const OPERATIONAL_DEDUCTION = 27;
 
@@ -72,7 +74,7 @@ const copy = {
     transparencyBody: [
       `Deduceri operaționale — ${OPERATIONAL_DEDUCTION}%: comisioanele platformelor (Booking, Airbnb, Expedia), impozitul efectiv pe venit și consumabilele (produse de igienă, cafea, sare, ulei, lenjerie).`,
       "Taxa de curățenie este achitată separat de oaspeți la momentul rezervării, deci nu se scade din venitul tău.",
-      `Utilitățile, întreținerea și comisionul de administrare se scad ulterior — de aceea randamentul-țintă de ${NET_YIELD_TARGET}% este venit curat (net), nu brut.`,
+      `Utilitățile, întreținerea și comisionul de administrare se scad ulterior — de aceea randamentul-țintă de ${NET_YIELD_RANGE}% este venit curat (net), nu brut.`,
       "Cifrele din acest raport sunt estimări pe ipotezele alese de tine în calculator. Valoarea finală pentru apartamentul tău se stabilește după evaluarea gratuită.",
     ],
     footer: "RealTrust Timișoara — Regim Hotelier & Servicii Imobiliare · realtrust.ro · +40 733 558 454",
@@ -106,7 +108,7 @@ const copy = {
     transparencyBody: [
       `Operational deduction — ${OPERATIONAL_DEDUCTION}%: platform commissions (Booking, Airbnb, Expedia), effective income tax and consumables (toiletries, coffee, salt, oil, linen).`,
       "The cleaning fee is paid separately by guests at booking time, so it is not deducted from your income.",
-      `Utilities, maintenance and the management commission are subtracted afterwards — which is why the ${NET_YIELD_TARGET}% target yield is net income, not gross.`,
+      `Utilities, maintenance and the management commission are subtracted afterwards — which is why the ${NET_YIELD_RANGE}% target yield is net income, not gross.`,
       "Figures are estimates based on the assumptions you selected in the calculator. Your final number is set after the free valuation.",
     ],
     footer: "RealTrust Timișoara — Short-Term Rental & Real Estate Services · realtrust.ro · +40 733 558 454",

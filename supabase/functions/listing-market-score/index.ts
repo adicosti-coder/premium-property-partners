@@ -116,7 +116,8 @@ Deno.serve(async (req) => {
 
   const classicRent = Math.round((size * rentPpm) / 10) * 10;
   const classicNetYear = Math.round(classicRent * 12 * 0.9);
-  const hotelNetYear = Math.round(price * 0.094);
+  const hotelNetYearMin = Math.round(price * 0.065);
+  const hotelNetYearMax = Math.round(price * 0.094);
 
   const result = {
     ok: true,
@@ -136,8 +137,9 @@ Deno.serve(async (req) => {
     target_high: targetHigh,
     classic_rent_month: classicRent,
     classic_yield_pct: Math.round((classicNetYear / price) * 1000) / 10,
-    hotel_net_month: Math.round(hotelNetYear / 12),
-    hotel_yield_pct: 9.4,
+    hotel_net_month_min: Math.round(hotelNetYearMin / 12),
+    hotel_net_month_max: Math.round(hotelNetYearMax / 12),
+    hotel_yield_pct: "6,5–9,4",
   };
 
   const channel = body?.channel === "whatsapp" ? "whatsapp" : "web";

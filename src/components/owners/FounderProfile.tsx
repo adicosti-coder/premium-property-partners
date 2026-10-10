@@ -38,7 +38,7 @@ const FounderProfile = () => {
         visionTitle: "Viziunea și experiența locală",
         vision: [
           "Peste 25 de ani în imobiliare exclusiv în Timișoara — cunosc tarifele reale pe fiecare zonă, de la Cetate și Iosefin până la Dumbrăvița și Aradului.",
-          "Cred că un apartament administrat corect trebuie să bată chiria clasică cu cifre, nu cu promisiuni: ținta noastră de lucru este 9,4% randament net.",
+          "Cred că un apartament administrat corect trebuie să bată chiria clasică cu cifre, nu cu promisiuni: ținta noastră de lucru este un randament net de 6,5–9,4% pe an.",
           "Standard hotelier aplicat la scară mică: aceleași reguli de curățenie, comunicare și raportare pentru un apartament ca pentru un hotel.",
           "Preferăm un portofoliu mic și performant decât multe apartamente administrate superficial.",
         ],
@@ -51,7 +51,7 @@ const FounderProfile = () => {
         labels: { company: "Firma", cui: "CUI", office: "Birou", contact: "Contact" },
         stats: [
           { value: "25+", suffix: "", label: "Ani experiență în imobiliare Timișoara", icon: "clock" as const },
-          { value: "9.4", suffix: "%", label: "Randament mediu net obținut pentru proprietari", icon: "trending" as const },
+          { value: "6,5–9,4", suffix: "%", label: "Randament net estimat pentru proprietari, pe an", icon: "trending" as const },
           { value: "100", suffix: "%", label: "Administrare completă, de la A la Z", icon: "shield" as const },
         ],
         quote:
@@ -74,7 +74,7 @@ const FounderProfile = () => {
         visionTitle: "Vision and local experience",
         vision: [
           "Over 25 years in real estate exclusively in Timișoara — I know the real rates per area, from Cetate and Iosefin to Dumbrăvița and Aradului.",
-          "A properly managed apartment should beat long-term rent with numbers, not promises: our working target is 9.4% net yield.",
+          "A properly managed apartment should beat long-term rent with numbers, not promises: our working target is a 6.5–9.4% net yield per year.",
           "Hotel standards at small scale: the same cleaning, communication and reporting rules as a hotel.",
           "We prefer a small, high-performing portfolio over many loosely managed apartments.",
         ],
@@ -87,7 +87,7 @@ const FounderProfile = () => {
         labels: { company: "Company", cui: "VAT ID", office: "Office", contact: "Contact" },
         stats: [
           { value: "25+", suffix: "", label: "Years of real estate experience in Timișoara", icon: "clock" as const },
-          { value: "9.4", suffix: "%", label: "Average net yield achieved for owners", icon: "trending" as const },
+          { value: "6.5–9.4", suffix: "%", label: "Estimated net yield for owners, per year", icon: "trending" as const },
           { value: "100", suffix: "%", label: "End-to-end management, from A to Z", icon: "shield" as const },
         ],
         quote:

@@ -3,7 +3,7 @@ import { Coins, Percent, TrendingUp, MessageCircle } from "lucide-react";
 /**
  * „Oferta reală" de pe pagina apartamentului: prețul din anunț, comisionul
  * RealTrust de administrare (15-20% din încasări) și profitul net estimat
- * (circa 9,4% pe an din valoarea apartamentului, ca estimare medie).
+ * (circa 6,5–9,4% pe an din valoarea apartamentului, ca estimare).
  */
 type Props = {
   name: string;

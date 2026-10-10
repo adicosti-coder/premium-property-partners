@@ -31,7 +31,7 @@ const EXTRA_FAQ = {
     },
     {
       q: "Cât randament (ROI) pot obține realist în Timișoara?",
-      a: "Referința noastră este 9,4% net pe an, ca estimare medie, calculată la o ocupare de aproximativ 75% și după Property Management RealTrust (15-20% din încasări) și costurile reale de operare. Un apartament de 2 camere bine poziționat în Cetate, Iosefin sau lângă Iulius Town se apropie de această cifră; poți verifica scenariul tău în calculatorul de randament.",
+      a: "Referința noastră este 6,5–9,4% net pe an, ca estimare, calculată la o ocupare de aproximativ 75% și după Property Management RealTrust (15-20% din încasări) și costurile reale de operare. Un apartament de 2 camere bine poziționat în Cetate, Iosefin sau lângă Iulius Town se apropie de această cifră; poți verifica scenariul tău în calculatorul de randament.",
     },
     {
       q: "Ce este Property Management RealTrust și ce include?",
@@ -43,7 +43,7 @@ const EXTRA_FAQ = {
     },
     {
       q: "Care este profitul net pe lună pentru apartamentul meu?",
-      a: "Profitul net se calculează simplu: venit brut (tariful pe noapte × ocupare medie de 75%), minus Property Management RealTrust 15-20% din încasări și costurile reale de operare. Rezultatul se apropie de 9,4% net pe an din valoarea apartamentului, ca estimare medie. Îți trimitem calculul exact pentru apartamentul tău, cu preț, venit brut și profit net lunar, fără nicio obligație.",
+      a: "Profitul net se calculează simplu: venit brut (tariful pe noapte × ocupare medie de 75%), minus Property Management RealTrust 15-20% din încasări și costurile reale de operare. Rezultatul se încadrează între 6,5% și 9,4% net pe an din valoarea apartamentului, ca estimare. Îți trimitem calculul exact pentru apartamentul tău, cu preț, venit brut și profit net lunar, fără nicio obligație.",
     },
     {
       q: "Cum se desfășoară o vizită la apartament?",
@@ -69,7 +69,7 @@ const EXTRA_FAQ = {
     },
     {
       q: "What ROI can I realistically expect in Timișoara?",
-      a: "Our benchmark is 9.4% net per year, as an average estimate, based on roughly 75% occupancy and after RealTrust Property Management (15-20% of revenue) and real operating costs. A well-located 2-room apartment in Cetate, Iosefin or near Iulius Town approaches that figure; check your own scenario in the yield calculator.",
+      a: "Our benchmark is 6.5–9.4% net per year, as an estimate, based on roughly 75% occupancy and after RealTrust Property Management (15-20% of revenue) and real operating costs. A well-located 2-room apartment in Cetate, Iosefin or near Iulius Town approaches that figure; check your own scenario in the yield calculator.",
     },
     {
       q: "What is RealTrust Property Management and what does it include?",
@@ -81,7 +81,7 @@ const EXTRA_FAQ = {
     },
     {
       q: "What is the monthly net profit for my apartment?",
-      a: "Net profit is simple: gross revenue (nightly rate × 75% average occupancy) minus RealTrust Property Management 15-20% of revenue and real operating costs. The result approaches 9.4% net per year of the apartment's value, as an average estimate. We send the exact calculation for your apartment — price, gross revenue and monthly net profit — with no obligation.",
+      a: "Net profit is simple: gross revenue (nightly rate × 75% average occupancy) minus RealTrust Property Management 15-20% of revenue and real operating costs. The result falls between 6.5% and 9.4% net per year of the apartment's value, as an estimate. We send the exact calculation for your apartment — price, gross revenue and monthly net profit — with no obligation.",
     },
     {
       q: "How does a viewing work?",
@@ -106,11 +106,11 @@ const COPY = {
   ro: {
     seoTitle: "Întrebări Frecvente Regim Hotelier & Administrare Timișoara | RealTrust",
     seoDescription:
-      "Răspunsuri despre regim hotelier, administrare apartamente și randament (ROI 9,4% net) în Timișoara: autorizații, taxe, contract, daune și încasări.",
+      "Răspunsuri despre regim hotelier, administrare apartamente și randament (ROI net estimat 6,5–9,4%) în Timișoara: autorizații, taxe, contract, daune și încasări.",
     badge: "Întrebări frecvente",
     h1: "Întrebări frecvente despre regim hotelier, administrare și randament",
     intro:
-      "Tot ce întreabă proprietarii din Timișoara înainte de a da apartamentul în administrare: autorizații și legislație, taxe locale, contract și preaviz, daune provocate de oaspeți și cum se ajunge la un randament net de 9,4% pe an.",
+      "Tot ce întreabă proprietarii din Timișoara înainte de a da apartamentul în administrare: autorizații și legislație, taxe locale, contract și preaviz, daune provocate de oaspeți și cum se ajunge la un randament net de 6,5–9,4% pe an.",
     breadcrumb: "Întrebări frecvente",
     home: "Acasă",
     ctaTitle: "Nu ți-ai găsit răspunsul?",
@@ -125,11 +125,11 @@ const COPY = {
   en: {
     seoTitle: "Short-Term Rental FAQ — Management & ROI in Timișoara | RealTrust",
     seoDescription:
-      "Answers about short-term rental, apartment management and yield (9.4% net ROI) in Timișoara: licensing, taxes, contract, damages and payouts.",
+      "Answers about short-term rental, apartment management and yield (6.5–9.4% estimated net ROI) in Timișoara: licensing, taxes, contract, damages and payouts.",
     badge: "Frequently asked questions",
     h1: "Frequently asked questions about short-term rental, management and ROI",
     intro:
-      "Everything owners in Timișoara ask before handing over an apartment: licensing and legislation, local taxes, contract and notice, guest damages, and how a 9.4% net annual yield is reached.",
+      "Everything owners in Timișoara ask before handing over an apartment: licensing and legislation, local taxes, contract and notice, guest damages, and how a 6.5–9.4% net annual yield is reached.",
     breadcrumb: "FAQ",
     home: "Home",
     ctaTitle: "Didn't find your answer?",
