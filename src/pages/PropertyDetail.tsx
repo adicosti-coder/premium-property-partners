@@ -1026,20 +1026,6 @@ const PropertyDetail = () => {
                 language={language}
               />
 
-              {/* Oferta reală: preț anunț, comision RealTrust, profit net estimat */}
-              <PropertyOfferBox
-                name={property.name}
-                price={
-                  (dbProperty?.capital_necesar ??
-                    (dbProperty?.price_per_sqm && dbProperty?.size
-                      ? Math.round(Number(dbProperty.price_per_sqm) * Number(dbProperty.size))
-                      : null)) as number | null
-                }
-                language={language}
-              />
-
-
-
               {/* ═══════════════════════════════════════════════════════
                   1. SCOR CARTIER — Validare vizuală rapidă
                   ═══════════════════════════════════════════════════════ */}
@@ -1358,6 +1344,18 @@ const PropertyDetail = () => {
                   );
                 })()
               )}
+
+              {/* Oferta reală: preț anunț, comision RealTrust, profit net estimat */}
+              <PropertyOfferBox
+                name={property.name}
+                price={
+                  (dbProperty?.capital_necesar ??
+                    (dbProperty?.price_per_sqm && dbProperty?.size
+                      ? Math.round(Number(dbProperty.price_per_sqm) * Number(dbProperty.size))
+                      : null)) as number | null
+                }
+                language={language}
+              />
 
               {/* Calculator Investiție detaliat */}
               {!staticProperty && (normalizedListingType === 'investitie' || normalizedListingType === 'cazare') && (() => {

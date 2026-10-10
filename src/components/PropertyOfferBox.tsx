@@ -12,7 +12,8 @@ type Props = {
 };
 
 const WA_NUMBER = "40799069256";
-const NET_YIELD = 0.094;
+const NET_YIELD_MIN = 0.065;
+const NET_YIELD_MAX = 0.094;
 const FEE_MIN = 0.15;
 const FEE_MAX = 0.2;
 
@@ -24,9 +25,11 @@ const PropertyOfferBox = ({ name, price, language = "ro" }: Props) => {
   const eur = (v: number) =>
     `${Math.round(v).toLocaleString(ro ? "ro-RO" : "en-US")} €`;
 
-  const netYear = value * NET_YIELD;
-  const netMonth = netYear / 12;
-  const grossMonth = netMonth / 0.73;
+  const netYearMin = value * NET_YIELD_MIN;
+  const netYearMax = value * NET_YIELD_MAX;
+  const netMonthMin = netYearMin / 12;
+  const netMonthMax = netYearMax / 12;
+  const grossMonth = netMonthMax / 0.73;
 
   const rows = [
     {
@@ -46,10 +49,10 @@ const PropertyOfferBox = ({ name, price, language = "ro" }: Props) => {
     {
       icon: TrendingUp,
       label: ro ? "Profit net estimat" : "Estimated net profit",
-      value: `${eur(netMonth)}/${ro ? "lună" : "mo"} · ${eur(netYear)}/${ro ? "an" : "yr"}`,
+      value: `${eur(netMonthMin)}–${eur(netMonthMax)}/${ro ? "lună" : "mo"} · ${eur(netYearMin)}–${eur(netYearMax)}/${ro ? "an" : "yr"}`,
       hint: ro
-        ? "Circa 9,4% pe an — estimare medie, în funcție de ocupare și costurile reale"
-        : "Around 9.4% per year — average estimate, depending on occupancy and real costs",
+        ? "Între 6,5% și 9,4% pe an — în funcție de zonă, ocupare și costurile reale"
+        : "Between 6.5% and 9.4% per year — depending on area, occupancy and real costs",
     },
   ];
 
