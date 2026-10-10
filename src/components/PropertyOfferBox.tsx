@@ -49,10 +49,10 @@ const PropertyOfferBox = ({ name, price, language = "ro" }: Props) => {
     {
       icon: TrendingUp,
       label: ro ? "Profit net estimat" : "Estimated net profit",
-      value: `${eur(netMonth)}/${ro ? "lună" : "mo"} · ${eur(netYear)}/${ro ? "an" : "yr"}`,
+      value: `${eur(netMonthMin)}–${eur(netMonthMax)}/${ro ? "lună" : "mo"} · ${eur(netYearMin)}–${eur(netYearMax)}/${ro ? "an" : "yr"}`,
       hint: ro
-        ? "Circa 9,4% pe an — estimare medie, în funcție de ocupare și costurile reale"
-        : "Around 9.4% per year — average estimate, depending on occupancy and real costs",
+        ? "Între 6,5% și 9,4% pe an — în funcție de zonă, ocupare și costurile reale"
+        : "Between 6.5% and 9.4% per year — depending on area, occupancy and real costs",
     },
   ];
 
