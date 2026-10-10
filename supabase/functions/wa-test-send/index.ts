@@ -7,6 +7,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { WA_PHONE_NUMBER_ID } from "../_shared/waConfig.ts";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
+import { isInternalWaNumber } from "../_shared/waInternalNumbers.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -56,6 +57,15 @@ Deno.serve(async (req) => {
   const to = normalizeRo(String(body.to ?? ""));
   if (!to) return json({ error: "invalid_phone", detail: "Format acceptat: 07xxxxxxxx sau +407xxxxxxxx" }, 400);
 
+  // Endpoint de test: destinatarul este limitat la numerele interne RealTrust,
+  // ca să nu poată fi folosit pentru mesaje către orice număr.
+  if (!isInternalWaNumber(to)) {
+    return json({ error: "recipient_not_allowed", detail: "Trimiterile de test sunt permise doar către numerele interne RealTrust." }, 403);
+  }
+
+  const text = (body.text ?? "").slice(0, 1000);
+  const templateParams = (body.template_params ?? []).slice(0, 8).map((p) => String(p).slice(0, 200));
+
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -89,12 +99,12 @@ Deno.serve(async (req) => {
         template: {
           name: body.template_name,
           language: { code: body.template_language || "en_US" },
-          ...(body.template_params?.length
+          ...(templateParams.length
             ? {
                 components: [
                   {
                     type: "body",
-                    parameters: body.template_params.map((p) => ({ type: "text", text: p })),
+                    parameters: templateParams.map((p) => ({ type: "text", text: p })),
                   },
                 ],
               }
@@ -105,7 +115,7 @@ Deno.serve(async (req) => {
         messaging_product: "whatsapp",
         to: to.replace(/^\+/, ""),
         type: "text",
-        text: { preview_url: false, body: body.text || "Mesaj de test RealTrust." },
+        text: { preview_url: false, body: text || "Mesaj de test RealTrust." },
       };
 
   const resp = await fetch(`https://graph.facebook.com/v20.0/${phoneId}/messages`, {
@@ -122,8 +132,8 @@ Deno.serve(async (req) => {
     direction: "outbound",
     role: "system",
     content: useTemplate
-      ? `[template:${body.template_name}] ${(body.template_params ?? []).join(" | ")}`
-      : body.text || "Mesaj de test RealTrust.",
+      ? `[template:${body.template_name}] ${templateParams.join(" | ")}`
+      : text || "Mesaj de test RealTrust.",
     wa_message_id: waMessageId,
     delivery_status: resp.ok ? "sent" : null,
     error: resp.ok ? null : metaBody?.error?.message ?? `meta_${resp.status}`,

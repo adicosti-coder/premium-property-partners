@@ -92,11 +92,25 @@ serve(async (req) => {
         ip_address: ipAddress,
       };
 
-      if (followupEmailId) {
-        insertData.followup_email_id = followupEmailId;
+      // ID-urile de tracking nu sunt semnate — le acceptăm doar dacă
+      // aparțin efectiv utilizatorului semnat din URL.
+      if (followupEmailId && /^[0-9a-f-]{36}$/i.test(followupEmailId)) {
+        const { data: f } = await supabase
+          .from("simulation_followup_emails")
+          .select("id")
+          .eq("id", followupEmailId)
+          .eq("user_id", userId)
+          .maybeSingle();
+        if (f) insertData.followup_email_id = followupEmailId;
       }
-      if (abAssignmentId) {
-        insertData.ab_assignment_id = abAssignmentId;
+      if (abAssignmentId && /^[0-9a-f-]{36}$/i.test(abAssignmentId)) {
+        const { data: a } = await supabase
+          .from("email_ab_assignments")
+          .select("id")
+          .eq("id", abAssignmentId)
+          .eq("user_id", userId)
+          .maybeSingle();
+        if (a) insertData.ab_assignment_id = abAssignmentId;
       }
 
       const { error: insertError } = await supabase

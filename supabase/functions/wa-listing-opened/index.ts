@@ -4,6 +4,7 @@
 // și îl anunțăm în Make. Fără date sensibile: doar apartamentul (+ telefon opțional).
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { relayToMake } from "../_shared/makeRelay.ts";
+import { checkRateLimit, getClientIp } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,6 +31,10 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
+  // Anti-abuz: max 30 de evenimente/minut/IP — endpointul e public.
+  const rl = checkRateLimit(`wa-open:${getClientIp(req)}`, { maxRequests: 30, windowMs: 60_000 });
+  if (!rl.allowed) return json({ error: "rate_limit" }, 429);
+
   let body: { property_id?: string; phone?: string } = {};
   try { body = await req.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
 
@@ -51,6 +56,21 @@ Deno.serve(async (req) => {
 
   const phone = normalizeRoMobile(body.phone || "") || "";
   const url = prop.slug ? `https://realtrust.ro/proprietate/${prop.slug}` : null;
+
+  // Deduplicare: același telefon + proprietate în ultima oră → nu mai
+  // înregistrăm și nu mai anunțăm Make (previne umflarea artificială).
+  if (phone) {
+    const oneHourAgo = new Date(Date.now() - 3_600_000).toISOString();
+    const { data: dup } = await supabase
+      .from("wa_transaction_events")
+      .select("id")
+      .eq("phone_normalized", phone)
+      .eq("property_id", prop.id)
+      .eq("event", "listing_opened")
+      .gte("created_at", oneHourAgo)
+      .limit(1);
+    if (dup && dup.length > 0) return json({ ok: true, deduplicated: true });
+  }
 
   const { error } = await supabase.from("wa_transaction_events").insert({
     phone_normalized: phone,
