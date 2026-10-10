@@ -624,6 +624,13 @@
       "when": 1791586283611,
       "tag": "0088_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 89,
+      "version": "7",
+      "when": 1791620118647,
+      "tag": "0089_investor_portal_access",
+      "breakpoints": true
     }
   ]
 }

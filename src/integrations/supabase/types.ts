@@ -3050,6 +3050,7 @@ export type Database = {
           name: string | null
           phone_normalized: string
           unsubscribed_at: string | null
+          user_id: string | null
           zones: string[]
         }
         Insert: {
@@ -3062,6 +3063,7 @@ export type Database = {
           name?: string | null
           phone_normalized: string
           unsubscribed_at?: string | null
+          user_id?: string | null
           zones?: string[]
         }
         Update: {
@@ -3074,6 +3076,7 @@ export type Database = {
           name?: string | null
           phone_normalized?: string
           unsubscribed_at?: string | null
+          user_id?: string | null
           zones?: string[]
         }
         Relationships: []
