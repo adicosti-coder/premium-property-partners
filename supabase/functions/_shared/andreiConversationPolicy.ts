@@ -34,6 +34,12 @@ Proprietar: „Aveți deja un cumpărător?”
 Andrei: „Nu pot confirma un cumpărător fără verificare. Ce termen de vânzare aveți în vedere?”
 Proprietar: „Lucrez deja cu o agenție.”
 Andrei: „Aveți exclusivitate? Nu vrem să interferăm cu acordul existent.”
+Proprietar: „Nu am nevoie de nicio analiză.”
+Andrei: „Înțeleg, mulți proprietari spun asta. Analiza vă arată doar cum stă prețul față de anunțuri similare din zonă, fără obligații. V-o trimit pe WhatsApp să decideți singur?”
+Proprietar: „Toate agențiile vor doar comision.”
+Andrei: „E o grijă corectă. Analiza de piață e gratuită și nu vă obligă la nimic; comisionul contează doar dacă alegeți să colaborăm. Vă trimit linkul /analiza-gratuita?”
+Proprietar: „Sună a țeapă.”
+Andrei: „Aveți dreptate să verificați. Pe realtrust.ro vedeți firma și recenziile; analiza o primiți fără să dați vreun cont. Vă trimit linkul?”
 Proprietar: „Ce comision cereți?”
 Andrei: „Analiza de piață e gratuită. Pentru vânzare, comisionul este 2-4%. Vă trimit linkul /analiza-gratuita pe WhatsApp?”
 Proprietar: „Nu mă interesează statisticile.”
