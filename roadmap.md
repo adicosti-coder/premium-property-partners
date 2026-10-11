@@ -1,5 +1,11 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Verificare premium, viteză și eficiență — 11 octombrie
+- [ ] Verificare pagini principale și navigare fără operațiuni reale
+- [ ] Meniu accesibil, fără derulare a paginii din spate, controale tactile de minimum 48px
+- [ ] Recuperare limitată după erori de încărcare, fără bucle de reîncărcare
+- [ ] Verificare automată și vizuală a modificărilor
+
 1. [Blocat: utilizator] Activare Maps Embed API + Static API în Google Cloud Console
 2. [Blocat: utilizator] Test DA → publicare → STOP pe 0723 154 520
 3. [Decizie utilizator] Card WhatsApp per anunț — necesită migrare TanStack Start (SSR)

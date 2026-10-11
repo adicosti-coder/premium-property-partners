@@ -9,6 +9,7 @@ import { FAQSchemaProvider } from "@/hooks/useFAQSchema";
 import CanonicalHreflang from "@/components/seo/CanonicalHreflang";
 import TrailingSlashRedirect from "@/components/seo/TrailingSlashRedirect";
 import { captureCampaignAttribution } from "@/lib/campaignAttribution";
+import { isChunkLoadError, reserveChunkReload } from "@/lib/chunkRecovery";
 
 const Toaster = lazy(() => import("@/components/ui/toaster").then((m) => ({ default: m.Toaster })));
 const Sonner = lazy(() => import("@/components/ui/sonner").then((m) => ({ default: m.Toaster })));
@@ -16,18 +17,14 @@ const CookieConsent = lazy(() => import("@/components/CookieConsent"));
 
 // Handle dynamic import failures (stale cache) by reloading the page
 const handleDynamicImportError = (error: Error): never => {
-  const isChunkError = error.message.includes('Failed to fetch dynamically imported module') ||
-                       error.message.includes('Loading chunk') ||
-                       error.message.includes('Loading CSS chunk');
-  
-  if (isChunkError) {
-    // Clear any service worker cache and reload
-    if ('caches' in window) {
-      caches.keys().then(names => {
-        names.forEach(name => caches.delete(name));
-      });
+  if (isChunkLoadError(error)) {
+    try {
+      if (reserveChunkReload(window.sessionStorage, window.location.href, navigator.onLine)) {
+        window.location.reload();
+      }
+    } catch {
+      // Restricted browser storage: show the existing recovery screen instead.
     }
-    window.location.reload();
   }
   
   // Always re-throw so the lazy() promise never resolves to undefined
@@ -319,6 +316,7 @@ const App = () => (
                     <Route path="/analiza-roi-apartament" element={<AnalizaROIApartament />} />
                     <Route path="/piata-imobiliara-timisoara" element={<PiataImobiliara />} />
                     <Route path="/evaluare-gratuita" element={<EvaluareGratuita />} />
+                    <Route path="/evaluare" element={<Navigate to={`/evaluare-gratuita${location.search}${location.hash}`} replace />} />
                     <Route path="/analiza-anunt" element={<AnalizaAnunt />} />
                     <Route path="/harta-preturi" element={<HartaPreturi />} />
                     <Route path="/alerte-oportunitati" element={<AlerteOportunitati />} />
@@ -361,6 +359,7 @@ const App = () => (
                     <Route path="/legal/politica-de-confidentialitate" element={<Navigate to="/politica-confidentialitate" replace />} />
                     <Route path="/legal/termeni-si-conditii" element={<Navigate to="/termeni-si-conditii" replace />} />
                     <Route path="/index.html" element={<Navigate to="/" replace />} />
+                    <Route path="/index" element={<Navigate to="/" replace />} />
                     <Route path="/index-en.html" element={<Navigate to="/" replace />} />
                     <Route path="/index_EN.html" element={<Navigate to="/" replace />} />
                     <Route path="/imobiliare-realtrust-en.html" element={<Navigate to="/imobiliare" replace />} />
