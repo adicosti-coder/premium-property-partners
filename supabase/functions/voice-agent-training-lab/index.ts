@@ -70,7 +70,24 @@ function commissionAnswerOk(transcript: { role: string; text: string }[], branch
   });
   return asked ? ok : null;
 }
-function validate(transcript: { role: string; text: string }[], branch: string) {
+const ZONE_WORDS = ["iulius","lipovei","cetate","centru","iosefin","fabric","dumbr","aradului","girocului","soarelui","complex","circumvala","take ionescu","bucovina","calea sagului","sagului","martirilor","fratelia","freidorf","elisabetin","mehala","plopi","ronat","kuntz","odobescu","bucure"];
+function zoneHallucination(transcript: { role: string; text: string }[], listingZone: string): boolean {
+  const known = (listingZone || "").toLowerCase();
+  const ownerSaid = transcript.filter((t) => t.role !== "andrei").map((t) => t.text).join(" ").toLowerCase();
+  const a = transcript.filter((t) => t.role === "andrei").map((t) => t.text).join(" ").toLowerCase();
+  return ZONE_WORDS.some((z) => a.includes(z) && !known.includes(z) && !ownerSaid.includes(z));
+}
+function skepticPivotOk(transcript: { role: string; text: string }[]): boolean | null {
+  let seen = false, ok = true;
+  transcript.forEach((t, i) => {
+    if (t.role === "andrei" || !/(agen[țt]ii|agen[țt]ie)[^.?!]{0,40}comision|doar comision/i.test(t.text)) return;
+    seen = true;
+    const r = transcript.slice(i + 1).find((x) => x.role === "andrei")?.text ?? "";
+    if (!/(contract|angajament|obliga)/i.test(r) || !/gratuit/i.test(r) || !/whatsapp/i.test(r)) ok = false;
+  });
+  return seen ? ok : null;
+}
+function validate(transcript: { role: string; text: string }[], branch: string, listingZone = "") {
   const a = transcript.filter((t) => t.role === "andrei").map((t) => t.text).join(" ").toLowerCase();
   const wrongArg = branch === "vanzare" ? /randament|regim hotelier/.test(a) : branch === "inchiriere" ? /randament net|regim hotelier/.test(a) : false;
   return {
@@ -80,6 +97,8 @@ function validate(transcript: { role: string; text: string }[], branch: string) 
     commission_answer_ok: commissionAnswerOk(transcript, branch),
     offered_free_analysis: /analiz/.test(a),
     mentioned_whatsapp: /whatsapp/.test(a),
+    zone_hallucination: zoneHallucination(transcript, listingZone),
+    skeptic_pivot_ok: skepticPivotOk(transcript),
   };
 }
 const CATS = ["Tone of Voice", "Handling Objections", "Sales Strategy", "General"];
@@ -110,7 +129,7 @@ async function autoLoop(supabase: any, KEY: string, opts: { personas?: string[];
       const pick = byBranch[branch]?.shift();
       const r: any = await simulate(supabase, KEY, { persona: personas[i], prospect_id: pick?.id, branch, commission_probe: true, rejecter: opts.rejecter });
       if (!r.analysis) continue;
-      const v = validate(r.transcript, r.branch);
+      const v = validate(r.transcript, r.branch, r.listingZone);
       await supabase.from("voice_call_analyses").insert({
         source: "training_lab_auto", outcome: `${personas[i]} · ${r.branch} · comision ${v.commission_answer_ok === null ? "neîntrebat" : v.commission_answer_ok && !v.wrong_commission ? "OK" : "GREȘIT"}`, score: r.analysis.score,
         strengths: r.analysis.strengths, weaknesses: [...r.analysis.weaknesses,
@@ -118,6 +137,8 @@ async function autoLoop(supabase: any, KEY: string, opts: { personas?: string[];
           ...(v.wrong_branch_argument ? ["Validare: argument nepotrivit tipului de anunț"] : []),
           ...(v.wrong_commission ? ["Validare: procent de comision greșit pentru tipul de anunț"] : []),
           ...(v.commission_answer_ok === false ? ["Validare: răspunsul la comision nu începe cu analiza gratuită + procentul corect + /analiza-gratuita pe WhatsApp"] : []),
+          ...(v.zone_hallucination ? ["Validare: zonă inventată/presupusă, diferită de anunț"] : []),
+          ...(v.skeptic_pivot_ok === false ? ["Validare: la „agențiile vor doar comision” nu a confirmat lipsa contractului + raport gratuit pe WhatsApp"] : []),
           ...(!v.offered_free_analysis ? ["Validare: nu a propus analiza gratuită /analiza-gratuita"] : [])],
         objections: r.analysis.objections, prompt_fixes: r.analysis.prompt_fixes,
         transcript: r.transcript.map((t: any) => `${t.role === "andrei" ? "Andrei" : "Proprietar"}: ${t.text}`).join("\n"),
@@ -155,12 +176,14 @@ async function simulate(supabase: any, KEY: string, body: any): Promise<any> {
     let branch: "vanzare" | "inchiriere" | "cazare" = "vanzare";
     let personaText = PERSONAS[persona];
     let objections = "";
+    let listingZone = "";
     if (body.prospect_id) {
       const basePersona = PERSONAS[persona] ? persona : "";
       const { data: r } = await supabase.from("prospect_listings").select("id, title, category, zone, location, price, currency, rooms, size")
         .eq("id", String(body.prospect_id)).maybeSingle();
       if (!r) return { httpError: "Anunț inexistent", status: 404 };
       branch = normalizeAndreiBranch(branchOf(r.category));
+      listingZone = String(r.zone || r.location || "");
       const tip = branch === "inchiriere" ? "închiriază pe termen lung" : branch === "cazare" ? "are în regim hotelier" : "vinde";
       personaText = `Proprietar care ${tip}: „${r.title || "apartament"}”, zona ${r.zone || r.location || "nespecificată"}, ${r.rooms ?? "?"} camere, ${r.size ?? "?"} m², preț ${r.price ?? "?"} ${r.currency || "EUR"}${branch === "inchiriere" ? "/lună" : ""}. Ține la preț, întreabă ce face concret agenția pentru tipul lui de anunț și ridică obiecții legate de preț, zonă și mărimea apartamentului.`;
       if (basePersona) personaText = PERSONAS[basePersona] + " Anunțul tău real: " + personaText;
@@ -175,6 +198,7 @@ async function simulate(supabase: any, KEY: string, body: any): Promise<any> {
     if (!personaText) return { httpError: "Profil necunoscut", status: 400 };
     if (body.commission_probe) personaText += " În prima sau a doua replică întreabă direct: „Și ce comision luați?”.";
     if (body.rejecter) personaText += " Respingi la început ideea de analiză („nu am nevoie de analize”) și spui că nu plătești comision agențiilor.";
+    if (!/zona /.test(personaText) && !listingZone) objections += "\n\nZona anunțului NU este cunoscută: întreabă o singură dată cartierul; nu presupune nicio zonă.";
     const turns = Math.min(8, Math.max(3, Number(body.turns) || 6));
 
     const { data: script } = await supabase.from("voice_agent_scripts").select("system_prompt").eq("is_active", true).maybeSingle();
@@ -206,7 +230,7 @@ Vorbești natural, în română, ca la telefon: o replică scurtă (max 25 de cu
     const raw = await ai([
       { role: "system", content: "Ești coach sever de vânzări imobiliare telefonice. Răspunzi doar JSON valid." },
       { role: "user", content: `Analizează performanța lui Andrei (asistent AI RealTrust Timișoara) în conversația de mai jos. Criterii: replici scurte, nu se repetă, avansează (obiectiv → termen → preț → acord pentru analiză), tratează obiecțiile, transparență, fără informații inventate.
-Profil proprietar: ${persona}. Tip anunț: ${branch}. Verifică și dacă Andrei a folosit DOAR argumentele potrivite tipului de anunț.
+Profil proprietar: ${persona}. Tip anunț: ${branch}. Verifică și dacă Andrei a folosit DOAR argumentele potrivite tipului de anunț. Reguli stricte (penalizează sever): (1) orice mențiune a comisionului trebuie urmată imediat, în aceeași replică, de propunerea trimiterii analizei pe WhatsApp; (2) zona folosită trebuie să fie STRICT cea din anunț (${listingZone || "necunoscută — Andrei trebuie să întrebe o singură dată"}); orice cartier inventat sau presupus = greșeală gravă; (3) la „toate agențiile vor doar comision”, Andrei trebuie să confirme că nu cere contract/angajament și doar trimite gratuit raportul de evaluare pe WhatsApp.
 
 ${convo}
 
@@ -219,7 +243,14 @@ Răspunde STRICT JSON: {"score": 1-10, "strengths": ["..."], "weaknesses": ["...
     analysis.score = Math.max(1, Math.min(10, Math.round(Number(analysis.score) || 1)));
     for (const k of ["strengths", "weaknesses", "prompt_fixes"]) analysis[k] = (Array.isArray(analysis[k]) ? analysis[k] : []).map(String).slice(0, 6);
     analysis.objections = (Array.isArray(analysis.objections) ? analysis.objections : []).slice(0, 8);
-    return { transcript, analysis, branch, persona };
+    // penalizări automate deterministe pentru regulile stricte
+    const strict = validate(transcript, branch, listingZone);
+    let penalty = 0;
+    if (strict.commission_answer_ok === false || (/comision/i.test(transcript.filter((t) => t.role === "andrei").map((t) => t.text).join(" ")) && !strict.mentioned_whatsapp)) penalty += 2;
+    if (strict.zone_hallucination) penalty += 3;
+    if (strict.skeptic_pivot_ok === false) penalty += 2;
+    if (penalty) analysis.score = Math.max(1, analysis.score - penalty);
+    return { transcript, analysis, branch, persona, listingZone, strict };
 }
 
 Deno.serve(async (req) => {
