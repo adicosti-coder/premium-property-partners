@@ -13,6 +13,7 @@ type Campaign = {
 };
 
 const DELAYS = [1, 2, 3, 5, 10];
+const YES = ["interesat", "programare", "acord", "scheduled"];
 
 /** Caseta de control a campaniei Andrei — doar prospecte fără WhatsApp (131026). */
 export default function AndreiBatchCampaignControl() {
@@ -28,6 +29,41 @@ export default function AndreiBatchCampaignControl() {
     },
   });
   const c = q.data;
+
+  const stats = useQuery({
+    queryKey: ["voice-batch-campaign-stats"],
+    refetchInterval: 30_000,
+    queryFn: async () => {
+      const start = new Date(); start.setHours(0, 0, 0, 0);
+      const [wa, calls] = await Promise.all([
+        (supabase.from("wa_outbound_queue") as any).select("prospect_listing_id").eq("status", "failed")
+          .ilike("last_error", "%131026%").not("prospect_listing_id", "is", null).limit(1000),
+        (supabase.from("voice_call_sessions") as any).select("ai_outcome, call_duration_seconds")
+          .gte("created_at", start.toISOString()).limit(2000),
+      ]);
+      const ids = [...new Set((wa.data ?? []).map((r: any) => r.prospect_listing_id))] as string[];
+      let queue = 0;
+      if (ids.length) {
+        const { data } = await (supabase.from("prospect_listings") as any).select("id, tags, phone_normalized, contact_phone")
+          .in("id", ids).eq("is_active", true).is("published_at", null).eq("do_not_call", false);
+        queue = (data ?? []).filter((r: any) => {
+          const d = String(r.phone_normalized || r.contact_phone || "").replace(/\D/g, "");
+          return !((r.tags as string[]) || []).includes("apelat-andrei") && /^(40|0)7\d{8}$/.test(d.replace(/^0040/, "40"));
+        }).length;
+      }
+      const list = (calls.data ?? []) as any[];
+      const connected = list.filter((r) => Number(r.call_duration_seconds || 0) > 0);
+      const durs = connected.map((r) => Number(r.call_duration_seconds)).filter((s) => s < 3600);
+      return {
+        queue,
+        total: list.length,
+        connectRate: list.length ? Math.round((connected.length / list.length) * 100) : null,
+        yes: list.filter((r) => YES.includes(String(r.ai_outcome || "").toLowerCase())).length,
+        avg: durs.length ? Math.round(durs.reduce((a, b) => a + b, 0) / durs.length) : null,
+      };
+    },
+  });
+  const s = stats.data;
 
   const update = async (patch: Partial<Campaign>) => {
     const { error } = await (supabase.from("voice_batch_campaign") as any).update({ ...patch, updated_at: new Date().toISOString() }).eq("id", 1);
@@ -78,6 +114,20 @@ export default function AndreiBatchCampaignControl() {
         inCall ? "border-emerald-500/40 bg-emerald-500/10" : c.enabled ? "border-sky-500/30 bg-sky-500/5" : "border-border bg-muted/30",
       )} role="status" aria-live="polite">
         {status}
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2" aria-label="Statistici campanie azi">
+        {[
+          { l: "Prospecte în coadă", v: s?.queue ?? "…" },
+          { l: "Rată de răspuns azi", v: s ? (s.connectRate == null ? "—" : `${s.connectRate}% (${s.total} apeluri)`) : "…" },
+          { l: "Conversii „DA” azi", v: s?.yes ?? "…" },
+          { l: "Durată medie convorbire", v: s ? (s.avg == null ? "—" : `${Math.floor(s.avg / 60)}:${String(s.avg % 60).padStart(2, "0")} min`) : "…" },
+        ].map((it) => (
+          <div key={it.l} className="rounded-lg border border-border bg-muted/20 p-2">
+            <div className="text-xs text-muted-foreground">{it.l}</div>
+            <div className="text-lg font-semibold tabular-nums">{it.v}</div>
+          </div>
+        ))}
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
