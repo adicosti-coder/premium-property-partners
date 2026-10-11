@@ -83,12 +83,15 @@ export default function AndreiTrainingLab() {
       <Card>
         <CardHeader><CardTitle className="text-base">1. Alege profilul proprietarului</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
             {PERSONAS.map((p) => (
               <button key={p.id} type="button" onClick={() => { setPersona(p.id); setProspectId(null); }} aria-pressed={!prospectId && persona === p.id}
                 className={`min-h-[48px] rounded-lg border p-3 text-left transition-colors ${!prospectId && persona === p.id ? "border-primary bg-primary/10" : "border-border hover:bg-muted"}`}>
-                <div className="font-medium">{p.label}</div>
-                <div className="text-xs text-muted-foreground">{p.desc}</div>
+                <div className="flex items-center justify-between gap-1">
+                  <div className="font-medium text-sm sm:text-base">{p.label}</div>
+                  <Badge variant={p.difficulty === "Greu" ? "destructive" : p.difficulty === "Mediu" ? "default" : "secondary"} className="shrink-0 text-[10px]">{p.difficulty}</Badge>
+                </div>
+                <div className="text-xs text-muted-foreground line-clamp-2">{p.desc}</div>
               </button>
             ))}
           </div>
