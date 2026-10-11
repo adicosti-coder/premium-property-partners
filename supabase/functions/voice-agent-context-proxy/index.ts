@@ -21,9 +21,9 @@ Deno.serve(async (req) => {
   }
 
   const auth = await requireAdmin(req, corsHeaders);
-  if (!auth.ok) return auth.response!;
+  if (!auth.ok) return auth.response;
 
-  let body: { phone?: string } = {};
+  let body: { phone?: string; prospect_id?: string } = {};
   try {
     body = await req.json();
   } catch {
@@ -34,6 +34,9 @@ Deno.serve(async (req) => {
   }
 
   const phone = (body.phone || "").toString().trim();
+  if (body.prospect_id !== undefined && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.prospect_id)) {
+    return new Response(JSON.stringify({ error: "Invalid prospect ID" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
   if (!/^\+[1-9]\d{6,14}$/.test(phone)) {
     return new Response(JSON.stringify({ error: "Invalid phone format (E.164 required)" }), {
       status: 400,
@@ -57,7 +60,7 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
         "X-Voice-Agent-Secret": voiceSecret,
       },
-      body: JSON.stringify({ phone }),
+      body: JSON.stringify({ phone, prospect_id: body.prospect_id }),
     });
     const text = await upstream.text();
     return new Response(text, {

@@ -15,3 +15,4 @@
 - Property offers and Advisor investment cards share `getPropertyInvestmentMetrics`, keeping unrounded annual income until display — prevents inconsistent yields and rental multipliers.
 - Property maps and POI travel estimates use `propertyGeo` resolved GPS with explicit district fallback profiles — prevents imported Iosefin listings inheriting city-center coordinates or fixed travel times.
 - Voice Command Center prospect cards load details and WhatsApp history on demand by prospect ID and normalized phone variants; phone edits update both prospect phone fields with concurrency checks without changing past conversations — keeps calls current and historical contact records intact.
+- Voice simulator receives the first visible Command Center prospect by ID through the admin-only context proxy; phone is separate from listing identity and stale responses are discarded — preserves the intended property context when testing another number or editing contacts.

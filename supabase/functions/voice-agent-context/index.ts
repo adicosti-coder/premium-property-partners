@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  let body: { phone?: string } = {};
+  let body: { phone?: string; prospect_id?: string } = {};
   try {
     body = await req.json();
   } catch {
@@ -94,6 +94,9 @@ Deno.serve(async (req) => {
   }
 
   const rawPhone = (body.phone || "").toString().trim();
+  if (body.prospect_id !== undefined && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.prospect_id)) {
+    return new Response(JSON.stringify({ error: "Invalid prospect ID" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
   if (!rawPhone) {
     return new Response(JSON.stringify({ error: "Missing 'phone'" }), {
       status: 400,
@@ -135,7 +138,9 @@ Deno.serve(async (req) => {
     }
   }
 
-  const { data, error } = await supabase
+  const { data, error } = body.prospect_id ? await supabase.from("prospect_listings")
+    .select("id,title,contact_name,phone_normalized,contact_phone,zone,location,price,size,rooms,prospect_type,source_platform,source_url,description,admin_notes,call_summary,lifecycle_status,lead_score,quality_score")
+    .eq("id", body.prospect_id).maybeSingle() : await supabase
     .from("v_prospect_funnel")
     .select("*")
     .or(orParts.join(","))
@@ -168,19 +173,21 @@ Deno.serve(async (req) => {
   }
 
   const d = data as any;
-  const ownerName = d.title || "proprietar";
+  const ownerName = d.contact_name || "proprietar (nume nesalvat)";
   const propertyType = d.prospect_type || "proprietate";
   const zone = d.zone || d.location || "Timișoara";
   const price = d.price ?? "n/a";
-  const funnelStatus = d.funnel_status || d.prospect_lifecycle || "necunoscut";
-  const qualityScore = d.prospect_score ?? d.lead_score ?? "n/a";
-  const notes = d.call_summary || d.title || "fără note anterioare";
-  const rooms = "n/a";
+  const funnelStatus = d.lifecycle_status || d.funnel_status || d.prospect_lifecycle || "necunoscut";
+  const qualityScore = d.quality_score ?? d.prospect_score ?? d.lead_score ?? "n/a";
+  const notes = [d.admin_notes, d.call_summary].filter(Boolean).join("\n") || "fără note anterioare";
+  const rooms = d.rooms ?? "n/a";
 
 
 
   const agent_memory_context =
-    `CFR NOTE: Vorbești cu ${ownerName}. Acest număr este verificat prin Twilio. ` +
+    `CFR NOTE: Vorbești cu ${ownerName}. ` +
+    `Anunț: ${d.title || "titlu nesalvat"}. Suprafață: ${d.size ?? "n/a"} m². ` +
+    `Sursă: ${d.source_url || d.source_platform || "n/a"}. Descriere: ${d.description || "nesalvată"}. ` +
     `Detalii proprietate identificată: ${propertyType} cu ${rooms} camere în zona ${zone}, ` +
     `listată la prețul de ${price} EUR. Stadiul actual în funnel-ul nostru: ${funnelStatus}. ` +
     `Scorul inițial AI: ${qualityScore}/100. Note anterioare: ${notes}. ` +
@@ -190,8 +197,16 @@ Deno.serve(async (req) => {
   return new Response(
     JSON.stringify({
       caller_found: true,
+      found: true,
       phone_e164: e164,
       agent_memory_context,
+      prospect: {
+        id: d.id, raw_name: d.contact_name || null, inferred_name: null, phone: e164,
+        zone, price_eur: d.price ?? null, surface_m2: d.size ?? null,
+        rooms: d.rooms != null ? String(d.rooms) : null, property_type: propertyType,
+        source: d.source_platform || null, quality_score: typeof qualityScore === "number" ? qualityScore : null,
+        ai_notes: notes, lifecycle_status: funnelStatus,
+      },
       lead: {
         owner_name: ownerName,
         property_type: propertyType,

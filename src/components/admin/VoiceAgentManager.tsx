@@ -24,6 +24,7 @@ import VoiceAgentTrainingLab from "./VoiceAgentTrainingLab";
 import VoiceAgentGhostingQueue from "./VoiceAgentGhostingQueue";
 import VoiceAgentAutopilot from "./VoiceAgentAutopilot";
 import VoiceAgentCallSimulator from "./VoiceAgentCallSimulator";
+import type { VoiceProspectSummary } from "./VoiceProspectCard";
 import VoiceAgentResultsDashboard, { hourWindow, normalizeSentiment, sentimentEmojiMap, type HourWindow, type SentimentBucket } from "./VoiceAgentResultsDashboard";
 import ProspectTriageQueue from "./ProspectTriageQueue";
 import AggregatorRejectionLog from "./AggregatorRejectionLog";
@@ -84,7 +85,7 @@ const sentimentEmoji: Record<string, string> = {
   pozitiv: "😊", neutru: "😐", negativ: "😞",
 };
 
-export default function VoiceAgentManager() {
+export default function VoiceAgentManager({ simulatorProspect }: { simulatorProspect?: VoiceProspectSummary | null }) {
   const [calls, setCalls] = useState<VoiceCall[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialing, setDialing] = useState(false);
@@ -505,7 +506,7 @@ export default function VoiceAgentManager() {
           </div>
         </CardContent>
       </Card>
-      <VoiceAgentCallSimulator />
+      <VoiceAgentCallSimulator prospect={simulatorProspect} />
       <VoiceAgentResultsDashboard />
       <VoiceAgentAutopilot />
       <VoiceAgentSimSuccessRate />
