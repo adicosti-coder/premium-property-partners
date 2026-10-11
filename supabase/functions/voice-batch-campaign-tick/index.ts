@@ -2,6 +2,7 @@
 // neapelate încă (fără tag „apelat-andrei”), L–S 09:00–19:00 (Europe/Bucharest),
 // un singur apel odată, cu pauză configurabilă după încheierea apelului anterior.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { isInternalWaNumber as isInternalNumber } from "../_shared/waInternalNumbers.ts";
 
 const cors = {
@@ -22,6 +23,8 @@ const toE164 = (p?: string | null) => {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
+  const gate = await requireInternalOrAdmin(req, cors);
+  if (gate) return gate;
   const URL_ = Deno.env.get("SUPABASE_URL")!;
   const KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const sb = createClient(URL_, KEY);
@@ -82,5 +85,5 @@ Deno.serve(async (req) => {
     return json({ error: "initiate_failed", details: out });
   }
   await save({ current_session_id: out.sessionId, current_prospect_id: next.id, current_label: label, calls_started: (c.calls_started || 0) + 1, last_message: null });
-  return json({ ok: "calling", to, sessionId: out.sessionId });
+  return json({ ok: "calling", sessionId: out.sessionId });
 });

@@ -233,7 +233,7 @@ const handler = async (req: Request): Promise<Response> => {
 
             sentCount++;
           } catch (sendError) {
-            console.error(`Failed to send to ${email}:`, sendError);
+            console.error("Failed to send campaign email to a recipient:", sendError);
           }
         })
       );
