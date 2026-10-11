@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { FlaskConical, Loader2 } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
 import AndreiCallHistory from "./AndreiCallHistory";
 
 const PERSONAS = [
