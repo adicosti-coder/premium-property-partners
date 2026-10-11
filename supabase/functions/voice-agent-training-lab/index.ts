@@ -60,7 +60,8 @@ function badCommission(t: string, branch?: string): boolean {
 function commissionAnswerOk(transcript: { role: string; text: string }[], branch: string): boolean | null {
   let asked = false, ok = true;
   transcript.forEach((t, i) => {
-    if (t.role === "andrei" || !/comision|c[âa]t lua[țt]i|c[âa]t cere[țt]i/i.test(t.text)) return;
+    // doar întrebările directe despre comision, nu remarcile de tip „nu plătesc comision”
+    if (t.role === "andrei" || !/\?/.test(t.text) || !/(ce|c[âa]t|care e|care este)[^?]{0,25}comision|comision[^?]{0,20}(lua[țt]i|cere[țt]i|ave[țt]i)|c[âa]t lua[țt]i|c[âa]t cere[țt]i/i.test(t.text)) return;
     asked = true;
     const r = transcript.slice(i + 1).find((x) => x.role === "andrei")?.text ?? "";
     const first = r.split(/[.!?]/)[0] ?? "";
