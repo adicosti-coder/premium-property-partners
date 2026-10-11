@@ -436,6 +436,7 @@ const ProspectManager = () => {
     if (filterType !== 'all') filtered = filtered.filter(l => l.prospect_type === filterType);
     if (filterStatus !== 'all') filtered = filtered.filter(l => l.status === filterStatus);
     if (filterZone !== 'all') filtered = filtered.filter(l => l.zone === filterZone);
+    if (filterNoWa) filtered = filtered.filter(l => isNoWhatsApp(l.contact_phone));
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       filtered = filtered.filter(l =>
@@ -443,7 +444,76 @@ const ProspectManager = () => {
       );
     }
     setListings(filtered);
-  }, [allListings, filterStatus, filterZone, searchQuery, filterType]);
+  }, [allListings, filterStatus, filterZone, searchQuery, filterType, filterNoWa, noWaPhones]);
+
+  // „Marchează ca Apelat" — etichetează prospectul, trece în „contacted" și salvează nota.
+  const markAsCalled = async () => {
+    if (!callDialogFor) return;
+    setCallBusy(true);
+    try {
+      const stamp = format(new Date(), 'dd.MM.yyyy HH:mm');
+      const noteLine = `[${stamp}] Apelat telefonic${callNote.trim() ? `: ${callNote.trim()}` : ''}`;
+      const newNotes = callDialogFor.admin_notes ? `${callDialogFor.admin_notes}\n${noteLine}` : noteLine;
+      const newTags = [...new Set([...(callDialogFor.tags || []), 'apelat-telefonic'])];
+      const { error } = await supabase
+        .from('prospect_listings')
+        .update({ tags: newTags, admin_notes: newNotes, status: 'contacted' } as any)
+        .eq('id', callDialogFor.id);
+      if (error) throw error;
+      setAllListings(prev => prev.map(l => l.id === callDialogFor.id ? { ...l, tags: newTags, admin_notes: newNotes, status: 'contacted' } : l));
+      toast({ title: 'Marcat ca apelat 📞', description: 'Statusul a fost schimbat în „Contactat".' });
+      setCallDialogFor(null);
+      setCallNote('');
+    } catch (err: any) {
+      toast({ title: 'Eroare', description: err.message, variant: 'destructive' });
+    } finally {
+      setCallBusy(false);
+    }
+  };
+
+  // „Trimite SMS Evaluare" — SMS clasic cu linkul de analiză, prin relay-ul Make existent.
+  const sendEvaluationSms = async (listing: ProspectListing) => {
+    setSmsBusyId(listing.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-evaluation-sms', { body: { prospect_id: listing.id } });
+      if (error) throw error;
+      if (data?.ok) toast({ title: 'SMS trimis 📩', description: 'Evaluarea a plecat către proprietar.' });
+      else if (data?.skipped === 'cooldown_7d') toast({ title: 'Deja trimis', description: 'Acest prospect a primit SMS de evaluare în ultimele 7 zile.' });
+      else if (data?.skipped === 'not_configured') toast({ title: 'SMS neconfigurat', description: 'Webhook-ul Make pentru SMS nu e configurat încă.', variant: 'destructive' });
+      else toast({ title: 'SMS eșuat', description: data?.error || 'Eroare necunoscută', variant: 'destructive' });
+    } catch (err: any) {
+      toast({ title: 'SMS eșuat', description: err.message, variant: 'destructive' });
+    } finally {
+      setSmsBusyId(null);
+    }
+  };
+
+  // Butoanele rapide pentru prospectele fără WhatsApp (eroare Meta 131026).
+  const renderNoWaActions = (listing: ProspectListing, compact = false) => {
+    if (!isNoWhatsApp(listing.contact_phone)) return null;
+    return (
+      <div className={`flex items-center gap-1.5 ${compact ? 'mt-2' : 'mt-2'} flex-wrap`} onClick={e => e.stopPropagation()}>
+        <Button
+          size="sm"
+          variant="outline"
+          className="min-h-[36px] text-xs gap-1"
+          onClick={() => { setCallDialogFor(listing); setCallNote(''); }}
+        >
+          <Phone className="w-3.5 h-3.5" /> Marchează ca Apelat
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="min-h-[36px] text-xs gap-1"
+          disabled={smsBusyId === listing.id}
+          onClick={() => sendEvaluationSms(listing)}
+        >
+          {smsBusyId === listing.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MessageSquare className="w-3.5 h-3.5" />}
+          Trimite SMS Evaluare
+        </Button>
+      </div>
+    );
+  };
 
   const handleScrape = async () => {
     setIsScraping(true);
