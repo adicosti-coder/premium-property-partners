@@ -1,4 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { Turnstile } from "@marsidev/react-turnstile";
+import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, RotateCcw, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -59,6 +61,13 @@ const PhotoPropertyAnalysis = () => {
   const [gdprConsent, setGdprConsent] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [turnstileSiteKey, setTurnstileSiteKey] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  useEffect(() => {
+    supabase.functions.invoke("get-turnstile-site-key").then(({ data }) => {
+      if (data?.siteKey) setTurnstileSiteKey(data.siteKey);
+    }).catch(() => {});
+  }, []);
 
   const t = {
     ro: {
@@ -212,6 +221,7 @@ const PhotoPropertyAnalysis = () => {
           report: result.report,
           zone: result.report.zona,
           language,
+          turnstileToken,
         }),
       });
 
@@ -312,6 +322,14 @@ const PhotoPropertyAnalysis = () => {
                       </a>
                     </span>
                   </label>
+                  {turnstileSiteKey && (
+                    <Turnstile
+                      siteKey={turnstileSiteKey}
+                      onSuccess={setTurnstileToken}
+                      onExpire={() => setTurnstileToken(null)}
+                      options={{ size: "flexible", language: "ro" }}
+                    />
+                  )}
                 </div>
 
                 <Button

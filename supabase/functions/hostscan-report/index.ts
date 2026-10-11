@@ -38,7 +38,12 @@ Deno.serve(async (req) => {
     // Turnstile verification (fail-open if widget unavailable per project policy,
     // but require token presence so anonymous bots can't spam silently).
     const TURNSTILE_SECRET = Deno.env.get("TURNSTILE_SECRET_KEY");
-    if (TURNSTILE_SECRET && turnstileToken) {
+    if (!TURNSTILE_SECRET || !turnstileToken) {
+      return new Response(JSON.stringify({ error: "Captcha required" }), {
+        status: 403, headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+    {
       try {
         const verify = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
           method: "POST",
@@ -52,7 +57,10 @@ Deno.serve(async (req) => {
           });
         }
       } catch (e) {
-        console.warn("[hostscan-report] turnstile verify error (fail-open):", (e as Error).message);
+        console.warn("[hostscan-report] turnstile verify error (fail-closed):", (e as Error).message);
+        return new Response(JSON.stringify({ error: "Captcha failed" }), {
+          status: 403, headers: { ...cors, "Content-Type": "application/json" },
+        });
       }
     }
 
@@ -67,8 +75,9 @@ Deno.serve(async (req) => {
         .eq("source", "HostScan AI Report")
         .gte("created_at", since);
       if ((count ?? 0) >= 2) {
-        return new Response(JSON.stringify({ error: "Rate limit: max 2 reports per hour for this email" }), {
-          status: 429, headers: { ...cors, "Content-Type": "application/json" },
+        // Same response as a successful send so callers can't probe lead activity.
+        return new Response(JSON.stringify({ success: true }), {
+          status: 200, headers: { ...cors, "Content-Type": "application/json" },
         });
       }
     } catch (e) {

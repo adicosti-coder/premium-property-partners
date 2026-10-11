@@ -233,7 +233,7 @@ Deno.serve(async (req) => {
 
       return { line_type: lineType, is_unreachable: false, valid: lineType === "mobile", e164, cached: false };
     } catch (e) {
-      console.error(`[twilio-lookup] ${rawPhone} exception:`, (e as Error).message);
+      console.error(`[twilio-lookup] ***${String(rawPhone).replace(/\D/g, "").slice(-3)} exception:`, (e as Error).message);
       return { line_type: null, is_unreachable: false, valid: false, e164, cached: false };
     }
   }

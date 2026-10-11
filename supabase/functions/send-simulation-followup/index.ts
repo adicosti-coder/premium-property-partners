@@ -570,7 +570,7 @@ serve(async (req) => {
         });
 
         if (emailError) {
-          console.error(`Error sending email to ${profile.email}:`, emailError);
+          console.error(`Error sending follow-up email to profile ${profile.id}:`, emailError);
           errors.push(`${profile.email}: ${emailError.message}`);
           // Delete the followup record if email failed
           await supabase.from("simulation_followup_emails").delete().eq("id", followupRecord.id);
@@ -579,14 +579,14 @@ serve(async (req) => {
 
         if (emailType === "first_followup") {
           firstEmailsSent++;
-          console.log(`First follow-up email sent to ${profile.email} (A/B: ${variant || 'N/A'})`);
+          console.log(`First follow-up email sent to profile ${profile.id} (A/B: ${variant || 'N/A'})`);
         } else {
           secondEmailsSent++;
-          console.log(`Second follow-up email (special offer) sent to ${profile.email} (A/B: ${variant || 'N/A'})`);
+          console.log(`Second follow-up email (special offer) sent to profile ${profile.id} (A/B: ${variant || 'N/A'})`);
         }
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : String(err);
-        console.error(`Failed to send email to ${profile.email}:`, err);
+        console.error(`Failed to send follow-up email to profile ${profile.id}:`, err);
         errors.push(`${profile.email}: ${errorMessage}`);
       }
     }
