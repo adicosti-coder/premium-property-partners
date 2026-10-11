@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Loader2, RefreshCw, Search, CheckCircle2, MessageSquare, TrendingDown,
-  Clock, AlertTriangle, ArrowRight, Flame,
+  Clock, AlertTriangle, ArrowRight, Flame, PhoneOff,
 } from "lucide-react";
 
 const AMBIGUOUS_TYPES = ["generic_search", "sale", "rent", "vanzare", "necunoscut"];
@@ -89,7 +89,18 @@ export default function DailyCommandCenter() {
           .select("*", { count: "exact", head: true })
           .is("acknowledged_at", null)),
       ]);
-      return { toVerify, hot, newToday, outreachPending, waPending, waFailed, priceDrops, expiringSoon, anomalies };
+
+      // Prospecte distincte al căror număr nu are WhatsApp (eroare Meta 131026).
+      const { data: noWaRows } = await supabase
+        .from("wa_outbound_queue")
+        .select("prospect_listing_id")
+        .eq("status", "failed")
+        .ilike("last_error", "%131026%")
+        .not("prospect_listing_id", "is", null)
+        .limit(500);
+      const noWhatsApp = new Set((noWaRows ?? []).map((r: any) => r.prospect_listing_id)).size;
+
+      return { toVerify, hot, newToday, outreachPending, waPending, waFailed, priceDrops, expiringSoon, anomalies, noWhatsApp };
     },
   });
 
@@ -110,9 +121,10 @@ export default function DailyCommandCenter() {
     { key: "drops", label: "Scăderi de preț (24h)", hint: "ocazii de negociere", count: d.priceDrops, tab: "price-drops", icon: TrendingDown, tone: "green" },
     { key: "stale", label: "Posibil expirate", hint: "nevăzute peste 21 de zile", count: d.expiringSoon, tab: "expired-listings", icon: Clock, tone: "slate" },
     { key: "anomalies", label: "Probleme automatizări", hint: "nerezolvate", count: d.anomalies, tab: "automation", icon: AlertTriangle, tone: d.anomalies > 0 ? "rose" : "slate" },
+    { key: "no-wa", label: "Necesită Apel Telefonic (Fără WhatsApp)", hint: "numere fără WhatsApp — de sunat direct", count: d.noWhatsApp, tab: "unified-pipeline", icon: PhoneOff, tone: d.noWhatsApp > 0 ? "rose" : "slate" },
   ] : [];
 
-  const urgent = cards.filter((c) => c.count > 0 && ["verify", "hot", "outreach", "wa-failed", "anomalies"].includes(c.key));
+  const urgent = cards.filter((c) => c.count > 0 && ["verify", "hot", "outreach", "wa-failed", "anomalies", "no-wa"].includes(c.key));
 
   return (
     <div className="space-y-6">
