@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
   const label = next.contact_name || to;
   if (!res.ok || !out?.sessionId) {
     // Marcăm ca încercat ca să nu blocăm coada pe același număr.
-    const tags = [...new Set([...((next.tags as string[]) || []), "apelat-andrei"])];
+    const tags = [...new Set([...((next.tags as string[]) || []), "apelat-andrei", "reverificat-andrei"])];
     await sb.from("prospect_listings").update({ tags }).eq("id", next.id);
     await save({ last_call_ended_at: now.toISOString(), last_message: `Apel nepornit către ${label}: ${out?.error || out?.skipped || res.status}` });
     return json({ error: "initiate_failed", details: out });
