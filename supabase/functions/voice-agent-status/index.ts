@@ -441,12 +441,14 @@ serve(async (req) => {
         // Etichete vizibile în Admin pentru apelurile lui Andrei
         try {
           const { data: pr } = await supabase.from("prospect_listings")
-            .select("tags, admin_notes").eq("id", session.prospect_listing_id).maybeSingle();
+            .select("tags, admin_notes, expiry_check_status").eq("id", session.prospect_listing_id).maybeSingle();
           const o = String(parsed.outcome || "");
           const extra = ["apelat-andrei"];
           if (derivedStatus === "completed" && !["robot", "nicio_legatura"].includes(o)) extra.push("preluat-ai");
           if (["interesat", "programare", "acord"].includes(o)) extra.push("raspuns-da");
           if (o === "neinteresat") extra.push("nu-doreste");
+          const isRecheck = (pr as any)?.expiry_check_status === "inactiv_sursa";
+          if (isRecheck) extra.push("reverificat-andrei");
           const tags = [...new Set([...((pr?.tags as string[]) || []), ...extra])];
           const stamp = new Date().toLocaleString("ro-RO", { timeZone: "Europe/Bucharest" });
           const note = `[${stamp}] Andrei (AI): ${o || derivedStatus} — ${summaryText}`;
@@ -454,6 +456,19 @@ serve(async (req) => {
             tags,
             admin_notes: pr?.admin_notes ? `${pr.admin_notes}\n${note}` : note,
           } as any).eq("id", session.prospect_listing_id);
+          // Reverificare: expirat + DNC STRICT doar la confirmare directă (vândut/închiriat/retragere).
+          if (isRecheck && derivedStatus === "completed") {
+            const txt = `${summaryText} ${JSON.stringify(session.transcript || [])}`.toLowerCase();
+            const confirmedGone = /s-a v[âa]ndut|am v[âa]ndut|e v[âa]ndut|este v[âa]ndut|s-a [îi]nchiriat|am [îi]nchiriat|e [îi]nchiriat|este [îi]nchiriat|nu mai (e|este) (valabil|disponibil)|retrage|retrag|șterge|sterge|nu mai (vreau|doresc)/.test(txt);
+            if (confirmedGone) {
+              await supabase.from("prospect_listings").update({
+                is_active: false, lifecycle_status: "expired", expiry_check_status: "expired",
+                do_not_call: true, do_not_call_reason: "reverificare: proprietar a confirmat vândut/închiriat/retragere",
+              } as any).eq("id", session.prospect_listing_id);
+            } else if (/(mai (e|este) (valabil|disponibil)|da,? (e|este) (valabil|disponibil))/.test(txt)) {
+              await supabase.from("prospect_listings").update({ expiry_check_status: "ok" } as any).eq("id", session.prospect_listing_id);
+            }
+          }
           // ExclusivBot: follow-up WhatsApp DOAR după „DA” explicit în apel, prin șablon aprobat Meta.
           if (extra.includes("raspuns-da")) {
             const { data: pp } = await supabase.from("prospect_listings")

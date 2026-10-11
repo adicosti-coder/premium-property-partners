@@ -53,21 +53,27 @@ Deno.serve(async (req) => {
     await save({ last_message: `Pauză ${c.delay_minutes} min între apeluri.` }); return json({ skipped: "delay" });
   }
 
-  // 4. Următorul prospect: EXCLUSIV 131026, neapelat de Andrei
+  // 4. Următorul prospect: întâi 131026 (fără WhatsApp), apoi reverificarea
+  //    anunțurilor „Inactiv pe sursă” — fiecare sunat o singură dată.
+  const okPhone = (r: any) => { const to = toE164(r.phone_normalized || r.contact_phone); return /^\+407\d{8}$/.test(to) && !isInternalNumber(to); };
   const { data: q } = await sb.from("wa_outbound_queue").select("prospect_listing_id").eq("status", "failed")
     .ilike("last_error", "%131026%").not("prospect_listing_id", "is", null).limit(1000);
   const ids = [...new Set((q ?? []).map((r: any) => r.prospect_listing_id))];
-  if (!ids.length) { await save({ last_message: "Nu mai sunt prospecte fără WhatsApp de sunat." }); return json({ skipped: "empty" }); }
-  const { data: rows } = await sb.from("prospect_listings").select("id, title, contact_name, phone_normalized, contact_phone, tags")
-    .in("id", ids).eq("is_active", true).is("published_at", null).eq("do_not_call", false)
-    .eq("seller_type", "privat") // SellerScan: doar proprietari privați confirmați
-    .order("created_at", { ascending: true }).limit(200);
-  const next = (rows ?? []).find((r: any) => {
-    const tags = (r.tags as string[]) || [];
-    const to = toE164(r.phone_normalized || r.contact_phone);
-    return !tags.includes("apelat-andrei") && /^\+407\d{8}$/.test(to) && !isInternalNumber(to);
-  });
-  if (!next) { await save({ last_message: "Toate prospectele fără WhatsApp au fost deja apelate de Andrei." }); return json({ skipped: "all_called" }); }
+  let next: any = null;
+  if (ids.length) {
+    const { data: rows } = await sb.from("prospect_listings").select("id, title, contact_name, phone_normalized, contact_phone, tags")
+      .in("id", ids).eq("is_active", true).is("published_at", null).eq("do_not_call", false)
+      .eq("seller_type", "privat") // SellerScan: doar proprietari privați confirmați
+      .order("created_at", { ascending: true }).limit(200);
+    next = (rows ?? []).find((r: any) => !((r.tags as string[]) || []).includes("apelat-andrei") && okPhone(r));
+  }
+  if (!next) {
+    const { data: rc } = await sb.from("prospect_listings").select("id, title, contact_name, phone_normalized, contact_phone, tags")
+      .eq("expiry_check_status", "inactiv_sursa").eq("do_not_call", false).eq("seller_type", "privat")
+      .order("last_expiry_check_at", { ascending: true }).limit(200);
+    next = (rc ?? []).find((r: any) => !((r.tags as string[]) || []).includes("reverificat-andrei") && okPhone(r));
+  }
+  if (!next) { await save({ last_message: "Nu mai sunt prospecte fără WhatsApp sau anunțuri de reverificat de sunat." }); return json({ skipped: "all_called" }); }
 
   const to = toE164(next.phone_normalized || next.contact_phone);
   const res = await fetch(`${URL_}/functions/v1/voice-agent-initiate`, {
@@ -79,7 +85,7 @@ Deno.serve(async (req) => {
   const label = next.contact_name || to;
   if (!res.ok || !out?.sessionId) {
     // Marcăm ca încercat ca să nu blocăm coada pe același număr.
-    const tags = [...new Set([...((next.tags as string[]) || []), "apelat-andrei"])];
+    const tags = [...new Set([...((next.tags as string[]) || []), "apelat-andrei", "reverificat-andrei"])];
     await sb.from("prospect_listings").update({ tags }).eq("id", next.id);
     await save({ last_call_ended_at: now.toISOString(), last_message: `Apel nepornit către ${label}: ${out?.error || out?.skipped || res.status}` });
     return json({ error: "initiate_failed", details: out });
