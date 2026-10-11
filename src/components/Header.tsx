@@ -315,7 +315,7 @@ const Header = () => {
       <header className="fixed top-0 left-0 right-0 z-50">
 
       <div className="glass border-b border-border/50 dark:border-border shadow-sm dark:shadow-none">
-        <div className="container mx-auto px-4 sm:px-6">
+        <div className="container mx-auto px-4 max-[360px]:px-3 sm:px-6">
           <div className="flex items-center justify-between h-16 md:h-20 gap-2 overflow-visible">
           {/* Logo - 3 lines layout centered */}
           <a href="/" className="group relative flex flex-col items-center gap-0 transition-all duration-300 hover:scale-105 hover:-rotate-1 hover:-translate-y-0.5 hover:drop-shadow-[0_8px_20px_hsl(45_100%_50%/0.3)] flex-shrink-0 mr-1 md:mr-2 lg:mr-3">
@@ -331,7 +331,7 @@ const Header = () => {
               <span className="text-primary font-bold group-hover:text-amber-400 transition-colors duration-300">ApArt</span> Hotel
             </span>
             {/* Line 3: Services */}
-            <span className="text-[8px] lg:text-[9px] xl:text-[10px] font-semibold text-foreground/70 dark:text-foreground/80 tracking-widest uppercase leading-tight text-center transition-all duration-500 group-hover:tracking-[0.2em] group-hover:text-foreground">
+            <span className="text-[8px] max-[360px]:text-[7px] lg:text-[9px] xl:text-[10px] font-semibold text-foreground/70 dark:text-foreground/80 tracking-widest uppercase leading-tight text-center transition-all duration-500 group-hover:tracking-[0.2em] group-hover:text-foreground">
               Imobiliare & Regim Hotelier
             </span>
           </a>
@@ -414,11 +414,11 @@ const Header = () => {
               variant="default"
               aria-expanded={mobileMenuOpen}
               aria-controls="header-navigation"
-              className="flex shrink-0 items-center gap-2 px-3 sm:px-4 h-12 min-h-12 rounded-lg font-bold min-w-[88px] sm:min-w-[100px] justify-center motion-reduce:transition-none"
+              className="flex shrink-0 items-center gap-2 px-3 sm:px-4 h-12 min-h-12 rounded-lg font-bold min-w-[88px] max-[360px]:min-w-12 max-[360px]:w-12 max-[360px]:px-0 sm:min-w-[100px] justify-center motion-reduce:transition-none"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label={mobileMenuOpen ? (language === 'ro' ? 'Închide meniul' : 'Close menu') : (language === 'ro' ? 'Deschide meniul' : 'Open menu')}
             >
-            {mobileMenuOpen ? <XIcon /> : <><MenuIcon /><span className="text-sm font-extrabold tracking-wider">MENIU</span></>}
+            {mobileMenuOpen ? <XIcon /> : <><MenuIcon /><span className="text-sm font-extrabold tracking-wider max-[360px]:hidden">MENIU</span></>}
             </Button>
           </div>
         </div>
