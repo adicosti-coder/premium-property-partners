@@ -649,7 +649,7 @@ export default function VoiceAgentCommandCenter() {
         <CollapsibleContent>
           <div className="p-4 pt-2 border-t border-border">
             <Suspense fallback={<div className="flex items-center justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>}>
-              <VoiceAgentManager />
+              <VoiceAgentManager simulatorProspect={hotProspects[0] ?? null} />
             </Suspense>
           </div>
         </CollapsibleContent>

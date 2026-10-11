@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Phone, Loader2, Play, AlertCircle, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabaseClient";
+import type { VoiceProspectSummary } from "./VoiceProspectCard";
+import { consentPhone } from "./autoConsentedListingUtils";
 
 interface ContextResponse {
   found: boolean;
@@ -29,14 +31,23 @@ interface ContextResponse {
   latency_ms?: number;
 }
 
-export default function VoiceAgentCallSimulator() {
-  const [phone, setPhone] = useState("+40");
+export default function VoiceAgentCallSimulator({ prospect }: { prospect?: VoiceProspectSummary | null }) {
+  const [phone, setPhone] = useState(prospect?.phone_normalized || prospect?.contact_phone || "+40");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ContextResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const requestVersion = useRef(0);
+  useEffect(() => {
+    requestVersion.current += 1;
+    setPhone(prospect?.phone_normalized || prospect?.contact_phone || "+40");
+    setResult(null);
+    setError(null);
+    setLoading(false);
+  }, [prospect?.id, prospect?.phone_normalized, prospect?.contact_phone]);
 
   const simulateCall = async () => {
-    if (!/^\+[1-9]\d{6,14}$/.test(phone.trim())) {
+    const normalizedPhone = consentPhone(phone);
+    if (!/^\+[1-9]\d{6,14}$/.test(normalizedPhone)) {
       toast({
         title: "Număr invalid",
         description: "Folosește format internațional E.164 (ex: +40722123456)",
@@ -48,12 +59,14 @@ export default function VoiceAgentCallSimulator() {
     setLoading(true);
     setResult(null);
     setError(null);
+    const version = ++requestVersion.current;
 
     try {
       const { data, error: invokeErr } = await supabase.functions.invoke(
         "voice-agent-context-proxy",
-        { body: { phone: phone.trim() } }
+        { body: { phone: normalizedPhone, ...(prospect ? { prospect_id: prospect.id } : {}) } }
       );
+      if (version !== requestVersion.current) return;
 
       if (invokeErr) {
         const msg = invokeErr.message || "Eroare la apelul edge function";
@@ -66,18 +79,22 @@ export default function VoiceAgentCallSimulator() {
         return;
       }
 
-      setResult(data);
+      if (data?.error) throw new Error(data.details || data.error);
+      if (prospect && (!data?.found || data.prospect?.id !== prospect.id)) throw new Error("Contextul primit nu corespunde primului prospect din listă.");
+      const response = { ...data, found: data.found ?? data.caller_found ?? false } as ContextResponse;
+      setResult(response);
       toast({
-        title: data.found ? "✅ Prospect găsit" : "ℹ️ Prospect necunoscut",
-        description: data.found
+        title: response.found ? "✅ Prospect găsit" : "ℹ️ Prospect necunoscut",
+        description: response.found
           ? `Memorie încărcată pentru ${data.prospect?.inferred_name || data.prospect?.raw_name || phone}`
           : "Se folosește template-ul fallback.",
       });
     } catch (err: any) {
+      if (version !== requestVersion.current) return;
       setError(err.message || "Eroare de rețea");
       toast({ title: "Eroare rețea", description: err.message, variant: "destructive" });
     } finally {
-      setLoading(false);
+      if (version === requestVersion.current) setLoading(false);
     }
   };
 
@@ -89,29 +106,30 @@ export default function VoiceAgentCallSimulator() {
           <CardTitle className="text-base font-semibold">Simulator Apel Andrei</CardTitle>
         </div>
         <CardDescription className="text-xs text-muted-foreground">
-          Simulează declanșarea unui apel prin ElevenLabs și verifică contextul dinamic încărcat din v_prospect_funnel.
+          {prospect?.title || "Context apel Andrei"}
         </CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-4">
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">
+            <label htmlFor="andrei-simulator-phone" className="text-xs font-medium text-muted-foreground mb-1 block">
               Număr de telefon (format internațional)
             </label>
             <Input
+              id="andrei-simulator-phone"
               type="tel"
               placeholder="+40722123456"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="h-10"
+              className="min-h-12"
             />
           </div>
           <div className="flex items-end">
             <Button
               onClick={simulateCall}
               disabled={loading}
-              className="h-10 gap-2 bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
+              className="min-h-12 h-auto gap-2 whitespace-normal"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
               Simulează declanșare ElevenLabs
@@ -130,7 +148,7 @@ export default function VoiceAgentCallSimulator() {
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               {result.found ? (
-                <Badge className="gap-1 bg-green-100 text-green-800 hover:bg-green-100">
+                <Badge variant="secondary" className="gap-1">
                   <CheckCircle className="h-3 w-3" />
                   Găsit în funnel
                 </Badge>
