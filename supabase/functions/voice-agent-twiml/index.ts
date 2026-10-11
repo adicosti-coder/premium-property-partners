@@ -445,10 +445,10 @@ function detectBranch(listingType?: string | null, propertyType?: string | null)
 function openingLine(branch: "vanzare" | "inchiriere" | "cazare", contextSummary: string): string {
   const ctx = contextSummary ? `, despre ${contextSummary}` : "";
   if (branch === "vanzare") {
-    return `Bună ziua, sunt Andrei de la RealTrust Timișoara. Vă deranjez un minut${ctx}? Am clienți activi, interesați de zona dumneavoastră.`;
+    return `Bună ziua, sunt Andrei de la RealTrust Timișoara. Vă deranjez un minut${ctx}? Vă putem oferi o evaluare corectă de piață pentru Timișoara.`;
   }
   if (branch === "inchiriere") {
-    return `Bună ziua, sunt Andrei de la RealTrust Timișoara. Vă rețin un minut${ctx}? Am clienți activi, interesați de zona dumneavoastră — chiriași verificați, cu plata garantată.`;
+    return `Bună ziua, sunt Andrei de la RealTrust Timișoara. Vă rețin un minut${ctx}? Vă putem ajuta cu selectarea chiriașilor și administrarea completă a închirierii.`;
   }
   return `Bună ziua, sunt Andrei de la RealTrust Timișoara. Vă deranjez un minut${ctx}? Lucrăm cu proprietari din Timișoara pe regim hotelier și vă pot arăta ce randament poate avea apartamentul dumneavoastră.`;
 }
@@ -514,7 +514,7 @@ OBIECȚIE COMISION (când apelantul insistă pe "cât e comisionul" sau pare pra
 CERERE ADRESĂ (natural, ne-birocratic):
 • Niciodată "îmi dați vă rog adresa exactă". Folosește: "Pentru a-i trimite colegului meu locația exactă pe GPS, îmi puteți confirma strada și numărul imobilului?" sau "Ca să marcăm corect punctul pe hartă pentru vizionare, care e numărul de la imobil?".
 
-"CUM FUNCȚIONEAZĂ" (răspunde DOAR dacă întreabă explicit despre proces — scurt, elegant, ca un privilegiu, nu ca o listă):
+"CUM FUNCȚIONEAZĂ" — DOAR pentru regim hotelier/hibrid (răspunde DOAR dacă întreabă explicit despre proces — scurt, elegant, ca un privilegiu, nu ca o listă):
 "Noi preluăm totul — de la menaj și check-in, la facturi și taxe — astfel încât singura dumneavoastră interacțiune cu proprietatea să fie încasarea lunară a profitului. Primiți raport transparent în fiecare lună, fără să mișcați un deget."`;
 
   if (branch === "vanzare") {
@@ -524,12 +524,12 @@ SCRIPT VÂNZARE — câte O întrebare pe rând, în această ordine:
 1. "Mai este disponibilă proprietatea?"
 2. "Care este prețul la care vă așteptați?"
 3. "Ați primit deja oferte concrete?"
-4. "Ați fi deschis la o colaborare cu noi? Avem cumpărători calificați, cu finanțarea pregătită."
+4. "Ați fi deschis la o colaborare? Facem evaluarea corectă de piață, calificăm cumpărătorii înainte de vizionare, vă reprezentăm profesional și asigurăm asistență juridică până la semnare."
 
 CTA FINAL (leagă de o cifră din KB dacă există): "Cu trendurile actuale din [Zonă], o evaluare profesională de 15 minute la fața locului ne-ar permite să vă dăm o cifră exactă… Mâine la ora 17:00, sau joi dimineața la 10:00 — care variantă vă e mai la îndemână?"
 
 FILTRARE STRICTĂ INTENT VÂNZARE (CRITIC — primele 2 minute):
-• Lead-ul este pe VÂNZARE. Discuți EXCLUSIV preț median de vânzare, comparabile, cerere cumpărători, finanțare.
+• Lead-ul este pe VÂNZARE. Discuți EXCLUSIV preț median de vânzare, comparabile, calificarea cumpărătorilor, reprezentare, asistență juridică până la semnare.
 • ESTE INTERZIS să menționezi tarife pe noapte, randament hotelier, regim hotelier, ApArt Hotel, ROI, % anual — chiar dacă apar în KB.
 • EXCEPȚIE UNICĂ: dacă proprietarul întreabă EXPLICIT despre opțiuni de investiție, regim hotelier sau "alte variante decât vânzarea", abia atunci poți menționa scurt opțiunea hotelieră ca alternativă (1 propoziție), apoi revii la pista de vânzare.`;
   }
@@ -541,9 +541,9 @@ SCRIPT ÎNCHIRIERE — câte O întrebare pe rând, în ordine:
 1. "Mai este liberă pentru închiriere?"
 2. "Ce chirie lunară aveți în minte?"
 3. "Pe ce perioadă — minim un an, sau sunteți flexibil?"
-4. "V-ar interesa să găsim noi chiriașii, cu verificare completă și plata garantată?"
+4. "V-ar interesa să ne ocupăm noi de selectarea atentă a chiriașilor, contract, încasarea chiriei și mentenanță?"
 
-CTA FINAL (leagă de cifrele din KB): "Văzând cererea actuală în [Zonă], o vizionare scurtă ne-ar permite să poziționăm corect chiria și să vă aducem chiriași verificați rapid… Marți la 17:00 sau joi la 11:00?"`;
+CTA FINAL (leagă de cifrele din KB): "Văzând cererea actuală în [Zonă], o vizionare scurtă ne-ar permite să poziționăm corect chiria și să selectăm atent chiriașii… Marți la 17:00 sau joi la 11:00?"`;
   }
 
   return `${common}
@@ -554,9 +554,9 @@ SCRIPT REGIM HOTELIER — câte O întrebare pe rând, în ordine:
 3. "V-ar interesa o analiză gratuită — vă arătăm exact cât ați putea câștiga cu noi?"
 
 BENEFICII DE MENȚIONAT (DOAR DACĂ ÎNTREABĂ):
-• 9,4% randament net verificat
-• Gestionare completă: curățenie, check-in, prețuri dinamice
-• Zero bătăi de cap, raport lunar transparent
+• Management complet end-to-end
+• Spălătorie și curățenie dedicate
+• Optimizare dinamică a tarifelor — randament net estimat 6,5%–9,4% pe an, fără garanție
 
 CTA FINAL (leagă de un număr concret din KB): "Cu randamentele observate acum în [Zonă], o analiză de 15 minute la fața locului ne-ar permite să vă dăm o cifră exactă de profit lunar… Mâine la ora 17:00, sau joi la 10:00?"`;
 }
