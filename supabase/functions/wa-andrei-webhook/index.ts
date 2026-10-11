@@ -91,7 +91,9 @@ async function handlePublishIntent(
       .in("phone_normalized", variants)
       .neq("status", "revoked");
 
+    let removedListing = false;
     for (const c of consents ?? []) {
+      if (c.property_id) removedListing = true;
       await supabase
         .from("wa_publish_consents")
         .update({ status: "revoked", revoked_at: nowIso, notes: message.slice(0, 500) })
@@ -100,7 +102,7 @@ async function handlePublishIntent(
         await supabase.from("properties").update({ is_active: false }).eq("id", c.property_id);
       }
     }
-    return { waitingAdmin: false };
+    return { waitingAdmin: false, removedListing };
   }
 
   // Acord: salvăm dovada (idempotent pe telefon + anunț).
@@ -402,6 +404,7 @@ Deno.serve(async (req) => {
               .from("wa_publish_consents")
               .select("id")
               .eq("phone_normalized", from)
+              .neq("status", "revoked")
               .limit(1)
               .maybeSingle();
             pendingConsent = !!consentRow;
@@ -511,6 +514,15 @@ Deno.serve(async (req) => {
               supabaseUrl,
               serviceKey,
             });
+            if (publishIntent === "revoke") {
+              // Un „Nu” simplu este refuz: intră în DNC (quick_no) ca orice refuz expres.
+              const plainNo = /^nu+[\s!.,]*$/i.test(text.trim());
+              if (plainNo && !wasStop) quick = { kind: "quick_no", text: quick.text };
+              // Confirmăm eliminarea doar dacă anunțul chiar era publicat.
+              if (!(res as any).removedListing) {
+                quick = { kind: quick.kind, text: quick.kind === "quick_stop" ? quick.text : "Am înțeles. Nu vă mai deranjăm și nu vă publicăm anunțul. O zi frumoasă!" };
+              }
+            }
             // SLA: proprietarul află că anunțul e la verificare; link-ul vine automat la publicare.
             if (res.waitingAdmin) quick = { kind: "publish_consent", text: OWNER_WAITING_ADMIN_TEXT };
           } catch (e) {
