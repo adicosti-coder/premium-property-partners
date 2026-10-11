@@ -51,7 +51,7 @@ export default function AndreiBatchCampaignControl() {
       let queue = 0;
       if (ids.length) {
         const { data } = await (supabase.from("prospect_listings") as any).select("id, tags, phone_normalized, contact_phone")
-          .in("id", ids).eq("is_active", true).is("published_at", null).eq("do_not_call", false);
+          .in("id", ids).eq("seller_type", "privat").eq("is_active", true).is("published_at", null).eq("do_not_call", false);
         queue = (data ?? []).filter((r: any) => {
           const d = String(r.phone_normalized || r.contact_phone || "").replace(/\D/g, "");
           return !((r.tags as string[]) || []).includes("apelat-andrei") && /^(40|0)7\d{8}$/.test(d.replace(/^0040/, "40"));
@@ -121,7 +121,7 @@ export default function AndreiBatchCampaignControl() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Pornești apelarea automată?</AlertDialogTitle>
-            <AlertDialogDescription>Andrei va suna proprietari reali, pe rând: exclusiv prospecte fără WhatsApp (131026), neapelate încă, în programul Luni–Sâmbătă, 09:00–19:00.</AlertDialogDescription>
+            <AlertDialogDescription>Andrei va suna proprietari reali, pe rând: exclusiv proprietari privați confirmați, fără WhatsApp (131026), neapelați încă, în programul Luni–Sâmbătă, 09:00–19:00.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="min-h-12">Renunță</AlertDialogCancel>

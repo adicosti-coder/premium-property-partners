@@ -7,14 +7,19 @@ import { toast } from "sonner";
 import { SourceLink } from "@/components/admin/shared/SourceLink";
 import AndreiBatchCampaignControl from "@/components/admin/AndreiBatchCampaignControl";
 
-type Row = { id: string; title: string | null; price: number | null; zone: string | null; location: string | null; phone_normalized: string | null; contact_phone: string | null; source_url: string | null; reason: "no_mobile" | "no_reply" | "no_whatsapp" };
+type Row = { id: string; title: string | null; price: number | null; zone: string | null; location: string | null; phone_normalized: string | null; contact_phone: string | null; source_url: string | null; seller_type?: string | null; seller_type_reason?: string | null; reason: "no_mobile" | "no_reply" | "no_whatsapp" };
 const isMobile = (p?: string | null) => /^\+407\d{8}$/.test(p ?? "");
 const toE164 = (p?: string | null) => {
   const d = (p ?? "").replace(/\D/g, "").replace(/^0040/, "40");
   const n = d.startsWith("40") ? d : d.startsWith("0") ? `40${d.slice(1)}` : d;
   return n ? `+${n}` : "";
 };
-const COLS = "id, title, price, zone, location, phone_normalized, contact_phone, source_url";
+const COLS = "id, title, price, zone, location, phone_normalized, contact_phone, source_url, seller_type, seller_type_reason";
+const SELLER: Record<string, { label: string; v: "default" | "destructive" | "outline" }> = {
+  privat: { label: "Proprietar Privat", v: "default" },
+  agentie: { label: "Agenție", v: "destructive" },
+  de_verificat: { label: "De verificat", v: "outline" },
+};
 const REASON_LABELS: Record<Row["reason"], string> = {
   no_mobile: "Fără mobil",
   no_reply: "Fără răspuns 48h",
@@ -105,6 +110,15 @@ export default function CallsToMakePanel() {
                   <td className="p-2 max-w-[260px]">
                     <div className="truncate">{r.title || "Fără titlu"}</div>
                     <Badge variant={r.reason === "no_whatsapp" ? "destructive" : "secondary"} className="text-[10px] mt-1">{REASON_LABELS[r.reason]}</Badge>
+                    {r.seller_type && SELLER[r.seller_type] && (
+                      <Badge variant={SELLER[r.seller_type].v} title={r.seller_type_reason || undefined} className="text-[10px] mt-1 ml-1">{SELLER[r.seller_type].label}</Badge>
+                    )}
+                    {r.seller_type === "de_verificat" && (
+                      <Button size="sm" variant="ghost" className="h-7 text-[11px] ml-1" onClick={async () => {
+                        const { error } = await (supabase.from("prospect_listings") as any).update({ agency_classified_at: new Date().toISOString(), agency_suspicion_score: 0 }).eq("id", r.id);
+                        if (error) toast.error(error.message); else { toast.success("Marcat ca proprietar privat"); q.refetch(); }
+                      }}>Confirmă proprietar</Button>
+                    )}
                   </td>
                   <td className="p-2 whitespace-nowrap">{r.price ? `${Number(r.price).toLocaleString("ro-RO")} €` : "—"}</td>
                   <td className="p-2">{r.zone || r.location || "—"}</td>
