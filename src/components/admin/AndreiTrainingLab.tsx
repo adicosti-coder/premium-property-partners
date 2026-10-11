@@ -131,6 +131,7 @@ export default function AndreiTrainingLab() {
           </CardContent>
         </Card>
       )}
+      <AndreiCallHistory />
     </div>
   );
 }
