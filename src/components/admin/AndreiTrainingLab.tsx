@@ -110,9 +110,15 @@ export default function AndreiTrainingLab() {
               </div>
             </div>
           )}
-          <Button className="min-h-[48px]" onClick={run} disabled={running}>
+          <Button className="min-h-[48px] w-full sm:w-auto" onClick={run} disabled={running}>
             {running ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Simulare în curs (≈30 s)…</> : "Inițiază Apel de Antrenament (Andrei vs Gemini)"}
           </Button>
+          {running && (
+            <div className="space-y-1" role="status" aria-live="polite">
+              <Progress value={undefined} className="h-2" />
+              <p className="text-xs text-muted-foreground">Andrei discută cu proprietarul simulat, apoi Gemini analizează conversația…</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
