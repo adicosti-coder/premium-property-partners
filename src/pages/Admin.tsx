@@ -223,9 +223,9 @@ const Admin = () => {
 
             <SidebarInset className="flex flex-col min-w-0">
               <header className="sticky top-0 z-20 border-b border-border bg-card">
-                <div className="flex items-center gap-2 px-4 py-3">
+                <div className="flex flex-wrap items-center gap-2 px-3 sm:px-4 py-3 max-w-full min-w-0 overflow-x-hidden">
                   <SidebarTrigger />
-                  <div className="h-6 w-px bg-border" />
+                  <div className="h-6 w-px bg-border shrink-0" />
                   <Button
                     variant="ghost"
                     size="sm"
