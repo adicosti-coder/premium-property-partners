@@ -267,18 +267,20 @@ export default function WhatsappOutboundQueue() {
   const runWorker = async () => {
     setWorkerBusy(true);
     try {
-      const { data, error } = await supabase.functions.invoke("wa-outbound-queue-worker", {
-        body: { batch_size: 10 },
-      });
+      const { data, error } = await supabase.functions.invoke("wa-queue-flush", { body: {} });
       if (error) throw error;
-      if (data?.rate_limited) {
+      const w = data?.worker ?? {};
+      if (w.rate_limited) {
         toast({
           title: "Limită atinsă",
-          description: `Trimise ultima oră: ${data.sent_last_hour}/${data.max_per_hour}, ultima zi: ${data.sent_last_day}/${data.max_per_day}`,
+          description: `Trimise ultima oră: ${w.sent_last_hour}/${w.max_per_hour}, ultima zi: ${w.sent_last_day}/${w.max_per_day}`,
           variant: "destructive",
         });
       } else {
-        toast({ title: "Coadă procesată", description: `Procesate: ${data?.processed ?? 0}` });
+        toast({
+          title: "Coadă procesată",
+          description: `Pregătite mutate în coadă: ${data?.enqueued ?? 0}/${data?.prepared ?? 0} · Reîncercate: ${data?.retried ?? 0} · Eșuate definitiv (ex. fără WhatsApp): ${data?.definitive_failed ?? 0} · Procesate acum: ${w.processed ?? 0}`,
+        });
       }
       await load();
     } catch (e) {
@@ -383,7 +385,7 @@ export default function WhatsappOutboundQueue() {
           </Button>
           <Button size="sm" onClick={() => void runWorker()} disabled={workerBusy}>
             {workerBusy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
-            Procesează coada
+            Procesează coada acum / Reîncearcă
           </Button>
         </div>
       }
@@ -669,11 +671,16 @@ export default function WhatsappOutboundQueue() {
                   </td>
                   <td className="px-3 py-2">
                     <Badge variant={meta.variant}>{meta.label}</Badge>
-                    {r.last_error && (
-                      <p className="text-[10px] text-destructive mt-1 max-w-[220px] truncate" title={r.last_error}>
-                        {r.last_error}
-                      </p>
-                    )}
+                    {r.last_error && (() => {
+                      const code = r.last_error.match(/\b(13\d{4}|470|100|190)\b/)?.[1];
+                      const msg = r.last_error.match(/"message":"([^"]+)"/)?.[1] ?? r.last_error;
+                      return (
+                        <p className="text-[10px] text-destructive mt-1 max-w-[260px] break-words" title={r.last_error}>
+                          {code && <span className="font-semibold">Cod Meta {code}: </span>}
+                          {code === "131026" ? "Numărul nu are WhatsApp" : msg.slice(0, 160)}
+                        </p>
+                      );
+                    })()}
                   </td>
                   <td className="px-3 py-2 text-xs whitespace-nowrap">
                     {r.template_name} <span className="text-muted-foreground">({r.template_language})</span>
