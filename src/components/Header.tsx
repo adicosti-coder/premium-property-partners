@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useState, useEffect, lazy, Suspense, forwardRef } from "react";
+import { useState, useEffect, useRef, lazy, Suspense, forwardRef } from "react";
 
 // Inline SVG icons to avoid loading lucide-react in critical path (~25KB saving)
 const MenuIcon = forwardRef<SVGSVGElement>((_props, ref) => <svg ref={ref} width="20" height="20" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>);
@@ -42,10 +42,49 @@ const Header = () => {
   const [activeSection, setActiveSection] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLElement>(null);
   
   const { t, language } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const focusable = () => Array.from(menuRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), [tabindex="0"]') ?? [])
+      .filter((element) => element.getClientRects().length > 0);
+    const frame = requestAnimationFrame(() => focusable()[0]?.focus());
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setMobileMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+      if (event.key !== "Tab") return;
+      const controls = [menuButtonRef.current, ...focusable()].filter((element): element is HTMLElement => element !== null);
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [mobileMenuOpen]);
 
   // Resolve auth as early as possible so the Admin entry is visible on desktop
   // without requiring a click/touch. The supabase client is still lazy-loaded.
@@ -268,7 +307,8 @@ const Header = () => {
     <>
       {/* Backdrop blur when mobile menu is open — CSS only, no framer-motion */}
       <div
-        className={`fixed inset-0 bg-gradient-to-b from-amber-900/50 via-black/50 to-amber-900/50 backdrop-blur-sm z-40 transition-opacity duration-300 ${mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        aria-hidden="true"
+        className={`fixed inset-0 bg-foreground/50 z-40 transition-opacity duration-300 motion-reduce:transition-none ${mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
         onClick={() => setMobileMenuOpen(false)}
       />
       
@@ -369,21 +409,27 @@ const Header = () => {
             </Link>
             
             {/* Mobile menu button */}
-            <button
-              className="flex items-center gap-2 px-4 py-2.5 min-h-[48px] rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold shadow-lg shadow-amber-500/30 hover:from-amber-400 hover:to-amber-500 transition-all duration-200 border border-amber-400/50 min-w-[100px] justify-center"
+            <Button
+              ref={menuButtonRef}
+              variant="default"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="header-navigation"
+              className="flex shrink-0 items-center gap-2 px-3 sm:px-4 h-12 min-h-12 rounded-lg font-bold min-w-[88px] sm:min-w-[100px] justify-center motion-reduce:transition-none"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label={mobileMenuOpen ? (language === 'ro' ? 'Închide meniul' : 'Close menu') : (language === 'ro' ? 'Deschide meniul' : 'Open menu')}
             >
             {mobileMenuOpen ? <XIcon /> : <><MenuIcon /><span className="text-sm font-extrabold tracking-wider">MENIU</span></>}
-            </button>
+            </Button>
           </div>
         </div>
         </div>
         {/* Mobile Navigation */}
         {/* Mobile Navigation — CSS transitions only */}
         <nav
-          className={`px-4 border-t border-border origin-top overflow-auto bg-background transition-all duration-300 ease-out ${mobileMenuOpen ? 'max-h-[80vh] opacity-100 scale-y-100 py-4' : 'max-h-0 opacity-0 scale-y-95 py-0 border-t-0 pointer-events-none'}`}
-          style={{ transformOrigin: 'top' }}
+          ref={menuRef}
+          id="header-navigation"
+          aria-label={language === "ro" ? "Navigare principală" : "Main navigation"}
+          className={`px-4 border-t border-border origin-top overflow-auto overscroll-contain bg-background transition-all duration-300 ease-out motion-reduce:transition-none ${mobileMenuOpen ? 'max-h-[calc(100dvh-4rem)] md:max-h-[calc(100dvh-5rem)] opacity-100 scale-y-100 py-4' : 'max-h-0 opacity-0 scale-y-95 py-0 border-t-0 pointer-events-none'}`}
           {...(!mobileMenuOpen ? { inert: '' as unknown as boolean } : {})}
         >
               <div className="flex flex-col gap-2">
@@ -415,7 +461,7 @@ const Header = () => {
                     </p>
                     {group.links.map((link) => {
                       const isActive = activeSection === link.href;
-                      const linkClasses = `flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-lg transition-all duration-200 ${
+                      const linkClasses = `flex min-h-12 items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                         isActive 
                           ? "text-primary bg-primary/10 font-semibold" 
                           : "text-foreground/70 hover:text-foreground hover:bg-muted/50"

@@ -142,6 +142,11 @@ const LegacyRedirect = ({ to }: { to: string }) => {
   return null;
 };
 
+const EvaluationRedirect = () => {
+  const { search, hash } = useLocation();
+  return <Navigate to={`/evaluare-gratuita${search}${hash}`} replace />;
+};
+
 // Scroll to top on route change
 const ScrollToTop = () => {
   const location = useLocation();
@@ -316,7 +321,7 @@ const App = () => (
                     <Route path="/analiza-roi-apartament" element={<AnalizaROIApartament />} />
                     <Route path="/piata-imobiliara-timisoara" element={<PiataImobiliara />} />
                     <Route path="/evaluare-gratuita" element={<EvaluareGratuita />} />
-                    <Route path="/evaluare" element={<Navigate to={`/evaluare-gratuita${location.search}${location.hash}`} replace />} />
+                    <Route path="/evaluare" element={<EvaluationRedirect />} />
                     <Route path="/analiza-anunt" element={<AnalizaAnunt />} />
                     <Route path="/harta-preturi" element={<HartaPreturi />} />
                     <Route path="/alerte-oportunitati" element={<AlerteOportunitati />} />
