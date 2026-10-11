@@ -81,6 +81,7 @@ const EvaluareGratuita = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
+  const [contactErrors, setContactErrors] = useState<Partial<Record<"name" | "phone" | "email", string>>>({});
   const [form, setForm] = useState({
     propertyType: "",
     zone: "",
@@ -165,6 +166,7 @@ const EvaluareGratuita = () => {
 
   const handleSubmit = async () => {
     if (!canNext() || submitted) return;
+    setContactErrors({});
     setSubmitted(true);
 
     // Persist the lead (dedup handled server-side by leads_dedupe_upsert).
@@ -202,6 +204,14 @@ const EvaluareGratuita = () => {
     if (result.ok !== true) {
       setSubmitted(false);
       if (result.reason === "validation") {
+        const nextErrors = {
+          name: result.errors.name ? "Introdu un nume între 2 și 120 de caractere." : undefined,
+          phone: result.errors.whatsapp_number ? "Introdu un număr de telefon valid, cu prefixul țării." : undefined,
+          email: result.errors.email ? "Introdu o adresă de email validă." : undefined,
+        };
+        setContactErrors(nextErrors);
+        const firstField = nextErrors.name ? "name" : nextErrors.phone ? "phone" : "email";
+        document.getElementById(`eval-${firstField}`)?.focus();
         toast.error("Verifică numele, telefonul și emailul introduse.");
       } else {
         toast.error("Nu am putut trimite cererea. Te rugăm să încerci din nou.");
@@ -381,30 +391,42 @@ const EvaluareGratuita = () => {
                   <Label htmlFor="eval-name">Nume</Label>
                   <Input
                     id="eval-name"
+                    autoComplete="name"
+                    aria-invalid={!!contactErrors.name}
+                    aria-describedby={contactErrors.name ? "eval-name-error" : undefined}
                     value={form.name}
                     onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                     placeholder="Numele complet"
                   />
+                  {contactErrors.name && <p id="eval-name-error" role="alert" className="mt-1 text-sm text-destructive">{contactErrors.name}</p>}
                 </div>
                 <div>
                   <Label htmlFor="eval-phone">Telefon</Label>
                   <Input
                     id="eval-phone"
+                    autoComplete="tel"
+                    aria-invalid={!!contactErrors.phone}
+                    aria-describedby={contactErrors.phone ? "eval-phone-error" : undefined}
                     type="tel"
                     value={form.phone}
                     onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
                     placeholder="07xxxxxxxx"
                   />
+                  {contactErrors.phone && <p id="eval-phone-error" role="alert" className="mt-1 text-sm text-destructive">{contactErrors.phone}</p>}
                 </div>
                 <div>
                   <Label htmlFor="eval-email">Email</Label>
                   <Input
                     id="eval-email"
+                    autoComplete="email"
+                    aria-invalid={!!contactErrors.email}
+                    aria-describedby={contactErrors.email ? "eval-email-error" : undefined}
                     type="email"
                     value={form.email}
                     onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                     placeholder="email@exemplu.ro"
                   />
+                  {contactErrors.email && <p id="eval-email-error" role="alert" className="mt-1 text-sm text-destructive">{contactErrors.email}</p>}
                 </div>
               </div>
             </div>
@@ -424,8 +446,8 @@ const EvaluareGratuita = () => {
                 Următorul <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             ) : (
-              <Button onClick={handleSubmit} disabled={!canNext()}>
-                Trimite cererea
+              <Button onClick={handleSubmit} className="min-h-12" disabled={!canNext() || submitted}>
+                {submitted ? "Se trimite…" : "Trimite cererea"}
               </Button>
             )}
           </div>

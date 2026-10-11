@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 type Campaign = {
   enabled: boolean; delay_minutes: number; current_label: string | null;
@@ -15,16 +17,20 @@ type Campaign = {
 const DELAYS = [1, 2, 3, 5, 10];
 const YES = ["interesat", "programare", "acord", "scheduled"];
 
-/** Caseta de control a campaniei Andrei — doar prospecte fără WhatsApp (131026). */
 export default function AndreiBatchCampaignControl() {
   const [now, setNow] = useState(Date.now());
+  const [updating, setUpdating] = useState(false);
+  const updateLock = useRef(false);
+  const [confirmStart, setConfirmStart] = useState(false);
+  
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
 
   const q = useQuery({
     queryKey: ["voice-batch-campaign"],
     refetchInterval: 5_000,
     queryFn: async () => {
-      const { data } = await (supabase.from("voice_batch_campaign") as any).select("*").eq("id", 1).maybeSingle();
+      const { data, error } = await (supabase.from("voice_batch_campaign") as any).select("*").eq("id", 1).maybeSingle();
+      if (error) throw error;
       return data as Campaign | null;
     },
   });
@@ -66,41 +72,63 @@ export default function AndreiBatchCampaignControl() {
   const s = stats.data;
 
   const update = async (patch: Partial<Campaign>) => {
-    const { error } = await (supabase.from("voice_batch_campaign") as any).update({ ...patch, updated_at: new Date().toISOString() }).eq("id", 1);
-    if (error) return toast.error("Nu s-a putut salva");
-    q.refetch();
+    if (updateLock.current) return;
+    updateLock.current = true;
+    setUpdating(true);
+    try {
+      const { error } = await (supabase.from("voice_batch_campaign") as any).update({ ...patch, updated_at: new Date().toISOString() }).eq("id", 1);
+      if (error) throw error;
+      if (typeof patch.enabled === "boolean") toast.success(patch.enabled ? "Campanie pornită" : "Campanie pusă pe pauză");
+      await q.refetch();
+    } catch {
+      toast.error("Nu s-a putut salva");
+    } finally {
+      updateLock.current = false;
+      setUpdating(false);
+    }
   };
 
   const toggle = () => {
-    if (!c) return;
-    if (!c.enabled && !confirm("Andrei va suna automat, pe rând, proprietarii fără WhatsApp neapelați încă (Luni–Sâmbătă 09:00–19:00). Pornești?")) return;
-    update({ enabled: !c.enabled });
-    toast.success(c.enabled ? "Campanie pusă pe pauză" : "Campanie pornită — primul apel în cel mult un minut");
+    if (!c || updating) return;
+    if (!c.enabled) { setConfirmStart(true); return; }
+    void update({ enabled: false });
   };
 
-  if (!c) return null;
+  if (q.isError) return <div role="alert" className="space-y-2 border border-destructive/40 rounded-lg p-4 text-sm text-destructive">Controlul campaniei nu s-a putut încărca.<Button variant="outline" className="min-h-12 ml-3" onClick={() => void q.refetch()}>Reîncearcă</Button></div>;
+  if (!c) return <p role="status" className="py-4 text-sm text-muted-foreground">{q.isPending ? "Se încarcă starea campaniei…" : "Campania nu este configurată."}</p>;
 
   const inCall = !!c.current_session_id;
   const waitLeftMs = c.last_call_ended_at ? new Date(c.last_call_ended_at).getTime() + c.delay_minutes * 60_000 - now : 0;
   let status: React.ReactNode;
   if (inCall) {
     status = (
-      <span className="flex items-center gap-2 font-medium">
-        <span className="inline-block animate-bounce text-lg" aria-hidden>📞</span>
-        În apel cu {c.current_label || "proprietar"}
+      <span className="flex items-center gap-2 font-medium text-success">
+        <Loader2 className="h-4 w-4 animate-spin" /> În apel cu {c.current_label || "proprietar"}
       </span>
     );
   } else if (!c.enabled) {
-    status = <span className="font-medium">⏸ Campanie în pauză</span>;
+    status = <span className="font-medium text-muted-foreground">⏸ Campanie în pauză</span>;
   } else if (waitLeftMs > 0) {
-    const m = Math.floor(waitLeftMs / 60000), s = Math.floor((waitLeftMs % 60000) / 1000);
-    status = <span className="font-medium">⏳ Așteptare pauză {m}:{String(s).padStart(2, "0")} min până la următorul apel</span>;
+    const m = Math.floor(waitLeftMs / 60000), sec = Math.floor((waitLeftMs % 60000) / 1000);
+    status = <span className="font-medium text-primary">⏳ Așteptare {m}:{String(sec).padStart(2, "0")} min până la următorul apel</span>;
   } else {
-    status = <span className="font-medium">🔎 {c.last_message || "Se caută următorul proprietar de sunat…"}</span>;
+    status = <span className="font-medium animate-pulse">{c.last_message || "🔎 Se caută următorul proprietar…"}</span>;
   }
 
   return (
     <section aria-label="Campanie Apelare Automată AI" className="rounded-xl border border-border bg-card p-4 space-y-3">
+      <AlertDialog open={confirmStart} onOpenChange={setConfirmStart}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Pornești apelarea automată?</AlertDialogTitle>
+            <AlertDialogDescription>Andrei va suna proprietari reali, pe rând: exclusiv prospecte fără WhatsApp (131026), neapelate încă, în programul Luni–Sâmbătă, 09:00–19:00.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="min-h-12">Renunță</AlertDialogCancel>
+            <AlertDialogAction className="min-h-12" onClick={() => void update({ enabled: true })}>Da, pornește campania</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h4 className="font-semibold">Campanie Apelare Automată AI</h4>
         <div className="flex flex-wrap gap-2">
@@ -111,20 +139,20 @@ export default function AndreiBatchCampaignControl() {
 
       <div className={cn(
         "rounded-lg border px-3 py-2 text-sm",
-        inCall ? "border-emerald-500/40 bg-emerald-500/10" : c.enabled ? "border-sky-500/30 bg-sky-500/5" : "border-border bg-muted/30",
+        inCall ? "border-success/40 bg-success/10" : c.enabled ? "border-primary/30 bg-primary/5" : "border-border bg-muted/30",
       )} role="status" aria-live="polite">
         {status}
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2" aria-label="Statistici campanie azi">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
         {[
-          { l: "Prospecte în coadă", v: s?.queue ?? "…" },
-          { l: "Rată de răspuns azi", v: s ? (s.connectRate == null ? "—" : `${s.connectRate}% (${s.total} apeluri)`) : "…" },
-          { l: "Conversii „DA” azi", v: s?.yes ?? "…" },
-          { l: "Durată medie convorbire", v: s ? (s.avg == null ? "—" : `${Math.floor(s.avg / 60)}:${String(s.avg % 60).padStart(2, "0")} min`) : "…" },
+          { l: "În coadă", v: s?.queue ?? "…" },
+          { l: "Răspuns azi", v: s ? (s.connectRate == null ? "—" : `${s.connectRate}% (${s.total})`) : "…" },
+          { l: "Conversii azi", v: s?.yes ?? "…" },
+          { l: "Durată medie", v: s ? (s.avg == null ? "—" : `${Math.floor(s.avg / 60)}:${String(s.avg % 60).padStart(2, "0")} min`) : "…" },
         ].map((it) => (
           <div key={it.l} className="rounded-lg border border-border bg-muted/20 p-2">
-            <div className="text-xs text-muted-foreground">{it.l}</div>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{it.l}</div>
             <div className="text-lg font-semibold tabular-nums">{it.v}</div>
           </div>
         ))}
@@ -133,27 +161,24 @@ export default function AndreiBatchCampaignControl() {
       <div className="flex flex-wrap items-center gap-3">
         <Button
           onClick={toggle}
-          className={cn("min-h-[48px] text-white",
-            c.enabled ? "bg-orange-600 hover:bg-orange-700" : "bg-emerald-600 hover:bg-emerald-700")}
+          disabled={updating}
+          className={cn("min-h-12",
+            c.enabled ? "bg-accent text-accent-foreground hover:bg-accent/90" : "bg-success text-success-foreground hover:bg-success/90")}
         >
-          {c.enabled ? "⏸ Pauză Campanie" : "▶ Pornește Apelarea Automată AI"}
+          {updating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+          {c.enabled ? "⏸ Pauză Campanie" : "▶ Pornește Apelarea"}
         </Button>
-        <div className="flex items-center gap-2 text-sm" role="radiogroup" aria-label="Pauză între apeluri">
-          <span className="text-muted-foreground">Pauză între apeluri:</span>
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">Pauză:</span>
           {DELAYS.map((m) => (
             <Button key={m} size="sm" variant={c.delay_minutes === m ? "default" : "outline"}
-              role="radio" aria-checked={c.delay_minutes === m}
-              className="min-h-[44px] min-w-[48px]" onClick={() => update({ delay_minutes: m })}>
-              {m} min
+              disabled={updating}
+              className="min-h-12 min-w-12" onClick={() => update({ delay_minutes: m })}>
+              {m}m
             </Button>
           ))}
         </div>
-        <span className="text-xs text-muted-foreground">Apeluri pornite: {c.calls_started}</span>
       </div>
-
-      <p className="text-xs text-muted-foreground">
-        Se apelează doar proprietarii fără WhatsApp (Eroare Meta 131026), cu mobil RO, neapelați anterior și care nu se află în Lista de Excludere.
-      </p>
     </section>
   );
 }

@@ -21,6 +21,7 @@ const RefreshIcon = () => (
 interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: ReactNode;
+  resetKey?: string;
 }
 
 interface ErrorBoundaryState {
@@ -40,6 +41,12 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("ErrorBoundary caught:", error, errorInfo);
+  }
+
+  componentDidUpdate(previousProps: ErrorBoundaryProps) {
+    if (previousProps.resetKey !== this.props.resetKey && this.state.hasError) {
+      this.handleReset();
+    }
   }
 
   handleReset = () => {
@@ -64,11 +71,11 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
             <p className="text-muted-foreground mb-6">
               A apărut o eroare neașteptată. Încearcă să reîncarci pagina.
             </p>
-            <div className="flex gap-3 justify-center">
-              <Button variant="outline" onClick={this.handleReset}>
+            <div className="flex flex-wrap gap-3 justify-center">
+              <Button variant="outline" onClick={this.handleReset} className="min-h-12">
                 Încearcă din nou
               </Button>
-              <Button onClick={this.handleReload} className="gap-2">
+              <Button onClick={this.handleReload} className="min-h-12 gap-2">
                 <RefreshIcon />
                 Reîncarcă pagina
               </Button>

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,20 +57,36 @@ const RealEstateContactForm = () => {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [isVerifyingCaptcha, setIsVerifyingCaptcha] = useState(false);
   const [turnstileSiteKey, setTurnstileSiteKey] = useState<string | null>(null);
+  const [captchaLoadError, setCaptchaLoadError] = useState(false);
+  const [captchaAttempt, setCaptchaAttempt] = useState(0);
+  const [loadingSiteKey, setLoadingSiteKey] = useState(false);
+  const captchaRequest = useRef(0);
 
-  // Fetch Turnstile site key on mount
-  useEffect(() => {
-    const fetchSiteKey = async () => {
+  const fetchSiteKey = useCallback(async () => {
+      const request = ++captchaRequest.current;
+      setLoadingSiteKey(true);
+      setCaptchaLoadError(false);
+      setCaptchaToken(null);
       try {
         const { data, error } = await supabase.functions.invoke('get-turnstile-site-key');
         if (error) throw error;
+        if (typeof data?.siteKey !== "string" || !data.siteKey.trim()) throw new Error("Missing verification configuration");
+        if (request !== captchaRequest.current) return;
         setTurnstileSiteKey(data.siteKey);
+        setCaptchaAttempt(value => value + 1);
       } catch (error) {
+        if (request !== captchaRequest.current) return;
+        setCaptchaLoadError(true);
         console.error("Failed to fetch Turnstile site key:", error);
+      } finally {
+        if (request === captchaRequest.current) setLoadingSiteKey(false);
       }
-    };
-    fetchSiteKey();
   }, []);
+
+  useEffect(() => {
+    void fetchSiteKey();
+    return () => { captchaRequest.current += 1; };
+  }, [fetchSiteKey]);
 
   const handleCaptchaVerify = (token: string) => {
     setCaptchaToken(token);
@@ -402,10 +418,11 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
                   {turnstileSiteKey ? (
                     <>
                       <Turnstile
+                        key={captchaAttempt}
                         siteKey={turnstileSiteKey}
-                        onSuccess={(token) => setCaptchaToken(token)}
+                        onSuccess={(token) => { setCaptchaToken(token); setCaptchaLoadError(false); }}
                         onExpire={() => setCaptchaToken(null)}
-                        onError={() => setCaptchaToken(null)}
+                        onError={() => { setCaptchaToken(null); setCaptchaLoadError(true); }}
                         options={{ theme: "auto" }}
                       />
                       {captchaToken && (
@@ -415,11 +432,21 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
                         </div>
                       )}
                     </>
-                  ) : (
+                  ) : !captchaLoadError ? (
                     <div className="flex items-center justify-center py-4">
                       <div className="animate-pulse text-muted-foreground text-sm">
                         {language === "ro" ? "Se încarcă verificarea..." : "Loading verification..."}
                       </div>
+                    </div>
+                  ) : null}
+                  {captchaLoadError && (
+                    <div className="space-y-2 text-center">
+                      <p role="alert" className="text-sm text-destructive">
+                        {language === "ro" ? "Verificarea de securitate nu s-a încărcat. Datele completate sunt păstrate." : "Security verification could not load. Your entered details are preserved."}
+                      </p>
+                      <Button type="button" variant="outline" className="min-h-12" disabled={loadingSiteKey} onClick={() => void fetchSiteKey()}>
+                        {language === "ro" ? "Reîncearcă verificarea" : "Retry verification"}
+                      </Button>
                     </div>
                   )}
                 </div>

@@ -10,9 +10,10 @@ import CanonicalHreflang from "@/components/seo/CanonicalHreflang";
 import TrailingSlashRedirect from "@/components/seo/TrailingSlashRedirect";
 import { captureCampaignAttribution } from "@/lib/campaignAttribution";
 import { isChunkLoadError, reserveChunkReload } from "@/lib/chunkRecovery";
+import RouteLoading from "@/components/RouteLoading";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
 
-const Toaster = lazy(() => import("@/components/ui/toaster").then((m) => ({ default: m.Toaster })));
-const Sonner = lazy(() => import("@/components/ui/sonner").then((m) => ({ default: m.Toaster })));
 const CookieConsent = lazy(() => import("@/components/CookieConsent"));
 
 // Handle dynamic import failures (stale cache) by reloading the page
@@ -32,8 +33,8 @@ const handleDynamicImportError = (error: Error): never => {
 };
 
 // Wrap lazy imports with error handling
-const lazyWithRetry = (importFn: () => Promise<{ default: React.ComponentType<unknown> }>) => {
-  return lazy(() => importFn().catch(handleDynamicImportError) as Promise<{ default: React.ComponentType<unknown> }>);
+const lazyWithRetry = <Props extends object>(importFn: () => Promise<{ default: React.ComponentType<Props> }>) => {
+  return lazy(() => importFn().catch(handleDynamicImportError));
 };
 
 // Configure React Query defaults for better stability on custom domains
@@ -89,7 +90,7 @@ const ZoneLanding = lazyWithRetry(() => import("./pages/ZoneLanding"));
 const AnalizaProprietate = lazyWithRetry(() => import("./pages/AnalizaProprietate"));
 const GuestGuide = lazyWithRetry(() => import("./pages/GuestGuide"));
 const CatalogInvestitii = lazyWithRetry(() => import("./pages/CatalogInvestitii"));
-const LegalPage = lazy(() => import("./pages/LegalPage"));
+const LegalPage = lazyWithRetry(() => import("./pages/LegalPage"));
 const Unsubscribe = lazyWithRetry(() => import("./pages/Unsubscribe"));
 const ScraperLeads = lazyWithRetry(() => import("./pages/ScraperLeads"));
 const ScraperPreview = lazyWithRetry(() => import("./pages/ScraperPreview"));
@@ -122,8 +123,10 @@ const SharedComparison = lazyWithRetry(() => import("./pages/SharedComparison"))
 const CallDashboard = lazyWithRetry(() => import("./pages/CallDashboard"));
 const AdminLeadDashboard = lazyWithRetry(() => import("./pages/AdminLeadDashboard"));
 const FastReview = lazyWithRetry(() => import("./pages/admin/FastReview"));
-// No loader — render nothing while chunks load so the HTML skeleton stays visible
-const PageLoader = () => null;
+const RouteBoundary = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
+  return <ErrorBoundary resetKey={`${location.pathname}${location.search}`}>{children}</ErrorBoundary>;
+};
 
 const ContactPage = lazyWithRetry(() => import("./pages/ContactPage"));
 const IntrebariFrecvente = lazyWithRetry(() => import("./pages/IntrebariFrecvente"));
@@ -184,21 +187,18 @@ const ScrollToTop = () => {
 // Loads ONLY on first user interaction or a long fallback so Lighthouse never
 // pulls these chunks into the critical chain.
 const DeferredShell = ({ children }: { children: React.ReactNode }) => {
-  const [interacted, setInteracted] = useState(false);
   const [consentReady, setConsentReady] = useState(false);
   useEffect(() => {
     let triggered = false;
     const trigger = () => {
       if (triggered) return;
       triggered = true;
-      setInteracted(true);
       setConsentReady(true);
       events.forEach(e => document.removeEventListener(e, trigger));
     };
     const events = ["click", "touchstart", "keydown"] as const;
     events.forEach(e => document.addEventListener(e, trigger, { once: true, passive: true }));
     // GDPR: the cookie banner must appear without requiring an interaction first.
-    // Toast layers stay out of the load path until the user actually interacts.
     const timer = setTimeout(() => setConsentReady(true), 4000);
     return () => {
       clearTimeout(timer);
@@ -215,12 +215,8 @@ const DeferredShell = ({ children }: { children: React.ReactNode }) => {
           <CookieConsent />
         </Suspense>
       )}
-      {interacted && (
-        <Suspense fallback={null}>
-          <Toaster />
-          <Sonner />
-        </Suspense>
-      )}
+      <Toaster />
+      <Sonner />
     </>
   );
 };
@@ -238,7 +234,8 @@ const App = () => (
               <CanonicalHreflang />
               <ScrollToTop />
               <DeferredShell>
-                <Suspense fallback={<PageLoader />}>
+                <RouteBoundary>
+                <Suspense fallback={<RouteLoading />}>
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/auth" element={<Auth />} />
@@ -375,6 +372,7 @@ const App = () => (
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
+                </RouteBoundary>
               </DeferredShell>
               </FAQSchemaProvider>
             </ErrorBoundary>
