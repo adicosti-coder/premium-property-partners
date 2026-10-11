@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,10 +24,12 @@ interface CallRow {
 
 function statusBadge(row: CallRow) {
   const s = (row.status || "").toLowerCase();
-  if (row.is_voicemail) return <Badge variant="outline" className="border-amber-500/50 text-amber-600"><Voicemail className="h-3 w-3 mr-1" />Voicemail</Badge>;
-  if (s === "completed" || s === "in-progress") return <Badge className="bg-green-600">Răspuns</Badge>;
+  if (row.is_voicemail) return <Badge variant="outline"><Voicemail className="h-3 w-3 mr-1" />Mesagerie vocală</Badge>;
+  if (s === "in-progress") return <Badge variant="secondary">În convorbire</Badge>;
+  if (s === "completed") return <Badge variant="outline" className="border-primary/40 text-primary">Încheiat</Badge>;
   if (s === "failed" || s === "busy" || s === "no-answer" || s === "canceled") return <Badge variant="destructive">{s === "no-answer" ? "Fără răspuns" : s === "busy" ? "Ocupat" : "Eșuat"}</Badge>;
-  if (s === "initiated" || s === "ringing" || s === "queued") return <Badge variant="secondary">Inițiat…</Badge>;
+  if (s === "ringing") return <Badge variant="secondary">Sună…</Badge>;
+  if (s === "initiated" || s === "queued") return <Badge variant="secondary">{s === "queued" ? "În coadă" : "Inițiat…"}</Badge>;
   return <Badge variant="outline">{row.status || "—"}</Badge>;
 }
 
@@ -39,7 +41,7 @@ function fmtDuration(sec: number | null) {
 }
 
 function fmtTime(iso: string) {
-  return new Date(iso).toLocaleString("ro-RO", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+  return new Date(iso).toLocaleString("ro-RO", { timeZone: "Europe/Bucharest", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 }
 
 export function TwilioCallsLog() {
@@ -47,12 +49,14 @@ export function TwilioCallsLog() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const inFlight = useRef(false);
 
   const load = useCallback(async (isSilent = false) => {
+    if (inFlight.current) return;
+    inFlight.current = true;
     if (isSilent) setRefreshing(true);
     else setLoading(true);
     
-    setError(null);
     try {
       const { data, error: err } = await supabase
         .from("voice_call_sessions")
@@ -62,9 +66,11 @@ export function TwilioCallsLog() {
       
       if (err) throw err;
       setRows((data as CallRow[]) || []);
-    } catch (err: any) {
-      setError(err.message);
+      setError(null);
+    } catch (err) {
+      setError(err && typeof err === "object" && "message" in err ? String(err.message) : "Jurnalul nu s-a putut actualiza. Reîncearcă.");
     } finally {
+      inFlight.current = false;
       setLoading(false);
       setRefreshing(false);
     }
@@ -82,24 +88,24 @@ export function TwilioCallsLog() {
         <div className="flex items-center justify-between gap-2">
           <div>
             <CardTitle className="text-base flex items-center gap-2">
-              <PhoneCall className="h-4 w-4 text-blue-500" /> Jurnal apeluri Twilio
+              <PhoneCall className="h-4 w-4 text-primary" /> Jurnal apeluri Twilio
             </CardTitle>
             <CardDescription>Ultimele 20 de apeluri. Se actualizează automat.</CardDescription>
           </div>
-          <Button variant="outline" size="sm" onClick={() => load()} disabled={loading || refreshing}>
+          <Button variant="outline" size="icon" className="min-h-12 min-w-12" aria-label="Reîmprospătează jurnalul apelurilor" onClick={() => load()} disabled={loading || refreshing}>
             {loading || refreshing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
           </Button>
         </div>
       </CardHeader>
       <CardContent>
         {error && (
-          <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive mb-3 flex items-start gap-2">
+          <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive mb-3 flex items-start gap-2">
             <XCircle className="h-4 w-4 mt-0.5 flex-shrink-0" /> {error}
           </div>
         )}
-        {loading ? (
-          <div className="flex items-center justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-        ) : rows.length === 0 ? (
+        {loading && rows.length === 0 ? (
+          <p role="status" className="py-4 text-center text-sm text-muted-foreground">Se încarcă apelurile…</p>
+        ) : rows.length === 0 && !error ? (
           <p className="text-sm text-muted-foreground italic text-center py-4">Niciun apel înregistrat încă.</p>
         ) : (
           <div className="overflow-x-auto">
@@ -121,13 +127,13 @@ export function TwilioCallsLog() {
                     <td className="py-2 pr-3 font-mono text-xs">{r.to_number || "—"}</td>
                     <td className="py-2 pr-3 text-center">
                       {r.direction === "inbound"
-                        ? <PhoneIncoming className="h-3.5 w-3.5 text-green-600 inline" aria-label="Primite" />
-                        : <PhoneOutgoing className="h-3.5 w-3.5 text-blue-600 inline" aria-label="Efectuate" />}
+                        ? <PhoneIncoming className="h-3.5 w-3.5 text-primary inline" aria-label="Primite" />
+                        : <PhoneOutgoing className="h-3.5 w-3.5 text-primary inline" aria-label="Efectuate" />}
                     </td>
                     <td className="py-2 pr-3">{statusBadge(r)}</td>
                     <td className="py-2 pr-3">{fmtDuration(r.call_duration_seconds)}</td>
-                    <td className="py-2 text-xs text-muted-foreground max-w-[220px] truncate" title={r.twilio_failure_reason || r.error_message || ""}>
-                      {r.twilio_failure_reason || r.error_message || r.answered_by || "—"}
+                    <td className="py-2 text-xs text-muted-foreground min-w-40 max-w-[260px] break-words">
+                      {r.twilio_failure_reason || r.error_message || (r.answered_by && r.answered_by !== "0" ? r.answered_by : "—")}
                     </td>
                   </tr>
                 ))}
