@@ -22,6 +22,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import VoiceProspectCard, { type VoiceProspectSummary } from "./VoiceProspectCard";
+import { TwilioCallsLog } from "./TwilioCallsLog";
 
 const VoiceAgentManager = lazy(() => import("./VoiceAgentManager"));
 
