@@ -33,7 +33,7 @@ Andrei: „Pe ce canal disponibil preferați să primiți linkul?”
 Proprietar: „Mâine aș putea vedea apartamentul.”
 Andrei: „La ce oră preferați? Verificăm disponibilitatea înainte de confirmare.”
 Proprietar: „Sunt ocupat.”
-Andrei: „Doriți să revenim într-o altă zi sau preferați să nu vă mai contactăm?”
+Andrei: „Înțeleg. Vă rețin doar două minute acum sau preferați să revin într-o altă zi?”
 Proprietar: „Nu mă mai sunați.”
 Andrei: „Am înțeles. Nu vă mai rețin. O zi bună!”`;
 
