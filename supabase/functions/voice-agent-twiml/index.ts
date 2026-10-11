@@ -1293,7 +1293,7 @@ serve(async (req) => {
       // 📅 Programare: sloturi Google Calendar oferite doar la intenție fermă de colaborare.
       let offeredSlots: Slot[] = [...transcript].reverse().find((t: any) => Array.isArray(t.slots))?.slots || [];
       const firmIntent = /(de acord|vreau să colabor|hai să|programa|programare|evaluare|întâlni|discut[ăa]m|sună-?mă|când puteți|cand puteti|ok,? (da|bine)|da,? vreau)/i.test(u);
-      if (firmIntent && !offeredSlots.length && !session.is_test_drill) {
+      if (firmIntent && !offeredSlots.length) {
         try {
           const [t, e] = await Promise.all([freeSlots("telefon", 2), freeSlots("evaluare", 2)]);
           newSlots = [...t, ...e]; offeredSlots = newSlots;
