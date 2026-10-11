@@ -1121,6 +1121,31 @@ const ProspectManager = () => {
         </div>
       )}
 
+      {/* ── Dialog „Marchează ca Apelat" ─────────────── */}
+      <Dialog open={!!callDialogFor} onOpenChange={open => { if (!open) { setCallDialogFor(null); setCallNote(''); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Marchează ca Apelat telefonic</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            {callDialogFor?.title || 'Fără titlu'} · {callDialogFor?.contact_phone || 'fără telefon'}
+          </p>
+          <Textarea
+            value={callNote}
+            onChange={e => setCallNote(e.target.value)}
+            placeholder="Notă scurtă (opțional): ce a spus proprietarul, următorul pas…"
+            rows={3}
+            aria-label="Notă apel telefonic"
+          />
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => { setCallDialogFor(null); setCallNote(''); }}>Anulează</Button>
+            <Button onClick={markAsCalled} disabled={callBusy} className="gap-1">
+              {callBusy && <Loader2 className="w-4 h-4 animate-spin" />} Confirmă apelul
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* ── Detail Dialog ────────────────────────────── */}
       <Dialog open={!!selectedListing} onOpenChange={open => { if (!open) setSelectedListing(null); }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
