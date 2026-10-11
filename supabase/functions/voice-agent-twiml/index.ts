@@ -575,7 +575,7 @@ function gatherXml(actionUrl: string, innerXml = ""): string {
   // • bargeIn=true → utilizatorul poate întrerupe Andrei oricând (cheie pentru natural feel)
   // • profanityFilter=false → nu cenzurează numere/euro/etc.
   // • actionOnEmptyResult=true → nicio "dead air" la tăcere
-  return `<Gather input="speech" language="ro-RO" speechModel="phone_call" enhanced="true" bargeIn="true" speechTimeout="auto" timeout="4" profanityFilter="false" actionOnEmptyResult="true" action="${safeUrl}" method="POST">${innerXml}</Gather>`;
+  return `<Gather input="speech" language="ro-RO" speechModel="phone_call" enhanced="true" bargeIn="true" speechTimeout="2" timeout="6" profanityFilter="false" actionOnEmptyResult="true" action="${safeUrl}" method="POST">${innerXml}</Gather>`;
 }
 
 function isCustomPrompt(prompt?: string | null): boolean {
@@ -1265,11 +1265,13 @@ serve(async (req) => {
     } else if (!userSpeech.trim()) {
       // Tăcere / nu s-a înțeles: NU chemăm AI-ul (ar repeta replica anterioară). Reformulare scurtă, apoi închidere.
       isEmptyTurn = true;
-      if (emptyStreak >= 1) {
+      if (emptyStreak >= 2) {
         aiReply = "Se pare că nu vă aud. Revin altă dată. O zi bună!";
         shouldHangup = true;
+      } else if (emptyStreak === 1) {
+        aiReply = "Sunteți încă pe linie?";
       } else {
-        aiReply = "Mă auziți? Doriți analiza gratuită pentru proprietate?";
+        aiReply = "Mă auziți?";
       }
       aiRawReply = aiReply;
     } else if (LOVABLE_API_KEY) {
