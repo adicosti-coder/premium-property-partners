@@ -1,3 +1,4 @@
+import { freeSlots, bookSlot, type Slot } from "../_shared/andreiCalendar.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { verifyTwilioRequest } from "../_shared/twilioVerify.ts";
@@ -1258,6 +1259,8 @@ serve(async (req) => {
     const emptyStreak = (() => { let n = 0; for (let i = transcript.length - 1; i >= 0 && transcript[i].role === "assistant" && transcript[i].empty; i--) n++; return n; })();
     let isEmptyTurn = false;
 
+    let newSlots: Slot[] | null = null;
+    let bookedSlot: Slot | null = null;
     if (turn === 0) {
       // ⚡ Greeting deterministic, fără AI → voce imediat la preluare.
       aiReply = openingLine(branch, contextSummary);
@@ -1287,6 +1290,18 @@ serve(async (req) => {
       const antiRepeat = prevAssistant.length
         ? `\nReplicile tale anterioare (NU le repeta și nu le reformula): ${prevAssistant.slice(-4).map((r) => `„${r}”`).join(" | ")}.\nAvansează conversația la pasul următor (obiectiv → termen → preț → acord pentru analiză/pas următor). Nu folosi placeholder-e de tipul {{...}}.`
         : "";
+      // 📅 Programare: sloturi Google Calendar oferite doar la intenție fermă de colaborare.
+      let offeredSlots: Slot[] = [...transcript].reverse().find((t: any) => Array.isArray(t.slots))?.slots || [];
+      const firmIntent = /(de acord|vreau să colabor|hai să|programa|programare|evaluare|întâlni|discut[ăa]m|sună-?mă|când puteți|cand puteti|ok,? (da|bine)|da,? vreau)/i.test(u);
+      if (firmIntent && !offeredSlots.length) {
+        try {
+          const [t, e] = await Promise.all([freeSlots("telefon", 2), freeSlots("evaluare", 2)]);
+          newSlots = [...t, ...e]; offeredSlots = newSlots;
+        } catch (e) { console.warn("[voice-twiml] calendar", (e as Error).message); }
+      }
+      const calendarExtra = offeredSlots.length
+        ? `\nPROGRAMARE: proprietarul vrea să colaboreze. Întreabă scurt dacă preferă o discuție telefonică de 15 minute sau o evaluare la apartament (nu la birou — nu avem birou), apoi propune maximum două din aceste sloturi libere: ${offeredSlots.map((s, i) => `${i + 1}) ${s.kind === "telefon" ? "discuție telefonică" : "evaluare la apartament"} ${s.label}`).join("; ")}. Doar DUPĂ ce proprietarul confirmă explicit un slot, confirmă-l verbal și adaugă la finalul replicii exact marcajul [REZERVA:număr]. Nu inventa alte ore.`
+        : "";
       const callAi = async (extra: string) => {
         const ctrl = new AbortController();
         const timer = setTimeout(() => ctrl.abort(), 4500);
@@ -1312,7 +1327,19 @@ serve(async (req) => {
         } finally { clearTimeout(timer); }
       };
       try {
-        aiRawReply = await callAi("");
+        aiRawReply = await callAi(calendarExtra);
+        const mk = aiRawReply.match(/\[REZERVA:(\d)\]/);
+        aiRawReply = aiRawReply.replace(/\[REZERVA:\d\]/g, "").trim();
+        const pick = mk ? offeredSlots[Number(mk[1]) - 1] : null;
+        if (pick && !transcript.some((t: any) => t.booked)) {
+          try {
+            await bookSlot(pick, { name: (session as any).contact_name, phone: session.to_number, listing: contextSummary?.slice?.(0, 300) });
+            bookedSlot = pick;
+          } catch (e) {
+            console.warn("[voice-twiml] book failed", (e as Error).message);
+            aiRawReply = "Îmi pare rău, intervalul tocmai s-a ocupat. Vă propun altă oră?";
+          }
+        }
         if (aiRawReply && !isRomanianReply(aiRawReply)) {
           await logLanguageViolation(supabase, sessionId, turn, aiRawReply, "english_in_turn");
           const retried = await retryInRomanian(LOVABLE_API_KEY, systemPrompt, history);
@@ -1334,7 +1361,7 @@ serve(async (req) => {
       shouldHangup = true;
     }
 
-    transcript.push({ role: "assistant", text: aiReply, at: new Date().toISOString(), ...(isEmptyTurn ? { empty: true } : {}) });
+    transcript.push({ role: "assistant", text: aiReply, at: new Date().toISOString(), ...(isEmptyTurn ? { empty: true } : {}), ...(newSlots ? { slots: newSlots } : {}), ...(bookedSlot ? { booked: bookedSlot } : {}) });
 
     if (turn >= 8 || /la revedere|închid|nu mai|mulțumesc.*revedere|o zi bună/i.test(aiReply)) {
       shouldHangup = true;

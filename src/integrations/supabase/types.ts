@@ -6312,6 +6312,8 @@ export type Database = {
           scraped_at: string | null
           scraper_lead_id: string | null
           search_keywords: string[]
+          seller_type: string
+          seller_type_reason: string | null
           size: number | null
           source_platform: string
           source_url: string
@@ -6416,6 +6418,8 @@ export type Database = {
           scraped_at?: string | null
           scraper_lead_id?: string | null
           search_keywords?: string[]
+          seller_type?: string
+          seller_type_reason?: string | null
           size?: number | null
           source_platform: string
           source_url: string
@@ -6520,6 +6524,8 @@ export type Database = {
           scraped_at?: string | null
           scraper_lead_id?: string | null
           search_keywords?: string[]
+          seller_type?: string
+          seller_type_reason?: string | null
           size?: number | null
           source_platform?: string
           source_url?: string
