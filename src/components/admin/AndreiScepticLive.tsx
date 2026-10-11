@@ -32,7 +32,7 @@ export default function AndreiScepticLive({ onRunSaved }: { onRunSaved?: () => v
         <CardTitle className="text-base flex items-center gap-2"><Radio className="h-4 w-4 text-primary" /> Antrenament Sceptic live</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <Button className="min-h-[48px] w-full sm:w-auto" onClick={start} disabled={step !== null}>
+        <Button className="min-h-[48px] h-auto w-full whitespace-normal px-3 py-2 text-sm sm:w-auto sm:text-base" onClick={start} disabled={step !== null}>
           {step !== null ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Simularea {step} din {TOTAL}…</> : "Pornește antrenamentul Sceptic live"}
         </Button>
         <p className="text-xs text-muted-foreground">Fiecare conversație apare aici imediat ce Gemini o evaluează și se salvează în istoric. Nu se sună pe nimeni.</p>
