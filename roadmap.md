@@ -3,6 +3,7 @@
 ## Prompt Andrei — replici concise
 - [x] Reguli prioritare comune și exemple fictive realiste pentru vânzare
 - [x] Trei teste trecute, build OK și funcții activate fără apeluri reale
+- [x] Drill live „obiectii_clasice”: 5/5 trecute (scor 75–90), replica „Sunt ocupat” ajustată cu alternativă de 2 minute
 
 ## Îmbunătățiri prioritizate — 11 octombrie, runda 2
 - [x] Stabilitate: încărcare vizibilă, recuperare izolată și notificări disponibile imediat
