@@ -27,7 +27,7 @@ const ThemeToggle = forwardRef<HTMLButtonElement>((_props, ref) => {
       size="sm"
       onClick={toggleTheme}
       className="w-11 h-11 min-w-[44px] min-h-[44px] p-0 text-muted-foreground hover:text-foreground transition-colors"
-      aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+      aria-label={theme === 'dark' ? 'Comută pe modul luminos' : 'Comută pe modul întunecat'}
     >
       {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
     </Button>

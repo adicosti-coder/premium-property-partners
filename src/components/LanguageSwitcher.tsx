@@ -17,8 +17,8 @@ const LanguageSwitcher = forwardRef<HTMLButtonElement>((_props, ref) => {
     <button
       ref={ref}
       onClick={toggleLanguage}
-      className="flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] min-w-[44px] rounded-full bg-primary/10 hover:bg-primary/20 border border-primary/20 transition-all duration-200 group overflow-hidden"
-      aria-label={language === 'ro' ? 'RO — Switch to English' : 'EN — Schimbă în Română'}
+      className="shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 py-2.5 min-h-[44px] min-w-[44px] rounded-full bg-primary/10 hover:bg-primary/20 border border-primary/20 transition-all duration-200 group overflow-hidden"
+      aria-label={language === 'ro' ? 'Limba: română — schimbă în engleză' : 'Language: English — switch to Romanian'}
     >
       <span
         className={`text-base sm:text-lg transition-all duration-300 ${
