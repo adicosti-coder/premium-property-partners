@@ -110,7 +110,8 @@ async function autoLoop(supabase: any, KEY: string) {
   try { plan = JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0] || "null"); } catch { plan = null; }
   if (!plan) return;
   const activeIds = new Set((active ?? []).map((l: any) => l.id));
-  const keep = (Array.isArray(plan.keep_ids) ? plan.keep_ids : []).map(String).filter((id: string) => activeIds.has(id)).slice(0, 5);
+  const badIds = new Set((active ?? []).filter((l: any) => BANNED.test(l.lesson) || badCommission(l.lesson)).map((l: any) => l.id));
+  const keep = (Array.isArray(plan.keep_ids) ? plan.keep_ids : []).map(String).filter((id: string) => activeIds.has(id) && !badIds.has(id)).slice(0, 5);
   const fresh = (Array.isArray(plan.new) ? plan.new : []).filter((n: any) => String(n?.lesson || "").length >= 10 && !BANNED.test(n.lesson) && !badCommission(n.lesson))
     .slice(0, 5 - keep.length);
   const toArchive = [...activeIds].filter((id) => !keep.includes(id as string));
