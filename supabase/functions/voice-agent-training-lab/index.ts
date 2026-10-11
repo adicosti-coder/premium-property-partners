@@ -38,13 +38,36 @@ async function ai(messages: any[], key: string, opts: Record<string, unknown> = 
 
 const branchOf = (c: string | null) => c === "hotelier" ? "cazare" : c === "inchiriere" ? "inchiriere" : "vanzare";
 const BANNED = /rețea privată|retea privata|preț premium|peste piață|chirie garantată|venit garantat|doi minute|doi camere|doi opțiuni/i;
-// Comision: singura valoare reală admisă este administrarea RealTrust 15–20%.
-function badCommission(t: string): boolean {
+// Comisioane reale pe tip de serviciu (singurele procente admise).
+const COMMISSION_BY_BRANCH: Record<string, string[]> = {
+  vanzare: ["2-4"],
+  inchiriere: ["50-100", "15-20"], // intermediere din prima chirie sau administrare clasică
+  cazare: ["15-20"],
+};
+const ALL_COMMISSIONS = new Set(Object.values(COMMISSION_BY_BRANCH).flat());
+function pctTokens(s: string): string[] {
+  return [...s.matchAll(/(\d+(?:[.,]\d+)?|X)\s*(?:-|–|la)?\s*(\d+)?\s*%/gi)]
+    .filter((m) => !/6[.,]5|9[.,]4/.test(m[0]))
+    .map((m) => `${m[1]}${m[2] ? "-" + m[2] : ""}`.replace(/\s/g, "").toUpperCase());
+}
+function badCommission(t: string, branch?: string): boolean {
   const s = String(t || "");
   if (!/comision|procent|%/i.test(s)) return false;
-  const pcts = [...s.matchAll(/(\d+(?:[.,]\d+)?|X)\s*(?:-|–|la)?\s*(\d+)?\s*%/gi)];
   if (/X\s*%/i.test(s) || /cheltuieli/i.test(s)) return true;
-  return pcts.some((m) => !/^(15\s*[-–]\s*20|15|20)$/.test(`${m[1]}${m[2] ? "-" + m[2] : ""}`.replace(/\s/g, "")) && !/6[.,]5|9[.,]4/.test(m[0]));
+  const allowed = branch ? new Set(COMMISSION_BY_BRANCH[branch] ?? []) : ALL_COMMISSIONS;
+  return pctTokens(s).some((p) => !allowed.has(p));
+}
+function commissionAnswerOk(transcript: { role: string; text: string }[], branch: string): boolean | null {
+  let asked = false, ok = true;
+  transcript.forEach((t, i) => {
+    if (t.role === "andrei" || !/comision|c[âa]t lua[țt]i|c[âa]t cere[țt]i/i.test(t.text)) return;
+    asked = true;
+    const r = transcript.slice(i + 1).find((x) => x.role === "andrei")?.text ?? "";
+    const first = r.split(/[.!?]/)[0] ?? "";
+    const pcts = pctTokens(r);
+    if (!/analiz/i.test(first) || !/gratuit/i.test(first) || !pcts.length || pcts.some((p) => !(COMMISSION_BY_BRANCH[branch] ?? []).includes(p)) || !/whatsapp|analiza-gratuita/i.test(r)) ok = false;
+  });
+  return asked ? ok : null;
 }
 function validate(transcript: { role: string; text: string }[], branch: string) {
   const a = transcript.filter((t) => t.role === "andrei").map((t) => t.text).join(" ").toLowerCase();
@@ -52,6 +75,8 @@ function validate(transcript: { role: string; text: string }[], branch: string) 
   return {
     banned_phrase: BANNED.test(a),
     wrong_branch_argument: wrongArg,
+    wrong_commission: badCommission(a, branch),
+    commission_answer_ok: commissionAnswerOk(transcript, branch),
     offered_free_analysis: /analiz/.test(a),
     mentioned_whatsapp: /whatsapp/.test(a),
   };
