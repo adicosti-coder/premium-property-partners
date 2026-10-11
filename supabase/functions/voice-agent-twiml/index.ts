@@ -765,7 +765,7 @@ serve(async (req) => {
             .select("zone, expiry_check_status").eq("id", sessFast.prospect_listing_id).maybeSingle();
           if (pFast?.expiry_check_status === "inactiv_sursa") {
             const zona = String(pFast.zone || "").trim() || "Timișoara";
-            fastGreeting = `Bună ziua! Sunt Andrei de la RealTrust. Vă sun în legătură cu proprietatea dumneavoastră din ${zona}. Am observat că anunțul nu mai este activ pe site-uri și voiam doar să verific scurt dacă proprietatea mai este valabilă pentru închiriere sau vânzare.`;
+            fastGreeting = `Bună ziua! Vă sun de la RealTrust în legătură cu proprietatea din ${zona}. Am văzut că anunțul nu mai este activ pe site-uri și voiam doar să verific dacă proprietatea mai este valabilă.`;
           }
         }
         let fastUrl: string | null = null;
