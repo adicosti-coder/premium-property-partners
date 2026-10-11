@@ -176,6 +176,7 @@ async function simulate(supabase: any, KEY: string, body: any): Promise<any> {
     let branch: "vanzare" | "inchiriere" | "cazare" = "vanzare";
     let personaText = PERSONAS[persona];
     let objections = "";
+    let listingZone = "";
     if (body.prospect_id) {
       const basePersona = PERSONAS[persona] ? persona : "";
       const { data: r } = await supabase.from("prospect_listings").select("id, title, category, zone, location, price, currency, rooms, size")
