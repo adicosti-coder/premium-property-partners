@@ -246,6 +246,20 @@ export default function VoiceAgentCallSimulator({ prospect }: { prospect?: Voice
       </CardHeader>
 
       <CardContent className="space-y-4">
+        <AlertDialog open={!!pendingNumber} onOpenChange={(o) => { if (!o) setPendingNumber(null); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Pornești un apel real?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Andrei va suna efectiv numărul <strong>{pendingNumber}</strong> prin Twilio.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="min-h-12">Renunță</AlertDialogCancel>
+              <AlertDialogAction className="min-h-12" onClick={confirmRealCall}>Da, sună acum</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
             <label htmlFor="andrei-simulator-phone" className="text-xs font-medium text-muted-foreground mb-1 block">
