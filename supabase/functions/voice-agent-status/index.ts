@@ -1,3 +1,4 @@
+import { ANDREI_FOLLOWUP_TEMPLATE, FOLLOWUP_BENEFITS, followupTemplateApproved, followupLink } from "../_shared/andreiFollowup.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { logAudit } from "../_shared/auditLog.ts";
@@ -453,6 +454,36 @@ serve(async (req) => {
             tags,
             admin_notes: pr?.admin_notes ? `${pr.admin_notes}\n${note}` : note,
           } as any).eq("id", session.prospect_listing_id);
+          // ExclusivBot: follow-up WhatsApp DOAR după „DA” explicit în apel, prin șablon aprobat Meta.
+          if (extra.includes("raspuns-da")) {
+            const { data: pp } = await supabase.from("prospect_listings")
+              .select("id, contact_name, category, phone_normalized, contact_phone, do_not_call").eq("id", session.prospect_listing_id).maybeSingle();
+            const digits = String(pp?.phone_normalized || pp?.contact_phone || session.to_number || "").replace(/\D/g, "").replace(/^0040/, "40").replace(/^0/, "40");
+            const tail = digits.slice(-9);
+            const variants = [`40${tail}`, `+40${tail}`, `0${tail}`];
+            const [{ data: noWa }, { data: prev }] = await Promise.all([
+              supabase.from("wa_outbound_queue").select("id").in("phone_normalized", variants).ilike("last_error", "%131026%").limit(1),
+              supabase.from("wa_outbound_queue").select("id").eq("prospect_listing_id", session.prospect_listing_id).eq("source", "andrei_followup").limit(1),
+            ]);
+            let skip: string | null = null;
+            if (!/^407\d{8}$/.test(`40${tail}`)) skip = "fără mobil";
+            else if (pp?.do_not_call) skip = "DNC";
+            else if (noWa?.length) skip = "fără WhatsApp (131026)";
+            else if (prev?.length) skip = "deja trimis";
+            else if (!(await followupTemplateApproved())) skip = "șablon în aprobare Meta";
+            if (!skip) {
+              const branch = pp?.category === "hotelier" ? "cazare" : pp?.category === "inchiriere" ? "inchiriere" : "vanzare";
+              await supabase.from("wa_outbound_queue").insert({
+                phone_normalized: `40${tail}`, prospect_listing_id: session.prospect_listing_id, source: "andrei_followup", status: "pending",
+                template_name: ANDREI_FOLLOWUP_TEMPLATE, template_language: "ro", priority: 10, scheduled_at: new Date().toISOString(),
+                template_params: [String(pp?.contact_name || "").split(/\s+/)[0] || "dumneavoastră", FOLLOWUP_BENEFITS[branch], followupLink(session.prospect_listing_id)],
+              } as any);
+            } else {
+              const t2 = [...new Set([...tags, skip === "fără WhatsApp (131026)" ? "followup-fara-whatsapp" : "followup-wa-amanat"])];
+              await supabase.from("prospect_listings").update({ tags: t2 } as any).eq("id", session.prospect_listing_id);
+              console.log("[voice-status] followup skipped:", skip);
+            }
+          }
         } catch (e) {
           console.warn("[voice-status] prospect tag update failed", (e as Error).message);
         }
