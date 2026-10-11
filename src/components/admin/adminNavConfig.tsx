@@ -188,6 +188,7 @@ const RAW_GROUPS: AdminGroup[] = [
       // 🧠 AI Tools — utilitare AI pentru conținut și asistență
       { value: "ai-cache", label: "AI Cache", icon: Sparkles, subgroup: "AI Tools", keywords: ["cache", "ai content"] },
       { value: "voice-agent", label: "Voice Agent", icon: Phone, subgroup: "AI Tools", keywords: ["voice", "apel ai"] },
+      { value: "andrei-training-lab", label: "Training Lab Andrei", icon: Sparkles, subgroup: "AI Tools", keywords: ["training", "antrenament", "andrei", "simulare", "gemini"] },
       { value: "whatsapp-andrei", label: "Andrei WhatsApp", icon: MessageSquare, subgroup: "WhatsApp & Andrei", keywords: ["whatsapp", "wa", "andrei", "chat"] },
       { value: "whatsapp-queue", label: "Coadă WhatsApp", icon: MessageSquare, subgroup: "WhatsApp & Andrei", keywords: ["whatsapp", "coada", "queue", "outbound", "template", "rate limit"] },
       { value: "whatsapp-test", label: "Test mesaj WhatsApp", icon: MessageSquare, subgroup: "WhatsApp & Andrei", keywords: ["test", "sablon", "șablon", "v6", "trimite", "proprietar", "butoane"] },
