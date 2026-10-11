@@ -758,7 +758,16 @@ serve(async (req) => {
         if (!sessFast) return xmlResponse(ROMANIAN_SAFE_ERROR_XML);
 
         const fastBranch: "vanzare" | "inchiriere" | "cazare" = "vanzare";
-        const fastGreeting = openingLine(fastBranch, "");
+        let fastGreeting = openingLine(fastBranch, "");
+        // Mesaj fix, rostit exact, pentru anunțurile dispărute de pe portaluri.
+        if (sessFast.prospect_listing_id) {
+          const { data: pFast } = await supabase.from("prospect_listings")
+            .select("zone, expiry_check_status").eq("id", sessFast.prospect_listing_id).maybeSingle();
+          if (pFast?.expiry_check_status === "inactiv_sursa") {
+            const zona = String(pFast.zone || "").trim() || "Timișoara";
+            fastGreeting = `Bună ziua! Sunt Andrei de la RealTrust. Vă sun în legătură cu proprietatea dumneavoastră din ${zona}. Am observat că anunțul nu mai este activ pe site-uri și voiam doar să verific scurt dacă proprietatea mai este valabilă pentru închiriere sau vânzare.`;
+          }
+        }
         let fastUrl: string | null = null;
         if (ELEVENLABS_API_KEY) {
           const ttsRes = await ttsToPermanentCached(
