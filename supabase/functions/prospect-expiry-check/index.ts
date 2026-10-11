@@ -163,15 +163,16 @@ Deno.serve(async (req) => {
 
         if (dryRun) continue;
 
-        const newNote = `[expiry-check ${nowIso.slice(0, 16)}] ${check.expired ? "EXPIRAT" : "ok"}: ${check.reason}`;
+        const newNote = `[expiry-check ${nowIso.slice(0, 16)}] ${check.expired ? "INACTIV PE SURSĂ (reverificare necesară)" : "ok"}: ${check.reason}`;
         if (check.expired) {
+          // Dispariția de pe portal NU arhivează și NU expiră anunțul: doar îl
+          // marcăm pentru reverificare. Arhivarea/DNC se face strict la
+          // confirmarea proprietarului (vândut/închiriat/retragere).
           await supabase
             .from("prospect_listings")
             .update({
-              is_active: false,
-              lifecycle_status: "expired",
               last_expiry_check_at: nowIso,
-              expiry_check_status: "expired",
+              expiry_check_status: "inactiv_sursa",
               admin_notes: [r.admin_notes, newNote].filter(Boolean).join("\n"),
             })
             .eq("id", r.id);
