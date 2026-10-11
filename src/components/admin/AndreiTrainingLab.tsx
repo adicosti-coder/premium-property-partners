@@ -99,7 +99,7 @@ export default function AndreiTrainingLab() {
       <Card>
         <CardHeader><CardTitle className="text-base">1. Alege profilul proprietarului</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
             {PERSONAS.map((p) => (
               <button key={p.id} type="button" onClick={() => { setPersona(p.id); setProspectId(null); }} aria-pressed={!prospectId && persona === p.id}
                 className={`min-h-[48px] rounded-lg border p-3 text-left transition-colors ${!prospectId && persona === p.id ? "border-primary bg-primary/10" : "border-border hover:bg-muted"}`}>
@@ -114,7 +114,7 @@ export default function AndreiTrainingLab() {
           {campaign.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-sm font-semibold">Sau un anunț real din campanie (proprietarul nu este sunat)</h4>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {campaign.map((c) => (
                   <button key={c.id} type="button" onClick={() => setProspectId(c.id)} aria-pressed={prospectId === c.id}
                     className={`min-h-[48px] rounded-lg border p-3 text-left transition-colors ${prospectId === c.id ? "border-primary bg-primary/10" : "border-border hover:bg-muted"}`}>
