@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import AutoConsentedListings from "@/components/admin/AutoConsentedListings";
 import RevokedListingsPanel from "@/components/admin/RevokedListingsPanel";
+import ConsentFunnelPanel from "@/components/admin/ConsentFunnelPanel";
 
 /**
  * Ecran dedicat acordurilor de publicare primite pe WhatsApp.
@@ -24,6 +25,7 @@ export default function AutoConsentedListingsPanel() {
         </Link>
       </p>
 
+      <ConsentFunnelPanel />
       <AutoConsentedListings />
       <RevokedListingsPanel />
     </div>

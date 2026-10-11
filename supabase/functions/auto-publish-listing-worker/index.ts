@@ -531,6 +531,14 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Notificare instant către admin: anunț publicat după acordul proprietarului,
+    // ca publicarea să poată fi verificată în primele minute.
+    if (consentRow && inserted.slug && !republish) {
+      const label = String(prospect.title || "Anunț").slice(0, 120);
+      await sendWaText("40723154520", `✅ Publicat automat după „DA": ${label}\nhttps://realtrust.ro/proprietate/${inserted.slug}`)
+        .catch((e) => console.warn("[auto-publish] admin notify WA failed:", String(e)));
+    }
+
     // Fire-and-forget: image processing
     if (finalImages.length > 0) {
       const proc = fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/process-listing-images`, {
