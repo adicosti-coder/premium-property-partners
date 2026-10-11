@@ -8,6 +8,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { FlaskConical, Loader2 } from "lucide-react";
 import AndreiCallHistory from "./AndreiCallHistory";
+import AndreiScepticLive from "./AndreiScepticLive";
+import TimisoaraZonesManager from "./TimisoaraZonesManager";
+import AndreiUpcomingCalls from "./AndreiUpcomingCalls";
 
 const PERSONAS = [
   { id: "sceptic", label: "Sceptic", desc: "Crede că e o agenție și cere dovezi.", difficulty: "Mediu" },
@@ -133,7 +136,7 @@ export default function AndreiTrainingLab() {
               Antrenează doar Sceptic
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">Antrenamentul rulează pe cele 4 profiluri, pe vânzare, închiriere și regim hotelier, verifică răspunsul la întrebarea despre comision și păstrează maximum 5 lecții active. Rulează automat și în fiecare noapte, în fundal.</p>
+          <p className="text-xs text-muted-foreground">Antrenamentul rulează pe cele 4 profiluri, pe vânzare, închiriere și regim hotelier, verifică răspunsul la întrebarea despre comision și păstrează maximum 5 lecții active. Rulează automat în fiecare noapte, în fundal: 02:00 toate profilurile, 02:30 Sceptic (ora României, ajustat automat vară/iarnă).</p>
           {autoRunning && (
             <div className="space-y-1" role="status" aria-live="polite">
               <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
@@ -196,6 +199,9 @@ export default function AndreiTrainingLab() {
           </CardContent>
         </Card>
       )}
+      <AndreiScepticLive onRunSaved={() => setHistoryKey((k) => k + 1)} />
+      <AndreiUpcomingCalls />
+      <TimisoaraZonesManager />
       <AndreiCallHistory key={historyKey} />
     </div>
   );
