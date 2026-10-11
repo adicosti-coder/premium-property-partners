@@ -1,5 +1,5 @@
 // Campanie Andrei: sună pe rând DOAR prospectele fără WhatsApp (Meta 131026),
-// neapelate încă (fără tag „apelat-andrei”), L–S 09:00–19:00 (Europe/Bucharest),
+// neapelate încă (fără tag „apelat-andrei”), L–S 09:00–20:00 (Europe/Bucharest),
 // un singur apel odată, cu pauză configurabilă după încheierea apelului anterior.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
@@ -44,9 +44,9 @@ Deno.serve(async (req) => {
     return json({ ok: "call_finished" });
   }
 
-  // 2. Orar L–S 09–19
+  // 2. Orar L–S 09–20 (aliniat cu fereastra WhatsApp)
   const { day, hour } = bucharestNow();
-  if (day === "Sun" || hour < 9 || hour >= 19) { await save({ last_message: "În afara orarului (L–S 09:00–19:00) — reia automat la 09:00." }); return json({ skipped: "outside_hours" }); }
+  if (day === "Sun" || hour < 9 || hour >= 20) { await save({ last_message: "În afara orarului (L–S 09:00–20:00) — reia automat la 09:00." }); return json({ skipped: "outside_hours" }); }
 
   // 3. Pauză între apeluri
   if (c.last_call_ended_at && now.getTime() - new Date(c.last_call_ended_at).getTime() < c.delay_minutes * 60_000) {
