@@ -33,8 +33,8 @@ const handleDynamicImportError = (error: Error): never => {
 };
 
 // Wrap lazy imports with error handling
-const lazyWithRetry = (importFn: () => Promise<{ default: React.ComponentType<unknown> }>) => {
-  return lazy(() => importFn().catch(handleDynamicImportError) as Promise<{ default: React.ComponentType<unknown> }>);
+const lazyWithRetry = <Props extends object>(importFn: () => Promise<{ default: React.ComponentType<Props> }>) => {
+  return lazy(() => importFn().catch(handleDynamicImportError));
 };
 
 // Configure React Query defaults for better stability on custom domains
