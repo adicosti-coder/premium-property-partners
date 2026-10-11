@@ -933,7 +933,7 @@ serve(async (req) => {
         const ownerLabel = prospect.contact_name ? `dl/dna ${prospect.contact_name}` : "stimat proprietar";
         contextSummary = `${prospect.title || "anunțul dvs"}${prospect.location ? ", " + prospect.location : ""}`;
         const pitch = (prospect.ai_score_breakdown as any)?.recommended_pitch || "";
-        leadContext = `Vorbești cu ${ownerLabel}. Context lead: ${prospect.title || ""} — ${prospect.location || ""} ${prospect.zone || ""} — preț listat ${prospect.price || "?"} ${prospect.currency || "EUR"} — categorie: ${prospect.category || "?"}.${pitch ? " Sugestie pitch: " + pitch : ""}`;
+        leadContext = `Vorbești cu ${ownerLabel}. Context lead: ${prospect.title || ""} — ${prospect.location || ""} ${prospect.zone || ""} — preț listat ${prospect.price || "?"} ${prospect.currency || "EUR"} — categorie: ${prospect.category || "?"}.${pitch ? " Sugestie pitch: " + pitch : ""}\n\n${andreiListingObjections({ branch, price: prospect.price, currency: prospect.currency, zone: prospect.zone || prospect.location, rooms: (prospect as any).rooms, size: (prospect as any).size, title: prospect.title })}`;
       }
     } else if (session.lead_id) {
       const { data: lead } = await supabase
