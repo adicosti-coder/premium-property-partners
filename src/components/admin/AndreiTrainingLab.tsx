@@ -11,6 +11,7 @@ import AndreiCallHistory from "./AndreiCallHistory";
 import AndreiScepticLive from "./AndreiScepticLive";
 import TimisoaraZonesManager from "./TimisoaraZonesManager";
 import AndreiUpcomingCalls from "./AndreiUpcomingCalls";
+import OwnersWhatsappStatus from "./OwnersWhatsappStatus";
 
 const PERSONAS = [
   { id: "sceptic", label: "Sceptic", desc: "Crede că e o agenție și cere dovezi.", difficulty: "Mediu" },
@@ -201,6 +202,7 @@ export default function AndreiTrainingLab() {
       )}
       <AndreiScepticLive onRunSaved={() => setHistoryKey((k) => k + 1)} />
       <AndreiUpcomingCalls />
+      <OwnersWhatsappStatus />
       <TimisoaraZonesManager />
       <AndreiCallHistory key={historyKey} />
     </div>
