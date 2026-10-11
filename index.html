@@ -143,14 +143,14 @@
          (0 bytes of network), eliminating the "white page" gap before the
          hero WebP arrives. The gradient mimics the warm dark tone of the
          hero photo so the swap is visually seamless. */
-      #app-shell-placeholder{position:absolute;top:0;left:0;right:0;z-index:20;pointer-events:none;min-height:880px;overflow:hidden;display:flex;align-items:center;padding-top:7rem;contain:layout;background:radial-gradient(ellipse at 30% 40%,#3a2f1f 0%,#1f1812 55%,#100c08 100%)}
+      #app-shell-placeholder{position:absolute;top:0;left:0;right:0;z-index:20;pointer-events:none;min-height:880px;overflow:hidden;display:flex;align-items:center;padding-top:9rem;contain:layout;background:radial-gradient(ellipse at 30% 40%,#3a2f1f 0%,#1f1812 55%,#100c08 100%)}
       @media(min-width:768px){#app-shell-placeholder{min-height:100dvh;padding-top:8rem}}
       /* Hero shell text uses light tones so it reads against the warm gradient
          BEFORE the photo loads. Once the WebP paints, foreground text stays
          light because the photo overlay is dark on the left. */
       #app-shell-placeholder .ash-h1,#app-shell-placeholder .ash-sub{color:#f5efe4}
       #app-shell-placeholder .ash-h1 .mid{color:rgba(245,239,228,.92)}
-      #app-shell-placeholder .ash-h1 .pill{background:rgba(0,0,0,.35);border-color:rgba(245,239,228,.25);color:#e9c98a}
+      #app-shell-placeholder .ash-h1 .pill{color:#e9c98a}
 
       /* GUARD 3: Font-swap metric matching — fallback fonts use overrides
          so glyph baselines do not shift when web fonts swap in.
@@ -185,10 +185,11 @@
       .ash-h1{font-family:'Playfair Display',Georgia,serif;font-weight:600;font-size:2.25rem;line-height:1.1;color:hsl(var(--foreground));margin-bottom:1.5rem;display:block}
       .ash-h1>span{display:block}
       .ash-h1 .mid{font-family:inherit;font-style:italic;font-weight:400;font-size:1.5rem;color:hsl(var(--foreground)/0.9);margin:.5rem 0}
-      .ash-h1 .pill{display:inline-flex;align-items:baseline;gap:.25rem;padding:.25rem .5rem;border-radius:.5rem;background:hsl(var(--background)/.35);border:1px solid hsl(var(--border)/.4);color:hsl(var(--primary))}
+      .ash-h1 .pill{display:inline-flex;align-items:baseline;gap:.25rem;color:#e9c98a}
       .ash-sub{max-width:42rem;margin:0 0 2rem;font-size:1.125rem;line-height:1.625;color:hsl(var(--foreground))}
       @media(min-width:768px){.ash-h1{font-size:3rem}.ash-h1 .mid{font-size:1.875rem}.ash-sub{font-size:1.25rem}}
       @media(min-width:1024px){.ash-h1{font-size:3.75rem}.ash-h1 .mid{font-size:2.25rem}}
+      @media(max-width:767px){.ash-h1,.ash-sub{text-shadow:0 1px 4px rgba(0,0,0,.5)}}
     </style>
 
     <!-- Self-hosted Google Fonts — eliminates 2 DNS lookups + external requests -->
