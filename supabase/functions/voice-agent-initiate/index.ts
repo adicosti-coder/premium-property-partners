@@ -116,7 +116,7 @@ serve(async (req) => {
     if (prospectId) {
       const { data: p } = await supabase
         .from("prospect_listings")
-        .select("id, title, price, zone, location, property_type, contact_name, source_url, do_not_call")
+        .select("id, title, price, zone, location, contact_name, source_url, do_not_call")
         .eq("id", prospectId)
         .maybeSingle();
       if (!p) {
@@ -131,7 +131,7 @@ serve(async (req) => {
         owner_name: (p as any).contact_name || null,
         phone: toNumber,
         title: (p as any).title || null,
-        property_type: (p as any).property_type || null,
+        property_type: null,
         price: (p as any).price || null,
         zone,
         analysis_url: analysisUrl,
