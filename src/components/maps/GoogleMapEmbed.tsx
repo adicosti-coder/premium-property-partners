@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 
 /** Browser Maps key (referrer-restricted to realtrust.ro), safe to embed publicly. */
 export const GOOGLE_MAPS_BROWSER_KEY =
-  (import.meta.env["VITE_GOOGLE_MAPS_API_KEY"] as string | undefined) || "AIzaSyOzEguKXY_yi738etpgK8A5V-QkKN2vvFo";
+  (import.meta.env["VITE_GOOGLE_MAPS_API_KEY"] as string | undefined) || "AIzaSyDzEguKXY_yl73BetpgK8A5V-QkKN2vvFg";
 
 type Props = {
   latitude?: number | null;
