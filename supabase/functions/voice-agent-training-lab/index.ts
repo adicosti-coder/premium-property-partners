@@ -264,6 +264,12 @@ Deno.serve(async (req) => {
     }
 
     if (body.action === "sceptic_drill") {
+      if (body.background) {
+        // rulare programată (cron de noapte): răspundem imediat, simulările continuă în fundal
+        // @ts-ignore EdgeRuntime
+        EdgeRuntime.waitUntil(autoLoop(supabase, KEY, { personas: ["sceptic", "sceptic", "sceptic"], rejecter: true }).catch((e) => console.error("sceptic_drill", e)));
+        return json({ started: true, background: true });
+      }
       const before = await supabase.from("voice_call_analyses").select("id", { count: "exact", head: true }).eq("source", "training_lab_auto");
       await autoLoop(supabase, KEY, { personas: ["sceptic", "sceptic", "sceptic"], rejecter: true }).catch((e) => console.error("sceptic_drill", e));
       const after = await supabase.from("voice_call_analyses").select("id", { count: "exact", head: true }).eq("source", "training_lab_auto");
