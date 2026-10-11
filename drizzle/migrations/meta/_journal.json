@@ -666,6 +666,13 @@
       "when": 1791744084898,
       "tag": "0094_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 95,
+      "version": "7",
+      "when": 1791744643943,
+      "tag": "0095_align_prospect_zone_with_title",
+      "breakpoints": true
     }
   ]
 }
