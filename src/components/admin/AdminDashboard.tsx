@@ -13,6 +13,7 @@ import GooglePerformanceWidget from "./GooglePerformanceWidget";
 import SeoAutomationWidget from "./SeoAutomationWidget";
 import AdminUnifiedKpiBar from "./AdminUnifiedKpiBar";
 import ListingPipelineMetrics from "./ListingPipelineMetrics";
+import StaleDraftsActions from "./StaleDraftsActions";
 
 import { toast } from "@/hooks/use-toast";
 import { MarkAsAgencyButton } from "@/components/admin/MarkAsAgencyButton";
@@ -130,7 +131,7 @@ const AdminDashboard = () => {
         supabase.from("properties").select("*", { count: "exact", head: true }).eq("is_active", true).eq("listing_type", "inchiriere"),
         supabase.from("prospect_listings").select("*", { count: "exact", head: true }).eq("is_active", true).gt("lead_score", 80),
         supabase.from("properties").select("*", { count: "exact", head: true }).eq("is_active", false).contains("features", ["necesită-verificare"]),
-        supabase.from("properties").select("*", { count: "exact", head: true }).eq("is_active", false).lt("created_at", sevenDaysAgo),
+        supabase.from("properties").select("*", { count: "exact", head: true }).eq("is_active", false).lt("created_at", sevenDaysAgo).not("features", "cs", "{arhivat}"),
         supabase.from("prospect_listings").select("*", { count: "exact", head: true }).eq("is_active", true).eq("lifecycle_status", "new"),
       ]);
       return {
@@ -512,6 +513,7 @@ const AdminDashboard = () => {
               <p className="mt-3 text-3xl font-bold text-primary">{item.value}</p>
             </button>
           ))}
+          <StaleDraftsActions count={listingOps?.staleDrafts ?? 0} />
         </CardContent>
       </Card>
 
