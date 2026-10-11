@@ -127,13 +127,13 @@ export default function AndreiTrainingLab() {
             </div>
           )}
           <div className="flex flex-col gap-2 sm:flex-row">
-            <Button className="min-h-[48px] w-full sm:w-auto" onClick={run} disabled={running || autoRunning}>
+            <Button className="min-h-[48px] h-auto w-full whitespace-normal px-3 py-2 text-sm sm:w-auto sm:text-base" onClick={run} disabled={running || autoRunning}>
               {running ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Simulare în curs (≈30 s)…</> : "Inițiază Apel de Antrenament (Andrei vs Gemini)"}
             </Button>
-            <Button className="min-h-[48px] w-full sm:w-auto" onClick={() => runAuto()} disabled={running || autoRunning}>
+            <Button className="min-h-[48px] h-auto w-full whitespace-normal px-3 py-2 text-sm sm:w-auto sm:text-base" onClick={() => runAuto()} disabled={running || autoRunning}>
               {autoRunning ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Antrenament în curs (≈2 min)…</> : "Rulează Antrenament Automat Acum"}
             </Button>
-            <Button variant="outline" className="min-h-[48px] w-full sm:w-auto" onClick={() => runAuto("sceptic_drill")} disabled={running || autoRunning}>
+            <Button variant="outline" className="min-h-[48px] h-auto w-full whitespace-normal px-3 py-2 text-sm sm:w-auto sm:text-base" onClick={() => runAuto("sceptic_drill")} disabled={running || autoRunning}>
               Antrenează doar Sceptic
             </Button>
           </div>
