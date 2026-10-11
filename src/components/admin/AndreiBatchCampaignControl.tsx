@@ -120,8 +120,8 @@ export default function AndreiBatchCampaignControl() {
       <AlertDialog open={confirmStart} onOpenChange={setConfirmStart}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Pornești apelarea automată?</AlertDialogTitle>
-            <AlertDialogDescription>Andrei va suna proprietari reali, pe rând: exclusiv proprietari privați confirmați, fără WhatsApp (131026), neapelați încă, în programul Luni–Sâmbătă, 09:00–19:00.</AlertDialogDescription>
+            <AlertDialogTitle>Lansezi campania secvențială?</AlertDialogTitle>
+            <AlertDialogDescription>Sistemul va trimite mai întâi un mesaj pe WhatsApp tuturor proprietarilor care au cont activ. Pentru cei fără WhatsApp, Andrei (Voice Agent) va efectua un apel vocal. Doar proprietari privați confirmați, numere mobile, fără cei de pe lista „nu mai contacta”, Luni–Sâmbătă, 09:00–20:00.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="min-h-12">Renunță</AlertDialogCancel>
@@ -130,9 +130,9 @@ export default function AndreiBatchCampaignControl() {
         </AlertDialogContent>
       </AlertDialog>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h4 className="font-semibold">Campanie Apelare Automată AI</h4>
+        <h4 className="font-semibold">Campanie Secvențială (WhatsApp + Apel Fallback)</h4>
         <div className="flex flex-wrap gap-2">
-          <Badge variant="outline">🕘 Luni–Sâmbătă, 09:00–19:00</Badge>
+          <Badge variant="outline">🕘 Luni–Sâmbătă, 09:00–20:00</Badge>
           <Badge variant={c.enabled ? "default" : "secondary"}>{c.enabled ? "Activă" : "Oprită"}</Badge>
         </div>
       </div>
@@ -162,11 +162,11 @@ export default function AndreiBatchCampaignControl() {
         <Button
           onClick={toggle}
           disabled={updating}
-          className={cn("min-h-12",
+          className={cn("min-h-12 h-auto whitespace-normal text-left",
             c.enabled ? "bg-accent text-accent-foreground hover:bg-accent/90" : "bg-success text-success-foreground hover:bg-success/90")}
         >
           {updating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-          {c.enabled ? "⏸ Pauză Campanie" : "▶ Pornește Apelarea"}
+          {c.enabled ? "⏸ Pauză Campanie" : "▶ Lansează Campanie Secvențială (WhatsApp + Apel Fallback)"}
         </Button>
         <div className="flex items-center gap-2 text-sm">
           <span className="text-muted-foreground">Pauză:</span>
