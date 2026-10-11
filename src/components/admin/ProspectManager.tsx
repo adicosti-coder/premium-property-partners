@@ -378,6 +378,11 @@ const ProspectManager = () => {
     return () => { supabase.removeChannel(channel); };
   }, [activeJob?.id]);
 
+  const [noWaPhones, setNoWaPhones] = useState<Set<string>>(new Set());
+  // Meta 131026 = numărul nu are WhatsApp. Comparăm pe ultimele 9 cifre (07… vs 407…).
+  const isNoWhatsApp = (phone?: string | null) =>
+    !!phone && noWaPhones.has(phone.replace(/\D/g, '').slice(-9));
+
   const fetchListings = useCallback(async () => {
     setIsLoading(true);
     try {
