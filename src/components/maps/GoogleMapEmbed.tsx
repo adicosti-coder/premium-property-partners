@@ -28,7 +28,7 @@ export function buildGoogleMapEmbedUrl({ latitude, longitude, query, zoom = 15 }
 }
 
 /** Clean fallback shown when the Maps key is missing/rejected — no black error screens. */
-const MapFallback = ({ title, query }: { title: string; query?: string | null }) => {
+const MapFallback = ({ title, query, debugError }: { title: string; query?: string | null; debugError?: string | null }) => {
   const href = query?.trim()
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${query.trim()}${/timi[sș]oara/i.test(query) ? "" : ", Timișoara"}`)}`
     : "https://www.google.com/maps/search/?api=1&query=Timi%C8%99oara";
@@ -40,25 +40,39 @@ const MapFallback = ({ title, query }: { title: string; query?: string | null })
       <a href={href} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-primary hover:underline">
         Deschide în Google Maps →
       </a>
+      {debugError && (
+        <p className="mt-1 max-w-full break-words rounded bg-destructive/10 px-2 py-1 font-mono text-[10px] text-destructive" role="alert">
+          Google Maps: {debugError}
+        </p>
+      )}
     </div>
   );
 };
 
-/** Key probe on every mount: a 1x1 Static Maps image fails when the key is invalid/restricted. */
-function isMapsKeyValid(): Promise<boolean> {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => resolve(true);
-    img.onerror = () => resolve(false);
-    img.src = `https://maps.googleapis.com/maps/api/staticmap?center=45.7489,21.227&zoom=1&size=1x1&key=${GOOGLE_MAPS_BROWSER_KEY}&_=${Date.now()}`;
-  });
+type KeyProbe = { ok: boolean; error: string | null };
+
+/** Key probe on every mount: reads the real Google error so it can be surfaced for debugging. */
+async function probeMapsKey(): Promise<KeyProbe> {
+  const url = `https://maps.googleapis.com/maps/api/staticmap?center=45.7489,21.227&zoom=1&size=1x1&key=${GOOGLE_MAPS_BROWSER_KEY}&_=${Date.now()}`;
+  try {
+    const res = await fetch(url, { referrerPolicy: "strict-origin-when-cross-origin" });
+    if (res.ok) return { ok: true, error: null };
+    const body = (await res.text()).replace(/\s+/g, " ").trim().slice(0, 300);
+    const error = `HTTP ${res.status}: ${body || "fără detalii"}`;
+    console.error("[GoogleMapEmbed] Cheia Google Maps a fost respinsă:", error);
+    return { ok: false, error };
+  } catch (e) {
+    const error = e instanceof Error ? e.message : "Eroare de rețea la verificarea cheii";
+    console.error("[GoogleMapEmbed] Verificarea cheii Google Maps a eșuat:", error);
+    return { ok: false, error };
+  }
 }
 
 /** Lazy Google Maps Embed — mounts only when near the viewport (keeps LCP fast). */
 const GoogleMapEmbed = ({ title = "Hartă locație", className = "h-72", ...rest }: Props) => {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
-  const [keyOk, setKeyOk] = useState<boolean | null>(null);
+  const [probe, setProbe] = useState<KeyProbe | null>(null);
   const src = buildGoogleMapEmbedUrl(rest);
 
   useEffect(() => {
@@ -70,19 +84,19 @@ const GoogleMapEmbed = ({ title = "Hartă locație", className = "h-72", ...rest
   }, [visible]);
 
   useEffect(() => {
-    if (!visible || keyOk !== null) return;
+    if (!visible || probe !== null) return;
     let alive = true;
-    void isMapsKeyValid().then((ok) => { if (alive) setKeyOk(ok); });
+    void probeMapsKey().then((result) => { if (alive) setProbe(result); });
     return () => { alive = false; };
-  }, [visible, keyOk]);
+  }, [visible, probe]);
 
   if (!src) return null;
   return (
     <div ref={ref} className={`relative w-full overflow-hidden rounded-xl border border-border bg-muted ${className}`}>
-      {visible && keyOk ? (
+      {visible && probe?.ok ? (
         <iframe title={title} src={src} className="h-full w-full" style={{ border: 0 }} loading="lazy" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
-      ) : visible && keyOk === false ? (
-        <MapFallback title={title} query={rest.query} />
+      ) : visible && probe && !probe.ok ? (
+        <MapFallback title={title} query={rest.query} debugError={probe.error} />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center gap-2 text-sm text-muted-foreground">
           <MapPin className="h-5 w-5 text-primary" /> {title}
