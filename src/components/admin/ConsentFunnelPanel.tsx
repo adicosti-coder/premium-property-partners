@@ -63,7 +63,7 @@ const FunnelBlock = ({ title, stats }: { title: string; stats: FunnelStats }) =>
     </div>
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
       <StatCard label="Cereri trimise" value={String(stats.requested)} />
-      <StatCard label="Acorduri „DA"" value={String(stats.granted)} />
+      <StatCard label={'Acorduri „DA"'} value={String(stats.granted)} />
       <StatCard label="Publicate" value={String(stats.published)} />
       <StatCard label="Retrase / STOP" value={String(stats.revoked)} />
       <StatCard
