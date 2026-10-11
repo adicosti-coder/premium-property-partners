@@ -19,3 +19,4 @@
 - Chunk-load recovery allows at most one automatic refresh per URL per minute and never refreshes offline or deletes unrelated caches — prevents reload loops and preserves cached resources.
 - Keep toast hosts mounted at startup, isolate route errors with a location-reset boundary, and delay nonblocking route-loading feedback briefly — preserves early notifications and prerendered content without blank navigation.
 - Voice campaign controls use an in-page confirmation, serialize updates, and announce success only after persistence; call-log refreshes retain existing rows — avoids blocked browser confirmations, misleading feedback, and polling flicker.
+- Append the shared concise conversation policy after voice scripts and learned lessons, with sales examples only on sales calls; reuse it in drills — keeps runtime brevity and factuality rules consistent even with custom scripts.
