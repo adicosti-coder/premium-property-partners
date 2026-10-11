@@ -9,6 +9,10 @@ import { supabase } from "@/lib/supabaseClient";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import type { VoiceProspectSummary } from "./VoiceProspectCard";
 import { consentPhone } from "./autoConsentedListingUtils";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ContextResponse {
   found: boolean;
@@ -41,6 +45,7 @@ export default function VoiceAgentCallSimulator({ prospect }: { prospect?: Voice
   const [callError, setCallError] = useState<string | null>(null);
   const [callInfo, setCallInfo] = useState<string | null>(null);
   const requestVersion = useRef(0);
+  const [pendingNumber, setPendingNumber] = useState<string | null>(null);
   const [config, setConfig] = useState<{ ready: boolean; checks: { key: string; label: string; ok: boolean; required: boolean; detail: string }[] } | null>(null);
   const [configLoading, setConfigLoading] = useState(false);
   const [configError, setConfigError] = useState<string | null>(null);
@@ -141,16 +146,47 @@ export default function VoiceAgentCallSimulator({ prospect }: { prospect?: Voice
     return `${status ? `HTTP ${status} — ` : ""}${base}${body?.details ? ` · ${raw}` : ""}`;
   };
 
-  const startRealCall = async () => {
+  const startRealCall = () => {
     const normalizedPhone = consentPhone(phone);
-    if (!/^\+[1-9]\d{6,14}$/.test(normalizedPhone)) {
-      toast({ title: "Număr invalid", description: "Format E.164, ex: +40722123456", variant: "destructive" });
+    if (!/^\+40[237]\d{8}$/.test(normalizedPhone) && !/^\+(?!40)[1-9]\d{6,14}$/.test(normalizedPhone)) {
+      const msg = `Număr invalid: „${phone}” → „${normalizedPhone}”. Folosește format internațional, ex: +40723154520.`;
+      setCallError(msg);
+      toast({ title: "Număr invalid", description: msg, variant: "destructive" });
       return;
     }
-    if (!window.confirm(`Andrei va suna REAL numărul ${normalizedPhone}. Continui?`)) return;
+    setPendingNumber(normalizedPhone);
+  };
+
+  const pollSession = async (sessionId: string, toNumber: string) => {
+    const labels: Record<string, string> = {
+      initiating: "se inițiază", queued: "în coada Twilio", initiated: "inițiat", ringing: "sună",
+      "in-progress": "în desfășurare", answered: "preluat", completed: "încheiat", busy: "ocupat",
+      "no-answer": "nu a răspuns", failed: "eșuat", canceled: "anulat",
+    };
+    for (let i = 0; i < 30; i++) {
+      await new Promise((r) => setTimeout(r, 3000));
+      const { data } = await supabase.from("voice_call_sessions")
+        .select("status, error_message").eq("id", sessionId).maybeSingle();
+      if (!data) continue;
+      const st = String(data.status || "");
+      setCallInfo(`Apel către ${toNumber}: ${labels[st] || st}.`);
+      if (data.error_message || ["failed", "busy", "no-answer", "canceled"].includes(st)) {
+        const msg = `Twilio a raportat „${labels[st] || st}” pentru ${toNumber}${data.error_message ? `: ${data.error_message}` : "."}`;
+        setCallError(msg);
+        toast({ title: "Apelul nu a reușit", description: msg, variant: "destructive" });
+        return;
+      }
+      if (["in-progress", "answered", "completed"].includes(st)) return;
+    }
+  };
+
+  const confirmRealCall = async () => {
+    const normalizedPhone = pendingNumber;
+    setPendingNumber(null);
+    if (!normalizedPhone) return;
     setCalling(true);
     setCallError(null);
-    setCallInfo(null);
+    setCallInfo(`Se trimite cererea de apel către ${normalizedPhone}…`);
     try {
       const { data, error: invokeErr } = await supabase.functions.invoke("voice-agent-initiate", {
         body: { toNumber: normalizedPhone, ...(prospect ? { prospectId: prospect.id } : {}), forceElevenLabs: true },
@@ -165,26 +201,31 @@ export default function VoiceAgentCallSimulator({ prospect }: { prospect?: Voice
         }
         const msg = explainCallError(status, body);
         console.error("voice-agent-initiate failed:", status, body);
+        setCallInfo(null);
         setCallError(msg);
         toast({ title: "Apelul nu a pornit", description: msg, variant: "destructive" });
         return;
       }
       if (data?.skipped) {
         const msg = data.message || `Apel sărit: ${data.skipped}`;
+        setCallInfo(null);
         setCallError(msg);
         toast({ title: "Apel sărit", description: msg, variant: "destructive" });
         return;
       }
-      if (data?.error) {
-        const msg = explainCallError(undefined, data);
+      if (data?.error || !data?.sessionId) {
+        const msg = explainCallError(undefined, data?.error ? data : { error: `Răspuns neașteptat: ${JSON.stringify(data).slice(0, 300)}` });
+        setCallInfo(null);
         setCallError(msg);
         toast({ title: "Apelul nu a pornit", description: msg, variant: "destructive" });
         return;
       }
-      setCallInfo(`Apel trimis către Twilio (SID ${data?.callSid ?? "—"}). Telefonul ar trebui să sune în câteva secunde.`);
+      setCallInfo(`Twilio a acceptat apelul către ${normalizedPhone} (SID ${data.callSid ?? "—"}). Urmăresc starea…`);
       toast({ title: "📞 Apel inițiat", description: `Andrei sună ${normalizedPhone}` });
+      await pollSession(data.sessionId, normalizedPhone);
     } catch (err: any) {
       const msg = err?.message || "Eroare de rețea";
+      setCallInfo(null);
       setCallError(msg);
       toast({ title: "Eroare rețea", description: msg, variant: "destructive" });
     } finally {
@@ -205,6 +246,20 @@ export default function VoiceAgentCallSimulator({ prospect }: { prospect?: Voice
       </CardHeader>
 
       <CardContent className="space-y-4">
+        <AlertDialog open={!!pendingNumber} onOpenChange={(o) => { if (!o) setPendingNumber(null); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Pornești un apel real?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Andrei va suna efectiv numărul <strong>{pendingNumber}</strong> prin Twilio.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="min-h-12">Renunță</AlertDialogCancel>
+              <AlertDialogAction className="min-h-12" onClick={confirmRealCall}>Da, sună acum</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
             <label htmlFor="andrei-simulator-phone" className="text-xs font-medium text-muted-foreground mb-1 block">
