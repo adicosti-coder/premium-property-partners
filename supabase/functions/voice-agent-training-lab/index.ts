@@ -234,7 +234,7 @@ Deno.serve(async (req) => {
       const before = await supabase.from("voice_call_analyses").select("id", { count: "exact", head: true }).eq("source", "training_lab_auto");
       await autoLoop(supabase, KEY).catch((e) => console.error("auto_loop", e));
       const after = await supabase.from("voice_call_analyses").select("id", { count: "exact", head: true }).eq("source", "training_lab_auto");
-      const { data: active } = await supabase.from("voice_agent_playbook_addendum").select("id", { count: "exact", head: true }).eq("is_active", true);
+      const active = await supabase.from("voice_agent_playbook_addendum").select("id", { count: "exact", head: true }).eq("is_active", true);
       return json({ started: true, finished: true, analyses_added: Math.max(0, (after.count ?? 0) - (before.count ?? 0)), active_lessons: active.count ?? 0 });
     }
     const r = await simulate(supabase, KEY, body);
