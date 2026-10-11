@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Phone, Loader2, Play, AlertCircle, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabaseClient";
+import { FunctionsHttpError } from "@supabase/supabase-js";
 import type { VoiceProspectSummary } from "./VoiceProspectCard";
 import { consentPhone } from "./autoConsentedListingUtils";
 
@@ -36,6 +37,9 @@ export default function VoiceAgentCallSimulator({ prospect }: { prospect?: Voice
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ContextResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [calling, setCalling] = useState(false);
+  const [callError, setCallError] = useState<string | null>(null);
+  const [callInfo, setCallInfo] = useState<string | null>(null);
   const requestVersion = useRef(0);
   useEffect(() => {
     requestVersion.current += 1;
@@ -98,6 +102,73 @@ export default function VoiceAgentCallSimulator({ prospect }: { prospect?: Voice
     }
   };
 
+  const explainCallError = (status: number | undefined, body: any): string => {
+    const raw = typeof body === "string" ? body : JSON.stringify(body?.details ?? body ?? {});
+    const base = body?.error || body?.message || "Eroare necunoscută";
+    if (body?.missing) {
+      const miss = Object.entries(body.missing).filter(([, v]) => v).map(([k]) => k).join(", ");
+      return `Configurație lipsă: ${miss || "Twilio"}. ${base}`;
+    }
+    if (status === 401) return `401 Unauthorized — sesiunea de admin a expirat sau cheia conectorului e invalidă. ${raw}`;
+    if (status === 403) return `403 Forbidden — cont fără rol admin sau conectorul Twilio nu are acces. ${raw}`;
+    if (/21219|unverified/i.test(raw)) return `Twilio 21219: numărul destinatar nu e verificat (cont Trial). Detalii: ${raw}`;
+    if (/21210|21606|From/i.test(raw)) return `Numărul Twilio „From” (TWILIO_FROM_NUMBER) nu e valid/nu aparține contului. Detalii: ${raw}`;
+    if (/21215|geo|permission/i.test(raw)) return `Twilio: apelurile spre România nu sunt activate în Geo Permissions. Detalii: ${raw}`;
+    if (/20003|authenticate/i.test(raw)) return `Twilio 20003: autentificare eșuată — reconectează Twilio. Detalii: ${raw}`;
+    return `${status ? `HTTP ${status} — ` : ""}${base}${body?.details ? ` · ${raw}` : ""}`;
+  };
+
+  const startRealCall = async () => {
+    const normalizedPhone = consentPhone(phone);
+    if (!/^\+[1-9]\d{6,14}$/.test(normalizedPhone)) {
+      toast({ title: "Număr invalid", description: "Format E.164, ex: +40722123456", variant: "destructive" });
+      return;
+    }
+    if (!window.confirm(`Andrei va suna REAL numărul ${normalizedPhone}. Continui?`)) return;
+    setCalling(true);
+    setCallError(null);
+    setCallInfo(null);
+    try {
+      const { data, error: invokeErr } = await supabase.functions.invoke("voice-agent-initiate", {
+        body: { toNumber: normalizedPhone, ...(prospect ? { prospectId: prospect.id } : {}), forceElevenLabs: true },
+      });
+      if (invokeErr) {
+        let status: number | undefined;
+        let body: any = invokeErr.message;
+        if (invokeErr instanceof FunctionsHttpError) {
+          status = invokeErr.context.status;
+          const text = await invokeErr.context.text();
+          try { body = JSON.parse(text); } catch { body = { error: text }; }
+        }
+        const msg = explainCallError(status, body);
+        console.error("voice-agent-initiate failed:", status, body);
+        setCallError(msg);
+        toast({ title: "Apelul nu a pornit", description: msg, variant: "destructive" });
+        return;
+      }
+      if (data?.skipped) {
+        const msg = data.message || `Apel sărit: ${data.skipped}`;
+        setCallError(msg);
+        toast({ title: "Apel sărit", description: msg, variant: "destructive" });
+        return;
+      }
+      if (data?.error) {
+        const msg = explainCallError(undefined, data);
+        setCallError(msg);
+        toast({ title: "Apelul nu a pornit", description: msg, variant: "destructive" });
+        return;
+      }
+      setCallInfo(`Apel trimis către Twilio (SID ${data?.callSid ?? "—"}). Telefonul ar trebui să sune în câteva secunde.`);
+      toast({ title: "📞 Apel inițiat", description: `Andrei sună ${normalizedPhone}` });
+    } catch (err: any) {
+      const msg = err?.message || "Eroare de rețea";
+      setCallError(msg);
+      toast({ title: "Eroare rețea", description: msg, variant: "destructive" });
+    } finally {
+      setCalling(false);
+    }
+  };
+
   return (
     <Card className="border border-border/60 bg-card">
       <CardHeader className="pb-3">
@@ -135,12 +206,38 @@ export default function VoiceAgentCallSimulator({ prospect }: { prospect?: Voice
               Simulează declanșare ElevenLabs
             </Button>
           </div>
+          <div className="flex items-end">
+            <Button
+              onClick={startRealCall}
+              disabled={calling}
+              variant="destructive"
+              className="min-h-12 h-auto gap-2 whitespace-normal"
+            >
+              {calling ? <Loader2 className="h-4 w-4 animate-spin" /> : <Phone className="h-4 w-4" />}
+              Pornește apel real
+            </Button>
+          </div>
         </div>
+        <p className="text-xs text-muted-foreground">
+          „Simulează” doar încarcă contextul (nu sună). „Pornește apel real” sună efectiv numărul prin Twilio + vocea ElevenLabs.
+        </p>
 
         {error && (
           <div className="flex items-start gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
             <XCircle className="h-4 w-4 mt-0.5 shrink-0" />
             <span>{error}</span>
+          </div>
+        )}
+        {callError && (
+          <div role="alert" className="flex items-start gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive break-words">
+            <XCircle className="h-4 w-4 mt-0.5 shrink-0" />
+            <span>{callError}</span>
+          </div>
+        )}
+        {callInfo && (
+          <div className="flex items-start gap-2 rounded-md bg-primary/10 p-3 text-sm text-foreground">
+            <CheckCircle className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
+            <span>{callInfo}</span>
           </div>
         )}
 
