@@ -312,7 +312,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, sessionId = "", language = "ro", conversationHistory = [], pageContext = "/", imageBase64, imagesArray, qualificationContext, pageTitle = "", pageDescription = "", pageUrl = "" } = await req.json();
+    const { message, sessionId = "", language = "ro", conversationHistory = [], pageContext: rawPageContext = "/", imageBase64, imagesArray, qualificationContext, pageTitle = "", pageDescription = "", pageUrl = "" } = await req.json();
 
     if ((!message && !imageBase64 && !imagesArray?.length) || (message && message.length > 2000)) {
       return new Response(JSON.stringify({ error: "invalid_message" }), {
@@ -322,6 +322,7 @@ serve(async (req) => {
 
     // Async lead detection
     const pageInfo = { title: String(pageTitle || "").replace(/[<>]/g, "").slice(0, 200), description: String(pageDescription || "").replace(/[<>]/g, "").slice(0, 300), url: /^https?:\/\/(www\.)?realtrust\.ro\//.test(String(pageUrl)) || String(pageUrl).startsWith("http://localhost") || /lovable\.app\//.test(String(pageUrl)) ? String(pageUrl).slice(0, 300) : "" };
+    const pageContext = (() => { const v = String(rawPageContext || "/").trim().slice(0, 200); return /^\/[A-Za-z0-9\-._~\/%?=&#]*$/.test(v) ? v : "/"; })();
     const leadPromise = detectAndSaveLead(message, conversationHistory, pageContext, pageInfo).catch((e) => { console.error(e); return null; });
     const logCtx = { leadPromise, pageInfo };
     notifyChatLead(message, sessionId, pageContext, conversationHistory).catch(console.error);
