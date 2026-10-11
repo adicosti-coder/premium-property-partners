@@ -451,6 +451,24 @@ export default function WhatsappOutboundQueue() {
       }
       filters={
         <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Filtre rapide">
+            {([
+              ["all", "Toate"],
+              ["sent", "Cu succes"],
+              ["failed", "Eșuate Meta"],
+              ["cancelled", "Sărite / Blocate"],
+            ] as const).map(([v, label]) => (
+              <Button
+                key={v}
+                size="sm"
+                variant={statusFilter === v ? "default" : "outline"}
+                className="h-8 text-xs"
+                onClick={() => setStatusFilter(v)}
+              >
+                {label}
+              </Button>
+            ))}
+          </div>
           <Input
             placeholder="Caută telefon, șablon sau sursă…"
             value={search}

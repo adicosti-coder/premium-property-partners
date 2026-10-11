@@ -378,6 +378,11 @@ const ProspectManager = () => {
     return () => { supabase.removeChannel(channel); };
   }, [activeJob?.id]);
 
+  const [noWaPhones, setNoWaPhones] = useState<Set<string>>(new Set());
+  // Meta 131026 = numărul nu are WhatsApp. Comparăm pe ultimele 9 cifre (07… vs 407…).
+  const isNoWhatsApp = (phone?: string | null) =>
+    !!phone && noWaPhones.has(phone.replace(/\D/g, '').slice(-9));
+
   const fetchListings = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -391,6 +396,15 @@ const ProspectManager = () => {
       if (error) throw error;
       const typedData = (data || []) as unknown as ProspectListing[];
       setAllListings(typedData);
+
+      // Numerele pentru care Meta a returnat 131026 (fără WhatsApp) — marcate vizual în listă.
+      const { data: waFailed } = await supabase
+        .from('wa_outbound_queue')
+        .select('phone_normalized')
+        .eq('status', 'failed')
+        .ilike('last_error', '%131026%')
+        .limit(500);
+      setNoWaPhones(new Set((waFailed || []).map((r: any) => String(r.phone_normalized || '').replace(/\D/g, '').slice(-9))));
 
       // Compute stats from all data
       const total = typedData.length;
@@ -662,9 +676,12 @@ const ProspectManager = () => {
         {listing.size && <span>{listing.size}mp</span>}
       </div>
       {listing.contact_phone && (
-        <div className="flex items-center gap-1 mt-2">
+        <div className="flex items-center gap-1 mt-2 flex-wrap">
           <Phone className="w-3 h-3 text-green-600" />
           <span className="text-xs text-green-600 font-medium">{listing.contact_phone}</span>
+          {isNoWhatsApp(listing.contact_phone) && (
+            <Badge variant="destructive" className="text-[10px]">Fără WhatsApp – Necesită apel telefonic</Badge>
+          )}
         </div>
       )}
       {(listing.tags?.length > 0) && (
@@ -699,6 +716,9 @@ const ProspectManager = () => {
               </Badge>
               <Badge variant="outline" className="shrink-0">{listing.source_platform}</Badge>
               {stage && <Badge variant="secondary" className="shrink-0">{stage.emoji} {stage.label.replace(stage.emoji + ' ', '')}</Badge>}
+              {isNoWhatsApp(listing.contact_phone) && (
+                <Badge variant="destructive" className="shrink-0">Fără WhatsApp – Necesită apel telefonic</Badge>
+              )}
             </div>
             <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground flex-wrap">
               {listing.zone && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{listing.zone}</span>}
