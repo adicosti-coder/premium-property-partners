@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { FlaskConical, Loader2 } from "lucide-react";
+import AndreiCallHistory from "./AndreiCallHistory";
 
 const PERSONAS = [
   { id: "sceptic", label: "Sceptic", desc: "Crede că e o agenție și cere dovezi." },
@@ -130,6 +131,7 @@ export default function AndreiTrainingLab() {
           </CardContent>
         </Card>
       )}
+      <AndreiCallHistory />
     </div>
   );
 }

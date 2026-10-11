@@ -645,6 +645,13 @@
       "when": 1791709336475,
       "tag": "0091_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "7",
+      "when": 1791736982642,
+      "tag": "0092_voice_call_analyses",
+      "breakpoints": true
     }
   ]
 }

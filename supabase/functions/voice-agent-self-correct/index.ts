@@ -29,6 +29,46 @@ serve(async (req) => {
 
     let lessonInserted: any = null;
 
+    // 0. FULL GEMINI ANALYSIS for every real call with a user turn → saved in history.
+    if (sessionId && LOVABLE_API_KEY) {
+      try {
+        const { data: s } = await supabase.from("voice_call_sessions")
+          .select("id, ai_outcome, transcript, to_number").eq("id", sessionId).maybeSingle();
+        const turns = Array.isArray(s?.transcript) ? s!.transcript : [];
+        const hasUser = turns.some((t: any) => (t.role === "user") && String(t.text || t.content || "").trim());
+        const { data: existing } = await supabase.from("voice_call_analyses").select("id").eq("session_id", sessionId).maybeSingle();
+        if (s && hasUser && !existing) {
+          const convo = turns.map((t: any) => `${t.role === "user" ? "Proprietar" : "Andrei"}: ${t.text || t.content || ""}`).join("\n").slice(0, 6000);
+          const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ model: "google/gemini-2.5-flash", temperature: 0.2, messages: [
+              { role: "system", content: "Ești coach sever de vânzări imobiliare telefonice. Răspunzi doar JSON valid." },
+              { role: "user", content: `Analizează performanța lui Andrei (asistent AI RealTrust Timișoara) într-un apel real. Criterii: replici scurte, nu se repetă, avansează, tratează obiecțiile, transparență, fără informații inventate.\n\n${convo}\n\nRăspunde STRICT JSON: {"score": 1-10, "strengths": ["..."], "weaknesses": ["..."], "objections": [{"objection": "...", "handled": true|false, "comment": "..."}], "prompt_fixes": ["regulă imperativă, max 200 caractere"]}` },
+            ] }),
+          });
+          if (r.ok) {
+            const raw = String((await r.json())?.choices?.[0]?.message?.content || "");
+            const m = raw.match(/\{[\s\S]*\}/);
+            const a = m ? JSON.parse(m[0]) : null;
+            if (a) {
+              const arr = (v: unknown, n: number) => (Array.isArray(v) ? v : []).slice(0, n);
+              await supabase.from("voice_call_analyses").insert({
+                session_id: sessionId, source: "real_call", to_number: s.to_number, outcome: s.ai_outcome,
+                score: Math.max(1, Math.min(10, Math.round(Number(a.score) || 1))),
+                strengths: arr(a.strengths, 6).map(String), weaknesses: arr(a.weaknesses, 6).map(String),
+                objections: arr(a.objections, 8), prompt_fixes: arr(a.prompt_fixes, 6).map(String),
+                transcript: convo,
+              });
+            }
+          }
+        }
+      } catch (e) {
+        console.error("[self-correct] full analysis failed", e);
+      }
+    }
+
+
     // 1. SELF-CORRECTION: if session was rejected, ask Gemini for a 1-sentence lesson.
     if (sessionId && LOVABLE_API_KEY) {
       const { data: sess } = await supabase

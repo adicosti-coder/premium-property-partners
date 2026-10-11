@@ -10500,6 +10500,54 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_call_analyses: {
+        Row: {
+          applied_lessons: Json
+          created_at: string
+          id: string
+          objections: Json
+          outcome: string | null
+          prompt_fixes: Json
+          score: number | null
+          session_id: string | null
+          source: string
+          strengths: Json
+          to_number: string | null
+          transcript: string | null
+          weaknesses: Json
+        }
+        Insert: {
+          applied_lessons?: Json
+          created_at?: string
+          id?: string
+          objections?: Json
+          outcome?: string | null
+          prompt_fixes?: Json
+          score?: number | null
+          session_id?: string | null
+          source?: string
+          strengths?: Json
+          to_number?: string | null
+          transcript?: string | null
+          weaknesses?: Json
+        }
+        Update: {
+          applied_lessons?: Json
+          created_at?: string
+          id?: string
+          objections?: Json
+          outcome?: string | null
+          prompt_fixes?: Json
+          score?: number | null
+          session_id?: string | null
+          source?: string
+          strengths?: Json
+          to_number?: string | null
+          transcript?: string | null
+          weaknesses?: Json
+        }
+        Relationships: []
+      }
       voice_call_sessions: {
         Row: {
           ai_outcome: string | null
