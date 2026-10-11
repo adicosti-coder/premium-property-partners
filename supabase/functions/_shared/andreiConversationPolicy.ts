@@ -109,7 +109,7 @@ export function andreiListingObjections(f: AndreiListingFacts): string {
       ? `Preț: cere ${price} ${cur}${unit}. Obiecție probabilă: „Nu scad chiria.” Răspuns: respecți cifra și propui analiza gratuită comparată cu chirii similare din zonă.`
       : `Preț: cere ${price} ${cur}${ppm}. Obiecție probabilă: „Nu scad prețul.” Răspuns: respecți decizia și propui comparația gratuită cu anunțuri similare din zonă; nu afirmi că prețul e mare fără date.`);
   }
-  if (zone) lines.push(`Zonă: ${zone}. Obiecție probabilă: „Zona se vinde/închiriază singură.” Răspuns: confirmi interesul pentru zonă și explici ce face RealTrust concret pentru acest tip de anunț.`);
+  if (zone) lines.push(`ZONA EXACTĂ din anunț: ${zone}. Folosești DOAR această zonă; nu numi alt cartier sau reper.`), lines.push(`Zonă: ${zone}. Obiecție probabilă: „Zona se vinde/închiriază singură.” Răspuns: confirmi interesul pentru zonă și explici ce face RealTrust concret pentru acest tip de anunț.`);
   else lines.push(`Zonă necunoscută: întrebi o singură dată cartierul; nu presupui zona.`);
   if (rooms === 1 || (size > 0 && size < 35)) lines.push(`Tip: garsonieră/1 cameră${size ? `, ${size} m²` : ""}. Obiecție probabilă: „E mică, nu merită o agenție.” Răspuns: pași simpli și costuri clare, fără presiune.`);
   else if (rooms >= 2) lines.push(`Tip: ${rooms} camere${size ? `, ${size} m²` : ""}${rooms === 2 ? " (1 dormitor + living)" : ""}. Obiecție probabilă: „Am deja destui interesați.” Răspuns: ${b === "vanzare" ? "filtrarea cumpărătorilor înainte de vizionare economisește timp" : b === "inchiriere" ? "selectarea atentă a chiriașilor reduce riscul" : "managementul complet elimină munca zilnică"}.`);
