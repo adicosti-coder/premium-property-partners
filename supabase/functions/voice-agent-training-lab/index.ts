@@ -97,24 +97,26 @@ async function autoLoop(supabase: any, KEY: string) {
       .order("created_at", { ascending: false }).limit(40);
     rows = [...rows, ...(data ?? [])];
   }
-  // diversificăm tipurile de anunț: vânzare, închiriere, hotelier
-  const byCat: Record<string, any[]> = {};
-  for (const r of rows) (byCat[r.category || "vanzare"] ||= []).push(r);
-  const order = Object.values(byCat);
-  const picks: string[] = [];
-  for (let i = 0; picks.length < 4 && i < 20; i++) { const g = order[i % order.length]; const x = g?.shift(); if (x) picks.push(x.id); }
-  const personas = Object.keys(PERSONAS);
+  // fiecare simulare primește alt tip de anunț (vânzare / închiriere / hotelier) și o întrebare despre comision
+  const byBranch: Record<string, any[]> = {};
+  for (const r of rows) (byBranch[branchOf(r.category)] ||= []).push(r);
+  const BR = ["vanzare", "inchiriere", "cazare"];
+  const personas = opts.personas ?? Object.keys(PERSONAS);
   const fixes: string[] = [];
   for (let i = 0; i < personas.length; i++) {
     try {
-      const r: any = await simulate(supabase, KEY, { persona: personas[i], prospect_id: picks[i] });
+      const branch = BR[i % BR.length];
+      const pick = byBranch[branch]?.shift();
+      const r: any = await simulate(supabase, KEY, { persona: personas[i], prospect_id: pick?.id, branch, commission_probe: true, rejecter: opts.rejecter });
       if (!r.analysis) continue;
       const v = validate(r.transcript, r.branch);
       await supabase.from("voice_call_analyses").insert({
-        source: "training_lab_auto", outcome: `${r.persona} · ${r.branch}`, score: r.analysis.score,
+        source: "training_lab_auto", outcome: `${personas[i]} · ${r.branch} · comision ${v.commission_answer_ok === null ? "neîntrebat" : v.commission_answer_ok && !v.wrong_commission ? "OK" : "GREȘIT"}`, score: r.analysis.score,
         strengths: r.analysis.strengths, weaknesses: [...r.analysis.weaknesses,
           ...(v.banned_phrase ? ["Validare: formulare interzisă sau acord greșit detectat"] : []),
           ...(v.wrong_branch_argument ? ["Validare: argument nepotrivit tipului de anunț"] : []),
+          ...(v.wrong_commission ? ["Validare: procent de comision greșit pentru tipul de anunț"] : []),
+          ...(v.commission_answer_ok === false ? ["Validare: răspunsul la comision nu începe cu analiza gratuită + procentul corect + /analiza-gratuita pe WhatsApp"] : []),
           ...(!v.offered_free_analysis ? ["Validare: nu a propus analiza gratuită /analiza-gratuita"] : [])],
         objections: r.analysis.objections, prompt_fixes: r.analysis.prompt_fixes,
         transcript: r.transcript.map((t: any) => `${t.role === "andrei" ? "Andrei" : "Proprietar"}: ${t.text}`).join("\n"),
@@ -122,7 +124,7 @@ async function autoLoop(supabase: any, KEY: string) {
       fixes.push(...r.analysis.prompt_fixes);
     } catch (e: any) {
       console.error("sim", e?.message);
-      if (e?.status === 402 || e?.status === 403) return; // circuit breaker
+      if (e?.status === 402 || e?.status === 403 || e?.status === 429) return; // circuit breaker
     }
   }
   if (!fixes.length) return;
