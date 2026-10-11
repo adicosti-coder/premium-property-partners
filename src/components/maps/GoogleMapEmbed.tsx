@@ -72,7 +72,7 @@ async function probeMapsKey(): Promise<KeyProbe> {
 const GoogleMapEmbed = ({ title = "Hartă locație", className = "h-72", ...rest }: Props) => {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
-  const [keyOk, setKeyOk] = useState<boolean | null>(null);
+  const [probe, setProbe] = useState<KeyProbe | null>(null);
   const src = buildGoogleMapEmbedUrl(rest);
 
   useEffect(() => {
