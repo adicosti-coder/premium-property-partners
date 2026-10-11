@@ -676,9 +676,12 @@ const ProspectManager = () => {
         {listing.size && <span>{listing.size}mp</span>}
       </div>
       {listing.contact_phone && (
-        <div className="flex items-center gap-1 mt-2">
+        <div className="flex items-center gap-1 mt-2 flex-wrap">
           <Phone className="w-3 h-3 text-green-600" />
           <span className="text-xs text-green-600 font-medium">{listing.contact_phone}</span>
+          {isNoWhatsApp(listing.contact_phone) && (
+            <Badge variant="destructive" className="text-[10px]">Fără WhatsApp – Necesită apel telefonic</Badge>
+          )}
         </div>
       )}
       {(listing.tags?.length > 0) && (
@@ -713,6 +716,9 @@ const ProspectManager = () => {
               </Badge>
               <Badge variant="outline" className="shrink-0">{listing.source_platform}</Badge>
               {stage && <Badge variant="secondary" className="shrink-0">{stage.emoji} {stage.label.replace(stage.emoji + ' ', '')}</Badge>}
+              {isNoWhatsApp(listing.contact_phone) && (
+                <Badge variant="destructive" className="shrink-0">Fără WhatsApp – Necesită apel telefonic</Badge>
+              )}
             </div>
             <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground flex-wrap">
               {listing.zone && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{listing.zone}</span>}
