@@ -638,6 +638,13 @@
       "when": 1791620132980,
       "tag": "0090_drop_investor_prospect_policy",
       "breakpoints": true
+    },
+    {
+      "idx": 91,
+      "version": "7",
+      "when": 1791709336475,
+      "tag": "0091_migration",
+      "breakpoints": true
     }
   ]
 }
