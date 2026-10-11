@@ -15,7 +15,7 @@
 - [ ] SMS evaluare: livrare efectivă amânată la cererea utilizatorului — funcția send-evaluation-sms e gata, dar nu există canal SMS activ (Make neconectat; numărul Twilio +40373800342 e voice-only; Twilio nu are numere RO cu SMS). De reluat când utilizatorul alege: număr Twilio GB cu SMS sau scenariu Make propriu.
 
 ## Fișe prospecte Command Center — Andrei
-- [ ] Contact proprietar și linkuri original/evaluare pe card
-- [ ] Editare rapidă număr cu salvare și validare
-- [ ] Detalii complete, istoric WhatsApp și note în dialog
-- [ ] Verificare interacțiuni fără inițierea apelurilor
+- [x] Contact proprietar și linkuri original/evaluare pe card
+- [x] Editare rapidă număr cu salvare și validare
+- [x] Detalii complete, istoric WhatsApp și note în dialog
+- [x] Verificare interacțiuni fără inițierea apelurilor
