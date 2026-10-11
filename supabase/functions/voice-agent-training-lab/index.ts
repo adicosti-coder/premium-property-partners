@@ -38,6 +38,14 @@ async function ai(messages: any[], key: string, opts: Record<string, unknown> = 
 
 const branchOf = (c: string | null) => c === "hotelier" ? "cazare" : c === "inchiriere" ? "inchiriere" : "vanzare";
 const BANNED = /rețea privată|retea privata|preț premium|peste piață|chirie garantată|venit garantat|doi minute|doi camere|doi opțiuni/i;
+// Comision: singura valoare reală admisă este administrarea RealTrust 15–20%.
+function badCommission(t: string): boolean {
+  const s = String(t || "");
+  if (!/comision|procent|%/i.test(s)) return false;
+  const pcts = [...s.matchAll(/(\d+(?:[.,]\d+)?|X)\s*(?:-|–|la)?\s*(\d+)?\s*%/gi)];
+  if (/X\s*%/i.test(s) || /cheltuieli/i.test(s)) return true;
+  return pcts.some((m) => !/^(15\s*[-–]\s*20|15|20)$/.test(`${m[1]}${m[2] ? "-" + m[2] : ""}`.replace(/\s/g, "")) && !/6[.,]5|9[.,]4/.test(m[0]));
+}
 function validate(transcript: { role: string; text: string }[], branch: string) {
   const a = transcript.filter((t) => t.role === "andrei").map((t) => t.text).join(" ").toLowerCase();
   const wrongArg = branch === "vanzare" ? /randament|regim hotelier/.test(a) : branch === "inchiriere" ? /randament net|regim hotelier/.test(a) : false;
@@ -103,7 +111,7 @@ async function autoLoop(supabase: any, KEY: string) {
   if (!plan) return;
   const activeIds = new Set((active ?? []).map((l: any) => l.id));
   const keep = (Array.isArray(plan.keep_ids) ? plan.keep_ids : []).map(String).filter((id: string) => activeIds.has(id)).slice(0, 5);
-  const fresh = (Array.isArray(plan.new) ? plan.new : []).filter((n: any) => String(n?.lesson || "").length >= 10 && !BANNED.test(n.lesson))
+  const fresh = (Array.isArray(plan.new) ? plan.new : []).filter((n: any) => String(n?.lesson || "").length >= 10 && !BANNED.test(n.lesson) && !badCommission(n.lesson))
     .slice(0, 5 - keep.length);
   const toArchive = [...activeIds].filter((id) => !keep.includes(id as string));
   if (toArchive.length) await supabase.from("voice_agent_playbook_addendum").update({ is_active: false }).in("id", toArchive);

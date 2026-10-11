@@ -124,7 +124,7 @@ export default function AndreiTrainingLab() {
               {running ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Simulare în curs (≈30 s)…</> : "Inițiază Apel de Antrenament (Andrei vs Gemini)"}
             </Button>
             <Button variant="secondary" className="min-h-[48px] w-full sm:w-auto" onClick={runAuto} disabled={running || autoRunning}>
-              {autoRunning ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Se pornește…</> : "Rulează antrenamentul automat"}
+              {autoRunning ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Se pornește…</> : "Rulează Antrenament Automat Acum"}
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">Antrenamentul automat rulează în fundal toate cele 4 profiluri pe anunțuri reale, analizează fiecare conversație și păstrează cele mai relevante 5 lecții active. Rezultatele apar în istoric, fără să aștepți pe pagină.</p>
