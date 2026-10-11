@@ -241,7 +241,7 @@ const Admin = () => {
                       {findTab(activeTab)?.label || t.admin.title}
                     </span>
                   </h1>
-                  <div className="ml-auto flex items-center gap-2">
+                  <div className="ml-auto flex flex-wrap items-center justify-end gap-1.5 sm:gap-2 max-w-full min-w-0">
                     <Button
                       size="sm"
                       onClick={() => handleSelectTab("flux-proprietari")}
