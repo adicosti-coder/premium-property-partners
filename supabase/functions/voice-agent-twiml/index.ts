@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { verifyTwilioRequest } from "../_shared/twilioVerify.ts";
 import { applyLexiconToText } from "../_shared/voiceLexicon.ts";
 import { signSessionId, verifySessionSig } from "../_shared/twimlWebhookSig.ts";
-import { andreiConversationPolicy } from "../_shared/andreiConversationPolicy.ts";
+import { andreiConversationPolicy, andreiListingObjections } from "../_shared/andreiConversationPolicy.ts";
 
 async function logTtsError(
   supabase: any,
@@ -917,7 +917,7 @@ serve(async (req) => {
     if (session.prospect_listing_id) {
       const { data: prospect } = await supabase
         .from("prospect_listings")
-        .select("title, category, prospect_type, contact_name, price, currency, location, zone, ai_score_breakdown, owner_sentiment, urgency_level, lead_score, score")
+        .select("title, category, prospect_type, contact_name, price, currency, location, zone, rooms, size, ai_score_breakdown, owner_sentiment, urgency_level, lead_score, score")
         .eq("id", session.prospect_listing_id)
         .maybeSingle();
       if (prospect) {
