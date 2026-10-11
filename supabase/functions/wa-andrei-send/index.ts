@@ -3,6 +3,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { WA_PHONE_NUMBER_ID } from "../_shared/waConfig.ts";
 import { fetchWithRetry } from "../_shared/fetchRetry.ts";
+import { toWaDigits } from "../_shared/waPhone.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -86,8 +87,8 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: "outside_24h_window_no_template" }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
-  // Meta phone number format: no leading '+'
-  const toNumber = conv.phone_normalized.replace(/^\+/, "");
+  // Meta: E.164 doar cifre, 40XXXXXXXXX (fără +, spații, 0040 sau 07).
+  const toNumber = toWaDigits(conv.phone_normalized) ?? String(conv.phone_normalized).replace(/\D/g, "");
 
   let waBody: Record<string, unknown>;
   if (useTemplate) {
