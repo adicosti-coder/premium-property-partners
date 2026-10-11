@@ -34,6 +34,7 @@ async function errText(error: unknown) {
 export default function AndreiTrainingLab() {
   const [persona, setPersona] = useState("sceptic");
   const [running, setRunning] = useState(false);
+  const [autoRunning, setAutoRunning] = useState(false);
   const [applying, setApplying] = useState(false);
   const [transcript, setTranscript] = useState<Line[]>([]);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
@@ -48,6 +49,15 @@ export default function AndreiTrainingLab() {
       .then(({ data }) => setCampaign(data?.profiles ?? []));
   }, []);
   const BRANCH_LABEL: Record<string, string> = { vanzare: "Vânzare", inchiriere: "Închiriere", cazare: "Regim hotelier" };
+
+  const runAuto = async () => {
+    setAutoRunning(true);
+    const { data, error } = await supabase.functions.invoke("voice-agent-training-lab", { body: { action: "auto_loop" } });
+    setAutoRunning(false);
+    if (error) return toast.error(await errText(error));
+    if (data?.started) toast.success("Antrenamentul automat rulează în fundal: toate cele 4 profiluri, pe anunțuri reale. Rezultatele apar în istoric în câteva minute.");
+    else toast.error(data?.error || "Nu a pornit");
+  };
 
   const run = async () => {
     setRunning(true); setTranscript([]); setAnalysis(null); setApplied(false);
@@ -109,9 +119,15 @@ export default function AndreiTrainingLab() {
               </div>
             </div>
           )}
-          <Button className="min-h-[48px] w-full sm:w-auto" onClick={run} disabled={running}>
-            {running ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Simulare în curs (≈30 s)…</> : "Inițiază Apel de Antrenament (Andrei vs Gemini)"}
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button className="min-h-[48px] w-full sm:w-auto" onClick={run} disabled={running || autoRunning}>
+              {running ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Simulare în curs (≈30 s)…</> : "Inițiază Apel de Antrenament (Andrei vs Gemini)"}
+            </Button>
+            <Button variant="secondary" className="min-h-[48px] w-full sm:w-auto" onClick={runAuto} disabled={running || autoRunning}>
+              {autoRunning ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Se pornește…</> : "Rulează antrenamentul automat"}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">Antrenamentul automat rulează în fundal toate cele 4 profiluri pe anunțuri reale, analizează fiecare conversație și păstrează cele mai relevante 5 lecții active. Rezultatele apar în istoric, fără să aștepți pe pagină.</p>
           {running && (
             <div className="space-y-1" role="status" aria-live="polite">
               <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
