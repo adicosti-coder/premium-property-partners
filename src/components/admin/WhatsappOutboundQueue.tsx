@@ -687,12 +687,12 @@ export default function WhatsappOutboundQueue() {
           </thead>
           <tbody>
             {loading && (
-              <tr><td colSpan={8} className="px-3 py-10 text-center text-muted-foreground">
-                <Loader2 className="h-5 w-5 animate-spin inline" />
+              <tr><td colSpan={9} className="px-3 py-10 text-center text-muted-foreground">
+                 <Loader2 className="h-5 w-5 animate-spin inline" />
               </td></tr>
             )}
             {!loading && !filtered.length && (
-              <tr><td colSpan={8} className="px-3 py-10 text-center text-muted-foreground">
+              <tr><td colSpan={9} className="px-3 py-10 text-center text-muted-foreground">
                 Nicio intrare în coadă pentru filtrele selectate.
               </td></tr>
             )}
