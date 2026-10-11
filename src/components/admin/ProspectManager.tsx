@@ -760,6 +760,7 @@ const ProspectManager = () => {
           )}
         </div>
       )}
+      {renderNoWaActions(listing, true)}
       {(listing.tags?.length > 0) && (
         <div className="flex flex-wrap gap-1 mt-2">
           {listing.tags.map(tag => {
@@ -804,6 +805,7 @@ const ProspectManager = () => {
               {listing.price_per_sqm && <span>€{listing.price_per_sqm}/mp</span>}
               {listing.contact_phone && <span className="flex items-center gap-1 text-green-600"><Phone className="w-3 h-3" />{listing.contact_phone}</span>}
             </div>
+            {renderNoWaActions(listing)}
           </div>
           <div className="flex items-center gap-1 shrink-0">
             {listing.contact_phone && (
@@ -835,6 +837,7 @@ const ProspectManager = () => {
       <div className="flex gap-3 overflow-x-auto pb-4">
         {activeStages.map(stage => {
           const stageListings = (filterType === 'all' ? allListings : allListings.filter(l => l.prospect_type === filterType))
+            .filter(l => !filterNoWa || isNoWhatsApp(l.contact_phone))
             .filter(l => l.status === stage.value)
             .sort((a, b) => b.score - a.score);
 
@@ -1044,6 +1047,14 @@ const ProspectManager = () => {
             </Button>
           );
         })}
+        <Button
+          size="sm"
+          variant={filterNoWa ? 'destructive' : 'outline'}
+          onClick={() => setFilterNoWa(v => !v)}
+          aria-pressed={filterNoWa}
+        >
+          📵 Fără WhatsApp ({allListings.filter(l => isNoWhatsApp(l.contact_phone)).length})
+        </Button>
       </div>
 
       {/* Stats */}
