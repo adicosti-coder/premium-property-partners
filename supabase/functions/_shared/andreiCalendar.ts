@@ -81,8 +81,8 @@ export async function listUpcomingAndreiEvents(supabase: any) {
     let owner = String(e.summary || "").split("—")[1]?.trim() || null, category: string | null = null;
     const digits = (phone || "").replace(/\D/g, "").slice(-9);
     if (digits.length === 9) {
-      const { data } = await supabase.from("prospect_listings").select("owner_name, category, title, zone").ilike("phone", `%${digits}`).limit(1).maybeSingle();
-      if (data) { owner = data.owner_name || owner; category = data.category; }
+      const { data } = await supabase.from("prospect_listings").select("contact_name, category, title, zone").ilike("phone", `%${digits}`).limit(1).maybeSingle();
+      if (data) { owner = data.contact_name || owner; category = data.category; }
     }
     out.push({ id: e.id, start: e.start?.dateTime || e.start?.date, end: e.end?.dateTime || e.end?.date, kind: /Evaluare/.test(e.summary) ? "evaluare" : "telefon", owner, phone, listing, category, link: e.htmlLink });
   }
