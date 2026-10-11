@@ -640,25 +640,30 @@ Deno.serve(async (req) => {
         }
         // Meta a respins clar mesajul → nimic nu a plecat, eliberăm rezervarea.
         await releasePhoneSend(supabase, phoneDigits, reserveKind);
-        // Eroarea 132001 = șablonul nu există la Meta; reîncercarea nu ajută.
+        // Eroarea 132001 = șablonul nu exista la Meta; reîncercarea nu ajută.
         const permanent = /132001|does not exist in the translation|Template name does not exist|http_404/i.test(err);
+        // Erori recuperabile (rate limit Meta / prea multe cereri): după epuizarea
+        // backoff-ului scurt, reîncercăm automat o dată pe oră, de max 3 ori,
+        // fără apăsarea manuală a butonului din Admin.
+        const recoverable = /130429|131056|http_429|rate.?limit|too many requests/i.test(err);
         const exhausted = permanent || attempts >= MAX_ATTEMPTS;
-        // Backoff la nivel de coadă: 5min, 25min
-        const delayMin = attempts === 1 ? 5 : 25;
+        const extendedRetry = exhausted && !permanent && recoverable && attempts < MAX_ATTEMPTS + 3;
+        // Backoff la nivel de coadă: 5min, 25min; apoi 60min pentru erorile recuperabile.
+        const delayMin = extendedRetry ? 60 : attempts === 1 ? 5 : 25;
         await supabase
           .from("wa_outbound_queue")
           .update({
-            status: exhausted ? "failed" : "pending",
-            last_error: err,
+            status: exhausted && !extendedRetry ? "failed" : "pending",
+            last_error: extendedRetry ? `${err} (reîncercare automată peste 1h)` : err,
             conversation_id: conversationId,
-            scheduled_at: exhausted
+            scheduled_at: exhausted && !extendedRetry
               ? new Date().toISOString()
               : new Date(Date.now() + delayMin * 60_000).toISOString(),
           })
           .eq("id", item.id);
 
-        results.push({ id: item.id, status: exhausted ? "failed" : "retry", error: err });
-        if (exhausted && !permanent) {
+        results.push({ id: item.id, status: exhausted && !extendedRetry ? "failed" : "retry", error: err });
+        if (exhausted && !permanent && !extendedRetry) {
           consecutiveFailures += 1;
           await relayToMake("wa_outbound_failed", {
             queue_id: item.id,
