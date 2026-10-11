@@ -1041,21 +1041,29 @@ async function olxApiSearch(query: string, max: number): Promise<FreeResult[]> {
   const intent = searchIntent(query);
   const terms = /timi[sș]oara/i.test(clean) ? clean : `${clean} timisoara`;
   const limit = Math.min(Math.max(max * 3, 20), 40);
-  const apiUrl = `https://www.olx.ro/api/v1/offers/?offset=0&limit=${limit}` +
-    `&query=${encodeURIComponent(terms)}&sort_by=created_at%3Adesc&filter_enum_private_business%5B0%5D=private`;
-
-  const { ok, html } = await fetchHtmlUnblockable(apiUrl, 25000, 'https://www.olx.ro/', {
-    alwaysProxy: true,
-    budget: 'search',
-    raw: true,
-  });
-  if (!ok || !html) return [];
-  const payload = parseJsonPayload(html);
-  if (!payload) {
-    console.warn(JSON.stringify({ kind: 'olx_api_parse_failed', len: html.length, head: html.slice(0, 200) }));
-    return [];
+  const fetchOffers = async (q: string): Promise<Record<string, unknown>[]> => {
+    const apiUrl = `https://www.olx.ro/api/v1/offers/?offset=0&limit=${limit}` +
+      `&query=${encodeURIComponent(q)}&sort_by=created_at%3Adesc&filter_enum_private_business%5B0%5D=private`;
+    const { ok, html } = await fetchHtmlUnblockable(apiUrl, 25000, 'https://www.olx.ro/', {
+      alwaysProxy: true,
+      budget: 'search',
+      raw: true,
+    });
+    if (!ok || !html) return [];
+    const payload = parseJsonPayload(html);
+    if (!payload) {
+      console.warn(JSON.stringify({ kind: 'olx_api_parse_failed', len: html.length, head: html.slice(0, 200) }));
+      return [];
+    }
+    return Array.isArray(payload.data) ? payload.data : [];
+  };
+  let offers = await fetchOffers(terms);
+  // Interogările lungi întorc des 0 rezultate: reîncercăm o dată cu o formă scurtă.
+  if (!offers.length) {
+    const short = simplifyForFreeEngine(query, 3);
+    const shortTerms = short ? (/timi[sș]oara/i.test(short) ? short : `${short} timisoara`) : '';
+    if (shortTerms && shortTerms !== terms) offers = await fetchOffers(shortTerms);
   }
-  const offers = Array.isArray(payload.data) ? payload.data : [];
   const out: FreeResult[] = [];
   let skippedBusiness = 0;
   let skippedCategory = 0;
