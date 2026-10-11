@@ -97,6 +97,24 @@ serve(async (req) => {
     if (answeredBy) updates.answered_by = answeredBy;
     if (isVoicemail) updates.is_voicemail = true;
 
+    // Async AMD: hang up immediately when a machine/voicemail is detected.
+    if (isAmdCallback && isVoicemail) {
+      const sid = String(form.get("CallSid") || session.twilio_call_sid || "");
+      const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY");
+      if (sid && LOVABLE_API_KEY && TWILIO_API_KEY) {
+        try {
+          const r = await fetch(`https://connector-gateway.lovable.dev/twilio/Calls/${sid}.json`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "X-Connection-Api-Key": TWILIO_API_KEY, "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ Status: "completed" }),
+          });
+          if (!r.ok) console.error(`[voice-status] AMD hangup failed [${r.status}]: ${await r.text()}`);
+          updates.amd_hangup = true;
+          updates.ai_outcome = "robot";
+        } catch (e) { console.error("[voice-status] AMD hangup error", e); }
+      }
+    }
+
     if (duration > 0) updates.call_duration_seconds = duration;
     if (recordingReady) updates.recording_url = `${recordingUrl}.mp3`;
 

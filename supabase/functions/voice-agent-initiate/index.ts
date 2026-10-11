@@ -137,7 +137,7 @@ serve(async (req) => {
         analysis_url: analysisUrl,
       };
       const greet = (p as any).contact_name ? `pe ${(p as any).contact_name}` : "proprietarul";
-      ownerPrompt = `Ești Andrei, asistent vocal RealTrust din Timișoara. Îl suni ${greet} pentru anunțul „${(p as any).title || "proprietatea"}” din zona ${zone}${(p as any).price ? `, preț ${(p as any).price} EUR` : ""}. Salută politicos, prezintă-te ca asistent AI RealTrust și spune pe scurt că am analizat anunțul pentru proprietatea din ${zone} și am pregătit o evaluare gratuită de piață. Obiectiv: (1) cere acordul de a-i trimite linkul cu analiza pe SMS sau WhatsApp; (2) întreabă dacă e deschis la publicarea gratuită pe RealTrust (Comision 0% pentru proprietar, fără exclusivitate). Nu promite că publici nimic fără acordul lui. Nu propune întâlniri la birou — nu avem birou pentru clienți. Dacă refuză sau e deranjat, mulțumește și închide politicos. Vorbești scurt, natural, în română, maxim 2-3 propoziții per replică.`;
+      ownerPrompt = `Ești Andrei, asistent vocal RealTrust din Timișoara. Îl suni ${greet} pentru anunțul „${(p as any).title || "proprietatea"}” din zona ${zone}${(p as any).price ? `, preț ${(p as any).price} EUR` : ""}. Salută politicos, prezintă-te ca asistent AI RealTrust și spune pe scurt că am analizat anunțul pentru proprietatea din ${zone} și am pregătit o evaluare gratuită de piață. Obiectiv: (1) cere acordul de a-i trimite linkul cu analiza pe SMS sau WhatsApp; (2) întreabă dacă e deschis la publicarea gratuită pe RealTrust (Comision 0% pentru proprietar, fără exclusivitate). Nu promite că publici nimic fără acordul lui. Nu propune întâlniri la birou — nu avem birou pentru clienți. Dacă refuză sau e deranjat, mulțumește și închide politicos. Vorbești scurt, natural, în română, maxim 2-3 propoziții per replică. Atenție la acordul genului feminin: „două minute”, „două camere”, „două opțiuni”, NICIODATĂ „doi minute”.`;
     }
     if (scraperLeadId) {
       const { data: lead } = await supabase
@@ -161,7 +161,7 @@ serve(async (req) => {
 
     const agentPrompt = ownerPrompt && !hasCustomPrompt ? ownerPrompt : hasCustomPrompt
       ? `__CUSTOM_PROMPT__\n${customPrompt.trim()}`
-      : `Ești Andrei, concierge vocal RealTrust, agenție de imobiliare premium din Timișoara. Suni amabil un potențial client. ${leadContext} Obiectiv: ${objective === "qualify" ? "calificare interes (buget, timeline, tip proprietate)" : objective === "schedule" ? "programare vizionare/întâlnire" : "follow-up"}. Vorbești scurt, natural, în limba română. Maxim 2-3 propoziții per replică. Dacă nu răspunde sau pare deranjat, închizi politicos.`;
+      : `Ești Andrei, concierge vocal RealTrust, agenție de imobiliare premium din Timișoara. Suni amabil un potențial client. ${leadContext} Obiectiv: ${objective === "qualify" ? "calificare interes (buget, timeline, tip proprietate)" : objective === "schedule" ? "programare vizionare/întâlnire" : "follow-up"}. Vorbești scurt, natural, în limba română. Maxim 2-3 propoziții per replică. Atenție la acordul genului feminin: „două minute”, „două camere”, „două opțiuni”, NICIODATĂ „doi minute”. Dacă nu răspunde sau pare deranjat, închizi politicos.`;
 
     // Create session row first (so webhook can find it via call_sid)
     const { data: session, error: sessErr } = await supabase
@@ -213,6 +213,11 @@ serve(async (req) => {
     if (agentSettings?.amd_enabled !== false) {
       const amdTimeout = Math.max(3, Math.min(10, agentSettings?.amd_timeout_seconds ?? 4));
       formBody.append("MachineDetection", "Enable");
+      // Async AMD: greeting plays instantly on pickup; robot detection result
+      // arrives later on the status callback, which hangs up machines.
+      formBody.append("AsyncAmd", "true");
+      formBody.append("AsyncAmdStatusCallback", statusUrl);
+      formBody.append("AsyncAmdStatusCallbackMethod", "POST");
       formBody.append("MachineDetectionTimeout", String(amdTimeout));
       formBody.append("MachineDetectionSpeechThreshold", "2400");
       formBody.append("MachineDetectionSilenceTimeout", "2000");

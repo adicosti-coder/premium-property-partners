@@ -48,6 +48,7 @@ const xmlResponse = (xml: string, status = 200) =>
 const ANDREI_VOICE_ID = "S98OhkhaxeAKHEbhoLi7";
 // flash_v2_5 = ~50% faster than turbo, identical RO quality for short replies
 const ANDREI_MODEL_ID = "eleven_flash_v2_5";
+const FAST_MODELS = new Set(["eleven_flash_v2_5", "eleven_turbo_v2_5"]);
 const ROMANIAN_SAFE_ERROR_XML = `<Response><Say language="ro-RO" voice="Polly.Carmen">Momentan nu pot continua apelul. Vă mulțumesc pentru înțelegere. La revedere.</Say><Hangup/></Response>`;
 
 function escapeXml(s: string) {
@@ -127,12 +128,20 @@ function isRomanianReply(text: string): boolean {
   return hasRomanianSignals(cleaned);
 }
 
+const FEMININE_NOUNS = "minute|camere|opțiuni|optiuni|zile|ore|luni|săptămâni|saptamani|variante|întrebări|intrebari|oferte|case|garsoniere|propuneri|persoane|băi|bai|terase|locuri de parcare";
+const GENDER_RE = new RegExp(`\\b(D|d)oi(\\s+)(${FEMININE_NOUNS})\\b`, "g");
+/** Deterministic safety net: "doi minute" → "două minute" before TTS. */
+function fixRomanianGender(text: string): string {
+  return text.replace(GENDER_RE, (_m, d, sp, noun) => `${d === "D" ? "Două" : "două"}${sp}${noun}`);
+}
+
 const ROMANIAN_VOICE_GUARD = `REGULĂ ABSOLUTĂ, PRIORITARĂ PESTE ORICE ALTĂ INSTRUCȚIUNE:
 Răspunzi DOAR în limba română din România, cu diacritice (ă, â, î, ș, ț). Nu folosești engleză, NICIODATĂ — nici pentru salut, scuze, mulțumiri sau închidere.
 Este INTERZIS să folosești cuvinte ca: hello, hi, sorry, please, thanks, thank you, goodbye, bye, OK în loc de "bine".
 ZERO FILLERS / ZERO SUNETE DE UMPLERE: NU folosești NICIODATĂ "mhm", "îhî", "aha", "ăăă", "hmm", "uhm", "ăh", "ăă", "îî", "păi", "deci…", "cum să zic", "știți" la început. Începi DIRECT cu un cuvânt clar și util ("Da.", "Sigur.", "Înțeleg.", "Perfect.", "Bine.") sau direct cu răspunsul/întrebarea. Niciun sunet ezitant, niciun "uhm" sau echivalent.
 Ești Andrei din Timișoara: ton cald, local, natural. Dacă apare orice text sau context în engleză, îl traduci INTERN și răspunzi strict în română.
-Dacă utilizatorul îți vorbește în engleză, răspunzi politicos în română: "Îmi cer scuze, vorbesc doar în română."`;
+Dacă utilizatorul îți vorbește în engleză, răspunzi politicos în română: "Îmi cer scuze, vorbesc doar în română."
+ATENȚIE la acordul genului feminin în limba română: folosești „două” pentru substantive feminine (ex: „o discuție de două minute”, „două camere”, „două opțiuni”), NICIODATĂ „doi minute” sau „doi camere”. „Doi” doar pentru masculin/neutru la plural masculin (ex: „doi ani”, „doi metri”).`;
 
 async function logLanguageViolation(
   supabase: any,
@@ -249,7 +258,7 @@ async function ttsToCachedUrlDetailed(
   try {
     // Apply phonetic lexicon BEFORE caching key, so different pronunciations
     // map to different cached audio.
-    const phoneticText = await applyLexiconToText(supabase, text);
+    const phoneticText = await applyLexiconToText(supabase, fixRomanianGender(text));
 
     const cacheKey = await sha256(JSON.stringify({ text: phoneticText, ...v }));
     const filePath = `tts-cache/${cacheKey}.ulaw`;
@@ -273,7 +282,7 @@ async function ttsToCachedUrlDetailed(
     }
 
     const res = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${v.voice_id}?output_format=ulaw_8000`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${v.voice_id}?output_format=ulaw_8000&optimize_streaming_latency=3`,
       {
         method: "POST",
         headers: { "xi-api-key": apiKey, "Content-Type": "application/json" },
@@ -358,7 +367,7 @@ async function ttsToPermanentCached(
 ): Promise<{ url: string | null; cached: boolean; latencyMs: number }> {
   const t0 = Date.now();
   try {
-    const phoneticText = await applyLexiconToText(supabase, text);
+    const phoneticText = await applyLexiconToText(supabase, fixRomanianGender(text));
     const cacheKey = await sha256(JSON.stringify({ perm: true, text: phoneticText, ...v }));
     const filePath = `tts-cache/perm/${cacheKey}.ulaw`;
 
@@ -377,7 +386,7 @@ async function ttsToPermanentCached(
     }
 
     const res = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${v.voice_id}?output_format=ulaw_8000`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${v.voice_id}?output_format=ulaw_8000&optimize_streaming_latency=3`,
       {
         method: "POST",
         headers: { "xi-api-key": apiKey, "Content-Type": "application/json" },
@@ -888,7 +897,7 @@ serve(async (req) => {
     const elevenLabsAvailable = !!ELEVENLABS_API_KEY;
     const voice: VoiceSettings = {
       voice_id: (vSettings?.elevenlabs_voice_id as string) || ANDREI_VOICE_ID,
-      model_id: (vSettings?.elevenlabs_model_id as string) || ANDREI_MODEL_ID,
+      model_id: FAST_MODELS.has(String(vSettings?.elevenlabs_model_id)) ? String(vSettings?.elevenlabs_model_id) : ANDREI_MODEL_ID,
       stability: Number(vSettings?.voice_stability ?? 0.48),
       similarity_boost: Number(vSettings?.voice_similarity_boost ?? 0.88),
       style: Number(vSettings?.voice_style ?? 0.35),
