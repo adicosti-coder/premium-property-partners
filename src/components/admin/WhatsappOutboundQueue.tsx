@@ -49,6 +49,14 @@ type QueueRow = {
   replied_at: string | null;
 };
 
+type ProspectInfo = {
+  id: string;
+  title: string | null;
+  zone: string | null;
+  source_platform: string | null;
+  source_url: string | null;
+};
+
 type RateSettings = {
   outbound_max_per_hour: number;
   outbound_max_per_day: number;
