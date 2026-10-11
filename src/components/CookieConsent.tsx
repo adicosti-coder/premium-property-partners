@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, forwardRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Shield, SlidersHorizontal } from "lucide-react";
@@ -244,6 +244,7 @@ const CookieConsent = forwardRef<HTMLDivElement>((_props, _ref) => {
       </div>
     </div>
   );
-};
+});
+CookieConsent.displayName = "CookieConsent";
 
 export default CookieConsent;
