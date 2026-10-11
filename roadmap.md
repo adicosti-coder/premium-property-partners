@@ -13,3 +13,9 @@
 - [x] Butoane rapide: „Marchează ca Apelat" (dialog cu notă, status → contacted, tag apelat-telefonic) și „Trimite SMS Evaluare" (edge fn send-evaluation-sms via Make relay, cooldown 7 zile)
 - [x] Contor „Necesită Apel Telefonic (Fără WhatsApp)" în Dashboard/Astăzi → click spre unified-pipeline
 - [ ] SMS evaluare: livrare efectivă amânată la cererea utilizatorului — funcția send-evaluation-sms e gata, dar nu există canal SMS activ (Make neconectat; numărul Twilio +40373800342 e voice-only; Twilio nu are numere RO cu SMS). De reluat când utilizatorul alege: număr Twilio GB cu SMS sau scenariu Make propriu.
+
+## Fișe prospecte Command Center — Andrei
+- [ ] Contact proprietar și linkuri original/evaluare pe card
+- [ ] Editare rapidă număr cu salvare și validare
+- [ ] Detalii complete, istoric WhatsApp și note în dialog
+- [ ] Verificare interacțiuni fără inițierea apelurilor
