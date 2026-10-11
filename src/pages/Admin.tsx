@@ -223,9 +223,9 @@ const Admin = () => {
 
             <SidebarInset className="flex flex-col min-w-0">
               <header className="sticky top-0 z-20 border-b border-border bg-card">
-                <div className="flex items-center gap-2 px-4 py-3">
+                <div className="flex flex-wrap items-center gap-2 px-3 sm:px-4 py-3 max-w-full min-w-0 overflow-x-hidden">
                   <SidebarTrigger />
-                  <div className="h-6 w-px bg-border" />
+                  <div className="h-6 w-px bg-border shrink-0" />
                   <Button
                     variant="ghost"
                     size="sm"
@@ -235,13 +235,13 @@ const Admin = () => {
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     <span className="hidden sm:inline">{t.admin.backToSite}</span>
                   </Button>
-                  <h1 className="text-lg font-serif font-semibold text-foreground flex items-center gap-2 ml-2 truncate">
+                  <h1 className="text-lg font-serif font-semibold text-foreground flex items-center gap-2 ml-2 truncate min-w-0 shrink">
                     <Users className="w-5 h-5 text-primary shrink-0" />
                     <span className="truncate">
                       {findTab(activeTab)?.label || t.admin.title}
                     </span>
                   </h1>
-                  <div className="ml-auto flex items-center gap-2">
+                  <div className="ml-auto flex flex-wrap items-center justify-end gap-1.5 sm:gap-2 max-w-full min-w-0">
                     <Button
                       size="sm"
                       onClick={() => handleSelectTab("flux-proprietari")}
