@@ -229,10 +229,13 @@ Deno.serve(async (req) => {
     }
 
     if (body.action === "auto_loop") {
-      const task = autoLoop(supabase, KEY).catch((e) => console.error("auto_loop", e));
-      // @ts-ignore EdgeRuntime e disponibil în Supabase Edge
-      if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(task);
-      return json({ started: true });
+      // Rulare în timp real: așteptăm finalul și returnăm rezultatul,
+      // ca istoricul din Training Lab să se actualizeze imediat.
+      const before = await supabase.from("voice_call_analyses").select("id", { count: "exact", head: true }).eq("source", "training_lab_auto");
+      await autoLoop(supabase, KEY).catch((e) => console.error("auto_loop", e));
+      const after = await supabase.from("voice_call_analyses").select("id", { count: "exact", head: true }).eq("source", "training_lab_auto");
+      const { data: active } = await supabase.from("voice_agent_playbook_addendum").select("id", { count: "exact", head: true }).eq("is_active", true);
+      return json({ started: true, finished: true, analyses_added: Math.max(0, (after.count ?? 0) - (before.count ?? 0)), active_lessons: active.count ?? 0 });
     }
     const r = await simulate(supabase, KEY, body);
     if ((r as any).httpError) return json({ error: (r as any).httpError }, (r as any).status);
