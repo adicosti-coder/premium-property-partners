@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 type Campaign = {
   enabled: boolean; delay_minutes: number; current_label: string | null;
@@ -19,6 +20,8 @@ const YES = ["interesat", "programare", "acord", "scheduled"];
 export default function AndreiBatchCampaignControl() {
   const [now, setNow] = useState(Date.now());
   const [updating, setUpdating] = useState(false);
+  const updateLock = useRef(false);
+  const [confirmStart, setConfirmStart] = useState(false);
   
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
 
@@ -26,7 +29,8 @@ export default function AndreiBatchCampaignControl() {
     queryKey: ["voice-batch-campaign"],
     refetchInterval: 5_000,
     queryFn: async () => {
-      const { data } = await (supabase.from("voice_batch_campaign") as any).select("*").eq("id", 1).maybeSingle();
+      const { data, error } = await (supabase.from("voice_batch_campaign") as any).select("*").eq("id", 1).maybeSingle();
+      if (error) throw error;
       return data as Campaign | null;
     },
   });
@@ -68,25 +72,30 @@ export default function AndreiBatchCampaignControl() {
   const s = stats.data;
 
   const update = async (patch: Partial<Campaign>) => {
-    if (updating) return;
+    if (updateLock.current) return;
+    updateLock.current = true;
     setUpdating(true);
-    const { error } = await (supabase.from("voice_batch_campaign") as any).update({ ...patch, updated_at: new Date().toISOString() }).eq("id", 1);
-    if (error) {
-      toast.error("Nu s-a putut salva");
-    } else {
+    try {
+      const { error } = await (supabase.from("voice_batch_campaign") as any).update({ ...patch, updated_at: new Date().toISOString() }).eq("id", 1);
+      if (error) throw error;
+      if (typeof patch.enabled === "boolean") toast.success(patch.enabled ? "Campanie pornită" : "Campanie pusă pe pauză");
       await q.refetch();
+    } catch {
+      toast.error("Nu s-a putut salva");
+    } finally {
+      updateLock.current = false;
+      setUpdating(false);
     }
-    setUpdating(false);
   };
 
   const toggle = () => {
     if (!c || updating) return;
-    if (!c.enabled && !confirm("Andrei va suna automat, pe rând, proprietarii fără WhatsApp neapelați încă. Pornești?")) return;
-    update({ enabled: !c.enabled });
-    toast.success(c.enabled ? "Campanie pusă pe pauză" : "Campanie pornită");
+    if (!c.enabled) { setConfirmStart(true); return; }
+    void update({ enabled: false });
   };
 
-  if (!c) return null;
+  if (q.isError) return <div role="alert" className="space-y-2 border border-destructive/40 rounded-lg p-4 text-sm text-destructive">Controlul campaniei nu s-a putut încărca.<Button variant="outline" className="min-h-12 ml-3" onClick={() => void q.refetch()}>Reîncearcă</Button></div>;
+  if (!c) return <p role="status" className="py-4 text-sm text-muted-foreground">{q.isPending ? "Se încarcă starea campaniei…" : "Campania nu este configurată."}</p>;
 
   const inCall = !!c.current_session_id;
   const waitLeftMs = c.last_call_ended_at ? new Date(c.last_call_ended_at).getTime() + c.delay_minutes * 60_000 - now : 0;
@@ -108,6 +117,18 @@ export default function AndreiBatchCampaignControl() {
 
   return (
     <section aria-label="Campanie Apelare Automată AI" className="rounded-xl border border-border bg-card p-4 space-y-3">
+      <AlertDialog open={confirmStart} onOpenChange={setConfirmStart}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Pornești apelarea automată?</AlertDialogTitle>
+            <AlertDialogDescription>Andrei va suna proprietari reali, pe rând: exclusiv prospecte fără WhatsApp (131026), neapelate încă, în programul Luni–Sâmbătă, 09:00–19:00.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="min-h-12">Renunță</AlertDialogCancel>
+            <AlertDialogAction className="min-h-12" onClick={() => void update({ enabled: true })}>Da, pornește campania</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h4 className="font-semibold">Campanie Apelare Automată AI</h4>
         <div className="flex flex-wrap gap-2">
