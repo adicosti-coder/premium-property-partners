@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, forwardRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Shield, SlidersHorizontal } from "lucide-react";
@@ -62,7 +62,7 @@ const updateConsent = (choice: ConsentChoice) => {
   if (adsGranted) initMetaPixel();
 };
 
-const CookieConsent = () => {
+const CookieConsent = forwardRef<HTMLDivElement>((_props, _ref) => {
   const [visible, setVisible] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [analyticsEnabled, setAnalyticsEnabled] = useState(false);
@@ -244,6 +244,7 @@ const CookieConsent = () => {
       </div>
     </div>
   );
-};
+});
+CookieConsent.displayName = "CookieConsent";
 
 export default CookieConsent;
