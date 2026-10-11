@@ -108,6 +108,9 @@
     --cream: 40 25% 96%;
     --slate: 222 25% 38%;
     --slate-light: 222 20% 55%;
+    /* Text over hero photo — theme-independent (photo scrim is always dark) */
+    --on-hero: 40 33% 95%;
+    --gold-on-hero: 42 72% 73%;
 
     /* Text contrast helpers - WCAG AA compliant */
     --text-strong: 222 47% 11%;
@@ -188,6 +191,10 @@
     --cream: 45 100% 96%;
     --slate: 215 20% 72%;
     --slate-light: 215 20% 80%;
+
+    /* Text over hero photo — same in both themes */
+    --on-hero: 40 33% 95%;
+    --gold-on-hero: 42 72% 73%;
     
     /* Text contrast helpers */
     --text-strong: 45 100% 96%;
@@ -754,6 +761,49 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .hero-kenburns { animation: none; transform: scale(1.05); }
+}
+
+/* ============================================
+   HERO OVERLAY SCRIMS — mobile uses a uniform dark scrim (40–55%) so the
+   presentation text always has strong contrast against the photo; desktop
+   keeps the theme-token gradients (light cream / dark navy).
+   Theme-independent by design: text over a photo is always light.
+   ============================================ */
+.hero-scrim-x {
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.48), rgba(0, 0, 0, 0.38));
+}
+.hero-scrim-y {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.62), transparent 45%, rgba(0, 0, 0, 0.28));
+}
+@media (min-width: 768px) {
+  .hero-scrim-x {
+    background: linear-gradient(to right, hsl(var(--background) / 0.92), hsl(var(--background) / 0.60), hsl(var(--background) / 0.10));
+  }
+  .dark .hero-scrim-x {
+    background: linear-gradient(to right, hsl(var(--background) / 0.85), hsl(var(--background) / 0.40), transparent);
+  }
+  .hero-scrim-y {
+    background: linear-gradient(to top, hsl(var(--background) / 0.80), transparent, hsl(var(--background) / 0.20));
+  }
+}
+
+/* Subtle text shadow for hero copy over the photo (mobile only — desktop
+   sits on the solid token gradient and needs no extra shadow). */
+.hero-text-shadow {
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55), 0 0 18px rgba(0, 0, 0, 0.25);
+}
+@media (min-width: 768px) {
+  .hero-text-shadow { text-shadow: none; }
+}
+
+/* Gold highlight keeps the gold identity but switches to the light-gold
+   token on mobile so it reads against the dark scrim. */
+@media (max-width: 767px) {
+  .hero-title-highlight {
+    background: none;
+    color: hsl(var(--gold-on-hero));
+    -webkit-text-fill-color: hsl(var(--gold-on-hero));
+  }
 }
 
 /* ============================================
