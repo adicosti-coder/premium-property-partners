@@ -50,13 +50,16 @@ export default function AndreiTrainingLab() {
   }, []);
   const BRANCH_LABEL: Record<string, string> = { vanzare: "Vânzare", inchiriere: "Închiriere", cazare: "Regim hotelier" };
 
+  const [historyKey, setHistoryKey] = useState(0);
   const runAuto = async () => {
     setAutoRunning(true);
     const { data, error } = await supabase.functions.invoke("voice-agent-training-lab", { body: { action: "auto_loop" } });
     setAutoRunning(false);
     if (error) return toast.error(await errText(error));
-    if (data?.started) toast.success("Antrenamentul automat rulează în fundal: toate cele 4 profiluri, pe anunțuri reale. Rezultatele apar în istoric în câteva minute.");
-    else toast.error(data?.error || "Nu a pornit");
+    if (data?.finished) {
+      setHistoryKey((k) => k + 1);
+      toast.success(`Antrenament terminat: ${data.analyses_added ?? 0} analize noi în istoric, ${data.active_lessons ?? 0} lecții active.`);
+    } else toast.error(data?.error || "Nu a pornit");
   };
 
   const run = async () => {
@@ -124,10 +127,18 @@ export default function AndreiTrainingLab() {
               {running ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Simulare în curs (≈30 s)…</> : "Inițiază Apel de Antrenament (Andrei vs Gemini)"}
             </Button>
             <Button className="min-h-[48px] w-full sm:w-auto" onClick={runAuto} disabled={running || autoRunning}>
-              {autoRunning ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Se pornește…</> : "Rulează Antrenament Automat Acum"}
+              {autoRunning ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Antrenament în curs (≈2 min)…</> : "Rulează Antrenament Automat Acum"}
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">Rulează automat în fiecare noapte la 02:00 (ora României). Butonul pornește acum, în fundal, toate cele 4 profiluri pe anunțuri reale și păstrează maximum 5 lecții active. Rezultatele apar în istoric, fără să aștepți pe pagină.</p>
+          <p className="text-xs text-muted-foreground">Antrenamentul rulează acum, în timp real, pe toate cele 4 profiluri cu anunțuri reale, și păstrează maximum 5 lecții active. La final, istoricul de mai jos se actualizează automat — vezi imediat ce s-a corectat.</p>
+          {autoRunning && (
+            <div className="space-y-1" role="status" aria-live="polite">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                <div className="h-full w-1/3 animate-pulse rounded-full bg-primary" />
+              </div>
+              <p className="text-xs text-muted-foreground">Andrei simulează cele 4 profiluri pe rând, Gemini analizează fiecare conversație și curăță lecțiile…</p>
+            </div>
+          )}
           {running && (
             <div className="space-y-1" role="status" aria-live="polite">
               <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
@@ -182,7 +193,7 @@ export default function AndreiTrainingLab() {
           </CardContent>
         </Card>
       )}
-      <AndreiCallHistory />
+      <AndreiCallHistory key={historyKey} />
     </div>
   );
 }
