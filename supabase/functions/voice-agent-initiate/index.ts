@@ -159,7 +159,7 @@ serve(async (req) => {
       }
     }
 
-    const agentPrompt = hasCustomPrompt
+    const agentPrompt = ownerPrompt && !hasCustomPrompt ? ownerPrompt : hasCustomPrompt
       ? `__CUSTOM_PROMPT__\n${customPrompt.trim()}`
       : `Ești Andrei, concierge vocal RealTrust, agenție de imobiliare premium din Timișoara. Suni amabil un potențial client. ${leadContext} Obiectiv: ${objective === "qualify" ? "calificare interes (buget, timeline, tip proprietate)" : objective === "schedule" ? "programare vizionare/întâlnire" : "follow-up"}. Vorbești scurt, natural, în limba română. Maxim 2-3 propoziții per replică. Dacă nu răspunde sau pare deranjat, închizi politicos.`;
 
@@ -171,9 +171,10 @@ serve(async (req) => {
         from_number: TWILIO_FROM_NUMBER,
         scraper_lead_id: scraperLeadId || null,
         lead_id: leadId || null,
+        prospect_listing_id: prospectId,
         initiated_by: initiatorUserId,
         status: "initiating",
-        call_objective: objective,
+        call_objective: prospectId ? "owner_consent" : objective,
         voice_agent_prompt: agentPrompt,
         direction: "outbound",
         language_retry_of: languageRetryOf || null,
@@ -245,7 +246,7 @@ serve(async (req) => {
       started_at: new Date().toISOString(),
     }).eq("id", session.id);
 
-    return new Response(JSON.stringify({ success: true, sessionId: session.id, callSid: twData.sid }), {
+    return new Response(JSON.stringify({ success: true, sessionId: session.id, callSid: twData.sid, payload: webhookPayload }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: any) {
