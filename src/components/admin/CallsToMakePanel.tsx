@@ -83,7 +83,7 @@ export default function CallsToMakePanel() {
                 <tr key={`${r.reason}-${r.id}`}>
                   <td className="p-2 max-w-[260px]">
                     <div className="truncate">{r.title || "Fără titlu"}</div>
-                    <Badge variant="secondary" className="text-[10px] mt-1">{r.reason === "no_mobile" ? "Fără mobil" : "Fără răspuns 48h"}</Badge>
+                    <Badge variant={r.reason === "no_whatsapp" ? "destructive" : "secondary"} className="text-[10px] mt-1">{REASON_LABELS[r.reason]}</Badge>
                   </td>
                   <td className="p-2 whitespace-nowrap">{r.price ? `${Number(r.price).toLocaleString("ro-RO")} €` : "—"}</td>
                   <td className="p-2">{r.zone || r.location || "—"}</td>
