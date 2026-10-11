@@ -56,7 +56,9 @@ Deno.serve(async (req) => {
   const ids = [...new Set((q ?? []).map((r: any) => r.prospect_listing_id))];
   if (!ids.length) { await save({ last_message: "Nu mai sunt prospecte fără WhatsApp de sunat." }); return json({ skipped: "empty" }); }
   const { data: rows } = await sb.from("prospect_listings").select("id, title, contact_name, phone_normalized, contact_phone, tags")
-    .in("id", ids).eq("is_active", true).is("published_at", null).eq("do_not_call", false).order("created_at", { ascending: true }).limit(200);
+    .in("id", ids).eq("is_active", true).is("published_at", null).eq("do_not_call", false)
+    .eq("seller_type", "privat") // SellerScan: doar proprietari privați confirmați
+    .order("created_at", { ascending: true }).limit(200);
   const next = (rows ?? []).find((r: any) => {
     const tags = (r.tags as string[]) || [];
     const to = toE164(r.phone_normalized || r.contact_phone);
