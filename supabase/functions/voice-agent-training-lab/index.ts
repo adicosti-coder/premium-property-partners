@@ -65,9 +65,9 @@ function commissionAnswerOk(transcript: { role: string; text: string }[], branch
     if (t.role === "andrei" || !/\?/.test(t.text) || !/(ce|c[âa]t|care e|care este)[^?]{0,25}comision|comision[^?]{0,20}(lua[țt]i|cere[țt]i|ave[țt]i)|c[âa]t lua[țt]i|c[âa]t cere[țt]i/i.test(t.text)) return;
     asked = true;
     const r = transcript.slice(i + 1).find((x) => x.role === "andrei")?.text ?? "";
-    const first = r.split(/[.!?]/)[0] ?? "";
+    // politețea sau repetarea numelui înainte nu contează; cerem doar: analiza/raportul gratuit + procentul corect + WhatsApp
     const pcts = pctTokens(r);
-    if (!/analiz/i.test(first) || !/gratuit/i.test(first) || !pcts.length || pcts.some((p) => !(COMMISSION_BY_BRANCH[branch] ?? []).includes(p)) || !/whatsapp|analiza-gratuita/i.test(r)) ok = false;
+    if (!/(analiz|raport|evaluare)[^.?!]{0,40}gratuit|gratuit[^.?!]{0,40}(analiz|raport|evaluare)/i.test(r) || !pcts.length || pcts.some((p) => !(COMMISSION_BY_BRANCH[branch] ?? []).includes(p)) || !/whatsapp|analiza-gratuita/i.test(r)) ok = false;
   });
   return asked ? ok : null;
 }
@@ -148,7 +148,7 @@ async function autoLoop(supabase: any, KEY: string, opts: { personas?: string[];
           ...(v.banned_phrase ? ["Validare: formulare interzisă sau acord greșit detectat"] : []),
           ...(v.wrong_branch_argument ? ["Validare: argument nepotrivit tipului de anunț"] : []),
           ...(v.wrong_commission ? ["Validare: procent de comision greșit pentru tipul de anunț"] : []),
-          ...(v.commission_answer_ok === false ? ["Validare: răspunsul la comision nu începe cu analiza gratuită + procentul corect + /analiza-gratuita pe WhatsApp"] : []),
+          ...(v.commission_answer_ok === false ? ["Validare: răspunsul la comision nu conține analiza gratuită + procentul corect + propunerea pe WhatsApp"] : []),
           ...(v.zone_hallucination ? [`Validare: ZONĂ INVENTATĂ — Andrei a spus „${v.invented_zones.join(", ")}”, dar anunțul indică „${r.listingZone || "zonă necunoscută"}”`] : []),
           ...(v.skeptic_pivot_ok === false ? ["Validare: la „agențiile vor doar comision” nu a confirmat lipsa contractului + raport gratuit pe WhatsApp"] : []),
           ...(!v.offered_free_analysis ? ["Validare: nu a propus analiza gratuită /analiza-gratuita"] : [])],

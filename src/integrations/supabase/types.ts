@@ -12883,6 +12883,10 @@ export type Database = {
         Args: { p_prospect_id: string; p_reason: string }
         Returns: undefined
       }
+      match_timisoara_zone_from_title: {
+        Args: { _title: string }
+        Returns: string
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -13010,6 +13014,7 @@ export type Database = {
         }
         Returns: string
       }
+      tm_norm: { Args: { t: string }; Returns: string }
       validate_chat_session: {
         Args: { p_session_id: string }
         Returns: boolean
