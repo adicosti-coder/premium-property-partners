@@ -21,6 +21,6 @@
 - [x] Verificare interacțiuni fără inițierea apelurilor
 
 ## Context simulator Andrei
-- [ ] Verificare contact/linkuri și detalii pe cardurile existente
-- [ ] Legare simulator de primul prospect vizibil, inclusiv după editarea telefonului
-- [ ] Verificare context fără inițierea apelurilor reale
+- [x] Verificare contact/linkuri și detalii pe cardurile existente
+- [x] Legare simulator de primul prospect vizibil, inclusiv după editarea telefonului
+- [x] Verificare context fără inițierea apelurilor reale
