@@ -16,7 +16,7 @@ const DELAYS = [1, 2, 3, 5, 10];
 const YES = ["interesat", "programare", "acord", "scheduled"];
 
 /** Caseta de control a campaniei Andrei — doar prospecte fără WhatsApp (131026). */
-export default function AndreiBatchCampaignControl() {
+export default function AndreiBatchCampaignControl() { const [updating, setUpdating] = useState(false);
   const [now, setNow] = useState(Date.now());
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
 
@@ -65,10 +65,10 @@ export default function AndreiBatchCampaignControl() {
   });
   const s = stats.data;
 
-  const update = async (patch: Partial<Campaign>) => {
+  const update = async (patch: Partial<Campaign>) => { if (updating) return; setUpdating(true);
     const { error } = await (supabase.from("voice_batch_campaign") as any).update({ ...patch, updated_at: new Date().toISOString() }).eq("id", 1);
-    if (error) return toast.error("Nu s-a putut salva");
-    q.refetch();
+    if (error) { setUpdating(false); return toast.error("Nu s-a putut salva"); }
+    q.refetch(); setUpdating(false);
   };
 
   const toggle = () => {
@@ -132,7 +132,7 @@ export default function AndreiBatchCampaignControl() {
 
       <div className="flex flex-wrap items-center gap-3">
         <Button
-          onClick={toggle}
+          onClick={toggle} disabled={updating}
           className={cn("min-h-[48px] text-white",
             c.enabled ? "bg-orange-600 hover:bg-orange-700" : "bg-emerald-600 hover:bg-emerald-700")}
         >
@@ -143,7 +143,7 @@ export default function AndreiBatchCampaignControl() {
           {DELAYS.map((m) => (
             <Button key={m} size="sm" variant={c.delay_minutes === m ? "default" : "outline"}
               role="radio" aria-checked={c.delay_minutes === m}
-              className="min-h-[44px] min-w-[48px]" onClick={() => update({ delay_minutes: m })}>
+              disabled={updating} className="min-h-[44px] min-w-[48px]" onClick={() => update({ delay_minutes: m })}>
               {m} min
             </Button>
           ))}

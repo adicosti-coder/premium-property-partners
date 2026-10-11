@@ -47,9 +47,9 @@ export function TwilioCallsLog() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const load = useCallback(async (isSilent = false) => { if (!isSilent)    
+     
+     
     const { data, error: err } = await supabase
       .from("voice_call_sessions")
       .select("id,to_number,direction,status,answered_by,is_voicemail,amd_hangup,call_duration_seconds,twilio_failure_reason,error_message,initiated_by,created_at,started_at,ended_at")
@@ -62,7 +62,7 @@ export function TwilioCallsLog() {
 
   useEffect(() => {
     load();
-    const t = setInterval(load, 30000);
+    const t = setInterval(() => load(true), 30000);
     return () => clearInterval(t);
   }, [load]);
 
