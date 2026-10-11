@@ -36,6 +36,7 @@ async function ai(messages: any[], key: string, opts: Record<string, unknown> = 
 }
 
 
+const branchOf = (c: string | null) => c === "hotelier" ? "cazare" : c === "inchiriere" ? "inchiriere" : "vanzare";
 const BANNED = /rețea privată|retea privata|preț premium|peste piață|chirie garantată|venit garantat|doi minute|doi camere|doi opțiuni/i;
 function validate(transcript: { role: string; text: string }[], branch: string) {
   const a = transcript.filter((t) => t.role === "andrei").map((t) => t.text).join(" ").toLowerCase();
@@ -199,7 +200,6 @@ Deno.serve(async (req) => {
       return json({ applied: lessons.length });
     }
 
-    const branchOf = (c: string | null) => c === "hotelier" ? "cazare" : c === "inchiriere" ? "inchiriere" : "vanzare";
     if (body.action === "campaign_profiles") {
       const { data: q } = await supabase.from("wa_outbound_queue").select("prospect_listing_id").eq("status", "failed")
         .ilike("last_error", "%131026%").not("prospect_listing_id", "is", null).limit(500);
