@@ -2,7 +2,7 @@
 // neapelate încă (fără tag „apelat-andrei”), L–S 09:00–19:00 (Europe/Bucharest),
 // un singur apel odată, cu pauză configurabilă după încheierea apelului anterior.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { isInternalNumber } from "../_shared/waInternalNumbers.ts";
+import { isInternalWaNumber as isInternalNumber } from "../_shared/waInternalNumbers.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
     .ilike("last_error", "%131026%").not("prospect_listing_id", "is", null).limit(1000);
   const ids = [...new Set((q ?? []).map((r: any) => r.prospect_listing_id))];
   if (!ids.length) { await save({ last_message: "Nu mai sunt prospecte fără WhatsApp de sunat." }); return json({ skipped: "empty" }); }
-  const { data: rows } = await sb.from("prospect_listings").select("id, title, owner_name, phone_normalized, contact_phone, tags")
+  const { data: rows } = await sb.from("prospect_listings").select("id, title, contact_name, phone_normalized, contact_phone, tags")
     .in("id", ids).eq("is_active", true).is("published_at", null).eq("do_not_call", false).order("created_at", { ascending: true }).limit(200);
   const next = (rows ?? []).find((r: any) => {
     const tags = (r.tags as string[]) || [];
@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
     body: JSON.stringify({ toNumber: to, prospectId: next.id }),
   });
   const out = await res.json().catch(() => ({}));
-  const label = next.owner_name || to;
+  const label = next.contact_name || to;
   if (!res.ok || !out?.sessionId) {
     // Marcăm ca încercat ca să nu blocăm coada pe același număr.
     const tags = [...new Set([...((next.tags as string[]) || []), "apelat-andrei"])];
