@@ -164,6 +164,7 @@
          fallback in case future code forgets size attrs. */
       img:not([width]):not([height]){aspect-ratio:16/9;width:100%;height:auto}
       img[width][height]{height:auto}
+      img.hero-kenburns[width][height]{height:100%}
 
       /* GUARD 5: All <video> elements get an aspect-ratio fallback so an
          autoplaying hero video cannot push content downward while metadata
