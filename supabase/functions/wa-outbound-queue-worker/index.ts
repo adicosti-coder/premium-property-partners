@@ -535,7 +535,7 @@ Deno.serve(async (req) => {
         conversationId = conv.id;
       }
 
-      const selectedTemplate = item.source === "followup" || item.source === "followup2"
+      const selectedTemplate = item.source === "followup" || item.source === "followup2" || item.source === "andrei_followup"
         ? item.template_name
         : item.source === "publish_consent_request"
           ? await preferredPublishConsentTemplate()
