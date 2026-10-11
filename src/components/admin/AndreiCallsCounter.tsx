@@ -25,9 +25,8 @@ export default function AndreiCallsCounter() {
       const list = (rows ?? []) as Array<{ ai_outcome: string | null; created_at: string; started_at: string | null; ended_at: string | null; call_duration_seconds: number | null }>;
       const out = (r: { ai_outcome: string | null }) => String(r.ai_outcome || "").toLowerCase();
       const waits = list
-        .filter((r) => r.started_at && r.ended_at && r.call_duration_seconds)
-        .map((r) => (new Date(r.ended_at!).getTime() - new Date(r.started_at!).getTime()) / 1000 - Number(r.call_duration_seconds))
-        .filter((s) => s >= 0 && s < 600);
+        .map((r) => Number(r.call_duration_seconds || 0))
+        .filter((s) => s > 0 && s < 3600);
       return {
         total: list.length,
         yes: list.filter((r) => YES.includes(out(r))).length,
@@ -41,7 +40,7 @@ export default function AndreiCallsCounter() {
     { label: "Apeluri", value: data?.total ?? 0, icon: Phone },
     { label: "Răspuns DA", value: data?.yes ?? 0, icon: ThumbsUp },
     { label: "STOP / Nu dorește", value: data?.stop ?? 0, icon: Ban },
-    { label: "Timp mediu răspuns", value: data?.avg == null ? "—" : `${data.avg} s`, icon: Timer },
+    { label: "Durată medie convorbire", value: data?.avg == null ? "—" : `${Math.floor(data.avg / 60)}:${String(data.avg % 60).padStart(2, "0")} min`, icon: Timer },
   ];
 
   return (
@@ -49,7 +48,7 @@ export default function AndreiCallsCounter() {
       <CardHeader className="flex flex-row items-start justify-between gap-3">
         <div>
           <CardTitle className="text-base">Apelurile lui Andrei</CardTitle>
-          <CardDescription>Timpul de răspuns = cât a sunat până a răspuns proprietarul.</CardDescription>
+          <CardDescription>Durata medie = de la conectarea apelului până la încheiere (doar apelurile la care s-a răspuns).</CardDescription>
         </div>
         <div className="flex gap-1">
           {[7, 30].map((d) => (
