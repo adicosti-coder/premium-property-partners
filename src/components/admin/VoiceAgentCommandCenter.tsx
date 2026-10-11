@@ -22,6 +22,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import VoiceProspectCard, { type VoiceProspectSummary } from "./VoiceProspectCard";
+import { TwilioCallsLog } from "./TwilioCallsLog";
 
 const VoiceAgentManager = lazy(() => import("./VoiceAgentManager"));
 
@@ -527,6 +528,9 @@ export default function VoiceAgentCommandCenter() {
           </Button>
         )}
       </div>
+
+      {/* Twilio calls log */}
+      <TwilioCallsLog />
 
       {/* Two-col: Hot Prospects + Callbacks Due */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
