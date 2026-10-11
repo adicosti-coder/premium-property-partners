@@ -90,6 +90,7 @@ const CONVERSATION_LABELS = [
   { value: 'revine', label: '🔄 Revine el', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 border-purple-300' },
   { value: 'potential-mare', label: '⭐ Potențial mare', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300 border-yellow-300' },
   { value: 'urgent', label: '🚨 Urgent', color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 border-red-400' },
+  { value: 'apelat-telefonic', label: '📞 Apelat telefonic', color: 'bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300 border-teal-300' },
 ];
 
 // ── Quick Reply Templates by Category ────────────────────────────
@@ -270,6 +271,11 @@ const ProspectManager = () => {
   const [stats, setStats] = useState({ total: 0, new: 0, contacted: 0, interested: 0, converted: 0, avgScore: 0 });
   const [activeQuickReply, setActiveQuickReply] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<string>('all');
+  const [filterNoWa, setFilterNoWa] = useState(false);
+  const [callDialogFor, setCallDialogFor] = useState<ProspectListing | null>(null);
+  const [callNote, setCallNote] = useState('');
+  const [callBusy, setCallBusy] = useState(false);
+  const [smsBusyId, setSmsBusyId] = useState<string | null>(null);
 
   // ── Scan-job state ───────────────────────────────────────────────────
   const [queryLimit, setQueryLimit] = useState<number>(() => {
