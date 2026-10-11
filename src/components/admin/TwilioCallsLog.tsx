@@ -108,6 +108,7 @@ export function TwilioCallsLog() {
                 <tr className="text-left text-xs text-muted-foreground border-b border-border">
                   <th className="py-2 pr-3 font-medium">Inițiat</th>
                   <th className="py-2 pr-3 font-medium">Număr</th>
+                  <th className="py-2 pr-3 font-medium text-center">Dir.</th>
                   <th className="py-2 pr-3 font-medium">Statut</th>
                   <th className="py-2 pr-3 font-medium">Durată</th>
                   <th className="py-2 font-medium">Detalii</th>
@@ -118,6 +119,11 @@ export function TwilioCallsLog() {
                   <tr key={r.id} className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors">
                     <td className="py-2 pr-3 whitespace-nowrap">{fmtTime(r.created_at)}</td>
                     <td className="py-2 pr-3 font-mono text-xs">{r.to_number || "—"}</td>
+                    <td className="py-2 pr-3 text-center">
+                      {r.direction === "inbound"
+                        ? <PhoneIncoming className="h-3.5 w-3.5 text-green-600 inline" aria-label="Primite" />
+                        : <PhoneOutgoing className="h-3.5 w-3.5 text-blue-600 inline" aria-label="Efectuate" />}
+                    </td>
                     <td className="py-2 pr-3">{statusBadge(r)}</td>
                     <td className="py-2 pr-3">{fmtDuration(r.call_duration_seconds)}</td>
                     <td className="py-2 text-xs text-muted-foreground max-w-[220px] truncate" title={r.twilio_failure_reason || r.error_message || ""}>
