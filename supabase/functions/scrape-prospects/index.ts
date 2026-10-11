@@ -693,8 +693,8 @@ async function proxyFetchHtml(
 const PROXY_BUDGET = {
   searchPages: 0,
   detailPages: 0,
-  maxSearchPages: 4,
-  maxDetailPages: 12,
+  maxSearchPages: 8,
+  maxDetailPages: 30,
 };
 
 function resetProxyBudget(opts?: { maxSearchPages?: number; maxDetailPages?: number }) {
@@ -2186,7 +2186,7 @@ Deno.serve(async (req) => {
 
     // Buget de apeluri prin proxy pe rulare: puține pagini de căutare (scumpe,
     // rezultate repetitive) și mai multe pagini de anunț (aduc preț/telefon).
-    resetProxyBudget({ maxSearchPages: 4, maxDetailPages: 12 });
+    resetProxyBudget({ maxSearchPages: 8, maxDetailPages: 30 });
     proxyLogClient = supabase;
 
     // Parse optional params
