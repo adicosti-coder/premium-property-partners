@@ -555,7 +555,8 @@ export default function VoiceAgentBatchCalling() {
     ];
     const esc = (v: any) => {
       if (v === null || v === undefined) return "";
-      const s = typeof v === "string" ? v : JSON.stringify(v);
+      let s = typeof v === "string" ? v : JSON.stringify(v);
+      if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
       return `"${s.replace(/"/g, '""').replace(/\r?\n/g, " ")}"`;
     };
     const transcriptToText = (t: any) => {

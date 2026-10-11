@@ -152,7 +152,7 @@ function locateJsonParseError(rawJson: string, errMsg: string): { line: number; 
 async function validateUrl(url: string): Promise<ValidationResult> {
   const empty: ValidationResult = { status: "warnings", errors: [], warnings: [], schema_types: [], error_locations: [], raw_blocks: [] };
   try {
-    const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 RealTrustBot SEO Validator" }, signal: AbortSignal.timeout(15000) });
+    const res = await fetch(url, { redirect: "manual", headers: { "User-Agent": "Mozilla/5.0 RealTrustBot SEO Validator" }, signal: AbortSignal.timeout(15000) });
     if (!res.ok) return { ...empty, status: "error", errors: [`HTTP ${res.status}`], warnings: [] };
     const html = await res.text();
     const blocks = [...html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
@@ -227,7 +227,15 @@ serve(async (req) => {
 
     const { url_path, override_id, history_id } = await req.json();
     if (!url_path) return json({ error: "url_path required" }, 400);
-    const fullUrl = url_path.startsWith("http") ? url_path : `${BASE_URL}${url_path}`;
+    if (typeof url_path !== "string") return json({ error: "url_path invalid" }, 400);
+    let fullUrl: string;
+    try {
+      const parsed = new URL(url_path, BASE_URL);
+      if (parsed.protocol !== "https:" || !["www.realtrust.ro", "realtrust.ro"].includes(parsed.hostname)) {
+        return json({ error: "Only realtrust.ro URLs allowed" }, 400);
+      }
+      fullUrl = parsed.toString();
+    } catch { return json({ error: "url_path invalid" }, 400); }
 
     const result = await validateUrl(fullUrl);
     const inserted = await sb.from("seo_schema_validations").insert({
