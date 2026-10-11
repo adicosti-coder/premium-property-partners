@@ -110,6 +110,35 @@ serve(async (req) => {
 
     // Fetch lead context for personalised prompt
     let leadContext = "";
+    const prospectId: string | null = typeof body.prospectId === "string" ? body.prospectId : null;
+    let ownerPrompt: string | null = null;
+    let webhookPayload: Record<string, unknown> | null = null;
+    if (prospectId) {
+      const { data: p } = await supabase
+        .from("prospect_listings")
+        .select("id, title, price, zone, location, property_type, contact_name, source_url, do_not_call")
+        .eq("id", prospectId)
+        .maybeSingle();
+      if (!p) {
+        return new Response(JSON.stringify({ error: "Prospect inexistent" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if ((p as any).do_not_call) {
+        return new Response(JSON.stringify({ skipped: "do_not_call", message: "Prospect în lista de excludere" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const zone = (p as any).zone || (p as any).location || "Timișoara";
+      const analysisUrl = (p as any).source_url ? `https://realtrust.ro/analiza-anunt?url=${encodeURIComponent((p as any).source_url)}` : null;
+      webhookPayload = {
+        owner_name: (p as any).contact_name || null,
+        phone: toNumber,
+        title: (p as any).title || null,
+        property_type: (p as any).property_type || null,
+        price: (p as any).price || null,
+        zone,
+        analysis_url: analysisUrl,
+      };
+      const greet = (p as any).contact_name ? `pe ${(p as any).contact_name}` : "proprietarul";
+      ownerPrompt = `Ești Andrei, asistent vocal RealTrust din Timișoara. Îl suni ${greet} pentru anunțul „${(p as any).title || "proprietatea"}” din zona ${zone}${(p as any).price ? `, preț ${(p as any).price} EUR` : ""}. Salută politicos, prezintă-te ca asistent AI RealTrust și spune pe scurt că am analizat anunțul pentru proprietatea din ${zone} și am pregătit o evaluare gratuită de piață. Obiectiv: (1) cere acordul de a-i trimite linkul cu analiza pe SMS sau WhatsApp; (2) întreabă dacă e deschis la publicarea gratuită pe RealTrust (Comision 0% pentru proprietar, fără exclusivitate). Nu promite că publici nimic fără acordul lui. Nu propune întâlniri la birou — nu avem birou pentru clienți. Dacă refuză sau e deranjat, mulțumește și închide politicos. Vorbești scurt, natural, în română, maxim 2-3 propoziții per replică.`;
+    }
     if (scraperLeadId) {
       const { data: lead } = await supabase
         .from("scraper_leads")
