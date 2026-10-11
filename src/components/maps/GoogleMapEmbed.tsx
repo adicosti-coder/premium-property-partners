@@ -84,19 +84,19 @@ const GoogleMapEmbed = ({ title = "Hartă locație", className = "h-72", ...rest
   }, [visible]);
 
   useEffect(() => {
-    if (!visible || keyOk !== null) return;
+    if (!visible || probe !== null) return;
     let alive = true;
-    void isMapsKeyValid().then((ok) => { if (alive) setKeyOk(ok); });
+    void probeMapsKey().then((result) => { if (alive) setProbe(result); });
     return () => { alive = false; };
-  }, [visible, keyOk]);
+  }, [visible, probe]);
 
   if (!src) return null;
   return (
     <div ref={ref} className={`relative w-full overflow-hidden rounded-xl border border-border bg-muted ${className}`}>
-      {visible && keyOk ? (
+      {visible && probe?.ok ? (
         <iframe title={title} src={src} className="h-full w-full" style={{ border: 0 }} loading="lazy" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
-      ) : visible && keyOk === false ? (
-        <MapFallback title={title} query={rest.query} />
+      ) : visible && probe && !probe.ok ? (
+        <MapFallback title={title} query={rest.query} debugError={probe.error} />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center gap-2 text-sm text-muted-foreground">
           <MapPin className="h-5 w-5 text-primary" /> {title}
