@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import MarkAsAgencyButton from "./MarkAsAgencyButton";
+import VoiceProspectCard, { type VoiceProspectSummary } from "./VoiceProspectCard";
 
 const VoiceAgentManager = lazy(() => import("./VoiceAgentManager"));
 
@@ -40,18 +40,7 @@ interface CallStats {
   win_rate: number;     // interested / reached
 }
 
-interface HotProspect {
-  id: string;
-  title: string | null;
-  zone: string | null;
-  price: number | null;
-  lead_score: number | null;
-  phone_normalized: string | null;
-  predictive_score: number | null;
-  conversion_probability: number | null;
-  last_call_at: string | null;
-  call_attempts: number;
-}
+type HotProspect = VoiceProspectSummary;
 
 interface CallbackDue {
   id: string;
@@ -262,7 +251,7 @@ export default function VoiceAgentCommandCenter() {
 
       // Hot prospects: active, has phone, not agency, not DNC, status open
       let q = supabase.from("prospect_listings")
-        .select("id, title, zone, price, lead_score, phone_normalized, predictive_score, conversion_probability, last_retry_at, retry_count")
+        .select("id, title, zone, price, lead_score, phone_normalized, contact_phone, contact_name, source_url, source_platform, predictive_score, conversion_probability, last_retry_at, retry_count")
         .eq("is_active", true)
         .not("phone_normalized", "is", null)
         .neq("prospect_type", "agentie")
@@ -278,6 +267,8 @@ export default function VoiceAgentCommandCenter() {
       setHotProspects((hot || []).map((p: any) => ({
         id: p.id, title: p.title, zone: p.zone, price: p.price,
         lead_score: p.lead_score, phone_normalized: p.phone_normalized,
+        contact_phone: p.contact_phone, contact_name: p.contact_name,
+        source_url: p.source_url, source_platform: p.source_platform,
         predictive_score: p.predictive_score,
         conversion_probability: p.conversion_probability,
         last_call_at: p.last_retry_at, call_attempts: p.retry_count || 0,
@@ -555,31 +546,11 @@ export default function VoiceAgentCommandCenter() {
                 Niciun prospect calificat. Relaxează filtrele de mai jos sau rulează Keyword Radar.
               </p>
             ) : hotProspects.map((p, idx) => (
-              <div key={p.id} className="flex items-center gap-3 p-3 rounded-md border border-border bg-muted/30 hover:bg-muted/60 transition-colors">
-                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-amber-500/20 text-amber-700 font-bold text-sm flex items-center justify-center">
-                  {idx + 1}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="font-medium text-sm truncate">{p.title || "(fără titlu)"}</div>
-                  <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
-                    {p.zone && <Badge variant="outline" className="text-[10px] h-4 px-1">{p.zone}</Badge>}
-                    {p.price ? <span>€{p.price.toLocaleString("ro-RO")}</span> : null}
-                    <span>score {p.lead_score ?? "—"}</span>
-                    {p.predictive_score != null && <span className="text-amber-600">AI {p.predictive_score}</span>}
-                    {p.call_attempts > 0 && <span className="text-red-500">{p.call_attempts}× încercări</span>}
-                  </div>
-                </div>
-                <Button size="sm" onClick={() => callNow(p.id)} disabled={callingId === p.id} className="flex-shrink-0">
-                  {callingId === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <PhoneCall className="h-3 w-3" />}
-                  <span className="ml-1.5 hidden sm:inline">Sună</span>
-                </Button>
-                <MarkAsAgencyButton
-                  id={p.id}
-                  phone={p.phone_normalized}
-                  variant="icon"
-                  onMarked={() => setHotProspects(prev => prev.filter(x => x.id !== p.id))}
-                />
-              </div>
+              <VoiceProspectCard key={p.id} prospect={p} rank={idx + 1}
+                calling={callingId === p.id} onCall={() => callNow(p.id)}
+                onMarked={() => setHotProspects(prev => prev.filter(x => x.id !== p.id))}
+                onPhoneSaved={phone => setHotProspects(prev => prev.map(x => x.id === p.id ? { ...x, phone_normalized: phone, contact_phone: phone } : x))}
+              />
             ))}
           </CardContent>
         </Card>

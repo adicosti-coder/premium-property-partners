@@ -14,3 +14,4 @@
 - /analiza-anunt extracts listing data via `public-listing-analysis` and scores it deterministically in `listing-market-score` (scraper comparables, last 180 days) — keeps price/negotiation numbers reproducible instead of AI-invented.
 - Property offers and Advisor investment cards share `getPropertyInvestmentMetrics`, keeping unrounded annual income until display — prevents inconsistent yields and rental multipliers.
 - Property maps and POI travel estimates use `propertyGeo` resolved GPS with explicit district fallback profiles — prevents imported Iosefin listings inheriting city-center coordinates or fixed travel times.
+- Voice Command Center prospect cards load details and WhatsApp history on demand by prospect ID and normalized phone variants; phone edits update both prospect phone fields with concurrency checks without changing past conversations — keeps calls current and historical contact records intact.
