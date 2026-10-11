@@ -392,6 +392,15 @@ const ProspectManager = () => {
       const typedData = (data || []) as unknown as ProspectListing[];
       setAllListings(typedData);
 
+      // Numerele pentru care Meta a returnat 131026 (fără WhatsApp) — marcate vizual în listă.
+      const { data: waFailed } = await supabase
+        .from('wa_outbound_queue')
+        .select('phone_normalized')
+        .eq('status', 'failed')
+        .ilike('last_error', '%131026%')
+        .limit(500);
+      setNoWaPhones(new Set((waFailed || []).map((r: any) => String(r.phone_normalized || '').replace(/\D/g, '').slice(-9))));
+
       // Compute stats from all data
       const total = typedData.length;
       const newCount = typedData.filter(l => l.status === 'new').length;
