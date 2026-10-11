@@ -1,10 +1,10 @@
 # Roadmap — optimizări sistem analiză și administrare
 
 ## Îmbunătățiri prioritizate — 11 octombrie, runda 2
-- [ ] Stabilitate: încărcare vizibilă, recuperare izolată și notificări disponibile imediat
-- [ ] Site public: verificarea și remedierea problemelor concrete de utilizare
-- [ ] Admin / Andrei: verificarea și remedierea problemelor concrete de afișare
-- [ ] Teste și verificare în pagină, fără apeluri sau mesaje reale
+- [x] Stabilitate: încărcare vizibilă, recuperare izolată și notificări disponibile imediat
+- [x] Site public: reîncercare verificare de securitate fără pierderea datelor și erori lângă câmpurile evaluării
+- [x] Admin / Andrei: jurnal stabil la actualizare, stări distincte, confirmare în pagină și feedback corect la salvarea campaniei
+- [x] Șapte teste și verificarea paginilor /index, /analiza-anunt, /evaluare, /contact, /investitori, paginii legale și panoului Andrei, fără apeluri sau mesaje reale
 
 ## Verificare premium, viteză și eficiență — 11 octombrie
 - [x] Verificare pagini principale și navigare fără operațiuni reale

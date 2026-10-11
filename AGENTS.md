@@ -18,3 +18,4 @@
 - Voice simulator receives the first visible Command Center prospect by ID through the admin-only context proxy; phone is separate from listing identity and stale responses are discarded — preserves the intended property context when testing another number or editing contacts.
 - Chunk-load recovery allows at most one automatic refresh per URL per minute and never refreshes offline or deletes unrelated caches — prevents reload loops and preserves cached resources.
 - Keep toast hosts mounted at startup, isolate route errors with a location-reset boundary, and delay nonblocking route-loading feedback briefly — preserves early notifications and prerendered content without blank navigation.
+- Voice campaign controls use an in-page confirmation, serialize updates, and announce success only after persistence; call-log refreshes retain existing rows — avoids blocked browser confirmations, misleading feedback, and polling flicker.
