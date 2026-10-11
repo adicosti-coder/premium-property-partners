@@ -78,6 +78,7 @@ const loaders: Record<string, Loader> = {
   "ai-memory": () => import("@/components/admin/AiMemoryPanel"),
   "photo-studio": () => import("@/components/admin/PhotoStudioManager"),
   "voice-agent": () => import("@/components/admin/VoiceAgentCommandCenter"),
+  "andrei-training-lab": () => import("@/components/admin/AndreiTrainingLab"),
   "whatsapp-andrei": () => import("@/components/admin/WhatsappAgentInbox"),
   "whatsapp-test": () => import("@/components/admin/WhatsAppTestSendPanel"),
   "whatsapp-queue": () => import("@/components/admin/WhatsappOutboundQueue"),
