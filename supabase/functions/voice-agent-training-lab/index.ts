@@ -199,7 +199,7 @@ Deno.serve(async (req) => {
 
     if (body.action === "apply") {
       const lessons = (Array.isArray(body.lessons) ? body.lessons : [])
-        .map((l: unknown) => String(l ?? "").trim()).filter((l: string) => l.length >= 10 && l.length <= 400).slice(0, 5);
+        .map((l: unknown) => String(l ?? "").trim()).filter((l: string) => l.length >= 10 && l.length <= 400 && !BANNED.test(l) && !badCommission(l)).slice(0, 5);
       if (!lessons.length) return json({ error: "Nicio sugestie validă de aplicat" }, 400);
       const { error } = await supabase.from("voice_agent_playbook_addendum").insert(lessons.map((lesson: string) => ({
         lesson, severity: "warning", is_active: true, auto_applied: true, applied_at: new Date().toISOString(),
