@@ -197,7 +197,7 @@ export default function VoiceAgentCommandCenter() {
   const [statsAll, setStatsAll] = useState<CallStats | null>(null);
   const [hotProspects, setHotProspects] = useState<HotProspect[]>([]);
   const [callbacks, setCallbacks] = useState<CallbackDue[]>([]);
-  const [callingId, setCallingId] = useState<string | null>(null);
+  const [callingId, setCallingId] = useState<string | null>(null); const [isRefetching, setIsRefetching] = useState(false);
   const [sources, setSources] = useState<SourceHealth[]>([]);
   const [triggeringScraper, setTriggeringScraper] = useState(false);
 
@@ -212,7 +212,7 @@ export default function VoiceAgentCommandCenter() {
   useEffect(() => { localStorage.setItem("va_min_score_70", String(requireScoreThreshold)); }, [requireScoreThreshold]);
 
   // ── Load data ────────────────────────────────────────────────────────────
-  const loadAll = async () => {
+  const loadAll = async (silent = false) => { if (!silent) setIsRefetching(true);
     setLoading(true);
     try {
       const since7d = new Date(Date.now() - 7 * 86400_000).toISOString();
@@ -310,7 +310,7 @@ export default function VoiceAgentCommandCenter() {
       console.error("[CommandCenter] load failed", e);
       toast({ title: "Eroare", description: "Nu am putut încărca datele.", variant: "destructive" });
     } finally {
-      setLoading(false);
+      setLoading(false); setIsRefetching(false);
     }
   };
 
@@ -461,8 +461,8 @@ export default function VoiceAgentCommandCenter() {
             <span className="text-xs text-muted-foreground">Andrei sună doar la comandă (buton „Sună" sau „🚀 Start Sesiune Apeluri")</span>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={loadAll} disabled={loading}>
-          {loading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null} Refresh
+        <Button variant="outline" size="sm" onClick={() => loadAll()} disabled={isRefetching}>
+          {isRefetching ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null} Refresh
         </Button>
       </div>
 
