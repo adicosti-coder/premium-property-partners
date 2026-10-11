@@ -1,6 +1,7 @@
 // Training Lab: Andrei vs un proprietar simulat de Gemini (doar text, fără apeluri reale),
 // analiză post-apel și aplicarea opțională a lecțiilor în contextul lui Andrei.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { listUpcomingAndreiEvents } from "../_shared/andreiCalendar.ts";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { andreiConversationPolicy, andreiListingObjections, normalizeAndreiBranch } from "../_shared/andreiConversationPolicy.ts";
 
@@ -70,12 +71,21 @@ function commissionAnswerOk(transcript: { role: string; text: string }[], branch
   });
   return asked ? ok : null;
 }
-const ZONE_WORDS = ["iulius","lipovei","cetate","centru","iosefin","fabric","dumbr","aradului","girocului","soarelui","complex","circumvala","take ionescu","bucovina","calea sagului","sagului","martirilor","fratelia","freidorf","elisabetin","mehala","plopi","ronat","kuntz","odobescu","bucure"];
+const norm = (x: string) => (x || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+let ZONES: { name: string; words: string[] }[] = [];
+async function loadZones(supabase: any) {
+  const { data } = await supabase.from("timisoara_zones").select("name, aliases").eq("is_active", true);
+  ZONES = (data ?? []).map((z: any) => ({ name: z.name, words: [z.name, ...(z.aliases ?? [])].map(norm).filter((w: string) => w.length >= 4) }));
+}
+/** Returnează zonele numite de Andrei care NU apar în anunț și nu au fost spuse de proprietar. */
+function inventedZones(transcript: { role: string; text: string }[], listingZone: string): string[] {
+  const known = norm(listingZone);
+  const ownerSaid = norm(transcript.filter((t) => t.role !== "andrei").map((t) => t.text).join(" "));
+  const a = norm(transcript.filter((t) => t.role === "andrei").map((t) => t.text).join(" "));
+  return ZONES.filter((z) => z.words.some((w) => a.includes(w)) && !z.words.some((w) => known.includes(w) || ownerSaid.includes(w))).map((z) => z.name);
+}
 function zoneHallucination(transcript: { role: string; text: string }[], listingZone: string): boolean {
-  const known = (listingZone || "").toLowerCase();
-  const ownerSaid = transcript.filter((t) => t.role !== "andrei").map((t) => t.text).join(" ").toLowerCase();
-  const a = transcript.filter((t) => t.role === "andrei").map((t) => t.text).join(" ").toLowerCase();
-  return ZONE_WORDS.some((z) => a.includes(z) && !known.includes(z) && !ownerSaid.includes(z));
+  return inventedZones(transcript, listingZone).length > 0;
 }
 function skepticPivotOk(transcript: { role: string; text: string }[]): boolean | null {
   let seen = false, ok = true;
@@ -98,12 +108,14 @@ function validate(transcript: { role: string; text: string }[], branch: string, 
     offered_free_analysis: /analiz/.test(a),
     mentioned_whatsapp: /whatsapp/.test(a),
     zone_hallucination: zoneHallucination(transcript, listingZone),
+    invented_zones: inventedZones(transcript, listingZone),
     skeptic_pivot_ok: skepticPivotOk(transcript),
   };
 }
 const CATS = ["Tone of Voice", "Handling Objections", "Sales Strategy", "General"];
 
-async function autoLoop(supabase: any, KEY: string, opts: { personas?: string[]; rejecter?: boolean } = {}) {
+async function autoLoop(supabase: any, KEY: string, opts: { personas?: string[]; rejecter?: boolean; offset?: number } = {}) {
+  await loadZones(supabase);
   const { data: q } = await supabase.from("wa_outbound_queue").select("prospect_listing_id").eq("status", "failed")
     .ilike("last_error", "%131026%").not("prospect_listing_id", "is", null).limit(300);
   const ids = [...new Set((q ?? []).map((r: any) => r.prospect_listing_id))];
@@ -125,19 +137,19 @@ async function autoLoop(supabase: any, KEY: string, opts: { personas?: string[];
   const fixes: string[] = [];
   for (let i = 0; i < personas.length; i++) {
     try {
-      const branch = BR[i % BR.length];
+      const branch = BR[(i + (opts.offset ?? 0)) % BR.length];
       const pick = byBranch[branch]?.shift();
       const r: any = await simulate(supabase, KEY, { persona: personas[i], prospect_id: pick?.id, branch, commission_probe: true, rejecter: opts.rejecter });
       if (!r.analysis) continue;
       const v = validate(r.transcript, r.branch, r.listingZone);
       await supabase.from("voice_call_analyses").insert({
-        source: "training_lab_auto", outcome: `${personas[i]} · ${r.branch} · comision ${v.commission_answer_ok === null ? "neîntrebat" : v.commission_answer_ok && !v.wrong_commission ? "OK" : "GREȘIT"}`, score: r.analysis.score,
+        source: "training_lab_auto", outcome: `${personas[i]} · ${r.branch} · comision ${v.commission_answer_ok === null ? "neîntrebat" : v.commission_answer_ok && !v.wrong_commission ? "OK" : "GREȘIT"}${v.zone_hallucination ? " · ZONĂ INVENTATĂ" : ""}`, score: r.analysis.score,
         strengths: r.analysis.strengths, weaknesses: [...r.analysis.weaknesses,
           ...(v.banned_phrase ? ["Validare: formulare interzisă sau acord greșit detectat"] : []),
           ...(v.wrong_branch_argument ? ["Validare: argument nepotrivit tipului de anunț"] : []),
           ...(v.wrong_commission ? ["Validare: procent de comision greșit pentru tipul de anunț"] : []),
           ...(v.commission_answer_ok === false ? ["Validare: răspunsul la comision nu începe cu analiza gratuită + procentul corect + /analiza-gratuita pe WhatsApp"] : []),
-          ...(v.zone_hallucination ? ["Validare: zonă inventată/presupusă, diferită de anunț"] : []),
+          ...(v.zone_hallucination ? [`Validare: ZONĂ INVENTATĂ — Andrei a spus „${v.invented_zones.join(", ")}”, dar anunțul indică „${r.listingZone || "zonă necunoscută"}”`] : []),
           ...(v.skeptic_pivot_ok === false ? ["Validare: la „agențiile vor doar comision” nu a confirmat lipsa contractului + raport gratuit pe WhatsApp"] : []),
           ...(!v.offered_free_analysis ? ["Validare: nu a propus analiza gratuită /analiza-gratuita"] : [])],
         objections: r.analysis.objections, prompt_fixes: r.analysis.prompt_fixes,
@@ -199,6 +211,7 @@ async function simulate(supabase: any, KEY: string, body: any): Promise<any> {
     if (body.commission_probe) personaText += " În prima sau a doua replică întreabă direct: „Și ce comision luați?”.";
     if (body.rejecter) personaText += " Respingi la început ideea de analiză („nu am nevoie de analize”) și spui că nu plătești comision agențiilor.";
     if (!/zona /.test(personaText) && !listingZone) objections += "\n\nZona anunțului NU este cunoscută: întreabă o singură dată cartierul; nu presupune nicio zonă.";
+    if (!ZONES.length) await loadZones(supabase);
     const turns = Math.min(8, Math.max(3, Number(body.turns) || 6));
 
     const { data: script } = await supabase.from("voice_agent_scripts").select("system_prompt").eq("is_active", true).maybeSingle();
@@ -207,6 +220,7 @@ async function simulate(supabase: any, KEY: string, body: any): Promise<any> {
     const andreiPrompt = (script?.system_prompt || "Ești Andrei, asistent AI imobiliar RealTrust Timișoara.") +
       (lessons?.length ? "\n\nLecții active:\n" + lessons.map((l: any) => `- ${l.lesson}`).join("\n") : "") +
       "\n\n" + andreiConversationPolicy(branch) + objections +
+      `\n\nZONA EXACTĂ DIN ANUNȚ: ${listingZone || "necunoscută — întreabă o singură dată cartierul"}. Cartiere și repere reale din Timișoara pe care le poți folosi DOAR dacă apar în anunț sau le spune proprietarul: ${ZONES.map((z) => z.name).join(", ")}. Nu numi niciun alt cartier sau reper.` +
       "\n\nEști la telefon. Răspunzi cu O singură replică scurtă, fără etichete sau ghilimele.";
     const ownerPrompt = `Joci rolul unui proprietar din Timișoara sunat de un asistent AI imobiliar. ${personaText}
 Vorbești natural, în română, ca la telefon: o replică scurtă (max 25 de cuvinte), fără etichete. Ridică obiecții realiste. Dacă ești convins, poți accepta analiza gratuită; dacă te enervează, poți spune STOP.`;
@@ -292,6 +306,29 @@ Deno.serve(async (req) => {
         if (profiles.length >= 6) break;
       }
       return json({ profiles });
+    }
+
+    // Cron-urile rulează la ambele ore UTC (vară/iarnă); executăm doar când ora României corespunde.
+    if (body.background && typeof body.local_hour === "number") {
+      const h = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Bucharest", hour: "2-digit", hour12: false }).format(new Date()));
+      if (h !== body.local_hour) return json({ skipped: true, reason: `ora României este ${h}, nu ${body.local_hour}` });
+    }
+
+    if (body.action === "upcoming_calls") {
+      try { return json({ events: await listUpcomingAndreiEvents(supabase) }); }
+      catch (e: any) { return json({ events: [], error: e?.message || "Calendar indisponibil" }); }
+    }
+
+    if (body.action === "sceptic_step") {
+      // o singură simulare Sceptic, pentru afișare live pas cu pas în Training Lab
+      const step = Math.max(0, Number(body.step) || 0);
+      const before = await supabase.from("voice_call_analyses").select("id", { count: "exact", head: true }).eq("source", "training_lab_auto");
+      await autoLoop(supabase, KEY, { personas: ["sceptic"], rejecter: true, offset: step });
+      const { data: last } = await supabase.from("voice_call_analyses").select("id, outcome, score, weaknesses, transcript, created_at")
+        .eq("source", "training_lab_auto").order("created_at", { ascending: false }).limit(1).maybeSingle();
+      const after = await supabase.from("voice_call_analyses").select("id", { count: "exact", head: true }).eq("source", "training_lab_auto");
+      const active = await supabase.from("voice_agent_playbook_addendum").select("id", { count: "exact", head: true }).eq("is_active", true);
+      return json({ finished: true, added: (after.count ?? 0) > (before.count ?? 0), last, active_lessons: active.count ?? 0 });
     }
 
     if (body.action === "sceptic_drill") {

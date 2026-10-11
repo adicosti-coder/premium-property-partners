@@ -659,6 +659,13 @@
       "when": 1791739441227,
       "tag": "0093_seller_scan_classification",
       "breakpoints": true
+    },
+    {
+      "idx": 94,
+      "version": "7",
+      "when": 1791744084898,
+      "tag": "0094_migration",
+      "breakpoints": true
     }
   ]
 }

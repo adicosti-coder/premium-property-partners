@@ -65,3 +65,26 @@ export async function bookSlot(slot: Slot, info: { name?: string | null; phone?:
   if (!r.ok) throw new Error(`Calendar ${r.status}: ${(await r.text()).slice(0, 200)}`);
   return await r.json();
 }
+
+/** Programările făcute de Andrei în următoarele 14 zile, îmbogățite cu proprietarul și tipul anunțului. */
+export async function listUpcomingAndreiEvents(supabase: any) {
+  const now = new Date();
+  const qs = new URLSearchParams({ timeMin: now.toISOString(), timeMax: new Date(now.getTime() + 14 * 864e5).toISOString(), singleEvents: "true", orderBy: "startTime", q: "Andrei AI", maxResults: "50" });
+  const r = await fetch(`${GW}/calendars/primary/events?${qs}`, { headers: headers() });
+  if (!r.ok) throw new Error(`Calendar ${r.status}: ${(await r.text()).slice(0, 200)}`);
+  const items = ((await r.json()).items ?? []).filter((e: any) => /Andrei AI/.test(e.summary || ""));
+  const out = [];
+  for (const e of items) {
+    const desc = String(e.description || "");
+    const phone = desc.match(/Telefon:\s*([^\n]+)/)?.[1]?.trim() || null;
+    const listing = desc.match(/Anunț:\s*([^\n]+)/)?.[1]?.trim() || null;
+    let owner = String(e.summary || "").split("—")[1]?.trim() || null, category: string | null = null;
+    const digits = (phone || "").replace(/\D/g, "").slice(-9);
+    if (digits.length === 9) {
+      const { data } = await supabase.from("prospect_listings").select("contact_name, category, title, zone").ilike("phone", `%${digits}`).limit(1).maybeSingle();
+      if (data) { owner = data.contact_name || owner; category = data.category; }
+    }
+    out.push({ id: e.id, start: e.start?.dateTime || e.start?.date, end: e.end?.dateTime || e.end?.date, kind: /Evaluare/.test(e.summary) ? "evaluare" : "telefon", owner, phone, listing, category, link: e.htmlLink });
+  }
+  return out;
+}

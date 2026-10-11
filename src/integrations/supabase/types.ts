@@ -9277,6 +9277,33 @@ export type Database = {
         }
         Relationships: []
       }
+      timisoara_zones: {
+        Row: {
+          aliases: string[]
+          created_at: string
+          id: string
+          is_active: boolean
+          kind: string
+          name: string
+        }
+        Insert: {
+          aliases?: string[]
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          kind?: string
+          name: string
+        }
+        Update: {
+          aliases?: string[]
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          kind?: string
+          name?: string
+        }
+        Relationships: []
+      }
       tracking_alert_log: {
         Row: {
           alerted: boolean
