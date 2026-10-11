@@ -153,6 +153,31 @@ serve(async (req) => {
         updates.status = twStatus;
       }
 
+      const isFinal = FINAL_STATUSES.includes(twStatus);
+      if (isFinal) {
+        // Run the full post-call pipeline (AI summary, outcome labels, clarity log)
+        // that normally runs from Twilio's status callback.
+        try {
+          const fwd = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/voice-agent-status?sessionId=${(session as any).id}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+              Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+              "x-internal-reconcile": "1",
+            },
+            body: new URLSearchParams({ CallStatus: twStatus, CallDuration: String(duration), CallSid: String(sid) }).toString(),
+            signal: AbortSignal.timeout(40000),
+          });
+          if (fwd.ok) {
+            // The status pipeline wrote the real summary; keep only bookkeeping fields.
+            delete updates.ai_summary; delete updates.ai_outcome; delete updates.ai_sentiment; delete updates.next_action;
+            delete updates.debug_log;
+          }
+        } catch (e) {
+          console.warn("[reconcile] status pipeline forward failed", (e as Error).message);
+        }
+      }
+
       await supabase.from("voice_call_sessions").update(updates).eq("id", (session as any).id);
       reconciled.push({ id: (session as any).id, ok: true, twilio_status: twStatus, duration, final: FINAL_STATUSES.includes(twStatus) });
     }

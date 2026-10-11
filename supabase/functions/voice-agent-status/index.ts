@@ -30,12 +30,21 @@ serve(async (req) => {
     // Verify Twilio HMAC signature — fail closed: unsigned callbacks cannot mutate call records.
     let twilioForm: URLSearchParams | null = null;
     if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
-    const verification = await verifyTwilioRequest(req.clone());
-    if (!verification.ok) {
-      console.warn("[voice-status] Twilio HMAC mismatch — rejected", { status: verification.response.status });
-      return verification.response;
+    // Internal path: voice-agent-reconcile forwards the final Twilio state with the
+    // service-role key when Twilio's own status callback never arrived.
+    const internalAuth = req.headers.get("authorization") || "";
+    const isInternal = req.headers.get("x-internal-reconcile") === "1"
+      && internalAuth === `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`;
+    if (isInternal) {
+      twilioForm = new URLSearchParams(await req.text());
+    } else {
+      const verification = await verifyTwilioRequest(req.clone());
+      if (!verification.ok) {
+        console.warn("[voice-status] Twilio HMAC mismatch — rejected", { status: verification.response.status });
+        return verification.response;
+      }
+      twilioForm = verification.params;
     }
-    twilioForm = verification.params;
 
     const url = new URL(req.url);
     const sessionId = url.searchParams.get("sessionId");
