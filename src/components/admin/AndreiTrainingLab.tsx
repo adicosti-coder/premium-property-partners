@@ -10,10 +10,10 @@ import { FlaskConical, Loader2 } from "lucide-react";
 import AndreiCallHistory from "./AndreiCallHistory";
 
 const PERSONAS = [
-  { id: "sceptic", label: "Sceptic", desc: "Crede că e o agenție și cere dovezi." },
-  { id: "grabit", label: "Grăbit", desc: "N-are timp, răspunde monosilabic." },
-  { id: "negociator", label: "Negociator pe preț", desc: "Nu scade prețul, negociază dur." },
-  { id: "garsoniera", label: "Proprietar garsonieră", desc: "Prima vânzare, cere explicații simple." },
+  { id: "sceptic", label: "Sceptic", desc: "Crede că e o agenție și cere dovezi.", difficulty: "Mediu" },
+  { id: "grabit", label: "Grăbit", desc: "N-are timp, răspunde monosilabic.", difficulty: "Greu" },
+  { id: "negociator", label: "Negociator pe preț", desc: "Nu scade prețul, negociază dur.", difficulty: "Greu" },
+  { id: "garsoniera", label: "Proprietar garsonieră", desc: "Prima vânzare, cere explicații simple.", difficulty: "Ușor" },
 ];
 
 type Analysis = {
@@ -82,12 +82,15 @@ export default function AndreiTrainingLab() {
       <Card>
         <CardHeader><CardTitle className="text-base">1. Alege profilul proprietarului</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
             {PERSONAS.map((p) => (
               <button key={p.id} type="button" onClick={() => { setPersona(p.id); setProspectId(null); }} aria-pressed={!prospectId && persona === p.id}
                 className={`min-h-[48px] rounded-lg border p-3 text-left transition-colors ${!prospectId && persona === p.id ? "border-primary bg-primary/10" : "border-border hover:bg-muted"}`}>
-                <div className="font-medium">{p.label}</div>
-                <div className="text-xs text-muted-foreground">{p.desc}</div>
+                <div className="flex items-center justify-between gap-1">
+                  <div className="font-medium text-sm sm:text-base">{p.label}</div>
+                  <Badge variant={p.difficulty === "Greu" ? "destructive" : p.difficulty === "Mediu" ? "default" : "secondary"} className="shrink-0 text-[10px]">{p.difficulty}</Badge>
+                </div>
+                <div className="text-xs text-muted-foreground line-clamp-2">{p.desc}</div>
               </button>
             ))}
           </div>
@@ -106,9 +109,17 @@ export default function AndreiTrainingLab() {
               </div>
             </div>
           )}
-          <Button className="min-h-[48px]" onClick={run} disabled={running}>
+          <Button className="min-h-[48px] w-full sm:w-auto" onClick={run} disabled={running}>
             {running ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Simulare în curs (≈30 s)…</> : "Inițiază Apel de Antrenament (Andrei vs Gemini)"}
           </Button>
+          {running && (
+            <div className="space-y-1" role="status" aria-live="polite">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                <div className="h-full w-1/3 animate-pulse rounded-full bg-primary" />
+              </div>
+              <p className="text-xs text-muted-foreground">Andrei discută cu proprietarul simulat, apoi Gemini analizează conversația…</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
