@@ -710,6 +710,32 @@ export default function WhatsappOutboundQueue() {
                       field="phone_normalized"
                     />
                   </td>
+                  <td className="px-3 py-2 max-w-[220px]">
+                    {(() => {
+                      const p = prospects.get(r.id);
+                      if (!p) return <span className="text-xs text-muted-foreground">—</span>;
+                      if (p.title) {
+                        return p.source_url ? (
+                          <a
+                            href={`/analiza-anunt?url=${encodeURIComponent(p.source_url)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-primary hover:underline line-clamp-2"
+                            title={p.title}
+                          >
+                            {p.title}
+                          </a>
+                        ) : (
+                          <span className="text-xs line-clamp-2" title={p.title}>{p.title}</span>
+                        );
+                      }
+                      return (
+                        <Badge variant="outline" className="text-[10px]">
+                          {p.zone ?? p.source_platform ?? "fără titlu"}
+                        </Badge>
+                      );
+                    })()}
+                  </td>
                   <td className="px-3 py-2">
                     <Badge variant={meta.variant}>{meta.label}</Badge>
                     {r.last_error && (() => {
