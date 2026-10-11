@@ -134,7 +134,39 @@ export default function WhatsappOutboundQueue() {
     if (statusFilter !== "all") q = q.eq("status", statusFilter);
     const { data, error } = await q;
     if (error) toast({ title: "Eroare la încărcarea cozii", description: error.message, variant: "destructive" });
-    setRows((data ?? []) as QueueRow[]);
+    const list = (data ?? []) as QueueRow[];
+    setRows(list);
+
+    // Încarcă anunțurile asociate: mai întâi după prospect_listing_id, apoi după telefon.
+    const map = new Map<string, ProspectInfo>();
+    const byId = new Map<string, QueueRow>();
+    const byPhone = new Map<string, QueueRow>();
+    for (const r of list) {
+      if (r.prospect_listing_id) byId.set(r.prospect_listing_id, r);
+      else if (r.phone_normalized && !byPhone.has(r.phone_normalized)) byPhone.set(r.phone_normalized, r);
+    }
+    if (byId.size) {
+      const { data: pls } = await (supabase as any)
+        .from("prospect_listings")
+        .select("id, title, zone, source_platform, source_url")
+        .in("id", [...byId.keys()]);
+      for (const p of pls ?? []) map.set(byId.get(p.id)!.id, p as ProspectInfo);
+    }
+    const missingPhones = [...byPhone.keys()].filter(
+      (ph) => !map.has(byPhone.get(ph)!.id),
+    );
+    if (missingPhones.length) {
+      const { data: pls } = await (supabase as any)
+        .from("prospect_listings")
+        .select("id, title, zone, source_platform, source_url, phone_normalized, created_at")
+        .in("phone_normalized", missingPhones)
+        .order("created_at", { ascending: false });
+      for (const p of pls ?? []) {
+        const row = byPhone.get(p.phone_normalized);
+        if (row && !map.has(row.id)) map.set(row.id, p as ProspectInfo);
+      }
+    }
+    setProspects(map);
     setLoading(false);
   }, [statusFilter]);
 
