@@ -62,7 +62,7 @@ const updateConsent = (choice: ConsentChoice) => {
   if (adsGranted) initMetaPixel();
 };
 
-const CookieConsent = () => {
+const CookieConsent = forwardRef<HTMLDivElement>((_props, _ref) => {
   const [visible, setVisible] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [analyticsEnabled, setAnalyticsEnabled] = useState(false);
