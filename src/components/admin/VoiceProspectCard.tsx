@@ -73,7 +73,6 @@ export default function VoiceProspectCard({ prospect: p, rank, calling, onCall, 
     event.preventDefault();
     const normalized = consentPhone(phone);
     if (!/^\+[1-9]\d{7,14}$/.test(normalized)) {
-      setSaveError("Saisissez un numéro valide.");
       setSaveError("Introdu un număr valid, de exemplu 07xx xxx xxx sau cu prefix internațional.");
       return;
     }
