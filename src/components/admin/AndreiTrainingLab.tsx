@@ -34,6 +34,7 @@ async function errText(error: unknown) {
 export default function AndreiTrainingLab() {
   const [persona, setPersona] = useState("sceptic");
   const [running, setRunning] = useState(false);
+  const [autoRunning, setAutoRunning] = useState(false);
   const [applying, setApplying] = useState(false);
   const [transcript, setTranscript] = useState<Line[]>([]);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
@@ -48,6 +49,15 @@ export default function AndreiTrainingLab() {
       .then(({ data }) => setCampaign(data?.profiles ?? []));
   }, []);
   const BRANCH_LABEL: Record<string, string> = { vanzare: "Vânzare", inchiriere: "Închiriere", cazare: "Regim hotelier" };
+
+  const runAuto = async () => {
+    setAutoRunning(true);
+    const { data, error } = await supabase.functions.invoke("voice-agent-training-lab", { body: { action: "auto_loop" } });
+    setAutoRunning(false);
+    if (error) return toast.error(await errText(error));
+    if (data?.started) toast.success("Antrenamentul automat rulează în fundal: toate cele 4 profiluri, pe anunțuri reale. Rezultatele apar în istoric în câteva minute.");
+    else toast.error(data?.error || "Nu a pornit");
+  };
 
   const run = async () => {
     setRunning(true); setTranscript([]); setAnalysis(null); setApplied(false);
