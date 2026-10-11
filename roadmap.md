@@ -19,3 +19,8 @@
 - [x] Editare rapidă număr cu salvare și validare
 - [x] Detalii complete, istoric WhatsApp și note în dialog
 - [x] Verificare interacțiuni fără inițierea apelurilor
+
+## Context simulator Andrei
+- [ ] Verificare contact/linkuri și detalii pe cardurile existente
+- [ ] Legare simulator de primul prospect vizibil, inclusiv după editarea telefonului
+- [ ] Verificare context fără inițierea apelurilor reale
