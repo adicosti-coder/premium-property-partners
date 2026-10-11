@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -40,9 +40,18 @@ export default function AndreiTrainingLab() {
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [applied, setApplied] = useState(false);
 
+  type CampaignProfile = { id: string; branch: string; title: string | null; zone: string | null; price: number | null; currency: string | null; rooms: number | null; size: number | null };
+  const [campaign, setCampaign] = useState<CampaignProfile[]>([]);
+  const [prospectId, setProspectId] = useState<string | null>(null);
+  useEffect(() => {
+    supabase.functions.invoke("voice-agent-training-lab", { body: { action: "campaign_profiles" } })
+      .then(({ data }) => setCampaign(data?.profiles ?? []));
+  }, []);
+  const BRANCH_LABEL: Record<string, string> = { vanzare: "Vânzare", inchiriere: "Închiriere", cazare: "Regim hotelier" };
+
   const run = async () => {
     setRunning(true); setTranscript([]); setAnalysis(null); setApplied(false);
-    const { data, error } = await supabase.functions.invoke("voice-agent-training-lab", { body: { persona } });
+    const { data, error } = await supabase.functions.invoke("voice-agent-training-lab", { body: prospectId ? { prospect_id: prospectId } : { persona } });
     setRunning(false);
     if (error) return toast.error(await errText(error));
     setTranscript(data?.transcript ?? []);
@@ -56,7 +65,7 @@ export default function AndreiTrainingLab() {
     const lessons = analysis.prompt_fixes.filter((_, i) => selected.has(i));
     if (!lessons.length) return toast.info("Selectează cel puțin o sugestie");
     setApplying(true);
-    const { data, error } = await supabase.functions.invoke("voice-agent-training-lab", { body: { action: "apply", lessons, persona } });
+    const { data, error } = await supabase.functions.invoke("voice-agent-training-lab", { body: { action: "apply", lessons, persona: prospectId ? "campanie" : persona } });
     setApplying(false);
     if (error) return toast.error(await errText(error));
     setApplied(true);
@@ -75,13 +84,28 @@ export default function AndreiTrainingLab() {
         <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {PERSONAS.map((p) => (
-              <button key={p.id} type="button" onClick={() => setPersona(p.id)} aria-pressed={persona === p.id}
-                className={`min-h-[48px] rounded-lg border p-3 text-left transition-colors ${persona === p.id ? "border-primary bg-primary/10" : "border-border hover:bg-muted"}`}>
+              <button key={p.id} type="button" onClick={() => { setPersona(p.id); setProspectId(null); }} aria-pressed={!prospectId && persona === p.id}
+                className={`min-h-[48px] rounded-lg border p-3 text-left transition-colors ${!prospectId && persona === p.id ? "border-primary bg-primary/10" : "border-border hover:bg-muted"}`}>
                 <div className="font-medium">{p.label}</div>
                 <div className="text-xs text-muted-foreground">{p.desc}</div>
               </button>
             ))}
           </div>
+          {campaign.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold">Sau un anunț real din campanie (proprietarul nu este sunat)</h4>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {campaign.map((c) => (
+                  <button key={c.id} type="button" onClick={() => setProspectId(c.id)} aria-pressed={prospectId === c.id}
+                    className={`min-h-[48px] rounded-lg border p-3 text-left transition-colors ${prospectId === c.id ? "border-primary bg-primary/10" : "border-border hover:bg-muted"}`}>
+                    <Badge variant="secondary" className="mb-1">{BRANCH_LABEL[c.branch] ?? c.branch}</Badge>
+                    <div className="font-medium text-sm line-clamp-2">{c.title || "Anunț fără titlu"}</div>
+                    <div className="text-xs text-muted-foreground">{[c.zone, c.rooms ? `${c.rooms} camere` : null, c.size ? `${c.size} m²` : null, c.price ? `${c.price} ${c.currency || "EUR"}${c.branch === "inchiriere" ? "/lună" : ""}` : null].filter(Boolean).join(" · ")}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <Button className="min-h-[48px]" onClick={run} disabled={running}>
             {running ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Simulare în curs (≈30 s)…</> : "Inițiază Apel de Antrenament (Andrei vs Gemini)"}
           </Button>

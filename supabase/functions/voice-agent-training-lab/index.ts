@@ -2,7 +2,7 @@
 // analiză post-apel și aplicarea opțională a lecțiilor în contextul lui Andrei.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
-import { andreiConversationPolicy } from "../_shared/andreiConversationPolicy.ts";
+import { andreiConversationPolicy, andreiListingObjections, normalizeAndreiBranch } from "../_shared/andreiConversationPolicy.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -57,8 +57,41 @@ Deno.serve(async (req) => {
       return json({ applied: lessons.length });
     }
 
-    const persona = String(body.persona || "");
-    if (!PERSONAS[persona]) return json({ error: "Profil necunoscut" }, 400);
+    const branchOf = (c: string | null) => c === "hotelier" ? "cazare" : c === "inchiriere" ? "inchiriere" : "vanzare";
+    if (body.action === "campaign_profiles") {
+      const { data: q } = await supabase.from("wa_outbound_queue").select("prospect_listing_id").eq("status", "failed")
+        .ilike("last_error", "%131026%").not("prospect_listing_id", "is", null).limit(500);
+      const ids = [...new Set((q ?? []).map((r: any) => r.prospect_listing_id))];
+      if (!ids.length) return json({ profiles: [] });
+      const { data: rows } = await supabase.from("prospect_listings").select("id, title, category, zone, location, price, currency, rooms, size")
+        .in("id", ids).eq("is_active", true).eq("do_not_call", false).order("created_at", { ascending: false }).limit(60);
+      const seen = new Set<string>(); const profiles: any[] = [];
+      for (const r of rows ?? []) {
+        const b = branchOf(r.category);
+        const key = `${b}:${r.rooms ?? "?"}`;
+        if (seen.has(key) && profiles.length >= 3) continue;
+        seen.add(key);
+        profiles.push({ id: r.id, branch: b, title: r.title, zone: r.zone || r.location, price: r.price, currency: r.currency, rooms: r.rooms, size: r.size });
+        if (profiles.length >= 6) break;
+      }
+      return json({ profiles });
+    }
+
+    let persona = String(body.persona || "");
+    let branch: "vanzare" | "inchiriere" | "cazare" = "vanzare";
+    let personaText = PERSONAS[persona];
+    let objections = "";
+    if (body.prospect_id) {
+      const { data: r } = await supabase.from("prospect_listings").select("id, title, category, zone, location, price, currency, rooms, size")
+        .eq("id", String(body.prospect_id)).maybeSingle();
+      if (!r) return json({ error: "Anunț inexistent" }, 404);
+      branch = normalizeAndreiBranch(branchOf(r.category));
+      const tip = branch === "inchiriere" ? "închiriază pe termen lung" : branch === "cazare" ? "are în regim hotelier" : "vinde";
+      personaText = `Proprietar care ${tip}: „${r.title || "apartament"}”, zona ${r.zone || r.location || "nespecificată"}, ${r.rooms ?? "?"} camere, ${r.size ?? "?"} m², preț ${r.price ?? "?"} ${r.currency || "EUR"}${branch === "inchiriere" ? "/lună" : ""}. Ține la preț, întreabă ce face concret agenția pentru tipul lui de anunț și ridică obiecții legate de preț, zonă și mărimea apartamentului.`;
+      persona = `campanie-${branch}`;
+      objections = "\n\n" + andreiListingObjections({ branch, price: r.price, currency: r.currency, zone: r.zone || r.location, rooms: r.rooms, size: r.size, title: r.title });
+    }
+    if (!personaText) return json({ error: "Profil necunoscut" }, 400);
     const turns = Math.min(8, Math.max(3, Number(body.turns) || 6));
 
     const { data: script } = await supabase.from("voice_agent_scripts").select("system_prompt").eq("is_active", true).maybeSingle();
@@ -66,12 +99,12 @@ Deno.serve(async (req) => {
       .order("created_at", { ascending: false }).limit(5);
     const andreiPrompt = (script?.system_prompt || "Ești Andrei, asistent AI imobiliar RealTrust Timișoara.") +
       (lessons?.length ? "\n\nLecții active:\n" + lessons.map((l: any) => `- ${l.lesson}`).join("\n") : "") +
-      "\n\n" + andreiConversationPolicy("vanzare") +
+      "\n\n" + andreiConversationPolicy(branch) + objections +
       "\n\nEști la telefon. Răspunzi cu O singură replică scurtă, fără etichete sau ghilimele.";
-    const ownerPrompt = `Joci rolul unui proprietar din Timișoara sunat de un asistent AI imobiliar. ${PERSONAS[persona]}
+    const ownerPrompt = `Joci rolul unui proprietar din Timișoara sunat de un asistent AI imobiliar. ${personaText}
 Vorbești natural, în română, ca la telefon: o replică scurtă (max 25 de cuvinte), fără etichete. Ridică obiecții realiste. Dacă ești convins, poți accepta analiza gratuită; dacă te enervează, poți spune STOP.`;
 
-    const transcript: { role: "andrei" | "proprietar"; text: string }[] = [{ role: "andrei", text: OPENING }];
+    const transcript: { role: "andrei" | "proprietar"; text: string }[] = [{ role: "andrei", text: branch === "inchiriere" ? OPENING.replace("de vânzare", "de închiriere") : branch === "cazare" ? OPENING.replace("anunțul dumneavoastră de vânzare", "apartamentul dumneavoastră în regim hotelier") : OPENING }];
     for (let i = 0; i < turns; i++) {
       const owner = await ai([{ role: "system", content: ownerPrompt },
         ...transcript.map((t) => ({ role: t.role === "andrei" ? "user" : "assistant", content: t.text }))], KEY, { temperature: 0.9 });
@@ -90,7 +123,7 @@ Vorbești natural, în română, ca la telefon: o replică scurtă (max 25 de cu
     const raw = await ai([
       { role: "system", content: "Ești coach sever de vânzări imobiliare telefonice. Răspunzi doar JSON valid." },
       { role: "user", content: `Analizează performanța lui Andrei (asistent AI RealTrust Timișoara) în conversația de mai jos. Criterii: replici scurte, nu se repetă, avansează (obiectiv → termen → preț → acord pentru analiză), tratează obiecțiile, transparență, fără informații inventate.
-Profil proprietar: ${persona}.
+Profil proprietar: ${persona}. Tip anunț: ${branch}. Verifică și dacă Andrei a folosit DOAR argumentele potrivite tipului de anunț.
 
 ${convo}
 
@@ -103,7 +136,7 @@ Răspunde STRICT JSON: {"score": 1-10, "strengths": ["..."], "weaknesses": ["...
     analysis.score = Math.max(1, Math.min(10, Math.round(Number(analysis.score) || 1)));
     for (const k of ["strengths", "weaknesses", "prompt_fixes"]) analysis[k] = (Array.isArray(analysis[k]) ? analysis[k] : []).map(String).slice(0, 6);
     analysis.objections = (Array.isArray(analysis.objections) ? analysis.objections : []).slice(0, 8);
-    return json({ transcript, analysis });
+    return json({ transcript, analysis, branch });
   } catch (e: any) {
     const status = e?.status === 429 || e?.status === 402 ? e.status : 500;
     const msg = status === 429 ? "Prea multe cereri AI, încearcă peste un minut." : status === 402 ? "Credite AI insuficiente." : e.message;
