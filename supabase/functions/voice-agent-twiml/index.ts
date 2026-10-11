@@ -1366,12 +1366,13 @@ serve(async (req) => {
 
     // Defer non-critical DB writes so we can return TwiML immediately.
     // Twilio is waiting on the wire — every ms here = silence on the call.
+    // Transcriptul se salvează ÎNAINTE de răspuns: următorul turn trebuie să vadă replica curentă (altfel Andrei se repetă).
+    await supabase.from("voice_call_sessions").update({
+      transcript,
+      status: shouldHangup ? "completing" : "in-progress",
+    }).eq("id", sessionId);
     const deferredWork = (async () => {
       try {
-        await supabase.from("voice_call_sessions").update({
-          transcript,
-          status: shouldHangup ? "completing" : "in-progress",
-        }).eq("id", sessionId);
         await pushDebugLog(supabase, sessionId, {
           stage: "twiml_turn_end",
           turn,
