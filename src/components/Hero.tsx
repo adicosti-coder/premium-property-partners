@@ -117,7 +117,7 @@ const Hero = () => {
   }, []);
 
   return (
-    <section className="relative min-h-[100dvh] flex items-center overflow-hidden pt-28 md:pt-32">
+    <section className="relative min-h-[100dvh] flex items-center overflow-hidden pt-36 md:pt-32">
       {/* Background: static image + video (desktop only) */}
       <div className="absolute inset-0 overflow-hidden">
         {heroSettings.customFallbackImage ? (
@@ -191,9 +191,11 @@ const Hero = () => {
         )}
       </div>
       
-      {/* Cinematic multi-layer overlay — depth + readability */}
-      <div className="absolute inset-0 bg-gradient-to-r from-background/92 via-background/60 to-background/10 dark:from-background/85 dark:via-background/40 dark:to-transparent z-[1]" />
-      <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-background/20 z-[1] pointer-events-none" />
+      {/* Cinematic multi-layer overlay — depth + readability.
+          Mobile: uniform dark scrim (see .hero-scrim-x/y in index.css);
+          desktop: theme-token gradients. */}
+      <div className="absolute inset-0 hero-scrim-x z-[1]" />
+      <div className="absolute inset-0 hero-scrim-y z-[1] pointer-events-none" />
       {/* Subtle vignette for editorial feel */}
       <div className="absolute inset-0 z-[1] pointer-events-none" style={{ boxShadow: 'inset 0 0 180px rgba(0,0,0,0.45)' }} />
       
@@ -205,7 +207,7 @@ const Hero = () => {
         <div className="max-w-4xl">
           
           {/* Headline */}
-          <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-semibold text-foreground leading-tight mb-6">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-semibold text-on-hero md:text-foreground hero-text-shadow leading-tight mb-6">
             <StaticTitle 
               title={heroSettings.customTitle || t.hero.title} 
               titleMid={t.hero.titleMid}
@@ -268,13 +270,11 @@ const Hero = () => {
 const StaticTitle = ({ title, titleMid, highlight }: { title: string; titleMid: string; highlight: string }) => (
   <span className="block">
     <span className="block">{title}</span>
-    <span className="block text-2xl md:text-3xl lg:text-4xl font-normal italic text-foreground/90 my-2">
+    <span className="block text-2xl md:text-3xl lg:text-4xl font-normal italic text-on-hero/90 md:text-foreground/90 hero-text-shadow my-2">
       {titleMid}
     </span>
-    <span className="block">
-      <span className="inline-flex items-baseline gap-1 px-2 py-1 rounded-lg bg-background/35 backdrop-blur-sm border border-border/40">
-        <span className="text-gradient-gold">{highlight}</span>
-      </span>
+    <span className="block hero-text-shadow">
+      <span className="text-gradient-gold hero-title-highlight">{highlight}</span>
     </span>
   </span>
 );
@@ -306,7 +306,7 @@ const HeroContent = ({
   return (
     <>
       <div className="max-w-2xl mb-8 min-h-[5.5rem] md:min-h-[6rem]">
-        <p className="text-lg md:text-xl text-foreground leading-relaxed">
+        <p className="text-lg md:text-xl text-on-hero md:text-foreground hero-text-shadow leading-relaxed">
           {subtitle.split('\n').map((line, i) => (
             <span key={i}>{line}{i < subtitle.split('\n').length - 1 && <br />}</span>
           ))}
@@ -334,10 +334,10 @@ const HeroContent = ({
       
       {/* Trust text */}
       <div className="mt-6">
-         <p className="text-foreground/90 text-sm">
+         <p className="text-on-hero/90 md:text-foreground/90 hero-text-shadow text-sm">
            {t.hero.trustText}
          </p>
-         <p className="text-foreground/90 text-sm mt-1">
+          <p className="text-on-hero/90 md:text-foreground/90 hero-text-shadow text-sm mt-1">
            {t.hero.trustPrivacy}
          </p>
       </div>
