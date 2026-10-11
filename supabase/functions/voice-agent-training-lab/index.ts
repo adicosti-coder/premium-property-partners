@@ -35,63 +35,102 @@ async function ai(messages: any[], key: string, opts: Record<string, unknown> = 
   return String(j.choices?.[0]?.message?.content ?? "").trim();
 }
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-  const gate = await requireInternalOrAdmin(req, corsHeaders);
-  if (gate) return gate;
-  try {
-    const KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!KEY) return json({ error: "LOVABLE_API_KEY lipsește" }, 500);
-    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const body = await req.json().catch(() => ({}));
 
-    if (body.action === "apply") {
-      const lessons = (Array.isArray(body.lessons) ? body.lessons : [])
-        .map((l: unknown) => String(l ?? "").trim()).filter((l: string) => l.length >= 10 && l.length <= 400).slice(0, 5);
-      if (!lessons.length) return json({ error: "Nicio sugestie validă de aplicat" }, 400);
-      const { error } = await supabase.from("voice_agent_playbook_addendum").insert(lessons.map((lesson: string) => ({
-        lesson, severity: "warning", is_active: true, auto_applied: true, applied_at: new Date().toISOString(),
-        profile_summary: `Training Lab · ${String(body.persona || "").slice(0, 40)}`,
-      })));
-      if (error) return json({ error: error.message }, 500);
-      return json({ applied: lessons.length });
+const branchOf = (c: string | null) => c === "hotelier" ? "cazare" : c === "inchiriere" ? "inchiriere" : "vanzare";
+const BANNED = /rețea privată|retea privata|preț premium|peste piață|chirie garantată|venit garantat|doi minute|doi camere|doi opțiuni/i;
+function validate(transcript: { role: string; text: string }[], branch: string) {
+  const a = transcript.filter((t) => t.role === "andrei").map((t) => t.text).join(" ").toLowerCase();
+  const wrongArg = branch === "vanzare" ? /randament|regim hotelier/.test(a) : branch === "inchiriere" ? /randament net|regim hotelier/.test(a) : false;
+  return {
+    banned_phrase: BANNED.test(a),
+    wrong_branch_argument: wrongArg,
+    offered_free_analysis: /analiz/.test(a),
+    mentioned_whatsapp: /whatsapp/.test(a),
+  };
+}
+const CATS = ["Tone of Voice", "Handling Objections", "Sales Strategy", "General"];
+
+async function autoLoop(supabase: any, KEY: string) {
+  const { data: q } = await supabase.from("wa_outbound_queue").select("prospect_listing_id").eq("status", "failed")
+    .ilike("last_error", "%131026%").not("prospect_listing_id", "is", null).limit(300);
+  const ids = [...new Set((q ?? []).map((r: any) => r.prospect_listing_id))];
+  let rows: any[] = [];
+  if (ids.length) {
+    const { data } = await supabase.from("prospect_listings").select("id, category").in("id", ids).eq("is_active", true).limit(60);
+    rows = data ?? [];
+  }
+  if (rows.length < 4) {
+    const { data } = await supabase.from("prospect_listings").select("id, category").eq("is_active", true).not("price", "is", null)
+      .order("created_at", { ascending: false }).limit(40);
+    rows = [...rows, ...(data ?? [])];
+  }
+  // diversificăm tipurile de anunț: vânzare, închiriere, hotelier
+  const byCat: Record<string, any[]> = {};
+  for (const r of rows) (byCat[r.category || "vanzare"] ||= []).push(r);
+  const order = Object.values(byCat);
+  const picks: string[] = [];
+  for (let i = 0; picks.length < 4 && i < 20; i++) { const g = order[i % order.length]; const x = g?.shift(); if (x) picks.push(x.id); }
+  const personas = Object.keys(PERSONAS);
+  const fixes: string[] = [];
+  for (let i = 0; i < personas.length; i++) {
+    try {
+      const r: any = await simulate(supabase, KEY, { persona: personas[i], prospect_id: picks[i] });
+      if (!r.analysis) continue;
+      const v = validate(r.transcript, r.branch);
+      await supabase.from("voice_call_analyses").insert({
+        source: "training_lab_auto", outcome: `${r.persona} · ${r.branch}`, score: r.analysis.score,
+        strengths: r.analysis.strengths, weaknesses: [...r.analysis.weaknesses,
+          ...(v.banned_phrase ? ["Validare: formulare interzisă sau acord greșit detectat"] : []),
+          ...(v.wrong_branch_argument ? ["Validare: argument nepotrivit tipului de anunț"] : []),
+          ...(!v.offered_free_analysis ? ["Validare: nu a propus analiza gratuită /analiza-gratuita"] : [])],
+        objections: r.analysis.objections, prompt_fixes: r.analysis.prompt_fixes,
+        transcript: r.transcript.map((t: any) => `${t.role === "andrei" ? "Andrei" : "Proprietar"}: ${t.text}`).join("\n"),
+      });
+      fixes.push(...r.analysis.prompt_fixes);
+    } catch (e: any) {
+      console.error("sim", e?.message);
+      if (e?.status === 402 || e?.status === 403) return; // circuit breaker
     }
+  }
+  if (!fixes.length) return;
+  const { data: active } = await supabase.from("voice_agent_playbook_addendum").select("id, lesson").eq("is_active", true).limit(50);
+  const raw = await ai([
+    { role: "system", content: "Curatorul regulilor lui Andrei. Răspunzi doar JSON valid." },
+    { role: "user", content: `Reguli active (id: text):\n${(active ?? []).map((l: any) => `${l.id}: ${l.lesson}`).join("\n") || "-"}\n\nSugestii noi din simulări:\n${fixes.map((f) => "- " + f).join("\n")}\n\nPăstrează STRICT cele mai relevante maximum 5 reguli în total (existente păstrate + noi). Elimină redundanțele. Respinge sugestii care promit cumpărători, prețuri premium, venituri garantate sau contrazic: replici scurte, „două minute”, argumente pe tip de anunț, propunerea analizei gratuite /analiza-gratuita pe WhatsApp cu acord. Categorii: ${CATS.join(", ")}.\nJSON: {"keep_ids":["..."],"new":[{"lesson":"max 200 caractere","category":"..."}]}` },
+  ], KEY, { temperature: 0.1 });
+  let plan: any = null;
+  try { plan = JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0] || "null"); } catch { plan = null; }
+  if (!plan) return;
+  const activeIds = new Set((active ?? []).map((l: any) => l.id));
+  const keep = (Array.isArray(plan.keep_ids) ? plan.keep_ids : []).map(String).filter((id: string) => activeIds.has(id)).slice(0, 5);
+  const fresh = (Array.isArray(plan.new) ? plan.new : []).filter((n: any) => String(n?.lesson || "").length >= 10 && !BANNED.test(n.lesson))
+    .slice(0, 5 - keep.length);
+  const toArchive = [...activeIds].filter((id) => !keep.includes(id as string));
+  if (toArchive.length) await supabase.from("voice_agent_playbook_addendum").update({ is_active: false }).in("id", toArchive);
+  if (fresh.length) await supabase.from("voice_agent_playbook_addendum").insert(fresh.map((n: any) => ({
+    lesson: String(n.lesson).slice(0, 400), severity: "warning", is_active: true, auto_applied: true, applied_at: new Date().toISOString(),
+    profile_summary: `Training Lab auto · [${CATS.includes(n.category) ? n.category : "General"}]`,
+  })));
+}
 
-    const branchOf = (c: string | null) => c === "hotelier" ? "cazare" : c === "inchiriere" ? "inchiriere" : "vanzare";
-    if (body.action === "campaign_profiles") {
-      const { data: q } = await supabase.from("wa_outbound_queue").select("prospect_listing_id").eq("status", "failed")
-        .ilike("last_error", "%131026%").not("prospect_listing_id", "is", null).limit(500);
-      const ids = [...new Set((q ?? []).map((r: any) => r.prospect_listing_id))];
-      if (!ids.length) return json({ profiles: [] });
-      const { data: rows } = await supabase.from("prospect_listings").select("id, title, category, zone, location, price, currency, rooms, size")
-        .in("id", ids).eq("is_active", true).eq("do_not_call", false).order("created_at", { ascending: false }).limit(60);
-      const seen = new Set<string>(); const profiles: any[] = [];
-      for (const r of rows ?? []) {
-        const b = branchOf(r.category);
-        const key = `${b}:${r.rooms ?? "?"}`;
-        if (seen.has(key) && profiles.length >= 3) continue;
-        seen.add(key);
-        profiles.push({ id: r.id, branch: b, title: r.title, zone: r.zone || r.location, price: r.price, currency: r.currency, rooms: r.rooms, size: r.size });
-        if (profiles.length >= 6) break;
-      }
-      return json({ profiles });
-    }
-
+async function simulate(supabase: any, KEY: string, body: any): Promise<any> {
     let persona = String(body.persona || "");
     let branch: "vanzare" | "inchiriere" | "cazare" = "vanzare";
     let personaText = PERSONAS[persona];
     let objections = "";
     if (body.prospect_id) {
+      const basePersona = PERSONAS[persona] ? persona : "";
       const { data: r } = await supabase.from("prospect_listings").select("id, title, category, zone, location, price, currency, rooms, size")
         .eq("id", String(body.prospect_id)).maybeSingle();
-      if (!r) return json({ error: "Anunț inexistent" }, 404);
+      if (!r) return { httpError: "Anunț inexistent", status: 404 };
       branch = normalizeAndreiBranch(branchOf(r.category));
       const tip = branch === "inchiriere" ? "închiriază pe termen lung" : branch === "cazare" ? "are în regim hotelier" : "vinde";
       personaText = `Proprietar care ${tip}: „${r.title || "apartament"}”, zona ${r.zone || r.location || "nespecificată"}, ${r.rooms ?? "?"} camere, ${r.size ?? "?"} m², preț ${r.price ?? "?"} ${r.currency || "EUR"}${branch === "inchiriere" ? "/lună" : ""}. Ține la preț, întreabă ce face concret agenția pentru tipul lui de anunț și ridică obiecții legate de preț, zonă și mărimea apartamentului.`;
-      persona = `campanie-${branch}`;
+      if (basePersona) personaText = PERSONAS[basePersona] + " Anunțul tău real: " + personaText;
+      persona = basePersona ? `${basePersona}-${branch}` : `campanie-${branch}`;
       objections = "\n\n" + andreiListingObjections({ branch, price: r.price, currency: r.currency, zone: r.zone || r.location, rooms: r.rooms, size: r.size, title: r.title });
     }
-    if (!personaText) return json({ error: "Profil necunoscut" }, 400);
+    if (!personaText) return { httpError: "Profil necunoscut", status: 400 };
     const turns = Math.min(8, Math.max(3, Number(body.turns) || 6));
 
     const { data: script } = await supabase.from("voice_agent_scripts").select("system_prompt").eq("is_active", true).maybeSingle();
@@ -132,11 +171,64 @@ Răspunde STRICT JSON: {"score": 1-10, "strengths": ["..."], "weaknesses": ["...
     const m = raw.match(/\{[\s\S]*\}/);
     let analysis: any = null;
     try { analysis = m ? JSON.parse(m[0]) : null; } catch { analysis = null; }
-    if (!analysis) return json({ transcript, analysis: null, error: "Analiza nu a putut fi citită" });
+    if (!analysis) return { transcript, analysis: null, branch, persona, error: "Analiza nu a putut fi citită" };
     analysis.score = Math.max(1, Math.min(10, Math.round(Number(analysis.score) || 1)));
     for (const k of ["strengths", "weaknesses", "prompt_fixes"]) analysis[k] = (Array.isArray(analysis[k]) ? analysis[k] : []).map(String).slice(0, 6);
     analysis.objections = (Array.isArray(analysis.objections) ? analysis.objections : []).slice(0, 8);
-    return json({ transcript, analysis, branch });
+    return { transcript, analysis, branch, persona };
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const gate = await requireInternalOrAdmin(req, corsHeaders);
+  if (gate) return gate;
+  try {
+    const KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!KEY) return json({ error: "LOVABLE_API_KEY lipsește" }, 500);
+    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const body = await req.json().catch(() => ({}));
+
+    if (body.action === "apply") {
+      const lessons = (Array.isArray(body.lessons) ? body.lessons : [])
+        .map((l: unknown) => String(l ?? "").trim()).filter((l: string) => l.length >= 10 && l.length <= 400).slice(0, 5);
+      if (!lessons.length) return json({ error: "Nicio sugestie validă de aplicat" }, 400);
+      const { error } = await supabase.from("voice_agent_playbook_addendum").insert(lessons.map((lesson: string) => ({
+        lesson, severity: "warning", is_active: true, auto_applied: true, applied_at: new Date().toISOString(),
+        profile_summary: `Training Lab · ${String(body.persona || "").slice(0, 40)}`,
+      })));
+      if (error) return json({ error: error.message }, 500);
+      return json({ applied: lessons.length });
+    }
+
+    if (body.action === "campaign_profiles") {
+      const { data: q } = await supabase.from("wa_outbound_queue").select("prospect_listing_id").eq("status", "failed")
+        .ilike("last_error", "%131026%").not("prospect_listing_id", "is", null).limit(500);
+      const ids = [...new Set((q ?? []).map((r: any) => r.prospect_listing_id))];
+      if (!ids.length) return json({ profiles: [] });
+      const { data: rows } = await supabase.from("prospect_listings").select("id, title, category, zone, location, price, currency, rooms, size")
+        .in("id", ids).eq("is_active", true).eq("do_not_call", false).order("created_at", { ascending: false }).limit(60);
+      const seen = new Set<string>(); const profiles: any[] = [];
+      for (const r of rows ?? []) {
+        const b = branchOf(r.category);
+        const key = `${b}:${r.rooms ?? "?"}`;
+        if (seen.has(key) && profiles.length >= 3) continue;
+        seen.add(key);
+        profiles.push({ id: r.id, branch: b, title: r.title, zone: r.zone || r.location, price: r.price, currency: r.currency, rooms: r.rooms, size: r.size });
+        if (profiles.length >= 6) break;
+      }
+      return json({ profiles });
+    }
+
+    if (body.action === "auto_loop") {
+      const task = autoLoop(supabase, KEY).catch((e) => console.error("auto_loop", e));
+      // @ts-ignore EdgeRuntime e disponibil în Supabase Edge
+      if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(task);
+      return json({ started: true });
+    }
+    const r = await simulate(supabase, KEY, body);
+    if ((r as any).httpError) return json({ error: (r as any).httpError }, (r as any).status);
+    return json(r);
+
   } catch (e: any) {
     const status = e?.status === 429 || e?.status === 402 ? e.status : 500;
     const msg = status === 429 ? "Prea multe cereri AI, încearcă peste un minut." : status === 402 ? "Credite AI insuficiente." : e.message;

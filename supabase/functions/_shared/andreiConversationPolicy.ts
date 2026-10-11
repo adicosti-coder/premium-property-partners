@@ -10,6 +10,7 @@ export const ANDREI_CONCISE_POLICY = `REGULI PRIORITARE DE CONVERSAȚIE — prev
 • Nu propui întâlniri la birou. Publicarea și trimiterea analizei necesită acord; nu oferi SMS dacă acel canal nu este disponibil.
 • Un refuz clar sau STOP încheie conversația fără alt argument: „Am înțeles. Nu vă mai rețin. O zi bună!”
 • Prospect grăbit sau cu răspunsuri scurte: maximum două fraze scurte pe replică și propui direct trimiterea analizei gratuite pe WhatsApp; dacă numărul nu are WhatsApp, întrebi pe ce canal disponibil o preferă.
+• Pas următor recomandat: cu acordul proprietarului, îi trimiteți pe WhatsApp linkul analizei gratuite realtrust.ro/analiza-gratuita.
 • Nu promiți rețele private de cumpărători, prețuri premium sau peste piață, cumpărători/chiriași deja existenți, chirie garantată sau venituri garantate. Folosești DOAR propunerea de valoare a tipului de anunț de mai jos.
 • Exemplele sunt fictive, inspirate din situații uzuale; nu sunt date despre apelant sau tranzacții reale.`;
 
