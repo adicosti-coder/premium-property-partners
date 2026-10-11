@@ -233,7 +233,7 @@ serve(async (req) => {
               messages: [
                 {
                   role: "system",
-                  content: `Analizează apelul și returnează STRICT JSON cu cheile: summary, outcome, sentiment, next_action, appointment_iso. Valorile outcome permise: interesat, neinteresat, callback, programare, robot, nicio_legatura.`,
+                  content: `Analizează apelul și returnează STRICT JSON cu cheile: summary, outcome, sentiment, next_action, appointment_iso. Valorile outcome permise: acord (proprietarul acceptă să primească linkul sau publicarea), interesat, neinteresat, callback, programare, robot, nicio_legatura.`,
                 },
                 { role: "user", content: transcriptText },
               ],
@@ -390,6 +390,7 @@ serve(async (req) => {
       if (session.prospect_listing_id) {
         const outcomeToLifecycle: Record<string, string> = {
           interesat: "interested",
+          acord: "interested",
           programare: "interested",
           callback: "callback",
           neinteresat: "rejected",
@@ -408,6 +409,26 @@ serve(async (req) => {
             auto_call_triggered_at: null,
           })
           .eq("id", session.prospect_listing_id);
+
+        // Etichete vizibile în Admin pentru apelurile lui Andrei
+        try {
+          const { data: pr } = await supabase.from("prospect_listings")
+            .select("tags, admin_notes").eq("id", session.prospect_listing_id).maybeSingle();
+          const o = String(parsed.outcome || "");
+          const extra = ["apelat-andrei"];
+          if (derivedStatus === "completed" && !["robot", "nicio_legatura"].includes(o)) extra.push("preluat-ai");
+          if (["interesat", "programare", "acord"].includes(o)) extra.push("raspuns-da");
+          if (o === "neinteresat") extra.push("nu-doreste");
+          const tags = [...new Set([...((pr?.tags as string[]) || []), ...extra])];
+          const stamp = new Date().toLocaleString("ro-RO", { timeZone: "Europe/Bucharest" });
+          const note = `[${stamp}] Andrei (AI): ${o || derivedStatus} — ${summaryText}`;
+          await supabase.from("prospect_listings").update({
+            tags,
+            admin_notes: pr?.admin_notes ? `${pr.admin_notes}\n${note}` : note,
+          } as any).eq("id", session.prospect_listing_id);
+        } catch (e) {
+          console.warn("[voice-status] prospect tag update failed", (e as Error).message);
+        }
       }
 
       try {
