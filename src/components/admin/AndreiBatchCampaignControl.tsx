@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 
 type Campaign = {
   enabled: boolean; delay_minutes: number; current_label: string | null;
@@ -15,9 +16,10 @@ type Campaign = {
 const DELAYS = [1, 2, 3, 5, 10];
 const YES = ["interesat", "programare", "acord", "scheduled"];
 
-/** Caseta de control a campaniei Andrei — doar prospecte fără WhatsApp (131026). */
-export default function AndreiBatchCampaignControl() { const [updating, setUpdating] = useState(false);
+export default function AndreiBatchCampaignControl() {
   const [now, setNow] = useState(Date.now());
+  const [updating, setUpdating] = useState(false);
+  
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
 
   const q = useQuery({
@@ -65,17 +67,23 @@ export default function AndreiBatchCampaignControl() { const [updating, setUpdat
   });
   const s = stats.data;
 
-  const update = async (patch: Partial<Campaign>) => { if (updating) return; setUpdating(true);
+  const update = async (patch: Partial<Campaign>) => {
+    if (updating) return;
+    setUpdating(true);
     const { error } = await (supabase.from("voice_batch_campaign") as any).update({ ...patch, updated_at: new Date().toISOString() }).eq("id", 1);
-    if (error) { setUpdating(false); return toast.error("Nu s-a putut salva"); }
-    q.refetch(); setUpdating(false);
+    if (error) {
+      toast.error("Nu s-a putut salva");
+    } else {
+      await q.refetch();
+    }
+    setUpdating(false);
   };
 
   const toggle = () => {
-    if (!c) return;
-    if (!c.enabled && !confirm("Andrei va suna automat, pe rând, proprietarii fără WhatsApp neapelați încă (Luni–Sâmbătă 09:00–19:00). Pornești?")) return;
+    if (!c || updating) return;
+    if (!c.enabled && !confirm("Andrei va suna automat, pe rând, proprietarii fără WhatsApp neapelați încă. Pornești?")) return;
     update({ enabled: !c.enabled });
-    toast.success(c.enabled ? "Campanie pusă pe pauză" : "Campanie pornită — primul apel în cel mult un minut");
+    toast.success(c.enabled ? "Campanie pusă pe pauză" : "Campanie pornită");
   };
 
   if (!c) return null;
@@ -85,18 +93,17 @@ export default function AndreiBatchCampaignControl() { const [updating, setUpdat
   let status: React.ReactNode;
   if (inCall) {
     status = (
-      <span className="flex items-center gap-2 font-medium">
-        <span className="inline-block animate-bounce text-lg" aria-hidden>📞</span>
-        În apel cu {c.current_label || "proprietar"}
+      <span className="flex items-center gap-2 font-medium text-emerald-700 dark:text-emerald-400">
+        <Loader2 className="h-4 w-4 animate-spin" /> În apel cu {c.current_label || "proprietar"}
       </span>
     );
   } else if (!c.enabled) {
-    status = <span className="font-medium">⏸ Campanie în pauză</span>;
+    status = <span className="font-medium text-muted-foreground">⏸ Campanie în pauză</span>;
   } else if (waitLeftMs > 0) {
-    const m = Math.floor(waitLeftMs / 60000), s = Math.floor((waitLeftMs % 60000) / 1000);
-    status = <span className="font-medium">⏳ Așteptare pauză {m}:{String(s).padStart(2, "0")} min până la următorul apel</span>;
+    const m = Math.floor(waitLeftMs / 60000), sec = Math.floor((waitLeftMs % 60000) / 1000);
+    status = <span className="font-medium text-sky-700 dark:text-sky-400">⏳ Așteptare {m}:{String(sec).padStart(2, "0")} min până la următorul apel</span>;
   } else {
-    status = <span className="font-medium">🔎 {c.last_message || "Se caută următorul proprietar de sunat…"}</span>;
+    status = <span className="font-medium animate-pulse">{c.last_message || "🔎 Se caută următorul proprietar…"}</span>;
   }
 
   return (
@@ -116,15 +123,15 @@ export default function AndreiBatchCampaignControl() { const [updating, setUpdat
         {status}
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2" aria-label="Statistici campanie azi">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
         {[
-          { l: "Prospecte în coadă", v: s?.queue ?? "…" },
-          { l: "Rată de răspuns azi", v: s ? (s.connectRate == null ? "—" : `${s.connectRate}% (${s.total} apeluri)`) : "…" },
-          { l: "Conversii „DA” azi", v: s?.yes ?? "…" },
-          { l: "Durată medie convorbire", v: s ? (s.avg == null ? "—" : `${Math.floor(s.avg / 60)}:${String(s.avg % 60).padStart(2, "0")} min`) : "…" },
+          { l: "În coadă", v: s?.queue ?? "…" },
+          { l: "Răspuns azi", v: s ? (s.connectRate == null ? "—" : `${s.connectRate}% (${s.total})`) : "…" },
+          { l: "Conversii azi", v: s?.yes ?? "…" },
+          { l: "Durată medie", v: s ? (s.avg == null ? "—" : `${Math.floor(s.avg / 60)}:${String(s.avg % 60).padStart(2, "0")} min`) : "…" },
         ].map((it) => (
           <div key={it.l} className="rounded-lg border border-border bg-muted/20 p-2">
-            <div className="text-xs text-muted-foreground">{it.l}</div>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{it.l}</div>
             <div className="text-lg font-semibold tabular-nums">{it.v}</div>
           </div>
         ))}
@@ -132,28 +139,25 @@ export default function AndreiBatchCampaignControl() { const [updating, setUpdat
 
       <div className="flex flex-wrap items-center gap-3">
         <Button
-          onClick={toggle} disabled={updating}
+          onClick={toggle}
+          disabled={updating}
           className={cn("min-h-[48px] text-white",
             c.enabled ? "bg-orange-600 hover:bg-orange-700" : "bg-emerald-600 hover:bg-emerald-700")}
         >
-          {c.enabled ? "⏸ Pauză Campanie" : "▶ Pornește Apelarea Automată AI"}
+          {updating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+          {c.enabled ? "⏸ Pauză Campanie" : "▶ Pornește Apelarea"}
         </Button>
-        <div className="flex items-center gap-2 text-sm" role="radiogroup" aria-label="Pauză între apeluri">
-          <span className="text-muted-foreground">Pauză între apeluri:</span>
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">Pauză:</span>
           {DELAYS.map((m) => (
             <Button key={m} size="sm" variant={c.delay_minutes === m ? "default" : "outline"}
-              role="radio" aria-checked={c.delay_minutes === m}
-              disabled={updating} className="min-h-[44px] min-w-[48px]" onClick={() => update({ delay_minutes: m })}>
-              {m} min
+              disabled={updating}
+              className="min-h-[44px] min-w-[48px]" onClick={() => update({ delay_minutes: m })}>
+              {m}m
             </Button>
           ))}
         </div>
-        <span className="text-xs text-muted-foreground">Apeluri pornite: {c.calls_started}</span>
       </div>
-
-      <p className="text-xs text-muted-foreground">
-        Se apelează doar proprietarii fără WhatsApp (Eroare Meta 131026), cu mobil RO, neapelați anterior și care nu se află în Lista de Excludere.
-      </p>
     </section>
   );
 }

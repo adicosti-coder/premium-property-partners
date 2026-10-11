@@ -45,19 +45,29 @@ function fmtTime(iso: string) {
 export function TwilioCallsLog() {
   const [rows, setRows] = useState<CallRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async (isSilent = false) => { if (!isSilent)    
-     
-     
-    const { data, error: err } = await supabase
-      .from("voice_call_sessions")
-      .select("id,to_number,direction,status,answered_by,is_voicemail,amd_hangup,call_duration_seconds,twilio_failure_reason,error_message,initiated_by,created_at,started_at,ended_at")
-      .order("created_at", { ascending: false })
-      .limit(20);
-    if (err) setError(err.message);
-    else setRows((data as CallRow[]) || []);
-    setLoading(false);
+  const load = useCallback(async (isSilent = false) => {
+    if (isSilent) setRefreshing(true);
+    else setLoading(true);
+    
+    setError(null);
+    try {
+      const { data, error: err } = await supabase
+        .from("voice_call_sessions")
+        .select("id,to_number,direction,status,answered_by,is_voicemail,amd_hangup,call_duration_seconds,twilio_failure_reason,error_message,initiated_by,created_at,started_at,ended_at")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      
+      if (err) throw err;
+      setRows((data as CallRow[]) || []);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -74,10 +84,10 @@ export function TwilioCallsLog() {
             <CardTitle className="text-base flex items-center gap-2">
               <PhoneCall className="h-4 w-4 text-blue-500" /> Jurnal apeluri Twilio
             </CardTitle>
-            <CardDescription>Ultimele 20 de apeluri: inițiat, răspuns, durată, statut. Se actualizează la 30s.</CardDescription>
+            <CardDescription>Ultimele 20 de apeluri. Se actualizează automat.</CardDescription>
           </div>
-          <Button variant="outline" size="sm" onClick={load} disabled={loading}>
-            {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+          <Button variant="outline" size="sm" onClick={() => load()} disabled={loading || refreshing}>
+            {loading || refreshing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
           </Button>
         </div>
       </CardHeader>
@@ -87,7 +97,9 @@ export function TwilioCallsLog() {
             <XCircle className="h-4 w-4 mt-0.5 flex-shrink-0" /> {error}
           </div>
         )}
-        {rows.length === 0 && !loading ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+        ) : rows.length === 0 ? (
           <p className="text-sm text-muted-foreground italic text-center py-4">Niciun apel înregistrat încă.</p>
         ) : (
           <div className="overflow-x-auto">
@@ -96,7 +108,6 @@ export function TwilioCallsLog() {
                 <tr className="text-left text-xs text-muted-foreground border-b border-border">
                   <th className="py-2 pr-3 font-medium">Inițiat</th>
                   <th className="py-2 pr-3 font-medium">Număr</th>
-                  <th className="py-2 pr-3 font-medium">Direcție</th>
                   <th className="py-2 pr-3 font-medium">Statut</th>
                   <th className="py-2 pr-3 font-medium">Durată</th>
                   <th className="py-2 font-medium">Detalii</th>
@@ -104,14 +115,9 @@ export function TwilioCallsLog() {
               </thead>
               <tbody>
                 {rows.map((r) => (
-                  <tr key={r.id} className="border-b border-border/50 last:border-0">
+                  <tr key={r.id} className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors">
                     <td className="py-2 pr-3 whitespace-nowrap">{fmtTime(r.created_at)}</td>
                     <td className="py-2 pr-3 font-mono text-xs">{r.to_number || "—"}</td>
-                    <td className="py-2 pr-3">
-                      {r.direction === "inbound"
-                        ? <PhoneIncoming className="h-3.5 w-3.5 text-green-600" aria-label="Primite" />
-                        : <PhoneOutgoing className="h-3.5 w-3.5 text-blue-600" aria-label="Efectuate" />}
-                    </td>
                     <td className="py-2 pr-3">{statusBadge(r)}</td>
                     <td className="py-2 pr-3">{fmtDuration(r.call_duration_seconds)}</td>
                     <td className="py-2 text-xs text-muted-foreground max-w-[220px] truncate" title={r.twilio_failure_reason || r.error_message || ""}>
