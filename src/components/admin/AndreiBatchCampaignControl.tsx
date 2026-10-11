@@ -102,7 +102,7 @@ export default function AndreiBatchCampaignControl() {
   let status: React.ReactNode;
   if (inCall) {
     status = (
-      <span className="flex items-center gap-2 font-medium text-emerald-700 dark:text-emerald-400">
+      <span className="flex items-center gap-2 font-medium text-success">
         <Loader2 className="h-4 w-4 animate-spin" /> În apel cu {c.current_label || "proprietar"}
       </span>
     );
@@ -110,7 +110,7 @@ export default function AndreiBatchCampaignControl() {
     status = <span className="font-medium text-muted-foreground">⏸ Campanie în pauză</span>;
   } else if (waitLeftMs > 0) {
     const m = Math.floor(waitLeftMs / 60000), sec = Math.floor((waitLeftMs % 60000) / 1000);
-    status = <span className="font-medium text-sky-700 dark:text-sky-400">⏳ Așteptare {m}:{String(sec).padStart(2, "0")} min până la următorul apel</span>;
+    status = <span className="font-medium text-primary">⏳ Așteptare {m}:{String(sec).padStart(2, "0")} min până la următorul apel</span>;
   } else {
     status = <span className="font-medium animate-pulse">{c.last_message || "🔎 Se caută următorul proprietar…"}</span>;
   }
@@ -139,7 +139,7 @@ export default function AndreiBatchCampaignControl() {
 
       <div className={cn(
         "rounded-lg border px-3 py-2 text-sm",
-        inCall ? "border-emerald-500/40 bg-emerald-500/10" : c.enabled ? "border-sky-500/30 bg-sky-500/5" : "border-border bg-muted/30",
+        inCall ? "border-success/40 bg-success/10" : c.enabled ? "border-primary/30 bg-primary/5" : "border-border bg-muted/30",
       )} role="status" aria-live="polite">
         {status}
       </div>
@@ -162,8 +162,8 @@ export default function AndreiBatchCampaignControl() {
         <Button
           onClick={toggle}
           disabled={updating}
-          className={cn("min-h-[48px] text-white",
-            c.enabled ? "bg-orange-600 hover:bg-orange-700" : "bg-emerald-600 hover:bg-emerald-700")}
+          className={cn("min-h-12",
+            c.enabled ? "bg-accent text-accent-foreground hover:bg-accent/90" : "bg-success text-success-foreground hover:bg-success/90")}
         >
           {updating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
           {c.enabled ? "⏸ Pauză Campanie" : "▶ Pornește Apelarea"}
@@ -173,7 +173,7 @@ export default function AndreiBatchCampaignControl() {
           {DELAYS.map((m) => (
             <Button key={m} size="sm" variant={c.delay_minutes === m ? "default" : "outline"}
               disabled={updating}
-              className="min-h-[44px] min-w-[48px]" onClick={() => update({ delay_minutes: m })}>
+              className="min-h-12 min-w-12" onClick={() => update({ delay_minutes: m })}>
               {m}m
             </Button>
           ))}
