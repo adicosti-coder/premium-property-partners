@@ -173,8 +173,23 @@ const AnalizaAnunt = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Analizează un anunț imobiliar din Timișoara | RealTrust"
-        description="Lipește linkul de pe Storia, OLX, Publi24 sau Imobiliare.ro și primești scorul proprietății, marja de negociere și prețul țintă."
+        title={
+          analysis && market
+            ? `Analiză ${analysis.zona || "Timișoara"}: scor ${market.total_score}/100 · ${eur(analysis.pret_listare || 0)} | RealTrust`
+            : analysis
+              ? `Analiză anunț: ${analysis.titlu || "proprietate în Timișoara"} | RealTrust`
+              : "Analizează un anunț imobiliar din Timișoara | RealTrust"
+        }
+        description={
+          analysis && market
+            ? `${analysis.titlu || "Proprietate"} — scor ${market.total_score}/100, preț țintă ${eur(market.target_low)}–${eur(market.target_high)}, ${eur(market.asking_ppm)}/m² față de mediana de ${eur(market.median_ppm)}/m² ${market.scope === "zona" ? `în ${market.zone_label}` : "în Timișoara"}.`
+            : "Lipește linkul de pe Storia, OLX, Publi24 sau Imobiliare.ro și primești scorul proprietății, marja de negociere și prețul țintă."
+        }
+        socialDescription={
+          market
+            ? `Scor ${market.total_score}/100 · Preț țintă ${eur(market.target_low)}–${eur(market.target_high)} · ${market.zone_label} · Evaluare gratuită RealTrust`
+            : undefined
+        }
         url="https://realtrust.ro/analiza-anunt"
       />
       <Suspense fallback={null}><Header /></Suspense>
