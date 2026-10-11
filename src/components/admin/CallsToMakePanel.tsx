@@ -8,6 +8,11 @@ import { SourceLink } from "@/components/admin/shared/SourceLink";
 
 type Row = { id: string; title: string | null; price: number | null; zone: string | null; location: string | null; phone_normalized: string | null; contact_phone: string | null; source_url: string | null; reason: "no_mobile" | "no_reply" | "no_whatsapp" };
 const isMobile = (p?: string | null) => /^\+407\d{8}$/.test(p ?? "");
+const toE164 = (p?: string | null) => {
+  const d = (p ?? "").replace(/\D/g, "").replace(/^0040/, "40");
+  const n = d.startsWith("40") ? d : d.startsWith("0") ? `40${d.slice(1)}` : d;
+  return n ? `+${n}` : "";
+};
 const COLS = "id, title, price, zone, location, phone_normalized, contact_phone, source_url";
 const REASON_LABELS: Record<Row["reason"], string> = {
   no_mobile: "Fără mobil",
@@ -17,6 +22,7 @@ const REASON_LABELS: Record<Row["reason"], string> = {
 
 export default function CallsToMakePanel() {
   const [busy, setBusy] = useState<string | null>(null);
+  const [calling, setCalling] = useState<string | null>(null);
   const q = useQuery({
     queryKey: ["calls-to-make"],
     refetchInterval: 60_000,
@@ -62,6 +68,19 @@ export default function CallsToMakePanel() {
     q.refetch();
   };
 
+  const callAndrei = async (r: Row) => {
+    const to = toE164(r.phone_normalized || r.contact_phone);
+    if (!to) return toast.error("Număr invalid");
+    if (!confirm(`Andrei îl va suna acum pe ${to} pentru „${r.title || "anunț"}”. Continui?`)) return;
+    setCalling(r.id);
+    const { data, error } = await supabase.functions.invoke("voice-agent-initiate", { body: { toNumber: to, prospectId: r.id } });
+    setCalling(null);
+    if (error) return toast.error("Apelul nu a pornit");
+    if (data?.skipped) return toast.info(data.message || `Apel blocat: ${data.skipped}`);
+    if (data?.error) return toast.error(data.error);
+    toast.success("Andrei sună acum. Rezultatul apare la prospect după apel.");
+  };
+
   const rows = q.data ?? [];
   return (
     <div className="space-y-3">
@@ -90,9 +109,16 @@ export default function CallsToMakePanel() {
                   <td className="p-2 whitespace-nowrap">{phone ? <a className="text-primary underline" href={`tel:${phone}`}>{phone}</a> : "—"}</td>
                   <td className="p-2"><SourceLink url={r.source_url} /></td>
                   <td className="p-2">
-                    <Button size="sm" className="min-h-[44px]" disabled={busy === r.id} onClick={() => confirmCall(r.id)}>
-                      {busy === r.id ? "Public…" : "A fost apelat - Acord verbal primit"}
-                    </Button>
+                    <div className="flex flex-col gap-2">
+                      {isMobile(toE164(phone)) && (
+                        <Button size="sm" variant="secondary" className="min-h-[44px]" disabled={calling === r.id} onClick={() => callAndrei(r)}>
+                          {calling === r.id ? "Se apelează…" : "Sune Andrei (Agent AI)"}
+                        </Button>
+                      )}
+                      <Button size="sm" className="min-h-[44px]" disabled={busy === r.id} onClick={() => confirmCall(r.id)}>
+                        {busy === r.id ? "Public…" : "A fost apelat - Acord verbal primit"}
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               );
