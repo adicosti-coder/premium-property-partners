@@ -78,6 +78,8 @@ export default {
           foreground: "hsl(var(--gold-foreground))",
         },
         cream: "hsl(var(--cream))",
+        "on-hero": "hsl(var(--on-hero))",
+        "gold-on-hero": "hsl(var(--gold-on-hero))",
         slate: {
           DEFAULT: "hsl(var(--slate))",
           light: "hsl(var(--slate-light))",
