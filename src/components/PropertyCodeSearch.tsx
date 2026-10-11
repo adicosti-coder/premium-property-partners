@@ -49,10 +49,12 @@ const PropertyCodeSearch = ({ className }: PropertyCodeSearchProps) => {
 
       setIsLoading(true);
       try {
+        const safe = searchValue.replace(/[^\p{L}\p{N}\s\-]/gu, "").trim().slice(0, 60);
+        if (!safe) { setResults([]); return; }
         const { data, error } = await supabase
           .from("properties")
           .select("id, name, property_code, location, listing_type")
-          .or(`property_code.ilike.%${searchValue}%,name.ilike.%${searchValue}%`)
+          .or(`property_code.ilike.%${safe}%,name.ilike.%${safe}%`)
           .eq("is_active", true)
           .limit(10);
 

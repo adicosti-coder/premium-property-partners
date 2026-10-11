@@ -175,7 +175,8 @@ export default function VoiceCallerProfilesManager() {
     const headers = Object.keys(data[0] || {});
     const escape = (v: any) => {
       if (v === null || v === undefined) return "";
-      const s = typeof v === "object" ? JSON.stringify(v) : String(v);
+      let s = typeof v === "object" ? JSON.stringify(v) : String(v);
+      if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
       return `"${s.replace(/"/g, '""')}"`;
     };
     const csv = [

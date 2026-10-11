@@ -115,6 +115,19 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
+    // One notification per review: reserve the review ID before sending.
+    const { error: reserveErr } = await supabase.from("request_idempotency").insert({
+      scope: "review-notification",
+      key: reviewId,
+      expires_at: new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString(),
+    });
+    if (reserveErr) {
+      return new Response(JSON.stringify({ success: true, skipped: "already_notified" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
     const guestName = escapeHtml(reviewRow.guest_name);
     const guestEmail = reviewRow.guest_email ? escapeHtml(reviewRow.guest_email) : "";
     const title = reviewRow.title ? escapeHtml(reviewRow.title) : "";
