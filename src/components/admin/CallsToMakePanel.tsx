@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { SourceLink } from "@/components/admin/shared/SourceLink";
+import AndreiBatchCampaignControl from "@/components/admin/AndreiBatchCampaignControl";
 
 type Row = { id: string; title: string | null; price: number | null; zone: string | null; location: string | null; phone_normalized: string | null; contact_phone: string | null; source_url: string | null; reason: "no_mobile" | "no_reply" | "no_whatsapp" };
 const isMobile = (p?: string | null) => /^\+407\d{8}$/.test(p ?? "");
@@ -88,6 +89,7 @@ export default function CallsToMakePanel() {
         <h3 className="text-lg font-semibold">Apeluri de făcut · {rows.length}</h3>
         <p className="text-sm text-muted-foreground">Prospecte fără WhatsApp (eroare Meta), fără mobil valid sau fără răspuns la 48h după primul mesaj.</p>
       </div>
+      <AndreiBatchCampaignControl />
       {q.isLoading && <p className="text-sm text-muted-foreground">Se încarcă…</p>}
       {!q.isLoading && rows.length === 0 && <p className="text-sm text-muted-foreground">Nimic de sunat acum.</p>}
       <div className="overflow-x-auto">
