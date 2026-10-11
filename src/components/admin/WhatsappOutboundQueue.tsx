@@ -49,6 +49,14 @@ type QueueRow = {
   replied_at: string | null;
 };
 
+type ProspectInfo = {
+  id: string;
+  title: string | null;
+  zone: string | null;
+  source_platform: string | null;
+  source_url: string | null;
+};
+
 type RateSettings = {
   outbound_max_per_hour: number;
   outbound_max_per_day: number;
@@ -101,6 +109,7 @@ const csvCell = (v: unknown) => {
 
 export default function WhatsappOutboundQueue() {
   const [rows, setRows] = useState<QueueRow[]>([]);
+  const [prospects, setProspects] = useState<Map<string, ProspectInfo>>(new Map());
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
@@ -125,7 +134,39 @@ export default function WhatsappOutboundQueue() {
     if (statusFilter !== "all") q = q.eq("status", statusFilter);
     const { data, error } = await q;
     if (error) toast({ title: "Eroare la încărcarea cozii", description: error.message, variant: "destructive" });
-    setRows((data ?? []) as QueueRow[]);
+    const list = (data ?? []) as QueueRow[];
+    setRows(list);
+
+    // Încarcă anunțurile asociate: mai întâi după prospect_listing_id, apoi după telefon.
+    const map = new Map<string, ProspectInfo>();
+    const byId = new Map<string, QueueRow>();
+    const byPhone = new Map<string, QueueRow>();
+    for (const r of list) {
+      if (r.prospect_listing_id) byId.set(r.prospect_listing_id, r);
+      else if (r.phone_normalized && !byPhone.has(r.phone_normalized)) byPhone.set(r.phone_normalized, r);
+    }
+    if (byId.size) {
+      const { data: pls } = await (supabase as any)
+        .from("prospect_listings")
+        .select("id, title, zone, source_platform, source_url")
+        .in("id", [...byId.keys()]);
+      for (const p of pls ?? []) map.set(byId.get(p.id)!.id, p as ProspectInfo);
+    }
+    const missingPhones = [...byPhone.keys()].filter(
+      (ph) => !map.has(byPhone.get(ph)!.id),
+    );
+    if (missingPhones.length) {
+      const { data: pls } = await (supabase as any)
+        .from("prospect_listings")
+        .select("id, title, zone, source_platform, source_url, phone_normalized, created_at")
+        .in("phone_normalized", missingPhones)
+        .order("created_at", { ascending: false });
+      for (const p of pls ?? []) {
+        const row = byPhone.get(p.phone_normalized);
+        if (row && !map.has(row.id)) map.set(row.id, p as ProspectInfo);
+      }
+    }
+    setProspects(map);
     setLoading(false);
   }, [statusFilter]);
 
@@ -639,19 +680,19 @@ export default function WhatsappOutboundQueue() {
         <table className="w-full text-sm">
           <thead className="bg-muted/40">
             <tr className="text-left">
-              {["Telefon", "Status", "Șablon", "Sursă", "Încercări", "Programat", "Trimis", "Acțiuni"].map((h) => (
+              {["Telefon", "Anunț asociat", "Status", "Șablon", "Sursă", "Încercări", "Programat", "Trimis", "Acțiuni"].map((h) => (
                 <th key={h} className="px-3 py-2 font-medium text-xs text-muted-foreground whitespace-nowrap">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {loading && (
-              <tr><td colSpan={8} className="px-3 py-10 text-center text-muted-foreground">
-                <Loader2 className="h-5 w-5 animate-spin inline" />
+              <tr><td colSpan={9} className="px-3 py-10 text-center text-muted-foreground">
+                 <Loader2 className="h-5 w-5 animate-spin inline" />
               </td></tr>
             )}
             {!loading && !filtered.length && (
-              <tr><td colSpan={8} className="px-3 py-10 text-center text-muted-foreground">
+              <tr><td colSpan={9} className="px-3 py-10 text-center text-muted-foreground">
                 Nicio intrare în coadă pentru filtrele selectate.
               </td></tr>
             )}
@@ -668,6 +709,32 @@ export default function WhatsappOutboundQueue() {
                       recordId={r.id}
                       field="phone_normalized"
                     />
+                  </td>
+                  <td className="px-3 py-2 max-w-[220px]">
+                    {(() => {
+                      const p = prospects.get(r.id);
+                      if (!p) return <span className="text-xs text-muted-foreground">—</span>;
+                      if (p.title) {
+                        return p.source_url ? (
+                          <a
+                            href={`/analiza-anunt?url=${encodeURIComponent(p.source_url)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-primary hover:underline line-clamp-2"
+                            title={p.title}
+                          >
+                            {p.title}
+                          </a>
+                        ) : (
+                          <span className="text-xs line-clamp-2" title={p.title}>{p.title}</span>
+                        );
+                      }
+                      return (
+                        <Badge variant="outline" className="text-[10px]">
+                          {p.zone ?? p.source_platform ?? "fără titlu"}
+                        </Badge>
+                      );
+                    })()}
                   </td>
                   <td className="px-3 py-2">
                     <Badge variant={meta.variant}>{meta.label}</Badge>
