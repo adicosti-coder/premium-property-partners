@@ -75,8 +75,9 @@ Deno.serve(async (req) => {
         .eq("source", "HostScan AI Report")
         .gte("created_at", since);
       if ((count ?? 0) >= 2) {
-        return new Response(JSON.stringify({ error: "Rate limit: max 2 reports per hour for this email" }), {
-          status: 429, headers: { ...cors, "Content-Type": "application/json" },
+        // Same response as a successful send so callers can't probe lead activity.
+        return new Response(JSON.stringify({ success: true }), {
+          status: 200, headers: { ...cors, "Content-Type": "application/json" },
         });
       }
     } catch (e) {

@@ -54,6 +54,10 @@ Deno.serve(async (req) => {
   }
 
   if (body?.action === "pdf") {
+    // One counted download per visitor per listing per day — prevents inflating stats.
+    if (!checkRateLimit(`analyzed-listing-pdf:${ip}:${url}`, { maxRequests: 1, windowMs: 86_400_000 }).allowed) {
+      return json({ ok: true, tracked: false });
+    }
     const { data: last } = await sb.from("analyzed_listings").select("id, pdf_downloads")
       .eq("url", url).order("created_at", { ascending: false }).limit(1).maybeSingle();
     if (!last) return json({ ok: true, tracked: false });
