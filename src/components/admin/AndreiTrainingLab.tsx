@@ -115,7 +115,9 @@ export default function AndreiTrainingLab() {
           </Button>
           {running && (
             <div className="space-y-1" role="status" aria-live="polite">
-              <Progress value={undefined} className="h-2" />
+              <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                <div className="h-full w-1/3 animate-pulse rounded-full bg-primary" style={{ animation: "pulse 1.2s ease-in-out infinite" }} />
+              </div>
               <p className="text-xs text-muted-foreground">Andrei discută cu proprietarul simulat, apoi Gemini analizează conversația…</p>
             </div>
           )}
