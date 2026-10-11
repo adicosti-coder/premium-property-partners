@@ -109,6 +109,7 @@ const csvCell = (v: unknown) => {
 
 export default function WhatsappOutboundQueue() {
   const [rows, setRows] = useState<QueueRow[]>([]);
+  const [prospects, setProspects] = useState<Map<string, ProspectInfo>>(new Map());
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
