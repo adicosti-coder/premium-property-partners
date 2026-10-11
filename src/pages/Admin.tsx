@@ -235,7 +235,7 @@ const Admin = () => {
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     <span className="hidden sm:inline">{t.admin.backToSite}</span>
                   </Button>
-                  <h1 className="text-lg font-serif font-semibold text-foreground flex items-center gap-2 ml-2 truncate">
+                  <h1 className="text-lg font-serif font-semibold text-foreground flex items-center gap-2 ml-2 truncate min-w-0 shrink">
                     <Users className="w-5 h-5 text-primary shrink-0" />
                     <span className="truncate">
                       {findTab(activeTab)?.label || t.admin.title}
