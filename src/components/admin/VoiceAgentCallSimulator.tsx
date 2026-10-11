@@ -41,6 +41,29 @@ export default function VoiceAgentCallSimulator({ prospect }: { prospect?: Voice
   const [callError, setCallError] = useState<string | null>(null);
   const [callInfo, setCallInfo] = useState<string | null>(null);
   const requestVersion = useRef(0);
+  const [config, setConfig] = useState<{ ready: boolean; checks: { key: string; label: string; ok: boolean; required: boolean; detail: string }[] } | null>(null);
+  const [configLoading, setConfigLoading] = useState(false);
+  const [configError, setConfigError] = useState<string | null>(null);
+
+  const loadConfig = async () => {
+    setConfigLoading(true);
+    setConfigError(null);
+    try {
+      const { data, error: invokeErr } = await supabase.functions.invoke("voice-agent-config-check", { body: {} });
+      if (invokeErr) {
+        const details = invokeErr instanceof FunctionsHttpError ? await invokeErr.context.text() : invokeErr.message;
+        throw new Error(details);
+      }
+      if (data?.error) throw new Error(data.error);
+      setConfig(data);
+    } catch (e: any) {
+      setConfigError(`Nu am putut verifica configurația: ${e?.message || "eroare"}`);
+    } finally {
+      setConfigLoading(false);
+    }
+  };
+
+  useEffect(() => { loadConfig(); }, []);
   useEffect(() => {
     requestVersion.current += 1;
     setPhone(prospect?.phone_normalized || prospect?.contact_phone || "+40");
@@ -88,10 +111,10 @@ export default function VoiceAgentCallSimulator({ prospect }: { prospect?: Voice
       const response = { ...data, found: data.found ?? data.caller_found ?? false } as ContextResponse;
       setResult(response);
       toast({
-        title: response.found ? "✅ Prospect găsit" : "ℹ️ Prospect necunoscut",
-        description: response.found
-          ? `Memorie încărcată pentru ${data.prospect?.inferred_name || data.prospect?.raw_name || phone}`
-          : "Se folosește template-ul fallback.",
+        title: response.found ? "✅ Context încărcat (simulare, fără apel)" : "ℹ️ Prospect necunoscut (simulare, fără apel)",
+        description: `${response.found
+          ? `Memorie încărcată pentru ${data.prospect?.inferred_name || data.prospect?.raw_name || phone}.`
+          : "Se folosește template-ul fallback."} Pentru ca telefonul să sune, apasă „Pornește apel real”.`,
       });
     } catch (err: any) {
       if (version !== requestVersion.current) return;
@@ -221,6 +244,27 @@ export default function VoiceAgentCallSimulator({ prospect }: { prospect?: Voice
         <p className="text-xs text-muted-foreground">
           „Simulează” doar încarcă contextul (nu sună). „Pornește apel real” sună efectiv numărul prin Twilio + vocea ElevenLabs.
         </p>
+
+        <div className="rounded-md border border-border/60 p-3 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-semibold">Configurație apeluri ieșire</span>
+            <Button variant="ghost" size="sm" className="min-h-12 h-auto" onClick={loadConfig} disabled={configLoading}>
+              {configLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Reverifică"}
+            </Button>
+          </div>
+          {configError && <p role="alert" className="text-xs text-destructive break-words">{configError}</p>}
+          {config?.checks?.map((c) => (
+            <div key={c.key} className="flex items-start gap-2 text-xs">
+              {c.ok ? <CheckCircle className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary" /> : <XCircle className="h-3.5 w-3.5 mt-0.5 shrink-0 text-destructive" />}
+              <span><strong>{c.label}</strong> ({c.key}) — {c.detail}</span>
+            </div>
+          ))}
+          {config && (
+            <p className={`text-xs font-medium ${config.ready ? "text-primary" : "text-destructive"}`}>
+              {config.ready ? "✅ Totul e configurat pentru apeluri reale." : "⚠️ Lipsește configurație — apelul real nu va porni până nu e completată."}
+            </p>
+          )}
+        </div>
 
         {error && (
           <div className="flex items-start gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
