@@ -19,14 +19,14 @@ export default function AndreiCallsCounter() {
       const from = new Date(Date.now() - days * 86400_000).toISOString();
       const { data: rows } = await supabase
         .from("voice_call_sessions")
-        .select("ai_outcome, created_at, started_at")
+        .select("ai_outcome, created_at, started_at, ended_at, call_duration_seconds")
         .gte("created_at", from)
         .limit(5000);
-      const list = (rows ?? []) as Array<{ ai_outcome: string | null; created_at: string; started_at: string | null }>;
+      const list = (rows ?? []) as Array<{ ai_outcome: string | null; created_at: string; started_at: string | null; ended_at: string | null; call_duration_seconds: number | null }>;
       const out = (r: { ai_outcome: string | null }) => String(r.ai_outcome || "").toLowerCase();
       const waits = list
-        .filter((r) => r.started_at)
-        .map((r) => (new Date(r.started_at!).getTime() - new Date(r.created_at).getTime()) / 1000)
+        .filter((r) => r.started_at && r.ended_at && r.call_duration_seconds)
+        .map((r) => (new Date(r.ended_at!).getTime() - new Date(r.started_at!).getTime()) / 1000 - Number(r.call_duration_seconds))
         .filter((s) => s >= 0 && s < 600);
       return {
         total: list.length,

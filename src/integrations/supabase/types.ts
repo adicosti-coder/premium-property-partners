@@ -10458,6 +10458,48 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_batch_campaign: {
+        Row: {
+          calls_started: number
+          current_label: string | null
+          current_prospect_id: string | null
+          current_session_id: string | null
+          delay_minutes: number
+          enabled: boolean
+          id: number
+          last_call_ended_at: string | null
+          last_message: string | null
+          last_tick_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          calls_started?: number
+          current_label?: string | null
+          current_prospect_id?: string | null
+          current_session_id?: string | null
+          delay_minutes?: number
+          enabled?: boolean
+          id?: number
+          last_call_ended_at?: string | null
+          last_message?: string | null
+          last_tick_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          calls_started?: number
+          current_label?: string | null
+          current_prospect_id?: string | null
+          current_session_id?: string | null
+          delay_minutes?: number
+          enabled?: boolean
+          id?: number
+          last_call_ended_at?: string | null
+          last_message?: string | null
+          last_tick_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       voice_call_sessions: {
         Row: {
           ai_outcome: string | null
