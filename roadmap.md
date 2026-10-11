@@ -1,5 +1,9 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Prompt Andrei — replici concise
+- [x] Reguli prioritare comune și exemple fictive realiste pentru vânzare
+- [x] Trei teste trecute, build OK și funcții activate fără apeluri reale
+
 ## Îmbunătățiri prioritizate — 11 octombrie, runda 2
 - [x] Stabilitate: încărcare vizibilă, recuperare izolată și notificări disponibile imediat
 - [x] Site public: reîncercare verificare de securitate fără pierderea datelor și erori lângă câmpurile evaluării

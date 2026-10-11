@@ -2,6 +2,7 @@
 // using Lovable AI Gateway, then judges the response with Gemini.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
+import { andreiConversationPolicy } from "../_shared/andreiConversationPolicy.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -69,7 +70,8 @@ Deno.serve(async (req) => {
       .select("lesson")
       .eq("is_active", true).order("created_at", { ascending: false }).limit(20);
     const systemPrompt = (script?.system_prompt || "Ești Andrei, concierge imobiliar RealTrust Timișoara.") +
-      (lessons?.length ? "\n\nLecții active:\n" + lessons.map((l: any) => `- ${l.lesson}`).join("\n") : "");
+      (lessons?.length ? "\n\nLecții active:\n" + lessons.map((l: any) => `- ${l.lesson}`).join("\n") : "") +
+      "\n\n" + andreiConversationPolicy("vanzare");
 
     const results: any[] = [];
     for (const s of scenarios) {
