@@ -26,7 +26,7 @@ const ThemeToggle = forwardRef<HTMLButtonElement>((_props, ref) => {
       variant="ghost"
       size="sm"
       onClick={toggleTheme}
-      className="w-11 h-11 min-w-[44px] min-h-[44px] p-0 text-muted-foreground hover:text-foreground transition-colors"
+      className="w-12 h-12 min-w-12 min-h-12 shrink-0 p-0 text-muted-foreground hover:text-foreground transition-colors"
       aria-label={theme === 'dark' ? 'Comută pe modul luminos' : 'Comută pe modul întunecat'}
     >
       {theme === 'dark' ? <SunIcon /> : <MoonIcon />}

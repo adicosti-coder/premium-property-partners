@@ -1,6 +1,12 @@
 # Roadmap — optimizări sistem analiză și administrare
 
-1. [Blocat: utilizator] Activare Maps Embed API + Static API în Google Cloud Console
+## Verificare premium, viteză și eficiență — 11 octombrie
+- [x] Verificare pagini principale și navigare fără operațiuni reale
+- [x] Meniu accesibil, fără derulare a paginii din spate, controale tactile de minimum 48px
+- [x] Recuperare limitată după erori de încărcare, fără bucle de reîncărcare
+- [x] Verificare automată și vizuală a modificărilor
+
+1. [x] Activare Maps Embed API + Static API confirmată anterior de utilizator
 2. [Blocat: utilizator] Test DA → publicare → STOP pe 0723 154 520
 3. [Decizie utilizator] Card WhatsApp per anunț — necesită migrare TanStack Start (SSR)
 4. [x] Notificare instant către admin la „DA" (link anunț publicat)
@@ -12,7 +18,7 @@
 - [x] Filtru rapid „Fără WhatsApp" în Admin → Prospecte (listă + pipeline)
 - [x] Butoane rapide: „Marchează ca Apelat" (dialog cu notă, status → contacted, tag apelat-telefonic) și „Trimite SMS Evaluare" (edge fn send-evaluation-sms via Make relay, cooldown 7 zile)
 - [x] Contor „Necesită Apel Telefonic (Fără WhatsApp)" în Dashboard/Astăzi → click spre unified-pipeline
-- [ ] SMS evaluare: livrare efectivă amânată la cererea utilizatorului — funcția send-evaluation-sms e gata, dar nu există canal SMS activ (Make neconectat; numărul Twilio +40373800342 e voice-only; Twilio nu are numere RO cu SMS). De reluat când utilizatorul alege: număr Twilio GB cu SMS sau scenariu Make propriu.
+- [Amânat de utilizator] SMS evaluare — gestionarea prospectelor rămâne prin apeluri vocale; canalul SMS nu este activ.
 
 ## Fișe prospecte Command Center — Andrei
 - [x] Contact proprietar și linkuri original/evaluare pe card
