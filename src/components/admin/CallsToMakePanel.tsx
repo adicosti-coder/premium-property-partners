@@ -23,11 +23,14 @@ export default function CallsToMakePanel() {
     queryFn: async (): Promise<Row[]> => {
       const since14 = new Date(Date.now() - 14 * 864e5).toISOString();
       const before48 = new Date(Date.now() - 48 * 3600e3).toISOString();
-      const [a, b] = await Promise.all([
+      const [a, b, c] = await Promise.all([
         (supabase.from("prospect_listings") as any).select(COLS).eq("is_active", true).is("published_at", null)
           .eq("do_not_call", false).gte("created_at", since14).order("created_at", { ascending: false }).limit(300),
         (supabase.from("wa_outbound_queue") as any).select("prospect_listing_id").eq("status", "sent")
           .is("replied_at", null).lte("sent_at", before48).not("prospect_listing_id", "is", null).limit(300),
+        // Erori Meta 131026 (numărul nu are WhatsApp) → de sunat direct.
+        (supabase.from("wa_outbound_queue") as any).select("prospect_listing_id").eq("status", "failed")
+          .ilike("last_error", "%131026%").not("prospect_listing_id", "is", null).limit(300),
       ]);
       if (a.error) throw a.error;
       const noMobile: Row[] = (a.data ?? []).filter((r: any) => !isMobile(r.phone_normalized)).map((r: any) => ({ ...r, reason: "no_mobile" }));
@@ -37,7 +40,14 @@ export default function CallsToMakePanel() {
         const { data } = await (supabase.from("prospect_listings") as any).select(COLS).in("id", ids).eq("is_active", true).is("published_at", null).eq("do_not_call", false);
         noReply = (data ?? []).map((r: any) => ({ ...r, reason: "no_reply" }));
       }
-      return [...noMobile, ...noReply];
+      const waIds = [...new Set((c.data ?? []).map((x: any) => x.prospect_listing_id))] as string[];
+      let noWhatsApp: Row[] = [];
+      if (waIds.length) {
+        const { data } = await (supabase.from("prospect_listings") as any).select(COLS).in("id", waIds).eq("is_active", true).is("published_at", null).eq("do_not_call", false);
+        noWhatsApp = (data ?? []).map((r: any) => ({ ...r, reason: "no_whatsapp" }));
+      }
+      const seen = new Set<string>();
+      return [...noWhatsApp, ...noMobile, ...noReply].filter((r) => (seen.has(r.id) ? false : (seen.add(r.id), true)));
     },
   });
 
@@ -57,7 +67,7 @@ export default function CallsToMakePanel() {
     <div className="space-y-3">
       <div>
         <h3 className="text-lg font-semibold">Apeluri de făcut · {rows.length}</h3>
-        <p className="text-sm text-muted-foreground">Prospecte fără mobil WhatsApp și prospecte fără răspuns la 48h după primul mesaj.</p>
+        <p className="text-sm text-muted-foreground">Prospecte fără WhatsApp (eroare Meta), fără mobil valid sau fără răspuns la 48h după primul mesaj.</p>
       </div>
       {q.isLoading && <p className="text-sm text-muted-foreground">Se încarcă…</p>}
       {!q.isLoading && rows.length === 0 && <p className="text-sm text-muted-foreground">Nimic de sunat acum.</p>}
