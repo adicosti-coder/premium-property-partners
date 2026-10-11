@@ -91,6 +91,10 @@ const CONVERSATION_LABELS = [
   { value: 'potential-mare', label: '⭐ Potențial mare', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300 border-yellow-300' },
   { value: 'urgent', label: '🚨 Urgent', color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 border-red-400' },
   { value: 'apelat-telefonic', label: '📞 Apelat telefonic', color: 'bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300 border-teal-300' },
+  { value: 'apelat-andrei', label: '🤖 Apelat de Andrei', color: 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300 border-sky-300' },
+  { value: 'preluat-ai', label: '🎧 Preluat de AI', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300 border-indigo-300' },
+  { value: 'raspuns-da', label: '✅ Răspuns DA', color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-300' },
+  { value: 'nu-doreste', label: '⛔ Nu dorește', color: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300 border-rose-300' },
 ];
 
 // ── Quick Reply Templates by Category ────────────────────────────
