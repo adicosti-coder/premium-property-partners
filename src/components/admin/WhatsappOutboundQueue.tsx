@@ -680,7 +680,7 @@ export default function WhatsappOutboundQueue() {
         <table className="w-full text-sm">
           <thead className="bg-muted/40">
             <tr className="text-left">
-              {["Telefon", "Status", "Șablon", "Sursă", "Încercări", "Programat", "Trimis", "Acțiuni"].map((h) => (
+              {["Telefon", "Anunț asociat", "Status", "Șablon", "Sursă", "Încercări", "Programat", "Trimis", "Acțiuni"].map((h) => (
                 <th key={h} className="px-3 py-2 font-medium text-xs text-muted-foreground whitespace-nowrap">{h}</th>
               ))}
             </tr>
