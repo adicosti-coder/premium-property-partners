@@ -1246,63 +1246,85 @@ serve(async (req) => {
     let aiError: string | null = null;
     let shouldHangup = false;
 
+    const prevAssistant = transcript.filter((t: any) => t.role === "assistant").map((t: any) => String(t.text || ""));
+    const lastAssistant = prevAssistant[prevAssistant.length - 1] || "";
+    const normWords = (s: string) => new Set(s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter((w) => w.length > 3));
+    const tooSimilar = (a: string, b: string) => {
+      const A = normWords(a), B = normWords(b);
+      if (!A.size || !B.size) return false;
+      let common = 0; A.forEach((w) => { if (B.has(w)) common++; });
+      return common / Math.min(A.size, B.size) >= 0.6;
+    };
+    const emptyStreak = (() => { let n = 0; for (let i = transcript.length - 1; i >= 0 && transcript[i].role === "assistant" && transcript[i].empty; i--) n++; return n; })();
+    let isEmptyTurn = false;
+
     if (turn === 0) {
-      // ⚡ OPTIMIZARE CRITICĂ DE LATENȚĂ: NU mai apelăm AI la turn=0.
-      // Greeting-ul deterministic (openingLine) este deja concierge-quality, sub 22 cuvinte,
-      // și permite TTS-ul ElevenLabs să fie cached/precalculat → proprietarul aude voce
-      // în <500ms de la „hello", nu în 4-7s.
-      // AI-ul preia integral din turn=1 înainte cu context complet (transcript + KB).
+      // ⚡ Greeting deterministic, fără AI → voce imediat la preluare.
       aiReply = openingLine(branch, contextSummary);
       aiRawReply = aiReply;
-    } else if (LOVABLE_API_KEY) {
-
-      const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            { role: "system", content: systemPrompt },
-            ...transcript.slice(-8).map((t: any) => ({ role: t.role === "user" ? "user" : "assistant", content: t.text })),
-            { role: "user", content: (() => {
-              const u = userSpeech.toLowerCase();
-              const wantsDetail = /(de ce|cum|explica|spune-?mi mai|detalii|exact|mai multe|cât|ce înseamnă|cum funcționează)/i.test(u);
-              const objects = /(scump|comision|nu mai|deja|singur|criza|criză|prea mult|nu pot|ocupat|vorbim altă|alt[ăa] dată)/i.test(u);
-              if (objects) {
-                return "Apelantul ridică o obiecție. Începe cu o confirmare empatică ULTRA-scurtă (\"înțeleg perfect.\" / \"vă înțeleg.\"), apoi UN argument concret, calm, în română cu diacritice. MAXIM 18 cuvinte total. NU insista, NU repeta același argument.";
-              }
-              return wantsDetail
-                ? "Răspunde concret la întrebare în română cu diacritice. Începe cu o confirmare scurtă (\"sigur, vă explic.\" / \"da, desigur.\"). MAXIM 2 propoziții, sub 30 de cuvinte."
-                : "Răspunde DIRECT, fără umpluturi (fără mhm, aha, ăăă, hmm, uhm). Începi cu cuvânt-cheie clar (\"Perfect.\" / \"Sigur.\" / \"Da.\") SAU direct cu întrebarea/confirmarea. MAXIM 1 propoziție, sub 14 cuvinte.";
-            })() },
-          ],
-        }),
-      });
-      if (aiRes.ok) {
-        const aiData = await aiRes.json();
-        aiRawReply = aiData.choices?.[0]?.message?.content?.trim() || "";
-        if (aiRawReply && !isRomanianReply(aiRawReply)) {
-          // Retry once with stricter instruction before falling back
-          await logLanguageViolation(supabase, sessionId, turn, aiRawReply, "english_in_turn");
-          const retried = await retryInRomanian(
-            LOVABLE_API_KEY,
-            systemPrompt,
-            transcript.slice(-8).map((t: any) => ({ role: t.role === "user" ? "user" : "assistant", content: t.text })),
-          );
-          if (retried && isRomanianReply(retried)) {
-            aiRawReply = retried;
-          } else {
-            await logLanguageViolation(supabase, sessionId, turn, retried || "(empty)", "retry_also_english");
-          }
-        }
-        aiReply = normalizeAiReply(
-          aiRawReply,
-          "Mulțumesc pentru timp. O zi frumoasă! La revedere.",
-        );
-      } else {
-        aiError = `AI HTTP ${aiRes.status}: ${(await aiRes.text()).slice(0, 200)}`;
-        aiReply = "Mulțumesc pentru timp. O zi frumoasă! La revedere.";
+    } else if (!userSpeech.trim()) {
+      // Tăcere / nu s-a înțeles: NU chemăm AI-ul (ar repeta replica anterioară). Reformulare scurtă, apoi închidere.
+      isEmptyTurn = true;
+      if (emptyStreak >= 1) {
+        aiReply = "Se pare că nu vă aud. Revin altă dată. O zi bună!";
         shouldHangup = true;
+      } else {
+        aiReply = "Mă auziți? Doriți analiza gratuită pentru proprietate?";
+      }
+      aiRawReply = aiReply;
+    } else if (LOVABLE_API_KEY) {
+      const history = transcript.filter((t: any) => !t.empty).slice(-10).map((t: any) => ({ role: t.role === "user" ? "user" : "assistant", content: t.text }));
+      const u = userSpeech.toLowerCase();
+      const wantsDetail = /(de ce|cum|explica|spune-?mi mai|detalii|exact|mai multe|cât|ce înseamnă|cum funcționează|nu am înțeles|nu înțeleg)/i.test(u);
+      const objects = /(scump|comision|nu mai|deja|singur|criza|criză|prea mult|nu pot|ocupat|vorbim altă|alt[ăa] dată)/i.test(u);
+      const lenRule = objects
+        ? "Obiecție: confirmare scurtă + UN argument nou. Maxim 18 cuvinte."
+        : wantsDetail
+          ? "Răspunde concret și simplu la întrebare. Maxim 2 propoziții, sub 28 de cuvinte."
+          : "Răspunde direct. O propoziție, sub 16 cuvinte.";
+      const antiRepeat = prevAssistant.length
+        ? `\nReplicile tale anterioare (NU le repeta și nu le reformula): ${prevAssistant.slice(-4).map((r) => `„${r}”`).join(" | ")}.\nAvansează conversația la pasul următor (obiectiv → termen → preț → acord pentru analiză/pas următor). Nu folosi placeholder-e de tipul {{...}}.`
+        : "";
+      const callAi = async (extra: string) => {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 4500);
+        try {
+          const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            signal: ctrl.signal,
+            headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash-lite",
+              max_tokens: 90,
+              temperature: 0.5,
+              messages: [
+                { role: "system", content: systemPrompt },
+                ...history,
+                { role: "system", content: `Proprietarul tocmai a spus: „${userSpeech}”. Răspunde la ASTA, în română cu diacritice. ${lenRule}${antiRepeat}${extra}` },
+              ],
+            }),
+          });
+          if (!r.ok) throw new Error(`AI HTTP ${r.status}: ${(await r.text()).slice(0, 200)}`);
+          const d = await r.json();
+          return String(d.choices?.[0]?.message?.content || "").trim();
+        } finally { clearTimeout(timer); }
+      };
+      try {
+        aiRawReply = await callAi("");
+        if (aiRawReply && !isRomanianReply(aiRawReply)) {
+          await logLanguageViolation(supabase, sessionId, turn, aiRawReply, "english_in_turn");
+          const retried = await retryInRomanian(LOVABLE_API_KEY, systemPrompt, history);
+          if (retried && isRomanianReply(retried)) aiRawReply = retried;
+        }
+        aiRawReply = aiRawReply.replace(/\{\{[^}]*\}\}/g, "").replace(/\s+,/g, ",").replace(/\s{2,}/g, " ").trim();
+        aiReply = normalizeAiReply(aiRawReply, "Mulțumesc pentru timp. O zi frumoasă! La revedere.");
+        if (lastAssistant && tooSimilar(aiReply, lastAssistant)) {
+          aiReply = "Ca să vă ajut concret: în cât timp ați dori să vindeți?";
+          if (prevAssistant.some((r) => tooSimilar(r, aiReply))) aiReply = "Vă pot trimite analiza gratuită a prețului. Sunteți de acord?";
+        }
+      } catch (e: any) {
+        aiError = String(e?.message || e);
+        aiReply = "Vă rog să mă scuzați, puteți repeta?";
       }
     } else {
       aiError = "LOVABLE_API_KEY missing";
@@ -1310,7 +1332,7 @@ serve(async (req) => {
       shouldHangup = true;
     }
 
-    transcript.push({ role: "assistant", text: aiReply, at: new Date().toISOString() });
+    transcript.push({ role: "assistant", text: aiReply, at: new Date().toISOString(), ...(isEmptyTurn ? { empty: true } : {}) });
 
     if (turn >= 8 || /la revedere|închid|nu mai|mulțumesc.*revedere|o zi bună/i.test(aiReply)) {
       shouldHangup = true;
