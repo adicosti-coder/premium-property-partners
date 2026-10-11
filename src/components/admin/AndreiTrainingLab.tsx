@@ -7,13 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { FlaskConical, Loader2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import AndreiCallHistory from "./AndreiCallHistory";
 
 const PERSONAS = [
-  { id: "sceptic", label: "Sceptic", desc: "Crede că e o agenție și cere dovezi." },
-  { id: "grabit", label: "Grăbit", desc: "N-are timp, răspunde monosilabic." },
-  { id: "negociator", label: "Negociator pe preț", desc: "Nu scade prețul, negociază dur." },
-  { id: "garsoniera", label: "Proprietar garsonieră", desc: "Prima vânzare, cere explicații simple." },
+  { id: "sceptic", label: "Sceptic", desc: "Crede că e o agenție și cere dovezi.", difficulty: "Mediu" },
+  { id: "grabit", label: "Grăbit", desc: "N-are timp, răspunde monosilabic.", difficulty: "Greu" },
+  { id: "negociator", label: "Negociator pe preț", desc: "Nu scade prețul, negociază dur.", difficulty: "Greu" },
+  { id: "garsoniera", label: "Proprietar garsonieră", desc: "Prima vânzare, cere explicații simple.", difficulty: "Ușor" },
 ];
 
 type Analysis = {
