@@ -60,7 +60,8 @@ function badCommission(t: string, branch?: string): boolean {
 function commissionAnswerOk(transcript: { role: string; text: string }[], branch: string): boolean | null {
   let asked = false, ok = true;
   transcript.forEach((t, i) => {
-    if (t.role === "andrei" || !/comision|c[âa]t lua[țt]i|c[âa]t cere[țt]i/i.test(t.text)) return;
+    // doar întrebările directe despre comision, nu remarcile de tip „nu plătesc comision”
+    if (t.role === "andrei" || !/\?/.test(t.text) || !/(ce|c[âa]t|care e|care este)[^?]{0,25}comision|comision[^?]{0,20}(lua[țt]i|cere[țt]i|ave[țt]i)|c[âa]t lua[țt]i|c[âa]t cere[țt]i/i.test(t.text)) return;
     asked = true;
     const r = transcript.slice(i + 1).find((x) => x.role === "andrei")?.text ?? "";
     const first = r.split(/[.!?]/)[0] ?? "";
@@ -83,7 +84,7 @@ function validate(transcript: { role: string; text: string }[], branch: string) 
 }
 const CATS = ["Tone of Voice", "Handling Objections", "Sales Strategy", "General"];
 
-async function autoLoop(supabase: any, KEY: string) {
+async function autoLoop(supabase: any, KEY: string, opts: { personas?: string[]; rejecter?: boolean } = {}) {
   const { data: q } = await supabase.from("wa_outbound_queue").select("prospect_listing_id").eq("status", "failed")
     .ilike("last_error", "%131026%").not("prospect_listing_id", "is", null).limit(300);
   const ids = [...new Set((q ?? []).map((r: any) => r.prospect_listing_id))];
@@ -97,24 +98,26 @@ async function autoLoop(supabase: any, KEY: string) {
       .order("created_at", { ascending: false }).limit(40);
     rows = [...rows, ...(data ?? [])];
   }
-  // diversificăm tipurile de anunț: vânzare, închiriere, hotelier
-  const byCat: Record<string, any[]> = {};
-  for (const r of rows) (byCat[r.category || "vanzare"] ||= []).push(r);
-  const order = Object.values(byCat);
-  const picks: string[] = [];
-  for (let i = 0; picks.length < 4 && i < 20; i++) { const g = order[i % order.length]; const x = g?.shift(); if (x) picks.push(x.id); }
-  const personas = Object.keys(PERSONAS);
+  // fiecare simulare primește alt tip de anunț (vânzare / închiriere / hotelier) și o întrebare despre comision
+  const byBranch: Record<string, any[]> = {};
+  for (const r of rows) (byBranch[branchOf(r.category)] ||= []).push(r);
+  const BR = ["vanzare", "inchiriere", "cazare"];
+  const personas = opts.personas ?? Object.keys(PERSONAS);
   const fixes: string[] = [];
   for (let i = 0; i < personas.length; i++) {
     try {
-      const r: any = await simulate(supabase, KEY, { persona: personas[i], prospect_id: picks[i] });
+      const branch = BR[i % BR.length];
+      const pick = byBranch[branch]?.shift();
+      const r: any = await simulate(supabase, KEY, { persona: personas[i], prospect_id: pick?.id, branch, commission_probe: true, rejecter: opts.rejecter });
       if (!r.analysis) continue;
       const v = validate(r.transcript, r.branch);
       await supabase.from("voice_call_analyses").insert({
-        source: "training_lab_auto", outcome: `${r.persona} · ${r.branch}`, score: r.analysis.score,
+        source: "training_lab_auto", outcome: `${personas[i]} · ${r.branch} · comision ${v.commission_answer_ok === null ? "neîntrebat" : v.commission_answer_ok && !v.wrong_commission ? "OK" : "GREȘIT"}`, score: r.analysis.score,
         strengths: r.analysis.strengths, weaknesses: [...r.analysis.weaknesses,
           ...(v.banned_phrase ? ["Validare: formulare interzisă sau acord greșit detectat"] : []),
           ...(v.wrong_branch_argument ? ["Validare: argument nepotrivit tipului de anunț"] : []),
+          ...(v.wrong_commission ? ["Validare: procent de comision greșit pentru tipul de anunț"] : []),
+          ...(v.commission_answer_ok === false ? ["Validare: răspunsul la comision nu începe cu analiza gratuită + procentul corect + /analiza-gratuita pe WhatsApp"] : []),
           ...(!v.offered_free_analysis ? ["Validare: nu a propus analiza gratuită /analiza-gratuita"] : [])],
         objections: r.analysis.objections, prompt_fixes: r.analysis.prompt_fixes,
         transcript: r.transcript.map((t: any) => `${t.role === "andrei" ? "Andrei" : "Proprietar"}: ${t.text}`).join("\n"),
@@ -122,7 +125,7 @@ async function autoLoop(supabase: any, KEY: string) {
       fixes.push(...r.analysis.prompt_fixes);
     } catch (e: any) {
       console.error("sim", e?.message);
-      if (e?.status === 402 || e?.status === 403) return; // circuit breaker
+      if (e?.status === 402 || e?.status === 403 || e?.status === 429) return; // circuit breaker
     }
   }
   if (!fixes.length) return;
@@ -164,7 +167,14 @@ async function simulate(supabase: any, KEY: string, body: any): Promise<any> {
       persona = basePersona ? `${basePersona}-${branch}` : `campanie-${branch}`;
       objections = "\n\n" + andreiListingObjections({ branch, price: r.price, currency: r.currency, zone: r.zone || r.location, rooms: r.rooms, size: r.size, title: r.title });
     }
+    else if (["vanzare", "inchiriere", "cazare"].includes(body.branch)) {
+      branch = body.branch;
+      const tip = branch === "inchiriere" ? "închiriază pe termen lung un apartament" : branch === "cazare" ? "are un apartament în regim hotelier" : "vinde un apartament";
+      if (personaText) personaText += ` Tu ${tip} în Timișoara.`;
+    }
     if (!personaText) return { httpError: "Profil necunoscut", status: 400 };
+    if (body.commission_probe) personaText += " În prima sau a doua replică întreabă direct: „Și ce comision luați?”.";
+    if (body.rejecter) personaText += " Respingi la început ideea de analiză („nu am nevoie de analize”) și spui că nu plătești comision agențiilor.";
     const turns = Math.min(8, Math.max(3, Number(body.turns) || 6));
 
     const { data: script } = await supabase.from("voice_agent_scripts").select("system_prompt").eq("is_active", true).maybeSingle();
@@ -253,10 +263,24 @@ Deno.serve(async (req) => {
       return json({ profiles });
     }
 
+    if (body.action === "sceptic_drill") {
+      const before = await supabase.from("voice_call_analyses").select("id", { count: "exact", head: true }).eq("source", "training_lab_auto");
+      await autoLoop(supabase, KEY, { personas: ["sceptic", "sceptic", "sceptic"], rejecter: true }).catch((e) => console.error("sceptic_drill", e));
+      const after = await supabase.from("voice_call_analyses").select("id", { count: "exact", head: true }).eq("source", "training_lab_auto");
+      const active = await supabase.from("voice_agent_playbook_addendum").select("id", { count: "exact", head: true }).eq("is_active", true);
+      return json({ finished: true, analyses_added: Math.max(0, (after.count ?? 0) - (before.count ?? 0)), active_lessons: active.count ?? 0 });
+    }
+
     if (body.action === "auto_loop") {
       // Rulare în timp real: așteptăm finalul și returnăm rezultatul,
       // ca istoricul din Training Lab să se actualizeze imediat.
       const before = await supabase.from("voice_call_analyses").select("id", { count: "exact", head: true }).eq("source", "training_lab_auto");
+      if (body.background) {
+        // rulare programată: răspundem imediat, simulările continuă în fundal
+        // @ts-ignore EdgeRuntime
+        EdgeRuntime.waitUntil(autoLoop(supabase, KEY).catch((e) => console.error("auto_loop", e)));
+        return json({ started: true, background: true });
+      }
       await autoLoop(supabase, KEY).catch((e) => console.error("auto_loop", e));
       const after = await supabase.from("voice_call_analyses").select("id", { count: "exact", head: true }).eq("source", "training_lab_auto");
       const active = await supabase.from("voice_agent_playbook_addendum").select("id", { count: "exact", head: true }).eq("is_active", true);

@@ -51,9 +51,9 @@ export default function AndreiTrainingLab() {
   const BRANCH_LABEL: Record<string, string> = { vanzare: "Vânzare", inchiriere: "Închiriere", cazare: "Regim hotelier" };
 
   const [historyKey, setHistoryKey] = useState(0);
-  const runAuto = async () => {
+  const runAuto = async (action: "auto_loop" | "sceptic_drill" = "auto_loop") => {
     setAutoRunning(true);
-    const { data, error } = await supabase.functions.invoke("voice-agent-training-lab", { body: { action: "auto_loop" } });
+    const { data, error } = await supabase.functions.invoke("voice-agent-training-lab", { body: { action } });
     setAutoRunning(false);
     if (error) return toast.error(await errText(error));
     if (data?.finished) {
@@ -126,11 +126,14 @@ export default function AndreiTrainingLab() {
             <Button className="min-h-[48px] w-full sm:w-auto" onClick={run} disabled={running || autoRunning}>
               {running ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Simulare în curs (≈30 s)…</> : "Inițiază Apel de Antrenament (Andrei vs Gemini)"}
             </Button>
-            <Button className="min-h-[48px] w-full sm:w-auto" onClick={runAuto} disabled={running || autoRunning}>
+            <Button className="min-h-[48px] w-full sm:w-auto" onClick={() => runAuto()} disabled={running || autoRunning}>
               {autoRunning ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Antrenament în curs (≈2 min)…</> : "Rulează Antrenament Automat Acum"}
             </Button>
+            <Button variant="outline" className="min-h-[48px] w-full sm:w-auto" onClick={() => runAuto("sceptic_drill")} disabled={running || autoRunning}>
+              Antrenează doar Sceptic
+            </Button>
           </div>
-          <p className="text-xs text-muted-foreground">Antrenamentul rulează acum, în timp real, pe toate cele 4 profiluri cu anunțuri reale, și păstrează maximum 5 lecții active. La final, istoricul de mai jos se actualizează automat — vezi imediat ce s-a corectat.</p>
+          <p className="text-xs text-muted-foreground">Antrenamentul rulează pe cele 4 profiluri, pe vânzare, închiriere și regim hotelier, verifică răspunsul la întrebarea despre comision și păstrează maximum 5 lecții active. Rulează automat și în fiecare noapte, în fundal.</p>
           {autoRunning && (
             <div className="space-y-1" role="status" aria-live="polite">
               <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
