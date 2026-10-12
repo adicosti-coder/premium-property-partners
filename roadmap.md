@@ -3,7 +3,8 @@
 ## Texte și accesibilitate drafturi sociale
 - [x] Texte lizibile completate cu descrierile salvate ale fotografiilor, fără informații inventate
 - [x] Texte alternative și descrieri foto vizibile, cu copiere separată
-- [ ] Teste și verificarea paginii autentificate fără publicare pe rețele sociale
+- [x] Trei teste trecute și pagina autentificată verificată; fără publicare pe rețele sociale
+- [ ] Verificarea copierii unei postări reale — blocată: momentan nu există drafturi salvate
 
 ## Prompt Andrei — replici concise
 - [x] Reguli prioritare comune și exemple fictive realiste pentru vânzare
