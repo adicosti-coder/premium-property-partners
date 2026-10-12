@@ -303,6 +303,7 @@ Deno.serve(async (req) => {
       direction: "outbound",
       role: "assistant",
       content: text,
+      tool_call: { auto_reply: "offer_followup" },
       error: sent.ok ? null : String(sent.error).slice(0, 500),
     });
 
