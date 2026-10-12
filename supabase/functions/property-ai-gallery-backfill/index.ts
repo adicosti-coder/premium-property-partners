@@ -14,14 +14,16 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   const denied = await requireInternalOrAdmin(req, cors);
   if (denied) return denied;
-  let body: { limit?: number; property_id?: string; tags_only?: boolean; offset?: number } = {};
+  let body: { limit?: number; property_id?: string; tags_only?: boolean; offset?: number; all?: boolean } = {};
   try { body = await req.json(); } catch { /* */ }
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   let q = sb.from("properties")
     .select("id, name, rooms, size, floor, year_built, listing_type, location, long_description_ro, original_description_raw, amenities, has_ac, has_elevator, heating_type, balconies, parking")
-    .not("migrated_from_prospect_id", "is", null).eq("is_active", true)
+    .eq("is_active", true)
     .order("created_at").range(Number(body.offset) || 0, (Number(body.offset) || 0) + Math.min(Number(body.limit) || 5, 10) - 1);
   if (body.property_id) q = q.eq("id", body.property_id);
+  // Rescrierea descrierii rămâne doar pentru anunțurile importate automat.
+  if (!(body.all && body.tags_only)) q = q.not("migrated_from_prospect_id", "is", null);
   const { data: props } = await q;
   const results: unknown[] = [];
   for (const p of props ?? []) {
