@@ -1,4 +1,5 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,6 +50,9 @@ export default function PropertyManager() {
   // Pagination
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState<PageSize>(25);
+
+  // Social Engine status per proprietate
+  const [socialStatus, setSocialStatus] = useState<Record<string, string>>({});
 
   // Editor dialog
   const [editorOpen, setEditorOpen] = useState(false);
@@ -257,6 +261,20 @@ export default function PropertyManager() {
     </div>
   );
 
+  useEffect(() => {
+    const ids = rows.map((r) => r.id);
+    if (!ids.length) return;
+    supabase.from("social_posts").select("property_id,status").in("property_id", ids).then(({ data }) => {
+      const rank: Record<string, number> = { draft: 1, scheduled: 2, posted: 3 };
+      const m: Record<string, string> = {};
+      for (const r of data ?? []) {
+        if (!r.property_id) continue;
+        if ((rank[r.status] ?? 0) > (rank[m[r.property_id]] ?? 0)) m[r.property_id] = r.status;
+      }
+      setSocialStatus(m);
+    });
+  }, [rows]);
+
   return (
     <>
       <AdminPageShell
@@ -330,6 +348,7 @@ export default function PropertyManager() {
                     <PropertyTableRow
                       key={property.id}
                       property={property}
+                      socialStatus={socialStatus[property.id]}
                       labels={rowLabels}
                       isDeleting={isDeletingId === property.id}
                       onEdit={openEdit}

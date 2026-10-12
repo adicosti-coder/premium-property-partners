@@ -25,6 +25,7 @@ interface Labels {
 }
 
 interface Props {
+  socialStatus?: string;
   property: PropertyRow;
   labels: Labels;
   isDeleting: boolean;
@@ -36,6 +37,7 @@ interface Props {
 export function PropertyTableRow({
   property,
   labels,
+  socialStatus,
   isDeleting,
   onEdit,
   onDelete,
@@ -44,7 +46,14 @@ export function PropertyTableRow({
   return (
     <TableRow className={!property.is_active ? "opacity-50" : ""}>
       <TableCell className="text-muted-foreground">{property.display_order}</TableCell>
-      <TableCell className="font-medium max-w-[200px] truncate">{property.name}</TableCell>
+      <TableCell className="font-medium max-w-[200px]">
+        <span className="block truncate">{property.name}</span>
+        {socialStatus && (
+          <span className={`mt-1 inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold ${socialStatus === "posted" ? "bg-primary text-primary-foreground" : socialStatus === "scheduled" ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground"}`}>
+            Social: {socialStatus === "posted" ? "Posted" : socialStatus === "scheduled" ? "Scheduled" : "Draft"}
+          </span>
+        )}
+      </TableCell>
       <TableCell className="text-muted-foreground max-w-[150px] truncate">
         {property.location}
       </TableCell>
