@@ -554,6 +554,30 @@ export type Database = {
         }
         Relationships: []
       }
+      app_settings: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+          updated_at?: string
+          value?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       article_votes: {
         Row: {
           created_at: string
@@ -9274,6 +9298,54 @@ export type Database = {
           status?: string
           title?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      social_posts: {
+        Row: {
+          caption: string
+          created_at: string
+          id: string
+          image_url: string | null
+          last_error: string | null
+          posted_to: string[]
+          scheduled_at: string | null
+          source_url: string
+          status: string
+          title: string
+          type: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          caption?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          last_error?: string | null
+          posted_to?: string[]
+          scheduled_at?: string | null
+          source_url: string
+          status?: string
+          title: string
+          type: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          caption?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          last_error?: string | null
+          posted_to?: string[]
+          scheduled_at?: string | null
+          source_url?: string
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }

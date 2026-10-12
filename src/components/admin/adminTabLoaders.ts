@@ -82,6 +82,7 @@ const loaders: Record<string, Loader> = {
   "andrei-training-lab": () => import("@/components/admin/AndreiTrainingLab"),
   "social-drafts": () => import("@/components/admin/SocialPostDraftsPanel"),
   "social-posts": () => import("@/components/admin/SocialPublishedPosts"),
+  "social-engine": () => import("@/components/admin/SocialEngine"),
   "whatsapp-andrei": () => import("@/components/admin/WhatsappAgentInbox"),
   "whatsapp-test": () => import("@/components/admin/WhatsAppTestSendPanel"),
   "whatsapp-queue": () => import("@/components/admin/WhatsappOutboundQueue"),
