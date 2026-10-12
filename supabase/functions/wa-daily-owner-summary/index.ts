@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const since = new Date(Date.now() - 864e5).toISOString();
 
-  const [sent, pending, failed, inbound, published, detected, requests] = await Promise.all([
+  const [sent, pending, failed, inbound, published, detected, requests, imgLogs] = await Promise.all([
     sb.from("wa_outbound_queue").select("id", { count: "exact", head: true }).gte("sent_at", since),
     sb.from("wa_outbound_queue").select("id", { count: "exact", head: true }).eq("status", "pending"),
     sb.from("wa_outbound_queue").select("last_error").eq("status", "failed").gte("updated_at", since).limit(200),
@@ -37,7 +37,26 @@ Deno.serve(async (req) => {
     sb.from("prospect_listings").select("id", { count: "exact", head: true }).gte("published_at", since),
     sb.from("prospect_listings").select("id", { count: "exact", head: true }).gte("created_at", since),
     sb.from("wa_publish_consents").select("id", { count: "exact", head: true }).gte("created_at", since),
+    sb.from("admin_audit_log").select("details").eq("action", "gallery_image_filter").gte("created_at", since).limit(500),
   ]);
+  const REASON_RO: Record<string, string> = {
+    ai_logo: "logo/reclamă", ai_map: "hartă", ai_other: "grafic/text/fără legătură", blank_black: "neagră",
+    blank_uniform: "goală/uniformă", corrupt: "coruptă", too_small_or_corrupt: "coruptă/prea mică", too_small: "rezoluție prea mică",
+    not_image: "nu e imagine",
+  };
+  let imgKept = 0, imgDropped = 0;
+  const imgReasons: Record<string, number> = {};
+  for (const l of imgLogs.data ?? []) {
+    const d = (l as any).details ?? {};
+    imgKept += Number(d.kept) || 0;
+    for (const x of d.dropped ?? []) {
+      imgDropped++;
+      const r = String(x.reason ?? "");
+      const label = REASON_RO[r] ?? (r.startsWith("http_") ? "link indisponibil" : r || "necunoscut");
+      imgReasons[label] = (imgReasons[label] ?? 0) + 1;
+    }
+  }
+  const imgLines = Object.entries(imgReasons).sort((a, b) => b[1] - a[1]).map(([k, v]) => `   ↳ ${k}: ${v}`);
 
   let yes = 0, no = 0, questions = 0, other = 0;
   for (const m of inbound.data ?? []) {
@@ -57,6 +76,8 @@ Deno.serve(async (req) => {
     `📤 Mesaje trimise din coadă: ${sent.count ?? 0}`,
     `💬 Răspunsuri primite: ${yes + no + questions + other} (DA: ${yes} · Refuz: ${no} · Întrebări: ${questions} · altele: ${other})`,
     `🏠 Anunțuri publicate cu succes: ${published.count ?? 0}`,
+    `🖼️ Galerii verificate: ${(imgLogs.data ?? []).length} · poze păstrate: ${imgKept} · excluse: ${imgDropped}`,
+    ...imgLines,
     `⏳ Rămase în coadă: ${pending.count ?? 0}`,
     `⚠️ Erori Meta: ${(failed.data ?? []).length}`,
     ...errLines,
