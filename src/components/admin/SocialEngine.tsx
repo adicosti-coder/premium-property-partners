@@ -153,7 +153,7 @@ export default function SocialEngine() {
       .from("app_settings")
       .upsert({ key: "webhook_url", value: webhookUrl }, { onConflict: "key" });
     if (error) {
-      toast({ title: "Eroare", description: "Nu s-a putut salva URL-ul webhook.", variant: "destructive" });
+      toast({ title: "Eroare", description: "Nu s-a putut salva URL-ul webhook Make.com.", variant: "destructive" });
     } else {
       setSettingsOpen(false);
       toast({ title: "Salvat", description: "URL-ul webhook Make.com a fost actualizat." });
@@ -446,7 +446,7 @@ export default function SocialEngine() {
                 <p className="text-sm text-muted-foreground">
                   Configurează un scenariu Make.com cu un <strong>declanșator Webhook</strong>, apoi lipește URL-ul mai jos.
                 </p>
-                <Label htmlFor="webhook">Webhook URL</Label>
+                <Label htmlFor="webhook">Webhook Make.com URL</Label>
                 <Input id="webhook" placeholder="https://hook.eu1.make.com/..." value={webhookUrl} onChange={(e) => setWebhookUrl(e.target.value)} />
                 <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={saveWebhookUrl}>Salvează</Button>
               </div>

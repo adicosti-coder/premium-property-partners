@@ -27,3 +27,4 @@
 - Social drafts match published gallery captions by canonical image path, never index — avoids wrong captions.
 - Explicit all-property backfills enrich manual listings too, preserve source copy, and resolve image URLs — avoids missing photos and lost facts.
 <!-- LOVABLE:END -->
+- Social Engine (`/admin/social-engine`) sends `social_posts` to the Make.com webhook only server-side via `process-scheduled-posts` (orchestrator */5, atomic claim, failure → draft with last_error, no auto-retry); tables are admin-only RLS — avoids browser CORS/no-cors silent failures and duplicate sends.
