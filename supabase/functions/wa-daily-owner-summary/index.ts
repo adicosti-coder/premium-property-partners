@@ -39,6 +39,24 @@ Deno.serve(async (req) => {
     sb.from("wa_publish_consents").select("id", { count: "exact", head: true }).gte("created_at", since),
     sb.from("admin_audit_log").select("details").eq("action", "gallery_image_filter").gte("created_at", since).limit(500),
   ]);
+  // Analytics anunțuri: vizite (property_views) + clicuri pe linkurile anunțurilor (cta_analytics).
+  const [viewsRes, clicksRes] = await Promise.all([
+    sb.from("property_views").select("property_id").gte("viewed_at", since).limit(20000),
+    sb.from("cta_analytics").select("id", { count: "exact", head: true })
+      .in("cta_type", ["listing_cazare_click", "listing_details_click", "listing_contact_click"]).gte("created_at", since),
+  ]);
+  const viewRows = (viewsRes.data ?? []) as Array<{ property_id: string | null }>;
+  const viewCounts: Record<string, number> = {};
+  for (const v of viewRows) if (v.property_id) viewCounts[v.property_id] = (viewCounts[v.property_id] ?? 0) + 1;
+  const top = Object.entries(viewCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  let topLines: string[] = [];
+  if (top.length) {
+    const { data: props } = await sb.from("properties").select("id, name").in("id", top.map(([id]) => id));
+    const names = new Map((props ?? []).map((p: any) => [String(p.id), String(p.name ?? "Anunț")]));
+    topLines = top.map(([id, n], i) => `   ${i + 1}. ${names.get(id) ?? "Anunț"} — ${n} accesări`);
+  }
+  if (viewsRes.error) console.error("[digest] views", viewsRes.error.message);
+  if (clicksRes.error) console.error("[digest] clicks", clicksRes.error.message);
   const REASON_RO: Record<string, string> = {
     ai_logo: "logo/reclamă", ai_map: "hartă", ai_other: "grafic/text/fără legătură", blank_black: "neagră",
     blank_uniform: "goală/uniformă", corrupt: "coruptă", too_small_or_corrupt: "coruptă/prea mică", too_small: "rezoluție prea mică",
@@ -76,6 +94,8 @@ Deno.serve(async (req) => {
     `📤 Mesaje trimise din coadă: ${sent.count ?? 0}`,
     `💬 Răspunsuri primite: ${yes + no + questions + other} (DA: ${yes} · Refuz: ${no} · Întrebări: ${questions} · altele: ${other})`,
     `🏠 Anunțuri publicate cu succes: ${published.count ?? 0}`,
+    `📈 Analytics anunțuri: ${viewRows.length} vizite · ${clicksRes.count ?? 0} click-uri pe linkuri`,
+    ...(topLines.length ? [`🏆 Top 3 cele mai vizitate:`, ...topLines] : [`🏆 Top 3: nicio vizită înregistrată`]),
     `🖼️ Galerii verificate: ${(imgLogs.data ?? []).length} · poze păstrate: ${imgKept} · excluse: ${imgDropped}`,
     ...imgLines,
     `⏳ Rămase în coadă: ${pending.count ?? 0}`,
