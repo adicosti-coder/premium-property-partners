@@ -374,7 +374,9 @@ Deno.serve(async (req) => {
         finalTitle = String(insp.clean_title).substring(0, 200);
         finalFull = String(insp.clean_description);
         finalShort = finalFull.replace(/^###.*$/gm, "").replace(/[*_`#>]/g, "").replace(/\s+/g, " ").trim().substring(0, 220);
-      }
+    }
+    // Nu oferim exclusivitate proprietarilor → titlul nu poate pretinde asta.
+    finalTitle = finalTitle.replace(/^\s*(exclusivitate|exclusiv)\s*(realtrust)?\s*[:\-–|]\s*/i, "").trim() || finalTitle;
     }
 
     finalImages = Array.from(new Set(
