@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Copy, Check, Trash2, Download } from "lucide-react";
+import { Copy, Check, Trash2, Download, Send, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,27 @@ export default function SocialPostDraftsPanel() {
     const { error } = await supabase.from("social_post_drafts").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
     if (error) return toast.error("Nu s-a salvat");
     qc.invalidateQueries({ queryKey: ["social_post_drafts"] });
+  };
+  const [publishingId, setPublishingId] = useState<string | null>(null);
+  const publishNow = async (draft: Draft) => {
+    setPublishingId(draft.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("social-autopost-drain", { body: { draft_id: draft.id } });
+      if (error) throw error;
+      const results = (data?.results ?? []) as { platform: string; ok: boolean; error?: string }[];
+      if (results.length && results.every((r) => r.ok)) {
+        toast.success("Postarea a fost publicată pe Facebook și Instagram.");
+      } else if (results.length) {
+        toast.error(`Postare eșuată: ${results.filter((r) => !r.ok).map((r) => `${r.platform}: ${r.error}`).join(" | ")}`);
+      } else {
+        toast.info(data?.skipped ? `Sărit: ${data.skipped}` : "Postarea nu a putut fi trimisă.");
+      }
+    } catch {
+      toast.error("Publicarea nu a putut fi pornită. Încearcă din nou.");
+    } finally {
+      setPublishingId(null);
+      qc.invalidateQueries({ queryKey: ["social_post_drafts"] });
+    }
   };
   const remove = async (id: string) => {
     const { error } = await supabase.from("social_post_drafts").delete().eq("id", id);
@@ -153,6 +175,12 @@ export default function SocialPostDraftsPanel() {
             })()}
             <div className="flex flex-wrap gap-2">
               <Button size="sm" className="min-h-12" aria-label={`Copiază postarea pentru ${d.title}`} onClick={() => copy(d.readableText)}><Copy className="h-4 w-4 mr-1" />Copiază textul</Button>
+              {d.status !== "posted" && (
+                <Button size="sm" className="min-h-12" disabled={publishingId === d.id || d.status === "posting"}
+                  aria-label={`Publică acum pe Facebook și Instagram postarea pentru ${d.title}`} onClick={() => publishNow(d)}>
+                  {publishingId === d.id ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Send className="h-4 w-4 mr-1" />}Publică acum
+                </Button>
+              )}
               <Button size="sm" variant="outline" className="min-h-12" aria-label={`Descarcă toate fotografiile pentru ${d.title}`} onClick={() => downloadAll(d.photos, d.title)}><Download className="h-4 w-4 mr-1" />Descarcă toate pozele</Button>
               {d.status !== "posted" && <Button size="sm" variant="outline" className="min-h-12" onClick={() => setStatus(d.id, "posted")}><Check className="h-4 w-4 mr-1" />Marchează postat</Button>}
               <Button size="sm" variant="ghost" className="min-h-12" onClick={() => remove(d.id)} aria-label="Șterge draftul"><Trash2 className="h-4 w-4" /></Button>
