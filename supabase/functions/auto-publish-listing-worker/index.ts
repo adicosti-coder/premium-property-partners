@@ -387,6 +387,11 @@ Deno.serve(async (req) => {
       for (const c of checks) if (c.ok && c.caption) captionByUrl.set(c.url, c.caption);
       const dropped = checks.filter((c) => !c.ok);
       if (dropped.length) console.log(`[worker] imagini excluse ${prospect.id}: ${dropped.map((d) => d.reason).join(",")}`);
+      await supabase.from("admin_audit_log").insert({
+        actor_label: "auto-publish-listing-worker", action: "gallery_image_filter",
+        entity_type: "prospect_listing", entity_id: prospect.id, severity: "info",
+        details: { total: checks.length, kept: kept.length, dropped: dropped.map((d) => ({ url: d.url, reason: d.reason })) },
+      }).then(() => {}, () => {});
       finalImages = kept;
     }
 
