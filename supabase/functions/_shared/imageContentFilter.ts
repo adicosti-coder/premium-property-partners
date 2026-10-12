@@ -4,7 +4,10 @@
 // La orice eroare de rețea/AI păstrăm imaginea (nu blocăm publicarea), dar le marcăm în rezultat.
 import { Image } from "https://deno.land/x/imagescript@1.2.17/mod.ts";
 
-export interface ImageCheck { url: string; ok: boolean; reason: string; caption?: string }
+export interface ImageCheck { url: string; ok: boolean; reason: string; caption?: string; tags?: string[] }
+
+/** Dotări care se pot vedea clar într-o poză. Vocabular fix → bifare deterministă. */
+export const VISUAL_TAGS = ["centrala_termica", "aer_conditionat", "balcon", "parcare", "lift", "masina_spalat", "masina_vase", "mobilat", "cada", "dus"] as const;
 
 async function pixelCheck(url: string): Promise<{ ok: boolean; reason: string }> {
   let bytes: Uint8Array;
@@ -41,8 +44,8 @@ async function pixelCheck(url: string): Promise<{ ok: boolean; reason: string }>
   return { ok: true, reason: "ok" };
 }
 
-async function classifyWithAI(urls: string[]): Promise<Map<string, { label: string; caption: string }>> {
-  const out = new Map<string, { label: string; caption: string }>();
+async function classifyWithAI(urls: string[]): Promise<Map<string, { label: string; caption: string; tags: string[] }>> {
+  const out = new Map<string, { label: string; caption: string; tags: string[] }>();
   const key = Deno.env.get("LOVABLE_API_KEY");
   if (!key || !urls.length) return out;
   try {
@@ -53,7 +56,8 @@ async function classifyWithAI(urls: string[]): Promise<Map<string, { label: stri
         "map (hartă/plan de localizare generic), other (grafic, text, document, imagine fără legătură). " +
         "Planurile de apartament (schițe cu camere) sunt property. Pentru fiecare imagine scrie și o descriere scurtă (o propoziție, max 14 cuvinte) în limba română a camerei/zonei vizibile " +
         "(ex. dormitor, bucătărie, baie, living, balcon, vedere exterior), fără nume de firme, prețuri sau numere de telefon. " +
-        "Răspunde DOAR JSON: {\"labels\":[\"property\",...],\"captions\":[\"Dormitor luminos cu pat dublu\",...]}",
+        "Pentru fiecare imagine listează și dotările vizibile CLAR (fără presupuneri), doar din: " + VISUAL_TAGS.join(", ") + ". " +
+        "Răspunde DOAR JSON: {\"labels\":[\"property\",...],\"captions\":[\"Dormitor luminos cu pat dublu\",...],\"tags\":[[\"aer_conditionat\"],[]...]}",
     }];
     for (const u of urls) content.push({ type: "image_url", image_url: { url: u } });
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -68,8 +72,12 @@ async function classifyWithAI(urls: string[]): Promise<Map<string, { label: stri
     const parsed = JSON.parse(raw) ?? {};
     const labels = (parsed.labels ?? []) as string[];
     const caps = (parsed.captions ?? []) as string[];
+    const tagRows = (parsed.tags ?? []) as unknown[];
+    const allowed = new Set<string>(VISUAL_TAGS);
     urls.forEach((u, i) => {
-      if (labels[i]) out.set(u, { label: String(labels[i]).toLowerCase(), caption: String(caps[i] ?? "").trim().slice(0, 160) });
+      const row = Array.isArray(tagRows[i]) ? (tagRows[i] as unknown[]) : [];
+      const tags = Array.from(new Set(row.map((t) => String(t).toLowerCase().trim()).filter((t) => allowed.has(t))));
+      if (labels[i]) out.set(u, { label: String(labels[i]).toLowerCase(), caption: String(caps[i] ?? "").trim().slice(0, 160), tags });
     });
   } catch (e) {
     console.warn("[imageContentFilter] AI classify failed", (e as Error)?.message);
@@ -89,7 +97,7 @@ export async function filterPropertyImages(urls: string[]): Promise<{ kept: stri
       const l = labels.get(c.url);
       if (!l) continue;
       if (l.label !== "property") { c.ok = false; c.reason = `ai_${l.label}`; }
-      else if (l.caption) c.caption = l.caption;
+      else { if (l.caption) c.caption = l.caption; if (l.tags.length) c.tags = l.tags; }
     }
   }
   const kept = checks.filter((c) => c.ok).map((c) => c.url);

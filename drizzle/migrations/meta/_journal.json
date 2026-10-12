@@ -687,6 +687,13 @@
       "when": 1791808426255,
       "tag": "0097_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "7",
+      "when": 1791811753003,
+      "tag": "0098_social_post_drafts",
+      "breakpoints": true
     }
   ]
 }

@@ -382,9 +382,13 @@ Deno.serve(async (req) => {
     ));
     // Conținut: fără fișiere corupte/negre, logo-uri de magazine, reclame sau hărți.
     const captionByUrl = new Map<string, string>();
+    const visualTags = new Set<string>();
     if (finalImages.length) {
       const { kept, checks } = await filterPropertyImages(finalImages);
-      for (const c of checks) if (c.ok && c.caption) captionByUrl.set(c.url, c.caption);
+      for (const c of checks) if (c.ok) {
+        if (c.caption) captionByUrl.set(c.url, c.caption);
+        for (const t of c.tags ?? []) visualTags.add(t);
+      }
       const dropped = checks.filter((c) => !c.ok);
       if (dropped.length) console.log(`[worker] imagini excluse ${prospect.id}: ${dropped.map((d) => d.reason).join(",")}`);
       await supabase.from("admin_audit_log").insert({
@@ -494,6 +498,7 @@ Deno.serve(async (req) => {
       source_platform: platform,
       source_url: null,
     };
+    applyVisualTags(propertyData, visualTags);
 
     // Re-publicare: actualizăm proprietatea existentă (păstrăm slug-ul/URL-ul
     // și o reactivăm), în loc să inserăm una nouă.
@@ -547,6 +552,18 @@ Deno.serve(async (req) => {
         property_id: inserted.id,
         published_at: new Date().toISOString(),
       }).eq("id", consentRow.id);
+    }
+
+    // Draft postare Facebook/Instagram (doar în Admin; nu se postează automat).
+    if (consentRow && inserted.slug) {
+      try {
+        await supabase.from("social_post_drafts").upsert({
+          property_id: inserted.id, property_slug: inserted.slug, title: inserted.name,
+          post_text: buildSocialPost({ title: inserted.name, slug: inserted.slug, zone: prospect.zone, rooms: prospect.rooms, size: prospect.size, price: prospect.price, currency: prospect.currency, isRent, tags: visualTags }),
+          images: pickSocialImages(finalImages, captionsList),
+          status: "draft", updated_at: new Date().toISOString(),
+        }, { onConflict: "property_id" });
+      } catch (e) { console.warn("[auto-publish] social draft failed:", (e as Error)?.message); }
     }
 
     // Proprietarul primește automat link-ul direct către pagina publicată.
@@ -614,3 +631,62 @@ Deno.serve(async (req) => {
     return safeJson({ success: false, error: message });
   }
 });
+
+
+const TAG_LABELS: Record<string, string> = {
+  centrala_termica: "Centrală termică proprie", aer_conditionat: "Aer condiționat", balcon: "Balcon",
+  parcare: "Loc de parcare", lift: "Lift", masina_spalat: "Mașină de spălat", masina_vase: "Mașină de spălat vase",
+  mobilat: "Mobilat", cada: "Cadă", dus: "Duș",
+};
+
+/** Bifează în specificații doar dotările văzute clar în poze; nu șterge nimic existent. */
+function applyVisualTags(data: Record<string, any>, tags: Set<string>) {
+  if (!tags.size) return;
+  const amenities = new Set<string>(Array.isArray(data.amenities) ? data.amenities : []);
+  for (const t of tags) if (TAG_LABELS[t]) amenities.add(TAG_LABELS[t]);
+  data.amenities = Array.from(amenities);
+  if (tags.has("aer_conditionat")) data.has_ac = true;
+  if (tags.has("lift")) data.has_elevator = true;
+  if (tags.has("centrala_termica") && !data.heating_type) data.heating_type = "Centrală proprie";
+  if (tags.has("balcon") && !(Number(data.balconies) > 0)) data.balconies = 1;
+  if (tags.has("parcare") && !data.parking) data.parking = "Loc de parcare";
+}
+
+const RENDER_OBJ = "/storage/v1/object/public/";
+function optimizedSocialUrl(u: string): string {
+  if (!u.includes(RENDER_OBJ)) return u;
+  return `${u.split("?")[0].replace(RENDER_OBJ, "/storage/v1/render/image/public/")}?width=1080&quality=80&resize=contain`;
+}
+
+/** Coperta + până la 2 poze cu încăperi diferite (după descrierea AI). */
+function pickSocialImages(images: string[], captions: string[]): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  images.forEach((u, i) => {
+    if (out.length >= 3 || !u) return;
+    const room = (captions[i] || "").toLowerCase().split(/\s+/)[0] || `#${i}`;
+    if (i > 0 && seen.has(room)) return;
+    seen.add(room); out.push(u);
+  });
+  for (const u of images) { if (out.length >= 3) break; if (u && !out.includes(u)) out.push(u); }
+  return out.map(optimizedSocialUrl);
+}
+
+function buildSocialPost(p: { title: string; slug: string; zone: string | null; rooms: number | null; size: number | null; price: number | null; currency: string | null; isRent: boolean; tags: Set<string> }): string {
+  const where = p.zone ? `${p.zone}, Timișoara` : "Timișoara";
+  const facts = [p.rooms ? `${p.rooms} ${p.rooms === 1 ? "cameră" : "camere"}` : null, p.size ? `${p.size} mp` : null].filter(Boolean).join(" · ");
+  const sym = String(p.currency || "EUR").toUpperCase() === "RON" ? "lei" : "€";
+  const price = p.price ? `${Math.round(Number(p.price)).toLocaleString("ro-RO")} ${sym}${p.isRent ? "/lună" : ""}` : null;
+  const extras = Array.from(p.tags).map((t) => TAG_LABELS[t]).filter(Boolean).slice(0, 4);
+  return [
+    `${p.isRent ? "🔑 De închiriat" : "🏡 De vânzare"} — ${p.title}`,
+    `📍 ${where}`,
+    facts ? `📐 ${facts}` : null,
+    price ? `💶 ${price}` : null,
+    extras.length ? `✅ ${extras.join(" · ")}` : null,
+    "",
+    `Detalii și toate pozele: https://realtrust.ro/proprietate/${p.slug}`,
+    "",
+    `#Timisoara #imobiliare${p.zone ? ` #${p.zone.replace(/[^\p{L}\p{N}]/gu, "")}` : ""} #RealTrust`,
+  ].filter((l) => l !== null).join("\n");
+}

@@ -110,6 +110,7 @@ const PiataImobiliara = lazyWithRetry(() => import("./pages/PiataImobiliara"));
 const EvaluareGratuita = lazyWithRetry(() => import("./pages/EvaluareGratuita"));
 const AnalizaAnunt = lazyWithRetry(() => import("./pages/AnalizaAnunt"));
 const AnalizaGratuita = lazyWithRetry(() => import("./pages/AnalizaGratuita"));
+const ConditiiProprietari = lazyWithRetry(() => import("./pages/ConditiiProprietari"));
 const HartaPreturi = lazyWithRetry(() => import("./pages/HartaPreturi"));
 const AlerteOportunitati = lazyWithRetry(() => import("./pages/AlerteOportunitati"));
 const Investitori = lazyWithRetry(() => import("./pages/Investitori"));
@@ -322,6 +323,7 @@ const App = () => (
                     <Route path="/evaluare" element={<EvaluationRedirect />} />
                     <Route path="/analiza-anunt" element={<AnalizaAnunt />} />
                     <Route path="/analiza-gratuita" element={<AnalizaGratuita />} />
+                    <Route path="/conditii-proprietari" element={<ConditiiProprietari />} />
                     <Route path="/harta-preturi" element={<HartaPreturi />} />
                     <Route path="/alerte-oportunitati" element={<AlerteOportunitati />} />
                     <Route path="/investitori" element={<Investitori />} />
