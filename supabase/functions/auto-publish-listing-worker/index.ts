@@ -12,6 +12,7 @@
  */
 
 import { isValidPropertyImageUrl } from "../_shared/propertyImageFilter.ts";
+import { filterPropertyImages } from "../_shared/imageContentFilter.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { ownerPublishedText, sendWaText } from "../_shared/listingInspection.ts";
 import { loadImportConfig, sanitizeListingText, type ImportConfigRow } from "../_shared/listingSanitizer.ts";
@@ -379,6 +380,13 @@ Deno.serve(async (req) => {
     finalImages = Array.from(new Set(
       (finalImages || []).filter((u): u is string => typeof u === "string").map((u) => u.trim()).filter(isValidPropertyImageUrl),
     ));
+    // Conținut: fără fișiere corupte/negre, logo-uri de magazine, reclame sau hărți.
+    if (finalImages.length) {
+      const { kept, checks } = await filterPropertyImages(finalImages);
+      const dropped = checks.filter((c) => !c.ok);
+      if (dropped.length) console.log(`[worker] imagini excluse ${prospect.id}: ${dropped.map((d) => d.reason).join(",")}`);
+      finalImages = kept;
+    }
 
     if (finalImages.length === 0) {
       await supabase.from("prospect_listings").update({
