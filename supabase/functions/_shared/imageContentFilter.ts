@@ -4,7 +4,7 @@
 // La orice eroare de rețea/AI păstrăm imaginea (nu blocăm publicarea), dar le marcăm în rezultat.
 import { Image } from "https://deno.land/x/imagescript@1.2.17/mod.ts";
 
-export interface ImageCheck { url: string; ok: boolean; reason: string }
+export interface ImageCheck { url: string; ok: boolean; reason: string; caption?: string }
 
 async function pixelCheck(url: string): Promise<{ ok: boolean; reason: string }> {
   let bytes: Uint8Array;
@@ -41,8 +41,8 @@ async function pixelCheck(url: string): Promise<{ ok: boolean; reason: string }>
   return { ok: true, reason: "ok" };
 }
 
-async function classifyWithAI(urls: string[]): Promise<Map<string, string>> {
-  const out = new Map<string, string>();
+async function classifyWithAI(urls: string[]): Promise<Map<string, { label: string; caption: string }>> {
+  const out = new Map<string, { label: string; caption: string }>();
   const key = Deno.env.get("LOVABLE_API_KEY");
   if (!key || !urls.length) return out;
   try {
@@ -51,7 +51,9 @@ async function classifyWithAI(urls: string[]): Promise<Map<string, string>> {
       text: "Pentru fiecare imagine (în ordine, index de la 0) răspunde cu o categorie: " +
         "property (interior/exterior/clădire/vedere a proprietății imobiliare), logo (logo/reclamă de magazin sau firmă, ex. Kaufland, Lidl, Profi), " +
         "map (hartă/plan de localizare generic), other (grafic, text, document, imagine fără legătură). " +
-        "Planurile de apartament (schițe cu camere) sunt property. Răspunde DOAR JSON: {\"labels\":[\"property\",...]}",
+        "Planurile de apartament (schițe cu camere) sunt property. Pentru fiecare imagine scrie și o descriere scurtă (o propoziție, max 14 cuvinte) în limba română a camerei/zonei vizibile " +
+        "(ex. dormitor, bucătărie, baie, living, balcon, vedere exterior), fără nume de firme, prețuri sau numere de telefon. " +
+        "Răspunde DOAR JSON: {\"labels\":[\"property\",...],\"captions\":[\"Dormitor luminos cu pat dublu\",...]}",
     }];
     for (const u of urls) content.push({ type: "image_url", image_url: { url: u } });
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -63,8 +65,12 @@ async function classifyWithAI(urls: string[]): Promise<Map<string, string>> {
     if (!r.ok) return out;
     const j = await r.json();
     const raw = String(j?.choices?.[0]?.message?.content ?? "").replace(/```json|```/g, "");
-    const labels = (JSON.parse(raw)?.labels ?? []) as string[];
-    urls.forEach((u, i) => { if (labels[i]) out.set(u, String(labels[i]).toLowerCase()); });
+    const parsed = JSON.parse(raw) ?? {};
+    const labels = (parsed.labels ?? []) as string[];
+    const caps = (parsed.captions ?? []) as string[];
+    urls.forEach((u, i) => {
+      if (labels[i]) out.set(u, { label: String(labels[i]).toLowerCase(), caption: String(caps[i] ?? "").trim().slice(0, 160) });
+    });
   } catch (e) {
     console.warn("[imageContentFilter] AI classify failed", (e as Error)?.message);
   }
@@ -81,10 +87,45 @@ export async function filterPropertyImages(urls: string[]): Promise<{ kept: stri
     const labels = await classifyWithAI(candidates.slice(i, i + 12));
     for (const c of checks) {
       const l = labels.get(c.url);
-      if (l && l !== "property") { c.ok = false; c.reason = `ai_${l}`; }
+      if (!l) continue;
+      if (l.label !== "property") { c.ok = false; c.reason = `ai_${l.label}`; }
+      else if (l.caption) c.caption = l.caption;
     }
   }
   const kept = checks.filter((c) => c.ok).map((c) => c.url);
   // Siguranță: dacă AI-ul ar respinge tot, dar există poze valide ca pixeli, nu golim galeria pe baza AI.
   return { kept, checks };
+}
+
+/** Descriere structurată din textul original + descrierile pozelor. Returnează null la eroare. */
+export async function synthesizeDescription(input: {
+  title: string; originalText: string; captions: string[]; facts: Record<string, unknown>;
+}): Promise<string | null> {
+  const key = Deno.env.get("LOVABLE_API_KEY");
+  if (!key) return null;
+  try {
+    const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: "Ești redactor imobiliar în Timișoara. Scrii în română, profesionist, fără exagerări. " +
+            "Folosește DOAR informații din textul anunțului, fapte și descrierile pozelor; nu inventa suprafețe, prețuri, zone sau dotări. " +
+            "Fără telefoane, e-mailuri, nume de agenții sau link-uri. Răspunde în Markdown cu exact secțiunile: " +
+            "## Descriere generală\n## Dotări & Finisaje\n## Compartimentare\n(150-300 cuvinte în total, liste cu - unde e potrivit)." },
+          { role: "user", content: `Titlu: ${input.title}\nFapte: ${JSON.stringify(input.facts)}\n\nText original:\n${input.originalText.slice(0, 5000)}\n\nDescrierile pozelor:\n${input.captions.map((c) => `- ${c}`).join("\n")}` },
+        ],
+      }),
+      signal: AbortSignal.timeout(45000),
+    });
+    if (!r.ok) return null;
+    const j = await r.json();
+    const txt = String(j?.choices?.[0]?.message?.content ?? "").replace(/^```(markdown)?|```$/g, "").trim();
+    if (txt.length < 120 || !txt.includes("Compartimentare")) return null;
+    return txt.replace(/(\+?40|0)7\d[\d\s.-]{7,}/g, "");
+  } catch (e) {
+    console.warn("[imageContentFilter] synthesize failed", (e as Error)?.message);
+    return null;
+  }
 }
