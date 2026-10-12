@@ -93,7 +93,7 @@ export default function BlogAutopilotDrafts() {
 
   const approve = useMutation({
     mutationFn: async ({ id, mode, when }: { id: string; mode: "now" | "schedule"; when?: string }) => {
-      const patch: Record<string, unknown> = { ai_pending_review: false };
+      const patch: { ai_pending_review: boolean; scheduled_for?: string } = { ai_pending_review: false };
       if (mode === "now") patch.scheduled_for = new Date(Date.now() + 60_000).toISOString();
       else if (when) patch.scheduled_for = new Date(when).toISOString();
       const { error } = await supabase.from("blog_articles").update(patch).eq("id", id);
