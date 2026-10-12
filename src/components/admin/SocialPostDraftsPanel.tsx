@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { describeSocialImage, readableSocialPost } from "@/lib/socialDraftContent";
+import { describeSocialImage, facebookPostOptimization, readableSocialPost } from "@/lib/socialDraftContent";
 import { resolvePropertyImageUrl } from "@/utils/resolvePropertyImageUrl";
 
 type Draft = { id: string; property_id: string; title: string | null; post_text: string; images: string[]; status: string; created_at: string };
