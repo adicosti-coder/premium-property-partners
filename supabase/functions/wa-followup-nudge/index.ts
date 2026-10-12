@@ -144,6 +144,22 @@ Deno.serve(async (req) => {
         continue;
       }
 
+      // 1b. Anunț inactiv, expirat, de agenție sau mai vechi de 10 zile → nu mai trimitem memento
+      //     (worker-ul l-ar anula oricum ca „stale”, iar proprietarul ar fi deranjat degeaba).
+      if (item.prospect_listing_id) {
+        const { data: pl } = await supabase
+          .from("prospect_listings")
+          .select("is_active, lifecycle_status, seller_type, do_not_call, created_at")
+          .eq("id", item.prospect_listing_id)
+          .maybeSingle();
+        const tooOld = pl?.created_at && Date.parse(pl.created_at) < Date.now() - 10 * 86_400_000;
+        if (!pl || pl.is_active === false || pl.do_not_call || pl.seller_type === "agentie" ||
+            ["expired", "rejected", "posted"].includes(String(pl.lifecycle_status)) || tooOld) {
+          results.push({ phone, stage: stage.source, skipped: "listing_not_eligible" });
+          continue;
+        }
+      }
+
       // 2. A răspuns între timp? Verificăm TOATE conversațiile acestui număr,
       //    nu doar cea legată de mesaj — oricine a scris nu mai primește memento.
       const { data: convs } = await supabase
