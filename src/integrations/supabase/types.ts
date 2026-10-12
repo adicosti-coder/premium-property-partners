@@ -9253,6 +9253,48 @@ export type Database = {
         }
         Relationships: []
       }
+      social_engine_logs: {
+        Row: {
+          created_at: string
+          error: string | null
+          http_status: number | null
+          id: string
+          image_count: number | null
+          platform: string | null
+          post_id: string | null
+          post_title: string | null
+          response_body: string | null
+          success: boolean
+          trigger: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          http_status?: number | null
+          id?: string
+          image_count?: number | null
+          platform?: string | null
+          post_id?: string | null
+          post_title?: string | null
+          response_body?: string | null
+          success?: boolean
+          trigger?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          http_status?: number | null
+          id?: string
+          image_count?: number | null
+          platform?: string | null
+          post_id?: string | null
+          post_title?: string | null
+          response_body?: string | null
+          success?: boolean
+          trigger?: string | null
+        }
+        Relationships: []
+      }
       social_post_drafts: {
         Row: {
           created_at: string
@@ -9307,8 +9349,10 @@ export type Database = {
           created_at: string
           id: string
           image_url: string | null
+          image_urls: string[]
           last_error: string | null
           posted_to: string[]
+          property_id: string | null
           scheduled_at: string | null
           source_url: string
           status: string
@@ -9322,8 +9366,10 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          image_urls?: string[]
           last_error?: string | null
           posted_to?: string[]
+          property_id?: string | null
           scheduled_at?: string | null
           source_url: string
           status?: string
@@ -9337,8 +9383,10 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          image_urls?: string[]
           last_error?: string | null
           posted_to?: string[]
+          property_id?: string | null
           scheduled_at?: string | null
           source_url?: string
           status?: string
@@ -13151,6 +13199,10 @@ export type Database = {
       seo_release_audit_lock: {
         Args: { p_language?: string; p_url: string }
         Returns: undefined
+      }
+      social_property_image_urls: {
+        Args: { _property_id: string }
+        Returns: string[]
       }
       submit_analysis_lead: {
         Args: {
