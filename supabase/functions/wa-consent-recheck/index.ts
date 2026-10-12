@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
   const results: Record<string, unknown>[] = [];
   for (const r of rows ?? []) {
     const variants = phoneVariants(r.phone_normalized);
-    const { data: dnc } = await sb.from("whatsapp_dnc").select("id").in("phone_normalized", variants).limit(1).maybeSingle()
+    const { data: dnc } = await sb.from("wa_dnc_list").select("id").in("phone_normalized", variants).limit(1).maybeSingle()
       .then((x) => x, () => ({ data: null }));
     if (dnc) { results.push({ phone: r.phone_normalized, action: "skip_dnc" }); continue; }
     const { data: conv } = await sb.from("wa_conversations").select("id, window_expires_at")
