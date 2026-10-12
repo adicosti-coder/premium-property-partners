@@ -191,6 +191,39 @@ Răspunde STRICT JSON conform schemei.`;
   };
 }
 
+
+// Optimizare SEO deterministă înainte de salvare: titlu/meta title ≤60 cu „Timișoara”,
+// meta descriere 140–160 caractere tăiată la cuvânt, fallback din excerpt/conținut.
+const cutWords = (s: string, n: number) => {
+  const t = s.replace(/\s+/g, " ").trim();
+  if (t.length <= n) return t;
+  return t.slice(0, n + 1).replace(/\s+\S*$/, "").replace(/[\s,;:–-]+$/, "");
+};
+const stripMd = (s: string) => s.replace(/[#*_>`\[\]()!]/g, " ").replace(/\s+/g, " ").trim();
+function withCity(s: string, zone: string, max: number) {
+  let t = cutWords(s, max);
+  if (!/timi[șs]oara/i.test(t)) {
+    const suffix = " | Timișoara";
+    t = cutWords(t, max - suffix.length) + suffix;
+  }
+  if (zone && !t.toLowerCase().includes(zone.split("/")[0].toLowerCase()) && t.length + zone.length + 3 <= max) {
+    t = t.replace(/ \| Timișoara$/, "") + ` – ${zone.split("/")[0]}` + (/timi[șs]oara/i.test(t) ? "" : ", Timișoara");
+  }
+  return t;
+}
+function optimizeSeo<T extends { title: string; excerpt: string; meta_title: string; meta_description: string; content_md: string }>(a: T, zone: string): T {
+  const title = withCity(a.title || a.meta_title || "", zone, 60);
+  const metaTitle = withCity(a.meta_title || a.title || "", zone, 60);
+  let desc = (a.meta_description || "").replace(/\s+/g, " ").trim();
+  if (desc.length < 140) {
+    const extra = stripMd(`${desc} ${a.excerpt || ""} ${a.content_md.replace(/^#.*$/gm, "")}`);
+    desc = extra;
+  }
+  desc = cutWords(desc, 157);
+  if (!/[.!?]$/.test(desc)) desc = desc.replace(/[.,;:]+$/, "") + ".";
+  return { ...a, title, meta_title: metaTitle, meta_description: desc };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   const gate = await requireInternalOrAdmin(req, corsHeaders);
@@ -307,7 +340,7 @@ Deno.serve(async (req) => {
     const statsText = lines.join("\n");
     const existingNote = `Există deja ${covered.size} articole tematice în blog; articolul nou NU trebuie să repete structura sau titlurile lor.`;
 
-    const article = await generateArticle(sb, topic, statsText, existingNote);
+    const article = optimizeSeo(await generateArticle(sb, topic, statsText, existingNote), topic.zone.zone);
 
     const cleanSlug = slugify(article.slug || article.title);
     if (!cleanSlug || !article.title || !article.content_md) throw new Error("AI incomplet: lipsesc câmpuri obligatorii");
