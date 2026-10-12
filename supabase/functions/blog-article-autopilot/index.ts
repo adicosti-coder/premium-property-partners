@@ -284,11 +284,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Statistici reale pe zonă din anunțurile active
-    const { data: props } = await sb
-      .from("properties")
-      .select("location, listing_type, bedrooms, rooms, usable_area, base_price_per_night, weekend_price_per_night")
-      .eq("is_active", true).limit(1000);
     const zoneProps = (props ?? []).filter((p: any) => {
       const loc = matchZone(p.location ?? "", zones);
       return loc?.zone === topic!.zone.zone;
