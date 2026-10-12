@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import OutreachMonitorPanel from "./OutreachMonitorPanel";
 import AndreiCallsCounter from "./AndreiCallsCounter";
+import SocialPostDraftsPanel from "./SocialPostDraftsPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -173,6 +174,8 @@ export default function DailyCommandCenter() {
       </Card>
 
       <AndreiCallsCounter />
+
+      <SocialPostDraftsPanel />
 
       <OutreachMonitorPanel />
 
