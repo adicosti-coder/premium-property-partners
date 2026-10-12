@@ -80,6 +80,7 @@ const loaders: Record<string, Loader> = {
   "voice-agent": () => import("@/components/admin/VoiceAgentCommandCenter"),
   "andrei-training-lab": () => import("@/components/admin/AndreiTrainingLab"),
   "social-drafts": () => import("@/components/admin/SocialPostDraftsPanel"),
+  "social-posts": () => import("@/components/admin/SocialPublishedPosts"),
   "whatsapp-andrei": () => import("@/components/admin/WhatsappAgentInbox"),
   "whatsapp-test": () => import("@/components/admin/WhatsAppTestSendPanel"),
   "whatsapp-queue": () => import("@/components/admin/WhatsappOutboundQueue"),
