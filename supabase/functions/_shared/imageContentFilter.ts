@@ -148,3 +148,33 @@ export async function captionImages(urls: string[]): Promise<string[]> {
   }
   return out;
 }
+
+export const TAG_LABELS: Record<string, string> = {
+  centrala_termica: "Centrală termică proprie", aer_conditionat: "Aer condiționat", balcon: "Balcon",
+  parcare: "Loc de parcare", lift: "Lift", masina_spalat: "Mașină de spălat", masina_vase: "Mașină de spălat vase",
+  mobilat: "Mobilat", cada: "Cadă", dus: "Duș",
+};
+
+/** Bifează în specificații doar dotările văzute clar în poze; nu șterge nimic existent. */
+export function applyVisualTags(data: Record<string, any>, tags: Set<string>) {
+  if (!tags.size) return;
+  const amenities = new Set<string>(Array.isArray(data.amenities) ? data.amenities : []);
+  for (const t of tags) if (TAG_LABELS[t]) amenities.add(TAG_LABELS[t]);
+  data.amenities = Array.from(amenities);
+  if (tags.has("aer_conditionat")) data.has_ac = true;
+  if (tags.has("lift")) data.has_elevator = true;
+  if (tags.has("centrala_termica") && !data.heating_type) data.heating_type = "Centrală proprie";
+  if (tags.has("balcon") && !(Number(data.balconies) > 0)) data.balconies = 1;
+  if (tags.has("parcare") && !data.parking) data.parking = "Loc de parcare";
+}
+
+
+/** Dotări vizibile în poze deja aprobate (fără excluderi). */
+export async function tagImages(urls: string[]): Promise<Set<string>> {
+  const out = new Set<string>();
+  for (let i = 0; i < urls.length; i += 12) {
+    const m = await classifyWithAI(urls.slice(i, i + 12));
+    for (const v of m.values()) for (const t of v.tags) out.add(t);
+  }
+  return out;
+}

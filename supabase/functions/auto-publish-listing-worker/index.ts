@@ -12,7 +12,7 @@
  */
 
 import { isValidPropertyImageUrl } from "../_shared/propertyImageFilter.ts";
-import { filterPropertyImages, synthesizeDescription } from "../_shared/imageContentFilter.ts";
+import { filterPropertyImages, synthesizeDescription, applyVisualTags, TAG_LABELS } from "../_shared/imageContentFilter.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { ownerPublishedText, sendWaText } from "../_shared/listingInspection.ts";
 import { loadImportConfig, sanitizeListingText, type ImportConfigRow } from "../_shared/listingSanitizer.ts";
@@ -632,25 +632,6 @@ Deno.serve(async (req) => {
   }
 });
 
-
-const TAG_LABELS: Record<string, string> = {
-  centrala_termica: "Centrală termică proprie", aer_conditionat: "Aer condiționat", balcon: "Balcon",
-  parcare: "Loc de parcare", lift: "Lift", masina_spalat: "Mașină de spălat", masina_vase: "Mașină de spălat vase",
-  mobilat: "Mobilat", cada: "Cadă", dus: "Duș",
-};
-
-/** Bifează în specificații doar dotările văzute clar în poze; nu șterge nimic existent. */
-function applyVisualTags(data: Record<string, any>, tags: Set<string>) {
-  if (!tags.size) return;
-  const amenities = new Set<string>(Array.isArray(data.amenities) ? data.amenities : []);
-  for (const t of tags) if (TAG_LABELS[t]) amenities.add(TAG_LABELS[t]);
-  data.amenities = Array.from(amenities);
-  if (tags.has("aer_conditionat")) data.has_ac = true;
-  if (tags.has("lift")) data.has_elevator = true;
-  if (tags.has("centrala_termica") && !data.heating_type) data.heating_type = "Centrală proprie";
-  if (tags.has("balcon") && !(Number(data.balconies) > 0)) data.balconies = 1;
-  if (tags.has("parcare") && !data.parking) data.parking = "Loc de parcare";
-}
 
 const RENDER_OBJ = "/storage/v1/object/public/";
 function optimizedSocialUrl(u: string): string {
