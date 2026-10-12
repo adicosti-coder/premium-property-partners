@@ -4,6 +4,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { publishToMetaSocial } from "../_shared/metaSocial.ts";
+import { sendAdminText } from "../_shared/listingInspection.ts";
 import { isInternalCall, timingSafeEqual } from "../_shared/cronAuth.ts";
 
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -51,5 +52,10 @@ Deno.serve(async (req) => {
     property_id: draft.property_id, property_slug: draft.property_slug, title: draft.title,
     platform: r.platform, status: r.ok ? "posted" : "failed", external_id: r.id ?? null, error_message: r.error ?? null,
   })));
+  const line = (r: { platform: string; ok: boolean; error?: string }) => `${r.platform === "facebook" ? "Facebook" : "Instagram"}: ${r.ok ? "Postat ✅" : `Eșuat ❌ (${String(r.error || "").slice(0, 120)})`}`;
+  const msg = allOk
+    ? `✅ Postare socială PUBLICATĂ\n${draft.title}\n${results.map(line).join("\n")}\nhttps://realtrust.ro/${draft.property_slug ?? ""}`
+    : `⚠️ Postare socială eșuată — salvată ca draft\n${draft.title}\n${results.map(line).join("\n")}\nhttps://realtrust.ro/admin/social-drafts`;
+  await sendAdminText(msg).catch((e) => console.warn("[social-drain] admin WA failed:", e?.message));
   return json({ ok: true, draft_id: draft.id, results });
 });
