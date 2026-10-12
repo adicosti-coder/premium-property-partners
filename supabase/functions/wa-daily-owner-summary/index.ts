@@ -13,25 +13,36 @@ const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u
 const isYes = (t: string) => /^(da( public)?|de acord|ok|okay|publicati|👍)[\s.!]*$/.test(norm(t)) || t.includes("👍");
 const isNo = (t: string) => /\b(nu|stop|nu multumesc|vandut|inchiriat|dezabonare)\b/.test(norm(t));
 
+const isQuestion = (t: string) => /\?|\b(cat|cum|cand|unde|ce|care|de ce)\b/.test(norm(t));
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   const denied = await requireInternalOrAdmin(req, corsHeaders);
   if (denied) return denied;
+  let reqBody: { force?: boolean } = {};
+  try { reqBody = await req.json(); } catch { /* cron */ }
+  // Cron rulează la 17:00 și 18:00 UTC; trimitem doar când la București e 20:00 (vară/iarnă).
+  const bucHour = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Bucharest", hour: "2-digit", hour12: false }).format(new Date()));
+  if (!reqBody.force && bucHour !== 20) {
+    return new Response(JSON.stringify({ skipped: "not_20_bucharest", bucHour }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const since = new Date(Date.now() - 864e5).toISOString();
 
-  const [sent, pending, failed, inbound, published] = await Promise.all([
+  const [sent, pending, failed, inbound, published, detected, requests] = await Promise.all([
     sb.from("wa_outbound_queue").select("id", { count: "exact", head: true }).gte("sent_at", since),
     sb.from("wa_outbound_queue").select("id", { count: "exact", head: true }).eq("status", "pending"),
     sb.from("wa_outbound_queue").select("last_error").eq("status", "failed").gte("updated_at", since).limit(200),
     sb.from("wa_messages").select("content").eq("direction", "inbound").gte("created_at", since).limit(2000),
     sb.from("prospect_listings").select("id", { count: "exact", head: true }).gte("published_at", since),
+    sb.from("prospect_listings").select("id", { count: "exact", head: true }).gte("created_at", since),
+    sb.from("wa_publish_consents").select("id", { count: "exact", head: true }).gte("created_at", since),
   ]);
 
-  let yes = 0, no = 0, other = 0;
+  let yes = 0, no = 0, questions = 0, other = 0;
   for (const m of inbound.data ?? []) {
     const t = String(m.content ?? "");
-    if (isYes(t)) yes++; else if (isNo(t)) no++; else other++;
+    if (isYes(t)) yes++; else if (isNo(t)) no++; else if (isQuestion(t)) questions++; else other++;
   }
   const errs: Record<string, number> = {};
   for (const f of failed.data ?? []) {
@@ -40,10 +51,12 @@ Deno.serve(async (req) => {
   }
   const errLines = Object.entries(errs).map(([k, v]) => `   ↳ ${k}: ${v}`);
   const body = [
-    `📋 Sumar zilnic proprietari (ultimele 24h)`,
+    `📋 Bilanț zilnic (ultimele 24h)`,
+    `🆕 Anunțuri noi detectate: ${detected.count ?? 0}`,
+    `✉️ Cereri de acord trimise: ${requests.count ?? 0}`,
     `📤 Mesaje trimise din coadă: ${sent.count ?? 0}`,
-    `💬 Răspunsuri proprietari: ${yes + no + other} (DA: ${yes} · Nu/STOP: ${no} · altele: ${other})`,
-    `🏠 Anunțuri publicate pe realtrust.ro: ${published.count ?? 0}`,
+    `💬 Răspunsuri primite: ${yes + no + questions + other} (DA: ${yes} · Refuz: ${no} · Întrebări: ${questions} · altele: ${other})`,
+    `🏠 Anunțuri publicate cu succes: ${published.count ?? 0}`,
     `⏳ Rămase în coadă: ${pending.count ?? 0}`,
     `⚠️ Erori Meta: ${(failed.data ?? []).length}`,
     ...errLines,
