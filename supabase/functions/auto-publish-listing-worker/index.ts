@@ -685,7 +685,7 @@ function buildSocialPost(p: { title: string; slug: string; zone: string | null; 
     price ? `💶 ${price}` : null,
     extras.length ? `✅ ${extras.join(" · ")}` : null,
     "",
-    `Detalii și toate pozele: https://realtrust.ro/proprietati/${p.slug}`,
+    `Detalii și toate pozele: https://realtrust.ro/proprietate/${p.slug}`,
     "",
     `#Timisoara #imobiliare${p.zone ? ` #${p.zone.replace(/[^\p{L}\p{N}]/gu, "")}` : ""} #RealTrust`,
   ].filter((l) => l !== null).join("\n");

@@ -647,6 +647,8 @@ export function clientViewingStepReply(
 // apartament (nu avem birou), orașul este Timișoara.
 // ─────────────────────────────────────────────────────────────────────────────
 
+export const OWNER_TERMS_URL = "https://realtrust.ro/conditii-proprietari";
+
 /** Tipurile de răspuns care înseamnă „proprietarul vrea să continue” → predare către om. */
 export const OWNER_HANDOVER_KINDS = new Set(["owner_viewing", "owner_collab_yes", "owner_call_request"]);
 
@@ -724,6 +726,20 @@ export function ownerReplyText(raw: string, ctx: ProspectContext = null): { kind
     return {
       kind: "owner_call_request",
       text: `Sigur, ${hi}vă sună un coleg RealTrust. Vă este mai comod înainte de prânz sau după?`,
+    };
+  }
+
+  // 2b) Întrebări despre comision / siguranță / contract → răspuns scurt + pagina de condiții.
+  if (/\?|cat|care|ce|cum|exista|e sigur|este sigur/.test(t) &&
+      /comision|cat costa|costuri|taxa|sigur|siguranta|incredere|teapa|contract|exclusivitate|obligati|angajament/.test(t) &&
+      !/comision.*(mare|mult|scump)|prea scump|prea mult/.test(t)) {
+    const fee = mode === "vanzare" ? "La vânzare comisionul e 2–4%, plătit doar dacă se vinde."
+      : mode === "inchiriere" ? "La închiriere plătiți doar după semnarea cu chiriașul."
+      : mode === "hotelier" ? "Administrarea este 15–20% doar din încasări."
+      : "Plătiți doar la rezultat, fără avans.";
+    return {
+      kind: "owner_terms_link",
+      text: `${hi ? hi.replace(/, $/, ". ") : ""}Publicarea și analiza sunt gratuite, fără exclusivitate și fără contract obligatoriu. ${fee} Toate condițiile pe scurt: ${OWNER_TERMS_URL}`,
     };
   }
 
