@@ -239,9 +239,25 @@ const PUBLISH_CONSENT_STRONG_RE =
 // wa_publish_consents), ca un „da” dintr-o conversație obișnuită să nu fie
 // citit drept acord de publicare.
 const PUBLISH_CONSENT_SOFT_RE =
-  /^(?:da+|dapublic|de\s+acord|ok(?:ee?y)?|bine|sigur|desigur|aprob|publicati|publica)[\s!.,?]*$/;
+  /^(?:da+|dapublic|de\s+acord|sunt\s+de\s+acord|ok(?:ee?y)?|ok\s+da|da\s+ok|(?:e|este)\s+ok|(?:e|este)\s+bine|bine|sigur|desigur|aprob|accept(?:am)?|publicati|publica|da,?\s+(?:puteti|se\s+poate|sigur|ok|de\s+acord|accept)|da,?\s+puteti\s+(?:sa\s+)?(?:il\s+)?publica(?:ti)?)(?:[\s!.,?]+(?:multumesc|mersi|va\s+multumesc))?[\s!.,?]*$/;
+// Acord condiționat de costuri („Dacă nu am costuri e ok”, „Dacă e gratuit, da”).
+const PUBLISH_CONSENT_CONDITIONAL_RE =
+  /\bdaca\b.{0,40}\b(?:cost|costuri|plat|bani|gratuit|gratis|comision|taxa)\w*.{0,40}\b(?:e|este|sunt)?\s*(?:ok|bine|de\s+acord|da|accept|in\s+regula)\b/;
 const PUBLISH_REVOKE_RE =
   /\bretrag\b|\bstop\b|\bsterge(?:ti)?\b|dau\s+in\s+judecata|nu mai public|nu mai doresc publicarea|scoateti anuntul|stergeti anuntul|scoate anuntul de pe site/;
+
+/** Reconfirmare scurtă pentru acordul condiționat de costuri. */
+export const PUBLISH_CONSENT_RECONFIRM_TEXT =
+  "Confirmăm 0% comision pentru proprietar și 0 costuri. Activăm anunțul acum?";
+
+/** true pentru „Dacă nu am costuri, e ok” — cere reconfirmare, nu publică direct. */
+export function isConditionalConsent(raw: string, opts?: { pendingConsent?: boolean }): boolean {
+  if (!opts?.pendingConsent) return false;
+  const t = stripDiacritics(raw);
+  if (!t || PUBLISH_REVOKE_RE.test(t) || isClearRefusal(raw)) return false;
+  if (/\bnu\s+(?:e|este|sunt)\s+(?:ok|bine|de\s+acord)\b/.test(t)) return false;
+  return PUBLISH_CONSENT_CONDITIONAL_RE.test(t);
+}
 
 /** Textul standard prin care cerem acordul de publicare pe realtrust.ro. */
 export function publishConsentRequestText(p?: {
@@ -252,16 +268,10 @@ export function publishConsentRequestText(p?: {
   /** Suprascrie link-ul de analiză (folosit de șablonul Meta cu {{2}}). */
   analysisUrl?: string;
 } | null): string {
-  const what = p?.title
-    ? `„${p.title}”`
-    : p?.zone
-      ? `apartamentul din zona ${p.zone}`
-      : "proprietatea dumneavoastră";
   const analysisUrl = p?.analysisUrl
     || (p?.source_url
       ? `https://realtrust.ro/analiza-anunt?url=${encodeURIComponent(p.source_url)}`
       : "https://realtrust.ro/analiza-anunt");
-  void what;
   return [
     `Bună ziua! Am generat o evaluare gratuită de piață pentru proprietatea dvs.: ${analysisUrl}`,
     "",
@@ -289,8 +299,9 @@ export function detectPublishIntent(
   if (PUBLISH_REVOKE_RE.test(t)) return "revoke";
   // „NU” simplu = retragere doar ca răspuns la cererea noastră de acord.
   if (/^nu+[\s!.,]*$/.test(t) && opts?.pendingConsent) return "revoke";
+  if (isClearRefusal(raw)) return null;
   if (PUBLISH_CONSENT_STRONG_RE.test(t)) return "consent";
-  if ((PUBLISH_CONSENT_SOFT_RE.test(t) || /👍/u.test(t)) && opts?.pendingConsent) {
+  if ((PUBLISH_CONSENT_SOFT_RE.test(t.trim()) || /👍/u.test(t)) && opts?.pendingConsent) {
     return "consent";
   }
   return null;
