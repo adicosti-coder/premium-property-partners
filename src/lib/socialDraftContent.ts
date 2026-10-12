@@ -68,3 +68,20 @@ export function facebookPostOptimization(title: string, postText: string): Faceb
   const hashtags = [...new Set(["#RealTrust", "#Timisoara", ...zoneWords])].join(" ");
   return { title: clean(title), description, hashtags, link };
 }
+
+/** Instagram caption: full optimized text + hashtags, hard-capped at 2200 chars (Instagram limit). */
+export function instagramPostDescription(postText: string, hashtags: string, max = 2200): string {
+  const base = postText.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, "").trim();
+  const missingTags = hashtags.split(/\s+/).filter((tag) => tag && !base.includes(tag));
+  const suffix = missingTags.length ? `\n\n${missingTags.join(" ")}` : "";
+  if (base.length + suffix.length <= max) return `${base}${suffix}`;
+  const room = max - suffix.length - 1;
+  let cut = base.slice(0, room);
+  const lastStop = cut.lastIndexOf(". ");
+  if (lastStop > room * 0.5) cut = cut.slice(0, lastStop + 1);
+  else {
+    const lastSpace = cut.lastIndexOf(" ");
+    if (lastSpace > 0) cut = cut.slice(0, lastSpace);
+  }
+  return `${cut.trim()}…${suffix}`;
+}

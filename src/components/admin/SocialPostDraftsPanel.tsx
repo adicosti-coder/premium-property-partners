@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { describeSocialImage, facebookPostOptimization, readableSocialPost } from "@/lib/socialDraftContent";
+import { describeSocialImage, facebookPostOptimization, instagramPostDescription, readableSocialPost } from "@/lib/socialDraftContent";
 import { resolvePropertyImageUrl } from "@/utils/resolvePropertyImageUrl";
 
 type Draft = { id: string; property_id: string; title: string | null; post_text: string; images: string[]; status: string; created_at: string };
@@ -124,19 +124,24 @@ export default function SocialPostDraftsPanel() {
             <p className="whitespace-pre-wrap break-words rounded bg-muted/40 p-3 text-sm leading-relaxed text-foreground">{d.readableText}</p>
             {(() => {
               const fb = facebookPostOptimization(d.title, d.readableText);
-              const fields: { label: string; value: string }[] = [
+              const ig = instagramPostDescription(d.readableText, fb.hashtags);
+              const fields: { label: string; value: string; hint?: string }[] = [
                 { label: "Titlu", value: fb.title },
                 { label: "Descriere", value: d.listing.description || fb.description },
+                { label: "Instagram", value: ig, hint: `${ig.length}/2.200 caractere` },
                 { label: "Hashtag-uri", value: fb.hashtags },
                 { label: "Link anunț", value: d.listing.link || fb.link },
               ];
               return (
-                <section aria-label={`Optimizare postare Facebook pentru ${d.title}`} className="space-y-2 rounded-lg border border-dashed p-3">
-                  <h4 className="text-sm font-medium text-foreground">Optimizare Facebook</h4>
+                <section aria-label={`Optimizare postare Facebook și Instagram pentru ${d.title}`} className="space-y-2 rounded-lg border border-dashed p-3">
+                  <h4 className="text-sm font-medium text-foreground">Optimizare Facebook &amp; Instagram</h4>
                   {fields.map((field) => (
                     <div key={field.label} className="flex flex-wrap items-start gap-2">
                       <span className="w-24 shrink-0 pt-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">{field.label}</span>
-                      <p className="min-w-0 flex-1 break-words rounded bg-muted/40 p-2 text-sm text-foreground">{field.value || "—"}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="whitespace-pre-wrap break-words rounded bg-muted/40 p-2 text-sm text-foreground">{field.value || "—"}</p>
+                        {field.hint && <p className="mt-1 text-xs text-muted-foreground">{field.hint}</p>}
+                      </div>
                       <Button size="sm" variant="outline" className="min-h-12 shrink-0" disabled={!field.value}
                         aria-label={`Copiază ${field.label.toLowerCase()} pentru ${d.title}`} onClick={() => copy(field.value)}>
                         <Copy className="mr-1 h-4 w-4" />Copiază
