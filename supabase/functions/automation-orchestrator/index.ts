@@ -66,6 +66,8 @@ const JOB_FN: Record<string, string> = {
   // WhatsApp (Andrei)
   "wa.outbound_drain": "wa-outbound-queue-worker",
   "wa.followup_nudge": "wa-followup-nudge",
+  // Social: coadă Facebook/Instagram la interval fix
+  "social.autopost_drain": "social-autopost-drain",
   // System
   "system.daily_digest": "automation-daily-digest",
   "system.self_healing": "automation-self-healing",

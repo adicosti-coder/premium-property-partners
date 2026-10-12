@@ -18,7 +18,6 @@ import { ownerPublishedText, sendWaText } from "../_shared/listingInspection.ts"
 import { loadImportConfig, sanitizeListingText, type ImportConfigRow } from "../_shared/listingSanitizer.ts";
 import { resolveListingBedrooms } from "../_shared/listingRooms.ts";
 import { prepareListingCover } from "../_shared/listingCover.ts";
-import { publishToMetaSocial } from "../_shared/metaSocial.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -557,33 +556,21 @@ Deno.serve(async (req) => {
       }).eq("id", consentRow.id);
     }
 
-    // Postare automată Facebook/Instagram după acord; la eroare rămâne draft în Admin.
+    // Postarea Facebook/Instagram intră în coadă ("queued"); `social-autopost-drain`
+    // o publică la interval fix ca să nu atingem limitele Meta.
     if (consentRow && inserted.slug) {
       try {
         const postText = buildSocialPost({ title: inserted.name, slug: inserted.slug, zone: prospect.zone, rooms: prospect.rooms, size: prospect.size, price: prospect.price, currency: prospect.currency, isRent, tags: visualTags });
         const socialImages = pickSocialImages(finalImages, captionsList);
         const { data: existing } = await supabase.from("social_post_drafts").select("status").eq("property_id", inserted.id).maybeSingle();
-        const alreadyPosted = existing?.status === "posted";
-        const results = alreadyPosted || republish ? [] : await publishToMetaSocial(postText, socialImages);
-        const fb = results.find((r) => r.platform === "facebook");
-        const ig = results.find((r) => r.platform === "instagram");
-        const allOk = results.length > 0 && results.every((r) => r.ok);
-        const errText = results.filter((r) => !r.ok).map((r) => `${r.platform}: ${r.error}`).join(" | ") || null;
+        const keepStatus = existing?.status === "posted" || existing?.status === "posting" || (republish && existing);
         await supabase.from("social_post_drafts").upsert({
           property_id: inserted.id, property_slug: inserted.slug, title: inserted.name,
           post_text: postText, images: socialImages,
-          status: alreadyPosted || allOk ? "posted" : "draft",
-          ...(fb?.ok ? { fb_post_id: fb.id } : {}), ...(ig?.ok ? { ig_media_id: ig.id } : {}),
-          ...(results.length ? { last_error: errText, posted_at: allOk ? new Date().toISOString() : null } : {}),
+          status: keepStatus ? existing!.status : (republish ? "draft" : "queued"),
           updated_at: new Date().toISOString(),
         }, { onConflict: "property_id" });
-        if (results.length) {
-          await supabase.from("social_autopost_logs").insert(results.map((r) => ({
-            property_id: inserted.id, property_slug: inserted.slug, title: inserted.name,
-            platform: r.platform, status: r.ok ? "posted" : "failed", external_id: r.id ?? null, error_message: r.error ?? null,
-          })));
-        }
-      } catch (e) { console.warn("[auto-publish] social autopost failed:", (e as Error)?.message); }
+      } catch (e) { console.warn("[auto-publish] social queue failed:", (e as Error)?.message); }
     }
 
     // Proprietarul primește automat link-ul direct către pagina publicată.
