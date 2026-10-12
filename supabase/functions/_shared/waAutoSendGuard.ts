@@ -13,7 +13,7 @@ type Sb = any;
 const BLOCKED_STATUSES = new Set(["closed", "opted_out", "rejected", "refused", "withdrawn", "retras", "dnc"]);
 /** Confirmările de refuz/retragere trebuie să plece chiar și după STOP/NU. */
 const REFUSAL_ACK_RE = /^(quick_(no|stop)|publish_revoke|revoke|opt_?out|refusal_ack)/;
-const INTRO_RE = /intro|prospect_intro|acord_publicare|publish_consent_request/i;
+const INTRO_RE = /intro/i;
 const DAY_MS = 24 * 3_600_000;
 
 export type GuardResult = { allowed: true } | { allowed: false; reason: string };
