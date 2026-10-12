@@ -58,9 +58,16 @@ Deno.serve(async (req) => {
   if (viewsRes.error) console.error("[digest] views", viewsRes.error.message);
   if (clicksRes.error) console.error("[digest] clicks", clicksRes.error.message);
   const { data: socialRows } = await sb.from("social_autopost_logs")
-    .select("platform, status, title, property_slug, error_message").gte("created_at", since).limit(200);
+    .select("platform, status, title, property_slug, error_message, external_id, created_at").gte("created_at", since).limit(200);
   const socialOk = (socialRows ?? []).filter((r: any) => r.status === "posted").length;
   const socialFail = (socialRows ?? []).filter((r: any) => r.status !== "posted") as any[];
+  const socialPosted = (socialRows ?? []).filter((r: any) => r.status === "posted") as any[];
+  const socialTime = (iso: string) => new Intl.DateTimeFormat("ro-RO", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Bucharest" }).format(new Date(iso));
+  const socialLink = (r: any) => r.platform === "instagram"
+    ? (r.external_id ? `https://instagram.com/p/${r.external_id}` : "")
+    : (r.external_id ? `https://facebook.com/${r.external_id}` : "");
+  const socialPostedLines = socialPosted.slice(0, 10).map((r) =>
+    `   ↳ ${socialTime(r.created_at)} · ${r.platform === "instagram" ? "Instagram" : "Facebook"}: ${r.title ?? r.property_slug ?? "Anunț"}${socialLink(r) ? `\n     ${socialLink(r)}` : ""}`);
   const REASON_RO: Record<string, string> = {
     ai_logo: "logo/reclamă", ai_map: "hartă", ai_other: "grafic/text/fără legătură", blank_black: "neagră",
     blank_uniform: "goală/uniformă", corrupt: "coruptă", too_small_or_corrupt: "coruptă/prea mică", too_small: "rezoluție prea mică",
