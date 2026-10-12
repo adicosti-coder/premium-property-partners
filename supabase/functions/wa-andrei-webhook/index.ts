@@ -682,7 +682,12 @@ Deno.serve(async (req) => {
             .order("sent_at", { ascending: false })
             .limit(1)
             .maybeSingle();
-          if (pendingReply?.id) {
+          // Doar un mesaj scris efectiv de proprietar (text / buton / răspuns
+          // interactiv cu conținut) creează lead; reacțiile, ecourile și
+          // evenimentele de sistem nu.
+          const isRealUserText =
+            ["text", "button", "interactive"].includes(type) && text.trim().length > 0 && !msg.errors;
+          if (pendingReply?.id && isRealUserText) {
             await supabase
               .from("wa_outbound_queue")
               .update({ status: "replied", replied_at: nowIso })
