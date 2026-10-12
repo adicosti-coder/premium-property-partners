@@ -259,6 +259,54 @@ export function isConditionalConsent(raw: string, opts?: { pendingConsent?: bool
   return PUBLISH_CONSENT_CONDITIONAL_RE.test(t);
 }
 
+/** Textul standard prin care cerem acordul de publicare pe realtrust.ro. */
+export function publishConsentRequestText(p?: {
+  title?: string | null;
+  zone?: string | null;
+  rooms?: number | null;
+  source_url?: string | null;
+  /** Suprascrie link-ul de analiză (folosit de șablonul Meta cu {{2}}). */
+  analysisUrl?: string;
+} | null): string {
+  const analysisUrl = p?.analysisUrl
+    || (p?.source_url
+      ? `https://realtrust.ro/analiza-anunt?url=${encodeURIComponent(p.source_url)}`
+      : "https://realtrust.ro/analiza-anunt");
+  return [
+    `Bună ziua! Am generat o evaluare gratuită de piață pentru proprietatea dvs.: ${analysisUrl}`,
+    "",
+    "Reprezint RealTrust Timișoara și avem investitori activi. Promovarea este 100% gratuită (Comision 0% pentru dvs., fără exclusivitate).",
+    "",
+    "Dacă doriți să publicăm anunțul complet cu poze pe site-ul nostru, răspundeți doar cu „DA” și îl activăm în 2 minute.",
+  ].join("\n");
+}
+
+export const PUBLISH_CONSENT_ACK =
+  "Va mulțumim! Am inregistrat acordul dumneavoastra pentru publicarea anunțului pe realtrust.ro. " +
+  "Anunțul apare pe site in scurt timp, fara costuri si fara exclusivitate. " +
+  "Puteti retrage acordul oricand, scriind RETRAG, iar anunțul este scos imediat de pe site.";
+
+export const PUBLISH_REVOKE_ACK =
+  "Anunțul dumneavoastră a fost eliminat definitiv de pe realtrust.ro.";
+
+/** „consent” / „revoke” / null pentru mesajul primit de la proprietar. */
+export function detectPublishIntent(
+  raw: string,
+  opts?: { pendingConsent?: boolean },
+): "consent" | "revoke" | null {
+  const t = stripDiacritics(raw);
+  if (!t) return null;
+  if (PUBLISH_REVOKE_RE.test(t)) return "revoke";
+  // „NU” simplu = retragere doar ca răspuns la cererea noastră de acord.
+  if (/^nu+[\s!.,]*$/.test(t) && opts?.pendingConsent) return "revoke";
+  if (isClearRefusal(raw)) return null;
+  if (PUBLISH_CONSENT_STRONG_RE.test(t)) return "consent";
+  if ((PUBLISH_CONSENT_SOFT_RE.test(t.trim()) || /👍/u.test(t)) && opts?.pendingConsent) {
+    return "consent";
+  }
+  return null;
+}
+
 /** Refuz explicit: butonul „Nu, mulțumesc" sau un „nu" clar, fără semnale de interes. */
 const EXPLICIT_NO = /^nu\s*,?\s*(mult?umesc|mersi|nu doresc)?\s*[.!]?$/;
 
