@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
 
   // Rezervăm draftul ca să nu fie postat de două rulări paralele.
   const { data: claimed } = await sb.from("social_post_drafts").update({ status: "posting", updated_at: new Date().toISOString() })
-    .eq("id", draft.id).eq("status", "queued").select("id");
+    .eq("id", draft.id).in("status", ["queued", "draft"]).select("id");
   if (!claimed?.length) return json({ ok: true, skipped: "claimed_elsewhere" });
 
   const results = await publishToMetaSocial(draft.post_text, (draft.images as string[]) ?? []);
