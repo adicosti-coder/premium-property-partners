@@ -761,8 +761,8 @@ export function ownerReplyText(raw: string, ctx: ProspectContext = null): { kind
     };
   }
 
-  // 7) Acord de colaborare — confirmare + următorul pas concret.
-  if (/^(da|sigur|ok|bine|de acord|accept)\b.*(colabor|intereseaza|interesat|sunt de acord|hai|putem)|sunt interesat|ma intereseaza|vreau sa colaboram|hai sa colaboram|da,? (ma|sunt)/.test(t)) {
+  // 7) Acord de colaborare — confirmare + următorul pas concret (niciodată pe un refuz).
+  if (!isClearRefusal(t) && /^(da|sigur|ok|bine|de acord|accept)\b.*(colabor|intereseaza|interesat|sunt de acord|hai|putem)|sunt interesat|ma intereseaza|vreau sa colaboram|hai sa colaboram|da,? (ma|sunt)/.test(t)) {
     return {
       kind: "owner_collab_yes",
       text:
