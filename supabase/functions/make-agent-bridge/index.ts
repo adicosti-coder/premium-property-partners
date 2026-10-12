@@ -9,6 +9,7 @@
 // Acces: apel intern (x-cron-secret / service role), Admin JWT, sau Make cu
 // header x-make-secret === MAKE_INBOUND_SECRET.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { checkAutoSend } from "../_shared/waAutoSendGuard.ts";
 import { WA_PHONE_NUMBER_ID, WA_API_VERSION, waToken } from "../_shared/waConfig.ts";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { relayToMake } from "../_shared/makeRelay.ts";
@@ -418,6 +419,9 @@ Deno.serve(async (req) => {
           .select("id, assigned_agent_id").eq("phone_normalized", phone)
           .order("updated_at", { ascending: false }).limit(1).maybeSingle());
     if (!conv?.id) return json({ error: "conversation_not_found" }, 404);
+    // Anti-spam: refuz/DNC/retras + max 1 mesaj automat / 24h.
+    const stepGuard = await checkAutoSend(supabase, { phone, conversationId: conv.id as string, kind: action });
+    if (!stepGuard.allowed) return json({ ok: false, skipped: true, error: "auto_send_blocked", reason: stepGuard.reason }, 409);
     const stepAgentId = (conv.assigned_agent_id as string) ?? null;
 
     // Apartamentul din discuție (dacă a fost deja ales) — pentru context în mesaj.
@@ -505,6 +509,7 @@ Deno.serve(async (req) => {
       direction: "outbound",
       role: "assistant",
       content: stepText,
+      tool_call: { auto_reply: action },
       error: sentStep.ok ? null : String(sentStep.error).slice(0, 500),
     });
 
@@ -587,6 +592,8 @@ Deno.serve(async (req) => {
           .select("id, assigned_agent_id").eq("phone_normalized", phone)
           .order("updated_at", { ascending: false }).limit(1).maybeSingle());
     if (!conv?.id) return json({ error: "conversation_not_found" }, 404);
+    const offerGuard = await checkAutoSend(supabase, { phone, conversationId: conv.id as string, kind: action });
+    if (!offerGuard.allowed) return json({ ok: false, skipped: true, error: "auto_send_blocked", reason: offerGuard.reason }, 409);
     const convAgentId = (conv.assigned_agent_id as string) ?? null;
 
     const propertyId = (body.property_id || "").trim() ||
