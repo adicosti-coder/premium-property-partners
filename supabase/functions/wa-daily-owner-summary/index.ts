@@ -94,6 +94,8 @@ Deno.serve(async (req) => {
     `📤 Mesaje trimise din coadă: ${sent.count ?? 0}`,
     `💬 Răspunsuri primite: ${yes + no + questions + other} (DA: ${yes} · Refuz: ${no} · Întrebări: ${questions} · altele: ${other})`,
     `🏠 Anunțuri publicate cu succes: ${published.count ?? 0}`,
+    `📈 Analytics anunțuri: ${viewRows.length} vizite · ${clicksRes.count ?? 0} click-uri pe linkuri`,
+    ...(topLines.length ? [`🏆 Top 3 cele mai vizitate:`, ...topLines] : [`🏆 Top 3: nicio vizită înregistrată`]),
     `🖼️ Galerii verificate: ${(imgLogs.data ?? []).length} · poze păstrate: ${imgKept} · excluse: ${imgDropped}`,
     ...imgLines,
     `⏳ Rămase în coadă: ${pending.count ?? 0}`,
