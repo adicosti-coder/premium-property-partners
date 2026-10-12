@@ -1,5 +1,8 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Descrieri toate cele 51 de anunțuri
+- [ ] Actualizare descrieri scurte, structurate și foto cu verificarea rezultatelor
+
 ## Texte și accesibilitate drafturi sociale
 - [x] Texte lizibile completate cu descrierile salvate ale fotografiilor, fără informații inventate
 - [x] Texte alternative și descrieri foto vizibile, cu copiere separată
