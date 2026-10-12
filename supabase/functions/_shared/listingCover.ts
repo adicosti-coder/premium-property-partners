@@ -4,7 +4,7 @@ import decodeWebp, { init as initWebpDecoder } from "npm:@jsquash/webp@1.5.0/dec
 import { isUrlAllowed, fetchWithSizeCap } from "./urlGuard.ts";
 
 let decoderReady: Promise<void> | null = null;
-async function decodeSource(bytes: Uint8Array): Promise<Image> {
+export async function decodeSource(bytes: Uint8Array): Promise<Image> {
   if (bytes[8] !== 0x57 || bytes[9] !== 0x45 || bytes[10] !== 0x42 || bytes[11] !== 0x50) return Image.decode(bytes);
   if (!decoderReady) {
     decoderReady = (async () => {
