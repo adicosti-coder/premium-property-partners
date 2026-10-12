@@ -8,9 +8,10 @@ import { isUrlAllowed, fetchWithSizeCap } from "./urlGuard.ts";
 const W = 1080, H = 1350;
 
 async function optimizeOne(url: string, key: string): Promise<string> {
-  if (!isUrlAllowed(url)) return url;
-  const res = await fetchWithSizeCap(url, 15 * 1024 * 1024);
-  const img = await decodeSource(new Uint8Array(await res.arrayBuffer()));
+  if (!isUrlAllowed(url, { extraHostSuffixes: ["olxcdn.com", "img.publi24.ro"] }).ok) return url;
+  const res = await fetchWithSizeCap(url, undefined, 15 * 1024 * 1024);
+  if (!res.ok || !res.bytes) throw new Error(res.error || "download failed");
+  const img = await decodeSource(res.bytes);
   const target = W / H, ratio = img.width / img.height;
   let cw = img.width, ch = img.height;
   if (ratio > target) cw = Math.round(img.height * target); else ch = Math.round(img.width / target);
