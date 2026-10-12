@@ -9193,6 +9193,42 @@ export type Database = {
         }
         Relationships: []
       }
+      social_post_drafts: {
+        Row: {
+          created_at: string
+          id: string
+          images: string[]
+          post_text: string
+          property_id: string
+          property_slug: string | null
+          status: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          images?: string[]
+          post_text: string
+          property_id: string
+          property_slug?: string | null
+          status?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          images?: string[]
+          post_text?: string
+          property_id?: string
+          property_slug?: string | null
+          status?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       stripe_webhook_events: {
         Row: {
           environment: string
