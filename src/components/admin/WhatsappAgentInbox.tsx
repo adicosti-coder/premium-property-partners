@@ -238,7 +238,7 @@ export default function WhatsappAgentInbox() {
     setSendingTemplate(true);
     const { data, error } = await supabase.functions.invoke("wa-andrei-send", {
       body: {
-        conversation_id: selectedId,
+        conversation_id: selectedId, manual: true,
         template_name: selectedTemplate.name,
         template_language: selectedTemplate.language,
         template_params: templateParams.slice(0, selectedTemplate.variable_count),
