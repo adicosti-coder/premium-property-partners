@@ -40,3 +40,31 @@ export function readableSocialPost(post: string, captions: string[]): string {
   return linkIndex < 0 ? `${text}\n\n${photoText}` :
     `${text.slice(0, linkIndex).trim()}\n\n${photoText}\n\n${text.slice(linkIndex)}`;
 }
+
+export interface FacebookPostOptimization {
+  title: string;
+  description: string;
+  hashtags: string;
+  link: string;
+}
+
+/** Facebook-ready fields derived only from the draft's own facts. */
+export function facebookPostOptimization(title: string, postText: string): FacebookPostOptimization {
+  const linkMatch = postText.match(/https?:\/\/\S+/);
+  const link = linkMatch ? linkMatch[0].replace(/[.,)]+$/, "") : "";
+  const plain = postText.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, "");
+  const sentences = plain
+    .replace(/Detalii și toate pozele:[\s\S]*$/i, "")
+    .split(/(?<=[.!?])\s+|\n+/)
+    .map(clean)
+    .filter((line) => line && !line.startsWith("În fotografii:") && !/^#/.test(line));
+  const description = sentences.slice(0, 3).join(" ").slice(0, 300);
+  const zoneWords = title
+    .replace(/[–—|,()]/g, " ")
+    .split(/\s+/)
+    .filter((word) => word.length > 3 && !/^(apartament|proprietate|realtrust|vânzare|inchiriere|camer[ae]|camere)$/i.test(word))
+    .slice(0, 3)
+    .map((word) => `#${word.replace(/[^\p{L}\p{N}]/gu, "")}`);
+  const hashtags = [...new Set(["#RealTrust", "#Timisoara", ...zoneWords])].join(" ");
+  return { title: clean(title), description, hashtags, link };
+}
