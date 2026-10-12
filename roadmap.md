@@ -1,7 +1,8 @@
 # Roadmap — optimizări sistem analiză și administrare
 
 ## Descrieri toate cele 51 de anunțuri
-- [ ] Actualizare descrieri scurte, structurate și foto cu verificarea rezultatelor
+- [x] Toate cele 51 de anunțuri: descrieri scurte și structurate salvate; dotări adăugate fără ștergeri; verificat pe site
+- [x] 397 din 415 fotografii au descrieri; la cele neinterpretate nu s-au inventat texte
 
 ## Texte și accesibilitate drafturi sociale
 - [x] Texte lizibile completate cu descrierile salvate ale fotografiilor, fără informații inventate
