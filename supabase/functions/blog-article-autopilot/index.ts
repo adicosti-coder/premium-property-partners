@@ -35,7 +35,7 @@ const VARIANTS = [
   {
     key: "inchiriere_lunara",
     angle: "închiriere lunară",
-    tokens: ["închirieri lunare", "inchirieri lunare", "închirieri"],
+    tokens: ["închirieri lunare", "inchirieri lunare", "închirieri", "inchirieri", "închiriere lunară", "inchiriere lunara", "inchiriere-lunara", "chirii lunare", "chirie lunara", "închiriere", "inchiriere"],
     category: "Imobiliare",
     brief:
       "Un ghid despre închirierea lunară (regim clasic) în zona dată: profilul chiriașului, cererea, avantajele și limitele față de regimul hotelier. Nu da cifre de chirie dacă nu apar în datele de mai jos.",
