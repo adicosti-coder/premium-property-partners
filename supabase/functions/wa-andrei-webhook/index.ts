@@ -15,6 +15,8 @@ import {
   PUBLISH_CONSENT_ACK,
   PUBLISH_REVOKE_ACK,
   publishConsentRequestText,
+  isConditionalConsent,
+  PUBLISH_CONSENT_RECONFIRM_TEXT,
 } from "../_shared/waAutoReply.ts";
 import { notifyClientChatLink } from "../_shared/waClientEmail.ts";
 import { notifyAgentInbound, notifyOwnerHandover, notifyClientCallRequest } from "../_shared/waAgentNotify.ts";
@@ -528,6 +530,9 @@ Deno.serve(async (req) => {
           } catch (e) {
             console.error("[wa-webhook] publish consent handling failed:", e);
           }
+        } else if (isConditionalConsent(text, { pendingConsent })) {
+          // „Dacă nu am costuri e ok” → reconfirmare scurtă; următorul „DA” publică.
+          quick = { kind: "publish_consent_reconfirm", text: PUBLISH_CONSENT_RECONFIRM_TEXT };
         }
 
         // Orice răspuns al unui proprietar din „Cozi Aprobare” ajunge pe e-mail
