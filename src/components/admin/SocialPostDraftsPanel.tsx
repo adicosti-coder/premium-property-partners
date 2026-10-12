@@ -103,7 +103,7 @@ export default function SocialPostDraftsPanel() {
           <article key={d.id} aria-labelledby={`social-title-${d.id}`} className="min-w-0 rounded-lg border p-3 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 id={`social-title-${d.id}`} className="min-w-0 break-words font-medium text-foreground">{d.title}</h3>
-              <Badge variant={d.status === "posted" ? "default" : "secondary"}>{d.status === "posted" ? "Postat" : "Draft"}</Badge>
+              <Badge variant={d.status === "posted" ? "default" : "secondary"}>{d.status === "posted" ? "Postat" : d.status === "queued" ? "Programat" : d.status === "posting" ? "Se postează" : "Draft"}</Badge>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {d.photos.map((photo, index) => (
