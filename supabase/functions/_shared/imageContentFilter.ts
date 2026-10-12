@@ -121,7 +121,7 @@ export async function synthesizeDescription(input: {
           { role: "system", content: "Ești redactor imobiliar în Timișoara. Scrii în română, profesionist, fără exagerări. " +
             "Folosește DOAR informații din textul anunțului, fapte și descrierile pozelor; nu inventa suprafețe, prețuri, zone sau dotări. " +
             "Fără telefoane, e-mailuri, nume de agenții sau link-uri. Răspunde în Markdown cu exact secțiunile: " +
-            "## Descriere generală\n## Dotări & Finisaje\n## Compartimentare\n(150-300 cuvinte în total, liste cu - unde e potrivit)." },
+            "un paragraf introductiv fluid (2-3 propoziții, fără titlu), apoi exact secțiunile: ## Compartimentare\n## Dotări & Finisaje\n## Puncte Forte\n(150-300 cuvinte în total, liste cu - unde e potrivit). Dotările vizibile din poze apar în Fapte (dotari_vizibile)." },
           { role: "user", content: `Titlu: ${input.title}\nFapte: ${JSON.stringify(input.facts)}\n\nText original:\n${input.originalText.slice(0, 5000)}\n\nDescrierile pozelor:\n${input.captions.map((c) => `- ${c}`).join("\n")}` },
         ],
       }),

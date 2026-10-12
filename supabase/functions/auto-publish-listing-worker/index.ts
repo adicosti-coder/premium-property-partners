@@ -446,7 +446,7 @@ Deno.serve(async (req) => {
       title: finalTitle,
       originalText: prospect.description || rawMd || finalFull,
       captions: captionsList.filter(Boolean),
-      facts: { zona: prospect.zone, camere: prospect.rooms, suprafata_mp: prospect.size, etaj: prospect.floor, an_constructie: prospect.year_built, tip: isRent ? "închiriere" : "vânzare" },
+      facts: { zona: prospect.zone, camere: prospect.rooms, suprafata_mp: prospect.size, etaj: prospect.floor, an_constructie: prospect.year_built, tip: isRent ? "închiriere" : "vânzare", dotari_vizibile: Array.from(visualTags).map((t) => TAG_LABELS[t]).filter(Boolean) },
     });
     if (enrichedDesc) finalFull = enrichedDesc;
 

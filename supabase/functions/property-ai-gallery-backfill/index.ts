@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
     const desc = await synthesizeDescription({
       title: p.name, originalText: p.original_description_raw || p.long_description_ro || "",
       captions: caps.filter(Boolean),
-      facts: { locatie: p.location, camere: p.rooms, suprafata_mp: p.size, etaj: p.floor, an_constructie: p.year_built, tip: p.listing_type },
+      facts: { locatie: p.location, camere: p.rooms, suprafata_mp: p.size, etaj: p.floor, an_constructie: p.year_built, tip: p.listing_type, dotari_vizibile: p.amenities ?? [] },
     });
     const upd: Record<string, unknown> = { image_alts: alts };
     if (desc) upd.long_description_ro = desc;
