@@ -18,7 +18,6 @@ import { ownerPublishedText, sendWaText } from "../_shared/listingInspection.ts"
 import { loadImportConfig, sanitizeListingText, type ImportConfigRow } from "../_shared/listingSanitizer.ts";
 import { resolveListingBedrooms } from "../_shared/listingRooms.ts";
 import { prepareListingCover } from "../_shared/listingCover.ts";
-import { publishToMetaSocial } from "../_shared/metaSocial.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
