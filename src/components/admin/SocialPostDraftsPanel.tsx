@@ -20,18 +20,27 @@ export default function SocialPostDraftsPanel() {
       if (error) throw error;
       const drafts = (data ?? []) as Draft[];
       if (!drafts.length) return [];
-      const { data: gallery, error: galleryError } = await supabase.from("property_images")
-        .select("property_id,image_path,original_url,caption,alt_text")
-        .in("property_id", [...new Set(drafts.map((draft) => draft.property_id))])
-        .eq("is_published", true).order("display_order");
+      const ids = [...new Set(drafts.map((draft) => draft.property_id))];
+      const [{ data: gallery, error: galleryError }, { data: props }] = await Promise.all([
+        supabase.from("property_images")
+          .select("property_id,image_path,original_url,caption,alt_text")
+          .in("property_id", ids).eq("is_published", true).order("display_order"),
+        supabase.from("properties").select("id,name,slug,description_ro").in("id", ids),
+      ]);
       if (galleryError) throw galleryError;
+      const propMap = new Map((props ?? []).map((p: any) => [p.id, p]));
       return drafts.map((draft) => {
-        const title = draft.title || "Proprietate RealTrust";
+        const prop: any = propMap.get(draft.property_id);
+        const title = prop?.name || draft.title || "Proprietate RealTrust";
         const photos = draft.images.map((src, index) => ({
           src: resolvePropertyImageUrl(src) || src,
           ...describeSocialImage(src, (gallery ?? []).filter((image) => image.property_id === draft.property_id), title, index),
         }));
-        return { ...draft, title, photos, readableText: readableSocialPost(draft.post_text, photos.map((photo) => photo.caption)) };
+        const listing = {
+          link: prop?.slug ? `https://realtrust.ro/proprietate/${prop.slug}` : "",
+          description: String(prop?.description_ro || "").replace(/[#*_>`]/g, "").replace(/\s+/g, " ").trim().slice(0, 300),
+        };
+        return { ...draft, title, photos, listing, readableText: readableSocialPost(draft.post_text, photos.map((photo) => photo.caption)) };
       });
     },
   });
@@ -117,9 +126,9 @@ export default function SocialPostDraftsPanel() {
               const fb = facebookPostOptimization(d.title, d.readableText);
               const fields: { label: string; value: string }[] = [
                 { label: "Titlu", value: fb.title },
-                { label: "Descriere", value: fb.description },
+                { label: "Descriere", value: d.listing.description || fb.description },
                 { label: "Hashtag-uri", value: fb.hashtags },
-                { label: "Link anunț", value: fb.link },
+                { label: "Link anunț", value: d.listing.link || fb.link },
               ];
               return (
                 <section aria-label={`Optimizare postare Facebook pentru ${d.title}`} className="space-y-2 rounded-lg border border-dashed p-3">
