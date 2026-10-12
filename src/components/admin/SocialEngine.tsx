@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
+import SocialEngineLogs from "./socialEngine/SocialEngineLogs";
+import SocialAiSettings from "./socialEngine/SocialAiSettings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Popover,
@@ -449,6 +451,7 @@ export default function SocialEngine() {
                 <Label htmlFor="webhook">Webhook Make.com URL</Label>
                 <Input id="webhook" placeholder="https://hook.eu1.make.com/..." value={webhookUrl} onChange={(e) => setWebhookUrl(e.target.value)} />
                 <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={saveWebhookUrl}>Salvează</Button>
+                <SocialAiSettings />
               </div>
             </DialogContent>
           </Dialog>
@@ -556,7 +559,7 @@ export default function SocialEngine() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="drafts" className="text-sm gap-1.5">
             <Pencil className="h-3.5 w-3.5" />
             Ciorne
@@ -582,6 +585,7 @@ export default function SocialEngine() {
             <BarChart3 className="h-3.5 w-3.5" />
             Analize
           </TabsTrigger>
+          <TabsTrigger value="logs" className="text-sm gap-1.5">Istoric / Logs</TabsTrigger>
         </TabsList>
 
         <TabsContent value="drafts">
@@ -639,6 +643,9 @@ export default function SocialEngine() {
 
         <TabsContent value="analytics">
           <SocialAnalytics posts={posts} />
+        </TabsContent>
+        <TabsContent value="logs">
+          <SocialEngineLogs />
         </TabsContent>
       </Tabs>
     </div>

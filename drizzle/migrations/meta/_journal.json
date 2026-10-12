@@ -715,6 +715,13 @@
       "when": 1791840325558,
       "tag": "0101_post_images_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 102,
+      "version": "7",
+      "when": 1791840971779,
+      "tag": "0102_social_engine_carousel_logs_trigger",
+      "breakpoints": true
     }
   ]
 }

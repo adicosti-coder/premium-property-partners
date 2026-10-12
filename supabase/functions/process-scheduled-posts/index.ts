@@ -14,23 +14,49 @@ export const isMakeWebhook = (u: string) => {
   try { const x = new URL(u); return x.protocol === "https:" && /(^|\.)make\.com$/.test(x.hostname); } catch { return false; }
 };
 
-async function send(url: string, post: any, platform: string, trigger: string) {
-  const r = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    signal: AbortSignal.timeout(15000),
-    body: JSON.stringify({
-      title: post.title,
-      caption: post.caption,
-      imageUrl: post.image_url || null,
-      sourceUrl: post.source_url,
-      platform,
-      type: post.type,
-      timestamp: new Date().toISOString(),
-      triggered_from: trigger,
-    }),
+async function resolveImages(sb: any, post: any): Promise<string[]> {
+  const list: string[] = [];
+  if (post.image_url) list.push(post.image_url);
+  for (const u of post.image_urls ?? []) list.push(u);
+  if (post.property_id) {
+    const { data } = await sb.rpc("social_property_image_urls", { _property_id: post.property_id });
+    for (const u of (data as string[] | null) ?? []) list.push(u);
+  }
+  return [...new Set(list.filter((u) => typeof u === "string" && /^https:\/\//.test(u)))].slice(0, 10);
+}
+
+async function send(sb: any, url: string, post: any, platform: string, trigger: string) {
+  const imageUrls = await resolveImages(sb, post);
+  let status: number | null = null, text = "", err: string | null = null;
+  try {
+    const r = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(15000),
+      body: JSON.stringify({
+        title: post.title,
+        caption: post.caption,
+        imageUrl: imageUrls[0] ?? post.image_url ?? null,
+        imageUrls,
+        isCarousel: imageUrls.length > 1,
+        sourceUrl: post.source_url,
+        platform,
+        type: post.type,
+        timestamp: new Date().toISOString(),
+        triggered_from: trigger,
+      }),
+    });
+    status = r.status;
+    text = (await r.text()).slice(0, 1000);
+    if (!r.ok) err = `Make.com ${r.status}: ${text.slice(0, 200)}`;
+  } catch (e) {
+    err = `Make.com indisponibil: ${e instanceof Error ? e.message : String(e)}`;
+  }
+  await sb.from("social_engine_logs").insert({
+    post_id: post.id, post_title: post.title, platform, trigger, success: !err,
+    http_status: status, response_body: text || null, error: err, image_count: imageUrls.length,
   });
-  if (!r.ok) throw new Error(`Make.com ${r.status}: ${(await r.text()).slice(0, 200)}`);
+  if (err) throw new Error(err);
 }
 
 Deno.serve(async (req) => {
@@ -52,7 +78,7 @@ Deno.serve(async (req) => {
     const { data: post } = await sb.from("social_posts").select("*").eq("id", body.post_id).maybeSingle();
     if (!post) return json({ success: false, error: "Postare negăsită" }, 404);
     try {
-      for (const p of platforms) await send(webhook, post, p, "admin_manual");
+      for (const p of platforms) await send(sb, webhook, post, p, "admin_manual");
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       await sb.from("social_posts").update({ last_error: msg }).eq("id", post.id);
@@ -76,7 +102,7 @@ Deno.serve(async (req) => {
     const todo = PLATFORMS.filter((p) => !(post.posted_to ?? []).includes(p));
     const done: string[] = [...(post.posted_to ?? [])];
     try {
-      for (const p of todo) { await send(webhook, post, p, "cron_job"); done.push(p); }
+      for (const p of todo) { await send(sb, webhook, post, p, "cron_job"); done.push(p); }
       await sb.from("social_posts").update({ posted_to: done, last_error: null }).eq("id", post.id);
       processed++;
     } catch (e) {
