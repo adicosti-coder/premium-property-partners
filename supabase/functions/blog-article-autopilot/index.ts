@@ -13,10 +13,11 @@ const MAX_PENDING_DRAFTS = 5;
 const AI_URL = "https://ai.gateway.lovable.dev/v1/responses";
 const MODEL = "openai/gpt-6-astra";
 
-// Zone canonice (mem: doar Centru/Cetate, Iosefin, Fabric, Dumbrăvița, Aradului)
+// Zone canonice (mem: doar Centru/Cetate, Iosefin, Fabric, Dumbrăvița, Aradului).
+// Tokenii includ repere stradale frecvente în `properties.location` (adrese complete).
 const ZONES = [
-  { zone: "Cetate/Centru", tokens: ["cetate", "centru"] },
-  { zone: "Iosefin", tokens: ["iosefin"] },
+  { zone: "Cetate/Centru", tokens: ["cetate", "centru", "revolutiei", "unirii", "victoriei", "baranutiu", "brediceanu", "coriolan", "alba iulia", "hungaria", "lloyd", "mercur"] },
+  { zone: "Iosefin", tokens: ["iosefin", "josefin"] },
   { zone: "Fabric", tokens: ["fabric"] },
   { zone: "Dumbrăvița", tokens: ["dumbravita"] },
   { zone: "Aradului", tokens: ["aradului"] },
@@ -244,13 +245,25 @@ Deno.serve(async (req) => {
       }
     }
 
-    let topic: { zone: ZoneDef; variant: VariantDef } | null = null;
-    for (const z of zones) {
-      for (const v of variants) {
-        if (!covered.has(`${z.zone}:${v.key}`)) { topic = { zone: z, variant: v }; break; }
-      }
-      if (topic) break;
+    // Statistici reale pe zonă din anunțurile active
+    const { data: props } = await sb
+      .from("properties")
+      .select("location, listing_type, bedrooms, rooms, usable_area, base_price_per_night, weekend_price_per_night")
+      .eq("is_active", true).limit(1000);
+
+    const activeCountByZone = new Map<string, number>();
+    for (const p of props ?? []) {
+      const loc = matchZone(p.location ?? "", zones);
+      if (loc) activeCountByZone.set(loc.zone, (activeCountByZone.get(loc.zone) ?? 0) + 1);
     }
+
+    let topic: { zone: ZoneDef; variant: VariantDef } | null = null;
+    // Candidați: combinațiile neacoperite, cele cu anunțuri active primește; fallback la cele acoperite mai vechi.
+    const candidates: { zone: ZoneDef; variant: VariantDef }[] = [];
+    for (const z of zones) for (const v of variants) candidates.push({ zone: z, variant: v });
+    candidates.sort((a, b) => (activeCountByZone.get(b.zone.zone) ?? 0) - (activeCountByZone.get(a.zone.zone) ?? 0));
+
+    topic = candidates.find((c) => !covered.has(`${c.zone.zone}:${c.variant.key}`)) ?? null;
     if (!topic) {
       // toate acoperite → reia combinația cu articolul cel mai vechi (refresh ciclic)
       let oldestKey: string | null = null; let oldestAt: string | null = null;
