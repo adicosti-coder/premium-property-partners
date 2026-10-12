@@ -9193,12 +9193,52 @@ export type Database = {
         }
         Relationships: []
       }
+      social_autopost_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          external_id: string | null
+          id: string
+          platform: string
+          property_id: string | null
+          property_slug: string | null
+          status: string
+          title: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          external_id?: string | null
+          id?: string
+          platform: string
+          property_id?: string | null
+          property_slug?: string | null
+          status: string
+          title?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          external_id?: string | null
+          id?: string
+          platform?: string
+          property_id?: string | null
+          property_slug?: string | null
+          status?: string
+          title?: string | null
+        }
+        Relationships: []
+      }
       social_post_drafts: {
         Row: {
           created_at: string
+          fb_post_id: string | null
           id: string
+          ig_media_id: string | null
           images: string[]
+          last_error: string | null
           post_text: string
+          posted_at: string | null
           property_id: string
           property_slug: string | null
           status: string
@@ -9207,9 +9247,13 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          fb_post_id?: string | null
           id?: string
+          ig_media_id?: string | null
           images?: string[]
+          last_error?: string | null
           post_text: string
+          posted_at?: string | null
           property_id: string
           property_slug?: string | null
           status?: string
@@ -9218,9 +9262,13 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          fb_post_id?: string | null
           id?: string
+          ig_media_id?: string | null
           images?: string[]
+          last_error?: string | null
           post_text?: string
+          posted_at?: string | null
           property_id?: string
           property_slug?: string | null
           status?: string

@@ -694,6 +694,13 @@
       "when": 1791811753003,
       "tag": "0098_social_post_drafts",
       "breakpoints": true
+    },
+    {
+      "idx": 99,
+      "version": "7",
+      "when": 1791824520252,
+      "tag": "0099_social_autopost_logs",
+      "breakpoints": true
     }
   ]
 }
