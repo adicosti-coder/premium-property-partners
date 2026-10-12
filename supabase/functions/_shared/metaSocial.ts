@@ -2,6 +2,7 @@
 // Folosește tokenul Meta existent (cel de la WhatsApp). Pagina și contul IG se
 // rezolvă din META_FB_PAGE_ID / META_IG_USER_ID sau automat din /me/accounts.
 import { waToken } from "./waConfig.ts";
+import { prepareInstagramImages } from "./instagramImages.ts";
 
 const G = "https://graph.facebook.com/v25.0";
 
@@ -81,7 +82,7 @@ export async function publishToMetaSocial(text: string, images: string[]): Promi
   if (!ctx.igId) out.push({ platform: "instagram", ok: false, error: "Pagina nu are cont Instagram Business legat" });
   else if (!imgs.length) out.push({ platform: "instagram", ok: false, error: "Instagram cere cel puțin o imagine" });
   else {
-    try { out.push({ platform: "instagram", ok: true, id: await postInstagram(ctx.igId, ctx.pageToken, text.slice(0, 2200), imgs) }); }
+    try { out.push({ platform: "instagram", ok: true, id: await postInstagram(ctx.igId, ctx.pageToken, text.slice(0, 2200), await prepareInstagramImages(imgs)) }); }
     catch (e) { out.push({ platform: "instagram", ok: false, error: (e as Error).message }); }
   }
   return out;
