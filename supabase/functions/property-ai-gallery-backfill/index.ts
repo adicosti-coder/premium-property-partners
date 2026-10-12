@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
   let q = sb.from("properties")
     .select("id, name, rooms, size, floor, year_built, listing_type, location, description_ro, images, image_path, long_description_ro, original_description_raw, amenities, has_ac, has_elevator, heating_type, balconies, parking")
     .eq("is_active", true)
-    .order("created_at").range(Number(body.offset) || 0, (Number(body.offset) || 0) + Math.min(Number(body.limit) || 5, 10) - 1);
+    .order("created_at").order("id").range(Number(body.offset) || 0, (Number(body.offset) || 0) + Math.min(Number(body.limit) || 5, 10) - 1);
   if (body.property_id) q = q.eq("id", body.property_id);
   // all=true includes manual listings on explicit admin request.
   if (!body.all) q = q.not("migrated_from_prospect_id", "is", null);
