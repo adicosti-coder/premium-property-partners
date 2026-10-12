@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Copy, Check, Trash2 } from "lucide-react";
+import { Copy, Check, Trash2, Download } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,30 @@ export default function SocialPostDraftsPanel() {
     const { error } = await supabase.from("social_post_drafts").delete().eq("id", id);
     if (error) return toast.error("Nu s-a șters");
     qc.invalidateQueries({ queryKey: ["social_post_drafts"] });
+  };
+  const download = async (src: string, name: string) => {
+    try {
+      const res = await fetch(src);
+      if (!res.ok) throw new Error();
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      window.open(src, "_blank", "noopener,noreferrer");
+      toast.info("Imaginea s-a deschis într-un tab nou — salveaz-o de acolo.");
+    }
+  };
+  const downloadAll = async (photos: { src: string }[], title: string) => {
+    for (let i = 0; i < photos.length; i++) {
+      await download(photos[i].src, `${title.replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-+|-+$/g, "") || "realtrust"}-foto-${i + 1}.jpg`);
+      await new Promise((r) => setTimeout(r, 400));
+    }
   };
   const copy = async (text: string) => {
     try {
