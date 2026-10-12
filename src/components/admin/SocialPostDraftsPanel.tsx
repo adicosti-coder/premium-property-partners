@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Copy, Check, Trash2, Download } from "lucide-react";
+import { Copy, Check, Trash2, Download, Send, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,27 @@ export default function SocialPostDraftsPanel() {
     const { error } = await supabase.from("social_post_drafts").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
     if (error) return toast.error("Nu s-a salvat");
     qc.invalidateQueries({ queryKey: ["social_post_drafts"] });
+  };
+  const [publishingId, setPublishingId] = useState<string | null>(null);
+  const publishNow = async (draft: Draft) => {
+    setPublishingId(draft.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("social-autopost-drain", { body: { draft_id: draft.id } });
+      if (error) throw error;
+      const results = (data?.results ?? []) as { platform: string; ok: boolean; error?: string }[];
+      if (results.length && results.every((r) => r.ok)) {
+        toast.success("Postarea a fost publicată pe Facebook și Instagram.");
+      } else if (results.length) {
+        toast.error(`Postare eșuată: ${results.filter((r) => !r.ok).map((r) => `${r.platform}: ${r.error}`).join(" | ")}`);
+      } else {
+        toast.info(data?.skipped ? `Sărit: ${data.skipped}` : "Postarea nu a putut fi trimisă.");
+      }
+    } catch {
+      toast.error("Publicarea nu a putut fi pornită. Încearcă din nou.");
+    } finally {
+      setPublishingId(null);
+      qc.invalidateQueries({ queryKey: ["social_post_drafts"] });
+    }
   };
   const remove = async (id: string) => {
     const { error } = await supabase.from("social_post_drafts").delete().eq("id", id);
