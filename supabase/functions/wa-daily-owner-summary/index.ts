@@ -113,6 +113,7 @@ Deno.serve(async (req) => {
     `⚠️ Erori Meta: ${(failed.data ?? []).length}`,
     ...errLines,
     `📣 Social media automat: ${socialOk} postări reușite · ${socialFail.length} eșuate (salvate ca draft)`,
+    ...socialPostedLines,
     ...socialFail.slice(0, 5).map((r) => `   ↳ ${r.platform === "instagram" ? "Instagram" : "Facebook"}: ${r.title ?? r.property_slug ?? "Anunț"} — ${String(r.error_message ?? "eroare").slice(0, 90)}`),
     ...(socialFail.length ? [`   Vezi: https://realtrust.ro/admin/social-drafts`] : []),
   ].join("\n");
