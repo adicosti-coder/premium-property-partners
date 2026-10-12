@@ -129,3 +129,14 @@ export async function synthesizeDescription(input: {
     return null;
   }
 }
+
+/** Descrieri scurte pentru imagini deja aprobate (fără excluderi). */
+export async function captionImages(urls: string[]): Promise<string[]> {
+  const out: string[] = [];
+  for (let i = 0; i < urls.length; i += 12) {
+    const chunk = urls.slice(i, i + 12);
+    const m = await classifyWithAI(chunk);
+    for (const u of chunk) out.push(m.get(u)?.caption || "");
+  }
+  return out;
+}
