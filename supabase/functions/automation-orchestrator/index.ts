@@ -62,6 +62,7 @@ const JOB_FN: Record<string, string> = {
   "blog.sitemap_refresh": "generate-blog-sitemap",
   "blog.article_draft_autopilot": "blog-article-autopilot",
   "social.make_scheduled_posts": "process-scheduled-posts",
+  "content.self_improve_weekly": "content-self-improve",
   // AI / prospect intelligence
   "ai.bulk_cache_refresh": "bulk-generate-ai-cache",
   "prospect.predictive_rescore": "scraper-lead-predictive",
