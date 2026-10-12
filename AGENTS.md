@@ -21,7 +21,8 @@
 - Voice campaign controls use an in-page confirmation, serialize updates, and announce success only after persistence; call-log refreshes retain existing rows — avoids blocked browser confirmations, misleading feedback, and polling flicker.
 - Append the shared concise conversation policy after voice scripts and learned lessons, with sales examples only on sales calls; reuse it in drills — keeps runtime brevity and factuality rules consistent even with custom scripts.
 - Every automated WhatsApp send (auto_kind, templates, offer steps) passes `_shared/waAutoSendGuard.ts` (DNC/refusal stop, 1 proactive per 24h, 1 reply per inbound, single intro) — prevents spam bursts to owners.
-- Consent auto-publish only queues a social draft; `social.autopost_drain` posts one per configured interval via `_shared/metaSocial.ts`, claims rows first, logs per platform, falls back to draft on Meta errors; amenities come only from a fixed AI visual-tag vocabulary, never cleared — avoids Meta rate limits, duplicates, invented features.
+- Consent auto-publish only queues a social draft; `social.autopost_drain` posts one per interval via `_shared/metaSocial.ts`, claims first, logs per platform, falls back to draft on Meta errors; amenities only from fixed AI visual-tag vocabulary — avoids rate limits, duplicates, invented features.
+- `blog.article_draft_autopilot` saves one blog DRAFT per run from real data only; admins publish it in "Auto-pilot Articole"; 402/403 pauses it persistently.
 <!-- LOVABLE:BEGIN -->
 - Social drafts match published gallery captions by canonical image path, never index — avoids wrong captions.
 - Explicit all-property backfills enrich manual listings too, preserve source copy, and resolve image URLs — avoids missing photos and lost facts.

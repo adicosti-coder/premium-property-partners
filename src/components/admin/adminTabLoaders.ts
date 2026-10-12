@@ -36,6 +36,7 @@ const loaders: Record<string, Loader> = {
   properties: () => import("@/components/admin/PropertyManager"),
   "investitii-premium": () => import("@/components/admin/InvestitiiPremiumManager"),
   blog: () => import("@/components/admin/BlogManager"),
+  "blog-autopilot": () => import("@/components/admin/BlogAutopilotDrafts"),
   "owner-codes": () => import("@/components/admin/OwnerCodeManager"),
   maintenance: () => import("@/components/admin/MaintenanceManager"),
   newsletter: () => import("@/components/admin/NewsletterManager"),

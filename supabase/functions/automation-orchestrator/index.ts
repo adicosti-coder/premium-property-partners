@@ -60,6 +60,7 @@ const JOB_FN: Record<string, string> = {
   // Blog / analytics
   "blog.hub_clicks_weekly_digest": "blog-hub-weekly-digest",
   "blog.sitemap_refresh": "generate-blog-sitemap",
+  "blog.article_draft_autopilot": "blog-article-autopilot",
   // AI / prospect intelligence
   "ai.bulk_cache_refresh": "bulk-generate-ai-cache",
   "prospect.predictive_rescore": "scraper-lead-predictive",
