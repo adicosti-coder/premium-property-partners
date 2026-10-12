@@ -298,6 +298,17 @@ export function detectPublishIntent(
 
 /** Refuz explicit: butonul „Nu, mulțumesc" sau un „nu" clar, fără semnale de interes. */
 const EXPLICIT_NO = /^nu\s*,?\s*(mult?umesc|mersi|nu doresc)?\s*[.!]?$/;
+
+/** Refuz clar formulat în propoziție („Nu sunt interesată”, „Fără agenții” etc.). */
+const CLEAR_REFUSAL_RE =
+  /\bnu\s+(sunt|suntem)\s+interesa|\bnu\s+(ma|mai|ne)\s+(mai\s+)?intereseaza|\bnu\s+(mai\s+)?(doresc|dorim|vreau|vrem)\b(?!\s+sa\s+(vand|inchiriez|colabor|stiu|aflu))|\bfara\s+agent|\bnu\s+(lucrez|colaborez|vreau)\s+cu\s+agent|\bnu\s+am\s+nevoie|\bnu\s+(ma|mai)\s+(contactati|sunati|deranjati)|\bnu\s+multumesc\b|\bnu,?\s+mersi\b|\bnu\s+ma\s+deranjati|\bnu\s+e\s+cazul\b|\bnu\s+este\s+cazul\b/;
+
+/** true dacă mesajul este un refuz clar (fără diacritice, lowercase). */
+export function isClearRefusal(raw: string): boolean {
+  const t = stripDiacritics(raw).trim();
+  if (!t) return false;
+  return EXPLICIT_NO.test(t) || CLEAR_REFUSAL_RE.test(t);
+}
 /** Cuvinte care arată interes — anulează interpretarea de refuz. */
 const INTEREST_HINT =
   /oferta|pret|estimare|astept|aștept|vreau|doresc|interes|suna|sun[ăa]|vizion|apartament|camere|zona|administrare|hotel|vanzare|rezerv/;
@@ -310,7 +321,7 @@ export function quickReplyText(
   const publishIntent = detectPublishIntent(raw, opts);
   if (publishIntent === "consent") return { kind: "publish_consent", text: PUBLISH_CONSENT_ACK };
   if (publishIntent === "revoke" && !/^\s*stop\b/.test(t)) return { kind: "publish_revoke", text: PUBLISH_REVOKE_ACK };
-  if (EXPLICIT_NO.test(t.trim()) && !INTEREST_HINT.test(t)) {
+  if ((EXPLICIT_NO.test(t.trim()) && !INTEREST_HINT.test(t)) || CLEAR_REFUSAL_RE.test(t.trim())) {
     return {
       kind: "quick_no",
       text: "Am înțeles. Nu vă mai deranjăm. Dacă vă pot ajuta altădată, îmi scrieți aici. O zi frumoasă!",
