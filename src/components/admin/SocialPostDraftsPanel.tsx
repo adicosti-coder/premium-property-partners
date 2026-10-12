@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Copy, Check, Trash2 } from "lucide-react";
+import { Copy, Check, Trash2, Download } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,30 @@ export default function SocialPostDraftsPanel() {
     if (error) return toast.error("Nu s-a șters");
     qc.invalidateQueries({ queryKey: ["social_post_drafts"] });
   };
+  const download = async (src: string, name: string) => {
+    try {
+      const res = await fetch(src);
+      if (!res.ok) throw new Error();
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      window.open(src, "_blank", "noopener,noreferrer");
+      toast.info("Imaginea s-a deschis într-un tab nou — salveaz-o de acolo.");
+    }
+  };
+  const downloadAll = async (photos: { src: string }[], title: string) => {
+    for (let i = 0; i < photos.length; i++) {
+      await download(photos[i].src, `${title.replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-+|-+$/g, "") || "realtrust"}-foto-${i + 1}.jpg`);
+      await new Promise((r) => setTimeout(r, 400));
+    }
+  };
   const copy = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -82,12 +106,16 @@ export default function SocialPostDraftsPanel() {
                   <Button size="sm" variant="outline" className="min-h-12 w-full whitespace-normal" aria-label={`Copiază textul alternativ pentru fotografia ${index + 1} din ${d.title}`} onClick={() => copy(photo.alt)}>
                     <Copy className="mr-2 h-4 w-4 shrink-0" />Copiază descrierea foto
                   </Button>
+                  <Button size="sm" variant="outline" className="min-h-12 w-full whitespace-normal" aria-label={`Descarcă fotografia ${index + 1} din ${d.title}`} onClick={() => download(photo.src, `${d.title.replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-+|-+$/g, "") || "realtrust"}-foto-${index + 1}.jpg`)}>
+                    <Download className="mr-2 h-4 w-4 shrink-0" />Descarcă imaginea
+                  </Button>
                 </figure>
               ))}
             </div>
             <p className="whitespace-pre-wrap break-words rounded bg-muted/40 p-3 text-sm leading-relaxed text-foreground">{d.readableText}</p>
             <div className="flex flex-wrap gap-2">
               <Button size="sm" className="min-h-12" aria-label={`Copiază postarea pentru ${d.title}`} onClick={() => copy(d.readableText)}><Copy className="h-4 w-4 mr-1" />Copiază textul</Button>
+              <Button size="sm" variant="outline" className="min-h-12" aria-label={`Descarcă toate fotografiile pentru ${d.title}`} onClick={() => downloadAll(d.photos, d.title)}><Download className="h-4 w-4 mr-1" />Descarcă toate pozele</Button>
               {d.status !== "posted" && <Button size="sm" variant="outline" className="min-h-12" onClick={() => setStatus(d.id, "posted")}><Check className="h-4 w-4 mr-1" />Marchează postat</Button>}
               <Button size="sm" variant="ghost" className="min-h-12" onClick={() => remove(d.id)} aria-label="Șterge draftul"><Trash2 className="h-4 w-4" /></Button>
             </div>
