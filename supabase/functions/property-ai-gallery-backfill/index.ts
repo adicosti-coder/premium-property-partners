@@ -1,5 +1,5 @@
 // Completează descrierile pozelor (caption/alt_text) și descrierea structurată
-// pentru anunțurile publicate automat deja existente.
+// pentru toate anunțurile active la cererea explicită a administratorului.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { captionImages, synthesizeDescription, tagImages, applyVisualTags } from "../_shared/imageContentFilter.ts";
@@ -20,7 +20,11 @@ Deno.serve(async (req) => {
   const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!url || !key) return json({ error: "Missing configuration" }, 500);
   const sb = createClient(url, key);
-  const imageUrl = (path: string) => /^https?:\/\//.test(path) ? path : path.startsWith("/") ? `https://realtrust.ro${path}` : sb.storage.from("property-images").getPublicUrl(path.replace(/^property-images\//, "")).data.publicUrl;
+   const imageUrl = (path: string) => {
+     const legacy = path.match(/^\/assets\/(helios|apt-03|apt-04|apt-05|apt-06|apt-07|apt-09|apt-11)\.webp$/);
+     if (legacy) return sb.storage.from("property-images").getPublicUrl(`static-ai/${legacy[1]}.webp`).data.publicUrl;
+     return /^https?:\/\//.test(path) ? path : path.startsWith("/") ? `https://realtrust.ro${path}` : sb.storage.from("property-images").getPublicUrl(path.replace(/^property-images\//, "")).data.publicUrl;
+   };
   let q = sb.from("properties")
     .select("id, name, rooms, size, floor, year_built, listing_type, location, description_ro, images, image_path, long_description_ro, original_description_raw, amenities, has_ac, has_elevator, heating_type, balconies, parking")
     .eq("is_active", true)
