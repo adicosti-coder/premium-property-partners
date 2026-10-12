@@ -966,13 +966,13 @@ Deno.serve(async (req) => {
       // Refuz clar → prospectul trece în „Retras / DNC” pe toate canalele (inclusiv apeluri).
       try {
         const variants = phoneVariants(quick.phone);
-        const ors = variants.flatMap((v) => [`phone.eq.${v}`, `owner_phone.eq.${v}`]).join(",");
+        const ors = variants.flatMap((v) => [`phone_normalized.eq.${v}`, `contact_phone.eq.${v}`]).join(",");
         await supabase.from("prospect_listings").update({
           do_not_call: true,
           do_not_call_reason: "refuz expres pe WhatsApp",
+          do_not_call_at: new Date().toISOString(),
           lifecycle_status: "withdrawn",
         }).or(ors);
-        await supabase.from("leads").update({ status: "retras_dnc" }).in("phone", variants);
       } catch (e) {
         console.error("[wa-webhook] prospect dnc mark failed:", e);
       }
