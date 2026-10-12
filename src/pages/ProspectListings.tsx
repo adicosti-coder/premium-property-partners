@@ -1844,7 +1844,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
               className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-lg hover:shadow-xl font-semibold border-2 border-orange-300/50"
             >
               {campaignRunning ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Rocket className="h-4 w-4 mr-1" />}
-              🚀 Lansează Campanie AI (Top {Math.min(CAMPAIGN_LIMIT, campaignTargets.length)})
+              🚀 Lansează Campanie Secvențială (WhatsApp + Apel Fallback)
             </Button>
             {campaignRunning && (
               <Button
