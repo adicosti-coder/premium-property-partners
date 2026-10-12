@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, RefreshCw, AlertTriangle, CheckCircle2, MinusCircle, Send } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import SocialAutopostLogs from "./SocialAutopostLogs";
 
 type LogRow = {
   id: string;
@@ -88,6 +89,7 @@ export default function AutoPublishLogsDashboard() {
 
   return (
     <div className="space-y-4">
+      <SocialAutopostLogs />
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-4">
           <div>

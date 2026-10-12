@@ -57,6 +57,10 @@ Deno.serve(async (req) => {
   }
   if (viewsRes.error) console.error("[digest] views", viewsRes.error.message);
   if (clicksRes.error) console.error("[digest] clicks", clicksRes.error.message);
+  const { data: socialRows } = await sb.from("social_autopost_logs")
+    .select("platform, status, title, property_slug, error_message").gte("created_at", since).limit(200);
+  const socialOk = (socialRows ?? []).filter((r: any) => r.status === "posted").length;
+  const socialFail = (socialRows ?? []).filter((r: any) => r.status !== "posted") as any[];
   const REASON_RO: Record<string, string> = {
     ai_logo: "logo/reclamă", ai_map: "hartă", ai_other: "grafic/text/fără legătură", blank_black: "neagră",
     blank_uniform: "goală/uniformă", corrupt: "coruptă", too_small_or_corrupt: "coruptă/prea mică", too_small: "rezoluție prea mică",
@@ -101,6 +105,9 @@ Deno.serve(async (req) => {
     `⏳ Rămase în coadă: ${pending.count ?? 0}`,
     `⚠️ Erori Meta: ${(failed.data ?? []).length}`,
     ...errLines,
+    `📣 Social media automat: ${socialOk} postări reușite · ${socialFail.length} eșuate (salvate ca draft)`,
+    ...socialFail.slice(0, 5).map((r) => `   ↳ ${r.platform === "instagram" ? "Instagram" : "Facebook"}: ${r.title ?? r.property_slug ?? "Anunț"} — ${String(r.error_message ?? "eroare").slice(0, 90)}`),
+    ...(socialFail.length ? [`   Vezi: https://realtrust.ro/admin/social-drafts`] : []),
   ].join("\n");
 
   const wa = await sendAdminText(body).catch((e) => ({ ok: false, error: String(e) }));
