@@ -570,6 +570,10 @@ Deno.serve(async (req) => {
           status: keepStatus ? existing!.status : (republish ? "draft" : "queued"),
           updated_at: new Date().toISOString(),
         }, { onConflict: "property_id" });
+        if (!keepStatus && !republish) {
+          const { sendAdminText } = await import("../_shared/listingInspection.ts");
+          await sendAdminText(`🗓️ Postare Facebook/Instagram PROGRAMATĂ\n${inserted.name}\nSe publică automat la următorul interval liber (09–21).\nhttps://realtrust.ro/admin/social-drafts`).catch((e) => console.warn("[auto-publish] social queued WA failed:", e?.message));
+        }
       } catch (e) { console.warn("[auto-publish] social queue failed:", (e as Error)?.message); }
     }
 
