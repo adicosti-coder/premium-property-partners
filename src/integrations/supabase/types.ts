@@ -1810,6 +1810,63 @@ export type Database = {
           },
         ]
       }
+      content_improvements: {
+        Row: {
+          baseline: Json | null
+          confidence: number | null
+          created_at: string
+          current_value: Json | null
+          decided_at: string | null
+          decided_by: string | null
+          error: string | null
+          evidence: Json | null
+          id: string
+          kind: string
+          outcome: Json | null
+          proposed_value: Json | null
+          rationale: string | null
+          status: string
+          target_id: string | null
+          title: string
+        }
+        Insert: {
+          baseline?: Json | null
+          confidence?: number | null
+          created_at?: string
+          current_value?: Json | null
+          decided_at?: string | null
+          decided_by?: string | null
+          error?: string | null
+          evidence?: Json | null
+          id?: string
+          kind: string
+          outcome?: Json | null
+          proposed_value?: Json | null
+          rationale?: string | null
+          status?: string
+          target_id?: string | null
+          title: string
+        }
+        Update: {
+          baseline?: Json | null
+          confidence?: number | null
+          created_at?: string
+          current_value?: Json | null
+          decided_at?: string | null
+          decided_by?: string | null
+          error?: string | null
+          evidence?: Json | null
+          id?: string
+          kind?: string
+          outcome?: Json | null
+          proposed_value?: Json | null
+          rationale?: string | null
+          status?: string
+          target_id?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       contest_periods: {
         Row: {
           created_at: string
