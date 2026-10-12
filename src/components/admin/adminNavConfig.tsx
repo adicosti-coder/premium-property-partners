@@ -226,6 +226,7 @@ const RAW_GROUPS: AdminGroup[] = [
       { value: "ai-memory", label: "AI Memory", icon: Brain, subgroup: "AI Tools", keywords: ["memorie", "context"] },
       { value: "investment-analysis", label: "Analiză Investiții", icon: TrendingUp, subgroup: "AI Tools", keywords: ["investitii", "roi", "analiza", "glm", "ai"] },
       { value: "seo-guide-generator", label: "Generator Ghiduri SEO", icon: FileText, subgroup: "AI Tools", keywords: ["seo", "ghid", "articol", "blog", "cartier", "complex", "glm"] },
+      { value: "blog-autopilot", label: "Auto-pilot Articole", icon: FileText, subgroup: "AI Tools", keywords: ["articol", "blog", "autopilot", "draft", "publicare", "programat"] },
 
       // 🔍 Scraper Pipeline — ecran UNIFICAT (observabilitate + prospecți + aprobare/publicare)
       { value: "unified-pipeline", label: "Pipeline Unificat", icon: Radar, badgeKey: "prospectPipeline", subgroup: "Scraper Pipeline", keywords: ["pipeline", "unificat", "prospects", "scraper", "monitor", "keywords", "aprobare", "publicare", "leads", "bot", "hot", "agentii"] },
