@@ -12,7 +12,7 @@
  */
 
 import { isValidPropertyImageUrl } from "../_shared/propertyImageFilter.ts";
-import { filterPropertyImages } from "../_shared/imageContentFilter.ts";
+import { filterPropertyImages, synthesizeDescription } from "../_shared/imageContentFilter.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { ownerPublishedText, sendWaText } from "../_shared/listingInspection.ts";
 import { loadImportConfig, sanitizeListingText, type ImportConfigRow } from "../_shared/listingSanitizer.ts";
@@ -381,8 +381,10 @@ Deno.serve(async (req) => {
       (finalImages || []).filter((u): u is string => typeof u === "string").map((u) => u.trim()).filter(isValidPropertyImageUrl),
     ));
     // Conținut: fără fișiere corupte/negre, logo-uri de magazine, reclame sau hărți.
+    const captionByUrl = new Map<string, string>();
     if (finalImages.length) {
       const { kept, checks } = await filterPropertyImages(finalImages);
+      for (const c of checks) if (c.ok && c.caption) captionByUrl.set(c.url, c.caption);
       const dropped = checks.filter((c) => !c.ok);
       if (dropped.length) console.log(`[worker] imagini excluse ${prospect.id}: ${dropped.map((d) => d.reason).join(",")}`);
       finalImages = kept;
@@ -423,7 +425,19 @@ Deno.serve(async (req) => {
       }).eq("id", prospect.id);
       return safeJson({ success: true, published: false, reason: "cover_processing_failed" });
     }
+    const origCover = finalImages[0];
     finalImages[0] = cover;
+    const captionsList = finalImages.map((u, i) => captionByUrl.get(i === 0 ? origCover : u) || "");
+    const titleAlt = finalTitle.substring(0, 80);
+    const aiAlts = captionsList.map((c, i) => c ? `${c} – ${titleAlt}` : ((finalImageAlts as any)?.[i] || titleAlt));
+    // Descriere structurată (Descriere generală / Dotări & Finisaje / Compartimentare).
+    const enrichedDesc = await synthesizeDescription({
+      title: finalTitle,
+      originalText: prospect.description || rawMd || finalFull,
+      captions: captionsList.filter(Boolean),
+      facts: { zona: prospect.zone, camere: prospect.rooms, suprafata_mp: prospect.size, etaj: prospect.floor, an_constructie: prospect.year_built, tip: isRent ? "închiriere" : "vânzare" },
+    });
+    if (enrichedDesc) finalFull = enrichedDesc;
 
     const propertyData: Record<string, any> = {
       name: finalTitle.substring(0, 200),
@@ -469,7 +483,7 @@ Deno.serve(async (req) => {
       base_price_per_night: null,
       capital_necesar: prospect.price,
       images: finalImages,
-      image_alts: finalImageAlts,
+      image_alts: aiAlts,
       image_path: finalImages[0] || null,
       booking_url: null,
       source_platform: platform,
@@ -501,6 +515,7 @@ Deno.serve(async (req) => {
       await supabase.from("property_images").delete().eq("property_id", inserted.id);
       const rows = finalImages.filter(Boolean).slice(0, 25).map((src: string, i: number) => ({
         property_id: inserted!.id, image_path: src, display_order: i, is_primary: i === 0, is_published: true,
+        caption: captionsList[i] || null, alt_text: aiAlts[i] || null,
       }));
       if (rows.length) await supabase.from("property_images").insert(rows);
     } catch (e) {

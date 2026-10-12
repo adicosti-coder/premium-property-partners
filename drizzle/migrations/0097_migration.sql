@@ -1,0 +1,1 @@
+alter table public.property_images add column if not exists caption text, add column if not exists alt_text text;

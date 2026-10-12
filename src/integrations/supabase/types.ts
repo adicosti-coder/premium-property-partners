@@ -5540,6 +5540,8 @@ export type Database = {
       }
       property_images: {
         Row: {
+          alt_text: string | null
+          caption: string | null
           created_at: string
           display_order: number
           id: string
@@ -5551,6 +5553,8 @@ export type Database = {
           property_id: string
         }
         Insert: {
+          alt_text?: string | null
+          caption?: string | null
           created_at?: string
           display_order?: number
           id?: string
@@ -5562,6 +5566,8 @@ export type Database = {
           property_id: string
         }
         Update: {
+          alt_text?: string | null
+          caption?: string | null
           created_at?: string
           display_order?: number
           id?: string
