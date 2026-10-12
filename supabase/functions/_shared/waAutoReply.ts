@@ -301,7 +301,7 @@ const EXPLICIT_NO = /^nu\s*,?\s*(mult?umesc|mersi|nu doresc)?\s*[.!]?$/;
 
 /** Refuz clar formulat în propoziție („Nu sunt interesată”, „Fără agenții” etc.). */
 const CLEAR_REFUSAL_RE =
-  /\bnu\s+(sunt|suntem)\s+interesa|\bnu\s+(ma|mai|ne)\s+(mai\s+)?intereseaza|\bnu\s+(mai\s+)?(doresc|dorim|vreau|vrem)\b(?!\s+sa\s+(vand|inchiriez|colabor|stiu|aflu))|\bfara\s+agent|\bnu\s+(lucrez|colaborez|vreau)\s+cu\s+agent|\bnu\s+am\s+nevoie|\bnu\s+(ma|mai)\s+(contactati|sunati|deranjati)|\bnu\s+multumesc\b|\bnu,?\s+mersi\b|\bnu\s+ma\s+deranjati|\bnu\s+e\s+cazul\b|\bnu\s+este\s+cazul\b/;
+  /\bnu\s+(sunt|suntem)\s+interesa|\bnu\s+(ma|mai|ne)\s+(mai\s+)?intereseaza|\bnu\s+(mai\s+)?(doresc|dorim|vreau|vrem)\b(?!\s+sa\s+(vand|inchiriez|colabor|stiu|aflu))|\bfara\s+agent|\bnu\s+(lucrez|colaborez|vreau)\s+cu\s+agent|\bnu\s+am\s+nevoie|\bnu\s+(ma|mai)\s+(contactati|sunati|deranjati)|\bnu\s+multumesc\b|\bnu,?\s+mersi\b|\bnu\s+ma\s+deranjati|\bnu\s+e\s+cazul\b|\bnu\s+este\s+cazul\b|\bnu\s+(mai\s+)?(este|e)\s+nevoie\b|\bprefer\s+sa\s+nu\b|\bnu\s+intentionez\b|\bnu\s+sunt\s+de\s+acord\b/;
 
 /** true dacă mesajul este un refuz clar (fără diacritice, lowercase). */
 export function isClearRefusal(raw: string): boolean {
