@@ -13,25 +13,45 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const bearer = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
-  if (!timingSafeEqual(bearer, key) && !(await isInternalCall(req))) return json({ error: "unauthorized" }, 401);
-
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, key, { auth: { persistSession: false } });
-  const { data: job } = await sb.from("automation_jobs").select("config").eq("job_key", "social.autopost_drain").maybeSingle();
-  const cfg = (job?.config ?? {}) as Record<string, unknown>;
-  const minInterval = Math.max(30, Number(cfg.min_interval_minutes) || 120);
-  const startH = Number(cfg.start_hour ?? 9), endH = Number(cfg.end_hour ?? 21);
 
-  const hour = Number(new Intl.DateTimeFormat("en-GB", { hour: "2-digit", hour12: false, timeZone: "Europe/Bucharest" }).format(new Date()));
-  if (hour < startH || hour >= endH) return json({ ok: true, skipped: "outside_window", hour });
+  // Publicare manuală din Admin: POST { draft_id } cu JWT de admin — sare peste fereastră și interval.
+  let manualDraftId: string | null = null;
+  let authorized = timingSafeEqual(bearer, key) || (await isInternalCall(req));
+  if (!authorized && bearer) {
+    const { data: { user } } = await sb.auth.getUser(bearer);
+    if (user) {
+      const { data: isAdmin } = await sb.rpc("has_role", { _user_id: user.id, _role: "admin" });
+      if (isAdmin) {
+        authorized = true;
+        try { manualDraftId = (await req.clone().json())?.draft_id ?? null; } catch { manualDraftId = null; }
+      }
+    }
+  }
+  if (!authorized) return json({ error: "unauthorized" }, 401);
 
-  const { data: last } = await sb.from("social_autopost_logs").select("created_at").order("created_at", { ascending: false }).limit(1).maybeSingle();
-  if (last && Date.now() - new Date(last.created_at).getTime() < minInterval * 60_000) {
-    return json({ ok: true, skipped: "interval", last_at: last.created_at, min_interval_minutes: minInterval });
+  if (!manualDraftId) {
+    const { data: job } = await sb.from("automation_jobs").select("config").eq("job_key", "social.autopost_drain").maybeSingle();
+    const cfg = (job?.config ?? {}) as Record<string, unknown>;
+    const minInterval = Math.max(30, Number(cfg.min_interval_minutes) || 120);
+    const startH = Number(cfg.start_hour ?? 9), endH = Number(cfg.end_hour ?? 21);
+
+    const hour = Number(new Intl.DateTimeFormat("en-GB", { hour: "2-digit", hour12: false, timeZone: "Europe/Bucharest" }).format(new Date()));
+    if (hour < startH || hour >= endH) return json({ ok: true, skipped: "outside_window", hour });
+
+    const { data: last } = await sb.from("social_autopost_logs").select("created_at").order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (last && Date.now() - new Date(last.created_at).getTime() < minInterval * 60_000) {
+      return json({ ok: true, skipped: "interval", last_at: last.created_at, min_interval_minutes: minInterval });
+    }
   }
 
-  const { data: draft } = await sb.from("social_post_drafts").select("id,property_id,property_slug,title,post_text,images")
-    .eq("status", "queued").order("created_at", { ascending: true }).limit(1).maybeSingle();
+  const { data: draft } = manualDraftId
+    ? await sb.from("social_post_drafts").select("id,property_id,property_slug,title,post_text,images,status")
+        .eq("id", manualDraftId).maybeSingle()
+    : await sb.from("social_post_drafts").select("id,property_id,property_slug,title,post_text,images,status")
+        .eq("status", "queued").order("created_at", { ascending: true }).limit(1).maybeSingle();
   if (!draft) return json({ ok: true, skipped: "queue_empty" });
+  if (draft.status === "posted" || draft.status === "posting") return json({ ok: true, skipped: "already_" + draft.status });
 
   // Rezervăm draftul ca să nu fie postat de două rulări paralele.
   const { data: claimed } = await sb.from("social_post_drafts").update({ status: "posting", updated_at: new Date().toISOString() })
