@@ -963,6 +963,19 @@ Deno.serve(async (req) => {
       } catch (e) {
         console.error("[wa-webhook] dnc upsert failed:", e);
       }
+      // Refuz clar → prospectul trece în „Retras / DNC” pe toate canalele (inclusiv apeluri).
+      try {
+        const variants = phoneVariants(quick.phone);
+        const ors = variants.flatMap((v) => [`phone_normalized.eq.${v}`, `contact_phone.eq.${v}`]).join(",");
+        await supabase.from("prospect_listings").update({
+          do_not_call: true,
+          do_not_call_reason: "refuz expres pe WhatsApp",
+          do_not_call_at: new Date().toISOString(),
+          lifecycle_status: "rejected",
+        }).or(ors);
+      } catch (e) {
+        console.error("[wa-webhook] prospect dnc mark failed:", e);
+      }
     } else if (await isBlockedConv(convId)) {
       continue; // număr în lista de excludere → răspunde doar un coleg
     }
