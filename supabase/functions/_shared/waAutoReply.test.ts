@@ -148,3 +148,15 @@ test("NU retrage doar ca răspuns la cerere", () => {
   expect(detectPublishIntent("Nu", { pendingConsent: true })).toBe("revoke");
   expect(detectPublishIntent("Nu")).toBeNull();
 });
+
+import { isClearRefusal, quickReplyText } from "./waAutoReply.ts";
+test.each(["Nu sunt interesată", "Nu ma intereseaza", "Nu doresc", "Fără agenții", "Nu, mulțumesc", "nu mă mai interesează"])(
+  "refuz clar → quick_no: %s",
+  (t) => {
+    expect(isClearRefusal(t)).toBe(true);
+    expect(quickReplyText(t)?.kind).toBe("quick_no");
+  },
+);
+test.each(["Sunt interesat", "Da, mă interesează", "Vreau să colaborăm"])("NU e refuz: %s", (t) => {
+  expect(isClearRefusal(t)).toBe(false);
+});

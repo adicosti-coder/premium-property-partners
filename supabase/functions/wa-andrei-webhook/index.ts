@@ -971,7 +971,7 @@ Deno.serve(async (req) => {
           do_not_call: true,
           do_not_call_reason: "refuz expres pe WhatsApp",
           do_not_call_at: new Date().toISOString(),
-          lifecycle_status: "withdrawn",
+          lifecycle_status: "rejected",
         }).or(ors);
       } catch (e) {
         console.error("[wa-webhook] prospect dnc mark failed:", e);
