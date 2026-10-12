@@ -8,6 +8,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { isInternalWaNumber } from "../_shared/waInternalNumbers.ts";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { isInternalCall } from "../_shared/cronAuth.ts";
+import { checkAutoSend } from "../_shared/waAutoSendGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -128,6 +129,13 @@ Deno.serve(async (req) => {
       continue;
     }
 
+    // Anti-spam: refuz/DNC/retras + max 1 mesaj automat / 24h.
+    const guard = await checkAutoSend(supabase, { phone, conversationId, kind: "offer_followup" });
+    if (!guard.allowed) {
+      results.push({ conversationId, skipped: guard.reason });
+      continue;
+    }
+
     if (dryRun) {
       sent += 1;
       results.push({ conversationId, phone, would_send: true });
@@ -232,6 +240,13 @@ Deno.serve(async (req) => {
       .limit(1);
     if (outAfter?.length) {
       results.push({ conversationId, step: "offer_confirm", skipped: "agent_active" });
+      continue;
+    }
+
+    // Anti-spam: refuz/DNC/retras + max 1 mesaj automat / 24h.
+    const guard = await checkAutoSend(supabase, { phone, conversationId, kind: "offer_confirm" });
+    if (!guard.allowed) {
+      results.push({ conversationId, step: "offer_confirm", skipped: guard.reason });
       continue;
     }
 
@@ -349,6 +364,13 @@ Deno.serve(async (req) => {
         .limit(1);
       if (outAfter?.length) {
         results.push({ conversationId, step: stage.next, skipped: "agent_active" });
+        continue;
+      }
+
+      // Anti-spam: refuz/DNC/retras + max 1 mesaj automat / 24h.
+      const guard = await checkAutoSend(supabase, { phone, conversationId, kind: stage.next });
+      if (!guard.allowed) {
+        results.push({ conversationId, step: stage.next, skipped: guard.reason });
         continue;
       }
 

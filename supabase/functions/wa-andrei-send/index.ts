@@ -4,6 +4,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { WA_PHONE_NUMBER_ID } from "../_shared/waConfig.ts";
 import { fetchWithRetry } from "../_shared/fetchRetry.ts";
 import { toWaDigits } from "../_shared/waPhone.ts";
+import { checkAutoSend } from "../_shared/waAutoSendGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -44,6 +45,8 @@ Deno.serve(async (req) => {
     template_language?: string;
     /** Marcaj opțional: mesajul a plecat automat (răspuns automat), nu de la agent. */
     auto_kind?: string;
+    /** Trimitere manuală de agent (exceptată de la limitele anti-spam). */
+    manual?: boolean;
   } = {};
   try { body = await req.json(); } catch {
     return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -67,6 +70,20 @@ Deno.serve(async (req) => {
 
   if (convErr || !conv) {
     return new Response(JSON.stringify({ error: "Conversation not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
+  // Anti-spam: orice mesaj automat (auto_kind sau șablon) trece prin poarta comună.
+  const isAutomated = body.manual !== true && (!!body.auto_kind || !!body.template_name);
+  if (isAutomated) {
+    const guard = await checkAutoSend(supabase, {
+      phone: conv.phone_normalized,
+      kind: body.auto_kind || null,
+      template: body.template_name || null,
+    });
+    if (!guard.allowed) {
+      console.log(`[wa-andrei-send] auto blocked conv=${conversationId} kind=${body.auto_kind || body.template_name} reason=${guard.reason}`);
+      return new Response(JSON.stringify({ error: "auto_send_blocked", reason: guard.reason, skipped: true }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
   }
 
   const now = Date.now();

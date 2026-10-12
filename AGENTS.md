@@ -20,3 +20,4 @@
 - Keep toast hosts mounted at startup, isolate route errors with a location-reset boundary, and delay nonblocking route-loading feedback briefly — preserves early notifications and prerendered content without blank navigation.
 - Voice campaign controls use an in-page confirmation, serialize updates, and announce success only after persistence; call-log refreshes retain existing rows — avoids blocked browser confirmations, misleading feedback, and polling flicker.
 - Append the shared concise conversation policy after voice scripts and learned lessons, with sales examples only on sales calls; reuse it in drills — keeps runtime brevity and factuality rules consistent even with custom scripts.
+- Every automated WhatsApp send (auto_kind, templates, offer steps) passes `_shared/waAutoSendGuard.ts` (DNC/refusal stop, 1 proactive per 24h, 1 reply per inbound, single intro) — prevents spam bursts to owners.
