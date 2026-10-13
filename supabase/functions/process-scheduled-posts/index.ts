@@ -4,6 +4,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
+import { formatSocialCaption } from "../_shared/socialCaption.ts";
 
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -35,7 +36,11 @@ async function send(sb: any, url: string, post: any, platform: string, trigger: 
       signal: AbortSignal.timeout(15000),
       body: JSON.stringify({
         title: post.title,
-        caption: post.caption,
+        caption: formatSocialCaption(post.caption || "", {
+          platform: platform === "instagram" ? "instagram" : "facebook",
+          type: post.type === "blog" ? "blog" : "property",
+          sourceUrl: post.source_url,
+        }),
         imageUrl: imageUrls[0] ?? post.image_url ?? null,
         imageUrls,
         isCarousel: imageUrls.length > 1,
