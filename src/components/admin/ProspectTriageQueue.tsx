@@ -304,7 +304,7 @@ export default function ProspectTriageQueue() {
                         </div>
                       )}
                     </div>
-                    <div className="flex sm:flex-col gap-2 shrink-0">
+                    <div className="grid grid-cols-1 gap-2 w-full sm:w-auto sm:shrink-0 [&>button]:w-full [&>button]:min-h-12">
                       <Button
                         size="sm"
                         className="min-h-12"
