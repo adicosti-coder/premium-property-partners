@@ -28,8 +28,9 @@ const MODULE: Record<string, string> = {
   wa_message: "outreach", wa_hours: "outreach", prospect_source: "outreach", andrei_rule: "outreach",
 };
 const isWhatsapp = (i: Item) => i.proposed_value?.scope === "whatsapp";
+const isMarket = (i: Item) => i.proposed_value?.scope === "market";
 const isObjection = (i: Item) => i.proposed_value?.scope === "wa_objection";
-const MODULES: Array<[string, string]> = [["all", "Toate"], ["conversations", "Conversații"], ["whatsapp", "Calitate WhatsApp"], ["blog", "Blog & SEO"], ["social", "Social"], ["ops", "Integrări"], ["cro", "Conversii"], ["outreach", "Prospectare"]];
+const MODULES: Array<[string, string]> = [["all", "Toate"], ["conversations", "Conversații"], ["market", "Piața anunțurilor"], ["whatsapp", "Calitate WhatsApp"], ["blog", "Blog & SEO"], ["social", "Social"], ["ops", "Integrări"], ["cro", "Conversii"], ["outreach", "Prospectare"]];
 const HIDDEN = new Set(["measured_at", "lead_ids", "row_id", "previous_config", "archived_ids", "social_post_id", "previous_followups", "scope", "code", "previous_lessons", "applied_lessons"]);
 const LABEL: Record<string, string> = {
   meta_title: "Titlu Google", meta_description: "Descriere Google", title: "Titlu", tone: "Ton",
@@ -147,14 +148,14 @@ export default function ContentImprovementCenter() {
   };
 
   const [mod, setMod] = useState("all");
-  const inMod = (i: Item) => mod === "all" || (isObjection(i) ? mod === "conversations" : isWhatsapp(i) ? mod === "whatsapp" : MODULE[i.kind] === mod);
+  const inMod = (i: Item) => mod === "all" || (isMarket(i) ? mod === "market" : isObjection(i) ? mod === "conversations" : isWhatsapp(i) ? mod === "whatsapp" : MODULE[i.kind] === mod);
   const pending = items.filter((i) => i.status === "pending" && inMod(i));
   const history = items.filter((i) => i.status !== "pending" && inMod(i));
 
   const Card = ({ i }: { i: Item }) => (
     <div className="rounded-lg border border-border bg-card p-4 space-y-3">
       <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="secondary">{isObjection(i) ? "Antrenor conversații" : isWhatsapp(i) ? "Calitate conversații WhatsApp" : KIND[i.kind] ?? i.kind}</Badge>
+        <Badge variant="secondary">{isMarket(i) ? "Calitate date piață" : isObjection(i) ? "Antrenor conversații" : isWhatsapp(i) ? "Calitate conversații WhatsApp" : KIND[i.kind] ?? i.kind}</Badge>
         {i.confidence != null && <span className="text-xs text-muted-foreground">Încredere {Math.round(i.confidence * 100)}%</span>}
         {i.status !== "pending" && <Badge variant={i.status === "applied" ? "default" : i.status === "failed" ? "destructive" : "outline"}>
           {i.status === "applied" ? "Aplicat" : i.status === "failed" ? "Eșuat" : i.status === "rolled_back" ? "Anulat" : "Respins"}</Badge>}
@@ -163,6 +164,7 @@ export default function ContentImprovementCenter() {
       <p className="font-heading font-semibold">{i.title}</p>
       {i.rationale && <p className="text-sm text-muted-foreground">{i.rationale}</p>}
       {i.evidence?.text && <p className="text-xs text-muted-foreground">Date: {i.evidence.text}</p>}
+      {isMarket(i) && <Button variant="outline" size="sm" className="min-h-12" onClick={() => navigate("/admin/hub-market-listings")}>Deschide Piața anunțurilor</Button>}
       {(isWhatsapp(i) || isObjection(i)) && i.evidence?.conversation_ids?.slice(0, 5).map((id, n) => (
         <Button key={id} variant="outline" size="sm" className="min-h-12" onClick={() => navigate(`/admin/hub-wa-conversations?view=whatsapp-live&conversation=${id}`)}>Verifică discuția {n + 1}</Button>
       ))}
@@ -176,7 +178,7 @@ export default function ContentImprovementCenter() {
             const src = String((i.proposed_value as any)?.source ?? ""); const zone = String((i.proposed_value as any)?.zone ?? "");
             const a = i.kind === "prospect_source"
               ? { ...base, label: `Setează prioritate maximă la scraping pe ${src}`, desc: `Activează ${src} în Prospectare cu numărul maxim de rezultate pe scanare (20)${zone ? ` și adaugă zona ${zone} în filtrul de zone` : ""}.` }
-              : isObjection(i) ? { ...base, label: "Aprobă replica pentru Andrei", desc: "Andrei va folosi replica drept model la obiecții similare pe WhatsApp. Nu trimite mesaje; poți anula oricând.", run: "apply" as const } : isWhatsapp(i) ? { ...base, label: "Aprobă regula pentru WhatsApp", desc: "Salvează regula pentru răspunsurile AI viitoare; nu trimite mesaje și nu modifică istoricul.", run: "apply" as const } : base;
+              : isMarket(i) ? { ...base, label: "Am notat, le corectez", desc: "Marchează problema ca preluată. Corecturile le faci în Piața anunțurilor; analiza următoare verifică dacă numărul a scăzut.", run: "apply" as const } : isObjection(i) ? { ...base, label: "Aprobă replica pentru Andrei", desc: "Andrei va folosi replica drept model la obiecții similare pe WhatsApp. Nu trimite mesaje; poți anula oricând.", run: "apply" as const } : isWhatsapp(i) ? { ...base, label: "Aprobă regula pentru WhatsApp", desc: "Salvează regula pentru răspunsurile AI viitoare; nu trimite mesaje și nu modifică istoricul.", run: "apply" as const } : base;
             return (
               <div className="space-y-2 border-t border-border pt-2">
                 <p className="text-xs text-muted-foreground"><span className="font-semibold text-foreground">Ce face AI-ul: </span>{a.desc}</p>
@@ -223,7 +225,7 @@ export default function ContentImprovementCenter() {
       <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrează după modul">
         {MODULES.map(([k, l]) => (
           <Button key={k} size="sm" variant={mod === k ? "default" : "outline"} className="min-h-12" aria-pressed={mod === k} onClick={() => setMod(k)}>
-            {l} ({items.filter((i) => i.status === "pending" && (k === "all" || (isObjection(i) ? k === "conversations" : isWhatsapp(i) ? k === "whatsapp" : MODULE[i.kind] === k))).length})
+            {l} ({items.filter((i) => i.status === "pending" && (k === "all" || (isMarket(i) ? k === "market" : isObjection(i) ? k === "conversations" : isWhatsapp(i) ? k === "whatsapp" : MODULE[i.kind] === k))).length})
           </Button>
         ))}
       </div>

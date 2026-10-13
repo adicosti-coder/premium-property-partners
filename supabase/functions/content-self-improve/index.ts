@@ -9,6 +9,7 @@ import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { analyzeWhatsapp, gatherWhatsappAudit } from "./whatsapp.ts";
 import { analyzeObjections, unsafeReply } from "./objections.ts";
+import { analyzeMarket } from "./market.ts";
 import { WA_AUDIT_RULES } from "../_shared/waConversationAudit.ts";
 import { analyzeOps, applyOps, rollbackOps, measureOps, OPS_KINDS } from "./ops.ts";
 
@@ -123,6 +124,7 @@ Nu inventa cifre, prețuri, randamente sau zone. Dacă datele sunt puține, prop
 async function analyze(db: any) {
   const measured = await measureOutcomes(db);
   const whatsapp = await analyzeWhatsapp(db);
+  try { whatsapp.created += (await analyzeMarket(db)).created; } catch (e) { console.error("market", e); }
   try { const ob = await analyzeObjections(db); whatsapp.created += ob.created; } catch (e) { console.error("objections", e); }
   const ctx = await gatherContext(db);
   const key = Deno.env.get("LOVABLE_API_KEY");
@@ -541,6 +543,7 @@ Deno.serve(async (req) => {
     }
     const gate = await requireInternalOrAdmin(req, corsHeaders);
     if (gate) return gate;
+    if (body?.action === "analyze_market") return json({ success: true, measured: 0, ...(await analyzeMarket(db)) });
     if (body?.action === "analyze_objections") return json({ success: true, measured: 0, ...(await analyzeObjections(db)) });
     if (body?.action === "analyze_whatsapp") return json({ success: true, measured: 0, ...(await analyzeWhatsapp(db)) });
     return json({ success: true, ...(await analyze(db)) });
