@@ -58,6 +58,7 @@ export default function SavedListingsPanel() {
     setLoading(true);
     const { data, error } = await supabase
       .from("prospect_listings")
+      .is("duplicate_of", null)
       .select(
         "id,title,price,price_per_sqm,price_checked_at,contact_phone,source_url,source_platform,zone,rooms,created_at,last_seen_at",
       )

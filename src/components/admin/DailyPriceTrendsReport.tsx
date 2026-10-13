@@ -26,7 +26,7 @@ interface Row {
 const eur = (v: number | null) => (v == null ? "—" : `${Math.round(Number(v)).toLocaleString("ro-RO")} €`);
 const num = (v: number | null, suffix = "") => (v == null ? "—" : `${Number(v).toFixed(1)}${suffix}`);
 const dayRo = (v: string) =>
-  new Date(v).toLocaleDateString("ro-RO", { weekday: "short", day: "2-digit", month: "2-digit" });
+  new Date(`${String(v).slice(0, 10)}T12:00:00Z`).toLocaleDateString("ro-RO", { weekday: "short", day: "2-digit", month: "2-digit" });
 
 export default function DailyPriceTrendsReport() {
   const [rows, setRows] = useState<Row[]>([]);

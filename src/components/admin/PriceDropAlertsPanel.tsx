@@ -145,7 +145,7 @@ export default function PriceDropAlertsPanel({ embedded = false }: { embedded?: 
     setChecking(true);
     try {
       const { data, error } = await supabase.functions.invoke("prospect-price-drop-alert", {
-        body: { min_pct: threshold, min_abs: 0, hours: 24 },
+        body: { min_pct: threshold, min_abs: 0, hours: Number(days) * 24 },
       });
       if (error) throw error;
       const drops = Number((data as { drops?: number } | null)?.drops || 0);

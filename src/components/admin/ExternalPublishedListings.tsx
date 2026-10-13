@@ -110,11 +110,12 @@ export default function ExternalPublishedListings() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("my_listings")
       .select("id,title,zone,property_type,rooms,size,price,image_url,publish_status")
       .order("updated_at", { ascending: false })
       .limit(300);
+    if (error) toast.error("Nu am putut încărca anunțurile publicate extern");
 
     const out: PublishedRow[] = [];
     for (const r of (data ?? []) as unknown as MyListingRow[]) {
