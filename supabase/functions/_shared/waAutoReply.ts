@@ -730,8 +730,8 @@ export function ownerReplyText(raw: string, ctx: ProspectContext = null): { kind
   }
 
   // 2b) Întrebări despre comision / siguranță / contract → răspuns scurt + pagina de condiții.
-  if (/\?|cat|care|ce|cum|exista|e sigur|este sigur/.test(t) &&
-      /comision|cat costa|costuri|taxa|sigur|siguranta|incredere|teapa|contract|exclusivitate|obligati|angajament/.test(t) &&
+  if (/\?|\b(cat|care|ce|cum|exista)\b|e sigur|este sigur/.test(t) &&
+      /comision|cat costa|costuri|taxa|siguranta|incredere|teapa|contract|exclusivitate|obligati|angajament|e sigur|este sigur/.test(t) &&
       !/comision.*(mare|mult|scump)|prea scump|prea mult/.test(t)) {
     const fee = mode === "vanzare" ? "La vânzare comisionul e 2–4%, plătit doar dacă se vinde."
       : mode === "inchiriere" ? "La închiriere plătiți doar după semnarea cu chiriașul."
