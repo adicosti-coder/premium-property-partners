@@ -19,16 +19,16 @@ const KIND: Record<string, string> = {
   social_caption: "Descriere socială", blog_topic: "Subiect articol nou", insight: "Observație",
   wa_message: "Mesaj WhatsApp", wa_hours: "Ore trimitere WhatsApp", prospect_source: "Surse & zone", andrei_rule: "Regulă Andrei",
   social_hours: "Orar postări social", social_featured: "Proprietatea săptămânii", integration_retry: "Integrări & webhooks",
-  lead_archive: "Curățare lead-uri", cta_ab: "Variantă CTA",
+  lead_archive: "Curățare lead-uri", cta_ab: "Variantă CTA", lead_followup: "Clienți de recontactat", listing_refresh: "Anunțuri fără contacte",
 };
 const MODULE: Record<string, string> = {
   blog_seo: "blog", blog_topic: "blog", insight: "blog",
   social_tone: "social", social_hashtags: "social", social_caption: "social", social_hours: "social", social_featured: "social",
-  integration_retry: "ops", lead_archive: "ops", cta_ab: "cro",
+  integration_retry: "ops", lead_archive: "ops", cta_ab: "cro", lead_followup: "outreach", listing_refresh: "cro",
   wa_message: "outreach", wa_hours: "outreach", prospect_source: "outreach", andrei_rule: "outreach",
 };
 const MODULES: Array<[string, string]> = [["all", "Toate"], ["blog", "Blog & SEO"], ["social", "Social"], ["ops", "Integrări"], ["cro", "Conversii"], ["outreach", "Prospectare"]];
-const HIDDEN = new Set(["measured_at", "lead_ids", "row_id", "previous_config", "archived_ids", "social_post_id"]);
+const HIDDEN = new Set(["measured_at", "lead_ids", "row_id", "previous_config", "archived_ids", "social_post_id", "previous_followups"]);
 const LABEL: Record<string, string> = {
   meta_title: "Titlu Google", meta_description: "Descriere Google", title: "Titlu", tone: "Ton",
   hashtags: "Hashtag-uri", caption: "Descriere", topic: "Subiect", zone: "Zonă", reason: "Motiv",
@@ -138,6 +138,8 @@ export default function ContentImprovementCenter() {
     social_featured: { label: "Aprobă și programează postarea în Social Engine", desc: "Creează postarea „Proprietatea săptămânii” cu pozele anunțului și o programează în Social Engine la data afișată.", icon: Check, run: "apply" },
     integration_retry: { label: "Execută re-încercare webhook", desc: "Retrimite acum mesajele Make.com din coadă și repune lead-urile nesincronizate în trimiterea către CRM.", icon: RefreshCw, run: "apply" },
     lead_archive: { label: "Arhivează lead-uri inactive", desc: "Scoate lead-urile reci din Lead Manager fără să le șteargă. Le poți readuce cu „Anulează”.", icon: Check, run: "apply" },
+    lead_followup: { label: "Programează recontactarea azi", desc: "Pune acești clienți în lista de recontactat de azi din Lead Manager. Nu trimite nimic automat — folosești mesajul sugerat când îi suni sau le scrii.", icon: Check, run: "apply" },
+    listing_refresh: { label: "Am notat, le revizuiesc", desc: "Marchează propunerea ca rezolvată. Modificările la poze, titlu sau preț le faci tu în anunț.", icon: Check, run: "apply" },
     cta_ab: { label: "Aplică variația A/B pe butonul CTA", desc: "Schimbă textul butonului pe pagina de start. După 14 zile se compară click-urile înainte și după; poți reveni oricând cu „Anulează”.", icon: Check, run: "apply" },
   };
 
@@ -186,7 +188,7 @@ export default function ContentImprovementCenter() {
       </div>
       {i.outcome && <div className="rounded border border-border p-3"><p className="text-xs font-semibold mb-1">Efect măsurat</p><Values v={i.outcome} /></div>}
       {i.error && <p className="text-xs text-destructive">{i.error}</p>}
-      {i.status === "applied" && !["integration_retry", "blog_topic", "insight", "andrei_rule", "wa_message", "wa_hours"].includes(i.kind) && (
+      {i.status === "applied" && !["integration_retry", "blog_topic", "insight", "andrei_rule", "wa_message", "wa_hours", "listing_refresh"].includes(i.kind) && (
         <Button size="sm" variant="outline" className="min-h-12" disabled={busy === i.id} onClick={() => rollback(i.id)}>
           {busy === i.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Undo2 className="h-4 w-4" />}Anulează (revino la varianta anterioară)
         </Button>
