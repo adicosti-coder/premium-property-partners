@@ -234,7 +234,7 @@ export default function OwnerFollowUpPanel() {
                   </div>
                 }
               >
-                <PriceDropAlertsPanel />
+                <PriceDropAlertsPanel embedded />
               </Suspense>
             </AdminErrorBoundary>
           </CardContent>
