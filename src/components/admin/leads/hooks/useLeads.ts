@@ -210,6 +210,7 @@ export function useLeads(opts: UseLeadsOptions) {
           "id, source, property_type, created_at, calculated_net_profit, property_area, is_read, crm_status",
         )
         .gte("created_at", since)
+        .is("archived_at", null)
         .order("created_at", { ascending: false })
         .limit(5000);
       if (error) throw error;
@@ -238,7 +239,7 @@ export function useLeads(opts: UseLeadsOptions) {
    */
   const fetchAllFiltered = useCallback(
     async (limit = 5000): Promise<LeadRow[]> => {
-      let q = supabase.from("leads").select(LEAD_COLUMNS);
+      let q = supabase.from("leads").select(LEAD_COLUMNS).is("archived_at", null);
       q = applyFilters(q);
       const { data, error } = await q
         .order("created_at", { ascending: false })
