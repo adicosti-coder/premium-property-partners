@@ -3,7 +3,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { WA_PHONE_NUMBER_ID } from "../_shared/waConfig.ts";
 import { fetchWithRetry } from "../_shared/fetchRetry.ts";
-import { toWaDigits } from "../_shared/waPhone.ts";
+import { toWaDigits, reservePhoneSend, markPhoneSent } from "../_shared/waPhone.ts";
 import { checkAutoSend } from "../_shared/waAutoSendGuard.ts";
 
 const corsHeaders = {
@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
   }
 
   // Anti-spam: orice mesaj automat (auto_kind sau șablon) trece prin poarta comună.
-  const isAutomated = body.manual !== true && (!!body.auto_kind || !!body.template_name);
+  const isAutomated = body.manual !== true;
   if (isAutomated) {
     const guard = await checkAutoSend(supabase, {
       phone: conv.phone_normalized,
@@ -135,6 +135,13 @@ Deno.serve(async (req) => {
     };
   }
 
+  const { data: lastInbound } = await supabase.from("wa_messages").select("id")
+    .eq("conversation_id", conversationId).eq("direction", "inbound").order("created_at", { ascending: false }).limit(1).maybeSingle();
+  const reservationKind = body.manual === true ? `manual:${conversationId}:${body.text ?? body.template_name}`
+    : `auto:${conversationId}:${lastInbound?.id ?? new Date().toISOString().slice(0, 10)}`;
+  if (!await reservePhoneSend(supabase, conv.phone_normalized, reservationKind, 24 * 3600_000)) {
+    return new Response(JSON.stringify({ error: "send_already_reserved" }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
   const url = `https://graph.facebook.com/v20.0/${phoneNumberId}/messages`;
   // Retries automatically on Meta rate limits (429) and 5xx, max 3 attempts.
   const waResp = await fetchWithRetry(
@@ -147,7 +154,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify(waBody),
     },
-    { label: "meta-wa-send", maxAttempts: 3 },
+    { label: "meta-wa-send", maxAttempts: 1 },
   );
 
   let waJson: any = {};
@@ -171,6 +178,7 @@ Deno.serve(async (req) => {
   }
 
   const waMsgId = waJson?.messages?.[0]?.id || null;
+  await markPhoneSent(supabase, conv.phone_normalized, reservationKind, { wa_message_id: waMsgId });
 
 
   await supabase.from("wa_messages").insert({
@@ -180,7 +188,7 @@ Deno.serve(async (req) => {
     role: "assistant",
     content: body.text || `[template:${body.template_name}]`,
     template_name: body.template_name || null,
-    tool_call: body.auto_kind ? { auto_reply: body.auto_kind } : null,
+    tool_call: isAutomated ? { auto_reply: body.auto_kind || "ai_reply" } : null,
   });
 
   await supabase.from("wa_conversations")
