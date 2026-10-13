@@ -17,6 +17,7 @@ type Item = {
 const KIND: Record<string, string> = {
   blog_seo: "SEO articol", social_tone: "Ton social", social_hashtags: "Hashtag-uri",
   social_caption: "Descriere socială", blog_topic: "Subiect articol nou", insight: "Observație",
+  wa_message: "Mesaj WhatsApp", wa_hours: "Ore trimitere WhatsApp", prospect_source: "Surse & zone", andrei_rule: "Regulă Andrei",
 };
 const LABEL: Record<string, string> = {
   meta_title: "Titlu Google", meta_description: "Descriere Google", title: "Titlu", tone: "Ton",
@@ -24,6 +25,8 @@ const LABEL: Record<string, string> = {
   views_14d_before: "Vizite 14 zile înainte", views_14d_after: "Vizite 14 zile după", delta: "Diferență",
   sends: "Trimiteri Make.com", success_rate: "Rată reușită",
   article_title: "Articol creat", slug: "Adresă", converted_to: "Transformată în propunere SEO",
+  name: "Nume șablon", body: "Text mesaj", best_hours: "Ore recomandate", source: "Portal", recommendation: "Recomandare", lesson: "Regulă",
+  active_rules: "Reguli active acum", score_before: "Scor apeluri înainte", score_after: "Scor apeluri după", calls_after: "Apeluri analizate după",
 };
 const fmt = (v: unknown) => typeof v === "number" && v <= 1 && v > 0 && !Number.isInteger(v) ? `${Math.round(v * 100)}%` : String(v ?? "—");
 
@@ -94,6 +97,7 @@ export default function ContentImprovementCenter() {
     blog_seo: { label: "Aprobă și aplică", desc: "Înlocuiește titlul și descrierea din Google ale articolului cu varianta propusă.", icon: Check, run: "apply" },
     social_tone: { label: "Aprobă și aplică", desc: "Schimbă tonul descrierilor generate în Social Engine.", icon: Check, run: "apply" },
     social_hashtags: { label: "Aprobă și aplică", desc: "Înlocuiește hashtag-urile implicite din Social Engine.", icon: Check, run: "apply" },
+    andrei_rule: { label: "Aprobă și adaugă la Andrei", desc: "Adaugă regula în Training Lab (maximum 5 active). Scorul apelurilor se compară după 14 zile.", icon: Check, run: "apply" },
     social_caption: { label: "Aprobă și aplică", desc: "Înlocuiește descrierea draftului social.", icon: Check, run: "apply" },
   };
 
@@ -150,7 +154,7 @@ export default function ContentImprovementCenter() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="font-heading text-xl font-bold">Centru Auto-îmbunătățire</h2>
-          <p className="text-sm text-muted-foreground">Blog, SEO și Social: sistemul analizează săptămânal datele reale, propune îmbunătățiri și învață din deciziile tale. Nimic nu se aplică fără aprobare.</p>
+          <p className="text-sm text-muted-foreground">Blog, SEO, Social, prospectare, WhatsApp și Andrei: sistemul analizează săptămânal datele reale, propune îmbunătățiri și învață din deciziile tale. Nimic nu se aplică fără aprobare.</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={load} aria-label="Reîncarcă"><RefreshCw className="h-4 w-4" /></Button>
