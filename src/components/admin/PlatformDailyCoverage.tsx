@@ -30,7 +30,20 @@ interface HistRow {
   recorded_at: string | null;
 }
 
-const dayKey = (iso: string) => iso.slice(0, 10);
+const dayKey = (iso: string) => new Date(iso).toLocaleDateString("sv-SE", { timeZone: "Europe/Bucharest" });
+
+/** Citește toate rândurile pe pagini de 1000 (limita serverului), max 20.000. */
+async function fetchAll<T>(make: (from: number, to: number) => PromiseLike<{ data: unknown; error: unknown }>) {
+  const out: T[] = [];
+  for (let from = 0; from < 20000; from += 1000) {
+    const { data, error } = await make(from, from + 999);
+    if (error) return { data: out, error };
+    const page = (data ?? []) as T[];
+    out.push(...page);
+    if (page.length < 1000) break;
+  }
+  return { data: out, error: null };
+}
 const dayRo = (v: string) =>
   new Date(`${v}T12:00:00Z`).toLocaleDateString("ro-RO", { weekday: "short", day: "2-digit", month: "2-digit" });
 
@@ -59,20 +72,22 @@ export default function PlatformDailyCoverage() {
     setLoading(true);
     const since = new Date(Date.now() - Number(days) * 86400000).toISOString();
     const [listings, history] = await Promise.all([
-      supabase
+      fetchAll<Raw>((f, t) => supabase
         .from("prospect_listings")
         .select("source_platform,created_at,last_seen_at,price,price_per_sqm,zone,title")
+        .is("duplicate_of", null)
         .gte("created_at", since)
         .order("created_at", { ascending: false })
-        .limit(10000),
-      supabase
+        .range(f, t)),
+      fetchAll<HistRow>((f, t) => supabase
         .from("prospect_price_history")
         .select("listing_id,source_platform,price,recorded_at")
         .gte("recorded_at", since)
         .order("recorded_at", { ascending: true })
-        .limit(10000),
+        .range(f, t)),
     ]);
     if (listings.error) toast.error("Nu am putut încărca datele pe platforme");
+    if (history.error) toast.error("Nu am putut încărca istoricul prețurilor — scăderile pot apărea 0");
     setRaw((listings.data || []) as unknown as Raw[]);
     setHist((history.data || []) as unknown as HistRow[]);
     setLoading(false);

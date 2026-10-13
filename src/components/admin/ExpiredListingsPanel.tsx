@@ -56,6 +56,7 @@ export default function ExpiredListingsPanel() {
     const { data, error } = await supabase
       .from("prospect_listings")
       .select(columns)
+      .is("duplicate_of", null)
       .not("source_url", "is", null)
       .or(`is_active.eq.false,expiry_check_status.eq.expired,last_seen_at.lt.${cutoff}`)
       .order("last_seen_at", { ascending: false, nullsFirst: false })
