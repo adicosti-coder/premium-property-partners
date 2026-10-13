@@ -305,7 +305,7 @@ export default function OwnerContactPanel() {
                     <div className="min-w-0">
                       <p className="text-sm font-medium line-clamp-2">{p.title || "Anunț fără titlu"}</p>
                       <p className="text-xs text-muted-foreground">
-                        {[p.zone, p.rooms ? `${p.rooms} camere` : null, eur(p.price, p.currency)].filter(Boolean).join(" · ")}
+                        {[({ vanzare: "Vânzare", inchiriere: "Închiriere", necunoscut: null } as const)[detectListingTransaction(p)], p.zone, p.rooms ? `${p.rooms} camere` : null, eur(p.price, p.currency)].filter(Boolean).join(" · ")}
                       </p>
                       <p className="mt-1 text-xs font-medium tabular-nums">{phone}</p>
                     </div>
