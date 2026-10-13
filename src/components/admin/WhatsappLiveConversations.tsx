@@ -182,6 +182,13 @@ export default function WhatsappLiveConversations() {
     else {
       setError(null);
       const rows = (data ?? []) as ConversationRow[];
+      const requested = selectedRef.current;
+      if (requested && !rows.some(r => r.id === requested)) {
+        const { data: extra } = await supabase.from("wa_conversations")
+          .select("id,phone_normalized,wa_profile_name,status,last_inbound_at,last_outbound_at,window_expires_at,assigned_agent_id,created_at")
+          .eq("id", requested).maybeSingle();
+        if (extra) rows.push(extra as ConversationRow);
+      }
       rows.sort((a, b) => lastActivity(b) - lastActivity(a));
       setConversations(rows);
       setSelectedId((prev) => prev ?? rows[0]?.id ?? null);

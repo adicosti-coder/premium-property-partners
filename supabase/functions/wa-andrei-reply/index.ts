@@ -3,6 +3,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { relayToMake } from "../_shared/makeRelay.ts";
 import { latestGeminiTurns } from "../_shared/waConversationAudit.ts";
+import { checkAutoSend } from "../_shared/waAutoSendGuard.ts";
 import { INTAKE_MESSAGE } from "../_shared/waAutoReply.ts";
 
 const GEMINI_MODEL = "gemini-3.6-flash";
@@ -85,6 +86,10 @@ Deno.serve(async (req) => {
   }
 
   // 2b. Rate limit per conversație: max 1 răspuns AI / REPLY_COOLDOWN_MS.
+  const sendGuard = await checkAutoSend(supabase, { phone: conv.phone_normalized, kind: "ai_reply" });
+  if (!sendGuard.allowed) {
+    return new Response(JSON.stringify({ ok: true, skipped: sendGuard.reason }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
   // Protejează atât de burst-uri (proprietar care trimite 5 mesaje rapid) cât
   // și de invocări duplicate ale webhook-ului Meta (retry la > 20s).
   const REPLY_COOLDOWN_MS = 5_000;

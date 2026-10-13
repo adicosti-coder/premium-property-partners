@@ -667,7 +667,10 @@ Deno.serve(async (req) => {
         if (quick) {
           // Răspuns la butoanele din primul mesaj → trimitem imediat răspunsul
           // potrivit, independent de regula de 3 ore, ca discuția să continue.
-          quickReplyConversations.set(convId, { phone: from, ...quick });
+          const previousQuick = quickReplyConversations.get(convId);
+          if (!previousQuick || !["quick_no", "quick_stop"].includes(previousQuick.kind)) {
+            quickReplyConversations.set(convId, { phone: from, ...quick });
+          }
         } else if (!outboundCount) {
           intakeConversations.set(convId, from);
         } else {

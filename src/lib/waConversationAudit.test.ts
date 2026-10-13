@@ -19,7 +19,7 @@ describe("WhatsApp regressions", () => {
   });
   it("latest turns must end in inbound", () => {
     expect(latestGeminiTurns([{ direction: "inbound", content: "Hi" }, { direction: "outbound", content: "Hello", role: "assistant" }])).toEqual([]);
-    expect(latestGeminiTurns([{ direction: "outbound", content: "intro", role: "assistant" }, { direction: "inbound", content: "Pret 84000" }, { direction: "outbound", error: "AI 400", role: "system", content: "" }]).at(-1)?.parts[0].text).toBe("Pret 84000");
+    expect(latestGeminiTurns([{ direction: "outbound", content: "intro", role: "assistant" }, { direction: "inbound", content: "Pret 84000" }, { direction: "outbound", error: "AI 400", role: "system", content: "" }])[0]?.parts[0].text).toBe("Pret 84000");
   });
   it("flags post-refusal commercial reply, not ack", () => {
     const f = auditWaConversation([{ direction: "inbound", content: "Nu sunt interesată" }, { direction: "outbound", content: "Am înțeles. Nu vă mai contactăm." }, { direction: "outbound", content: "Vreți o evaluare?" }]);
