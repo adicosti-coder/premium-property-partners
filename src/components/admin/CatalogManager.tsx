@@ -19,7 +19,7 @@ const CatalogManager = () => {
 
   // The `catalogs` bucket is private — links are short-lived signed URLs
   // generated for the authenticated admin, never public object URLs.
-  const SIGNED_URL_TTL = 60 * 60 * 24 * 7; // 7 days
+  const SIGNED_URL_TTL = 60 * 10; // 10 minutes
 
   const getSignedUrl = async (fileName: string) => {
     const { data } = await supabase.storage

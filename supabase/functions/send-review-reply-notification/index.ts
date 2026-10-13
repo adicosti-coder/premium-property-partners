@@ -45,7 +45,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
     const sbAdmin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { data: reviewRow } = await sbAdmin.from("property_reviews")
-      .select("guest_email, admin_reply").eq("id", reviewId).maybeSingle();
+      .select("guest_email, admin_reply, guest_name, title, content, rating, property_id").eq("id", reviewId).maybeSingle();
     if (!reviewRow || !reviewRow.admin_reply) {
       return new Response(JSON.stringify({ error: "Review not found" }), {
         status: 404, headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -53,14 +53,16 @@ const handler = async (req: Request): Promise<Response> => {
     }
     const guestEmail = (reviewRow.guest_email as string | null) || "";
     payload.adminReply = reviewRow.admin_reply as string;
-    const guestName = escapeHtml(payload.guestName);
-    const propertyName = escapeHtml(payload.propertyName);
-    const reviewTitle = payload.reviewTitle ? escapeHtml(payload.reviewTitle) : payload.reviewTitle;
-    const reviewContent = escapeHtml(payload.reviewContent);
+    // All email content comes from stored records, never from the request body.
+    const { data: propRow } = await sbAdmin.from("properties").select("name").eq("id", reviewRow.property_id).maybeSingle();
+    const guestName = escapeHtml(String(reviewRow.guest_name || ""));
+    const propertyName = escapeHtml(String((propRow as any)?.name || "RealTrust"));
+    const reviewTitle = reviewRow.title ? escapeHtml(String(reviewRow.title)) : "";
+    const reviewContent = escapeHtml(String(reviewRow.content || ""));
     const adminReply = escapeHtml(payload.adminReply);
-    const rating = Math.max(0, Math.min(5, Number(payload.rating) || 0));
+    const rating = Math.max(0, Math.min(5, Number(reviewRow.rating) || 0));
 
-    console.log("Processing reply notification for:", guestEmail);
+    console.log("Processing reply notification for review:", reviewId);
 
     if (!guestEmail) {
       console.log("No guest email provided, skipping notification");

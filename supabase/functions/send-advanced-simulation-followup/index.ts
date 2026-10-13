@@ -436,8 +436,8 @@ serve(async (req) => {
           });
 
           if (emailError) {
-            console.error(`Error sending email to ${profile.email}:`, emailError);
-            errors.push(`${profile.email}: ${emailError.message}`);
+            console.error(`Error sending email to user ${profile.id}:`, emailError);
+            errors.push(`user ${profile.id}: ${emailError.message}`);
             continue;
           }
 
@@ -455,11 +455,11 @@ serve(async (req) => {
           }
 
           emailsSent++;
-          console.log(`Advanced simulation follow-up email sent to ${profile.email}`);
+          console.log(`Advanced simulation follow-up email sent to user ${profile.id}`);
         } catch (err: unknown) {
           const errorMessage = err instanceof Error ? err.message : String(err);
-          console.error(`Failed to send email to ${profile.email}:`, err);
-          errors.push(`${profile.email}: ${errorMessage}`);
+          console.error(`Failed to send email to user ${profile.id}:`, err);
+          errors.push(`user ${profile.id}: ${errorMessage}`);
         }
       } else if (!profile.email) {
         console.log(`Skipping email for user ${profile.id}: no email address`);
