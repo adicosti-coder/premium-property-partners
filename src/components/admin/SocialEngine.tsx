@@ -1074,7 +1074,7 @@ function SocialCard({
         
         {/* Action buttons */}
         <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 hover:text-white" onClick={() => setPreviewOpen(true)}>
+          <Button variant="ghost" size="sm" aria-label={`Previzualizează postarea ${post.title}`} className="h-7 w-7 p-0 bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 hover:text-white" onClick={() => setPreviewOpen(true)}>
             <Eye className="h-3.5 w-3.5" />
           </Button>
           <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 hover:text-white" onClick={() => setEditOpen(true)}>
