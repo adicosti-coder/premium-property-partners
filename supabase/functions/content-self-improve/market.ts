@@ -3,7 +3,7 @@
 // ca administratorul să poată verifica rapid că datele aparțin unor anunțuri reale.
 const CHECKS: Record<string, { label: string; fix: string; q: (b: any) => any }> = {
   bad_price: { label: "Anunțuri active fără preț sau cu preț absurd", fix: "Verifică sursa; re-scanează sau dezactivează anunțurile cu preț lipsă/sub 5.000 €/peste 3.000.000 €.",
-    q: (b) => b.or("price.is.null,price.lt.5000,price.gt.3000000") },
+    q: (b) => b.or("price.is.null,price.lt.5000,price.gt.3000000,and(category.eq.inchiriere,price.gt.10000)") },
   bad_sqm: { label: "Preț pe m² improbabil", fix: "Prețuri pe m² sub 300 € sau peste 6.000 € indică suprafață sau chirie greșit citită (chirie lunară salvată ca vânzare).",
     q: (b) => b.or("price_per_sqm.lt.300,price_per_sqm.gt.6000") },
   no_zone: { label: "Anunțuri active fără zonă", fix: "Completează zona — fără ea nu apar în rapoartele pe cartier și în comparabile.", q: (b) => b.is("zone", null) },
