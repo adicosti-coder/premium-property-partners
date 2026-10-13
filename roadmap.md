@@ -1,5 +1,10 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Imagini Social Engine
+- [ ] Extragere fotografie principală originală, respingere fallback generic
+- [ ] Imagine tematică asociată automat pentru articole fără fotografie relevantă
+- [ ] Format Instagram garantat înainte de webhook, verificare fără publicare reală
+
 ## Descrieri Social Engine pe platforme
 - [x] Instagram fără URL, cu CTA de profil, titlu cu emoji, paragrafe și hashtag-uri finale
 - [x] Facebook cu link păstrat; regulă comună la generare, copiere și trimitere
