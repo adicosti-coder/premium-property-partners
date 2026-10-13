@@ -164,8 +164,6 @@ export default function OwnerContactPanel() {
         next_reminder_at: new Date(now.getTime() + 24 * 3_600_000).toISOString(), created_by: auth.user.id,
       });
       if (error) throw error;
-      const { error: updateError } = await supabase.from("prospect_listings").update({ lifecycle_status: "contacted" }).eq("id", p.id).in("lifecycle_status", ["new", "callback"]);
-      if (updateError) toast.error("Mesajul a fost salvat, dar statusul anunțului nu s-a actualizat.");
       toast.success("Trimitere confirmată. Memento programat la 24h.");
       setPending(null);
       queryClient.invalidateQueries({ queryKey: OWNER_FLOW_QUERY_KEY });
