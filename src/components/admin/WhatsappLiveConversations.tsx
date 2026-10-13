@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { auditWaConversation } from "../../../supabase/functions/_shared/waConversationAudit";
 import { supabase } from "@/lib/supabaseClient";
 import { AdminPageShell } from "@/components/admin/shared/AdminPageShell";
 import { Button } from "@/components/ui/button";
@@ -42,6 +44,7 @@ type MessageRow = {
   error: string | null;
   wa_message_id: string | null;
   created_at: string;
+  delivery_status: string | null;
 };
 
 type AgentRow = { id: string; name: string; email: string };
@@ -139,10 +142,16 @@ const lastActivity = (c: ConversationRow) => {
 };
 
 export default function WhatsappLiveConversations() {
+  const [params, setParams] = useSearchParams();
+  const selectedRef = useRef<string | null>(params.get("conversation"));
+  const sendLock = useRef(false);
+  const threadSequence = useRef(0);
+  const [auditing, setAuditing] = useState(false);
+  const [conversationFilter, setConversationFilter] = useState("all");
   const [conversations, setConversations] = useState<ConversationRow[]>([]);
   const [messages, setMessages] = useState<MessageRow[]>([]);
   const [txEvents, setTxEvents] = useState<TxEventRow[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(params.get("conversation"));
   const [loading, setLoading] = useState(true);
   const [loadingThread, setLoadingThread] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -210,13 +219,14 @@ export default function WhatsappLiveConversations() {
   }, []);
 
   const loadThread = useCallback(async (conversationId: string) => {
+    const sequence = ++threadSequence.current;
     setLoadingThread(true);
     const [msgRes, txRes] = await Promise.all([
       supabase
         .from("wa_messages")
-        .select("id, conversation_id, direction, role, content, template_name, error, wa_message_id, created_at")
+        .select("id, conversation_id, direction, role, content, template_name, error, wa_message_id, created_at, delivery_status")
         .eq("conversation_id", conversationId)
-        .order("created_at", { ascending: true })
+        .order("created_at", { ascending: false })
         .limit(500),
       supabase
         .from("wa_transaction_events")
@@ -225,8 +235,10 @@ export default function WhatsappLiveConversations() {
         .order("created_at", { ascending: true })
         .limit(200),
     ]);
-    if (msgRes.error) setError(msgRes.error.message);
-    setMessages((msgRes.data ?? []) as MessageRow[]);
+    if (sequence !== threadSequence.current || conversationId !== selectedRef.current) return;
+    if (msgRes.error || txRes.error) setError(msgRes.error?.message ?? txRes.error?.message ?? null);
+    else setError(null);
+    setMessages([...(msgRes.data ?? [])].reverse() as MessageRow[]);
     setTxEvents((txRes.data ?? []) as TxEventRow[]);
     setLoadingThread(false);
   }, []);
@@ -239,12 +251,21 @@ export default function WhatsappLiveConversations() {
   }, [loadConversations, loadAgents, loadSaleProperties, loadRecentOffers]);
 
   useEffect(() => {
-    if (selectedId) void loadThread(selectedId);
+    selectedRef.current = selectedId;
+    setReplyText("");
+    setPickedProperty("");
+    setAgentPick("");
+    setMessages([]);
+    setTxEvents([]);
+    if (selectedId) {
+      setParams(prev => { const next = new URLSearchParams(prev); next.set("conversation", selectedId); return next; }, { replace: true });
+      void loadThread(selectedId);
+    }
     else {
       setMessages([]);
       setTxEvents([]);
     }
-  }, [selectedId, loadThread]);
+  }, [selectedId, loadThread, setParams]);
 
   useRealtimeChannel("wa-live-conversations", [
     {
@@ -272,15 +293,17 @@ export default function WhatsappLiveConversations() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return conversations;
-    return conversations.filter(
+    const visible = conversations.filter(c => conversationFilter === "all" || (conversationFilter === "replied" ? !!c.last_inbound_at : ["awaiting_human", "escalated_to_call"].includes(c.status ?? "")));
+    if (!q) return visible;
+    return visible.filter(
       (c) =>
         c.phone_normalized?.toLowerCase().includes(q) ||
         (c.wa_profile_name ?? "").toLowerCase().includes(q),
     );
-  }, [conversations, search]);
+  }, [conversations, search, conversationFilter]);
 
   const selected = conversations.find((c) => c.id === selectedId) ?? null;
+  const findings = useMemo(() => auditWaConversation(messages), [messages]);
   const windowOpen = selected?.window_expires_at
     ? new Date(selected.window_expires_at).getTime() > Date.now()
     : false;
@@ -314,15 +337,7 @@ export default function WhatsappLiveConversations() {
       { label: "Anunț deschis", done: has("listing_opened") },
       {
         label: "Negociere",
-        done: has("negotiation") ||
-          (has("offer_followup") && messages.some((m) => m.direction === "inbound" &&
-            new Date(m.created_at).getTime() >
-              Math.max(
-                0,
-                ...txEvents
-                  .filter((t) => t.event === "offer_followup")
-                  .map((t) => new Date(t.created_at).getTime()),
-              ))),
+        done: has("negotiation"),
       },
     ];
   }, [txEvents, messages]);
@@ -357,14 +372,16 @@ export default function WhatsappLiveConversations() {
   ].join("\n");
 
   const sendReply = async () => {
-    if (!selected || !replyText.trim()) return;
+    if (!selected || !replyText.trim() || !windowOpen || sendLock.current) return;
+    sendLock.current = true;
     setSending(true);
     const { data, error: fnErr } = await supabase.functions.invoke("make-agent-bridge", {
       body: { action: "agent_reply", phone: selected.phone_normalized, message: replyText.trim() },
     });
     setSending(false);
+    sendLock.current = false;
     const res = (data ?? {}) as Record<string, unknown>;
-    if (fnErr || res.delivered === false) {
+    if (fnErr || res.delivered !== true) {
       toast({
         title: "Mesajul nu a fost livrat",
         description: windowOpen
@@ -374,7 +391,7 @@ export default function WhatsappLiveConversations() {
       });
     } else {
       toast({ title: "Mesaj trimis", description: "Clientul a primit mesajul pe WhatsApp." });
-      setReplyText("");
+      if (selectedRef.current === selected.id) setReplyText("");
     }
     void loadConversations();
     if (selectedId) void loadThread(selectedId);
@@ -386,7 +403,8 @@ export default function WhatsappLiveConversations() {
    */
   const sendOffer = async () => {
     const prop = saleProperties.find((p) => p.id === pickedProperty);
-    if (!selected || !prop) return;
+    if (!selected || !prop || !windowOpen || sendLock.current) return;
+    sendLock.current = true;
     const url = propertyUrl(prop);
 
     setSendingOffer(true);
@@ -400,8 +418,9 @@ export default function WhatsappLiveConversations() {
       },
     });
     setSendingOffer(false);
+    sendLock.current = false;
     const res = (data ?? {}) as Record<string, unknown>;
-    if (fnErr || res.delivered === false) {
+    if (fnErr || res.delivered !== true) {
       toast({
         title: "Anunțul nu a fost trimis",
         description: windowOpen
@@ -413,14 +432,6 @@ export default function WhatsappLiveConversations() {
       toast({
         title: "Anunț trimis clientului",
         description: `${prop.name} — apare în discuție și deschid pagina anunțului.`,
-      });
-      void supabase.functions.invoke("make-agent-bridge", {
-        body: {
-          action: "listing_opened",
-          phone: selected.phone_normalized,
-          property_id: prop.id,
-          conversation_id: selected.id,
-        },
       });
       window.open(url, "_blank", "noopener,noreferrer");
     }
@@ -451,7 +462,8 @@ export default function WhatsappLiveConversations() {
       | "offer_direct_chat"
       | "negotiation",
   ) => {
-    if (!selected) return;
+    if (!selected || !windowOpen || sendLock.current) return;
+    sendLock.current = true;
     const prop = saleProperties.find((p) => p.id === pickedProperty);
     setBusyStep(action);
     const { data, error: fnErr } = await supabase.functions.invoke("make-agent-bridge", {
@@ -463,9 +475,10 @@ export default function WhatsappLiveConversations() {
       },
     });
     setBusyStep(null);
+    sendLock.current = false;
     const res = (data ?? {}) as Record<string, unknown>;
     const titles = STEP_TITLES[action];
-    if (fnErr || res.delivered === false) {
+    if (fnErr || res.delivered !== true) {
       toast({
         title: titles.fail,
         description:
@@ -504,12 +517,25 @@ export default function WhatsappLiveConversations() {
     void loadConversations();
   };
 
+  const analyzeWhatsapp = async () => {
+    setAuditing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("content-self-improve", { body: { action: "analyze_whatsapp" } });
+      if (error || data?.error) throw new Error(data?.error ?? error?.message);
+      toast({ title: "Audit WhatsApp gata", description: `${data.inspected} conversații inspectate · ${data.signals} semnale · ${data.created} propuneri de aprobat.` });
+    } catch { toast({ title: "Auditul nu a reușit", description: "Reîncearcă peste câteva minute.", variant: "destructive" }); }
+    finally { setAuditing(false); }
+  };
+
   return (
     <AdminPageShell
       title="Conversații live WhatsApp"
       description="Firul complet al discuțiilor: mesajele trimise de agent și răspunsurile clienților, în timp real."
       actions={
         <div className="flex flex-wrap gap-2">
+          <Button size="sm" className="min-h-12" onClick={analyzeWhatsapp} disabled={auditing}>
+            {auditing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}Analizează conversațiile
+          </Button>
           <Button
             variant={showOffers ? "default" : "outline"}
             size="sm"
@@ -587,6 +613,10 @@ export default function WhatsappLiveConversations() {
               <MessageSquare className="h-4 w-4" />
               Discuții ({filtered.length})
             </CardTitle>
+            <Select value={conversationFilter} onValueChange={setConversationFilter}>
+              <SelectTrigger aria-label="Filtrează conversațiile"><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="all">Toate</SelectItem><SelectItem value="replied">Cu răspuns primit</SelectItem><SelectItem value="human">Necesită un coleg</SelectItem></SelectContent>
+            </Select>
             <div className="relative mt-2">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -622,7 +652,7 @@ export default function WhatsappLiveConversations() {
                       {c.wa_profile_name || c.phone_normalized}
                     </span>
                     <span className="text-xs text-muted-foreground shrink-0">
-                      {fmt(c.last_inbound_at ?? c.last_outbound_at ?? c.created_at)}
+                      {fmt(new Date(lastActivity(c)).toISOString())}
                     </span>
                   </div>
                   <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
@@ -693,6 +723,10 @@ export default function WhatsappLiveConversations() {
               </div>
             )}
           </CardHeader>
+          {findings.length > 0 && !loadingThread && <div className="mx-4 mb-3 border-l-2 border-destructive pl-3" role="status">
+            <p className="text-sm font-medium">De verificat în această discuție</p>
+            {[...new Set(findings.map(f => f.label))].map(label => <p key={label} className="text-xs text-muted-foreground">{label}</p>)}
+          </div>}
           {/* Firul de discuție ca într-o aplicație de chat: clientul în stânga, noi în dreapta. */}
           <CardContent className="max-h-[52vh] lg:max-h-[560px] overflow-y-auto bg-muted/20 rounded-md mx-2 sm:mx-4 p-2 sm:p-3 space-y-1.5 sm:space-y-2">
             {loadingThread ? (
@@ -710,11 +744,13 @@ export default function WhatsappLiveConversations() {
                 const prev = messages[i - 1];
                 const newDay =
                   !prev ||
-                  new Date(prev.created_at).toDateString() !== new Date(m.created_at).toDateString();
+                  dayLabel(prev.created_at) !== dayLabel(m.created_at);
                 const metaStatus = !outbound
                   ? null
                   : m.error
                     ? `Meta a respins: ${m.error}`
+                    : m.delivery_status === "read" ? "Citit"
+                    : m.delivery_status === "delivered" ? "Livrat"
                     : m.wa_message_id
                       ? "Acceptat de Meta"
                       : "Fără confirmare de la Meta";
@@ -736,7 +772,7 @@ export default function WhatsappLiveConversations() {
                       >
                         <div className="flex items-center gap-2 text-[11px] text-muted-foreground mb-1">
                           <span className="font-medium">
-                            {outbound ? agentName(selected?.assigned_agent_id ?? null) : "Client"}
+                            {outbound ? m.role === "system" ? "Sistem" : m.template_name ? "Șablon automat" : "RealTrust" : "Client"}
                           </span>
                           {m.template_name && <Badge variant="outline">{m.template_name}</Badge>}
                         </div>
@@ -810,7 +846,7 @@ export default function WhatsappLiveConversations() {
                 <Button
                   size="sm"
                   onClick={() => void sendReply()}
-                  disabled={sending || !replyText.trim()}
+                  disabled={sending || sendingOffer || !!busyStep || !replyText.trim() || !windowOpen || loadingThread}
                   aria-label="Trimite mesajul pe WhatsApp"
                 >
                   {sending ? (
@@ -859,7 +895,7 @@ export default function WhatsappLiveConversations() {
                     size="sm"
                     className="min-h-[40px]"
                     onClick={() => void sendOffer()}
-                    disabled={sendingOffer || !pickedProperty}
+                    disabled={sendingOffer || sending || !!busyStep || !pickedProperty || !windowOpen || loadingThread}
                     aria-label="Trimite anunțul de vânzare și deschide-l"
                   >
                     {sendingOffer ? (
@@ -880,7 +916,7 @@ export default function WhatsappLiveConversations() {
                     size="sm"
                     variant="outline"
                     className="min-h-[44px]"
-                    disabled={busyStep === "offer_intro"}
+                    disabled={!!busyStep || sending || sendingOffer || !windowOpen || loadingThread}
                     onClick={() => void runStep("offer_intro")}
                     aria-label="Anunță clientul că ofertele vin direct pe WhatsApp"
                   >
@@ -895,7 +931,7 @@ export default function WhatsappLiveConversations() {
                     size="sm"
                     variant="outline"
                     className="min-h-[44px]"
-                    disabled={busyStep === "offer_followup"}
+                    disabled={!!busyStep || sending || sendingOffer || !windowOpen || loadingThread}
                     onClick={() => void runStep("offer_followup")}
                     aria-label="Trimite oferta automată cu pașii următori"
                   >
@@ -910,7 +946,7 @@ export default function WhatsappLiveConversations() {
                     size="sm"
                     variant="outline"
                     className="min-h-[44px]"
-                    disabled={busyStep === "offer_confirm"}
+                    disabled={!!busyStep || sending || sendingOffer || !windowOpen || loadingThread}
                     onClick={() => void runStep("offer_confirm")}
                     aria-label="Confirmă livrarea ofertei și invită la vizionare și negociere"
                   >
@@ -925,7 +961,7 @@ export default function WhatsappLiveConversations() {
                     size="sm"
                     variant="outline"
                     className="min-h-[44px]"
-                    disabled={busyStep === "offer_meeting"}
+                    disabled={!!busyStep || sending || sendingOffer || !windowOpen || loadingThread}
                     onClick={() => void runStep("offer_meeting")}
                     aria-label="Propune un punct de întâlnire pentru vizionare și negociere"
                   >
@@ -940,7 +976,7 @@ export default function WhatsappLiveConversations() {
                     size="sm"
                     variant="outline"
                     className="min-h-[44px]"
-                    disabled={busyStep === "offer_direct_chat"}
+                    disabled={!!busyStep || sending || sendingOffer || !windowOpen || loadingThread}
                     onClick={() => void runStep("offer_direct_chat")}
                     aria-label="Anunță clientul că poate scrie direct pe WhatsApp"
                   >
@@ -956,7 +992,7 @@ export default function WhatsappLiveConversations() {
                     size="sm"
                     variant="outline"
                     className="min-h-[44px]"
-                    disabled={busyStep === "negotiation"}
+                    disabled={!!busyStep || sending || sendingOffer || !windowOpen || loadingThread}
                     onClick={() => void runStep("negotiation")}
                     aria-label="Trimite mesajul automat de negociere"
                   >
