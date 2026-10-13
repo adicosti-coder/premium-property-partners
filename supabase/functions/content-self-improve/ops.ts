@@ -5,7 +5,7 @@
 import { drainMakeRelayDlq } from "../_shared/makeRelay.ts";
 
 const DAY = 86400000;
-export const OPS_KINDS = ["social_hours", "social_featured", "integration_retry", "lead_archive", "cta_ab"];
+export const OPS_KINDS = ["social_hours", "social_featured", "integration_retry", "lead_archive", "cta_ab", "lead_followup", "listing_refresh"];
 const roHour = (iso: string) => Number(new Intl.DateTimeFormat("en-GB", { hour: "2-digit", hour12: false, timeZone: "Europe/Bucharest" }).format(new Date(iso)));
 const SOCIAL_REF = /facebook|instagram|fb\.|l\.instagram|lm\.facebook/i;
 
@@ -135,6 +135,45 @@ export async function analyzeOps(db: any, aiKey?: string | null): Promise<number
               proposed_value: { field: j.field, text: j.text, row_id: hero.id }, confidence: 0.6 });
           }
         } catch { /* răspuns invalid — nicio propunere */ }
+      }
+    }
+  }
+
+  // ── 5. Clienți uitați: contactați/ofertați, fără activitate de 3+ zile ──
+  if (!pend.has("lead_followup")) {
+    const today = new Date(); today.setUTCHours(0, 0, 0, 0);
+    const { data: stale } = await db.from("leads").select("id,name,crm_status,updated_at,follow_up_date").is("archived_at", null)
+      .in("crm_status", ["contactat", "ofertat"]).lte("updated_at", new Date(Date.now() - 3 * DAY).toISOString())
+      .gte("created_at", new Date(Date.now() - 60 * DAY).toISOString()).limit(200);
+    const due = (stale ?? []).filter((l: any) => !l.follow_up_date || new Date(l.follow_up_date) < today);
+    if (due.length) {
+      const days = (iso: string) => Math.floor((Date.now() - new Date(iso).getTime()) / DAY);
+      rows.push({ kind: "lead_followup", title: `Reia legătura cu ${due.length} ${due.length === 1 ? "client" : "clienți"} fără răspuns`,
+        rationale: `${due.length} clienți contactați sau cu ofertă trimisă nu au mai avut activitate de cel puțin 3 zile.`,
+        evidence: { text: due.slice(0, 8).map((l: any) => `${l.name || "Fără nume"} (${l.crm_status === "ofertat" ? "ofertă trimisă" : "contactat"}, ${days(l.updated_at)} zile)`).join("; ") },
+        current_value: { previous_followups: due.map((l: any) => ({ id: l.id, follow_up_date: l.follow_up_date ?? null })) },
+        proposed_value: { lead_ids: due.map((l: any) => l.id), mesaj_sugerat: "Bună ziua! Revin în legătură cu discuția noastră despre apartament. Mai este de actualitate? Vă pot ajuta cu informații suplimentare sau cu o vizionare la apartament." },
+        confidence: 0.8 });
+    }
+  }
+
+  // ── 6. Anunțuri vizitate, dar fără contacte (30 zile) ──
+  if (!pend.has("listing_refresh")) {
+    const { data: pv } = await db.from("property_views").select("property_id").gte("viewed_at", since30).limit(20000);
+    const views: Record<string, number> = {};
+    for (const v of pv ?? []) if (v.property_id) views[v.property_id] = (views[v.property_id] ?? 0) + 1;
+    const { data: cta } = await db.from("cta_analytics").select("property_id").gte("created_at", since30).not("property_id", "is", null).limit(20000);
+    const contacted = new Set((cta ?? []).map((c: any) => c.property_id));
+    const ids = Object.entries(views).filter(([id, n]) => n >= 30 && !contacted.has(id)).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([id]) => id);
+    if (ids.length) {
+      const { data: props } = await db.from("properties").select("id,name,slug").in("id", ids).eq("is_active", true);
+      const list = ids.map((id) => (props ?? []).find((p: any) => p.id === id)).filter(Boolean).slice(0, 5);
+      if (list.length) {
+        rows.push({ kind: "listing_refresh", title: `${list.length} ${list.length === 1 ? "anunț vizitat" : "anunțuri vizitate"} fără niciun contact`,
+          rationale: "Oamenii deschid aceste anunțuri, dar nimeni nu apasă pe WhatsApp, apel sau formular în ultimele 30 de zile. De obicei ajută o poză de copertă mai bună, un titlu mai clar sau prețul revizuit.",
+          evidence: { text: list.map((p: any) => `${p.name}: ${views[p.id]} vizite, 0 contacte`).join("; ") }, current_value: null,
+          proposed_value: { anunturi: list.map((p: any) => `${p.name} — https://realtrust.ro/proprietate/${p.slug}`).join("\n"), recomandare: "Schimbă poza de copertă, clarifică titlul și verifică prețul față de piață." },
+          confidence: 0.7 });
       }
     }
   }
