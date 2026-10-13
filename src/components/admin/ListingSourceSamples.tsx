@@ -6,11 +6,10 @@
  * Se încarcă doar la click (maximum 5 anunțuri o dată), ca să nu încetinească pagina.
  */
 import { useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
 import { ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-type Sample = {
+export type Sample = {
   id: string;
   title: string | null;
   source_url: string | null;
@@ -22,11 +21,11 @@ const eur = (v: number | null) => (v == null ? "—" : `${Math.round(Number(v)).
 
 export default function ListingSourceSamples({
   label = "Vezi anunțurile",
-  apply,
+  load,
 }: {
   label?: string;
-  /** Adaugă filtrele rândului (zi, portal, zonă) la interogarea de bază. */
-  apply: (q: any) => any;
+  /** Aduce maximum 5 anunțuri care aparțin rândului (zi, portal, zonă). */
+  load: () => Promise<Sample[]>;
 }) {
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<Sample[] | null>(null);
@@ -40,16 +39,14 @@ export default function ListingSourceSamples({
     setOpen(true);
     if (rows) return;
     setBusy(true);
-    const { data, error } = await apply(
-      supabase.from("prospect_listings").select("id,title,source_url,source_platform,price").is("duplicate_of", null),
-    ).limit(5);
-    setBusy(false);
-    if (error) {
+    try {
+      setRows(await load());
+    } catch {
       toast.error("Nu am putut încărca anunțurile din acest rând");
       setOpen(false);
-      return;
+    } finally {
+      setBusy(false);
     }
-    setRows((data ?? []) as Sample[]);
   };
 
   return (
