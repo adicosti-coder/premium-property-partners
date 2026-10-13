@@ -743,6 +743,13 @@
       "when": 1791884860630,
       "tag": "0105_wa_lead_enrichment_reminder",
       "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "7",
+      "when": 1791885785505,
+      "tag": "0106_self_improve_extended_kinds",
+      "breakpoints": true
     }
   ]
 }

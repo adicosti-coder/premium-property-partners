@@ -3345,6 +3345,7 @@ export type Database = {
           alert_sent_at: string | null
           alert_status: string | null
           anonymized_at: string | null
+          archived_at: string | null
           calculated_net_profit: number | null
           calculated_yearly_profit: number | null
           created_at: string
@@ -3389,6 +3390,7 @@ export type Database = {
           alert_sent_at?: string | null
           alert_status?: string | null
           anonymized_at?: string | null
+          archived_at?: string | null
           calculated_net_profit?: number | null
           calculated_yearly_profit?: number | null
           created_at?: string
@@ -3433,6 +3435,7 @@ export type Database = {
           alert_sent_at?: string | null
           alert_status?: string | null
           anonymized_at?: string | null
+          archived_at?: string | null
           calculated_net_profit?: number | null
           calculated_yearly_profit?: number | null
           created_at?: string
