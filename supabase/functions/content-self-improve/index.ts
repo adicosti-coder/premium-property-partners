@@ -364,7 +364,7 @@ async function rollback(db: any, id: string) {
   const c = r.current_value ?? {}; const b = r.baseline ?? {};
   let err: string | null = null;
   if (r.kind === "blog_seo") {
-    ({ error: err } = await db.from("blog_articles").update({ meta_title: c.meta_title ?? null, meta_description: c.meta_description ?? null }).eq("id", r.target_id).then((x: any) => ({ error: x.error?.message ?? null })));
+    err = (await db.from("blog_articles").update({ meta_title: c.meta_title ?? null, meta_description: c.meta_description ?? null }).eq("id", r.target_id)).error?.message ?? null;
   } else if (r.kind === "social_tone" || r.kind === "social_hashtags") {
     const row = r.kind === "social_tone" ? { key: "caption_tone", value: c.tone ?? "warm" } : { key: "default_hashtags", value: c.hashtags ?? "" };
     err = (await db.from("app_settings").upsert(row, { onConflict: "key" })).error?.message ?? null;
