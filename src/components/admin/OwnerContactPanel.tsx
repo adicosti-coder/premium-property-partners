@@ -1,8 +1,8 @@
 /**
  * Pasul 3 din „Flux proprietari" — Contactează.
  * Proprietarii verificați apar cu mesajul deja scris (date din anunț),
- * iar administratorul trimite dintr-o apăsare pe WhatsApp sau SMS.
- * Fiecare trimitere se salvează și programează mementourile la 24h și 72h.
+ * iar administratorul confirmă trimiterea manuală pe WhatsApp.
+ * Doar trimiterea confirmată programează mementourile la 24h și 72h.
  */
 import { lazy, Suspense, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, MessageCircle, Smartphone, Copy, RefreshCw, ExternalLink, ChevronDown, ChevronUp, CheckCircle2, Mail } from "lucide-react";
+import { Loader2, MessageCircle, Copy, RefreshCw, ExternalLink, ChevronDown, ChevronUp, CheckCircle2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import AdminErrorBoundary from "@/components/admin/AdminErrorBoundary";
 import { fetchOwnerContactReady, OWNER_FLOW_QUERY_KEY } from "@/lib/ownerFlowData";
@@ -22,7 +22,6 @@ import {
   getTemplate,
   isWhatsappCapable,
   normalizeRoPhone,
-  smsLink,
   templatesForKind,
   detectListingTransaction,
   defaultFirstTemplateKey,
@@ -252,7 +251,7 @@ export default function OwnerContactPanel() {
                     <div className="min-w-0">
                       <p className="text-sm font-medium line-clamp-2">{p.title || "Anunț fără titlu"}</p>
                       <p className="text-xs text-muted-foreground">
-                        {[({ vanzare: "Vânzare", inchiriere: "Închiriere", necunoscut: null } as const)[detectListingTransaction(p)], p.zone, p.rooms ? `${p.rooms} camere` : null, eur(p.price, p.currency)].filter(Boolean).join(" · ")}
+                        {[({ vanzare: "Vânzare", inchiriere: "Închiriere", necunoscut: null } as const)[detectListingTransaction(p)], p.zone, p.rooms ? `${p.rooms} camere` : null, `${eur(p.price, p.currency)}${detectListingTransaction(p) === "inchiriere" ? " / lună" : ""}`].filter(Boolean).join(" · ")}
                       </p>
                       <p className="mt-1 text-xs font-medium tabular-nums">{phone}</p>
                     </div>

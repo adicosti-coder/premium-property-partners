@@ -9,11 +9,11 @@ import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MessageCircle, Smartphone, RefreshCw, CheckCircle2, BellRing, Clock, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, MessageCircle, RefreshCw, CheckCircle2, BellRing, Clock, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import AdminErrorBoundary from "@/components/admin/AdminErrorBoundary";
 import { fetchOwnerReminders, OWNER_FLOW_QUERY_KEY } from "@/lib/ownerFlowData";
-import { getTemplate, isWhatsappCapable, detectListingTransaction, whatsappLink } from "@/lib/ownerOutreachTemplates";
+import { getTemplate, detectListingTransaction, whatsappLink } from "@/lib/ownerOutreachTemplates";
 
 const PriceDropAlertsPanel = lazy(() => import("@/components/admin/PriceDropAlertsPanel"));
 

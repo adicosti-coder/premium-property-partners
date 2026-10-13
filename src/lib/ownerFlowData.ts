@@ -56,6 +56,15 @@ export async function fetchOwnerContactReady() {
     }
   }
   const phones = candidates.map((r) => normalizeRoPhone(r.phone_normalized || r.contact_phone)).filter((p): p is string => p !== null);
+  const variants = [...new Set(phones.flatMap((p) => [p, p.slice(1), `0${p.slice(3)}`, `00${p.slice(1)}`]))];
+  for (let start = 0; start < variants.length; start += 100) {
+    const { data, error } = await supabase.from("owner_outreach_messages").select("phone_normalized").in("phone_normalized", variants.slice(start, start + 100));
+    if (error) throw error;
+    for (const message of data ?? []) {
+      const phone = normalizeRoPhone(message.phone_normalized);
+      if (phone) blockedPhones.add(phone);
+    }
+  }
   for (const c of await conversationsFor(phones)) {
     const phone = normalizeRoPhone(c.phone_normalized);
     if (phone && (c.last_inbound_at || c.last_outbound_at)) blockedPhones.add(phone);
