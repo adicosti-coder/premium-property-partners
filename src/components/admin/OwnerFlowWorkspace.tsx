@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState, type ComponentType } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,8 +45,12 @@ async function headCount(build: () => PromiseLike<{ count: number | null; error:
  * căutare → verificare → contactare → urmărire.
  * Fiecare pas randează panoul existent (lazy), deci nu există logică duplicată.
  */
+const STEP_KEYS: StepKey[] = ["search", "verify", "contact", "follow"];
+
 export default function OwnerFlowWorkspace() {
-  const [active, setActive] = useState<StepKey>("search");
+  const [searchParams] = useSearchParams();
+  const stepParam = searchParams.get("step") as StepKey | null;
+  const [active, setActive] = useState<StepKey>(stepParam && STEP_KEYS.includes(stepParam) ? stepParam : "search");
 
   const { data: counts } = useQuery({
     queryKey: ["owner-flow-step-counts"],
