@@ -701,13 +701,34 @@ Deno.serve(async (req) => {
             // Lead din răspunsul la șablonul de prim contact
             const { data: existingLead } = await supabase
               .from("leads")
-              .select("id")
+              .select("id, email, lead_score, simulation_data")
               .eq("whatsapp_number", from)
               .eq("source", "whatsapp_reply")
               .limit(1)
               .maybeSingle();
 
             let leadId: string | null = existingLead?.id ?? null;
+            const details = extractWaLeadDetails(text);
+            const bonus = waEngagementBonus(details);
+
+            if (leadId) {
+              // Lead existent: completăm datele noi și aplicăm doar diferența de bonus.
+              const prevSim = (existingLead?.simulation_data ?? {}) as Record<string, unknown>;
+              const applied = Number(prevSim.wa_engagement_bonus ?? 0) || 0;
+              const merged = { ...prevSim, ...waSimulationFields(details, text) };
+              const finalBonus = Math.max(applied, bonus);
+              merged.wa_engagement_bonus = finalBonus;
+              const upd: Record<string, unknown> = { simulation_data: merged };
+              if (!existingLead?.email && details.email) upd.email = details.email;
+              if (finalBonus > applied) {
+                const score = Math.min(100, Number(existingLead?.lead_score ?? 0) + finalBonus - applied);
+                upd.lead_score = score;
+                upd.lead_grade = gradeForScore(score);
+                upd.scored_at = nowIso;
+              }
+              const { error: uErr } = await supabase.from("leads").update(upd).eq("id", leadId);
+              if (uErr) console.error("[wa-webhook] lead enrich failed:", uErr);
+            }
 
             if (!leadId) {
               let area = 0;
@@ -728,6 +749,7 @@ Deno.serve(async (req) => {
                 listingLabel = [pl?.title, pl?.zone, pl?.price ? `${pl.price} ${pl?.currency ?? "EUR"}` : null]
                   .filter(Boolean).join(" · ");
               }
+              // Scorul e calculat de trigger la inserare; bonusul WhatsApp e citit din simulation_data.
               const { data: newLead, error: leadErr } = await supabase
                 .from("leads")
                 .insert({
@@ -737,6 +759,8 @@ Deno.serve(async (req) => {
                   message: listingLabel ? `[Anunț: ${listingLabel}] ${text}` : text,
                   property_area: area,
                   property_type: propType,
+                  ...(details.email ? { email: details.email } : {}),
+                  simulation_data: { ...waSimulationFields(details, text), wa_engagement_bonus: bonus },
                 })
                 .select("id")
                 .maybeSingle();
