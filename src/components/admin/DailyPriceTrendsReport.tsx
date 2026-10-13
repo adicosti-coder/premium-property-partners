@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import ListingSourceSamples, { type Sample } from "@/components/admin/ListingSourceSamples";
 import { bucharestDayRange } from "@/lib/bucharestDay";
+import { isSearchPageUrl } from "@/lib/listingUrl";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -52,7 +53,7 @@ export default function DailyPriceTrendsReport() {
     const { from, to } = bucharestDayRange(String(day));
     const { data, error } = await supabase
       .from("prospect_price_history")
-      .select("price, recorded_at, prospect_listings(id, title, source_url, source_platform)")
+      .select("price, recorded_at, prospect_listings(id, title, source_url, source_platform, is_active)")
       .gte("recorded_at", from)
       .lt("recorded_at", to)
       .order("recorded_at", { ascending: false })
@@ -63,10 +64,11 @@ export default function DailyPriceTrendsReport() {
     for (const r of (data ?? []) as Array<{
       price: number | null;
       recorded_at: string | null;
-      prospect_listings: { id: string; title: string | null; source_url: string | null; source_platform: string | null } | null;
+      prospect_listings: { id: string; title: string | null; source_url: string | null; source_platform: string | null; is_active: boolean | null } | null;
     }>) {
       const l = r.prospect_listings;
-      if (!l || seen.has(l.id)) continue;
+      // Doar anunțuri reale, active: titlul și linkul nu trebuie să fie o pagină de căutare.
+      if (!l || !l.is_active || seen.has(l.id) || isSearchPageUrl(l.source_url, l.title)) continue;
       seen.add(l.id);
       out.push({ id: l.id, title: l.title, source_url: l.source_url, source_platform: l.source_platform, price: r.price });
       if (out.length === 5) break;

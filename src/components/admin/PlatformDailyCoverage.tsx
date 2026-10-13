@@ -16,6 +16,7 @@ import { RefreshCw, Download, Radio } from "lucide-react";
 import { downloadCsv, csvFileName } from "@/utils/exportCsv";
 import { toast } from "sonner";
 import { PORTAL_ZONE_LABELS, canonicalZone } from "@/lib/timisoaraPortalZones";
+import { isSearchPageUrl } from "@/lib/listingUrl";
 
 interface Raw {
   source_platform: string | null;
@@ -216,9 +217,14 @@ export default function PlatformDailyCoverage() {
       .from("prospect_listings")
       .select("id,title,source_url,source_platform,price")
       .is("duplicate_of", null)
+      .eq("is_active", true)
       .gte("created_at", sinceIso)
       .order("created_at", { ascending: false })
-      .limit(5);
+      .limit(20);
+
+  /** Păstrăm doar anunțuri reale: titlul și linkul nu trebuie să fie o pagină de căutare. */
+  const onlyReal = (rows: Sample[]) =>
+    rows.filter((r) => !isSearchPageUrl(r.source_url, r.title)).slice(0, 5);
 
   /** Anunțurile aduse de portalul respectiv în perioada aleasă. */
   const platformSamples = (p: string) => async (): Promise<Sample[]> => {
@@ -229,29 +235,22 @@ export default function PlatformDailyCoverage() {
     else q = q.eq("source_platform", p);
     const { data, error } = await q;
     if (error) throw error;
-    return (data ?? []) as Sample[];
+    return onlyReal((data ?? []) as Sample[]);
   };
 
   /** Anunțurile adunate în ziua respectivă (ora României). */
   const daySamples = (day: string) => async (): Promise<Sample[]> => {
     const { from, to } = bucharestDayRange(day);
-    const { data, error } = await supabase
-      .from("prospect_listings")
-      .select("id,title,source_url,source_platform,price")
-      .is("duplicate_of", null)
-      .gte("created_at", from)
-      .lt("created_at", to)
-      .order("created_at", { ascending: false })
-      .limit(5);
+    const { data, error } = await baseSamples().gte("created_at", from).lt("created_at", to);
     if (error) throw error;
-    return (data ?? []) as Sample[];
+    return onlyReal((data ?? []) as Sample[]);
   };
 
   /** Anunțurile din zona respectivă, cu denumirea exactă de pe portal. */
   const zoneSamples = (raws: string[]) => async (): Promise<Sample[]> => {
     const { data, error } = await baseSamples().in("zone", raws);
     if (error) throw error;
-    return (data ?? []) as Sample[];
+    return onlyReal((data ?? []) as Sample[]);
   };
 
   const exportCsv = () => {
