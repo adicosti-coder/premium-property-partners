@@ -797,10 +797,20 @@ export function ownerReplyText(raw: string, ctx: ProspectContext = null): { kind
   if (mode === "vanzare" && /\b(comision)\b/.test(t)) {
     return { kind: "owner_terms_link", text: "Analiza de piață e gratuită. La vânzare, comisionul este 2–4%, plătit la încheierea tranzacției. Detalii: https://realtrust.ro/analiza-gratuita" };
   }
-  if (/nu intentionez sa scad|pret|promovarea e la/.test(t)) {
+  // Întrebare despre preț fără interes declarat — răspuns scurt, apoi pasul următor.
+  if (/\bpret/.test(t) && /\?|^(ce|cat|care|cum)\b/.test(t) && !/interesat|intereseaza|colabor/.test(t)) {
+    return {
+      kind: "owner_price_question",
+      text: `Pentru ${ref}` + (price ? ` pornim de la ${price}. ` : " stabilim prețul împreună, pe comparații reale din zonă. ") +
+        "Vă trimit întâi evaluarea gratuită?",
+    };
+  }
+  // Context de preț doar pentru afirmații, nu pentru întrebări sau mesaje de interes.
+  if (/nu intentionez sa scad|promovarea e la/.test(t) ||
+      (/\bpret/.test(t) && !/\?|^(ce|cat|care|cum)\b|interesat|intereseaza|colabor/.test(t))) {
     return { kind: "owner_price_context", text: "Am înțeles, respectăm prețul indicat de dumneavoastră. Nu îl modificăm fără acordul dumneavoastră." };
   }
-  if (mode === "vanzare" && /vanzare|vand|colaborare/.test(t)) {
+  if (mode === "vanzare" && /vanzare|vand|colaborare/.test(t) && !/interesat|intereseaza|vreau sa colaboram/.test(t)) {
     return { kind: "owner_sale_context", text: `Am înțeles, discutăm despre vânzarea ${ref}. Doriți detalii despre reprezentare sau despre publicarea gratuită?` };
   }
 
