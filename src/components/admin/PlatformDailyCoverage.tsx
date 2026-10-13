@@ -1,9 +1,13 @@
 /**
  * Câte anunțuri găsește fiecare platformă pe zi — ca să vedem unde datele sunt live.
  * Citește direct anunțurile găsite (prospect_listings) și le grupează pe zi + platformă.
+ * Fiecare rând poate fi desfăcut cu „Vezi anunțurile”: titlul extras de pe portal și
+ * linkul către pagina-sursă, ca să verifici rapid că cifrele vin din anunțuri reale.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import ListingSourceSamples, { type Sample } from "@/components/admin/ListingSourceSamples";
+import { bucharestDayRange } from "@/lib/bucharestDay";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +16,7 @@ import { RefreshCw, Download, Radio } from "lucide-react";
 import { downloadCsv, csvFileName } from "@/utils/exportCsv";
 import { toast } from "sonner";
 import { PORTAL_ZONE_LABELS, canonicalZone } from "@/lib/timisoaraPortalZones";
+import { isSearchPageUrl } from "@/lib/listingUrl";
 
 interface Raw {
   source_platform: string | null;
@@ -59,6 +64,12 @@ const normPlatform = (p: string | null) => {
   return p as string;
 };
 
+/** Cuvântul după care recunoaștem portalul în lista de anunțuri. */
+const platformKeyword = (p: string) => {
+  const v = p.toLowerCase();
+  return ["olx", "storia", "imobiliare", "publi24", "bursa", "facebook"].find((k) => v.includes(k)) || null;
+};
+
 const ALL_ZONES = "__all_zones__";
 
 export default function PlatformDailyCoverage() {
@@ -97,7 +108,13 @@ export default function PlatformDailyCoverage() {
     load();
   }, [load]);
 
-  /** Zona canonică a fiecărui anunț, după denumirile reale de pe portaluri. */
+  /** De la această oră numărăm „anunțuri noi” — aceleași limite ca în tabele. */
+  const sinceIso = useMemo(
+    () => new Date(Date.now() - Number(days) * 86400000).toISOString(),
+    [days],
+  );
+
+  /** Anunțurile din perioada aleasă, cu zona canonică după denumirile reale de pe portaluri. */
   const withZone = useMemo(
     () => raw.map((r) => ({ ...r, canonZone: canonicalZone(`${r.zone || ""} ${r.title || ""}`) })),
     [raw],
@@ -109,20 +126,24 @@ export default function PlatformDailyCoverage() {
     [withZone, zoneFilter],
   );
 
-  /** Câte anunțuri are fiecare zonă, pe fiecare portal. */
+  /** Câte anunțuri are fiecare zonă, pe fiecare portal + denumirile reale de zonă din grup. */
   const zoneRows = useMemo(() => {
     const byZone = new Map<string, Map<string, number>>();
+    const rawZones = new Map<string, Set<string>>();
     for (const r of withZone) {
       const z = r.canonZone || "Zonă nedetectată";
       const p = normPlatform(r.source_platform);
       if (!byZone.has(z)) byZone.set(z, new Map());
       const m = byZone.get(z)!;
       m.set(p, (m.get(p) || 0) + 1);
+      if (!rawZones.has(z)) rawZones.set(z, new Set());
+      if (r.zone) rawZones.get(z)!.add(r.zone);
     }
     return Array.from(byZone.entries())
       .map(([zone, counts]) => ({
         zone,
         counts,
+        raws: Array.from(rawZones.get(zone) || []),
         total: Array.from(counts.values()).reduce((s, v) => s + v, 0),
       }))
       .sort((a, b) => b.total - a.total);
@@ -191,6 +212,47 @@ export default function PlatformDailyCoverage() {
     return Date.now() - new Date(ls).getTime() < 48 * 3600 * 1000;
   };
 
+  const baseSamples = () =>
+    supabase
+      .from("prospect_listings")
+      .select("id,title,source_url,source_platform,price")
+      .is("duplicate_of", null)
+      .eq("is_active", true)
+      .gte("created_at", sinceIso)
+      .order("created_at", { ascending: false })
+      .limit(60);
+
+  /** Păstrăm doar anunțuri reale: titlul și linkul nu trebuie să fie o pagină de căutare. */
+  const onlyReal = (rows: Sample[]) =>
+    rows.filter((r) => !isSearchPageUrl(r.source_url, r.title)).slice(0, 5);
+
+  /** Anunțurile aduse de portalul respectiv în perioada aleasă. */
+  const platformSamples = (p: string) => async (): Promise<Sample[]> => {
+    const key = platformKeyword(p);
+    let q = baseSamples();
+    if (key) q = q.ilike("source_platform", `%${key}%`);
+    else if (p === "Necunoscut") q = q.is("source_platform", null);
+    else q = q.eq("source_platform", p);
+    const { data, error } = await q;
+    if (error) throw error;
+    return onlyReal((data ?? []) as Sample[]);
+  };
+
+  /** Anunțurile adunate în ziua respectivă (ora României). */
+  const daySamples = (day: string) => async (): Promise<Sample[]> => {
+    const { from, to } = bucharestDayRange(day);
+    const { data, error } = await baseSamples().gte("created_at", from).lt("created_at", to);
+    if (error) throw error;
+    return onlyReal((data ?? []) as Sample[]);
+  };
+
+  /** Anunțurile din zona respectivă, cu denumirea exactă de pe portal. */
+  const zoneSamples = (raws: string[]) => async (): Promise<Sample[]> => {
+    const { data, error } = await baseSamples().in("zone", raws);
+    if (error) throw error;
+    return onlyReal((data ?? []) as Sample[]);
+  };
+
   const exportCsv = () => {
     downloadCsv(
       csvFileName("anunturi-pe-platforma-pe-zi"),
@@ -234,10 +296,10 @@ export default function PlatformDailyCoverage() {
               </SelectContent>
             </Select>
             <Button variant="outline" size="sm" onClick={load} disabled={loading}>
-              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`h-4 h-4 ${loading ? "animate-spin" : ""}`} />
             </Button>
             <Button variant="outline" size="sm" onClick={exportCsv} disabled={!dayRows.length}>
-              <Download className="h-4 w-4" />
+              <Download className="h-4 h-4" />
             </Button>
           </div>
         </CardHeader>
@@ -268,7 +330,8 @@ export default function PlatformDailyCoverage() {
                   <th className="py-2 pr-3 font-medium">OLX</th>
                   <th className="py-2 pr-3 font-medium">Publi24</th>
                   <th className="py-2 pr-3 font-medium">Storia.ro</th>
-                  <th className="py-2 font-medium">Total</th>
+                  <th className="py-2 pr-3 font-medium">Total</th>
+                  <th className="py-2 font-medium">Anunțuri din zonă</th>
                 </tr>
               </thead>
               <tbody>
@@ -280,12 +343,19 @@ export default function PlatformDailyCoverage() {
                         {r.counts.get(p) || "—"}
                       </td>
                     ))}
-                    <td className="py-2 font-medium">{r.total}</td>
+                    <td className="py-2 pr-3 font-medium">{r.total}</td>
+                    <td className="py-2">
+                      {r.raws.length ? (
+                        <ListingSourceSamples label="Vezi anunțurile" load={zoneSamples(r.raws)} />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
                 {!zoneRows.length && (
                   <tr>
-                    <td className="py-3 text-muted-foreground" colSpan={6}>
+                    <td className="py-3 text-muted-foreground" colSpan={7}>
                       {loading ? "Se încarcă…" : "Nicio zonă cu anunțuri în perioada aleasă."}
                     </td>
                   </tr>
@@ -304,7 +374,8 @@ export default function PlatformDailyCoverage() {
                   <th className="py-2 pr-3 font-medium">Preț mediu</th>
                   <th className="py-2 pr-3 font-medium">€/mp mediu</th>
                   <th className="py-2 pr-3 font-medium">Scăderi de preț</th>
-                  <th className="py-2 font-medium">Ultimul anunț</th>
+                  <th className="py-2 pr-3 font-medium">Ultimul anunț</th>
+                  <th className="py-2 font-medium">Anunțuri de pe portal</th>
                 </tr>
               </thead>
               <tbody>
@@ -320,15 +391,18 @@ export default function PlatformDailyCoverage() {
                       <td className="py-2 pr-3">{avg == null ? "—" : `${avg.toLocaleString("ro-RO")} €`}</td>
                       <td className="py-2 pr-3">{sqm == null ? "—" : `${sqm.toLocaleString("ro-RO")} €`}</td>
                       <td className="py-2 pr-3">{s?.drops ?? 0}</td>
-                      <td className="py-2 whitespace-nowrap text-muted-foreground">
+                      <td className="py-2 pr-3 whitespace-nowrap text-muted-foreground">
                         {ls ? new Date(ls).toLocaleString("ro-RO", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—"}
+                      </td>
+                      <td className="py-2">
+                        <ListingSourceSamples label="Vezi anunțurile" load={platformSamples(p)} />
                       </td>
                     </tr>
                   );
                 })}
                 {!platforms.length && (
                   <tr>
-                    <td className="py-3 text-muted-foreground" colSpan={6}>
+                    <td className="py-3 text-muted-foreground" colSpan={7}>
                       {loading ? "Se încarcă…" : "Nicio platformă cu anunțuri."}
                     </td>
                   </tr>
@@ -345,7 +419,8 @@ export default function PlatformDailyCoverage() {
                       {p}
                     </th>
                   ))}
-                  <th className="py-2 font-medium">Total</th>
+                  <th className="py-2 pr-3 font-medium">Total</th>
+                  <th className="py-2 font-medium">Anunțuri din zi</th>
                 </tr>
               </thead>
               <tbody>
@@ -360,12 +435,15 @@ export default function PlatformDailyCoverage() {
                         </td>
                       );
                     })}
-                    <td className="py-2 font-medium">{r.total}</td>
+                    <td className="py-2 pr-3 font-medium">{r.total}</td>
+                    <td className="py-2">
+                      <ListingSourceSamples label="Vezi anunțurile" load={daySamples(r.day)} />
+                    </td>
                   </tr>
                 ))}
                 {!dayRows.length && (
                   <tr>
-                    <td className="py-4 text-muted-foreground" colSpan={platforms.length + 2}>
+                    <td className="py-4 text-muted-foreground" colSpan={platforms.length + 3}>
                       {loading ? "Se încarcă…" : "Nu există anunțuri în perioada aleasă."}
                     </td>
                   </tr>
