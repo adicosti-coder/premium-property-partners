@@ -4,7 +4,7 @@
 - Start the decorative desktop hero video only after genuine user interaction so the responsive image remains the stable LCP candidate.
 - Listing/contact pages ship a static #route-shell heading (prerender plugin) removed on first React H1 (max 3s) so real-user FCP/LCP don't wait for the JS bundle.
 - WhatsApp first-contact templates always use the Meta-approved resolver (v6 → v5 → v3), never an environment override; outbound stops for DNC/STOP or any prior inbound interaction.
-- Client qualification derives its saved zone and next step from WhatsApp history, never asks the zone twice, and keeps owner handover logic separate.
+- Client qualification reuses history/zone and separates owner handover; AI reads latest ordered turns and discards stale replies — avoids repeated questions.
 - Owner-consent queue messages resolve their dedicated template against Meta's approved Romanian body at send time; use the existing intro resolver until approval so inspection templates never reach owners.
 - WhatsApp sends normalize phones via `_shared/waPhone.ts` (all format variants in DB lookups) and reserve the number in `request_idempotency` before calling Meta; no automatic resend after timeouts — prevents duplicate messages from parallel or delayed runs.
 - Auto-consented listings view joins prospect/contact data with normalized WhatsApp names and exports filtered rows via shared tested helpers — avoids invented owner data.
@@ -21,9 +21,10 @@
 - Keep toast hosts mounted at startup, isolate route errors with a location-reset boundary, and delay nonblocking route-loading feedback briefly — preserves early notifications and prerendered content without blank navigation.
 - Voice campaign controls use an in-page confirmation, serialize updates, and announce success only after persistence; call-log refreshes retain existing rows — avoids blocked browser confirmations, misleading feedback, and polling flicker.
 - Append the shared concise conversation policy after voice scripts and learned lessons, with sales examples only on sales calls; reuse it in drills — keeps runtime brevity and factuality rules consistent even with custom scripts.
-- Every automated WhatsApp send (auto_kind, templates, offer steps) passes `_shared/waAutoSendGuard.ts` (DNC/refusal stop, 1 proactive per 24h, 1 reply per inbound, single intro) — prevents spam bursts to owners.
+- All automatic WhatsApp replies pass the shared guard and pre-send reservation — stops refusal and duplicate sends.
 - Consent auto-publish only queues a social draft; `social.autopost_drain` posts one per interval via `_shared/metaSocial.ts`, claims first, logs per platform, falls back to draft on Meta errors; amenities only from fixed AI visual-tag vocabulary — avoids rate limits, duplicates, invented features.
-- `blog.article_draft_autopilot` saves one blog DRAFT per run from real data only; admins publish it in "Auto-pilot Articole"; 402/403 pauses it persistently.
+- Blog autopilot saves one factual DRAFT per run; admin publishes; 402/403 pauses it.
+- WhatsApp audits use real ordered turns; approved lessons stay separate from voice, with compare-and-restore rollback — prevents wrong-channel training.
 <!-- LOVABLE:BEGIN -->
 - Social drafts match published gallery captions by canonical image path, never index — avoids wrong captions.
 - Explicit all-property backfills enrich manual listings too, preserve source copy, and resolve image URLs — avoids missing photos and lost facts.
