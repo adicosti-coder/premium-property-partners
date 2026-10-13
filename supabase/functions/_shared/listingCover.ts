@@ -14,7 +14,7 @@ export async function decodeSource(bytes: Uint8Array): Promise<Image> {
     })().catch(error => { decoderReady = null; throw error; });
   }
   await decoderReady;
-  const decoded = await decodeWebp(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
+  const decoded = await decodeWebp(new Uint8Array(bytes).buffer);
   const image = new Image(decoded.width, decoded.height);
   image.bitmap.set(decoded.data);
   return image;
