@@ -8,6 +8,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { analyzeWhatsapp, gatherWhatsappAudit } from "./whatsapp.ts";
+import { analyzeObjections, unsafeReply } from "./objections.ts";
 import { WA_AUDIT_RULES } from "../_shared/waConversationAudit.ts";
 import { analyzeOps, applyOps, rollbackOps, measureOps, OPS_KINDS } from "./ops.ts";
 
@@ -122,6 +123,7 @@ Nu inventa cifre, prețuri, randamente sau zone. Dacă datele sunt puține, prop
 async function analyze(db: any) {
   const measured = await measureOutcomes(db);
   const whatsapp = await analyzeWhatsapp(db);
+  try { const ob = await analyzeObjections(db); whatsapp.created += ob.created; } catch (e) { console.error("objections", e); }
   const ctx = await gatherContext(db);
   const key = Deno.env.get("LOVABLE_API_KEY");
   if (!key) return { measured, created: whatsapp.created, whatsapp, warning: "AI indisponibil; audit WhatsApp efectuat" };
@@ -321,7 +323,19 @@ async function apply(db: any, id: string, userId: string) {
   const p = r.proposed_value ?? {};
   let baseline: unknown = null;
   let err: string | null = null;
-  if (r.kind === "insight" && p.scope === "whatsapp") {
+  if (r.kind === "insight" && p.scope === "wa_objection") {
+    if (unsafeReply(String(p.reply ?? ""))) return { ok: false, error: "Replica încalcă regulile (procente, garanții, birou)" };
+    const { data: old, error: readErr } = await db.from("app_settings").select("value").eq("key", "wa_objection_replies").maybeSingle();
+    if (readErr) return { ok: false, error: readErr.message };
+    let list: any[] = [];
+    try { list = JSON.parse(old?.value ?? "[]"); } catch { return { ok: false, error: "Replici existente invalide" }; }
+    if (!Array.isArray(list)) list = [];
+    list = list.filter((x) => x?.code !== p.code);
+    if (list.length >= 8) return { ok: false, error: "Maximum 8 replici la obiecții; anulează una înainte" };
+    const next = JSON.stringify([...list, { code: p.code, objection: p.objection, reply: p.reply }]);
+    baseline = { previous_replies: old?.value ?? "[]", applied_replies: next };
+    err = (await db.from("app_settings").upsert({ key: "wa_objection_replies", value: next }, { onConflict: "key" })).error?.message ?? null;
+  } else if (r.kind === "insight" && p.scope === "whatsapp") {
     const canonical = WA_AUDIT_RULES[p.code as keyof typeof WA_AUDIT_RULES];
     if (!canonical || p.lesson !== canonical.lesson) return { ok: false, error: "Regulă WhatsApp invalidă" };
     const { data: old, error: readErr } = await db.from("app_settings").select("value").eq("key", "wa_conversation_lessons").maybeSingle();
@@ -384,7 +398,11 @@ async function rollback(db: any, id: string) {
   if (!r) return { ok: false, error: "Doar propunerile aplicate pot fi anulate" };
   const c = r.current_value ?? {}; const b = r.baseline ?? {};
   let err: string | null = null;
-  if (r.kind === "insight" && r.proposed_value?.scope === "whatsapp") {
+  if (r.kind === "insight" && r.proposed_value?.scope === "wa_objection") {
+    const { data: restored, error } = await db.from("app_settings").update({ value: b.previous_replies ?? "[]" })
+      .eq("key", "wa_objection_replies").eq("value", b.applied_replies).select("key");
+    err = error?.message ?? (restored?.length ? null : "Replicile s-au schimbat între timp; anulează întâi ultima aplicare");
+  } else if (r.kind === "insight" && r.proposed_value?.scope === "whatsapp") {
     const { data: restored, error } = await db.from("app_settings").update({ value: b.previous_lessons ?? "[]" })
       .eq("key", "wa_conversation_lessons").eq("value", b.applied_lessons).select("key");
     err = error?.message ?? (restored?.length ? null : "Regulile s-au schimbat între timp; anulează întâi ultima aplicare");
@@ -523,6 +541,7 @@ Deno.serve(async (req) => {
     }
     const gate = await requireInternalOrAdmin(req, corsHeaders);
     if (gate) return gate;
+    if (body?.action === "analyze_objections") return json({ success: true, measured: 0, ...(await analyzeObjections(db)) });
     if (body?.action === "analyze_whatsapp") return json({ success: true, measured: 0, ...(await analyzeWhatsapp(db)) });
     return json({ success: true, ...(await analyze(db)) });
   } catch (e) {
