@@ -29,7 +29,7 @@ describe("platform caption formatting", () => {
     expect(caption).toContain("🔗 Link în Bio pentru articolul complet!");
     expect(caption).toMatch(/^🔑/u);
     const chunks = caption.split("\n\n");
-    const tags = chunks.at(-1)?.split(" ") ?? [];
+    const tags = chunks[chunks.length - 1]?.split(" ") ?? [];
     expect(tags.length).toBeGreaterThanOrEqual(5);
     expect(tags.length).toBeLessThanOrEqual(8);
     expect(new Set(tags.map((t) => t.toLowerCase())).size).toBe(tags.length);

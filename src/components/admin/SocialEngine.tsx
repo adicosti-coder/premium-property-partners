@@ -789,7 +789,7 @@ function PostPreviewModal({ post, open, onOpenChange }: { post: SocialPost; open
                 </div>
                 <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap break-words">
                   <span className="font-semibold">realtrust.ro</span>{" "}
-                  {post.caption ? formatSocialCaption(post.caption, { platform: "instagram", type: post.type }) : <span className="text-muted-foreground italic">Nicio descriere încă</span>}
+                  {post.caption ? formatSocialCaption(post.caption, { platform: "instagram", type: post.type === "blog" ? "blog" : "property" }) : <span className="text-muted-foreground italic">Nicio descriere încă</span>}
                 </p>
               </div>
             </div>
@@ -813,7 +813,7 @@ function PostPreviewModal({ post, open, onOpenChange }: { post: SocialPost; open
               </div>
               <div className="px-3 pb-2">
                 <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap break-words">
-                  {post.caption ? formatSocialCaption(post.caption, { platform: "facebook", type: post.type, sourceUrl: post.source_url }) : <span className="text-muted-foreground italic">Nicio descriere încă</span>}
+                  {post.caption ? formatSocialCaption(post.caption, { platform: "facebook", type: post.type === "blog" ? "blog" : "property", sourceUrl: post.source_url }) : <span className="text-muted-foreground italic">Nicio descriere încă</span>}
                 </p>
               </div>
               <div className="aspect-video bg-primary flex items-center justify-center relative">
