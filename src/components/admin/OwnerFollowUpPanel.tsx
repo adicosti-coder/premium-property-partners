@@ -12,7 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, MessageCircle, Smartphone, RefreshCw, CheckCircle2, BellRing, Clock, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import AdminErrorBoundary from "@/components/admin/AdminErrorBoundary";
-import { getTemplate, isWhatsappCapable, smsLink, whatsappLink } from "@/lib/ownerOutreachTemplates";
+import { fetchOwnerReminders, OWNER_FLOW_QUERY_KEY } from "@/lib/ownerFlowData";
+import { getTemplate, isWhatsappCapable, detectListingTransaction, whatsappLink } from "@/lib/ownerOutreachTemplates";
 
 const PriceDropAlertsPanel = lazy(() => import("@/components/admin/PriceDropAlertsPanel"));
 
@@ -27,6 +28,7 @@ interface Reminder {
   next_reminder_at: string | null;
   sent_at: string | null;
   channel: string | null;
+  template_key: string | null;
   listing?: {
     title: string | null;
     zone: string | null;
@@ -34,6 +36,9 @@ interface Reminder {
     price: number | null;
     contact_name: string | null;
     source_platform: string | null;
+    description: string | null;
+    source_url: string | null;
+    category: string | null;
   } | null;
 }
 
@@ -45,62 +50,20 @@ const hoursAgo = (v: string | null) => (v ? Math.round((Date.now() - new Date(v)
 export default function OwnerFollowUpPanel() {
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState<string | null>(null);
+  const [pending, setPending] = useState<Reminder | null>(null);
   const [showDrops, setShowDrops] = useState(true);
 
-  const { data, isLoading, refetch, isRefetching } = useQuery({
-    queryKey: ["owner-followup-reminders"],
-    staleTime: 30_000,
-    refetchInterval: 90_000,
-    queryFn: async () => {
-      const { data: rows, error } = await supabase
-        .from("owner_outreach_messages")
-        .select(
-          "id, prospect_listing_id, phone_normalized, offer_price, currency, duration_months, reminder_stage, next_reminder_at, sent_at, channel",
-        )
-        .is("replied_at", null)
-        .not("next_reminder_at", "is", null)
-        .lt("reminder_stage", 2)
-        .order("next_reminder_at", { ascending: true })
-        .limit(100);
-      if (error) throw error;
-
-      const ids = Array.from(new Set((rows ?? []).map((r) => r.prospect_listing_id).filter(Boolean))) as string[];
-      const listings: Record<string, Reminder["listing"]> = {};
-      if (ids.length) {
-        const { data: ls } = await supabase
-          .from("prospect_listings")
-          .select("id, title, zone, rooms, price, contact_name, source_platform")
-          .in("id", ids);
-        (ls ?? []).forEach((l) => {
-          listings[l.id] = {
-            title: l.title,
-            zone: l.zone,
-            rooms: l.rooms,
-            price: l.price,
-            contact_name: l.contact_name,
-            source_platform: l.source_platform,
-          };
-        });
-      }
-
-      const now = Date.now();
-      const all: Reminder[] = (rows ?? []).map((r) => ({
-        ...r,
-        reminder_stage: Number(r.reminder_stage ?? 0),
-        listing: r.prospect_listing_id ? listings[r.prospect_listing_id] ?? null : null,
-      }));
-      return {
-        due: all.filter((r) => r.next_reminder_at && new Date(r.next_reminder_at).getTime() <= now),
-        upcoming: all.filter((r) => r.next_reminder_at && new Date(r.next_reminder_at).getTime() > now),
-      };
-    },
+  const { data, error, isLoading, refetch, isRefetching } = useQuery({
+    queryKey: [...OWNER_FLOW_QUERY_KEY, "follow"], staleTime: 30_000,
+    refetchInterval: 60_000, queryFn: fetchOwnerReminders,
   });
 
   const due = data?.due ?? [];
   const upcoming = data?.upcoming ?? [];
 
   const messageFor = (r: Reminder) => {
-    const tpl = getTemplate(r.reminder_stage === 0 ? "reminder_24h" : "reminder_72h");
+    const sale = r.template_key === "first_sale" || (!r.template_key && r.listing && detectListingTransaction(r.listing) === "vanzare");
+    const tpl = getTemplate(sale ? (r.reminder_stage === 0 ? "reminder_sale_24h" : "reminder_sale_72h") : (r.reminder_stage === 0 ? "reminder_24h" : "reminder_72h"));
     return tpl.build({
       ownerName: r.listing?.contact_name,
       title: r.listing?.title,
@@ -114,40 +77,34 @@ export default function OwnerFollowUpPanel() {
     });
   };
 
-  const sendReminder = async (r: Reminder, channel: "whatsapp" | "sms") => {
-    const phone = r.phone_normalized;
-    if (!phone) {
-      toast.error("Nu avem numărul proprietarului pentru acest mesaj.");
-      return;
-    }
-    if (channel === "whatsapp" && !isWhatsappCapable(phone)) {
-      toast.error("Numărul nu este mobil — trimite SMS.");
-      return;
-    }
-    const message = messageFor(r);
-    setBusy(r.id);
-    const link = channel === "whatsapp" ? whatsappLink(phone, message) : smsLink(phone, message);
-    const win = window.open(link, "_blank", "noopener,noreferrer");
-    if (!win) window.location.href = link;
+  const sendReminder = async (r: Reminder) => {
+    if (busy || pending) return;
+    try {
+      const current = await fetchOwnerReminders();
+      if (!current.due.some((item) => item.id === r.id)) {
+        toast.error("Mementoul nu mai este eligibil. Reîncarcă lista."); refetch(); return;
+      }
+      setPending(r);
+    } catch { toast.error("Nu am putut verifica istoricul. Mementoul nu s-a deschis."); }
+  };
 
+  const confirmReminderSent = async () => {
+    if (!pending || busy) return;
+    const r = pending;
+    setBusy(r.id);
     try {
       const nextStage = r.reminder_stage + 1;
-      // Etapa 1 = memento 24h → următorul la 72h de la primul mesaj (încă 48h).
-      // Etapa 2 = memento 72h → nu mai insistăm.
-      const nextAt = nextStage >= 2 ? null : new Date(Date.now() + 48 * 3_600_000).toISOString();
-      const { error } = await supabase
-        .from("owner_outreach_messages")
+      const nextAt = nextStage >= 2 ? null : new Date(new Date(r.sent_at || new Date().toISOString()).getTime() + 72 * 3_600_000).toISOString();
+      const { data, error } = await supabase.from("owner_outreach_messages")
         .update({ reminder_stage: nextStage, next_reminder_at: nextAt, status: nextStage >= 2 ? "followed_up_final" : "followed_up" })
-        .eq("id", r.id);
+        .eq("id", r.id).eq("reminder_stage", r.reminder_stage).is("replied_at", null).select("id");
       if (error) throw error;
-      toast.success(nextStage >= 2 ? "Memento final trimis." : "Memento trimis. Următorul la 72h.");
-      refetch();
-      queryClient.invalidateQueries({ queryKey: ["owner-flow-step-counts"] });
-    } catch (err) {
-      toast.error(`Mesajul s-a deschis, dar nu s-a salvat: ${(err as Error).message}`);
-    } finally {
-      setBusy(null);
-    }
+      if (!data?.length) throw new Error("Mementoul a fost deja actualizat. Reîncarcă lista.");
+      toast.success(nextStage >= 2 ? "Memento final confirmat." : "Memento confirmat. Următorul la 72h de la primul mesaj.");
+      setPending(null);
+      queryClient.invalidateQueries({ queryKey: OWNER_FLOW_QUERY_KEY });
+    } catch (err) { toast.error((err as Error).message); }
+    finally { setBusy(null); }
   };
 
   const markReplied = async (r: Reminder) => {
@@ -158,10 +115,9 @@ export default function OwnerFollowUpPanel() {
         .update({ replied_at: new Date().toISOString(), next_reminder_at: null, status: "replied" })
         .eq("id", r.id);
       if (error) throw error;
-      if (r.prospect_listing_id) {
-        await supabase.from("prospect_listings").update({ lifecycle_status: "interested" }).eq("id", r.prospect_listing_id);
-      }
+
       toast.success("Marcat ca „a răspuns”. Nu mai primește mementouri.");
+      queryClient.invalidateQueries({ queryKey: OWNER_FLOW_QUERY_KEY });
       refetch();
     } catch (err) {
       toast.error((err as Error).message);
@@ -191,14 +147,11 @@ export default function OwnerFollowUpPanel() {
       </div>
       {isDue && (
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => sendReminder(r, "whatsapp")} disabled={busy === r.id} className="min-h-[48px] flex-1 sm:flex-none">
+          <Button onClick={() => sendReminder(r)} disabled={busy !== null || pending !== null} className="min-h-[48px] flex-1 sm:flex-none">
             {busy === r.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageCircle className="mr-2 h-4 w-4" />}
-            Trimite mementoul
+            Pregătește mementoul
           </Button>
-          <Button variant="outline" onClick={() => sendReminder(r, "sms")} disabled={busy === r.id} className="min-h-[48px]">
-            <Smartphone className="mr-2 h-4 w-4" /> SMS
-          </Button>
-          <Button variant="ghost" onClick={() => markReplied(r)} disabled={busy === r.id} className="min-h-[48px]">
+          <Button variant="ghost" onClick={() => markReplied(r)} disabled={busy !== null || pending !== null} className="min-h-[48px]">
             <CheckCircle2 className="mr-2 h-4 w-4" /> A răspuns
           </Button>
         </div>
@@ -208,13 +161,13 @@ export default function OwnerFollowUpPanel() {
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader className="pb-3">
+      <section>
+        <CardHeader className="px-0 pb-3">
           <div className="flex items-start justify-between gap-3">
             <div>
               <CardTitle className="text-base">Mementouri de trimis ({due.length})</CardTitle>
               <CardDescription>
-                Proprietarii care nu au răspuns primesc un memento la 24h și, dacă tot nu răspund, unul final la 72h.
+                Recontactare manuală · 24h / 72h
               </CardDescription>
             </div>
             <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isRefetching} aria-label="Reîncarcă mementourile">
@@ -222,12 +175,12 @@ export default function OwnerFollowUpPanel() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="px-0 space-y-3">
           {isLoading ? (
             <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Se încarcă…
             </div>
-          ) : due.length === 0 ? (
+          ) : error ? (<p role="alert" className="text-sm text-destructive">Mementourile nu au putut fi încărcate. Reîncearcă.</p>) : due.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
               Nimic de reamintit acum. Mementourile apar automat la 24h și 72h după primul mesaj.
             </p>
@@ -242,7 +195,19 @@ export default function OwnerFollowUpPanel() {
             </div>
           )}
         </CardContent>
-      </Card>
+      </section>
+
+      {pending && pending.phone_normalized && (
+        <section aria-label="Confirmă mementoul" className="border border-primary rounded-lg p-4 space-y-3">
+          <h2 className="font-semibold">Confirmă trimiterea mementoului</h2>
+          <p className="text-sm whitespace-pre-wrap">{messageFor(pending)}</p>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild><a href={whatsappLink(pending.phone_normalized, messageFor(pending))} target="_blank" rel="noopener noreferrer">Deschide WhatsApp</a></Button>
+            <Button onClick={confirmReminderSent} disabled={busy !== null}>Am trimis mementoul</Button>
+            <Button variant="ghost" onClick={() => setPending(null)} disabled={busy !== null}>Anulează</Button>
+          </div>
+        </section>
+      )}
 
       <Card>
         <CardHeader className="pb-3">

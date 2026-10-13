@@ -1,3 +1,4 @@
+import { detectListingTransaction } from "@/lib/ownerOutreachTemplates";
 import { norm } from "@/lib/portalSearch";
 
 export type OwnerVerification = "confirmed" | "review" | "agency";
@@ -11,6 +12,7 @@ export interface OwnerListingCandidate {
   owner_verified?: boolean | null;
   is_active?: boolean | null;
   lifecycle_status?: string | null;
+  category?: string | null;
 }
 
 const TRACKING_PARAMS = /^(utm_|gclid|fbclid|msclkid|reason|ref|source|srsltid|_ga|mc_|sid|clickid)/i;
@@ -124,10 +126,6 @@ export function isResidentialRealEstate(candidate: OwnerListingCandidate): boole
 }
 
 export function listingTransaction(candidate: OwnerListingCandidate): "vanzare" | "inchiriere" | null {
-  const text = ` ${norm(`${candidate.title || ""} ${candidate.description || ""}`)} `;
-  if (/\b(inchiriez|inchiriere|inchiriat|se inchiriaza|ofer spre inchiriere|chirie|lunar)\b/.test(text)) {
-    return "inchiriere";
-  }
-  if (/\b(vand|vanzare|de vanzare|se vinde|ofer spre vanzare)\b/.test(text)) return "vanzare";
-  return null;
+  const result = detectListingTransaction({ ...candidate, source_url: candidate.url });
+  return result === "necunoscut" ? null : result;
 }

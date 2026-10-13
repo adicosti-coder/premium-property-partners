@@ -47,6 +47,7 @@ export interface AdHocListing {
   source_platform?: string | null;
   platform?: string | null;
   prospect_type?: string | null;
+  category?: string | null;
   owner_verified?: boolean | null;
   ai_score_breakdown?: { explicit_owner_signal?: boolean } | null;
   is_active?: boolean | null;
@@ -216,6 +217,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const [ignoreFilters, setIgnoreFilters] = useState(false);
   const [results, setResults] = useState<AdHocListing[] | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
+  const [advanced, setAdvanced] = useState(false);
   const [searching, setSearching] = useState(false);
   const [pricing, setPricing] = useState(false);
   const [exactPrices, setExactPrices] = useState<Record<string, number>>({});
@@ -353,6 +355,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   };
 
   const resetFilters = () => {
+    setPlatform(ALL_PLATFORMS);
+    setLimitToPreferred(false);
     setTypes([]);
     setPartitions([]);
     setExtras([]);
@@ -424,7 +428,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const transaction = listingTransaction(l);
     if (deal === "vanzare" && transaction === "inchiriere") return "este inchiriere";
     if (deal === "inchiriere" && transaction === "vanzare") return "este vanzare";
-    if (deal === "inchiriere" && transaction === null && !thinText) return "tranzactie neconfirmata";
+    if (deal !== ANY_DEAL && transaction === null && !thinText) return "tranzactie neconfirmata";
     
     const normalizedText = ` ${norm(rawText)} `;
     if (wantedTypes.length > 0) {
@@ -577,7 +581,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const fetchFor = async (w?: string) => {
       let q = supabase
         .from("prospect_listings")
-        .select("title,description,source_url,price,contact_phone,zone,rooms,source_platform,prospect_type,ai_score_breakdown,is_active,lifecycle_status,created_at,updated_at,last_seen_at")
+        .select("title,description,source_url,price,contact_phone,zone,rooms,source_platform,category,prospect_type,ai_score_breakdown,is_active,lifecycle_status,created_at,updated_at,last_seen_at")
         .not("source_url", "is", null)
         .eq("is_active", true)
         // „De verificat” poate avea date incomplete, dar este un rezultat real.
@@ -631,6 +635,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         rooms: r.rooms,
         source_platform: r.source_platform,
         prospect_type: r.prospect_type,
+        category: r.category,
         owner_verified: r.ai_score_breakdown?.explicit_owner_signal === true,
         is_active: r.is_active,
         lifecycle_status: r.lifecycle_status,
@@ -745,7 +750,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const { data, error } = await supabase
       .from("prospect_listings")
       .update({ is_active: false, lifecycle_status: "expired" } as never)
-      .eq("source_url", url)
+      .in("source_url", [...new Set([url, normalizeOwnerListingUrl(url), `${normalizeOwnerListingUrl(url)}/`])])
       .select("id");
     if (error) {
       toast({ title: "Nu am putut marca anunțul", description: error.message, variant: "destructive" });
@@ -769,7 +774,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     // Portalurile nu acceptă liste într-o singură căutare, așa că generăm mai
     // multe interogări: câte una pentru fiecare zonă bifată și fiecare număr de
     // camere. Compartimentarea, etajul și dotările se aplică pe rezultate.
-    const typePart = types[0] ?? "";
+    const typeVariants = types.length ? types : [""];
     const dealPart = deal === "vanzare" ? "de vanzare" : deal === "inchiriere" ? "de inchiriat" : "";
     const roomVariants = rooms.length ? rooms.slice(0, 3).map(r => `${r} camere`) : [""];
     const zoneVariants = zones.length
@@ -779,11 +784,11 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const cityPart = zones.length === 0 && !/\btimi[șs]oara\b/i.test(base) ? "Timișoara" : "";
     const terms = Array.from(
       new Set(
-        roomVariants.flatMap(rp =>
+        typeVariants.flatMap(typePart => roomVariants.flatMap(rp =>
           zoneVariants.map(zp =>
             `${typePart} ${rp} ${base} ${zp} ${cityPart} ${dealPart}`.replace(/\s+/g, " ").trim(),
           ),
-        ),
+        )),
       ),
     ).filter(t => t.length >= 3);
     if (terms.length === 0) {
@@ -896,7 +901,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
        const totalVisibleCandidates = listings.length;
        setSummary(
         (quiet && addedNow > 0 ? `+${addedNow} anunțuri adăugate automat · ` : "") +
-         `${newCount} rezultate live noi · ${totalVisibleCandidates} anunțuri individuale în listă · ${ok.length} ${ok.length === 1 ? "platformă verificată" : "platforme verificate"}` +
+         `${newCount} rezultate live noi · ${totalVisibleCandidates} anunțuri individuale în listă · ${new Set(ok.map(r => r.platform)).size} platforme verificate` +
           (perPlatform ? ` (${perPlatform})` : "") +
           (existingShown ? ` · ${existingShown} anunțuri deja salvate afișate cu link` : "") +
           (agency ? ` · ${agency} agenții excluse` : "") +
@@ -984,6 +989,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             rooms: r.rooms,
             source_platform: r.source_platform,
             prospect_type: r.prospect_type,
+        category: r.category,
             owner_verified: r.ai_score_breakdown?.explicit_owner_signal === true,
             is_active: r.is_active,
             lifecycle_status: r.lifecycle_status,
@@ -1057,7 +1063,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
           size="sm"
           variant={autoLive ? "default" : "outline"}
           aria-pressed={autoLive}
-          className="h-9 text-xs"
+          className="min-h-12 text-xs"
           onClick={() => setAutoLive(v => !v)}
         >
           {autoLive ? "Scanare automată: pornită" : "Scanare automată: oprită"}
@@ -1083,7 +1089,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                 size="sm"
                 variant={on ? "default" : "outline"}
                 aria-pressed={on}
-                className="h-9 text-xs"
+                className="min-h-12 text-xs"
                 onClick={() => { setTypes(v => toggleIn(v, t.value)); setIgnoreFilters(false); }}
               >
                 {t.label}
@@ -1091,115 +1097,6 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             );
           })}
         </div>
-      </div>
-
-      {/* Compartimentare */}
-      <div className="space-y-1.5">
-        <div className="text-[11px] text-muted-foreground">Compartimentare (poți alege mai multe)</div>
-        <div className="flex flex-wrap gap-1.5">
-          {PARTITION_OPTIONS.map(p => {
-            const on = partitions.includes(p.value);
-            return (
-              <Button
-                key={p.value}
-                type="button"
-                size="sm"
-                variant={on ? "default" : "outline"}
-                aria-pressed={on}
-                className="h-9 text-xs"
-                onClick={() => { setPartitions(v => toggleIn(v, p.value)); setIgnoreFilters(false); }}
-              >
-                {p.label}
-              </Button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Dotări */}
-      <div className="space-y-1.5">
-        <div className="text-[11px] text-muted-foreground">Dotări cerute (toate bifele trebuie să apară în anunț)</div>
-        <div className="flex flex-wrap gap-1.5">
-          {EXTRA_OPTIONS.map(x => {
-            const on = extras.includes(x.value);
-            return (
-              <Button
-                key={x.value}
-                type="button"
-                size="sm"
-                variant={on ? "default" : "outline"}
-                aria-pressed={on}
-                className="h-9 text-xs"
-                onClick={() => { setExtras(v => toggleIn(v, x.value)); setIgnoreFilters(false); }}
-              >
-                {x.label}
-              </Button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Etaj — selecție multiplă */}
-      <div className="space-y-1.5">
-        <div className="text-[11px] text-muted-foreground">Etaj (poți alege mai multe)</div>
-        <div className="flex flex-wrap gap-1.5">
-          {FLOOR_OPTIONS.map(f => {
-            const on = floors.includes(f.value);
-            return (
-              <Button
-                key={f.value}
-                type="button"
-                size="sm"
-                variant={on ? "default" : "outline"}
-                aria-pressed={on}
-                className="h-9 text-xs"
-                onClick={() => { setFloors(v => toggleIn(v, f.value)); setIgnoreFilters(false); }}
-              >
-                {f.label}
-              </Button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-2">
-        <Select value={yearFilter} onValueChange={setYearFilter}>
-          <SelectTrigger className="sm:w-[190px] min-h-[48px] sm:min-h-0" aria-label="An construcție">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ANY_YEAR}>Orice an construcție</SelectItem>
-            {YEAR_OPTIONS.map(y => (
-              <SelectItem key={y.value} value={y.value}>{y.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={sort} onValueChange={v => setSort(v as SortValue)}>
-          <SelectTrigger className="sm:w-[180px] min-h-[48px] sm:min-h-0" aria-label="Sortare rezultate">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {SORT_OPTIONS.map(o => (
-              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Input
-          value={minSurface}
-          onChange={e => setMinSurface(e.target.value)}
-          inputMode="numeric"
-          placeholder="Suprafață min. (mp)"
-          aria-label="Suprafață minimă în metri pătrați"
-          className="sm:w-[170px] min-h-[48px] sm:min-h-0"
-        />
-        <Input
-          value={maxSurface}
-          onChange={e => setMaxSurface(e.target.value)}
-          inputMode="numeric"
-          placeholder="Suprafață max. (mp)"
-          aria-label="Suprafață maximă în metri pătrați"
-          className="sm:w-[170px] min-h-[48px] sm:min-h-0"
-        />
       </div>
 
       <div className="space-y-1.5">
@@ -1227,7 +1124,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                 size="sm"
                 variant={on ? "default" : "outline"}
                 aria-pressed={on}
-                className="h-8 text-[11px]"
+                className="min-h-12 text-xs"
                 onClick={() => { setZones(v => toggleIn(v, z)); setIgnoreFilters(false); }}
               >
                 {z}
@@ -1269,7 +1166,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                 size="sm"
                 variant={on ? "default" : "outline"}
                 aria-pressed={on}
-                className="h-9 text-xs"
+                className="min-h-12 text-xs"
                 onClick={() => { setRooms(v => toggleIn(v, r.value)); setIgnoreFilters(false); }}
               >
                 {r.label}
@@ -1360,6 +1257,119 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       </div>
 
 
+      <Button variant="outline" onClick={() => setAdvanced(v => !v)} aria-expanded={advanced} className="min-h-12">
+        <ChevronDown className="h-4 w-4 mr-2" />{advanced ? "Ascunde filtrele avansate" : "Filtre avansate"}
+      </Button>
+      {advanced && <div className="space-y-3 border-t border-border pt-3">
+      {/* Compartimentare */}
+      <div className="space-y-1.5">
+        <div className="text-[11px] text-muted-foreground">Compartimentare (poți alege mai multe)</div>
+        <div className="flex flex-wrap gap-1.5">
+          {PARTITION_OPTIONS.map(p => {
+            const on = partitions.includes(p.value);
+            return (
+              <Button
+                key={p.value}
+                type="button"
+                size="sm"
+                variant={on ? "default" : "outline"}
+                aria-pressed={on}
+                className="min-h-12 text-xs"
+                onClick={() => { setPartitions(v => toggleIn(v, p.value)); setIgnoreFilters(false); }}
+              >
+                {p.label}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Dotări */}
+      <div className="space-y-1.5">
+        <div className="text-[11px] text-muted-foreground">Dotări cerute (toate bifele trebuie să apară în anunț)</div>
+        <div className="flex flex-wrap gap-1.5">
+          {EXTRA_OPTIONS.map(x => {
+            const on = extras.includes(x.value);
+            return (
+              <Button
+                key={x.value}
+                type="button"
+                size="sm"
+                variant={on ? "default" : "outline"}
+                aria-pressed={on}
+                className="min-h-12 text-xs"
+                onClick={() => { setExtras(v => toggleIn(v, x.value)); setIgnoreFilters(false); }}
+              >
+                {x.label}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Etaj — selecție multiplă */}
+      <div className="space-y-1.5">
+        <div className="text-[11px] text-muted-foreground">Etaj (poți alege mai multe)</div>
+        <div className="flex flex-wrap gap-1.5">
+          {FLOOR_OPTIONS.map(f => {
+            const on = floors.includes(f.value);
+            return (
+              <Button
+                key={f.value}
+                type="button"
+                size="sm"
+                variant={on ? "default" : "outline"}
+                aria-pressed={on}
+                className="min-h-12 text-xs"
+                onClick={() => { setFloors(v => toggleIn(v, f.value)); setIgnoreFilters(false); }}
+              >
+                {f.label}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Select value={yearFilter} onValueChange={setYearFilter}>
+          <SelectTrigger className="sm:w-[190px] min-h-[48px] sm:min-h-0" aria-label="An construcție">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ANY_YEAR}>Orice an construcție</SelectItem>
+            {YEAR_OPTIONS.map(y => (
+              <SelectItem key={y.value} value={y.value}>{y.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={sort} onValueChange={v => setSort(v as SortValue)}>
+          <SelectTrigger className="sm:w-[180px] min-h-[48px] sm:min-h-0" aria-label="Sortare rezultate">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {SORT_OPTIONS.map(o => (
+              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Input
+          value={minSurface}
+          onChange={e => setMinSurface(e.target.value)}
+          inputMode="numeric"
+          placeholder="Suprafață min. (mp)"
+          aria-label="Suprafață minimă în metri pătrați"
+          className="sm:w-[170px] min-h-[48px] sm:min-h-0"
+        />
+        <Input
+          value={maxSurface}
+          onChange={e => setMaxSurface(e.target.value)}
+          inputMode="numeric"
+          placeholder="Suprafață max. (mp)"
+          aria-label="Suprafață maximă în metri pătrați"
+          className="sm:w-[170px] min-h-[48px] sm:min-h-0"
+        />
+      </div>
+
       <div className="rounded-lg border p-2 space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="text-[11px] text-muted-foreground max-w-[26rem]">
@@ -1372,7 +1382,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             disabled={preferredZones.length === 0}
             aria-pressed={limitToPreferred}
             onClick={() => { setLimitToPreferred(v => !v); setIgnoreFilters(false); }}
-            className="h-9 text-xs"
+            className="min-h-12 text-xs"
           >
             {limitToPreferred ? "Doar zonele preferate" : "Toate zonele"}
           </Button>
@@ -1427,6 +1437,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         ))}
       </div>
 
+      </div>}
+
       {searching && (
         <div className="text-xs text-muted-foreground flex items-center gap-2">
           <Loader2 className="h-3 w-3 animate-spin" /> Caut anunțuri de la proprietari…
@@ -1467,7 +1479,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         const relaxed = strict.length === 0
           ? sortResults(eligible.filter(l => excludeReason(l, "soft") === null))
           : [];
-        const usedRelaxed = strict.length === 0 && relaxed.length > 0;
+        const usedRelaxed = false;
         const matched = ownersFirst(usedRelaxed ? relaxed : strict);
         const main = ignoreFilters ? ownersFirst(sortResults(eligible)) : matched;
         const rejected = eligible.filter(r => !main.includes(r));
@@ -1772,19 +1784,17 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   }
 
   return (
-    <Card className="border-2 border-amber-500/40 bg-amber-500/5">
-      <CardHeader>
+    <section className="space-y-3">
+      <CardHeader className="px-0">
         <CardTitle className="flex items-center gap-2">
-          <Search className="h-5 w-5 text-amber-600" />
+          <Search className="h-5 w-5 text-primary" />
           Caută anunțuri de la proprietari
         </CardTitle>
         <CardDescription>
-          Caută pe OLX, Storia.ro, imobiliare.ro, Publi24, BursaImobiliara.ro, Homezz.ro, Anuntul.ro,
-          Anunturi-Imobiliare.ro și Tocmai.ro doar anunțurile publicate de proprietari.
-          Agențiile sunt excluse automat, iar rezultatele intră și în „Anunțuri noi găsite”.
+          OLX · Storia.ro · imobiliare.ro · Publi24 · Homezz.ro · Anuntul.ro
         </CardDescription>
       </CardHeader>
-      <CardContent>{body}</CardContent>
-    </Card>
+      <CardContent className="px-0">{body}</CardContent>
+    </section>
   );
 }
