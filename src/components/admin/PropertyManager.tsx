@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,10 +42,15 @@ import { PropertyEditor } from "./property/dialogs/PropertyEditor";
 export default function PropertyManager() {
   const { t } = useLanguage();
 
-  // Filters (server-side)
+  // Filters (server-side) — preluate din URL când se navighează din cardurile de metrici
+  const [searchParams] = useSearchParams();
+  const urlType = searchParams.get("type");
+  const urlStatus = searchParams.get("status");
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterListingType, setFilterListingType] = useState<string>("all");
-  const [filterStatus, setFilterStatus] = useState<PropertyStatusFilter>("all");
+  const [filterListingType, setFilterListingType] = useState<string>(urlType || "all");
+  const [filterStatus, setFilterStatus] = useState<PropertyStatusFilter>(
+    urlStatus === "active" || urlStatus === "inactive" ? urlStatus : "all",
+  );
   const [showFilters, setShowFilters] = useState(true);
 
   // Pagination
