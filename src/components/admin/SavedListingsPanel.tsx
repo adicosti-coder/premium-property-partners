@@ -4,6 +4,7 @@
  * într-un singur loc. Include alertă pentru anunțurile aproape de expirare
  * (nevăzute pe platformă de peste 14 zile; la 21 de zile sunt considerate expirate).
  */
+import { isSearchPageUrl, isRoMobile } from "@/lib/listingUrl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -253,12 +254,12 @@ export default function SavedListingsPanel() {
                   <div className="text-sm text-muted-foreground flex flex-wrap gap-x-4 gap-y-1">
                     <span>Preț: <strong className="text-foreground">{eur(r.price)}</strong></span>
                     <span>€/mp: {r.price_per_sqm ? Math.round(Number(r.price_per_sqm)).toLocaleString("ro-RO") : "—"}</span>
-                    <span>Pe sursă: {dSource == null ? "—" : `${dSource} zile`}</span>
+                    <span>Pe sursă: {dSource == null ? "—" : `${dSource} ${dSource === 1 ? "zi" : "zile"}`}</span>
                     <span>Văzut ultima dată: {dateRo(r.last_seen_at)}</span>
                     <span>Preț verificat: {dateRo(r.price_checked_at)}</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {r.contact_phone && (
+                    {r.contact_phone && isRoMobile(r.contact_phone) && (
                       <>
                         <Button asChild size="sm" variant="outline">
                           <a href={`tel:${r.contact_phone}`} aria-label={`Sună ${r.contact_phone}`}>

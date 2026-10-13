@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isSearchPageUrl } from "../_shared/listingUrl.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -157,6 +158,8 @@ Deno.serve(async (req) => {
   // ── Filter hard-blacklisted ──
   const filteredLeads = nonArchivedLeads.filter((l: any) => {
     if (l.phone && phoneMap[l.phone]?.is_blacklisted) return false;
+    // Pagini de căutare/categorie nu sunt anunțuri (prețul ar fi al unui card aleatoriu).
+    if (isSearchPageUrl(l.url, l.title)) return false;
     return true;
   });
 
