@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { isSearchPageUrl } from "../_shared/listingUrl.ts";
+import { isImplausiblePrice, priceCategoryOf } from "../_shared/priceSanity.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -160,6 +161,8 @@ Deno.serve(async (req) => {
     if (l.phone && phoneMap[l.phone]?.is_blacklisted) return false;
     // Pagini de căutare/categorie nu sunt anunțuri (prețul ar fi al unui card aleatoriu).
     if (isSearchPageUrl(l.url, l.title)) return false;
+    // Prețuri neverosimile (ex: preț de vânzare salvat ca lună, 2.024.600 €/lună).
+    if (isImplausiblePrice(Number(l.original_price) || null, priceCategoryOf({ category: l.category, title: l.title, description: l.description, url: l.url }))) return false;
     return true;
   });
 
