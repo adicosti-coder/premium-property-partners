@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RefreshCw, ExternalLink, TrendingDown, Download, BellRing } from "lucide-react";
 import { downloadCsv, csvFileName } from "@/utils/exportCsv";
 import { toast } from "sonner";
+import { isIndividualOwnerListing, isResidentialRealEstate } from "@/lib/ownerListingRules";
 
 const STORAGE_KEY = "rt_price_drop_threshold";
 
@@ -29,7 +30,7 @@ interface Row {
 }
 
 interface Titles {
-  [id: string]: { title: string | null; zone: string | null; contact_phone: string | null };
+  [id: string]: { title: string | null; description: string | null; source_url: string | null; zone: string | null; contact_phone: string | null; currency: string | null; is_active: boolean | null; do_not_call: boolean; prospect_type: string | null };
 }
 
 const eur = (v: number | null) => (v == null ? "—" : `${Math.round(Number(v)).toLocaleString("ro-RO")} €`);
@@ -45,7 +46,7 @@ const dateRo = (v: string | null) =>
       })
     : "—";
 
-export default function PriceDropAlertsPanel() {
+export default function PriceDropAlertsPanel({ embedded = false }: { embedded?: boolean }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [titles, setTitles] = useState<Titles>({});
   const [loading, setLoading] = useState(false);
@@ -84,11 +85,11 @@ export default function PriceDropAlertsPanel() {
     if (ids.length) {
       const { data: ls } = await supabase
         .from("prospect_listings")
-        .select("id,title,zone,contact_phone")
+        .select("id,title,description,source_url,zone,contact_phone,currency,is_active,do_not_call,prospect_type")
         .in("id", ids);
       const map: Titles = {};
-      (ls || []).forEach((l: { id: string; title: string | null; zone: string | null; contact_phone: string | null }) => {
-        map[l.id] = { title: l.title, zone: l.zone, contact_phone: l.contact_phone };
+      (ls || []).forEach((l) => {
+        map[l.id] = l;
       });
       setTitles(map);
     } else {
@@ -119,10 +120,19 @@ export default function PriceDropAlertsPanel() {
   const filtered = useMemo(
     () =>
       rows.filter((r) => {
+        const meta = titles[r.listing_id || ""];
+        if (!meta || !meta.is_active || meta.do_not_call || meta.prospect_type === "agentie") return false;
+        const candidate = { ...meta, url: meta.source_url || r.source_url };
+        if (!isIndividualOwnerListing(candidate) || !isResidentialRealEstate(candidate)) return false;
+        // Large jumps often compare different offers scraped from category pages.
+        // Keep source records intact, but do not recommend outreach from suspect prices.
+        if (!r.old_price || !r.new_price || r.new_price <= 0 || r.new_price >= r.old_price) return false;
+        const actualDrop = (r.old_price - r.new_price) / r.old_price * 100;
+        if (actualDrop > 50 || Math.abs(actualDrop - Number(r.drop_pct ?? 0)) > 1) return false;
         if (platform !== "all" && (r.source_platform || "") !== platform) return false;
         return Number(r.drop_pct ?? 0) >= threshold;
       }),
-    [rows, platform, threshold],
+    [rows, titles, platform, threshold],
   );
 
   const last24h = useMemo(
@@ -168,20 +178,19 @@ export default function PriceDropAlertsPanel() {
     );
   };
 
+  const Wrapper = embedded ? "section" : Card;
   return (
-    <Card>
-      <CardHeader>
+    <Wrapper>
+      <CardHeader className={embedded ? "px-0" : undefined}>
         <CardTitle className="flex items-center gap-2">
           <TrendingDown className="h-5 w-5" />
           Scăderi de preț la anunțurile salvate
         </CardTitle>
         <CardDescription>
-          Anunțurile salvate sunt cele găsite pe platforme (OLX, Storia.ro, imobiliare.ro, Publi24,
-          BursaImobiliara.ro) și păstrate în listă. Aici apar doar cele care au scăzut prețul cu cel puțin
-          procentul ales.
+          Anunțuri individuale active · prețuri comparabile
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className={`space-y-4 ${embedded ? "px-0" : ""}`}>
         {last24h.length > 0 && (
           <Alert>
             <BellRing className="h-4 w-4" />
@@ -271,7 +280,8 @@ export default function PriceDropAlertsPanel() {
 
         <div className="space-y-2">
           {filtered.map((r) => {
-            const meta = titles[r.listing_id || ""] || { title: null, zone: null, contact_phone: null };
+            const meta = titles[r.listing_id || ""];
+            if (!meta) return null;
             return (
               <div key={r.id} className="rounded-lg border p-3 space-y-1">
                 <div className="flex flex-wrap items-center gap-2">
@@ -309,6 +319,6 @@ export default function PriceDropAlertsPanel() {
           )}
         </div>
       </CardContent>
-    </Card>
+    </Wrapper>
   );
 }

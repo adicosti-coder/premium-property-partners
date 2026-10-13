@@ -1,5 +1,11 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Refacere Flux proprietari
+- [x] Contoare din aceleași liste, pas păstrat în adresă și pagină simplificată
+- [x] Verificare proprietar salvată, contactare fără duplicate, șabloane și mementouri după tranzacție; SMS inactiv eliminat
+- [x] 22 teste și patru pași verificați autentificat, inclusiv pregătire/anulare memento real, fără mesaje sau apeluri; contactarea era goală, deci trimiterea nu a fost testată
+- [x] Scăderi de preț: eliminate pagini de căutare și salturi suspecte din afișare, fără modificarea datelor originale
+
 ## Imagini Social Engine
 - [x] Extragere fotografie principală originală, respingere fallback generic
 - [x] Asociere automată cu imagini editoriale existente pentru taxe, finanțe și acces digital; fără AI/Unsplash recurent

@@ -4,7 +4,7 @@
  * ca administratorul să trimită dintr-o singură apăsare (WhatsApp sau SMS).
  *
  * Reguli obligatorii de conținut:
- *  - se menționează doar administrarea RealTrust 15–25%, fără „cheltuieli ≈27%";
+ *  - se menționează doar administrarea RealTrust 15–20%, fără „cheltuieli ≈27%";
  *  - nu promitem „întâlnire la birou" (nu avem birou pentru clienți) — vizionarea se face la apartament;
  *  - orașul este Timișoara.
  */
@@ -57,14 +57,14 @@ export function detectListingTransaction(l: {
   source_url?: string | null; category?: string | null; title?: string | null; description?: string | null;
 }): ListingTransaction {
   const fromText = (s?: string | null): ListingTransaction => {
-    const t = (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const t = (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\bnu\s+(?:se\s+)?(?:inchiriez|inchiriaza|vand|vinde)\b/g, "");
     const sale = /vanzare|\bvand\b|\bvinde\b|for-sale/.test(t);
-    const rent = /inchiriere|inchiriez|\bchirie\b|de-inchiriat|for-rent/.test(t);
+    const rent = /inchiriere|inchiriez|\bchirie\b|(?:de[- ]|se )inchiriat|se inchiriaza|for-rent/.test(t);
     if (sale && !rent) return "vanzare";
     if (rent && !sale) return "inchiriere";
     return "necunoscut";
   };
-  for (const s of [l.source_url, l.category, l.title, l.description]) {
+  for (const s of [l.category, l.title, l.source_url, l.description]) {
     const r = fromText(s);
     if (r !== "necunoscut") return r;
   }
@@ -116,7 +116,7 @@ export const OWNER_OUTREACH_TEMPLATES: OutreachTemplate[] = [
         offer
           ? `Vă putem prelua apartamentul în administrare cu un venit estimat de ${offer} pe lună, pe un contract de ${duration}.`
           : `Vă putem prelua apartamentul în administrare pe un contract de ${duration}, cu un venit lunar garantat prin contract.`,
-        "Ne ocupăm de tot: promovare, oaspeți, curățenie, mentenanță și încasări. Comisionul de administrare RealTrust este între 15% și 25%, în funcție de pachetul ales.",
+        "Ne ocupăm de tot: promovare, oaspeți, curățenie, mentenanță și încasări. Comisionul de administrare RealTrust este între 15% și 20%, în funcție de pachetul ales.",
         "",
         "Dacă vă interesează, vin la apartament la o oră care vă e comodă și vă arăt calculul exact. Vă convine?",
       ].join("\n");
@@ -158,6 +158,16 @@ export const OWNER_OUTREACH_TEMPLATES: OutreachTemplate[] = [
         `Sunt Andrei, RealTrust Timișoara, despre ${listingRef(ctx)}.`,
         "Avem o propunere de administrare cu venit lunar garantat prin contract. Vă pot trimite calculul exact?",
       ].join(" "),
+  },
+  {
+    key: "reminder_sale_24h", label: "Memento vânzare 24h", kind: "reminder24",
+    hint: "Evaluare și reprezentare la vânzare.",
+    build: (ctx) => [greeting(ctx), "", `Revin în legătură cu ${listingRef(ctx)}, scos la vânzare.`, "Vă pot trimite evaluarea gratuită și detalii despre reprezentarea la vânzare?"].join("\n"),
+  },
+  {
+    key: "reminder_sale_72h", label: "Memento vânzare 72h", kind: "reminder72",
+    hint: "Ultima reamintire despre vânzare.",
+    build: (ctx) => [greeting(ctx), "", `Ultimul mesaj despre ${listingRef(ctx)}, scos la vânzare.`, "Mai este disponibil? Dacă doriți o evaluare gratuită sau ajutor la vânzare, vă stau la dispoziție. Mulțumesc!"].join("\n"),
   },
   {
     key: "reminder_24h",
