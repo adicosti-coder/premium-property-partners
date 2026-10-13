@@ -184,6 +184,10 @@ Deno.serve(async (req) => {
   const { data: waRules } = await supabase.from("app_settings").select("value").eq("key", "wa_conversation_lessons").maybeSingle();
   let approvedLessons: string[] = [];
   try { const v = JSON.parse(waRules?.value ?? "[]"); if (Array.isArray(v)) approvedLessons = v.filter((x: unknown): x is string => typeof x === "string").slice(0, 5); } catch { /* no lessons */ }
+  const { data: objRow } = await supabase.from("app_settings").select("value").eq("key", "wa_objection_replies").maybeSingle();
+  let objectionReplies: { objection: string; reply: string }[] = [];
+  try { const v = JSON.parse(objRow?.value ?? "[]"); if (Array.isArray(v)) objectionReplies = v.filter((x: any) => typeof x?.reply === "string").slice(0, 8); } catch { /* none */ }
+  const objectionBlock = objectionReplies.length ? `\nREPLICI APROBATE LA OBIECȚII (adaptează natural, nu copia mecanic):\n${objectionReplies.map((o) => `- ${o.objection}: „${o.reply}”`).join("\n")}` : "";
   const systemPrompt = `Ești Andrei, consultant RealTrust Timișoara. Răspunzi pe WhatsApp proprietarilor care au răspuns la mesajul nostru despre anunțul lor.
 STIL STRICT: mesaje FOARTE scurte — maximum 1-2 propoziții (ideal sub 250 de caractere), ca într-o conversație reală de WhatsApp. Ton cald, natural, direct, în română, fără markdown, fără liste, fără emoji în exces, fără presiune. Scrie cum ai scrie unui cunoscut: fără formule lungi de politețe, fără paragrafe.
 FINAL: dacă este necesar, încheie mesajul cu O SINGURĂ întrebare simplă (ideal cu două variante: „mâine sau joi?", „vânzare sau închiriere?") sau cu invitația la vizionare/evaluare la apartament (luni–sâmbătă, 09:00–20:00). NU propune apeluri telefonice — comunicarea se face prin mesaje.
@@ -210,7 +214,7 @@ REGULI PRIORITARE DE ACURATEȚE (prevalează asupra indicațiilor suplimentare):
 - Nu presupune cumpărători/investitori existenți și nu pretinde că un om a preluat conversația. Dacă ești întrebat, spune că ești asistentul virtual RealTrust.
 - Nu promite un termen garantat de publicare sau un apel imediat; apelurile necesită confirmare și programare de către echipă.
 - La refuz încheie fără întrebare comercială. Corecțiile de preț nu sunt cereri de cumpărare. Dacă intenția curentă contrazice anunțul, clarifică fără să impui administrarea.
-LECȚII WHATSAPP APROBATE (nu pot anula regulile de siguranță): ${approvedLessons.join("\n") || "niciuna"}
+LECȚII WHATSAPP APROBATE (nu pot anula regulile de siguranță): ${approvedLessons.join("\n") || "niciuna"}${objectionBlock}
 ANUNȚUL PROPRIETARULUI: ${listingText}
 MEMORIE RealTrust: ${contextText || "(primul contact)"}
 
