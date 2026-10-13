@@ -231,12 +231,15 @@ Deno.serve(async (req) => {
     }
 
     if (!skipEmailReason) {
+      const lastWa = str(sim.last_wa_message) ? String(sim.last_wa_message).slice(0, 2000) : "";
       const rows: Array<[string, string]> = [
         ["Nume", record.name],
         ["Telefon", phoneValid ? phoneRaw : "—"],
         ["Email", record.email || "—"],
         ["Cartier", crmPayload.lead.neighbourhood || "—"],
         ["Camere", crmPayload.lead.rooms || "—"],
+        ...(str(sim.transaction) ? [["Tip tranzacție", s(sim.transaction)] as [string, string]] : []),
+        ...(str(sim.budget) ? [["Buget", s(sim.budget)] as [string, string]] : []),
         ["Sursă", crmPayload.lead.source || "—"],
         ["Scor", record.lead_score != null ? `${record.lead_score} (${record.lead_grade ?? "-"})` : "—"],
         ["Campanie", utm.utm_campaign || "—"],
@@ -250,6 +253,8 @@ Deno.serve(async (req) => {
           <table style="width:100%;border-collapse:collapse;font-size:14px">
             ${rows.map(([k, v]) => `<tr><td style="padding:6px 0;color:#6e7480">${escapeHtml(k)}</td><td style="padding:6px 0;color:#1a365d;font-weight:600">${escapeHtml(v)}</td></tr>`).join("")}
           </table>
+          ${lastWa ? `<p style="margin:16px 0 4px;color:#6e7480;font-size:14px">Ultimul mesaj primit:</p>
+          <blockquote style="margin:0;padding:10px 14px;background:#f1f5f9;border-left:3px solid #25D366;color:#1a365d;white-space:pre-wrap;font-size:14px">${escapeHtml(lastWa)}</blockquote>` : ""}
           ${waLink
             ? `<p style="margin:20px 0"><a href="${waLink}" style="background:#25D366;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block">Deschide chat WhatsApp</a></p>`
             : `<p style="margin:20px 0;color:#b45309">Lead fără telefon valid — contactează pe email.</p>`}
