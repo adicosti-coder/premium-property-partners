@@ -9,7 +9,7 @@ export function isSearchPageUrl(url: string | null | undefined, title?: string |
   if (/imobiliare\.ro\/(vanzare|inchiriere)-[a-z-]+\/judetul-/.test(u)) return true;
   if (/[?&](page|search)=|\/q-[^/]+\/?$/.test(u)) return true;
   const t = String(title ?? "").toLowerCase();
-  return /anunturi gratuite|descopera ofertele|cele mai bune oferte|vezi anunturile/.test(t);
+  return /anunturi gratuite|descopera ofertele|apartamente de vanzare in zona|cele mai bune oferte|vezi anunturile/.test(t);
 }
 // Telefon mobil românesc valid (07xxxxxxxx); fixele 02/03 și numerele trunchiate nu sunt contact de proprietar.
 export function isRoMobile(phone: string | null | undefined): boolean {
