@@ -233,6 +233,11 @@ Deno.serve(async (req) => {
   try { body = await req.json(); } catch { /* gol = ok */ }
   const dryRun = body?.dry_run === true;
   const isAdminManual = body?.triggered_by === "admin";
+  // Subiect explicit din Centrul Auto-îmbunătățire (doar apel manual/intern).
+  const ct = body?.custom_topic;
+  const customTopic = ct && typeof ct.topic === "string" && ct.topic.trim().length >= 5
+    ? { topic: ct.topic.trim().slice(0, 200), zone: typeof ct.zone === "string" ? ct.zone.slice(0, 80) : "", reason: typeof ct.reason === "string" ? ct.reason.slice(0, 500) : "" }
+    : null;
 
   const sb = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -257,7 +262,7 @@ Deno.serve(async (req) => {
       .from("blog_articles")
       .select("id", { count: "exact", head: true })
       .eq("ai_pending_review", true).eq("is_published", false);
-    if (!dryRun && (pending ?? 0) >= MAX_PENDING_DRAFTS) {
+    if (!dryRun && !customTopic && (pending ?? 0) >= MAX_PENDING_DRAFTS) {
       return new Response(JSON.stringify({ skipped: true, reason: `drafts_pending=${pending} (limită ${MAX_PENDING_DRAFTS})` }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200,
       });
@@ -309,6 +314,13 @@ Deno.serve(async (req) => {
         topic = { zone: zones.find((z) => z.zone === zoneName)!, variant: variants.find((v) => v.key === variantKey)! };
       }
     }
+    if (customTopic) {
+      const z = matchZone(`${customTopic.zone} ${customTopic.topic}`, zones) ?? { zone: "Timișoara", tokens: [] };
+      topic = { zone: z, variant: {
+        key: "custom", angle: customTopic.topic, tokens: [], category: "Imobiliare",
+        brief: `Subiectul exact al articolului: „${customTopic.topic}”. Context din date: ${customTopic.reason || "—"}. Adaptează totul la Timișoara.`,
+      } };
+    }
     if (!topic) return new Response(JSON.stringify({ skipped: true, reason: "no_topic" }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 });
 
     if (dryRun) {
@@ -351,7 +363,7 @@ Deno.serve(async (req) => {
       slug = `${cleanSlug}-${i}`;
     }
 
-    const { error: insErr } = await sb.from("blog_articles").insert({
+    const { data: insRow, error: insErr } = await sb.from("blog_articles").insert({
       slug,
       title: article.title.slice(0, 200),
       excerpt: (article.excerpt ?? "").slice(0, 500),
@@ -363,10 +375,10 @@ Deno.serve(async (req) => {
       ai_pending_review: true,
       meta_title: (article.meta_title ?? "").slice(0, 200) || null,
       meta_description: (article.meta_description ?? "").slice(0, 300) || null,
-    });
+    }).select("id").maybeSingle();
     if (insErr) throw new Error(`insert: ${insErr.message}`);
 
-    return new Response(JSON.stringify({ created: true, slug, title: article.title, topic: `${topic.zone.zone} · ${topic.variant.angle}` }), {
+    return new Response(JSON.stringify({ created: true, id: insRow?.id ?? null, slug, title: article.title, topic: `${topic.zone.zone} · ${topic.variant.angle}` }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200,
     });
   } catch (e: any) {
