@@ -2940,8 +2940,11 @@ Deno.serve(async (req) => {
             // Pagină generică sau preț nerealist (preț de card din pagină de categorie) → INVALID, nu se salvează.
             if (isGenericSearchPage(url, result.title || rawResult.title || '')) { genericPageSkipped++; continue; }
             const minRealisticPrice = category === 'vanzare' ? 15000 : 100;
-            if (price && price > 0 && price < minRealisticPrice) {
-              console.log(JSON.stringify({ kind: 'invalid_price_skipped', url, price, category }));
+            // Cap superior: chirii > 10.000 €/lună (de obicei preț de vânzare salvat greșit
+            // ca lună) sau vânzări > 3.000.000 € → preț de card din pagină de categorie.
+            const maxRealisticPrice = category === 'vanzare' ? 3_000_000 : 10_000;
+            if (price && price > 0 && (price < minRealisticPrice || price > maxRealisticPrice)) {
+              console.log(JSON.stringify({ kind: 'invalid_price_skipped', url, price, category, reason: price > maxRealisticPrice ? 'price_above_max' : 'price_below_min' }));
               genericPageSkipped++;
               continue;
             }

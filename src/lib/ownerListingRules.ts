@@ -129,3 +129,18 @@ export function listingTransaction(candidate: OwnerListingCandidate): "vanzare" 
   const result = detectListingTransaction({ ...candidate, source_url: candidate.url });
   return result === "necunoscut" ? null : result;
 }
+
+export function hasImplausiblePrice(
+  listing: OwnerListingCandidate & { price?: number | null; currency?: string | null },
+): boolean {
+  return isImplausiblePrice(
+    listing.price ?? null,
+    priceCategoryOf({
+      category: listing.category ?? null,
+      title: listing.title ?? null,
+      description: listing.description ?? null,
+      url: listing.url ?? null,
+    }),
+    listing.currency ?? "EUR",
+  );
+}
