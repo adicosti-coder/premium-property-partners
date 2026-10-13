@@ -91,6 +91,7 @@ serve(async (req) => {
       .maybeSingle();
 
     let appointmentId = existing?.id as string | undefined;
+    const createdNow = !appointmentId;
 
     if (!appointmentId) {
       const notesWithAttribution = [
@@ -190,7 +191,7 @@ serve(async (req) => {
       }
     }
 
-    if (emailSent) {
+    if (emailSent && createdNow) {
       await supabase
         .from("chatbot_appointments")
         .update({ confirmation_sent_at: new Date().toISOString() })
