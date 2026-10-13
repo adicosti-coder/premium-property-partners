@@ -7,6 +7,8 @@ const CHECKS: Record<string, { label: string; fix: string; q: (b: any) => any }>
   no_zone: { label: "Anunțuri active fără zonă", fix: "Completează zona — fără ea nu apar în rapoartele pe cartier și în comparabile.", q: (b) => b.is("zone", null) },
   stale: { label: "Active, dar nevăzute de peste 21 de zile", fix: "Rulează verificarea de expirare; probabil au fost retrase de pe portal.",
     q: (b) => b.lt("last_seen_at", new Date(Date.now() - 21 * 86400000).toISOString()) },
+  search_pages: { label: "Pagini de căutare salvate ca anunțuri", fix: "Linkul duce la o listă de rezultate, nu la un anunț; prețul e al unui card aleatoriu. Dezactivează-le și verifică sursa în Prospectare.",
+    q: (b) => b.or("source_url.ilike.%storia.ro/ro/rezultate/%,source_url.ilike.%/q-%,title.ilike.%anunturi gratuite%,title.ilike.%descopera ofertele%") },
   dup_active: { label: "Duplicate încă active", fix: "Dezactivează copiile marcate ca duplicat, ca să nu dubleze numărătorile.", q: (b) => b.not("duplicate_of", "is", null) },
 };
 
