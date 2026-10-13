@@ -17,6 +17,7 @@ import {
   PUBLISH_REVOKE_ACK,
   publishConsentRequestText,
   isConditionalConsent,
+  isClearRefusal,
   PUBLISH_CONSENT_RECONFIRM_TEXT,
 } from "../_shared/waAutoReply.ts";
 import { notifyClientChatLink } from "../_shared/waClientEmail.ts";
@@ -552,7 +553,7 @@ Deno.serve(async (req) => {
 
         // Cererea de acord a fost pregătită din Admin, dar fereastra de 24h era
         // închisă → punem întrebarea acum, la primul răspuns al proprietarului.
-        if (!publishIntent) {
+        if (!publishIntent && !isClearRefusal(text) && !/^\s*stop\b/i.test(text) && (!quick || quick.kind === "intake")) {
           try {
             const { data: pending } = await supabase
               .from("wa_publish_consents")
@@ -570,7 +571,7 @@ Deno.serve(async (req) => {
                 .maybeSingle();
               quick = {
                 kind: "publish_consent_request",
-                text: publishConsentRequestText(pr ?? null),
+                text: publishConsentRequestText({ ...pr, safeDirect: true }),
               };
               await supabase
                 .from("wa_publish_consents")
@@ -586,7 +587,7 @@ Deno.serve(async (req) => {
         // dacă nu există încă nicio cerere de acord, o creăm și punem automat
         // întrebarea „DA PUBLIC”, ca Andrei să nu mai scrie manual.
         if (
-          !publishIntent && outboundCount && !String(quick?.kind ?? "").startsWith("owner_") &&
+          !publishIntent && outboundCount && !isClearRefusal(text) && !/^\s*stop\b/i.test(text) && !/[?]|comision|costuri|pret/i.test(text) && !String(quick?.kind ?? "").startsWith("owner_") &&
           quick?.kind !== "quick_no" && quick?.kind !== "quick_stop" &&
           quick?.kind !== "publish_consent_request"
         ) {
@@ -614,7 +615,7 @@ Deno.serve(async (req) => {
               if (!insErr) {
                 quick = {
                   kind: "publish_consent_request",
-                  text: publishConsentRequestText(pr),
+                  text: publishConsentRequestText({ ...pr, safeDirect: true }),
                 };
               } else {
                 console.error("[wa-webhook] auto consent request insert failed:", insErr);
@@ -627,7 +628,7 @@ Deno.serve(async (req) => {
         // Bot „Analizează anunțul meu”: un link Storia/OLX/Publi24/Imobiliare.ro
         // în mesaj → confirmare imediată + estimarea trimisă separat (~1 min).
         const listingLink = text.match(/https:\/\/(?:www\.)?[^\s/]*(?:storia|olx|publi24|imobiliare)\.ro\/\S+/i)?.[0];
-        if (listingLink && !publishIntent && quick?.kind !== "quick_stop") {
+        if (listingLink && !publishIntent && !isClearRefusal(text) && quick?.kind !== "quick_stop" && quick?.kind !== "quick_no") {
           quick = { kind: `listing_analysis_ack_${Date.now()}`, text: "Mulțumim! Analizăm anunțul acum — în aproximativ un minut vă trimitem aici scorul, spațiul de negociere și prețul țintă." };
           fetch(`${supabaseUrl}/functions/v1/wa-listing-analysis`, {
             method: "POST",
@@ -657,6 +658,11 @@ Deno.serve(async (req) => {
           } catch (e) {
             console.error("[wa-webhook] auto-reply dedupe check failed:", e);
           }
+        }
+        if (isClearRefusal(text) || /^\s*stop\b/i.test(text)) {
+          quick = { kind: /^\s*stop\b/i.test(text) ? "quick_stop" : "quick_no", text: "Am înțeles. Nu vă mai contactăm. O zi frumoasă!" };
+          conversationsToReply.delete(convId);
+          intakeConversations.delete(convId);
         }
         if (quick) {
           // Răspuns la butoanele din primul mesaj → trimitem imediat răspunsul
@@ -962,10 +968,10 @@ Deno.serve(async (req) => {
         .from("wa_conversations").select("phone_normalized").eq("id", convId).maybeSingle();
       if (!c?.phone_normalized) return false;
       const { data: d } = await supabase
-        .from("wa_dnc_list").select("id").eq("phone_normalized", c.phone_normalized).maybeSingle();
+        .from("wa_dnc_list").select("id").in("phone_normalized", phoneVariants(c.phone_normalized)).limit(1).maybeSingle();
       return !!d;
     } catch {
-      return false;
+      return true;
     }
   };
 
