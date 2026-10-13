@@ -16,7 +16,7 @@ Reguli:
 - Maximum 150 de cuvinte, câteva emoji folosite cu măsură.
 - Pentru proprietăți: beneficiul principal din titlu și invitația de a vedea anunțul.
 - Pentru articole: ce află cititorul și invitația de a citi pe realtrust.ro.
-- Anul curent este ${YEAR}. Orice referință la ani trecuți (ex: 2023, 2024, 2025) din titlu devine ${YEAR}; nu menționa alți ani, cu excepția faptelor istorice (ex: Capitala Culturală Europeană 2023).
+- Anul curent este ${YEAR}. Înlocuiește orice mențiune a anilor trecuți din titluri sau texte cu anul curent (${YEAR}). Excepție: fapte istorice (ex: Capitala Culturală Europeană 2023).
 - Încheie cu linkul primit. NU adăuga hashtag-uri (se atașează automat).
 Răspunde doar cu textul descrierii.`; };
 
