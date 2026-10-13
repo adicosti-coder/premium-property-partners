@@ -285,21 +285,39 @@ export default function SocialEngine() {
       });
 
       if (error || !data?.success) {
+        let details: string | undefined = data?.error;
+        const ctx = (error as { context?: Response } | null)?.context;
+        if (!details && ctx && typeof ctx.text === "function") {
+          try {
+            const raw = await ctx.text();
+            try { details = JSON.parse(raw)?.error || raw; } catch { details = raw; }
+          } catch { /* ignore */ }
+        }
+        if (ctx?.status === 401 || ctx?.status === 403) details = "Sesiunea de admin a expirat sau nu are drepturi. Reautentifică-te în Admin.";
+        console.error("scrape-realtrust failed:", details || error);
         toast({
-          title: "Scraping eșuat",
-          description: data?.error || error?.message || "Nu s-a putut face scraping pe realtrust.ro",
+          title: "Extragerea a eșuat",
+          description: details || error?.message || "Nu s-a putut extrage conținut de pe realtrust.ro",
           variant: "destructive",
         });
         return;
       }
 
       await fetchPosts();
-      toast({
-        title: data.inserted > 0 ? `S-au găsit ${data.inserted} postări noi!` : "Totul e la zi!",
-        description: `Pe realtrust.ro: ${data.discovered} pagini de anunțuri/blog, ${data.duplicates} deja existente.`,
-      });
-    } catch {
-      toast({ title: "Eroare", description: "Scraping-ul a eșuat neașteptat.", variant: "destructive" });
+      if (data.inserted > 0) {
+        toast({
+          title: `S-au adăugat ${data.inserted} ciorne noi!`,
+          description: `Pe realtrust.ro: ${data.discovered} pagini de anunțuri/blog, ${data.duplicates} deja existente.`,
+        });
+      } else {
+        toast({
+          title: "Nimic nou de extras",
+          description: "Toate articolele și anunțurile existente au fost deja extrase.",
+        });
+      }
+    } catch (e) {
+      console.error("scrape-realtrust exception:", e);
+      toast({ title: "Eroare", description: "Extragerea a eșuat neașteptat. Verifică conexiunea și reîncearcă.", variant: "destructive" });
     } finally {
       setScraping(false);
     }
@@ -602,7 +620,8 @@ export default function SocialEngine() {
               description={searchQuery || typeFilter !== "all" ? "Niciun rezultat pentru filtrele aplicate." : "Extrage conținut de pe realtrust.ro pentru a începe."}
               action={!searchQuery && typeFilter === "all" ? (
                 <Button variant="outline" size="sm" onClick={handleScrape} disabled={scraping}>
-                  <Globe className="h-4 w-4 mr-1.5" /> Extrage Conținut
+                  {scraping ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Globe className="h-4 w-4 mr-1.5" />}
+                  {scraping ? "Se extrage…" : "Extrage Conținut"}
                 </Button>
               ) : undefined}
             />
