@@ -74,3 +74,8 @@
 - [x] Verificare contact/linkuri și detalii pe cardurile existente
 - [x] Legare simulator de primul prospect vizibil, inclusiv după editarea telefonului
 - [x] Verificare context fără inițierea apelurilor reale
+
+## Verificarea surselor în Piața anunțurilor
+- [x] „Vezi anunțurile” în rapoartele zilnice și pe portaluri/zone: titlul extras de pe platformă și linkul către pagina-sursă, maximum 5 anunțuri, încărcate doar la cerere
+- [x] Exemple cu link și pe cardurile din Centrul Auto-îmbunătățire (Piața anunțurilor), salvate la fiecare analiză
+- [x] Ambele rapoarte verificate în browser autentificat, cu titluri reale afișate; funcția de analiză reactivată
