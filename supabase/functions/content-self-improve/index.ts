@@ -7,6 +7,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { requireAdmin } from "../_shared/adminAuth.ts";
+import { analyzeOps, applyOps, rollbackOps, measureOps, OPS_KINDS } from "./ops.ts";
 
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -50,7 +51,7 @@ async function measureOutcomes(db: any) {
     await db.from("content_improvements").update({ outcome }).eq("id", r.id);
     measured++;
   }
-  return measured;
+  return measured + await measureOps(db).catch(() => 0);
 }
 
 async function gatherContext(db: any) {
@@ -72,6 +73,16 @@ async function gatherContext(db: any) {
   const lowCtr = Object.values(agg).filter((a) => a.i >= 30 && a.c / a.i < 0.02)
     .sort((x, y) => y.i - x.i).slice(0, 15)
     .map((a) => ({ query: a.q, page: a.page, impressions: a.i, clicks: a.c, avg_position: +(a.p / a.n).toFixed(1) }));
+  // Căutări frecvente fără pagină de blog bine poziționată → subiecte noi
+  const byQ: Record<string, { i: number; blog: boolean; best: number }> = {};
+  for (const a of Object.values(agg)) {
+    const q = (byQ[a.q] ??= { i: 0, blog: false, best: 999 });
+    q.i += a.i; const pos = a.p / a.n;
+    if (/\/blog\//.test(a.page) && pos <= 15) q.blog = true;
+    q.best = Math.min(q.best, pos);
+  }
+  const uncovered = Object.entries(byQ).filter(([, v]) => v.i >= 20 && !v.blog && v.best > 10)
+    .sort((x, y) => y[1].i - x[1].i).slice(0, 15).map(([query, v]) => ({ query, impressions: v.i, best_position: +v.best.toFixed(1) }));
   const { data: settings } = await db.from("app_settings").select("key,value").in("key", ["caption_tone", "default_hashtags"]);
   const { data: logs } = await db.from("social_engine_logs").select("success,error").gte("created_at", since30).limit(500);
   const { data: drafts } = await db.from("social_posts").select("id,title,caption,type").eq("status", "draft")
@@ -81,6 +92,7 @@ async function gatherContext(db: any) {
   return {
     articles: (articles ?? []).map((a: any) => ({ ...a, views_30d: vc[a.id] ?? 0, content: undefined })),
     gsc_low_ctr: lowCtr,
+    gsc_uncovered_queries: uncovered,
     social_settings: Object.fromEntries((settings ?? []).map((s: any) => [s.key, s.value])),
     make_sends_30d: { total: logs?.length ?? 0, failed: (logs ?? []).filter((l: any) => !l.success).length },
     social_drafts: drafts ?? [],
@@ -91,11 +103,11 @@ async function gatherContext(db: any) {
 const SYSTEM = `Ești analistul de conținut RealTrust (imobiliare, Timișoara, jud. Timiș — niciodată București).
 Primești DATE REALE (JSON). Propui maximum 8 îmbunătățiri concrete, fiecare susținută de o cifră din date.
 Tipuri permise:
-- blog_seo: target_id = id articol; proposed = {meta_title ≤60 caractere, conține „Timișoara”; meta_description 140–160 caractere}. Prioritizează articole cu afișări mari în Google și CTR mic.
+- blog_seo: target_id = id articol; proposed = {meta_title ≤60 caractere, conține „Timișoara”; meta_description 140–160 caractere; internal_links: [{anchor, slug}] max 3, slug EXACT din articles}. Prioritizează articole cu afișări mari în Google și CTR mic (gsc_low_ctr).
 - social_tone: proposed = {tone: "luxury"|"investment"|"warm"}.
 - social_hashtags: proposed = {hashtags: "#Timișoara #RealTrust ..."} (max 10, mereu #Timișoara și #RealTrust).
 - social_caption: target_id = id draft social; proposed = {caption} (română, fără prețuri/dotări inventate, ≤2000 caractere, fără hashtag-uri).
-- blog_topic: proposed = {topic, zone, reason} — subiect nou bazat pe căutări reale din Google.
+- blog_topic: proposed = {topic, zone, reason, query} — subiect nou pentru o căutare reală din gsc_uncovered_queries (citează căutarea exactă și afișările).
 - insight: observație fără acțiune automată.
 Învață din past_decisions: nu repeta propuneri respinse; continuă direcțiile cu outcome pozitiv.
 Nu inventa cifre, prețuri, randamente sau zone. Dacă datele sunt puține, propune mai puțin.`;
@@ -184,7 +196,8 @@ async function analyze(db: any) {
   }
   if (rows.length) await db.from("content_improvements").insert(rows);
   const out = key ? await analyzeOutreach(db, key).catch((e) => { console.error("outreach", e); return 0; }) : 0;
-  return { measured, created: rows.length + out };
+  const ops = await analyzeOps(db, key).catch((e) => { console.error("ops", e); return 0; });
+  return { measured, created: rows.length + out + ops };
 }
 
 // ── Prospectare, WhatsApp și Andrei: doar propuneri; nimic nu se trimite sau se schimbă fără aprobare ──
@@ -331,6 +344,9 @@ async function apply(db: any, id: string, userId: string) {
       const { error } = await db.from("voice_agent_playbook_addendum").insert({ lesson: String(p.lesson).slice(0, 400), severity: "info", is_active: true, applied_at: new Date().toISOString(), applied_by: userId });
       err = error?.message ?? null;
     }
+  } else if (OPS_KINDS.includes(r.kind)) {
+    const res = await applyOps(db, r);
+    baseline = res.baseline; err = res.error;
   } else if (r.kind === "social_caption") {
     const { data, error } = await db.from("social_posts").update({ caption: p.caption }).eq("id", r.target_id).eq("status", "draft").select("id");
     err = error?.message ?? (data?.length ? null : "Postarea nu mai e draft");
@@ -339,6 +355,29 @@ async function apply(db: any, id: string, userId: string) {
     status: err ? "failed" : "applied", error: err, baseline, decided_at: new Date().toISOString(), decided_by: userId,
   }).eq("id", id);
   return err ? { ok: false, error: err } : { ok: true };
+}
+
+// ── Rollback: readuce valorile salvate înainte de aplicare ──
+async function rollback(db: any, id: string) {
+  const { data: r } = await db.from("content_improvements").select("*").eq("id", id).eq("status", "applied").maybeSingle();
+  if (!r) return { ok: false, error: "Doar propunerile aplicate pot fi anulate" };
+  const c = r.current_value ?? {}; const b = r.baseline ?? {};
+  let err: string | null = null;
+  if (r.kind === "blog_seo") {
+    err = (await db.from("blog_articles").update({ meta_title: c.meta_title ?? null, meta_description: c.meta_description ?? null }).eq("id", r.target_id)).error?.message ?? null;
+  } else if (r.kind === "social_tone" || r.kind === "social_hashtags") {
+    const row = r.kind === "social_tone" ? { key: "caption_tone", value: c.tone ?? "warm" } : { key: "default_hashtags", value: c.hashtags ?? "" };
+    err = (await db.from("app_settings").upsert(row, { onConflict: "key" })).error?.message ?? null;
+  } else if (r.kind === "social_caption") {
+    err = (await db.from("social_posts").update({ caption: c.caption }).eq("id", r.target_id).eq("status", "draft")).error?.message ?? null;
+  } else if (r.kind === "prospect_source" && b.platform) {
+    err = (await db.from("platform_scan_config").update({ is_enabled: b.is_enabled, max_results: b.max_results, zones: b.zones }).eq("platform", b.platform)).error?.message ?? null;
+  } else if (OPS_KINDS.includes(r.kind)) {
+    err = await rollbackOps(db, r);
+  } else err = "Această propunere nu poate fi anulată automat";
+  if (err) return { ok: false, error: err };
+  await db.from("content_improvements").update({ status: "rolled_back", outcome: { ...(r.outcome ?? {}), rolled_back_at: new Date().toISOString() } }).eq("id", id);
+  return { ok: true };
 }
 
 // ── Acțiuni directe din „Propunere” ──
@@ -436,6 +475,13 @@ Deno.serve(async (req) => {
       const uid = (auth as any).userId ?? (auth as any).user?.id ?? null;
       const res = body.action === "draft_article" ? await draftArticle(db, body.id, req, uid) : await seoRewrite(db, body.id, uid);
       return json(res, 200);
+    }
+    if (body?.action === "rollback") {
+      const auth = await requireAdmin(req, corsHeaders);
+      if (!auth.ok) return auth.response!;
+      if (typeof body.id !== "string" || !UUID.test(body.id)) return json({ error: "id invalid" }, 400);
+      const res = await rollback(db, body.id);
+      return json(res, res.ok ? 200 : 400);
     }
     if (body?.action === "apply" || body?.action === "reject") {
       const auth = await requireAdmin(req, corsHeaders);

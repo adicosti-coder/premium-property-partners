@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Check, FileText, Loader2, RefreshCw, Sparkles, Wand2, X } from "lucide-react";
+import { Check, FileText, Loader2, RefreshCw, Sparkles, Undo2, Wand2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 type Item = {
@@ -18,7 +18,17 @@ const KIND: Record<string, string> = {
   blog_seo: "SEO articol", social_tone: "Ton social", social_hashtags: "Hashtag-uri",
   social_caption: "Descriere socială", blog_topic: "Subiect articol nou", insight: "Observație",
   wa_message: "Mesaj WhatsApp", wa_hours: "Ore trimitere WhatsApp", prospect_source: "Surse & zone", andrei_rule: "Regulă Andrei",
+  social_hours: "Orar postări social", social_featured: "Proprietatea săptămânii", integration_retry: "Integrări & webhooks",
+  lead_archive: "Curățare lead-uri", cta_ab: "Variantă CTA",
 };
+const MODULE: Record<string, string> = {
+  blog_seo: "blog", blog_topic: "blog", insight: "blog",
+  social_tone: "social", social_hashtags: "social", social_caption: "social", social_hours: "social", social_featured: "social",
+  integration_retry: "ops", lead_archive: "ops", cta_ab: "cro",
+  wa_message: "outreach", wa_hours: "outreach", prospect_source: "outreach", andrei_rule: "outreach",
+};
+const MODULES: Array<[string, string]> = [["all", "Toate"], ["blog", "Blog & SEO"], ["social", "Social"], ["ops", "Integrări"], ["cro", "Conversii"], ["outreach", "Prospectare"]];
+const HIDDEN = new Set(["measured_at", "lead_ids", "row_id", "previous_config", "archived_ids", "social_post_id"]);
 const LABEL: Record<string, string> = {
   meta_title: "Titlu Google", meta_description: "Descriere Google", title: "Titlu", tone: "Ton",
   hashtags: "Hashtag-uri", caption: "Descriere", topic: "Subiect", zone: "Zonă", reason: "Motiv",
@@ -26,15 +36,30 @@ const LABEL: Record<string, string> = {
   sends: "Trimiteri Make.com", success_rate: "Rată reușită",
   article_title: "Articol creat", slug: "Adresă", converted_to: "Transformată în propunere SEO",
   name: "Nume șablon", body: "Text mesaj", best_hours: "Ore recomandate", source: "Portal", recommendation: "Recomandare", lesson: "Regulă",
+  internal_links: "Linkuri interne", query: "Căutare Google", start_hour: "Ora de start", end_hour: "Ora de final",
+  min_interval_minutes: "Minute între postări", image_urls: "Poze", source_url: "Link anunț", scheduled_at: "Programată pentru",
+  make_dlq: "Make.com în coadă", crm_failed: "Lead-uri nesincronizate CRM", social_engine_failed_7d: "Social Engine eșuate (7 zile)",
+  wa_failed_7d: "WhatsApp eșuate (7 zile)", calls_failed_7d: "Apeluri eșuate (7 zile)", retry_make: "Retrimite Make.com", retry_crm: "Retrimite CRM",
+  field: "Buton", text: "Text buton", clicks_before: "Click-uri 14 zile înainte", clicks_after: "Click-uri 14 zile după", home_clicks_14d: "Click-uri 14 zile",
+  rolled_back_at: "Anulat la", crm_requeued: "Lead-uri repuse în CRM", make: "Make.com",
   active_rules: "Reguli active acum", score_before: "Scor apeluri înainte", score_after: "Scor apeluri după", calls_after: "Apeluri analizate după",
 };
-const fmt = (v: unknown) => typeof v === "number" && v <= 1 && v > 0 && !Number.isInteger(v) ? `${Math.round(v * 100)}%` : String(v ?? "—");
+const FIELD: Record<string, string> = { hero_cta_primary_ro: "Butonul principal (pagina de start)", hero_cta_secondary_ro: "Butonul secundar (pagina de start)" };
+const fmt = (v: unknown): string => {
+  if (typeof v === "boolean") return v ? "Da" : "Nu";
+  if (typeof v === "number" && v <= 1 && v > 0 && !Number.isInteger(v)) return `${Math.round(v * 100)}%`;
+  if (typeof v === "string" && FIELD[v]) return FIELD[v];
+  if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}T/.test(v)) return new Date(v).toLocaleString("ro-RO", { timeZone: "Europe/Bucharest" });
+  if (Array.isArray(v)) return v.map((x) => x && typeof x === "object" ? Object.values(x).join(" → ") : String(x)).join("\n") || "—";
+  if (v && typeof v === "object") return Object.entries(v).map(([k, x]) => `${LABEL[k] ?? k}: ${x}`).join(" · ");
+  return String(v ?? "—");
+};
 
 function Values({ v }: { v: Record<string, unknown> | null }) {
   if (!v) return null;
   return (
     <dl className="space-y-1 text-sm">
-      {Object.entries(v).filter(([k]) => k !== "measured_at").map(([k, val]) => (
+      {Object.entries(v).filter(([k]) => !HIDDEN.has(k)).map(([k, val]) => (
         <div key={k}><dt className="text-xs text-muted-foreground">{LABEL[k] ?? k}</dt><dd className="whitespace-pre-wrap break-words">{fmt(val)}</dd></div>
       ))}
     </dl>
@@ -74,6 +99,15 @@ export default function ContentImprovementCenter() {
     load();
   };
 
+  const rollback = async (id: string) => {
+    setBusy(id);
+    const { data, error } = await supabase.functions.invoke("content-self-improve", { body: { action: "rollback", id } });
+    setBusy(null);
+    if (error || data?.ok === false) toast({ title: "Nu s-a putut anula", description: data?.error ?? "Reîncearcă.", variant: "destructive" });
+    else toast({ title: "Anulat", description: "Valorile de dinainte au fost restaurate." });
+    load();
+  };
+
   const runAction = async (i: Item, action: "draft_article" | "seo_rewrite") => {
     setBusy(i.id);
     const { data, error } = await supabase.functions.invoke("content-self-improve", { body: { action, id: i.id } });
@@ -92,18 +126,25 @@ export default function ContentImprovementCenter() {
   };
 
   const ACTION: Record<string, { label: string; desc: string; icon: typeof Wand2; run: "draft_article" | "seo_rewrite" | "apply" }> = {
-    blog_topic: { label: "Generează draft articol", desc: "AI scrie un articol nou adaptat pentru Timișoara (titlu, structură, conținut) și îl deschide în editor, nepublicat.", icon: FileText, run: "draft_article" },
+    blog_topic: { label: "Creează draft articol", desc: "AI scrie un articol nou adaptat pentru Timișoara (titlu, structură, conținut) și îl deschide în editor, nepublicat.", icon: FileText, run: "draft_article" },
     insight: { label: "Rescrie Titlu & Meta SEO", desc: "AI propune pe loc un titlu și o meta-descriere optimizate pentru Google pentru articolul vizat; le aprobi tu.", icon: Wand2, run: "seo_rewrite" },
-    blog_seo: { label: "Aprobă și aplică", desc: "Înlocuiește titlul și descrierea din Google ale articolului cu varianta propusă.", icon: Check, run: "apply" },
+    blog_seo: { label: "Actualizează meta-datele articolului", desc: "Înlocuiește titlul și descrierea din Google ale articolului cu varianta propusă. Linkurile interne propuse le adaugi tu în editor.", icon: Check, run: "apply" },
     social_tone: { label: "Aprobă și aplică", desc: "Schimbă tonul descrierilor generate în Social Engine.", icon: Check, run: "apply" },
     social_hashtags: { label: "Aprobă și aplică", desc: "Înlocuiește hashtag-urile implicite din Social Engine.", icon: Check, run: "apply" },
     andrei_rule: { label: "Aprobă și adaugă la Andrei", desc: "Adaugă regula în Training Lab (maximum 5 active). Scorul apelurilor se compară după 14 zile.", icon: Check, run: "apply" },
     social_caption: { label: "Aprobă și aplică", desc: "Înlocuiește descrierea draftului social.", icon: Check, run: "apply" },
     prospect_source: { label: "Setează prioritate maximă", desc: "", icon: Check, run: "apply" },
+    social_hours: { label: "Aprobă și aplică orarul", desc: "Schimbă intervalul orar în care se publică automat postările pe Facebook și Instagram.", icon: Check, run: "apply" },
+    social_featured: { label: "Aprobă și programează postarea în Social Engine", desc: "Creează postarea „Proprietatea săptămânii” cu pozele anunțului și o programează în Social Engine la data afișată.", icon: Check, run: "apply" },
+    integration_retry: { label: "Execută re-încercare webhook", desc: "Retrimite acum mesajele Make.com din coadă și repune lead-urile nesincronizate în trimiterea către CRM.", icon: RefreshCw, run: "apply" },
+    lead_archive: { label: "Arhivează lead-uri inactive", desc: "Scoate lead-urile reci din Lead Manager fără să le șteargă. Le poți readuce cu „Anulează”.", icon: Check, run: "apply" },
+    cta_ab: { label: "Aplică variația A/B pe butonul CTA", desc: "Schimbă textul butonului pe pagina de start. După 14 zile se compară click-urile înainte și după; poți reveni oricând cu „Anulează”.", icon: Check, run: "apply" },
   };
 
-  const pending = items.filter((i) => i.status === "pending");
-  const history = items.filter((i) => i.status !== "pending");
+  const [mod, setMod] = useState("all");
+  const inMod = (i: Item) => mod === "all" || MODULE[i.kind] === mod;
+  const pending = items.filter((i) => i.status === "pending" && inMod(i));
+  const history = items.filter((i) => i.status !== "pending" && inMod(i));
 
   const Card = ({ i }: { i: Item }) => (
     <div className="rounded-lg border border-border bg-card p-4 space-y-3">
@@ -111,7 +152,7 @@ export default function ContentImprovementCenter() {
         <Badge variant="secondary">{KIND[i.kind] ?? i.kind}</Badge>
         {i.confidence != null && <span className="text-xs text-muted-foreground">Încredere {Math.round(i.confidence * 100)}%</span>}
         {i.status !== "pending" && <Badge variant={i.status === "applied" ? "default" : i.status === "failed" ? "destructive" : "outline"}>
-          {i.status === "applied" ? "Aplicat" : i.status === "failed" ? "Eșuat" : "Respins"}</Badge>}
+          {i.status === "applied" ? "Aplicat" : i.status === "failed" ? "Eșuat" : i.status === "rolled_back" ? "Anulat" : "Respins"}</Badge>}
         <span className="ml-auto text-xs text-muted-foreground">{new Date(i.created_at).toLocaleDateString("ro-RO")}</span>
       </div>
       <p className="font-heading font-semibold">{i.title}</p>
@@ -145,6 +186,11 @@ export default function ContentImprovementCenter() {
       </div>
       {i.outcome && <div className="rounded border border-border p-3"><p className="text-xs font-semibold mb-1">Efect măsurat</p><Values v={i.outcome} /></div>}
       {i.error && <p className="text-xs text-destructive">{i.error}</p>}
+      {i.status === "applied" && !["integration_retry", "blog_topic", "insight", "andrei_rule", "wa_message", "wa_hours"].includes(i.kind) && (
+        <Button size="sm" variant="outline" className="min-h-12" disabled={busy === i.id} onClick={() => rollback(i.id)}>
+          {busy === i.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Undo2 className="h-4 w-4" />}Anulează (revino la varianta anterioară)
+        </Button>
+      )}
       {i.status === "pending" && (
         <div className="flex gap-2">
           {!ACTION[i.kind] && <Button size="sm" variant="outline" className="min-h-12" onClick={() => decide(i.id, "apply")} disabled={busy === i.id}><Check className="h-4 w-4" />Notat</Button>}
@@ -159,12 +205,19 @@ export default function ContentImprovementCenter() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="font-heading text-xl font-bold">Centru Auto-îmbunătățire</h2>
-          <p className="text-sm text-muted-foreground">Blog, SEO, Social, prospectare, WhatsApp și Andrei: sistemul analizează săptămânal datele reale, propune îmbunătățiri și învață din deciziile tale. Nimic nu se aplică fără aprobare.</p>
+          <p className="text-sm text-muted-foreground">Blog, SEO, Social, integrări (Make.com, WhatsApp, apeluri), conversii pe site, prospectare și Andrei: sistemul analizează săptămânal datele reale, propune îmbunătățiri și învață din deciziile tale. Nimic nu se aplică fără aprobare.</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={load} aria-label="Reîncarcă"><RefreshCw className="h-4 w-4" /></Button>
           <Button size="sm" onClick={analyze} disabled={running}>{running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}Analizează acum</Button>
         </div>
+      </div>
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrează după modul">
+        {MODULES.map(([k, l]) => (
+          <Button key={k} size="sm" variant={mod === k ? "default" : "outline"} className="min-h-12" aria-pressed={mod === k} onClick={() => setMod(k)}>
+            {l} ({items.filter((i) => i.status === "pending" && (k === "all" || MODULE[i.kind] === k)).length})
+          </Button>
+        ))}
       </div>
       <Tabs defaultValue="pending">
         <TabsList>
