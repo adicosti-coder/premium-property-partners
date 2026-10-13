@@ -231,7 +231,7 @@ const OSYSTEM = `Ești analistul de prospectare RealTrust (Timișoara, jud. Timi
 Propui maximum 6 îmbunătățiri, fiecare susținută de o cifră din date. Tipuri:
 - wa_message: proposed = {name, body} — text nou de șablon WhatsApp în română (max 550 caractere, fără prețuri sau garanții inventate, fără întâlniri la birou, fără procente de cheltuieli). Se trimite spre aprobare Meta manual.
 - wa_hours: proposed = {best_hours: [numere oră], reason} — orele (ora României) cu cea mai mare rată de răspuns, DOAR între 9 și 19, luni–sâmbătă.
-- prospect_source: proposed = {source, zone, recommendation} — ce portal/zonă aduce proprietari privați interesați.
+- prospect_source: proposed = {source, zone, recommendation} — ce portal/zonă aduce proprietari privați interesați. source EXACT unul din: Storia.ro, OLX, imobiliare.ro, Publi24, BursaImobiliara.ro, Anuntul.ro; zone = o zonă din Timișoara.
 - andrei_rule: proposed = {lesson} — regulă scurtă (max 200 caractere) pentru Andrei, din obiecțiile reale; replici scurte, fără promisiuni de cumpărători sau venituri garantate.
 Nu repeta propuneri respinse din past_decisions. Dacă datele sunt puține, propune mai puțin.`;
 
@@ -265,6 +265,12 @@ async function analyzeOutreach(db: any, key: string) {
       if (typeof p.lesson !== "string" || p.lesson.length > 220) continue;
       current = { active_rules: ctx.andrei_active_rules.length };
     }
+    if (it.kind === "prospect_source") {
+      const cfg = await matchPlatform(db, p.source);
+      if (!cfg) continue;
+      p.source = cfg.platform;
+      current = { platform: cfg.platform, max_results: cfg.max_results, zones: (cfg.zones ?? []).join(", ") || "toate" };
+    }
     if (it.kind === "wa_hours") {
       const hs = (Array.isArray(p.best_hours) ? p.best_hours : []).map(Number).filter((h: number) => h >= 9 && h < 20);
       if (!hs.length) continue;
@@ -278,6 +284,14 @@ async function analyzeOutreach(db: any, key: string) {
   }
   if (rows.length) await db.from("content_improvements").insert(rows);
   return rows.length;
+}
+
+async function matchPlatform(db: any, source: unknown) {
+  const norm = (s: string) => s.toLowerCase().replace(/\.(ro|com)$/, "").replace(/[^a-z0-9]/g, "");
+  const s = norm(String(source ?? ""));
+  if (!s) return null;
+  const { data } = await db.from("platform_scan_config").select("platform,is_enabled,max_results,zones");
+  return (data ?? []).find((c: any) => norm(c.platform) === s) ?? null;
 }
 
 async function apply(db: any, id: string, userId: string) {
@@ -295,6 +309,18 @@ async function apply(db: any, id: string, userId: string) {
     const row = r.kind === "social_tone" ? { key: "caption_tone", value: p.tone } : { key: "default_hashtags", value: p.hashtags };
     const { error } = await db.from("app_settings").upsert(row, { onConflict: "key" });
     err = error?.message ?? null;
+  } else if (r.kind === "prospect_source") {
+    const cfg = await matchPlatform(db, p.source);
+    if (!cfg) err = `Portalul „${p.source ?? "?"}” nu există în setările de scanare`;
+    else {
+      const zone = typeof p.zone === "string" ? p.zone.trim() : "";
+      const zones = zone && !(cfg.zones ?? []).some((z: string) => z.toLowerCase() === zone.toLowerCase()) ? [...(cfg.zones ?? []), zone] : (cfg.zones ?? []);
+      baseline = { platform: cfg.platform, max_results: cfg.max_results, zones: cfg.zones, is_enabled: cfg.is_enabled };
+      const { error } = await db.from("platform_scan_config").update({
+        is_enabled: true, max_results: 20, zones, notes: `Prioritate maximă (Centru Auto-îmbunătățire, ${new Date().toISOString().slice(0, 10)})`, updated_at: new Date().toISOString(),
+      }).eq("platform", cfg.platform);
+      err = error?.message ?? null;
+    }
   } else if (r.kind === "andrei_rule") {
     const { count } = await db.from("voice_agent_playbook_addendum").select("id", { count: "exact", head: true }).eq("is_active", true);
     if ((count ?? 0) >= 5) err = "Andrei are deja 5 reguli active — dezactivează una în Training Lab";
