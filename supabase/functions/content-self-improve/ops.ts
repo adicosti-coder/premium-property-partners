@@ -225,6 +225,12 @@ export async function applyOps(db: any, r: any): Promise<{ baseline: unknown; er
     const { error } = await db.from("public_site_settings").update({ [p.field]: p.text, updated_at: now.toISOString() }).eq("id", p.row_id);
     return { baseline: { home_clicks_14d: before }, error: error?.message ?? null };
   }
+  if (r.kind === "lead_followup") {
+    const ids: string[] = Array.isArray(p.lead_ids) ? p.lead_ids.slice(0, 200) : [];
+    const { data, error } = await db.from("leads").update({ follow_up_date: now.toISOString() }).in("id", ids).select("id");
+    return { baseline: { scheduled: data?.length ?? 0 }, error: error?.message ?? null };
+  }
+  if (r.kind === "listing_refresh") return { baseline: null, error: null };
   return { baseline: null, error: "Tip necunoscut" };
 }
 
@@ -238,6 +244,10 @@ export async function rollbackOps(db: any, r: any): Promise<string | null> {
   }
   if (r.kind === "lead_archive") return (await db.from("leads").update({ archived_at: null }).in("id", b.archived_ids ?? [])).error?.message ?? null;
   if (r.kind === "cta_ab") return (await db.from("public_site_settings").update({ [c.field]: c.text || null }).eq("id", c.row_id)).error?.message ?? null;
+  if (r.kind === "lead_followup") {
+    for (const f of (c.previous_followups ?? []).slice(0, 200)) await db.from("leads").update({ follow_up_date: f.follow_up_date }).eq("id", f.id);
+    return null;
+  }
   return "Re-încercarea nu se poate anula";
 }
 
