@@ -36,6 +36,8 @@ type FixType = "title" | "meta" | "schema" | "alt_text" | "canonical" | "all";
 
 const BASE_URL = "https://www.realtrust.ro";
 const CANONICAL_HOST = "www.realtrust.ro";
+const ROBOTS_HOSTS = new Set(["www.realtrust.ro", "realtrust.ro"]);
+const safeHost = (h: unknown) => (typeof h === "string" && ROBOTS_HOSTS.has(h.toLowerCase()) ? h.toLowerCase() : CANONICAL_HOST);
 const ALLOWED_HOSTS = new Set([CANONICAL_HOST, "realtrust.ro"]);
 
 // ============================================================================
@@ -150,11 +152,11 @@ serve(async (req) => {
       case "apply_manual_canonical":
         return json(await applyManualCanonical(sb, body, userId));
       case "get_robots_status":
-        return json(await getRobotsStatus(sb, (body as any).host || CANONICAL_HOST));
+        return json(await getRobotsStatus(sb, safeHost((body as any).host)));
       case "invalidate_robots_cache":
-        return json(await invalidateRobotsCache(sb, (body as any).host || CANONICAL_HOST, userId, (body as any).reason || ""));
+        return json(await invalidateRobotsCache(sb, safeHost((body as any).host), userId, (body as any).reason || ""));
       case "refresh_robots_cache":
-        return json(await refreshRobotsCache(sb, (body as any).host || CANONICAL_HOST, userId, (body as any).reason || ""));
+        return json(await refreshRobotsCache(sb, safeHost((body as any).host), userId, (body as any).reason || ""));
       default:
         return json({ error: `Unknown action: ${body.action}` }, 400);
     }

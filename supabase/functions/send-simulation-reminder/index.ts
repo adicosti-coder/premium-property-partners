@@ -253,13 +253,13 @@ Deno.serve(async (req) => {
 
           if (emailResponse.ok) {
             emailsSent++;
-            console.log(`Email sent to ${user.email}`);
+            console.log(`Email sent to user ${user.id}`);
           } else {
             const errorText = await emailResponse.text();
-            console.error(`Email failed for ${user.email}:`, errorText);
+            console.error(`Email failed for user ${user.id}:`, errorText);
           }
         } catch (emailError) {
-          console.error(`Email error for ${user.email}:`, emailError);
+          console.error(`Email error for user ${user.id}:`, emailError);
         }
       }
 

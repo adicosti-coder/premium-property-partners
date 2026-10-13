@@ -18,7 +18,11 @@ serve(async (req) => {
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const sb = createClient(SUPABASE_URL, SERVICE_KEY);
     const { url_path, variant, type } = await req.json();
-    if (!url_path || !variant || !["A","B"].includes(variant)) return json({ ok: false }, 400);
+    if (typeof url_path !== "string" || !/^\/[a-zA-Z0-9\-_/.]{0,200}$/.test(url_path) || !["A","B"].includes(variant)) return json({ ok: false }, 400);
+    if (type !== undefined && type !== "click" && type !== "impression") return json({ ok: false }, 400);
+    // Only track paths with an active A/B override
+    const { data: ov } = await sb.from("seo_overrides").select("id").eq("url_path", url_path).eq("is_active", true).eq("ab_enabled", true).is("ab_winner", null).maybeSingle();
+    if (!ov) return json({ ok: false }, 404);
     const today = new Date().toISOString().slice(0, 10);
 
     const { data: row } = await sb
@@ -48,6 +52,6 @@ serve(async (req) => {
     }
     return json({ ok: true });
   } catch (e) {
-    return json({ ok: false, error: (e as Error).message }, 500);
+    return json({ ok: false, error: "internal_error" }, 500);
   }
 });
