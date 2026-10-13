@@ -4,7 +4,7 @@
  * iar administratorul trimite dintr-o apăsare pe WhatsApp sau SMS.
  * Fiecare trimitere se salvează și programează mementourile la 24h și 72h.
  */
-import { lazy, Suspense, useMemo, useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, MessageCircle, Smartphone, Copy, RefreshCw, ExternalLink, ChevronDown, ChevronUp, CheckCircle2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import AdminErrorBoundary from "@/components/admin/AdminErrorBoundary";
-import { hasAgencyEvidence, isIndividualOwnerListing, isResidentialRealEstate } from "@/lib/ownerListingRules";
+import { fetchOwnerContactReady, OWNER_FLOW_QUERY_KEY } from "@/lib/ownerFlowData";
 import {
   getTemplate,
   isWhatsappCapable,
@@ -85,60 +85,14 @@ export default function OwnerContactPanel() {
   const queryClient = useQueryClient();
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [sending, setSending] = useState<string | null>(null);
+  const [pending, setPending] = useState<{ prospect: Prospect; draft: Draft; phone: string } | null>(null);
   const [showQueue, setShowQueue] = useState(false);
 
-  const { data, isLoading, refetch, isRefetching } = useQuery({
-    queryKey: ["owner-contact-ready"],
-    staleTime: 30_000,
-    refetchInterval: 120_000,
-    queryFn: async () => {
-      const { data: rows, error } = await supabase
-        .from("prospect_listings")
-        .select(
-          "id, title, description, zone, rooms, price, currency, contact_name, contact_phone, phone_normalized, contact_email, prospect_type, source_platform, lead_score, lifecycle_status, source_url, category, created_at",
-        )
-        .eq("is_active", true)
-        .eq("do_not_call", false)
-        .in("lifecycle_status", ["new", "interested", "callback", "to_review"])
-        // Doar cei cu telefon — altfel primele 60 după scor pot fi toate fără număr.
-        .or("phone_normalized.not.is.null,contact_phone.not.is.null")
-        .order("lead_score", { ascending: false, nullsFirst: false })
-        .order("created_at", { ascending: false })
-        .limit(150);
-      if (error) throw error;
-
-      // Aceleași reguli ca în „Caută anunțuri de la proprietari": fără agenții,
-      // fără pagini de căutare/categorie și doar imobiliare rezidențiale.
-      const eligible = (rows ?? []).filter((r) => {
-        if (!normalizeRoPhone(r.phone_normalized || r.contact_phone)) return false;
-        const candidate = {
-          title: r.title,
-          description: r.description,
-          url: r.source_url,
-          phone: r.phone_normalized || r.contact_phone,
-          prospect_type: r.prospect_type,
-        };
-        if (hasAgencyEvidence(candidate)) return false;
-        if (!isResidentialRealEstate(candidate)) return false;
-        if (r.source_url && !isIndividualOwnerListing(candidate)) return false;
-        return true;
-      }) as Prospect[];
-
-      const ids = eligible.map((r) => r.id);
-      const contacted = new Set<string>();
-      if (ids.length) {
-        const { data: msgs } = await supabase
-          .from("owner_outreach_messages")
-          .select("prospect_listing_id")
-          .in("prospect_listing_id", ids);
-        (msgs ?? []).forEach((m) => m.prospect_listing_id && contacted.add(m.prospect_listing_id));
-      }
-      return { prospects: eligible.slice(0, 40), contacted };
-    },
+  const { data, error, isLoading, refetch, isRefetching } = useQuery({
+    queryKey: [...OWNER_FLOW_QUERY_KEY, "contact"],
+    staleTime: 30_000, refetchInterval: 120_000, queryFn: fetchOwnerContactReady,
   });
-
-  const prospects = data?.prospects ?? [];
-  const contacted = useMemo(() => data?.contacted ?? new Set<string>(), [data]);
+  const prospects = data ?? [];
 
   const draftOf = (p: Prospect): Draft => {
     const existing = drafts[p.id];
@@ -170,59 +124,54 @@ export default function OwnerContactPanel() {
     return false;
   };
 
-  const logAndOpen = async (p: Prospect, channel: "whatsapp" | "sms") => {
+  const logAndOpen = async (p: Prospect) => {
+    if (pending || sending) return;
     const phone = normalizeRoPhone(p.phone_normalized || p.contact_phone);
-    if (!phone) {
-      toast.error("Numărul proprietarului nu este valid.");
-      return;
-    }
     const draft = draftOf(p);
-    if (!saleGuardOk(p, draft)) return;
-    const message = draft.message.trim();
-    if (!message) {
-      toast.error("Mesajul este gol.");
+    if (!phone || !isWhatsappCapable(phone) || !saleGuardOk(p, draft) || !draft.message.trim()) {
+      toast.error("Verifică numărul mobil și mesajul înainte de contactare.");
       return;
     }
-    if (channel === "whatsapp" && !isWhatsappCapable(phone)) {
-      toast.error("Numărul nu este mobil — trimite SMS sau sună.");
-      return;
-    }
-
-    setSending(p.id);
-    // Deschidem fereastra înainte de await, altfel telefonul blochează redirectul.
-    const link = channel === "whatsapp" ? whatsappLink(phone, message) : smsLink(phone, message);
-    const win = window.open(link, "_blank", "noopener,noreferrer");
-    if (!win) window.location.href = link;
-
     try {
-      const { data: auth } = await supabase.auth.getUser();
+      const eligible = await fetchOwnerContactReady();
+      if (!eligible.some((r) => r.id === p.id)) {
+        toast.error("Proprietarul nu mai este eligibil pentru primul mesaj. Reîncarcă lista.");
+        refetch();
+        return;
+      }
+      setPending({ prospect: p, draft: { ...draft }, phone });
+    } catch {
+      toast.error("Nu am putut verifica istoricul proprietarului. Mesajul nu s-a deschis.");
+    }
+  };
+
+  const confirmSent = async () => {
+    if (!pending || sending) return;
+    const { prospect: p, draft, phone } = pending;
+    setSending(p.id);
+    try {
+      const { data: auth, error: authError } = await supabase.auth.getUser();
+      if (authError || !auth.user) throw new Error("Autentificarea a expirat.");
       const now = new Date();
+      const monthly = draft.templateKey !== "first_sale";
       const { error } = await supabase.from("owner_outreach_messages").insert({
-        prospect_listing_id: p.id,
-        phone_normalized: phone,
-        offer_price: draft.offerPrice ? Number(draft.offerPrice) : null,
+        prospect_listing_id: p.id, phone_normalized: phone,
+        offer_price: monthly && draft.offerPrice ? Number(draft.offerPrice) : null,
         currency: (p.currency || "EUR").toUpperCase(),
-        duration_months: draft.duration ? Number(draft.duration) : 12,
-        message,
-        channel,
-        status: "sent",
-        template_key: draft.templateKey,
-        sent_at: now.toISOString(),
-        reminder_stage: 0,
-        // Primul memento la 24h; al doilea se programează automat la 72h de la primul mesaj.
-        next_reminder_at: new Date(now.getTime() + 24 * 3_600_000).toISOString(),
-        created_by: auth?.user?.id ?? null,
+        duration_months: monthly ? Number(draft.duration) || 12 : null,
+        message: draft.message.trim(), channel: "whatsapp", status: "sent", template_key: draft.templateKey,
+        sent_at: now.toISOString(), reminder_stage: 0,
+        next_reminder_at: new Date(now.getTime() + 24 * 3_600_000).toISOString(), created_by: auth.user.id,
       });
       if (error) throw error;
-      toast.success("Mesaj trimis și salvat. Memento programat la 24h.");
-      queryClient.invalidateQueries({ queryKey: ["owner-followup-reminders"] });
-      queryClient.invalidateQueries({ queryKey: ["owner-flow-step-counts"] });
-      refetch();
+      const { error: updateError } = await supabase.from("prospect_listings").update({ lifecycle_status: "contacted" }).eq("id", p.id).in("lifecycle_status", ["new", "callback"]);
+      if (updateError) toast.error("Mesajul a fost salvat, dar statusul anunțului nu s-a actualizat.");
+      toast.success("Trimitere confirmată. Memento programat la 24h.");
+      setPending(null);
+      queryClient.invalidateQueries({ queryKey: OWNER_FLOW_QUERY_KEY });
     } catch (err) {
-      toast.error(`Mesajul s-a deschis, dar nu a fost salvat: ${(err as Error).message}`);
-    } finally {
-      setSending(null);
-    }
+      toast.error(`Confirmarea nu a fost salvată: ${(err as Error).message}`);
+    } finally { setSending(null); }
   };
 
   /** Canal alternativ: trimite același mesaj pe e-mail, prin info@realtrust.ro. */
@@ -247,11 +196,11 @@ export default function OwnerContactPanel() {
         },
       });
       if (error) throw error;
-      if ((data as { ok?: boolean })?.ok === false) {
+      if ((data as { ok?: boolean })?.ok !== true) {
         throw new Error((data as { error?: string })?.error || "Trimiterea a eșuat");
       }
       toast.success(`E-mail trimis către ${email}. Memento programat la 24h.`);
-      queryClient.invalidateQueries({ queryKey: ["owner-followup-reminders"] });
+      queryClient.invalidateQueries({ queryKey: OWNER_FLOW_QUERY_KEY });
       refetch();
     } catch (err) {
       toast.error(`E-mailul nu a plecat: ${(err as Error).message}`);
@@ -271,13 +220,13 @@ export default function OwnerContactPanel() {
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader className="pb-3">
+      <section>
+        <CardHeader className="px-0 pb-3">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <CardTitle className="text-base">Trimite mesajul proprietarului</CardTitle>
+              <CardTitle className="text-base">Proprietari gata de contactat</CardTitle>
               <CardDescription>
-                Mesajul e deja scris cu datele anunțului. Alege șablonul, completează oferta și trimite pe WhatsApp sau SMS.
+                Primul contact · WhatsApp
               </CardDescription>
             </div>
             <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isRefetching} aria-label="Reîncarcă lista">
@@ -285,12 +234,12 @@ export default function OwnerContactPanel() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="px-0 space-y-4">
           {isLoading ? (
             <div className="flex items-center gap-2 py-10 justify-center text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Se încarcă proprietarii…
             </div>
-          ) : prospects.length === 0 ? (
+          ) : error ? (<p role="alert" className="text-sm text-destructive">Lista nu a putut fi încărcată. Reîncearcă.</p>) : prospects.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
               Niciun proprietar cu telefon valid, gata de contactat. Rulează pașii „Caută" și „Verifică".
             </p>
@@ -298,7 +247,7 @@ export default function OwnerContactPanel() {
             prospects.map((p) => {
               const draft = draftOf(p);
               const phone = normalizeRoPhone(p.phone_normalized || p.contact_phone);
-              const already = contacted.has(p.id);
+
               return (
                 <div key={p.id} className="rounded-lg border p-3 space-y-3">
                   <div className="flex flex-wrap items-start justify-between gap-2">
@@ -312,11 +261,6 @@ export default function OwnerContactPanel() {
                     <div className="flex flex-wrap items-center gap-1.5">
                       {p.source_platform && <Badge variant="outline" className="text-[10px]">{p.source_platform}</Badge>}
                       {p.lead_score != null && <Badge variant="secondary" className="text-[10px]">scor {p.lead_score}</Badge>}
-                      {already && (
-                        <Badge className="text-[10px] gap-1">
-                          <CheckCircle2 className="h-3 w-3" /> contactat
-                        </Badge>
-                      )}
                     </div>
                   </div>
 
@@ -324,7 +268,7 @@ export default function OwnerContactPanel() {
                     <div className="space-y-1">
                       <Label className="text-xs" htmlFor={`tpl-${p.id}`}>Șablon</Label>
                       <Select value={draft.templateKey} onValueChange={(v) => updateDraft(p, { templateKey: v, dirty: false, manualTemplate: true })}>
-                        <SelectTrigger id={`tpl-${p.id}`} className="h-10">
+                        <SelectTrigger id={`tpl-${p.id}`} className="min-h-12">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -334,27 +278,27 @@ export default function OwnerContactPanel() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="space-y-1">
+                    {draft.templateKey !== "first_sale" && <div className="space-y-1">
                       <Label className="text-xs" htmlFor={`offer-${p.id}`}>Ofertă lunară</Label>
                       <Input
                         id={`offer-${p.id}`}
                         inputMode="numeric"
                         placeholder="ex. 550"
                         value={draft.offerPrice}
-                        onChange={(e) => updateDraft(p, { offerPrice: e.target.value.replace(/[^\d]/g, ""), dirty: false })}
-                        className="h-10"
+                        onChange={(e) => updateDraft(p, { offerPrice: e.target.value.replace(/[^\d]/g, "") })}
+                        className="min-h-12"
                       />
-                    </div>
-                    <div className="space-y-1">
+                    </div>}
+                    {draft.templateKey !== "first_sale" && <div className="space-y-1">
                       <Label className="text-xs" htmlFor={`dur-${p.id}`}>Durată (luni)</Label>
                       <Input
                         id={`dur-${p.id}`}
                         inputMode="numeric"
                         value={draft.duration}
-                        onChange={(e) => updateDraft(p, { duration: e.target.value.replace(/[^\d]/g, ""), dirty: false })}
-                        className="h-10"
+                        onChange={(e) => updateDraft(p, { duration: e.target.value.replace(/[^\d]/g, "") })}
+                        className="min-h-12"
                       />
-                    </div>
+                    </div>}
                   </div>
 
                   <div className="space-y-1">
@@ -370,28 +314,19 @@ export default function OwnerContactPanel() {
 
                   <div className="flex flex-wrap gap-2">
                     <Button
-                      onClick={() => logAndOpen(p, "whatsapp")}
-                      disabled={sending === p.id}
+                      onClick={() => logAndOpen(p)}
+                      disabled={sending !== null || pending !== null}
                       className="min-h-[48px] flex-1 sm:flex-none"
-                      aria-label="Trimite mesajul pe WhatsApp"
+                      aria-label="Pregătește mesajul pe WhatsApp"
                     >
                       {sending === p.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageCircle className="mr-2 h-4 w-4" />}
                       WhatsApp
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => logAndOpen(p, "sms")}
-                      disabled={sending === p.id}
-                      className="min-h-[48px] flex-1 sm:flex-none"
-                      aria-label="Trimite mesajul prin SMS"
-                    >
-                      <Smartphone className="mr-2 h-4 w-4" /> SMS
                     </Button>
                     {p.contact_email && (
                       <Button
                         variant="outline"
                         onClick={() => sendEmail(p)}
-                        disabled={sending === p.id}
+                        disabled={sending !== null || pending !== null}
                         className="min-h-[48px] flex-1 sm:flex-none"
                         aria-label="Trimite mesajul pe e-mail"
                       >
@@ -414,7 +349,20 @@ export default function OwnerContactPanel() {
             })
           )}
         </CardContent>
-      </Card>
+      </section>
+
+      {pending && (
+        <section role="region" aria-label="Confirmă trimiterea manuală" className="border border-primary rounded-lg p-4 space-y-3">
+          <h2 className="font-semibold">Confirmă trimiterea pe WhatsApp</h2>
+          <p className="text-sm text-muted-foreground">{pending.prospect.title}</p>
+          <Textarea value={pending.draft.message} readOnly rows={6} aria-label="Mesaj pregătit pentru WhatsApp" />
+          <div className="flex flex-wrap gap-2">
+            <Button asChild><a href={whatsappLink(pending.phone, pending.draft.message)} target="_blank" rel="noopener noreferrer">Deschide WhatsApp</a></Button>
+            <Button onClick={confirmSent} disabled={sending !== null}><CheckCircle2 className="h-4 w-4 mr-2" />Am trimis mesajul</Button>
+            <Button variant="ghost" onClick={() => setPending(null)} disabled={sending !== null}>Anulează</Button>
+          </div>
+        </section>
+      )}
 
       <Card>
         <CardHeader className="pb-3">
