@@ -2,6 +2,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requireAdmin } from "../_shared/adminAuth.ts";
+import { refreshYears } from "../_shared/currentYear.ts";
 
 const SITE = "https://realtrust.ro";
 const json = (b: unknown, status = 200) =>
@@ -60,8 +61,8 @@ Deno.serve(async (req) => {
         const d = await r.json().catch(() => ({}));
         if (!r.ok) { failed++; console.error("scrape", url, r.status, JSON.stringify(d).slice(0, 300)); return; }
         const m = d.data?.metadata ?? d.metadata ?? {};
-        const title = String(m.ogTitle || m.title || url.split("/").pop()?.replace(/-/g, " ") || "Fără titlu")
-          .replace(/\s*[|–-]\s*RealTrust.*$/i, "").slice(0, 200);
+        const title = refreshYears(String(m.ogTitle || m.title || url.split("/").pop()?.replace(/-/g, " ") || "Fără titlu")
+          .replace(/\s*[|–-]\s*RealTrust.*$/i, "").slice(0, 200));
         const img = Array.isArray(m.ogImage) ? m.ogImage[0] : m.ogImage || m.image || "";
         rows.push({ type: isProperty(url) ? "property" : "blog", title, source_url: url, image_url: String(img || ""), caption: "", status: "draft", posted_to: [] });
       } catch (e) { failed++; console.error("scrape err", url, e); }
