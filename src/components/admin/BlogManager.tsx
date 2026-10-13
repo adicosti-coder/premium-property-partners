@@ -272,6 +272,15 @@ const BlogManager = () => {
     setIsDialogOpen(true);
   };
 
+  // Deep link: /admin/blog?edit=<id> deschide direct editorul (ex. din Centrul Auto-îmbunătățire).
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("edit");
+    if (!id || !/^[0-9a-f-]{36}$/i.test(id)) return;
+    supabase.from("blog_articles").select("*").eq("id", id).maybeSingle().then(({ data }) => {
+      if (data) openDialog(data as unknown as BlogArticle);
+    });
+  }, []);
+
   // Bulk / analytics state.
   const [showAnalytics, setShowAnalytics] = useState(true);
   const [isAutopilotRunning, setIsAutopilotRunning] = useState(false);
