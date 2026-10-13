@@ -4,6 +4,8 @@
  */
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import ListingSourceSamples, { type Sample } from "@/components/admin/ListingSourceSamples";
+import { bucharestDayRange } from "@/lib/bucharestDay";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +46,33 @@ export default function DailyPriceTrendsReport() {
   useEffect(() => {
     load();
   }, [load]);
+
+  /** Anunțurile ale căror prețuri au fost înregistrate în ziua respectivă (ora României). */
+  const daySamples = (day: string) => async (): Promise<Sample[]> => {
+    const { from, to } = bucharestDayRange(String(day));
+    const { data, error } = await supabase
+      .from("prospect_price_history")
+      .select("price, recorded_at, prospect_listings(id, title, source_url, source_platform)")
+      .gte("recorded_at", from)
+      .lt("recorded_at", to)
+      .order("recorded_at", { ascending: false })
+      .limit(20);
+    if (error) throw error;
+    const seen = new Set<string>();
+    const out: Sample[] = [];
+    for (const r of (data ?? []) as Array<{
+      price: number | null;
+      recorded_at: string | null;
+      prospect_listings: { id: string; title: string | null; source_url: string | null; source_platform: string | null } | null;
+    }>) {
+      const l = r.prospect_listings;
+      if (!l || seen.has(l.id)) continue;
+      seen.add(l.id);
+      out.push({ id: l.id, title: l.title, source_url: l.source_url, source_platform: l.source_platform, price: r.price });
+      if (out.length === 5) break;
+    }
+    return out;
+  };
 
   const exportCsv = () => {
     downloadCsv(
@@ -108,7 +137,8 @@ export default function DailyPriceTrendsReport() {
                 <th className="py-2 pr-3">Zile pe sursă</th>
                 <th className="py-2 pr-3">Scăderi</th>
                 <th className="py-2 pr-3">Scădere medie</th>
-                <th className="py-2">Scădere max.</th>
+                <th className="py-2 pr-3">Scădere max.</th>
+                <th className="py-2">Anunțuri din zi</th>
               </tr>
             </thead>
             <tbody>
@@ -123,12 +153,15 @@ export default function DailyPriceTrendsReport() {
                     {r.drops_count > 0 ? <Badge variant="destructive">{r.drops_count}</Badge> : "—"}
                   </td>
                   <td className="py-2 pr-3">{num(r.avg_drop_pct, "%")}</td>
-                  <td className="py-2">{num(r.max_drop_pct, "%")}</td>
+                  <td className="py-2 pr-3">{num(r.max_drop_pct, "%")}</td>
+                  <td className="py-2">
+                    <ListingSourceSamples label="Vezi anunțurile" load={daySamples(r.day)} />
+                  </td>
                 </tr>
               ))}
               {!loading && !rows.length && (
                 <tr>
-                  <td colSpan={8} className="py-3 text-muted-foreground">
+                  <td colSpan={9} className="py-3 text-muted-foreground">
                     Nu există date pentru perioada selectată.
                   </td>
                 </tr>
