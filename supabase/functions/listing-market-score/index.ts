@@ -145,7 +145,7 @@ Deno.serve(async (req) => {
 
   const result = {
     ok: true,
-    p25_ppm: q(0.25), p75_ppm: q(0.75), histogram, sample, trend, finance,
+    p25_ppm: q(0.25), p75_ppm: q(0.75), histogram, trend, finance,
     zone_label: zone?.label ?? "Timișoara",
     scope,
     comparables: pool.length,

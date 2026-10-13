@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { signSessionId } from "../_shared/twimlWebhookSig.ts";
+import { phoneVariants } from "../_shared/waPhone.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -77,6 +78,22 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "toNumber invalid (format E.164: +407...)" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // ── Recipient guard: only Romanian mobiles that belong to a known prospect or lead ──
+    if (!/^\+407\d{8}$/.test(toNumber)) {
+      return new Response(JSON.stringify({ error: "Doar numere mobile românești (07…)" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    {
+      const vars = phoneVariants(toNumber);
+      const [{ data: pk }, { data: pn }, { data: ld }] = await Promise.all([
+        supabase.from("prospect_listings").select("id").in("contact_phone", vars).limit(1),
+        supabase.from("prospect_listings").select("id").in("phone_normalized", vars).limit(1),
+        supabase.from("leads").select("id").in("whatsapp_number", vars).limit(1),
+      ]);
+      if (!pk?.length && !pn?.length && !ld?.length) {
+        return new Response(JSON.stringify({ error: "Numărul nu aparține unui prospect sau lead existent" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
     }
 
     // ── Pre-flight: phone intelligence guard (skip voip/landline/unreachable) ──

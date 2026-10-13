@@ -29,6 +29,11 @@ Deno.serve(async (req) => {
   // Link to the signed-in investor account (for /investitori), when present.
   const jwt = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
   const { data: u } = jwt ? await sb.auth.getUser(jwt) : { data: null };
+  // Existing subscribers can only be changed by their linked signed-in account.
+  const { data: existing } = await sb.from("investor_alert_subscribers").select("id, user_id").eq("phone_normalized", phone).maybeSingle();
+  if (existing && !(u?.user?.id && existing.user_id === u.user.id)) {
+    return json({ ok: true, already_subscribed: true });
+  }
   const { error } = await sb.from("investor_alert_subscribers").upsert({
     phone_normalized: phone, name, zones, max_price: maxPrice, consent_text: CONSENT_TEXT,
     consented_at: new Date().toISOString(), unsubscribed_at: null,
