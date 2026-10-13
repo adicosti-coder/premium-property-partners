@@ -99,6 +99,7 @@ export default function ContentImprovementCenter() {
     social_hashtags: { label: "Aprobă și aplică", desc: "Înlocuiește hashtag-urile implicite din Social Engine.", icon: Check, run: "apply" },
     andrei_rule: { label: "Aprobă și adaugă la Andrei", desc: "Adaugă regula în Training Lab (maximum 5 active). Scorul apelurilor se compară după 14 zile.", icon: Check, run: "apply" },
     social_caption: { label: "Aprobă și aplică", desc: "Înlocuiește descrierea draftului social.", icon: Check, run: "apply" },
+    prospect_source: { label: "Setează prioritate maximă", desc: "", icon: Check, run: "apply" },
   };
 
   const pending = items.filter((i) => i.status === "pending");
@@ -122,7 +123,11 @@ export default function ContentImprovementCenter() {
           <p className="text-xs font-semibold">Propunere</p>
           <Values v={i.proposed_value} />
           {i.status === "pending" && ACTION[i.kind] && (() => {
-            const a = ACTION[i.kind]; const Icon = a.icon;
+            const base = ACTION[i.kind]; const Icon = base.icon;
+            const src = String((i.proposed_value as any)?.source ?? ""); const zone = String((i.proposed_value as any)?.zone ?? "");
+            const a = i.kind === "prospect_source"
+              ? { ...base, label: `Setează prioritate maximă la scraping pe ${src}`, desc: `Activează ${src} în Prospectare cu numărul maxim de rezultate pe scanare (20)${zone ? ` și adaugă zona ${zone} în filtrul de zone` : ""}.` }
+              : base;
             return (
               <div className="space-y-2 border-t border-border pt-2">
                 <p className="text-xs text-muted-foreground"><span className="font-semibold text-foreground">Ce face AI-ul: </span>{a.desc}</p>
