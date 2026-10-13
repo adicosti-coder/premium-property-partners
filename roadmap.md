@@ -1,5 +1,10 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Refacere Flux proprietari
+- [ ] Corectarea contoarelor și păstrarea pasului în adresă
+- [ ] Corectarea selecției, aprobării și mesajelor după tipul anunțului
+- [ ] Verificarea paginii și a celor patru pași fără mesaje sau apeluri reale
+
 ## Imagini Social Engine
 - [x] Extragere fotografie principală originală, respingere fallback generic
 - [x] Asociere automată cu imagini editoriale existente pentru taxe, finanțe și acces digital; fără AI/Unsplash recurent
