@@ -672,6 +672,8 @@ async function proxyFetchHtml(
     const synthetic = rawLinks
       .map((l) => (typeof l === 'string' ? l : (l as { url?: string })?.url))
       .filter((l): l is string => typeof l === 'string')
+      // Doar anunțuri individuale calificate merg mai departe la extragere (economie credite).
+      .filter((l) => !isGenericSearchPage(l, ''))
       .map((l) => `<a href="${l}"></a>`)
       .join('');
     const merged = `${html}${synthetic}`;
@@ -1901,6 +1903,7 @@ const GENERIC_LISTING_TITLE_SIGNALS = [
   'apartamente de închiriat', 'garsoniere de vanzare', 'garsoniere de vânzare',
   'proprietati noi', 'proprietăți noi', 'pagina ', 'rezultate vanzare', 'rezultate vânzare',
   'wikipedia', 'archives', 'tag:', '- forum', 'pdf', '[pdf]', 'hotararea', 'hcl ',
+  'descopera ofertele', 'descoperă ofertele', 'apartamente de vanzare in zona', 'apartamente de vânzare în zona',
   'lista de', 'arhiva', 'top ', 'guide', 'ghid ', 'știri', 'stiri ', 'news',
 ];
 
@@ -2934,6 +2937,14 @@ Deno.serve(async (req) => {
             // Reject/park anunțuri fără date esențiale pentru pipeline. Nu le
             // publicăm live (is_active=false) ca să nu polueze coada, dar le
             // păstrăm pentru diagnostic în panoul de reconciliere.
+            // Pagină generică sau preț nerealist (preț de card din pagină de categorie) → INVALID, nu se salvează.
+            if (isGenericSearchPage(url, result.title || rawResult.title || '')) { genericPageSkipped++; continue; }
+            const minRealisticPrice = category === 'vanzare' ? 15000 : 100;
+            if (price && price > 0 && price < minRealisticPrice) {
+              console.log(JSON.stringify({ kind: 'invalid_price_skipped', url, price, category }));
+              genericPageSkipped++;
+              continue;
+            }
             const validationIssues: string[] = [];
             if (category === 'vanzare') {
               if (!price || price <= 0) validationIssues.push('missing_price');
