@@ -57,7 +57,7 @@ export default function DailyPriceTrendsReport() {
       .gte("recorded_at", from)
       .lt("recorded_at", to)
       .order("recorded_at", { ascending: false })
-      .limit(20);
+      .limit(60);
     if (error) throw error;
     const seen = new Set<string>();
     const out: Sample[] = [];

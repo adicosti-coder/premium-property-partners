@@ -220,7 +220,7 @@ export default function PlatformDailyCoverage() {
       .eq("is_active", true)
       .gte("created_at", sinceIso)
       .order("created_at", { ascending: false })
-      .limit(20);
+      .limit(60);
 
   /** Păstrăm doar anunțuri reale: titlul și linkul nu trebuie să fie o pagină de căutare. */
   const onlyReal = (rows: Sample[]) =>
