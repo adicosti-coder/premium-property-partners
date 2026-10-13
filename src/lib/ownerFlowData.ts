@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
-import { isActiveOwnerListing, isIndividualOwnerListing, isResidentialRealEstate, ownerVerification } from "@/lib/ownerListingRules";
+import { hasImplausiblePrice, isActiveOwnerListing, isIndividualOwnerListing, isResidentialRealEstate, ownerVerification } from "@/lib/ownerListingRules";
 import { isWhatsappCapable, normalizeRoPhone } from "@/lib/ownerOutreachTemplates";
 
 export const OWNER_FLOW_QUERY_KEY = ["owner-flow"] as const;
@@ -22,7 +22,7 @@ async function activeCandidates() {
   }
   return rows.filter((r) => {
     const c = candidateOf(r);
-    return isActiveOwnerListing(c) && isResidentialRealEstate(c) && isIndividualOwnerListing(c) && ownerVerification(c) !== "agency";
+    return isActiveOwnerListing(c) && isResidentialRealEstate(c) && isIndividualOwnerListing(c) && ownerVerification(c) !== "agency" && !hasImplausiblePrice(c);
   });
 }
 

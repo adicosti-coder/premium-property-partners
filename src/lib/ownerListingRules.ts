@@ -1,4 +1,5 @@
 import { detectListingTransaction } from "@/lib/ownerOutreachTemplates";
+import { isImplausiblePrice, priceCategoryOf } from "@/lib/priceSanity";
 import { norm } from "@/lib/portalSearch";
 
 export type OwnerVerification = "confirmed" | "review" | "agency";
@@ -128,4 +129,19 @@ export function isResidentialRealEstate(candidate: OwnerListingCandidate): boole
 export function listingTransaction(candidate: OwnerListingCandidate): "vanzare" | "inchiriere" | null {
   const result = detectListingTransaction({ ...candidate, source_url: candidate.url });
   return result === "necunoscut" ? null : result;
+}
+
+export function hasImplausiblePrice(
+  listing: OwnerListingCandidate & { price?: number | null; currency?: string | null },
+): boolean {
+  return isImplausiblePrice(
+    listing.price ?? null,
+    priceCategoryOf({
+      category: listing.category ?? null,
+      title: listing.title ?? null,
+      description: listing.description ?? null,
+      url: listing.url ?? null,
+    }),
+    listing.currency ?? "EUR",
+  );
 }
