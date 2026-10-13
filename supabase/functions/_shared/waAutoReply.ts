@@ -482,9 +482,10 @@ const CLIENT_ZONE_STEPS = new Set([
 ]);
 
 function answerAfter(messages: ConversationMessage[], autoKind: string): string | null {
-  const promptIndex = messages.findLastIndex(
-    (message) => message.direction === "outbound" && message.tool_call?.auto_reply === autoKind,
-  );
+  let promptIndex = -1;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].direction === "outbound" && messages[i].tool_call?.auto_reply === autoKind) { promptIndex = i; break; }
+  }
   if (promptIndex < 0) return null;
   const answer = messages.slice(promptIndex + 1).find((message) => message.direction === "inbound");
   return String(answer?.content ?? "").trim() || null;
