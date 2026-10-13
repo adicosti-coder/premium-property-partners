@@ -70,10 +70,12 @@ Deno.serve(async (req) => {
   const body = await req.json().catch(() => ({}));
   if (body.post_id !== undefined && (typeof body.post_id !== "string" || !UUID.test(body.post_id))) return json({ error: "Postare invalidă" }, 400);
   if (body.dry_run !== undefined && typeof body.dry_run !== "boolean") return json({ error: "dry_run invalid" }, 400);
+  if (body.current_image !== undefined && body.current_image !== null && (typeof body.current_image !== "string" || body.current_image.length > 2048)) return json({ error: "Imagine invalidă" }, 400);
   if (body.dry_run === true) {
     if (!body.post_id) return json({ error: "Postarea este obligatorie" }, 400);
     const { data: post } = await sb.from("social_posts").select("*").eq("id", body.post_id).maybeSingle();
     if (!post) return json({ error: "Postare negăsită" }, 404);
+    if (body.current_image !== undefined) post.image_url = body.current_image;
     try { return json({ success: true, payload: await payload(sb, post, "instagram", "admin_preview") }); }
     catch (e) { return json({ error: e instanceof Error ? e.message : "Imagine indisponibilă" }, 422); }
   }

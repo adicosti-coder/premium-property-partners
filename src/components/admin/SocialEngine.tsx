@@ -921,7 +921,7 @@ function PostEditModal({
     setPreparingImage(true);
     setImageError("");
     try {
-      const { data, error } = await supabase.functions.invoke("process-scheduled-posts", { body: { post_id: post.id, dry_run: true } });
+      const { data, error } = await supabase.functions.invoke("process-scheduled-posts", { body: { post_id: post.id, dry_run: true, current_image: imageUrl || null } });
       if (error) {
         const response = (error as { context?: Response }).context;
         const details = response ? await response.json().catch(() => null) : null;

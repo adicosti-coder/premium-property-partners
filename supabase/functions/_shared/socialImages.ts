@@ -6,7 +6,7 @@ function storedImage(sb: any, value: unknown): unknown {
 }
 export async function resolveSocialFeaturedImage(sb: any, opts: { title: string; type: string; sourceUrl: string; metadata?: any; markdown?: string; currentImage?: unknown }) {
   const m = opts.metadata ?? {};
-  const candidates: unknown[] = [m.ogImage, m["og:image"], m.featuredImage, m.image, m.twitterImage];
+  const candidates: unknown[] = [m.ogImage, m["og:image"], m.featuredImage, m.image, m.twitterImage, opts.currentImage];
   const url = new URL(opts.sourceUrl);
   const slug = decodeURIComponent(url.pathname.split("/").filter(Boolean).pop() || "");
   if (opts.type === "blog") {
@@ -21,7 +21,6 @@ export async function resolveSocialFeaturedImage(sb: any, opts: { title: string;
       candidates.push(...(gallery ?? []).map((r: any) => storedImage(sb, r.image_path)), storedImage(sb, data.image_path), ...(data.images ?? []).map((u: unknown) => storedImage(sb, u)));
     }
   }
-  candidates.push(opts.currentImage);
   const original = selectSocialImage(opts.title, opts.type, candidates, opts.markdown);
   if (original) return original;
   // Reuse inspected editorial assets. Never invent a property or city photograph.
