@@ -3,6 +3,7 @@
 // rezolvă din META_FB_PAGE_ID / META_IG_USER_ID sau automat din /me/accounts.
 import { waToken } from "./waConfig.ts";
 import { prepareInstagramImages } from "./instagramImages.ts";
+import { formatSocialCaption } from "./socialCaption.ts";
 
 const G = "https://graph.facebook.com/v25.0";
 
@@ -77,12 +78,12 @@ export async function publishToMetaSocial(text: string, images: string[]): Promi
     return [{ platform: "facebook", ok: false, error }, { platform: "instagram", ok: false, error }];
   }
   const out: SocialResult[] = [];
-  try { out.push({ platform: "facebook", ok: true, id: await postFacebook(ctx.pageId, ctx.pageToken, text, imgs) }); }
+  try { out.push({ platform: "facebook", ok: true, id: await postFacebook(ctx.pageId, ctx.pageToken, formatSocialCaption(text, { platform: "facebook", type: "property" }), imgs) }); }
   catch (e) { out.push({ platform: "facebook", ok: false, error: (e as Error).message }); }
   if (!ctx.igId) out.push({ platform: "instagram", ok: false, error: "Pagina nu are cont Instagram Business legat" });
   else if (!imgs.length) out.push({ platform: "instagram", ok: false, error: "Instagram cere cel puțin o imagine" });
   else {
-    try { out.push({ platform: "instagram", ok: true, id: await postInstagram(ctx.igId, ctx.pageToken, text.slice(0, 2200), await prepareInstagramImages(imgs)) }); }
+    try { out.push({ platform: "instagram", ok: true, id: await postInstagram(ctx.igId, ctx.pageToken, formatSocialCaption(text, { platform: "instagram", type: "property" }), await prepareInstagramImages(imgs)) }); }
     catch (e) { out.push({ platform: "instagram", ok: false, error: (e as Error).message }); }
   }
   return out;

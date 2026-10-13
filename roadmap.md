@@ -1,5 +1,10 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Descrieri Social Engine pe platforme
+- [x] Instagram fără URL, cu CTA de profil, titlu cu emoji, paragrafe și hashtag-uri finale
+- [x] Facebook cu link păstrat; regulă comună la generare, copiere și trimitere
+- [x] Șapte teste, funcții activate și generare reală verificată după reîncărcare în previzualizarea Instagram/Facebook; fără publicare pe rețele
+
 ## Descrieri toate cele 51 de anunțuri
 - [x] Toate cele 51 de anunțuri: descrieri scurte și structurate salvate; dotări adăugate fără ștergeri; verificat pe site
 - [x] 397 din 415 fotografii au descrieri; la cele neinterpretate nu s-au inventat texte
