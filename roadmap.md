@@ -1,5 +1,10 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Audit conversații WhatsApp
+- [ ] Analiză conversații reale și corectarea erorilor confirmate
+- [ ] Analiză WhatsApp în Centrul Auto-îmbunătățire cu aprobare și anulare
+- [ ] Teste și verificare autentificată, fără mesaje reale
+
 ## Refacere Flux proprietari
 - [x] Contoare din aceleași liste, pas păstrat în adresă și pagină simplificată
 - [x] Verificare proprietar salvată, contactare fără duplicate, șabloane și mementouri după tranzacție; SMS inactiv eliminat
