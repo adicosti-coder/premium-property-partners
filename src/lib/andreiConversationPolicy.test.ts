@@ -8,7 +8,7 @@ describe("Andrei concise policy", () => {
   });
   it("keeps example replies short", () => {
     const replies = ANDREI_SALES_EXAMPLES.split("\n").filter(line => line.startsWith("Andrei:"));
-    expect(replies.length).toBe(12);
+    expect(replies.length).toBe(15);
     for (const line of replies) expect(line.replace(/^Andrei: /, "").split(/\s+/).length).toBeLessThanOrEqual(30);
   });
   it("retains consent, transparency and factuality rules", () => {
