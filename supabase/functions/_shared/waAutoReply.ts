@@ -1,6 +1,8 @@
 // Mesajele automate WhatsApp (calificare + confirmare), într-un singur loc,
 // ca webhook-ul Meta și puntea Make.com să trimită exact același text.
 
+import { detectZone } from "./detectZone.ts";
+
 export type ProspectContext = {
   prospect_type?: string | null;
   category?: string | null;
@@ -267,11 +269,17 @@ export function publishConsentRequestText(p?: {
   source_url?: string | null;
   /** Suprascrie link-ul de analiză (folosit de șablonul Meta cu {{2}}). */
   analysisUrl?: string;
+  /** Direct reply only; keep the approved Meta body unchanged. */
+  safeDirect?: boolean;
 } | null): string {
   const analysisUrl = p?.analysisUrl
     || (p?.source_url
       ? `https://realtrust.ro/analiza-anunt?url=${encodeURIComponent(p.source_url)}`
       : "https://realtrust.ro/analiza-anunt");
+  if (p?.safeDirect) return [
+    `Publicarea pe realtrust.ro este gratuită și separată de serviciul de intermediere. Puteți consulta analiza aici: ${analysisUrl}`,
+    "Dacă doriți publicarea anunțului, răspundeți DA PUBLIC. Îl verificăm înainte de publicare; retragerea se cere prin RETRAG.",
+  ].join("\n\n");
   return [
     `Bună ziua! Am generat o evaluare gratuită de piață pentru proprietatea dvs.: ${analysisUrl}`,
     "",
@@ -312,13 +320,13 @@ const EXPLICIT_NO = /^nu\s*,?\s*(mult?umesc|mersi|nu doresc)?\s*[.!]?$/;
 
 /** Refuz clar formulat în propoziție („Nu sunt interesată”, „Fără agenții” etc.). */
 const CLEAR_REFUSAL_RE =
-  /\bnu\s+(sunt|suntem)\s+interesa|\bnu\s+(ma|mai|ne)\s+(mai\s+)?intereseaza|\bnu\s+(mai\s+)?(doresc|dorim|vreau|vrem)\b(?!\s+sa\s+(vand|inchiriez|colabor|stiu|aflu))|\bfara\s+agent|\bnu\s+(lucrez|colaborez|vreau)\s+cu\s+agent|\bnu\s+am\s+nevoie|\bnu\s+(ma|mai)\s+(contactati|sunati|deranjati)|\bnu\s+multumesc\b|\bnu,?\s+mersi\b|\bnu\s+ma\s+deranjati|\bnu\s+e\s+cazul\b|\bnu\s+este\s+cazul\b|\bnu\s+(mai\s+)?(este|e)\s+nevoie\b|\bprefer\s+sa\s+nu\b|\bnu\s+intentionez\b|\bnu\s+sunt\s+de\s+acord\b/;
+  /\bnu\s+(sunt|suntem)\s+interesa|\bnu\s+(ma|mai|ne)\s+(mai\s+)?intereseaza|\bnu\s+(mai\s+)?(doresc|dorim|vreau|vrem)\b(?!\s+sa\s+(vand|inchiriez|colabor|stiu|aflu))|\bfara\s+agent|\bnu\s+(lucrez|colaborez|vreau)\s+cu\s+agent|\bnu\s+am\s+nevoie|\bnu\s+(ma|mai)\s+(contactati|sunati|deranjati)|\bnu\s+multumesc\b|\bnu,?\s+mersi\b|\bnu\s+ma\s+deranjati|\bnu\s+e\s+cazul\b|\bnu\s+este\s+cazul\b|\bnu\s+(mai\s+)?(este|e)\s+nevoie\b|\bprefer\s+sa\s+nu\b|\bnu\s+intentionez\s+sa\s+(?:vand|inchiriez|colaborez)\b|\bnu\s+sunt\s+de\s+acord\b/;
 
 /** true dacă mesajul este un refuz clar (fără diacritice, lowercase). */
 export function isClearRefusal(raw: string): boolean {
   const t = stripDiacritics(raw).trim();
   if (!t) return false;
-  return EXPLICIT_NO.test(t) || CLEAR_REFUSAL_RE.test(t);
+  return EXPLICIT_NO.test(t) || CLEAR_REFUSAL_RE.test(t) || /\bnu\s*,?\s*multumesc\b/.test(t);
 }
 /** Cuvinte care arată interes — anulează interpretarea de refuz. */
 const INTEREST_HINT =
@@ -332,7 +340,7 @@ export function quickReplyText(
   const publishIntent = detectPublishIntent(raw, opts);
   if (publishIntent === "consent") return { kind: "publish_consent", text: PUBLISH_CONSENT_ACK };
   if (publishIntent === "revoke" && !/^\s*stop\b/.test(t)) return { kind: "publish_revoke", text: PUBLISH_REVOKE_ACK };
-  if ((EXPLICIT_NO.test(t.trim()) && !INTEREST_HINT.test(t)) || CLEAR_REFUSAL_RE.test(t.trim())) {
+  if ((EXPLICIT_NO.test(t.trim()) && !INTEREST_HINT.test(t)) || isClearRefusal(raw)) {
     return {
       kind: "quick_no",
       text: "Am înțeles. Nu vă mai deranjăm. Dacă vă pot ajuta altădată, îmi scrieți aici. O zi frumoasă!",
@@ -474,9 +482,10 @@ const CLIENT_ZONE_STEPS = new Set([
 ]);
 
 function answerAfter(messages: ConversationMessage[], autoKind: string): string | null {
-  const promptIndex = messages.findLastIndex(
-    (message) => message.direction === "outbound" && message.tool_call?.auto_reply === autoKind,
-  );
+  let promptIndex = -1;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].direction === "outbound" && messages[i].tool_call?.auto_reply === autoKind) { promptIndex = i; break; }
+  }
   if (promptIndex < 0) return null;
   const answer = messages.slice(promptIndex + 1).find((message) => message.direction === "inbound");
   return String(answer?.content ?? "").trim() || null;
@@ -486,11 +495,15 @@ function answerAfter(messages: ConversationMessage[], autoKind: string): string 
 export function rememberedClientZone(messages: ConversationMessage[]): string | null {
   for (let i = messages.length - 1; i >= 0; i -= 1) {
     const message = messages[i];
+    if (message.direction === "inbound") {
+      const explicit = detectZone(message.content);
+      if (explicit) return explicit;
+    }
     const kind = message.direction === "outbound" ? message.tool_call?.auto_reply ?? "" : "";
     if (!CLIENT_ZONE_STEPS.has(kind)) continue;
     const answer = messages.slice(i + 1).find((item) => item.direction === "inbound");
     const zone = String(answer?.content ?? "").trim();
-    if (zone && zone.length <= 80) return zone;
+    if (zone && zone.length <= 80 && !/[?]|comision|multumesc|interesa|\bnu\b/i.test(stripDiacritics(zone))) return zone;
   }
   return null;
 }
@@ -708,6 +721,7 @@ function modeValueLine(mode: ListingMode, ref: string): string {
 export function ownerReplyText(raw: string, ctx: ProspectContext = null): { kind: string; text: string } | null {
   const t = stripDiacritics(raw);
   if (!t) return null;
+  if (isClearRefusal(raw) || /^stop\b/.test(t)) return quickReplyText(raw);
   const ref = ownerRef(ctx);
   const hi = ownerHello(ctx);
   const price = ownerPrice(ctx);
@@ -734,12 +748,12 @@ export function ownerReplyText(raw: string, ctx: ProspectContext = null): { kind
       /comision|cat costa|costuri|taxa|siguranta|incredere|teapa|contract|exclusivitate|obligati|angajament|e sigur|este sigur/.test(t) &&
       !/comision.*(mare|mult|scump)|prea scump|prea mult/.test(t)) {
     const fee = mode === "vanzare" ? "La vânzare comisionul e 2–4%, plătit doar dacă se vinde."
-      : mode === "inchiriere" ? "La închiriere plătiți doar după semnarea cu chiriașul."
+      : mode === "inchiriere" ? "Intermedierea închirierii este 50–100% din prima chirie; administrarea, dacă o alegeți, este 15–20%."
       : mode === "hotelier" ? "Administrarea este 15–20% doar din încasări."
       : "Plătiți doar la rezultat, fără avans.";
     return {
       kind: "owner_terms_link",
-      text: `${hi ? hi.replace(/, $/, ". ") : ""}Publicarea și analiza sunt gratuite, fără exclusivitate și fără contract obligatoriu. ${fee} Toate condițiile pe scurt: ${OWNER_TERMS_URL}`,
+      text: `Analiza de piață e gratuită. ${fee} Detalii: https://realtrust.ro/analiza-gratuita`,
     };
   }
 
@@ -778,6 +792,16 @@ export function ownerReplyText(raw: string, ctx: ProspectContext = null): { kind
             ? "Vreți să vă trimit chiriile recente din zonă?"
             : "Vreți să vă trimit o comparație realistă de venit?"),
     };
+  }
+
+  if (mode === "vanzare" && /\b(comision)\b/.test(t)) {
+    return { kind: "owner_terms_link", text: "Analiza de piață e gratuită. La vânzare, comisionul este 2–4%, plătit la încheierea tranzacției. Detalii: https://realtrust.ro/analiza-gratuita" };
+  }
+  if (/nu intentionez sa scad|pret|promovarea e la/.test(t)) {
+    return { kind: "owner_price_context", text: "Am înțeles, respectăm prețul indicat de dumneavoastră. Nu îl modificăm fără acordul dumneavoastră." };
+  }
+  if (mode === "vanzare" && /vanzare|vand|colaborare/.test(t)) {
+    return { kind: "owner_sale_context", text: `Am înțeles, discutăm despre vânzarea ${ref}. Doriți detalii despre reprezentare sau despre publicarea gratuită?` };
   }
 
   // 6) Are deja pe cineva — retragere elegantă, ușa rămâne deschisă.

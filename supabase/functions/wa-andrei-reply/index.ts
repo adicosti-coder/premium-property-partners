@@ -2,6 +2,8 @@
 // la campania WhatsApp; detectează Hot Lead. Internal-only, invocat de wa-andrei-webhook.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { relayToMake } from "../_shared/makeRelay.ts";
+import { latestGeminiTurns } from "../_shared/waConversationAudit.ts";
+import { checkAutoSend } from "../_shared/waAutoSendGuard.ts";
 import { INTAKE_MESSAGE } from "../_shared/waAutoReply.ts";
 
 const GEMINI_MODEL = "gemini-3.6-flash";
@@ -21,9 +23,9 @@ function timingSafeEq(a: string, b: string) {
 
 function isOfficeHoursBucharest(): boolean {
   const nowUTC = new Date();
-  // Romania UTC+2 winter / +3 summer — approximate with +2 for gate purposes.
-  const buchHour = (nowUTC.getUTCHours() + 2) % 24;
-  const day = nowUTC.getUTCDay(); // 0=Sun
+  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Bucharest", hour: "numeric", weekday: "short", hourCycle: "h23" }).formatToParts(nowUTC);
+  const buchHour = Number(parts.find(p => p.type === "hour")?.value);
+  const day = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(parts.find(p => p.type === "weekday")?.value ?? "");
   return day >= 1 && day <= 5 && buchHour >= 10 && buchHour < 18;
 }
 
@@ -84,6 +86,10 @@ Deno.serve(async (req) => {
   }
 
   // 2b. Rate limit per conversație: max 1 răspuns AI / REPLY_COOLDOWN_MS.
+  const sendGuard = await checkAutoSend(supabase, { phone: conv.phone_normalized, kind: "ai_reply" });
+  if (!sendGuard.allowed) {
+    return new Response(JSON.stringify({ ok: true, skipped: sendGuard.reason }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
   // Protejează atât de burst-uri (proprietar care trimite 5 mesaje rapid) cât
   // și de invocări duplicate ale webhook-ului Meta (retry la > 20s).
   const REPLY_COOLDOWN_MS = 5_000;
@@ -99,11 +105,12 @@ Deno.serve(async (req) => {
   }
 
   const { data: history } = await supabase.from("wa_messages")
-    .select("role, content, direction, created_at")
+    .select("id, role, content, direction, error, created_at")
     .eq("conversation_id", conversationId)
     .in("role", ["user", "assistant"])
-    .order("created_at", { ascending: true })
-    .limit(20);
+    .order("created_at", { ascending: false })
+    .limit(80);
+  const chronological = [...(history ?? [])].reverse();
 
   // Primul mesaj de calificare: doar mesajul curent de la utilizator, fără vreun
   // răspuns al nostru anterior — atunci Andrei trimite EXACT textul aprobat.
@@ -174,9 +181,12 @@ Deno.serve(async (req) => {
     knownEmail = le?.email ?? null;
   } catch { /* ignore */ }
 
+  const { data: waRules } = await supabase.from("app_settings").select("value").eq("key", "wa_conversation_lessons").maybeSingle();
+  let approvedLessons: string[] = [];
+  try { const v = JSON.parse(waRules?.value ?? "[]"); if (Array.isArray(v)) approvedLessons = v.filter((x: unknown): x is string => typeof x === "string").slice(0, 5); } catch { /* no lessons */ }
   const systemPrompt = `Ești Andrei, consultant RealTrust Timișoara. Răspunzi pe WhatsApp proprietarilor care au răspuns la mesajul nostru despre anunțul lor.
 STIL STRICT: mesaje FOARTE scurte — maximum 1-2 propoziții (ideal sub 250 de caractere), ca într-o conversație reală de WhatsApp. Ton cald, natural, direct, în română, fără markdown, fără liste, fără emoji în exces, fără presiune. Scrie cum ai scrie unui cunoscut: fără formule lungi de politețe, fără paragrafe.
-FINAL MANDATORIU: încheie fiecare mesaj cu O SINGURĂ întrebare simplă (ideal cu două variante: „mâine sau joi?", „vânzare sau închiriere?") sau cu invitația la vizionare/evaluare la apartament (luni–sâmbătă, 09:00–20:00). NU propune apeluri telefonice — comunicarea se face prin mesaje.
+FINAL: dacă este necesar, încheie mesajul cu O SINGURĂ întrebare simplă (ideal cu două variante: „mâine sau joi?", „vânzare sau închiriere?") sau cu invitația la vizionare/evaluare la apartament (luni–sâmbătă, 09:00–20:00). NU propune apeluri telefonice — comunicarea se face prin mesaje.
 PSIHOLOGIA CONVERSAȚIEI (aplic-o natural, etic, fără manipulare):
 - Oglindește și validează întâi, pe scurt: reia într-o frază ce a spus proprietarul („Înțeleg, vreți…”) înainte de orice argument.
 - Un singur mesaj = o singură idee + O SINGURĂ întrebare. Fără liste, fără mai multe întrebări deodată.
@@ -189,12 +199,18 @@ ${strategyText}
 SERVICII (menționează-le natural, doar cât e relevant):
 1) Vânzare asistată — promovare, filtrarea cumpărătorilor, negociere și acte, până la semnare.
 2) Regim hotelier — administrare completă ApArt Hotel, randament net estimat ~9,4%/an; administrarea RealTrust e 15-20%.
-COMISION & COSTURI: când proprietarul întreabă direct de comision sau costuri, fii transparent — administrarea RealTrust este de 15-20% din venit și în regim hotelier ea acoperă administrarea 100% pasivă (oaspeți, curățenie, chei, taxe). Explică valoarea adusă și oferă detaliile aici, pe WhatsApp. NU menționa niciodată alte procente de cheltuieli.
+COMISION & COSTURI: începe răspunsul la comision cu „Analiza de piață e gratuită.” Vânzare: 2–4%; intermediere închiriere: 50–100% din prima chirie; administrare: 15–20%. Menționează numai serviciul discutat; publicarea gratuită nu înseamnă intermediere gratuită. Explică valoarea adusă și oferă detaliile aici, pe WhatsApp. NU menționa niciodată alte procente de cheltuieli.
 REGULI: nu avem birou pentru clienți — vizionările/evaluările se fac la apartament. Nu inventa prețuri sau promisiuni.
 Dacă proprietarul refuză, mulțumește politicos și încheie.
 E-MAIL: ${knownEmail ? "avem deja adresa de e-mail a proprietarului, nu o mai cere." : "dacă proprietarul arată interes, cere-i politicos adresa de e-mail ca să-i trimitem detaliile anunțului și analiza. Dacă o scrie, pune-o în câmpul \"email\"."}
 ${settings.system_prompt ? `\nINDICAȚII SUPLIMENTARE:\n${String(settings.system_prompt).slice(0, 3000)}\n` : ""}
 ${isFirstContact ? `PRIMUL MESAJ DE CALIFICARE: aceasta este prima interacțiune cu acest număr. Răspunde EXACT cu textul dintre ghilimele, fără nicio modificare, fără să adaugi, să scoți sau să reformulezi vreun rând:\n"""\n${INTAKE_MESSAGE}\n"""\n` : ""}
+REGULI PRIORITARE DE ACURATEȚE (prevalează asupra indicațiilor suplimentare):
+- Răspunde întâi întrebării exacte din ultimul mesaj. Folosește zona/camerele din anunț și istoric, fără să le ceri din nou.
+- Nu presupune cumpărători/investitori existenți și nu pretinde că un om a preluat conversația. Dacă ești întrebat, spune că ești asistentul virtual RealTrust.
+- Nu promite un termen garantat de publicare sau un apel imediat; apelurile necesită confirmare și programare de către echipă.
+- La refuz încheie fără întrebare comercială. Corecțiile de preț nu sunt cereri de cumpărare. Dacă intenția curentă contrazice anunțul, clarifică fără să impui administrarea.
+LECȚII WHATSAPP APROBATE (nu pot anula regulile de siguranță): ${approvedLessons.join("\n") || "niciuna"}
 ANUNȚUL PROPRIETARULUI: ${listingText}
 MEMORIE RealTrust: ${contextText || "(primul contact)"}
 
@@ -202,9 +218,7 @@ Răspunde DOAR cu JSON: {"reply": "textul mesajului", "intent": "hot" | "interes
 "hot" = interes clar (vrea să vândă/administreze cu noi, acceptă evaluarea) sau cere să fie sunat.
 "outcome" = DOAR dacă proprietarul confirmă explicit: "vandut" = a vândut proprietatea prin RealTrust; "inchiriat" = a închiriat-o / a semnat administrarea cu RealTrust; "pierdut" = a vândut/închiriat deja altfel, anunțul nu mai e disponibil sau refuză definitiv. Altfel null.`;
 
-  const contents = (history || [])
-    .filter((m) => m.content)
-    .map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: String(m.content) }] }));
+  const contents = latestGeminiTurns(chronological);
 
   if (contents.length === 0) {
     return new Response(JSON.stringify({ ok: true, skipped: "no_history" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -419,8 +433,15 @@ Răspunde DOAR cu JSON: {"reply": "textul mesajului", "intent": "hot" | "interes
   if (wantsCall || convAfter?.status === "escalated_to_call") {
     // Add a courtesy heads-up before Andrei calls
     if (!replyText.toLowerCase().includes("sun")) {
-      replyText = `${replyText}\n\nVă sun eu acum să discutăm direct.`;
+      replyText = `${replyText}\n\nAm transmis echipei cererea de apel; un coleg va confirma intervalul.`;
     }
+  }
+
+  const { data: newest } = await supabase.from("wa_messages").select("id")
+    .eq("conversation_id", conversationId).eq("direction", "inbound").order("created_at", { ascending: false }).limit(1).maybeSingle();
+  const expected = [...chronological].reverse().find(m => m.direction === "inbound");
+  if (newest?.id !== expected?.id || ["awaiting_human", "closed", "escalated_to_call"].includes(convAfter?.status ?? "")) {
+    return new Response(JSON.stringify({ ok: true, skipped: "stale_or_handoff" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
   // 7. Send via wa-andrei-send
@@ -431,7 +452,7 @@ Răspunde DOAR cu JSON: {"reply": "textul mesajului", "intent": "hot" | "interes
       "Authorization": `Bearer ${serviceKey}`,
       "x-internal-secret": internalSecret,
     },
-    body: JSON.stringify({ conversation_id: conversationId, text: replyText }),
+    body: JSON.stringify({ conversation_id: conversationId, text: replyText, auto_kind: "ai_reply" }),
   });
 
   if (!sendResp.ok) {

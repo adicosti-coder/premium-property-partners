@@ -7,6 +7,8 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { requireAdmin } from "../_shared/adminAuth.ts";
+import { analyzeWhatsapp, gatherWhatsappAudit } from "./whatsapp.ts";
+import { WA_AUDIT_RULES } from "../_shared/waConversationAudit.ts";
 import { analyzeOps, applyOps, rollbackOps, measureOps, OPS_KINDS } from "./ops.ts";
 
 const json = (b: unknown, status = 200) =>
@@ -42,6 +44,11 @@ async function measureOutcomes(db: any) {
         .gte("created_at", r.decided_at).lt("created_at", new Date(d.getTime() + 14 * DAY).toISOString());
       const n = logs?.length ?? 0;
       outcome = { ...outcome, sends: n, success_rate: n ? logs!.filter((l: any) => l.success).length / n : null };
+    }
+    if (r.kind === "insight" && r.proposed_value?.scope === "whatsapp") {
+      const audit = await gatherWhatsappAudit(db, r.decided_at);
+      const signals = audit.findings.filter((f: any) => f.code === r.proposed_value.code).length;
+      outcome = { ...outcome, signals_before: r.current_value?.signals_before, signals_after: signals, conversations_after: audit.conversations, comparison: "Eșantioane limitate; nu dovedește cauzalitate" };
     }
     if (r.kind === "andrei_rule") {
       const d = new Date(r.decided_at);
@@ -114,9 +121,10 @@ Nu inventa cifre, prețuri, randamente sau zone. Dacă datele sunt puține, prop
 
 async function analyze(db: any) {
   const measured = await measureOutcomes(db);
+  const whatsapp = await analyzeWhatsapp(db);
   const ctx = await gatherContext(db);
   const key = Deno.env.get("LOVABLE_API_KEY");
-  if (!key) return { measured, created: 0, error: "AI indisponibil" };
+  if (!key) return { measured, created: whatsapp.created, whatsapp, warning: "AI indisponibil; audit WhatsApp efectuat" };
   const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
@@ -154,7 +162,7 @@ async function analyze(db: any) {
       tool_choice: { type: "function", function: { name: "propose" } },
     }),
   });
-  if (!r.ok) return { measured, created: 0, error: `AI ${r.status}` };
+  if (!r.ok) return { measured, created: whatsapp.created, whatsapp, warning: `AI ${r.status}` };
   const d = await r.json();
   let items: any[] = [];
   try { items = JSON.parse(d.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments ?? "{}").items ?? []; } catch { items = []; }
@@ -197,7 +205,7 @@ async function analyze(db: any) {
   if (rows.length) await db.from("content_improvements").insert(rows);
   const out = key ? await analyzeOutreach(db, key).catch((e) => { console.error("outreach", e); return 0; }) : 0;
   const ops = await analyzeOps(db, key).catch((e) => { console.error("ops", e); return 0; });
-  return { measured, created: rows.length + out + ops };
+  return { measured, created: rows.length + out + ops + whatsapp.created, whatsapp };
 }
 
 // ── Prospectare, WhatsApp și Andrei: doar propuneri; nimic nu se trimite sau se schimbă fără aprobare ──
@@ -313,7 +321,20 @@ async function apply(db: any, id: string, userId: string) {
   const p = r.proposed_value ?? {};
   let baseline: unknown = null;
   let err: string | null = null;
-  if (r.kind === "blog_seo") {
+  if (r.kind === "insight" && p.scope === "whatsapp") {
+    const canonical = WA_AUDIT_RULES[p.code as keyof typeof WA_AUDIT_RULES];
+    if (!canonical || p.lesson !== canonical.lesson) return { ok: false, error: "Regulă WhatsApp invalidă" };
+    const { data: old, error: readErr } = await db.from("app_settings").select("value").eq("key", "wa_conversation_lessons").maybeSingle();
+    if (readErr) return { ok: false, error: readErr.message };
+    let lessons: string[] = [];
+    try { lessons = JSON.parse(old?.value ?? "[]"); } catch { return { ok: false, error: "Reguli existente invalide" }; }
+    if (!Array.isArray(lessons)) return { ok: false, error: "Reguli existente invalide" };
+    if (!lessons.includes(p.lesson) && lessons.length >= 5) return { ok: false, error: "Maximum 5 reguli WhatsApp; anulează una înainte" };
+    const next = JSON.stringify([...new Set([...lessons, p.lesson])]);
+    baseline = { previous_lessons: old?.value ?? "[]", applied_lessons: next };
+    const { error } = await db.from("app_settings").upsert({ key: "wa_conversation_lessons", value: next }, { onConflict: "key" });
+    err = error?.message ?? null;
+  } else if (r.kind === "blog_seo") {
     const now = new Date();
     baseline = { views_14d: await articleViews(db, r.target_id, new Date(now.getTime() - 14 * DAY), now) };
     const { error } = await db.from("blog_articles").update({ meta_title: p.meta_title, meta_description: p.meta_description }).eq("id", r.target_id);
@@ -363,7 +384,11 @@ async function rollback(db: any, id: string) {
   if (!r) return { ok: false, error: "Doar propunerile aplicate pot fi anulate" };
   const c = r.current_value ?? {}; const b = r.baseline ?? {};
   let err: string | null = null;
-  if (r.kind === "blog_seo") {
+  if (r.kind === "insight" && r.proposed_value?.scope === "whatsapp") {
+    const { data: restored, error } = await db.from("app_settings").update({ value: b.previous_lessons ?? "[]" })
+      .eq("key", "wa_conversation_lessons").eq("value", b.applied_lessons).select("key");
+    err = error?.message ?? (restored?.length ? null : "Regulile s-au schimbat între timp; anulează întâi ultima aplicare");
+  } else if (r.kind === "blog_seo") {
     err = (await db.from("blog_articles").update({ meta_title: c.meta_title ?? null, meta_description: c.meta_description ?? null }).eq("id", r.target_id)).error?.message ?? null;
   } else if (r.kind === "social_tone" || r.kind === "social_hashtags") {
     const row = r.kind === "social_tone" ? { key: "caption_tone", value: c.tone ?? "warm" } : { key: "default_hashtags", value: c.hashtags ?? "" };
@@ -498,6 +523,7 @@ Deno.serve(async (req) => {
     }
     const gate = await requireInternalOrAdmin(req, corsHeaders);
     if (gate) return gate;
+    if (body?.action === "analyze_whatsapp") return json({ success: true, measured: 0, ...(await analyzeWhatsapp(db)) });
     return json({ success: true, ...(await analyze(db)) });
   } catch (e) {
     console.error("content-self-improve", e);

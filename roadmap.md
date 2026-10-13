@@ -1,5 +1,11 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Audit conversații WhatsApp
+- [x] 10 conversații inspectate; corectate prioritatea refuzului, istoricul AI, comisioanele pe tranzacție și protecția trimiterilor paralele
+- [x] Calitate WhatsApp în Centrul Auto-îmbunătățire: 5 propuneri reale salvate, dovezi cu acces direct, reguli separate de voce și anulare condiționată
+- [x] 79 teste trecute; audit și acces la conversații verificate autentificat, fără erori; selecția persistă după reîncărcare
+- [x] Funcțiile activate; fără trimitere reală și fără aprobarea regulilor în verificare; șablonul Meta aprobat păstrat, cererea directă nouă fără promisiuni neconfirmate
+
 ## Refacere Flux proprietari
 - [x] Contoare din aceleași liste, pas păstrat în adresă și pagină simplificată
 - [x] Verificare proprietar salvată, contactare fără duplicate, șabloane și mementouri după tranzacție; SMS inactiv eliminat
