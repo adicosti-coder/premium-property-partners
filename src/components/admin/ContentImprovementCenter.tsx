@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Check, FileText, Loader2, RefreshCw, Sparkles, Undo2, Wand2, X } from "lucide-react";
+import { Check, ExternalLink, FileText, Loader2, RefreshCw, Sparkles, Undo2, Wand2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 type Item = {
   id: string; kind: string; title: string; rationale: string | null; confidence: number | null;
   current_value: Record<string, unknown> | null; proposed_value: Record<string, unknown> | null;
-  evidence: { text?: string; conversation_ids?: string[] } | null; status: string; outcome: Record<string, unknown> | null;
+  evidence: { text?: string; conversation_ids?: string[]; samples?: Array<{ title: string | null; url: string | null; platform: string | null }> } | null; status: string; outcome: Record<string, unknown> | null;
   error: string | null; created_at: string; target_id?: string | null; decided_at: string | null;
 };
 
@@ -164,7 +164,30 @@ export default function ContentImprovementCenter() {
       <p className="font-heading font-semibold">{i.title}</p>
       {i.rationale && <p className="text-sm text-muted-foreground">{i.rationale}</p>}
       {i.evidence?.text && <p className="text-xs text-muted-foreground">Date: {i.evidence.text}</p>}
-      {isMarket(i) && <Button variant="outline" size="sm" className="min-h-12" onClick={() => navigate("/admin/hub-market-listings")}>Deschide Piața anunțurilor</Button>}
+      {isMarket(i) && (
+        <div className="space-y-1">
+          {(i.evidence?.samples?.length ?? 0) > 0 && (
+            <p className="text-xs font-semibold">Anunțuri din problemă — titlu extras de pe sursă</p>
+          )}
+          {i.evidence?.samples?.slice(0, 5).map((s, n) => (
+            s.url ? (
+              <a
+                key={n}
+                href={s.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-1 text-xs underline underline-offset-2 hover:text-primary"
+              >
+                <ExternalLink className="h-3 w-3 mt-0.5 shrink-0" />
+                <span className="break-words">{s.title || "Anunț fără titlu"}{s.platform ? ` · ${s.platform}` : ""}</span>
+              </a>
+            ) : (
+              <p key={n} className="text-xs break-words">{s.title || "Anunț fără titlu"}{s.platform ? ` · ${s.platform}` : ""}</p>
+            )
+          ))}
+          <Button variant="outline" size="sm" className="min-h-12" onClick={() => navigate("/admin/hub-market-listings")}>Deschide Piața anunțurilor</Button>
+        </div>
+      )}
       {(isWhatsapp(i) || isObjection(i)) && i.evidence?.conversation_ids?.slice(0, 5).map((id, n) => (
         <Button key={id} variant="outline" size="sm" className="min-h-12" onClick={() => navigate(`/admin/hub-wa-conversations?view=whatsapp-live&conversation=${id}`)}>Verifică discuția {n + 1}</Button>
       ))}
