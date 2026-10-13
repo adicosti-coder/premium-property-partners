@@ -24,6 +24,9 @@ import {
   normalizeRoPhone,
   smsLink,
   templatesForKind,
+  detectListingTransaction,
+  defaultFirstTemplateKey,
+  saleMessageViolations,
   whatsappLink,
   type OutreachContext,
 } from "@/lib/ownerOutreachTemplates";
@@ -48,6 +51,7 @@ interface Prospect {
   prospect_type: string | null;
   contact_email: string | null;
   created_at: string | null;
+  category: string | null;
 }
 
 interface Draft {
@@ -56,6 +60,8 @@ interface Draft {
   duration: string;
   message: string;
   dirty: boolean;
+  /** Administratorul a ales manual șablonul. */
+  manualTemplate?: boolean;
 }
 
 const FIRST_TEMPLATES = templatesForKind("first");
@@ -89,7 +95,7 @@ export default function OwnerContactPanel() {
       const { data: rows, error } = await supabase
         .from("prospect_listings")
         .select(
-          "id, title, description, zone, rooms, price, currency, contact_name, contact_phone, phone_normalized, contact_email, prospect_type, source_platform, lead_score, lifecycle_status, source_url, created_at",
+          "id, title, description, zone, rooms, price, currency, contact_name, contact_phone, phone_normalized, contact_email, prospect_type, source_platform, lead_score, lifecycle_status, source_url, category, created_at",
         )
         .eq("is_active", true)
         .eq("do_not_call", false)
@@ -137,7 +143,7 @@ export default function OwnerContactPanel() {
   const draftOf = (p: Prospect): Draft => {
     const existing = drafts[p.id];
     if (existing) return existing;
-    const base: Draft = { templateKey: FIRST_TEMPLATES[0].key, offerPrice: "", duration: "12", message: "", dirty: false };
+    const base: Draft = { templateKey: defaultFirstTemplateKey(detectListingTransaction(p)), offerPrice: "", duration: "12", message: "", dirty: false };
     base.message = getTemplate(base.templateKey).build(contextOf(p, base));
     return base;
   };
@@ -155,6 +161,15 @@ export default function OwnerContactPanel() {
     });
   };
 
+  /** Anunț de vânzare: fără chirie/administrare pe luni, cu excepția unui șablon ales manual. */
+  const saleGuardOk = (p: Prospect, draft: Draft) => {
+    if (draft.manualTemplate || detectListingTransaction(p) !== "vanzare") return true;
+    const issues = saleMessageViolations(draft.message);
+    if (!issues.length) return true;
+    toast.error(`Anunț de vânzare: mesajul menționează ${issues.join(", ")}. Folosește șablonul „Primul mesaj — vânzare” sau alege manual alt șablon.`);
+    return false;
+  };
+
   const logAndOpen = async (p: Prospect, channel: "whatsapp" | "sms") => {
     const phone = normalizeRoPhone(p.phone_normalized || p.contact_phone);
     if (!phone) {
@@ -162,6 +177,7 @@ export default function OwnerContactPanel() {
       return;
     }
     const draft = draftOf(p);
+    if (!saleGuardOk(p, draft)) return;
     const message = draft.message.trim();
     if (!message) {
       toast.error("Mesajul este gol.");
@@ -217,6 +233,7 @@ export default function OwnerContactPanel() {
       return;
     }
     const draft = draftOf(p);
+    if (!saleGuardOk(p, draft)) return;
     setSending(p.id);
     try {
       const { data, error } = await supabase.functions.invoke("owner-outreach-email", {
@@ -306,7 +323,7 @@ export default function OwnerContactPanel() {
                   <div className="grid gap-2 sm:grid-cols-3">
                     <div className="space-y-1">
                       <Label className="text-xs" htmlFor={`tpl-${p.id}`}>Șablon</Label>
-                      <Select value={draft.templateKey} onValueChange={(v) => updateDraft(p, { templateKey: v, dirty: false })}>
+                      <Select value={draft.templateKey} onValueChange={(v) => updateDraft(p, { templateKey: v, dirty: false, manualTemplate: true })}>
                         <SelectTrigger id={`tpl-${p.id}`} className="h-10">
                           <SelectValue />
                         </SelectTrigger>
