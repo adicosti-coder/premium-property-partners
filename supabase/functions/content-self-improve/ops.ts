@@ -85,7 +85,7 @@ export async function analyzeOps(db: any, aiKey?: string | null): Promise<number
       db.from("wa_outbound_queue").select("id", { count: "exact", head: true }).eq("status", "failed").gte("created_at", since7),
     ]);
     const selFail = (sel ?? []).filter((l: any) => !l.success).length;
-    const { data: calls } = await db.from("voice_call_logs").select("status").gte("created_at", since7).limit(2000).then((x: any) => x, () => ({ data: null }));
+    const { data: calls } = await db.from("voice_call_sessions").select("status").gte("created_at", since7).limit(2000);
     const callFail = (calls ?? []).filter((c: any) => /fail|error/i.test(String(c.status ?? ""))).length;
     const retriable = (dlq ?? 0) + (crm ?? 0);
     if (retriable > 0 || selFail >= 3 || (waFail ?? 0) >= 3 || callFail >= 3) {
