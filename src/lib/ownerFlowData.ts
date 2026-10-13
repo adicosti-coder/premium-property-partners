@@ -22,7 +22,7 @@ async function activeCandidates() {
   }
   return rows.filter((r) => {
     const c = candidateOf(r);
-    return isActiveOwnerListing(c) && isResidentialRealEstate(c) && isIndividualOwnerListing(c) && ownerVerification(c) !== "agency";
+    return isActiveOwnerListing(c) && isResidentialRealEstate(c) && isIndividualOwnerListing(c) && ownerVerification(c) !== "agency" && !hasImplausiblePrice(c);
   });
 }
 
