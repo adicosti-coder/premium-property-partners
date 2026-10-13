@@ -9,17 +9,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, RefreshCw, CheckCircle2, AlertTriangle, ExternalLink } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
+import { useQueryClient } from "@tanstack/react-query";
+import { fetchOwnerReview, OWNER_FLOW_QUERY_KEY } from "@/lib/ownerFlowData";
+import { detectListingTransaction, normalizeRoPhone } from "@/lib/ownerOutreachTemplates";
 import { MarkAsAgencyButton } from "@/components/admin/MarkAsAgencyButton";
-
-/** Normalizare telefon RO introdus manual → format internațional +40… */
-function normalizeRoPhone(raw: string): string | null {
-  let digits = raw.replace(/\D/g, "");
-  if (digits.startsWith("0040")) digits = digits.slice(2);
-  if (/^40[237]\d{8}$/.test(digits)) return `+${digits}`;
-  if (/^0[237]\d{8}$/.test(digits)) return `+4${digits}`;
-  if (/^[237]\d{8}$/.test(digits)) return `+40${digits}`;
-  return null;
-}
 
 interface QualityAnalysis {
   quality_score?: number;
@@ -55,11 +48,15 @@ interface TriageRow {
   quality_analyzed_at: string | null;
   scraped_at: string | null;
   created_at: string;
+  description: string | null;
+  category: string | null;
+  currency: string | null;
+  ai_score_breakdown: unknown;
 }
 
-const AMBIGUOUS_TYPES = ["generic_search", "sale", "rent", "vanzare", "necunoscut"];
-
 export default function ProspectTriageQueue() {
+  const queryClient = useQueryClient();
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [rows, setRows] = useState<TriageRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [actingId, setActingId] = useState<string | null>(null);
@@ -90,6 +87,7 @@ export default function ProspectTriageQueue() {
         ? { ...r, contact_phone: normalized, phone_normalized: normalized }
         : r)));
       setManualPhone(prev => ({ ...prev, [row.id]: "" }));
+      queryClient.invalidateQueries({ queryKey: OWNER_FLOW_QUERY_KEY });
       toast({ title: "Telefon salvat", description: `${normalized} — anunțul poate fi contactat.` });
     } catch (e: any) {
       toast({ title: "Eroare salvare telefon", description: e.message ?? String(e), variant: "destructive" });
@@ -101,17 +99,11 @@ export default function ProspectTriageQueue() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      // Ambiguous = not yet confirmed as owner OR explicitly flagged for review
-      const { data, error } = await supabase
-        .from("prospect_listings")
-        .select("id,title,source_url,source_platform,zone,location,price,contact_phone,phone_normalized,prospect_type,lifecycle_status,rejection_reason,score,lead_score,images,quality_score,quality_analysis,quality_analyzed_at,scraped_at,created_at")
-        .eq("is_active", true)
-        .or(`prospect_type.in.(${AMBIGUOUS_TYPES.join(",")}),prospect_type.is.null`)
-        .order("created_at", { ascending: false })
-        .limit(100);
-      if (error) throw error;
-      setRows((data || []) as unknown as TriageRow[]);
+      const data = await fetchOwnerReview();
+      setRows(data as unknown as TriageRow[]);
+      setLoadError(null);
     } catch (e: any) {
+      setLoadError(e.message ?? String(e));
       toast({ title: "Eroare", description: e.message ?? String(e), variant: "destructive" });
     } finally {
       setLoading(false);
@@ -161,13 +153,15 @@ export default function ProspectTriageQueue() {
         .from("prospect_listings")
         .update({
           prospect_type: "proprietar",
+          ai_score_breakdown: { ...(row.ai_score_breakdown && typeof row.ai_score_breakdown === "object" ? row.ai_score_breakdown : {}), explicit_owner_signal: true },
           lifecycle_status: "new",
           rejection_reason: null,
           is_active: true,
         })
         .eq("id", row.id);
       if (error) throw error;
-      toast({ title: "Aprobat pentru Andrei", description: row.title?.slice(0, 60) ?? row.id });
+      queryClient.invalidateQueries({ queryKey: OWNER_FLOW_QUERY_KEY });
+      toast({ title: "Proprietar confirmat", description: row.title?.slice(0, 60) ?? row.id });
       setRows(prev => prev.filter(r => r.id !== row.id));
     } catch (e: any) {
       toast({ title: "Eroare aprobare", description: e.message, variant: "destructive" });
@@ -177,31 +171,31 @@ export default function ProspectTriageQueue() {
   };
 
   return (
-    <Card className="border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-transparent">
+    <section className="space-y-3">
       <CardHeader className="flex flex-row items-start justify-between gap-3">
         <div>
           <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-amber-600" />
-            Carantină prospecți ambigui
+            <AlertTriangle className="h-5 w-5 text-primary" />
+            Proprietari de verificat
             <Badge variant="outline" className="ml-1">{rows.length}</Badge>
           </CardTitle>
           <CardDescription>
-            Lead-uri ne-clasificate ca proprietar — nu au trecut filtrul <code className="text-xs">explicitOwnerSignal</code> sau așteaptă revizuire. Aprobă-i pentru a-i face vizibili pentru Andrei.
+            Confirmare proprietar privat
           </CardDescription>
         </div>
-        <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+        <Button variant="outline" size="sm" onClick={load} disabled={loading} className="min-h-12 min-w-12" aria-label="Reîncarcă proprietarii de verificat">
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
         </Button>
       </CardHeader>
       <CardContent>
         {loading && rows.length === 0 ? (
           <div className="text-sm text-muted-foreground py-8 text-center">Se încarcă…</div>
-        ) : rows.length === 0 ? (
+        ) : loadError ? (<div role="alert" className="text-sm text-destructive py-6">Lista nu a putut fi încărcată: {loadError}</div>) : rows.length === 0 ? (
           <div className="text-sm text-muted-foreground py-8 text-center">
-            ✨ Coadă goală — niciun prospect ambiguu de revizuit.
+            Niciun proprietar în așteptarea verificării.
           </div>
         ) : (
-          <ScrollArea className="h-[480px] pr-3">
+          <div>
             <div className="space-y-2">
               {rows.map(row => (
                 <div key={row.id} className="border rounded-lg p-3 bg-card hover:bg-accent/30 transition-colors">
@@ -217,7 +211,7 @@ export default function ProspectTriageQueue() {
                         )}
                         {row.zone && <span className="text-xs text-muted-foreground">📍 {row.zone}</span>}
                         <GoogleMapButton query={row.location || row.zone} title={row.title || "Locație prospect"} />
-                        {row.price && <span className="text-xs font-medium">€{row.price.toLocaleString()}</span>}
+                        {row.price != null && <span className="text-xs font-medium">{row.price.toLocaleString("ro-RO")} {row.currency === "RON" ? "lei" : "€"}{detectListingTransaction(row) === "inchiriere" ? " / lună" : ""}</span>}
                       </div>
                       <div className="text-sm font-medium line-clamp-2">{row.title || "(fără titlu)"}</div>
                       {Array.isArray(row.images) && row.images.length > 0 && (
@@ -292,12 +286,12 @@ export default function ProspectTriageQueue() {
                               value={manualPhone[row.id] || ""}
                               onChange={e => setManualPhone(prev => ({ ...prev, [row.id]: e.target.value }))}
                               onKeyDown={e => { if (e.key === "Enter") void saveManualPhone(row); }}
-                              className="h-10"
+                              className="min-h-12"
                             />
                             <Button
                               size="sm"
                               variant="secondary"
-                              className="h-10"
+                              className="min-h-12"
                               onClick={() => saveManualPhone(row)}
                               disabled={savingPhoneId === row.id}
                               aria-label="Salvează telefonul adăugat manual"
@@ -313,12 +307,12 @@ export default function ProspectTriageQueue() {
                     <div className="flex sm:flex-col gap-2 shrink-0">
                       <Button
                         size="sm"
-                        className="bg-green-600 hover:bg-green-700 text-white"
+                        className="min-h-12"
                         onClick={() => approve(row)}
-                        disabled={actingId === row.id}
+                        disabled={actingId !== null}
                       >
                         {actingId === row.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3 mr-1" />}
-                        Aprobă pentru Andrei
+                        Confirmă proprietarul
                       </Button>
                       <Button
                         size="sm"
@@ -340,16 +334,16 @@ export default function ProspectTriageQueue() {
                         phone={row.phone_normalized}
                         url={row.source_url}
                         contextLabel={`Triage · ${row.title?.slice(0, 60) || row.id}`}
-                        onMarked={() => setRows((prev) => prev.filter((r) => r.id !== row.id))}
+                        onMarked={() => { setRows((prev) => prev.filter((r) => r.id !== row.id)); queryClient.invalidateQueries({ queryKey: OWNER_FLOW_QUERY_KEY }); }}
                       />
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-          </ScrollArea>
+          </div>
         )}
       </CardContent>
-    </Card>
+    </section>
   );
 }
