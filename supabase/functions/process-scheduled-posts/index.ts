@@ -5,6 +5,9 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { formatSocialCaption } from "../_shared/socialCaption.ts";
+import { prepareInstagramImages } from "../_shared/instagramImages.ts";
+import { resolveSocialFeaturedImage } from "../_shared/socialImages.ts";
+import { usableSocialImage } from "../_shared/socialImageSelection.ts";
 
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -17,49 +20,43 @@ export const isMakeWebhook = (u: string) => {
 
 async function resolveImages(sb: any, post: any): Promise<string[]> {
   const list: string[] = [];
-  if (post.image_url) list.push(post.image_url);
+  const featured = await resolveSocialFeaturedImage(sb, { title: post.title, type: post.type, sourceUrl: post.source_url, currentImage: post.image_url });
+  if (featured) list.push(featured);
   for (const u of post.image_urls ?? []) list.push(u);
   if (post.property_id) {
     const { data } = await sb.rpc("social_property_image_urls", { _property_id: post.property_id });
     for (const u of (data as string[] | null) ?? []) list.push(u);
   }
-  return [...new Set(list.filter((u) => typeof u === "string" && /^https:\/\//.test(u)))].slice(0, 10);
+  return [...new Set(list.map(u => usableSocialImage(u, post.title, post.type)).filter((u): u is string => !!u))].slice(0, 10);
 }
 
+async function payload(sb: any, post: any, platform: string, trigger: string) {
+  const originals = await resolveImages(sb, post);
+  if (platform === "instagram" && !originals.length) throw new Error("Nu există o imagine relevantă pentru Instagram — adaugă o fotografie în ciornă.");
+  const imageUrls = platform === "instagram" ? await prepareInstagramImages(originals) : originals;
+  return {
+    title: post.title,
+    caption: formatSocialCaption(post.caption || "", { platform: platform === "instagram" ? "instagram" : "facebook", type: post.type === "blog" ? "blog" : "property", sourceUrl: post.source_url }),
+    imageUrl: imageUrls[0] ?? null, imageUrls, isCarousel: imageUrls.length > 1,
+    sourceUrl: post.source_url, platform, type: post.type, timestamp: new Date().toISOString(), triggered_from: trigger,
+  };
+}
 async function send(sb: any, url: string, post: any, platform: string, trigger: string) {
-  const imageUrls = await resolveImages(sb, post);
+  let imageCount = 0;
   let status: number | null = null, text = "", err: string | null = null;
   try {
+    const data = await payload(sb, post, platform, trigger);
+    imageCount = data.imageUrls.length;
     const r = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      signal: AbortSignal.timeout(15000),
-      body: JSON.stringify({
-        title: post.title,
-        caption: formatSocialCaption(post.caption || "", {
-          platform: platform === "instagram" ? "instagram" : "facebook",
-          type: post.type === "blog" ? "blog" : "property",
-          sourceUrl: post.source_url,
-        }),
-        imageUrl: imageUrls[0] ?? post.image_url ?? null,
-        imageUrls,
-        isCarousel: imageUrls.length > 1,
-        sourceUrl: post.source_url,
-        platform,
-        type: post.type,
-        timestamp: new Date().toISOString(),
-        triggered_from: trigger,
-      }),
+      method: "POST", headers: { "Content-Type": "application/json" }, signal: AbortSignal.timeout(15000), body: JSON.stringify(data),
     });
     status = r.status;
     text = (await r.text()).slice(0, 1000);
     if (!r.ok) err = `Make.com ${r.status}: ${text.slice(0, 200)}`;
-  } catch (e) {
-    err = `Make.com indisponibil: ${e instanceof Error ? e.message : String(e)}`;
-  }
+  } catch (e) { err = e instanceof Error ? e.message : String(e); }
   await sb.from("social_engine_logs").insert({
     post_id: post.id, post_title: post.title, platform, trigger, success: !err,
-    http_status: status, response_body: text || null, error: err, image_count: imageUrls.length,
+    http_status: status, response_body: text || null, error: err, image_count: imageCount,
   });
   if (err) throw new Error(err);
 }
@@ -71,6 +68,17 @@ Deno.serve(async (req) => {
 
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const body = await req.json().catch(() => ({}));
+  if (body.post_id !== undefined && (typeof body.post_id !== "string" || !UUID.test(body.post_id))) return json({ error: "Postare invalidă" }, 400);
+  if (body.dry_run !== undefined && typeof body.dry_run !== "boolean") return json({ error: "dry_run invalid" }, 400);
+  if (body.current_image !== undefined && body.current_image !== null && (typeof body.current_image !== "string" || body.current_image.length > 2048)) return json({ error: "Imagine invalidă" }, 400);
+  if (body.dry_run === true) {
+    if (!body.post_id) return json({ error: "Postarea este obligatorie" }, 400);
+    const { data: post } = await sb.from("social_posts").select("*").eq("id", body.post_id).maybeSingle();
+    if (!post) return json({ error: "Postare negăsită" }, 404);
+    if (body.current_image !== undefined) post.image_url = body.current_image;
+    try { return json({ success: true, payload: await payload(sb, post, "instagram", "admin_preview") }); }
+    catch (e) { return json({ error: e instanceof Error ? e.message : "Imagine indisponibilă" }, 422); }
+  }
   const { data: setting } = await sb.from("app_settings").select("value").eq("key", "webhook_url").maybeSingle();
   const webhook = setting?.value?.trim() ?? "";
   if (!webhook) return json({ success: false, error: "Webhook Make.com neconfigurat" }, body?.post_id ? 400 : 200);

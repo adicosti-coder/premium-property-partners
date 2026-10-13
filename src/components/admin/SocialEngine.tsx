@@ -861,12 +861,15 @@ function PostEditModal({
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [preparingImage, setPreparingImage] = useState(false);
+  const [imageError, setImageError] = useState("");
 
   useEffect(() => {
     if (open) {
       setTitle(post.title);
       setCaption(post.caption);
       setImageUrl(post.image_url || "");
+      setImageError("");
     }
   }, [open, post]);
 
@@ -914,6 +917,22 @@ function PostEditModal({
 
   const captionOverLimit = caption.length > INSTAGRAM_CAPTION_LIMIT;
 
+  const prepareImage = async () => {
+    setPreparingImage(true);
+    setImageError("");
+    try {
+      const { data, error } = await supabase.functions.invoke("process-scheduled-posts", { body: { post_id: post.id, dry_run: true, current_image: imageUrl || null } });
+      if (error) {
+        const response = (error as { context?: Response }).context;
+        const details = response ? await response.json().catch(() => null) : null;
+        throw new Error(details?.error || error.message);
+      }
+      if (!data?.payload?.imageUrl) throw new Error(data?.error || "Imagine indisponibilă");
+      setImageUrl(data.payload.imageUrl);
+    } catch (e) { setImageError(e instanceof Error ? e.message : "Pregătirea imaginii a eșuat"); }
+    finally { setPreparingImage(false); }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
@@ -929,8 +948,8 @@ function PostEditModal({
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Imagine</Label>
             {imageUrl ? (
-              <div className="relative rounded-md overflow-hidden border border-border aspect-video bg-muted group">
-                <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
+              <div className="relative rounded-md overflow-hidden border border-border aspect-square bg-muted group">
+                <img src={imageUrl} alt="Imaginea postării" className="w-full h-full object-contain" />
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                   <label className="cursor-pointer">
                     <input type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
@@ -973,6 +992,11 @@ function PostEditModal({
               <div className="flex-1 h-px bg-border" />
             </div>
             <Input placeholder="https://..." value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="text-xs" />
+            <Button variant="outline" className="w-full min-h-12" onClick={prepareImage} disabled={preparingImage || uploading}>
+              {preparingImage ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ImageIcon className="h-4 w-4 mr-2" />}
+              {preparingImage ? "Se pregătește imaginea…" : "Asociază imagine pentru Instagram"}
+            </Button>
+            {imageError && <p role="alert" className="text-xs text-destructive">{imageError}</p>}
           </div>
 
           <div className="space-y-1.5">
@@ -990,7 +1014,7 @@ function PostEditModal({
               <p className="text-[10px] text-destructive">⚠ Descrierea depășește limita Instagram de {INSTAGRAM_CAPTION_LIMIT} caractere</p>
             )}
           </div>
-          <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleSave} disabled={saving || uploading || !title.trim()}>
+          <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleSave} disabled={saving || uploading || preparingImage || !title.trim()}>
             {saving ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Pencil className="h-4 w-4 mr-1.5" />}
             {saving ? "Se salvează…" : "Salvează Modificările"}
           </Button>

@@ -1,5 +1,11 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Imagini Social Engine
+- [x] Extragere fotografie principală originală, respingere fallback generic
+- [x] Asociere automată cu imagini editoriale existente pentru taxe, finanțe și acces digital; fără AI/Unsplash recurent
+- [x] Format Instagram 1:1/4:5 înainte de webhook; 17 teste și dry-run autentificat pe ciornă reală, JPEG 1080×1080, fără publicare
+- [ ] Verificarea butonului nou din dialog — blocată de verificarea suplimentară Admin prin cod e-mail
+
 ## Descrieri Social Engine pe platforme
 - [x] Instagram fără URL, cu CTA de profil, titlu cu emoji, paragrafe și hashtag-uri finale
 - [x] Facebook cu link păstrat; regulă comună la generare, copiere și trimitere
