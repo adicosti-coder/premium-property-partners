@@ -50,7 +50,57 @@ const listingRef = (ctx: OutreachContext) => {
   return ctx.platform ? `${base} publicat pe ${ctx.platform}` : base;
 };
 
+export type ListingTransaction = "vanzare" | "inchiriere" | "necunoscut";
+
+/** Tipul tranzacției din URL, categorie, titlu și descriere (în această ordine). */
+export function detectListingTransaction(l: {
+  source_url?: string | null; category?: string | null; title?: string | null; description?: string | null;
+}): ListingTransaction {
+  const fromText = (s?: string | null): ListingTransaction => {
+    const t = (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const sale = /vanzare|\bvand\b|\bvinde\b|for-sale/.test(t);
+    const rent = /inchiriere|inchiriez|\bchirie\b|de-inchiriat|for-rent/.test(t);
+    if (sale && !rent) return "vanzare";
+    if (rent && !sale) return "inchiriere";
+    return "necunoscut";
+  };
+  for (const s of [l.source_url, l.category, l.title, l.description]) {
+    const r = fromText(s);
+    if (r !== "necunoscut") return r;
+  }
+  return "necunoscut";
+}
+
+/** Șablonul implicit de prim mesaj după tipul anunțului. */
+export const defaultFirstTemplateKey = (tx: ListingTransaction) =>
+  tx === "vanzare" ? "first_sale" : "first_management";
+
+/** Ce nu are voie să apară într-un mesaj automat pentru un anunț de vânzare. */
+export function saleMessageViolations(message: string): string[] {
+  const t = message.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const issues: string[] = [];
+  if (/\b\d+\s*luni\b/.test(t)) issues.push("contract pe luni");
+  if (/administrare/.test(t)) issues.push("administrare");
+  if (/inchiri|chiri/.test(t)) issues.push("închiriere");
+  return issues;
+}
+
 export const OWNER_OUTREACH_TEMPLATES: OutreachTemplate[] = [
+  {
+    key: "first_sale",
+    label: "Primul mesaj — vânzare",
+    hint: "Reprezentare la vânzare și cumpărători/investitori verificați; fără chirie sau administrare.",
+    kind: "first",
+    build: (ctx) =>
+      [
+        greeting(ctx),
+        "",
+        `Sunt Andrei, de la RealTrust Timișoara. Am văzut ${listingRef(ctx)}, scos la vânzare.`,
+        "Vă putem ajuta să îl vindeți mai repede, la un preț corect: evaluare pe piața din Timișoara, cumpărători verificați înainte de vizionare și asistență până la semnare. Lucrăm și cu investitori care caută apartamente în zonă.",
+        "",
+        "Vă trimit o evaluare gratuită?",
+      ].join("\n"),
+  },
   {
     key: "first_management",
     label: "Primul mesaj — administrare",
