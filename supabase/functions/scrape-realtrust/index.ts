@@ -18,7 +18,16 @@ Deno.serve(async (req) => {
   if (!auth.ok) return auth.response!;
 
   const apiKey = Deno.env.get("FIRECRAWL_API_KEY");
-  if (!apiKey) return json({ success: false, error: "Firecrawl nu este configurat" }, 500);
+  if (!apiKey) return json({ success: false, error: "Cheia Firecrawl lipsește — reconectează Firecrawl din Connectors." }, 500);
+  const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+  const viaGateway = apiKey.startsWith("lovc_");
+  if (viaGateway && !lovableKey) return json({ success: false, error: "LOVABLE_API_KEY lipsește pentru Firecrawl." }, 500);
+  const FC = viaGateway ? "https://connector-gateway.lovable.dev/firecrawl/v2" : "https://api.firecrawl.dev/v2";
+  const fcHeaders: Record<string, string> = viaGateway
+    ? { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": apiKey, "Content-Type": "application/json" }
+    : { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
+  const fcFetch = (path: string, payload: unknown, ms: number) =>
+    fetch(`${FC}/${path}`, { method: "POST", headers: fcHeaders, body: JSON.stringify(payload), signal: AbortSignal.timeout(ms) });
 
   try {
     const body = await req.json().catch(() => ({}));
@@ -26,15 +35,11 @@ Deno.serve(async (req) => {
       ? body.keywords.filter((k: unknown) => typeof k === "string").map((k: string) => k.toLowerCase().trim()).filter(Boolean).slice(0, 20)
       : [];
 
-    const mapResp = await fetch("https://api.firecrawl.dev/v2/map", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ url: SITE, limit: 1000, includeSubdomains: false }),
-    });
+    const mapResp = await fcFetch("map", { url: SITE, limit: 1000, includeSubdomains: false }, 30000);
     const mapData = await mapResp.json().catch(() => ({}));
     if (!mapResp.ok) {
       console.error("firecrawl map", mapResp.status, mapData);
-      return json({ success: false, error: `Firecrawl ${mapResp.status}: ${mapData?.error ?? "map eșuat"}` }, 502);
+      return json({ success: false, error: `Firecrawl ${mapResp.status}: ${mapData?.error ?? "listarea paginilor a eșuat"}` }, 502);
     }
     const rawLinks: unknown[] = mapData.links ?? mapData.data?.links ?? [];
     const links = [...new Set(rawLinks.map((l: any) => canon(typeof l === "string" ? l : l?.url ?? "")).filter(Boolean))];
@@ -42,26 +47,27 @@ Deno.serve(async (req) => {
     const candidates = links.filter((u) => (isProperty(u) || isBlog(u)) && kw(u));
 
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const { data: existing } = await sb.from("social_posts").select("source_url");
+    const { data: existing, error: exErr } = await sb.from("social_posts").select("source_url");
+    if (exErr) return json({ success: false, error: `Citirea postărilor existente a eșuat: ${exErr.message}` }, 500);
     const known = new Set((existing ?? []).map((r: any) => canon(r.source_url)));
     const fresh = candidates.filter((u) => !known.has(u)).slice(0, 10);
 
     const rows: Array<Record<string, unknown>> = [];
-    for (const url of fresh) {
+    let failed = 0;
+    await Promise.all(fresh.map(async (url) => {
       try {
-        const r = await fetch("https://api.firecrawl.dev/v2/scrape", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true }),
-        });
+        const r = await fcFetch("scrape", { url, formats: ["markdown"], onlyMainContent: true }, 40000);
         const d = await r.json().catch(() => ({}));
-        if (!r.ok) { console.error("scrape", url, r.status); continue; }
+        if (!r.ok) { failed++; console.error("scrape", url, r.status, JSON.stringify(d).slice(0, 300)); return; }
         const m = d.data?.metadata ?? d.metadata ?? {};
         const title = String(m.ogTitle || m.title || url.split("/").pop()?.replace(/-/g, " ") || "Fără titlu")
           .replace(/\s*[|–-]\s*RealTrust.*$/i, "").slice(0, 200);
         const img = Array.isArray(m.ogImage) ? m.ogImage[0] : m.ogImage || m.image || "";
         rows.push({ type: isProperty(url) ? "property" : "blog", title, source_url: url, image_url: String(img || ""), caption: "", status: "draft", posted_to: [] });
-      } catch (e) { console.error("scrape err", url, e); }
+      } catch (e) { failed++; console.error("scrape err", url, e); }
+    }));
+    if (fresh.length > 0 && rows.length === 0) {
+      return json({ success: false, error: `Am găsit ${fresh.length} pagini noi, dar extragerea lor a eșuat (Firecrawl). Reîncearcă peste câteva minute.` }, 502);
     }
 
     let inserted = 0;
@@ -70,7 +76,7 @@ Deno.serve(async (req) => {
       if (error) return json({ success: false, error: error.message }, 500);
       inserted = data?.length ?? 0;
     }
-    return json({ success: true, discovered: candidates.length, duplicates: candidates.length - fresh.length, inserted });
+    return json({ success: true, discovered: candidates.length, duplicates: candidates.length - fresh.length, inserted, failed });
   } catch (e) {
     console.error("scrape-realtrust", e);
     return json({ success: false, error: e instanceof Error ? e.message : "Eroare necunoscută" }, 500);
