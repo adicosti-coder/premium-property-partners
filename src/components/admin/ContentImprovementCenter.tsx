@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 type Item = {
   id: string; kind: string; title: string; rationale: string | null; confidence: number | null;
   current_value: Record<string, unknown> | null; proposed_value: Record<string, unknown> | null;
-  evidence: { text?: string } | null; status: string; outcome: Record<string, unknown> | null;
+  evidence: { text?: string; conversation_ids?: string[] } | null; status: string; outcome: Record<string, unknown> | null;
   error: string | null; created_at: string; target_id?: string | null; decided_at: string | null;
 };
 
@@ -27,8 +27,9 @@ const MODULE: Record<string, string> = {
   integration_retry: "ops", lead_archive: "ops", cta_ab: "cro", lead_followup: "outreach", listing_refresh: "cro",
   wa_message: "outreach", wa_hours: "outreach", prospect_source: "outreach", andrei_rule: "outreach",
 };
-const MODULES: Array<[string, string]> = [["all", "Toate"], ["blog", "Blog & SEO"], ["social", "Social"], ["ops", "Integrări"], ["cro", "Conversii"], ["outreach", "Prospectare"]];
-const HIDDEN = new Set(["measured_at", "lead_ids", "row_id", "previous_config", "archived_ids", "social_post_id", "previous_followups"]);
+const isWhatsapp = (i: Item) => i.proposed_value?.scope === "whatsapp";
+const MODULES: Array<[string, string]> = [["all", "Toate"], ["whatsapp", "Calitate WhatsApp"], ["blog", "Blog & SEO"], ["social", "Social"], ["ops", "Integrări"], ["cro", "Conversii"], ["outreach", "Prospectare"]];
+const HIDDEN = new Set(["measured_at", "lead_ids", "row_id", "previous_config", "archived_ids", "social_post_id", "previous_followups", "scope", "code", "previous_lessons", "applied_lessons"]);
 const LABEL: Record<string, string> = {
   meta_title: "Titlu Google", meta_description: "Descriere Google", title: "Titlu", tone: "Ton",
   hashtags: "Hashtag-uri", caption: "Descriere", topic: "Subiect", zone: "Zonă", reason: "Motiv",
@@ -42,6 +43,7 @@ const LABEL: Record<string, string> = {
   wa_failed_7d: "WhatsApp eșuate (7 zile)", calls_failed_7d: "Apeluri eșuate (7 zile)", retry_make: "Retrimite Make.com", retry_crm: "Retrimite CRM",
   field: "Buton", text: "Text buton", clicks_before: "Click-uri 14 zile înainte", clicks_after: "Click-uri 14 zile după", home_clicks_14d: "Click-uri 14 zile",
   rolled_back_at: "Anulat la", crm_requeued: "Lead-uri repuse în CRM", make: "Make.com",
+  conversations_14d: "Conversații inspectate", signals_before: "Semnale înainte", signals_after: "Semnale după", conversations_after: "Conversații inspectate după", comparison: "Limitele comparației",
   active_rules: "Reguli active acum", score_before: "Scor apeluri înainte", score_after: "Scor apeluri după", calls_after: "Apeluri analizate după",
 };
 const FIELD: Record<string, string> = { hero_cta_primary_ro: "Butonul principal (pagina de start)", hero_cta_secondary_ro: "Butonul secundar (pagina de start)" };
@@ -144,14 +146,14 @@ export default function ContentImprovementCenter() {
   };
 
   const [mod, setMod] = useState("all");
-  const inMod = (i: Item) => mod === "all" || MODULE[i.kind] === mod;
+  const inMod = (i: Item) => mod === "all" || (isWhatsapp(i) ? mod === "whatsapp" : MODULE[i.kind] === mod);
   const pending = items.filter((i) => i.status === "pending" && inMod(i));
   const history = items.filter((i) => i.status !== "pending" && inMod(i));
 
   const Card = ({ i }: { i: Item }) => (
     <div className="rounded-lg border border-border bg-card p-4 space-y-3">
       <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="secondary">{KIND[i.kind] ?? i.kind}</Badge>
+        <Badge variant="secondary">{isWhatsapp(i) ? "Calitate conversații WhatsApp" : KIND[i.kind] ?? i.kind}</Badge>
         {i.confidence != null && <span className="text-xs text-muted-foreground">Încredere {Math.round(i.confidence * 100)}%</span>}
         {i.status !== "pending" && <Badge variant={i.status === "applied" ? "default" : i.status === "failed" ? "destructive" : "outline"}>
           {i.status === "applied" ? "Aplicat" : i.status === "failed" ? "Eșuat" : i.status === "rolled_back" ? "Anulat" : "Respins"}</Badge>}
@@ -160,6 +162,9 @@ export default function ContentImprovementCenter() {
       <p className="font-heading font-semibold">{i.title}</p>
       {i.rationale && <p className="text-sm text-muted-foreground">{i.rationale}</p>}
       {i.evidence?.text && <p className="text-xs text-muted-foreground">Date: {i.evidence.text}</p>}
+      {isWhatsapp(i) && i.evidence?.conversation_ids?.slice(0, 5).map((id, n) => (
+        <Button key={id} variant="outline" size="sm" className="min-h-12" onClick={() => navigate(`/admin/hub-wa-conversations?view=whatsapp-live&conversation=${id}`)}>Verifică discuția {n + 1}</Button>
+      ))}
       <div className="grid gap-3 md:grid-cols-2">
         {i.current_value && <div className="rounded bg-muted p-3"><p className="text-xs font-semibold mb-1">Acum</p><Values v={i.current_value} /></div>}
         <div className={`rounded-lg border-2 p-3 space-y-2 ${i.status === "pending" ? "border-primary/40 bg-primary/5" : "border-border bg-muted"}`}>
@@ -170,7 +175,7 @@ export default function ContentImprovementCenter() {
             const src = String((i.proposed_value as any)?.source ?? ""); const zone = String((i.proposed_value as any)?.zone ?? "");
             const a = i.kind === "prospect_source"
               ? { ...base, label: `Setează prioritate maximă la scraping pe ${src}`, desc: `Activează ${src} în Prospectare cu numărul maxim de rezultate pe scanare (20)${zone ? ` și adaugă zona ${zone} în filtrul de zone` : ""}.` }
-              : base;
+              : isWhatsapp(i) ? { ...base, label: "Aprobă regula pentru WhatsApp", desc: "Salvează regula pentru răspunsurile AI viitoare; nu trimite mesaje și nu modifică istoricul.", run: "apply" as const } : base;
             return (
               <div className="space-y-2 border-t border-border pt-2">
                 <p className="text-xs text-muted-foreground"><span className="font-semibold text-foreground">Ce face AI-ul: </span>{a.desc}</p>
@@ -188,7 +193,7 @@ export default function ContentImprovementCenter() {
       </div>
       {i.outcome && <div className="rounded border border-border p-3"><p className="text-xs font-semibold mb-1">Efect măsurat</p><Values v={i.outcome} /></div>}
       {i.error && <p className="text-xs text-destructive">{i.error}</p>}
-      {i.status === "applied" && !["integration_retry", "blog_topic", "insight", "andrei_rule", "wa_message", "wa_hours", "listing_refresh"].includes(i.kind) && (
+      {i.status === "applied" && (isWhatsapp(i) || !["integration_retry", "blog_topic", "insight", "andrei_rule", "wa_message", "wa_hours", "listing_refresh"].includes(i.kind)) && (
         <Button size="sm" variant="outline" className="min-h-12" disabled={busy === i.id} onClick={() => rollback(i.id)}>
           {busy === i.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Undo2 className="h-4 w-4" />}Anulează (revino la varianta anterioară)
         </Button>
@@ -217,7 +222,7 @@ export default function ContentImprovementCenter() {
       <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrează după modul">
         {MODULES.map(([k, l]) => (
           <Button key={k} size="sm" variant={mod === k ? "default" : "outline"} className="min-h-12" aria-pressed={mod === k} onClick={() => setMod(k)}>
-            {l} ({items.filter((i) => i.status === "pending" && (k === "all" || MODULE[i.kind] === k)).length})
+            {l} ({items.filter((i) => i.status === "pending" && (k === "all" || (isWhatsapp(i) ? k === "whatsapp" : MODULE[i.kind] === k))).length})
           </Button>
         ))}
       </div>
