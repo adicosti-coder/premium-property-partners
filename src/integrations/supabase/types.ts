@@ -3378,6 +3378,7 @@ export type Database = {
           source: string | null
           status_token: string
           touch_count: number
+          uncontacted_reminder_sent_at: string | null
           updated_at: string
           whatsapp_number: string
         }
@@ -3421,6 +3422,7 @@ export type Database = {
           source?: string | null
           status_token?: string
           touch_count?: number
+          uncontacted_reminder_sent_at?: string | null
           updated_at?: string
           whatsapp_number: string
         }
@@ -3464,6 +3466,7 @@ export type Database = {
           source?: string | null
           status_token?: string
           touch_count?: number
+          uncontacted_reminder_sent_at?: string | null
           updated_at?: string
           whatsapp_number?: string
         }
