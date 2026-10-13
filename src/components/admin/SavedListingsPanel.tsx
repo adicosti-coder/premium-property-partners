@@ -68,7 +68,7 @@ export default function SavedListingsPanel() {
       .order("last_seen_at", { ascending: false, nullsFirst: false })
       .limit(500);
     if (error) toast.error("Nu am putut încărca anunțurile salvate");
-    setRows(((data || []) as unknown as Row[]) || []);
+    setRows(((data || []) as unknown as Row[]).filter((r) => !isSearchPageUrl(r.source_url, r.title)));
     setLoading(false);
   }, []);
 
