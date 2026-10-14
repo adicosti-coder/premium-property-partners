@@ -1,6 +1,8 @@
 # Roadmap — optimizări sistem analiză și administrare
 
 ## Stories Social Engine
+- [ ] Generare automată Feed/Reels/Stories cu descrieri separate, Reel din 3–5 poze și text suprapus pe Story
+- [ ] Trimitere selectivă a variantei cu parametri specifici către Make.com
 - [ ] Opțiune Story, fotografie/video 1080×1920 și link opțional precompletat
 - [ ] Salvare și payload Make.com STORY cu link separat; verificări fără publicare reală
 
