@@ -1,0 +1,3 @@
+ALTER TABLE public.social_posts ADD COLUMN IF NOT EXISTS content_variants jsonb;
+ALTER TABLE public.social_posts ADD CONSTRAINT social_posts_content_variants_check CHECK (content_variants IS NULL OR jsonb_typeof(content_variants) = 'object');
+COMMENT ON COLUMN public.social_posts.content_variants IS 'Independent FEED, REELS, STORY captions and media, generated as drafts only. Selected media remains in the existing publishing columns.';

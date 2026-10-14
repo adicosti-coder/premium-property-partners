@@ -778,6 +778,13 @@
       "when": 1791956508742,
       "tag": "0110_social_engine_stories",
       "breakpoints": true
+    },
+    {
+      "idx": 111,
+      "version": "7",
+      "when": 1791956661365,
+      "tag": "0111_social_content_variants",
+      "breakpoints": true
     }
   ]
 }

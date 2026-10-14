@@ -9409,6 +9409,7 @@ export type Database = {
       social_posts: {
         Row: {
           caption: string
+          content_variants: Json | null
           created_at: string
           id: string
           image_url: string | null
@@ -9429,6 +9430,7 @@ export type Database = {
         }
         Insert: {
           caption?: string
+          content_variants?: Json | null
           created_at?: string
           id?: string
           image_url?: string | null
@@ -9449,6 +9451,7 @@ export type Database = {
         }
         Update: {
           caption?: string
+          content_variants?: Json | null
           created_at?: string
           id?: string
           image_url?: string | null
