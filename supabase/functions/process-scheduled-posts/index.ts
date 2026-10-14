@@ -33,8 +33,8 @@ async function resolveImages(sb: any, post: any): Promise<string[]> {
 export function mediaTypeOf(post: { media_type?: string | null }, imageCount: number): "IMAGE" | "CAROUSEL" | "REELS" | "STORY" {
   if (post.media_type === "STORY") return "STORY";
   if (post.media_type === "REELS") return "REELS";
-  if (post.media_type === "CAROUSEL") return imageCount > 1 ? "CAROUSEL" : "IMAGE";
-  if (post.media_type === "IMAGE") return "IMAGE";
+  // IMAGE is the column default for every row, so it cannot mean an explicit
+  // single-photo choice: multi-photo posts keep going out as carousels.
   return imageCount > 1 ? "CAROUSEL" : "IMAGE";
 }
 
