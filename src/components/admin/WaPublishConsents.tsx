@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { ExternalLink, MessageCircle, RefreshCw, ShieldCheck } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import OwnerConsentFunnel from "./OwnerConsentFunnel";
+import OwnerQuickReplies from "./OwnerQuickReplies";
 
 type ConsentRow = {
   id: string;
@@ -209,6 +210,7 @@ const WaPublishConsents = () => {
       </CardHeader>
       <CardContent className="space-y-6">
         <OwnerConsentFunnel />
+        <OwnerQuickReplies />
         <p className="text-sm text-muted-foreground">
           Proprietarul primește pe WhatsApp întrebarea dacă putem prelua anunțul pe realtrust.ro.
           Răspunsul „DA PUBLIC” înregistrează acordul și pornește preluarea; „RETRAG” scoate
