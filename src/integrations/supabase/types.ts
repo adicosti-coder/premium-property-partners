@@ -503,6 +503,42 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_text_cache: {
+        Row: {
+          action: string
+          cache_key: string
+          created_at: string
+          hits: number
+          id: string
+          lang: string
+          model: string | null
+          output: Json
+          prompt_version: string
+        }
+        Insert: {
+          action: string
+          cache_key: string
+          created_at?: string
+          hits?: number
+          id?: string
+          lang?: string
+          model?: string | null
+          output: Json
+          prompt_version: string
+        }
+        Update: {
+          action?: string
+          cache_key?: string
+          created_at?: string
+          hits?: number
+          id?: string
+          lang?: string
+          model?: string | null
+          output?: Json
+          prompt_version?: string
+        }
+        Relationships: []
+      }
       analyzed_listings: {
         Row: {
           calculated_score: number | null
