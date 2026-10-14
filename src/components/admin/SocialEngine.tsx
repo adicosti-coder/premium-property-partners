@@ -99,6 +99,10 @@ type SocialPost = {
 const INSTAGRAM_CAPTION_LIMIT = 2200;
 type MediaType = "IMAGE" | "CAROUSEL" | "REELS" | "STORY";
 type PostUpdates = { title?: string; caption?: string; image_url?: string | null; image_urls?: string[]; media_type?: MediaType; video_url?: string | null; story_link_url?: string | null; content_variants?: SocialVariants | null };
+const initialMedia = (p: { media_type?: string | null; image_urls?: string[] | null }): MediaType => {
+  const m = (p.media_type as MediaType) || "IMAGE";
+  return m === "IMAGE" && (p.image_urls?.length ?? 0) > 1 ? "CAROUSEL" : m;
+};
 const MEDIA_LABELS: Record<MediaType, string> = { IMAGE: "Imagine Statică", CAROUSEL: "Carusel", REELS: "Reel Video", STORY: "Instagram / Facebook Story" };
 
 export default function SocialEngine() {
@@ -900,7 +904,7 @@ function PostEditModal({
   const [dragOver, setDragOver] = useState(false);
   const [preparingImage, setPreparingImage] = useState(false);
   const [imageError, setImageError] = useState("");
-  const [mediaType, setMediaType] = useState<MediaType>((post.media_type as MediaType) || "IMAGE");
+  const [mediaType, setMediaType] = useState<MediaType>(initialMedia(post));
   const [videoUrl, setVideoUrl] = useState(post.video_url || "");
   const [renderingVideo, setRenderingVideo] = useState(false);
   const [videoError, setVideoError] = useState("");
@@ -927,7 +931,7 @@ function PostEditModal({
       setCaption(post.caption);
       setImageUrl(post.image_url || "");
       setImageError("");
-      setMediaType((post.media_type as MediaType) || "IMAGE");
+      setMediaType(initialMedia(post));
       setVideoUrl(post.video_url || "");
       setVideoError("");
       setStoryLinkUrl(post.story_link_url ?? (post.media_type === "STORY" ? "" : post.source_url));
