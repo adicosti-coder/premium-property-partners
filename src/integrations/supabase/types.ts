@@ -12107,6 +12107,7 @@ export type Database = {
           property_id: string | null
           prospect_listing_id: string | null
           published_at: string | null
+          reminder_sent_at: string | null
           requested_at: string | null
           revoked_at: string | null
           source: string
@@ -12124,6 +12125,7 @@ export type Database = {
           property_id?: string | null
           prospect_listing_id?: string | null
           published_at?: string | null
+          reminder_sent_at?: string | null
           requested_at?: string | null
           revoked_at?: string | null
           source?: string
@@ -12141,6 +12143,7 @@ export type Database = {
           property_id?: string | null
           prospect_listing_id?: string | null
           published_at?: string | null
+          reminder_sent_at?: string | null
           requested_at?: string | null
           revoked_at?: string | null
           source?: string

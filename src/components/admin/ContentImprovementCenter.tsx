@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Check, ExternalLink, FileText, Loader2, RefreshCw, Sparkles, Undo2, Wand2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import OwnerConsentFunnel from "./OwnerConsentFunnel";
 
 type Item = {
   id: string; kind: string; title: string; rationale: string | null; confidence: number | null;
@@ -252,6 +253,7 @@ export default function ContentImprovementCenter() {
           </Button>
         ))}
       </div>
+      {(mod === "outreach" || mod === "all") && <OwnerConsentFunnel />}
       <Tabs defaultValue="pending">
         <TabsList>
           <TabsTrigger value="pending">De aprobat ({pending.length})</TabsTrigger>
