@@ -30,7 +30,8 @@ async function resolveImages(sb: any, post: any): Promise<string[]> {
   return [...new Set(list.map(u => usableSocialImage(u, post.title, post.type)).filter((u): u is string => !!u))].slice(0, 10);
 }
 
-export function mediaTypeOf(post: { media_type?: string | null }, imageCount: number): "IMAGE" | "CAROUSEL" | "REELS" {
+export function mediaTypeOf(post: { media_type?: string | null }, imageCount: number): "IMAGE" | "CAROUSEL" | "REELS" | "STORY" {
+  if (post.media_type === "STORY") return "STORY";
   if (post.media_type === "REELS") return "REELS";
   if (post.media_type === "CAROUSEL") return imageCount > 1 ? "CAROUSEL" : "IMAGE";
   if (post.media_type === "IMAGE") return "IMAGE";
@@ -39,7 +40,8 @@ export function mediaTypeOf(post: { media_type?: string | null }, imageCount: nu
 
 async function payload(sb: any, post: any, platform: string, trigger: string) {
   const reels = post.media_type === "REELS";
-  let videoUrl: string | null = reels && typeof post.video_url === "string" && /^https:\/\//.test(post.video_url) ? post.video_url : null;
+  const story = post.media_type === "STORY";
+  let videoUrl: string | null = (reels || story) && typeof post.video_url === "string" && /^https:\/\//.test(post.video_url) ? post.video_url : null;
   const own = videoUrl?.match(/\/storage\/v1\/object\/sign\/social-reels\/([^?]+)/);
   if (own) {
     // Reînnoim linkul semnat la trimitere, ca Make.com să primească mereu un URL valid.
@@ -48,14 +50,19 @@ async function payload(sb: any, post: any, platform: string, trigger: string) {
   }
   if (reels && !videoUrl) throw new Error("Reel Video cere un video MP4 — generează-l din poze sau lipește un URL în ciornă.");
   const originals = await resolveImages(sb, post);
-  if (platform === "instagram" && !reels && !originals.length) throw new Error("Nu există o imagine relevantă pentru Instagram — adaugă o fotografie în ciornă.");
-  const prepared = platform === "instagram" && !reels ? await prepareInstagramImages(originals) : originals;
+  if ((platform === "instagram" || story) && !videoUrl && !originals.length) throw new Error("Nu există o imagine relevantă — adaugă o fotografie în ciornă.");
+  const prepared = (platform === "instagram" || story) && !videoUrl ? await prepareInstagramImages(story ? originals.slice(0, 1) : originals, story) : originals;
   const media_type = mediaTypeOf(post, prepared.length);
-  const imageUrls = media_type === "IMAGE" ? prepared.slice(0, 1) : media_type === "REELS" ? prepared.slice(0, 1) : prepared;
+  const imageUrls = media_type === "CAROUSEL" ? prepared : prepared.slice(0, 1);
+  const storyLink = story && typeof post.story_link_url === "string" ? post.story_link_url.trim() : "";
+  if (storyLink) {
+    const link = new URL(storyLink);
+    if (!["https:", "http:"].includes(link.protocol) || storyLink.length > 2048) throw new Error("Story Link URL invalid.");
+  }
   return {
     title: post.title,
     caption: formatSocialCaption(post.caption || "", { platform: platform === "instagram" ? "instagram" : "facebook", type: post.type === "blog" ? "blog" : "property", sourceUrl: post.source_url }),
-    media_type, video_url: videoUrl,
+    media_type, video_url: videoUrl, story_link_url: storyLink || null,
     imageUrl: imageUrls[0] ?? null, imageUrls, isCarousel: media_type === "CAROUSEL",
     sourceUrl: post.source_url, platform, type: post.type, timestamp: new Date().toISOString(), triggered_from: trigger,
   };
@@ -90,11 +97,15 @@ Deno.serve(async (req) => {
   if (body.post_id !== undefined && (typeof body.post_id !== "string" || !UUID.test(body.post_id))) return json({ error: "Postare invalidă" }, 400);
   if (body.dry_run !== undefined && typeof body.dry_run !== "boolean") return json({ error: "dry_run invalid" }, 400);
   if (body.current_image !== undefined && body.current_image !== null && (typeof body.current_image !== "string" || body.current_image.length > 2048)) return json({ error: "Imagine invalidă" }, 400);
+  if (body.current_media_type !== undefined && !["IMAGE", "CAROUSEL", "REELS", "STORY"].includes(body.current_media_type)) return json({ error: "Tip media invalid" }, 400);
+  if (body.preview_image_only !== undefined && typeof body.preview_image_only !== "boolean") return json({ error: "Previzualizare invalidă" }, 400);
   if (body.dry_run === true) {
     if (!body.post_id) return json({ error: "Postarea este obligatorie" }, 400);
     const { data: post } = await sb.from("social_posts").select("*").eq("id", body.post_id).maybeSingle();
     if (!post) return json({ error: "Postare negăsită" }, 404);
     if (body.current_image !== undefined) post.image_url = body.current_image;
+    if (body.current_media_type !== undefined) post.media_type = body.current_media_type;
+    if (body.preview_image_only === true) { post.video_url = null; if (post.media_type === "REELS") post.media_type = "IMAGE"; }
     try { return json({ success: true, payload: await payload(sb, post, "instagram", "admin_preview") }); }
     catch (e) { return json({ error: e instanceof Error ? e.message : "Imagine indisponibilă" }, 422); }
   }

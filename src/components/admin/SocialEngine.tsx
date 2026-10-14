@@ -1,4 +1,5 @@
 import { renderReelFromImages } from "@/lib/reelVideo";
+import { validateStoryVideo } from "@/lib/storyMedia";
 import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import { exportPdfReport } from "./socialEngine/exportPdf";
@@ -84,6 +85,7 @@ type SocialPost = {
   image_urls?: string[] | null;
   media_type?: string | null;
   video_url?: string | null;
+  story_link_url?: string | null;
   caption: string;
   status: string;
   posted_to: string[];
@@ -93,9 +95,9 @@ type SocialPost = {
 };
 
 const INSTAGRAM_CAPTION_LIMIT = 2200;
-type MediaType = "IMAGE" | "CAROUSEL" | "REELS";
-type PostUpdates = { title?: string; caption?: string; image_url?: string | null; media_type?: MediaType; video_url?: string | null };
-const MEDIA_LABELS: Record<MediaType, string> = { IMAGE: "Imagine Statică", CAROUSEL: "Carusel", REELS: "Reel Video" };
+type MediaType = "IMAGE" | "CAROUSEL" | "REELS" | "STORY";
+type PostUpdates = { title?: string; caption?: string; image_url?: string | null; media_type?: MediaType; video_url?: string | null; story_link_url?: string | null };
+const MEDIA_LABELS: Record<MediaType, string> = { IMAGE: "Imagine Statică", CAROUSEL: "Carusel", REELS: "Reel Video", STORY: "Instagram / Facebook Story" };
 
 export default function SocialEngine() {
   const [posts, setPosts] = useState<SocialPost[]>([]);
@@ -190,8 +192,9 @@ export default function SocialEngine() {
   };
 
   const updatePost = async (id: string, updates: PostUpdates) => {
+    const { error } = await supabase.from("social_posts").update(updates).eq("id", id);
+    if (error) throw new Error("Modificările nu au putut fi salvate. Încearcă din nou.");
     setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates } : p)));
-    await supabase.from("social_posts").update(updates).eq("id", id);
     toast({ title: "Postare actualizată", description: "Modificările au fost salvate." });
   };
 
@@ -874,6 +877,8 @@ function PostEditModal({
   const [videoUrl, setVideoUrl] = useState(post.video_url || "");
   const [renderingVideo, setRenderingVideo] = useState(false);
   const [videoError, setVideoError] = useState("");
+  const [storyLinkUrl, setStoryLinkUrl] = useState(post.story_link_url ?? (post.media_type === "STORY" ? "" : post.source_url));
+  const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
     if (open) {
@@ -884,6 +889,8 @@ function PostEditModal({
       setMediaType((post.media_type as MediaType) || "IMAGE");
       setVideoUrl(post.video_url || "");
       setVideoError("");
+      setStoryLinkUrl(post.story_link_url ?? (post.media_type === "STORY" ? "" : post.source_url));
+      setSaveError("");
     }
   }, [open, post]);
 
@@ -941,26 +948,43 @@ function PostEditModal({
 
   const handleSave = async () => {
     setSaving(true);
-    if (mediaType === "REELS" && videoUrl && !/^https:\/\//.test(videoUrl)) { setVideoError("URL-ul video trebuie să înceapă cu https://"); setSaving(false); return; }
-    await onSave(post.id, { title, caption, image_url: imageUrl || null, media_type: mediaType, video_url: mediaType === "REELS" ? (videoUrl.trim() || null) : null });
-    setSaving(false);
-    onOpenChange(false);
+    setSaveError("");
+    try {
+      const hasVideo = mediaType === "REELS" || mediaType === "STORY";
+      if (hasVideo && videoUrl.trim() && !/^https:\/\//.test(videoUrl.trim())) throw new Error("URL-ul video trebuie să înceapă cu https://");
+      if (mediaType === "STORY" && storyLinkUrl.trim()) {
+        const link = new URL(storyLinkUrl.trim());
+        if (!["https:", "http:"].includes(link.protocol) || link.href.length > 2048) throw new Error("Story Link URL trebuie să fie o adresă web validă.");
+      }
+      let savedImage = imageUrl;
+      if (mediaType === "STORY") {
+        if (videoUrl.trim()) await validateStoryVideo(videoUrl.trim());
+        else savedImage = await getPreparedImage("STORY");
+      }
+      await onSave(post.id, { title, caption, image_url: savedImage || null, media_type: mediaType, video_url: hasVideo ? (videoUrl.trim() || null) : null, story_link_url: mediaType === "STORY" ? (storyLinkUrl.trim() || null) : null });
+      onOpenChange(false);
+    } catch (e) { setSaveError(e instanceof Error ? e.message : "Salvarea a eșuat."); }
+    finally { setSaving(false); }
   };
 
   const captionOverLimit = caption.length > INSTAGRAM_CAPTION_LIMIT;
+
+  const getPreparedImage = async (format: MediaType): Promise<string> => {
+    const { data, error } = await supabase.functions.invoke("process-scheduled-posts", { body: { post_id: post.id, dry_run: true, current_image: imageUrl || null, current_media_type: format, preview_image_only: true } });
+    if (error) {
+      const response = (error as { context?: Response }).context;
+      const details = response ? await response.json().catch(() => null) : null;
+      throw new Error(details?.error || error.message);
+    }
+    if (!data?.payload?.imageUrl) throw new Error(data?.error || "Imagine indisponibilă");
+    return data.payload.imageUrl;
+  };
 
   const prepareImage = async () => {
     setPreparingImage(true);
     setImageError("");
     try {
-      const { data, error } = await supabase.functions.invoke("process-scheduled-posts", { body: { post_id: post.id, dry_run: true, current_image: imageUrl || null } });
-      if (error) {
-        const response = (error as { context?: Response }).context;
-        const details = response ? await response.json().catch(() => null) : null;
-        throw new Error(details?.error || error.message);
-      }
-      if (!data?.payload?.imageUrl) throw new Error(data?.error || "Imagine indisponibilă");
-      setImageUrl(data.payload.imageUrl);
+      setImageUrl(await getPreparedImage(mediaType === "STORY" ? "STORY" : "IMAGE"));
     } catch (e) { setImageError(e instanceof Error ? e.message : "Pregătirea imaginii a eșuat"); }
     finally { setPreparingImage(false); }
   };
@@ -988,25 +1012,31 @@ function PostEditModal({
             {mediaType === "CAROUSEL" && <p className="text-[10px] text-muted-foreground">Se trimit până la 10 poze ale articolului/proprietății.</p>}
           </div>
 
-          {mediaType === "REELS" && (
+          {(mediaType === "REELS" || mediaType === "STORY") && (
             <div className="space-y-2 rounded-md border border-border p-3">
-              <Label className="text-xs font-medium">Video Reel (9:16)</Label>
+              <Label className="text-xs font-medium">{mediaType === "STORY" ? "Video Story opțional (1080×1920)" : "Video Reel (9:16)"}</Label>
               {videoUrl && <video src={videoUrl} controls playsInline className="w-full max-h-80 rounded-md bg-muted aspect-[9/16] object-contain" />}
               <Button variant="outline" className="w-full min-h-12" onClick={generateReel} disabled={renderingVideo}>
                 {renderingVideo ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ImageIcon className="h-4 w-4 mr-2" />}
                 {renderingVideo ? "Se creează video-ul…" : "Generează video 9:16 din poze"}
               </Button>
               <Input placeholder="sau lipește URL video MP4 (https://…)" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} className="text-xs" aria-label="URL video MP4" />
+              {mediaType === "STORY" && videoUrl && <Button variant="ghost" className="min-h-12" onClick={() => setVideoUrl("")}><X className="h-4 w-4 mr-2" />Folosește doar fotografia</Button>}
               {videoError && <p role="alert" className="text-xs text-destructive">{videoError}</p>}
             </div>
           )}
 
+          {mediaType === "STORY" && <div className="space-y-1.5">
+            <Label htmlFor="story-link-url" className="text-xs font-medium">Story Link URL (opțional)</Label>
+            <Input id="story-link-url" type="url" maxLength={2048} placeholder="https://…" value={storyLinkUrl} onChange={(e) => setStoryLinkUrl(e.target.value)} />
+          </div>}
+
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">{mediaType === "REELS" ? "Copertă" : "Imagine"}</Label>
             {imageUrl ? (
-              <div className="relative rounded-md overflow-hidden border border-border aspect-square bg-muted group">
+              <div className={cn("relative rounded-md overflow-hidden border border-border bg-muted group", mediaType === "STORY" ? "aspect-[9/16]" : "aspect-square")}>
                 <img src={imageUrl} alt="Imaginea postării" className="w-full h-full object-contain" />
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                <div className="absolute inset-0 bg-background/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                   <label className="cursor-pointer">
                     <input type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
                     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-background/90 text-foreground text-xs font-medium hover:bg-background transition-colors">
@@ -1050,7 +1080,7 @@ function PostEditModal({
             <Input placeholder="https://..." value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="text-xs" />
             <Button variant="outline" className="w-full min-h-12" onClick={prepareImage} disabled={preparingImage || uploading}>
               {preparingImage ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ImageIcon className="h-4 w-4 mr-2" />}
-              {preparingImage ? "Se pregătește imaginea…" : "Asociază imagine pentru Instagram"}
+              {preparingImage ? "Se pregătește imaginea…" : mediaType === "STORY" ? "Pregătește fotografia Story 1080×1920" : "Asociază imagine pentru Instagram"}
             </Button>
             {imageError && <p role="alert" className="text-xs text-destructive">{imageError}</p>}
           </div>
@@ -1070,6 +1100,7 @@ function PostEditModal({
               <p className="text-[10px] text-destructive">⚠ Descrierea depășește limita Instagram de {INSTAGRAM_CAPTION_LIMIT} caractere</p>
             )}
           </div>
+          {saveError && <p role="alert" className="text-xs text-destructive">{saveError}</p>}
           <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleSave} disabled={saving || uploading || preparingImage || renderingVideo || !title.trim()}>
             {saving ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Pencil className="h-4 w-4 mr-1.5" />}
             {saving ? "Se salvează…" : "Salvează Modificările"}
