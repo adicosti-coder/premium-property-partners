@@ -2,6 +2,14 @@ import { describe, expect, it } from "vitest";
 import { instagramFrame, selectSocialImage, socialImageTopic, usableSocialImage } from "../../supabase/functions/_shared/socialImageSelection";
 
 describe("social featured image selection", () => {
+  it.each([[1920, 1080], [1080, 1920], [800, 1000]])("fits Story %i×%i into 1080×1920 without clipping", (w, h) => {
+    const f = instagramFrame(w, h, true);
+    expect(f.width).toBe(1080);
+    expect(f.height).toBe(1920);
+    expect(f.imageWidth + f.x).toBeLessThanOrEqual(1080);
+    expect(f.imageHeight + f.y).toBeLessThanOrEqual(1920);
+    expect(f.imageWidth / f.imageHeight).toBeCloseTo(w / h, 1);
+  });
   it("prefers the original OG image", () => {
     expect(selectSocialImage("Taxă hotelieră", "blog", ["https://realtrust.ro/article.jpg", "https://realtrust.ro/other.jpg"])).toBe("https://realtrust.ro/article.jpg");
   });
