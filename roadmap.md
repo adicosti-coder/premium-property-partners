@@ -1,5 +1,13 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Stories Social Engine
+- [x] Generare Feed/Reels/Stories cu descrieri separate, Reel din 3–5 poze (lipsa pozelor/MP4 semnalată) și text suprapus pe Story
+- [x] Trimitere doar a variantei selectate cu media_type, video_url, story_link_url și caption
+- [x] Opțiune Story, fotografie/video 1080×1920 și link opțional precompletat
+- [x] Generare AI și payload Story verificate pe ciornă reală, JPEG 1080×1920 și text suprapus inspectate; 22 teste trecute, fără publicare
+- [ ] Verificare completă selecție/salvare în editor — blocată de codul e-mail Admin; Reel real din 3–5 fotografii rămâne neverificat (ciorna disponibilă are o singură imagine)
+- [ ] Router și Sticker Link în scenariul Make.com — necesită configurarea scenariului de către utilizator; nu s-a trimis webhook real
+
 ## Audit conversații WhatsApp
 - [x] 10 conversații inspectate; corectate prioritatea refuzului, istoricul AI, comisioanele pe tranzacție și protecția trimiterilor paralele
 - [x] Calitate WhatsApp în Centrul Auto-îmbunătățire: 5 propuneri reale salvate, dovezi cu acces direct, reguli separate de voce și anulare condiționată

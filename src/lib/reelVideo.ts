@@ -18,14 +18,16 @@ function loadImage(src: string): Promise<HTMLImageElement | null> {
   });
 }
 
-export async function renderReelFromImages(urls: string[], secondsPerImage = 2.5): Promise<Blob> {
+export async function renderReelFromImages(urls: string[], secondsPerImage = 2.5, minimumImages = 1): Promise<Blob> {
   const mime = pickReelMime();
   if (!mime) throw new Error("Browserul nu poate crea MP4. Folosește Chrome actualizat sau lipește un URL de video MP4.");
   const images = (await Promise.all([...new Set(urls)].slice(0, 8).map(loadImage))).filter((i): i is HTMLImageElement => !!i);
   if (!images.length) throw new Error("Nicio poză nu a putut fi încărcată pentru video.");
+  if (images.length < minimumImages) throw new Error(`Video-ul necesită ${minimumImages} fotografii accesibile; unele poze nu au putut fi încărcate.`);
   const canvas = document.createElement("canvas");
   canvas.width = REEL_W; canvas.height = REEL_H;
-  const ctx = canvas.getContext("2d")!;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas indisponibil pentru generarea video-ului.");
   // Test anti-taint: dacă o poză blochează exportul, oprim cu mesaj clar.
   ctx.drawImage(images[0], 0, 0, 1, 1);
   try { canvas.toDataURL(); } catch { throw new Error("Pozele sunt pe un site care nu permite folosirea lor în video."); }
@@ -39,6 +41,11 @@ export async function renderReelFromImages(urls: string[], secondsPerImage = 2.5
 
   const total = images.length * secondsPerImage * 1000;
   const start = performance.now();
+  const drawPhoto = (img: HTMLImageElement, local: number) => {
+    const scale = Math.max(REEL_W / img.width, REEL_H / img.height) * (1 + 0.06 * local);
+    const w = img.width * scale, h = img.height * scale;
+    ctx.drawImage(img, (REEL_W - w) / 2, (REEL_H - h) / 2, w, h);
+  };
   await new Promise<void>((resolve) => {
     const frame = () => {
       const t = performance.now() - start;
@@ -47,9 +54,12 @@ export async function renderReelFromImages(urls: string[], secondsPerImage = 2.5
       const local = (t % (secondsPerImage * 1000)) / (secondsPerImage * 1000);
       const img = images[idx];
       ctx.fillStyle = "#000"; ctx.fillRect(0, 0, REEL_W, REEL_H);
-      const scale = Math.max(REEL_W / img.width, REEL_H / img.height) * (1 + 0.06 * local);
-      const w = img.width * scale, h = img.height * scale;
-      ctx.drawImage(img, (REEL_W - w) / 2, (REEL_H - h) / 2, w, h);
+      if (idx > 0 && local < 0.15) {
+        drawPhoto(images[idx - 1], 1);
+        ctx.globalAlpha = local / 0.15;
+      }
+      drawPhoto(img, local);
+      ctx.globalAlpha = 1;
       requestAnimationFrame(frame);
     };
     frame();

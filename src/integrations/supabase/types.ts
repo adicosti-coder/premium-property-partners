@@ -9409,6 +9409,7 @@ export type Database = {
       social_posts: {
         Row: {
           caption: string
+          content_variants: Json | null
           created_at: string
           id: string
           image_url: string | null
@@ -9420,6 +9421,7 @@ export type Database = {
           scheduled_at: string | null
           source_url: string
           status: string
+          story_link_url: string | null
           title: string
           type: string
           updated_at: string
@@ -9428,6 +9430,7 @@ export type Database = {
         }
         Insert: {
           caption?: string
+          content_variants?: Json | null
           created_at?: string
           id?: string
           image_url?: string | null
@@ -9439,6 +9442,7 @@ export type Database = {
           scheduled_at?: string | null
           source_url: string
           status?: string
+          story_link_url?: string | null
           title: string
           type: string
           updated_at?: string
@@ -9447,6 +9451,7 @@ export type Database = {
         }
         Update: {
           caption?: string
+          content_variants?: Json | null
           created_at?: string
           id?: string
           image_url?: string | null
@@ -9458,6 +9463,7 @@ export type Database = {
           scheduled_at?: string | null
           source_url?: string
           status?: string
+          story_link_url?: string | null
           title?: string
           type?: string
           updated_at?: string

@@ -1,4 +1,6 @@
 import { renderReelFromImages } from "@/lib/reelVideo";
+import { renderStoryImage, validateStoryVideo } from "@/lib/storyMedia";
+import { readSocialVariants, selectedVariant, type SocialVariants } from "@/lib/socialVariants";
 import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import { exportPdfReport } from "./socialEngine/exportPdf";
@@ -84,6 +86,8 @@ type SocialPost = {
   image_urls?: string[] | null;
   media_type?: string | null;
   video_url?: string | null;
+  story_link_url?: string | null;
+  content_variants?: SocialVariants | null;
   caption: string;
   status: string;
   posted_to: string[];
@@ -93,9 +97,9 @@ type SocialPost = {
 };
 
 const INSTAGRAM_CAPTION_LIMIT = 2200;
-type MediaType = "IMAGE" | "CAROUSEL" | "REELS";
-type PostUpdates = { title?: string; caption?: string; image_url?: string | null; media_type?: MediaType; video_url?: string | null };
-const MEDIA_LABELS: Record<MediaType, string> = { IMAGE: "Imagine Statică", CAROUSEL: "Carusel", REELS: "Reel Video" };
+type MediaType = "IMAGE" | "CAROUSEL" | "REELS" | "STORY";
+type PostUpdates = { title?: string; caption?: string; image_url?: string | null; image_urls?: string[]; media_type?: MediaType; video_url?: string | null; story_link_url?: string | null; content_variants?: SocialVariants | null };
+const MEDIA_LABELS: Record<MediaType, string> = { IMAGE: "Imagine Statică", CAROUSEL: "Carusel", REELS: "Reel Video", STORY: "Instagram / Facebook Story" };
 
 export default function SocialEngine() {
   const [posts, setPosts] = useState<SocialPost[]>([]);
@@ -123,7 +127,7 @@ export default function SocialEngine() {
     if (error) {
       console.error("Error fetching posts:", error);
     } else {
-      setPosts(data || []);
+      setPosts((data || []).map(p => ({ ...p, content_variants: readSocialVariants(p.content_variants) })));
     }
     setLoading(false);
   }, []);
@@ -190,8 +194,9 @@ export default function SocialEngine() {
   };
 
   const updatePost = async (id: string, updates: PostUpdates) => {
+    const { error } = await supabase.from("social_posts").update(updates).eq("id", id);
+    if (error) throw new Error("Modificările nu au putut fi salvate. Încearcă din nou.");
     setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates } : p)));
-    await supabase.from("social_posts").update(updates).eq("id", id);
     toast({ title: "Postare actualizată", description: "Modificările au fost salvate." });
   };
 
@@ -222,11 +227,12 @@ export default function SocialEngine() {
   };
 
   const generateCaption = async (id: string) => {
+    try {
     const post = posts.find((p) => p.id === id);
     if (!post) return;
 
     const { data, error } = await supabase.functions.invoke("generate-caption", {
-      body: { title: post.title, type: post.type, source_url: post.source_url, post_id: post.id },
+      body: { title: post.title, type: post.type, source_url: post.source_url, post_id: post.id, variants: true },
     });
 
     if (error || data?.error) {
@@ -235,13 +241,44 @@ export default function SocialEngine() {
         description: data?.error || error?.message || "Încearcă din nou mai târziu.",
         variant: "destructive",
       });
-      return;
+      throw new Error(data?.error || error?.message || "Generare AI eșuată.");
     }
 
     if (data?.caption) {
-      setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, caption: data.caption } : p)));
-      await supabase.from("social_posts").update({ caption: data.caption }).eq("id", id);
-      toast({ title: "Descriere generată!", description: "Descrierea AI a fost salvată." });
+      const variants = readSocialVariants(data.variants);
+      if (!variants) throw new Error("Variantele generate sunt incomplete.");
+      const sources = [...new Set([...(data.source_images ?? []), post.image_url, ...(post.image_urls ?? [])].filter(Boolean))].slice(0, 5) as string[];
+      variants.FEED.image_url = sources[0] ?? post.image_url;
+      variants.FEED.image_urls = sources;
+      variants.STORY.story_link_url = post.source_url;
+      try {
+        if (!sources[0]) throw new Error("Lipsește fotografia pentru Story.");
+        const { data: prepared, error: prepareError } = await supabase.functions.invoke("process-scheduled-posts", { body: { post_id: post.id, dry_run: true, current_media_type: "STORY", current_image: sources[0], preview_image_only: true } });
+        if (prepareError || !prepared?.payload?.imageUrl) throw new Error("Fotografia Story nu poate fi pregătită.");
+        const blob = await renderStoryImage(prepared.payload.imageUrl, variants.STORY.overlay_text || post.title);
+        const path = `social/stories/${post.id}-${Date.now()}.jpg`;
+        const { error: uploadError } = await supabase.storage.from("property-images").upload(path, blob, { contentType: "image/jpeg" });
+        if (uploadError) throw uploadError;
+        variants.STORY.image_url = supabase.storage.from("property-images").getPublicUrl(path).data.publicUrl;
+      } catch (e) { variants.STORY.error = e instanceof Error ? e.message : "Fotografia Story nu a putut fi creată."; }
+      try {
+        if (sources.length < 3) throw new Error("Reel necesită cel puțin 3 fotografii reale; adaugă poze sau un URL MP4 în editor.");
+        const blob = await renderReelFromImages(sources, 2.5, 3);
+        const path = `social-engine/reels/${post.id}-${Date.now()}.mp4`;
+        const { error: uploadError } = await supabase.storage.from("social-reels").upload(path, blob, { contentType: "video/mp4" });
+        if (uploadError) throw uploadError;
+        const { data: signed, error: signError } = await supabase.storage.from("social-reels").createSignedUrl(path, 60 * 60 * 24 * 7);
+        if (signError || !signed) throw signError ?? new Error("Link video indisponibil.");
+        variants.REELS.video_url = signed.signedUrl;
+      } catch (e) { variants.REELS.error = e instanceof Error ? e.message : "Video-ul nu a putut fi creat."; }
+      const mode = (post.media_type as MediaType) || "IMAGE";
+      const chosen = variants[selectedVariant(mode)];
+      await updatePost(id, { content_variants: variants, caption: chosen.caption, image_url: chosen.image_url ?? variants.FEED.image_url, image_urls: sources, video_url: mode === "REELS" ? variants.REELS.video_url ?? null : null, story_link_url: mode === "STORY" ? post.source_url : null, media_type: mode === "IMAGE" && sources.length > 1 ? "CAROUSEL" : mode });
+      toast({ title: "Variantele au fost salvate", description: [variants.REELS.error, variants.STORY.error].filter(Boolean).join(" ") || "Feed, Reels și Stories sunt pregătite, fără publicare." });
+    }
+    } catch (e) {
+      toast({ title: "Generarea nu a fost finalizată", description: e instanceof Error ? e.message : "Încearcă din nou.", variant: "destructive" });
+      throw e;
     }
   };
 
@@ -260,17 +297,8 @@ export default function SocialEngine() {
 
     for (const post of draftsWithoutCaptions) {
       try {
-        const { data, error } = await supabase.functions.invoke("generate-caption", {
-          body: { title: post.title, type: post.type, source_url: post.source_url, post_id: post.id },
-        });
-
-        if (!error && data?.caption) {
-          setPosts((prev) =>
-            prev.map((p) => (p.id === post.id ? { ...p, caption: data.caption } : p))
-          );
-          await supabase.from("social_posts").update({ caption: data.caption }).eq("id", post.id);
-          successCount++;
-        }
+        await generateCaption(post.id);
+        successCount++;
       } catch {
         console.error("Failed to generate caption for", post.id);
       }
@@ -778,15 +806,16 @@ function PostPreviewModal({ post, open, onOpenChange }: { post: SocialPost; open
                 </div>
                 <span className="text-xs font-semibold text-foreground">realtrust.ro</span>
               </div>
-              <div className="aspect-square bg-primary flex items-center justify-center relative">
-                {post.image_url ? (
-                  <img src={post.image_url} alt={post.title} className="w-full h-full object-cover" />
+              <div className={cn("bg-primary flex items-center justify-center relative", post.media_type === "STORY" || post.media_type === "REELS" ? "aspect-[9/16]" : "aspect-square")}>
+                {post.video_url && (post.media_type === "REELS" || post.media_type === "STORY") ? <video src={post.video_url} controls playsInline className="w-full h-full object-contain" /> : post.image_url ? (
+                  <img src={post.image_url} alt={post.title} className="w-full h-full object-contain" />
                 ) : (
                   <div className="text-center px-6 space-y-2">
                     <ImageIcon className="h-10 w-10 mx-auto text-accent/60" />
                     <p className="text-xs text-primary-foreground/70 font-medium">{post.title}</p>
                   </div>
                 )}
+                {post.media_type === "STORY" && post.story_link_url && <a href={post.story_link_url} target="_blank" rel="noopener noreferrer" className="absolute bottom-12 min-h-12 flex items-center gap-2 bg-background text-foreground px-4 rounded-md"><ExternalLink className="h-4 w-4" />Vezi detaliile</a>}
               </div>
               <div className="px-3 py-2 space-y-1">
                 <div className="flex gap-3">
@@ -823,15 +852,16 @@ function PostPreviewModal({ post, open, onOpenChange }: { post: SocialPost; open
                   {post.caption ? formatSocialCaption(post.caption, { platform: "facebook", type: post.type === "blog" ? "blog" : "property", sourceUrl: post.source_url }) : <span className="text-muted-foreground italic">Nicio descriere încă</span>}
                 </p>
               </div>
-              <div className="aspect-video bg-primary flex items-center justify-center relative">
-                {post.image_url ? (
-                  <img src={post.image_url} alt={post.title} className="w-full h-full object-cover" />
+              <div className={cn("bg-primary flex items-center justify-center relative", post.media_type === "STORY" || post.media_type === "REELS" ? "aspect-[9/16]" : "aspect-video")}>
+                {post.video_url && (post.media_type === "REELS" || post.media_type === "STORY") ? <video src={post.video_url} controls playsInline className="w-full h-full object-contain" /> : post.image_url ? (
+                  <img src={post.image_url} alt={post.title} className="w-full h-full object-contain" />
                 ) : (
                   <div className="text-center px-6 space-y-2">
                     <ImageIcon className="h-10 w-10 mx-auto text-accent/60" />
                     <p className="text-xs text-primary-foreground/70 font-medium">{post.title}</p>
                   </div>
                 )}
+                {post.media_type === "STORY" && post.story_link_url && <a href={post.story_link_url} target="_blank" rel="noopener noreferrer" className="absolute bottom-12 min-h-12 flex items-center gap-2 bg-background text-foreground px-4 rounded-md"><ExternalLink className="h-4 w-4" />Vezi detaliile</a>}
               </div>
               <div className="px-3 py-2 border-t border-border">
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wide">realtrust.ro</p>
@@ -874,6 +904,22 @@ function PostEditModal({
   const [videoUrl, setVideoUrl] = useState(post.video_url || "");
   const [renderingVideo, setRenderingVideo] = useState(false);
   const [videoError, setVideoError] = useState("");
+  const [storyLinkUrl, setStoryLinkUrl] = useState(post.story_link_url ?? (post.media_type === "STORY" ? "" : post.source_url));
+  const [saveError, setSaveError] = useState("");
+  const [variants, setVariants] = useState<SocialVariants | null>(post.content_variants ?? null);
+  const switchMedia = (value: MediaType) => {
+    const nextVariants = variants ? { ...variants, [selectedVariant(mediaType)]: { ...variants[selectedVariant(mediaType)], caption, image_url: imageUrl, video_url: videoUrl || null, story_link_url: mediaType === "STORY" ? storyLinkUrl || null : null } } : null;
+    setVariants(nextVariants);
+    const chosen = nextVariants?.[selectedVariant(value)];
+    setMediaType(value);
+    if (chosen) {
+      setCaption(chosen.caption);
+      setImageUrl(chosen.image_url ?? nextVariants?.FEED.image_url ?? post.image_url ?? "");
+      setVideoUrl(chosen.video_url ?? "");
+      setVideoError(chosen.error ?? "");
+      if (value === "STORY") setStoryLinkUrl(chosen.story_link_url ?? post.source_url);
+    }
+  };
 
   useEffect(() => {
     if (open) {
@@ -884,6 +930,9 @@ function PostEditModal({
       setMediaType((post.media_type as MediaType) || "IMAGE");
       setVideoUrl(post.video_url || "");
       setVideoError("");
+      setStoryLinkUrl(post.story_link_url ?? (post.media_type === "STORY" ? "" : post.source_url));
+      setSaveError("");
+      setVariants(post.content_variants ?? null);
     }
   }, [open, post]);
 
@@ -941,26 +990,44 @@ function PostEditModal({
 
   const handleSave = async () => {
     setSaving(true);
-    if (mediaType === "REELS" && videoUrl && !/^https:\/\//.test(videoUrl)) { setVideoError("URL-ul video trebuie să înceapă cu https://"); setSaving(false); return; }
-    await onSave(post.id, { title, caption, image_url: imageUrl || null, media_type: mediaType, video_url: mediaType === "REELS" ? (videoUrl.trim() || null) : null });
-    setSaving(false);
-    onOpenChange(false);
+    setSaveError("");
+    try {
+      const hasVideo = mediaType === "REELS" || mediaType === "STORY";
+      if (hasVideo && videoUrl.trim() && !/^https:\/\//.test(videoUrl.trim())) throw new Error("URL-ul video trebuie să înceapă cu https://");
+      if (mediaType === "STORY" && storyLinkUrl.trim()) {
+        const link = new URL(storyLinkUrl.trim());
+        if (!["https:", "http:"].includes(link.protocol) || link.href.length > 2048) throw new Error("Story Link URL trebuie să fie o adresă web validă.");
+      }
+      let savedImage = imageUrl;
+      if (mediaType === "STORY") {
+        if (videoUrl.trim()) await validateStoryVideo(videoUrl.trim());
+        else savedImage = await getPreparedImage("STORY");
+      }
+      const updatedVariants = variants ? { ...variants, [selectedVariant(mediaType)]: { ...variants[selectedVariant(mediaType)], caption, image_url: savedImage || null, video_url: hasVideo ? videoUrl.trim() || null : null, story_link_url: mediaType === "STORY" ? storyLinkUrl.trim() || null : null, error: null } } : null;
+      await onSave(post.id, { title, caption, image_url: savedImage || null, media_type: mediaType, video_url: hasVideo ? (videoUrl.trim() || null) : null, story_link_url: mediaType === "STORY" ? (storyLinkUrl.trim() || null) : null, content_variants: updatedVariants });
+      onOpenChange(false);
+    } catch (e) { setSaveError(e instanceof Error ? e.message : "Salvarea a eșuat."); }
+    finally { setSaving(false); }
   };
 
   const captionOverLimit = caption.length > INSTAGRAM_CAPTION_LIMIT;
+
+  const getPreparedImage = async (format: MediaType): Promise<string> => {
+    const { data, error } = await supabase.functions.invoke("process-scheduled-posts", { body: { post_id: post.id, dry_run: true, current_image: imageUrl || null, current_media_type: format, preview_image_only: true } });
+    if (error) {
+      const response = (error as { context?: Response }).context;
+      const details = response ? await response.json().catch(() => null) : null;
+      throw new Error(details?.error || error.message);
+    }
+    if (!data?.payload?.imageUrl) throw new Error(data?.error || "Imagine indisponibilă");
+    return data.payload.imageUrl;
+  };
 
   const prepareImage = async () => {
     setPreparingImage(true);
     setImageError("");
     try {
-      const { data, error } = await supabase.functions.invoke("process-scheduled-posts", { body: { post_id: post.id, dry_run: true, current_image: imageUrl || null } });
-      if (error) {
-        const response = (error as { context?: Response }).context;
-        const details = response ? await response.json().catch(() => null) : null;
-        throw new Error(details?.error || error.message);
-      }
-      if (!data?.payload?.imageUrl) throw new Error(data?.error || "Imagine indisponibilă");
-      setImageUrl(data.payload.imageUrl);
+      setImageUrl(await getPreparedImage(mediaType === "STORY" ? "STORY" : "IMAGE"));
     } catch (e) { setImageError(e instanceof Error ? e.message : "Pregătirea imaginii a eșuat"); }
     finally { setPreparingImage(false); }
   };
@@ -979,7 +1046,7 @@ function PostEditModal({
 
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Tip conținut</Label>
-            <Select value={mediaType} onValueChange={(v) => setMediaType(v as MediaType)}>
+            <Select value={mediaType} onValueChange={(v) => switchMedia(v as MediaType)}>
               <SelectTrigger className="min-h-12" aria-label="Tip conținut"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {(Object.keys(MEDIA_LABELS) as MediaType[]).map((k) => <SelectItem key={k} value={k}>{MEDIA_LABELS[k]}</SelectItem>)}
@@ -988,25 +1055,31 @@ function PostEditModal({
             {mediaType === "CAROUSEL" && <p className="text-[10px] text-muted-foreground">Se trimit până la 10 poze ale articolului/proprietății.</p>}
           </div>
 
-          {mediaType === "REELS" && (
+          {(mediaType === "REELS" || mediaType === "STORY") && (
             <div className="space-y-2 rounded-md border border-border p-3">
-              <Label className="text-xs font-medium">Video Reel (9:16)</Label>
+              <Label className="text-xs font-medium">{mediaType === "STORY" ? "Video Story opțional (1080×1920)" : "Video Reel (9:16)"}</Label>
               {videoUrl && <video src={videoUrl} controls playsInline className="w-full max-h-80 rounded-md bg-muted aspect-[9/16] object-contain" />}
               <Button variant="outline" className="w-full min-h-12" onClick={generateReel} disabled={renderingVideo}>
                 {renderingVideo ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ImageIcon className="h-4 w-4 mr-2" />}
                 {renderingVideo ? "Se creează video-ul…" : "Generează video 9:16 din poze"}
               </Button>
               <Input placeholder="sau lipește URL video MP4 (https://…)" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} className="text-xs" aria-label="URL video MP4" />
+              {mediaType === "STORY" && videoUrl && <Button variant="ghost" className="min-h-12" onClick={() => setVideoUrl("")}><X className="h-4 w-4 mr-2" />Folosește doar fotografia</Button>}
               {videoError && <p role="alert" className="text-xs text-destructive">{videoError}</p>}
             </div>
           )}
 
+          {mediaType === "STORY" && <div className="space-y-1.5">
+            <Label htmlFor="story-link-url" className="text-xs font-medium">Story Link URL (opțional)</Label>
+            <Input id="story-link-url" type="url" maxLength={2048} placeholder="https://…" value={storyLinkUrl} onChange={(e) => setStoryLinkUrl(e.target.value)} />
+          </div>}
+
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">{mediaType === "REELS" ? "Copertă" : "Imagine"}</Label>
             {imageUrl ? (
-              <div className="relative rounded-md overflow-hidden border border-border aspect-square bg-muted group">
+              <div className={cn("relative rounded-md overflow-hidden border border-border bg-muted group", mediaType === "STORY" ? "aspect-[9/16]" : "aspect-square")}>
                 <img src={imageUrl} alt="Imaginea postării" className="w-full h-full object-contain" />
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                <div className="absolute inset-0 bg-background/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                   <label className="cursor-pointer">
                     <input type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
                     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-background/90 text-foreground text-xs font-medium hover:bg-background transition-colors">
@@ -1050,7 +1123,7 @@ function PostEditModal({
             <Input placeholder="https://..." value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="text-xs" />
             <Button variant="outline" className="w-full min-h-12" onClick={prepareImage} disabled={preparingImage || uploading}>
               {preparingImage ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ImageIcon className="h-4 w-4 mr-2" />}
-              {preparingImage ? "Se pregătește imaginea…" : "Asociază imagine pentru Instagram"}
+              {preparingImage ? "Se pregătește imaginea…" : mediaType === "STORY" ? "Pregătește fotografia Story 1080×1920" : "Asociază imagine pentru Instagram"}
             </Button>
             {imageError && <p role="alert" className="text-xs text-destructive">{imageError}</p>}
           </div>
@@ -1070,6 +1143,7 @@ function PostEditModal({
               <p className="text-[10px] text-destructive">⚠ Descrierea depășește limita Instagram de {INSTAGRAM_CAPTION_LIMIT} caractere</p>
             )}
           </div>
+          {saveError && <p role="alert" className="text-xs text-destructive">{saveError}</p>}
           <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleSave} disabled={saving || uploading || preparingImage || renderingVideo || !title.trim()}>
             {saving ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Pencil className="h-4 w-4 mr-1.5" />}
             {saving ? "Se salvează…" : "Salvează Modificările"}
@@ -1111,8 +1185,9 @@ function SocialCard({
 
   const handleGenerate = async () => {
     setGenerating(true);
-    await onGenerate(post.id);
-    setGenerating(false);
+    try { await onGenerate(post.id); }
+    catch { /* Parent reports the error; retain the existing draft. */ }
+    finally { setGenerating(false); }
   };
 
   const hasImage = !!post.image_url;
@@ -1125,7 +1200,7 @@ function SocialCard({
       {/* Image / Placeholder */}
       <div className="relative w-full aspect-[16/10] bg-primary overflow-hidden">
         {hasImage ? (
-          <img src={post.image_url!} alt={post.title} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
+          <img src={post.image_url ?? ""} alt={post.title} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-primary/70 flex items-center justify-center">
             <div className="text-center px-6 space-y-2">
@@ -1226,9 +1301,9 @@ function SocialCard({
               <Sparkles className="inline h-3 w-3 mr-0.5 text-accent" /> Descriere AI
             </Label>
             <div className="flex gap-1">
-              <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs text-muted-foreground" onClick={handleGenerate} disabled={generating}>
+              <Button variant="ghost" size="sm" className="min-h-12 px-1.5 text-xs text-muted-foreground" onClick={handleGenerate} disabled={generating}>
                 {generating ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Wand2 className="h-3 w-3 mr-1" />}
-                {generating ? "…" : "AI"}
+                {generating ? "Se generează…" : "Generează 3 variante"}
               </Button>
               <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs text-muted-foreground" onClick={() => setEditing(!editing)}>
                 <Pencil className="h-3 w-3" />
