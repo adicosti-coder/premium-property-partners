@@ -25,7 +25,8 @@ export async function renderReelFromImages(urls: string[], secondsPerImage = 2.5
   if (!images.length) throw new Error("Nicio poză nu a putut fi încărcată pentru video.");
   const canvas = document.createElement("canvas");
   canvas.width = REEL_W; canvas.height = REEL_H;
-  const ctx = canvas.getContext("2d")!;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas indisponibil pentru generarea video-ului.");
   // Test anti-taint: dacă o poză blochează exportul, oprim cu mesaj clar.
   ctx.drawImage(images[0], 0, 0, 1, 1);
   try { canvas.toDataURL(); } catch { throw new Error("Pozele sunt pe un site care nu permite folosirea lor în video."); }

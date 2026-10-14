@@ -25,8 +25,8 @@ export function selectSocialImage(title: string, type: string, candidates: unkno
   }
   return null;
 }
-export function instagramFrame(width: number, height: number) {
-  const w = 1080, h = height > width ? 1350 : 1080;
+export function instagramFrame(width: number, height: number, story = false) {
+  const w = 1080, h = story ? 1920 : height > width ? 1350 : 1080;
   const scale = Math.min(w / width, h / height);
   const iw = Math.max(1, Math.round(width * scale)), ih = Math.max(1, Math.round(height * scale));
   return { width: w, height: h, imageWidth: iw, imageHeight: ih, x: Math.floor((w - iw) / 2), y: Math.floor((h - ih) / 2) };
