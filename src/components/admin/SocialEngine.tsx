@@ -80,6 +80,9 @@ type SocialPost = {
   type: string;
   source_url: string;
   image_url: string | null;
+  image_urls?: string[] | null;
+  media_type?: string | null;
+  video_url?: string | null;
   caption: string;
   status: string;
   posted_to: string[];
@@ -89,6 +92,9 @@ type SocialPost = {
 };
 
 const INSTAGRAM_CAPTION_LIMIT = 2200;
+type MediaType = "IMAGE" | "CAROUSEL" | "REELS";
+type PostUpdates = { title?: string; caption?: string; image_url?: string | null; media_type?: MediaType; video_url?: string | null };
+const MEDIA_LABELS: Record<MediaType, string> = { IMAGE: "Imagine Statică", CAROUSEL: "Carusel", REELS: "Reel Video" };
 
 export default function SocialEngine() {
   const [posts, setPosts] = useState<SocialPost[]>([]);
@@ -182,7 +188,7 @@ export default function SocialEngine() {
     await supabase.from("social_posts").update({ caption }).eq("id", id);
   };
 
-  const updatePost = async (id: string, updates: { title?: string; caption?: string; image_url?: string | null }) => {
+  const updatePost = async (id: string, updates: PostUpdates) => {
     setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates } : p)));
     await supabase.from("social_posts").update(updates).eq("id", id);
     toast({ title: "Postare actualizată", description: "Modificările au fost salvate." });
@@ -853,7 +859,7 @@ function PostEditModal({
   post: SocialPost;
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  onSave: (id: string, updates: { title?: string; caption?: string; image_url?: string | null }) => Promise<void>;
+  onSave: (id: string, updates: PostUpdates) => Promise<void>;
 }) {
   const [title, setTitle] = useState(post.title);
   const [caption, setCaption] = useState(post.caption);
@@ -863,6 +869,10 @@ function PostEditModal({
   const [dragOver, setDragOver] = useState(false);
   const [preparingImage, setPreparingImage] = useState(false);
   const [imageError, setImageError] = useState("");
+  const [mediaType, setMediaType] = useState<MediaType>((post.media_type as MediaType) || "IMAGE");
+  const [videoUrl, setVideoUrl] = useState(post.video_url || "");
+  const [renderingVideo, setRenderingVideo] = useState(false);
+  const [videoError, setVideoError] = useState("");
 
   useEffect(() => {
     if (open) {
@@ -870,8 +880,26 @@ function PostEditModal({
       setCaption(post.caption);
       setImageUrl(post.image_url || "");
       setImageError("");
+      setMediaType((post.media_type as MediaType) || "IMAGE");
+      setVideoUrl(post.video_url || "");
+      setVideoError("");
     }
   }, [open, post]);
+
+  const generateReel = async () => {
+    setRenderingVideo(true);
+    setVideoError("");
+    try {
+      const sources = [imageUrl, ...(post.image_urls ?? [])].filter(Boolean) as string[];
+      if (!sources.length) throw new Error("Adaugă cel puțin o poză înainte de a genera video-ul.");
+      const blob = await renderReelFromImages(sources);
+      const fileName = `social-engine/reels/${post.id}-${Date.now()}.mp4`;
+      const { error: upErr } = await supabase.storage.from("property-images").upload(fileName, blob, { contentType: "video/mp4", upsert: true });
+      if (upErr) throw upErr;
+      setVideoUrl(supabase.storage.from("property-images").getPublicUrl(fileName).data.publicUrl);
+    } catch (e) { setVideoError(e instanceof Error ? e.message : "Generarea video-ului a eșuat"); }
+    finally { setRenderingVideo(false); }
+  };
 
     const uploadFile = async (file: File) => {
     if (!file.type.startsWith("image/")) return;
@@ -910,7 +938,8 @@ function PostEditModal({
 
   const handleSave = async () => {
     setSaving(true);
-    await onSave(post.id, { title, caption, image_url: imageUrl || null });
+    if (mediaType === "REELS" && videoUrl && !/^https:\/\//.test(videoUrl)) { setVideoError("URL-ul video trebuie să înceapă cu https://"); setSaving(false); return; }
+    await onSave(post.id, { title, caption, image_url: imageUrl || null, media_type: mediaType, video_url: mediaType === "REELS" ? (videoUrl.trim() || null) : null });
     setSaving(false);
     onOpenChange(false);
   };
@@ -946,7 +975,31 @@ function PostEditModal({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium">Imagine</Label>
+            <Label className="text-xs font-medium">Tip conținut</Label>
+            <Select value={mediaType} onValueChange={(v) => setMediaType(v as MediaType)}>
+              <SelectTrigger className="min-h-12" aria-label="Tip conținut"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {(Object.keys(MEDIA_LABELS) as MediaType[]).map((k) => <SelectItem key={k} value={k}>{MEDIA_LABELS[k]}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            {mediaType === "CAROUSEL" && <p className="text-[10px] text-muted-foreground">Se trimit până la 10 poze ale articolului/proprietății.</p>}
+          </div>
+
+          {mediaType === "REELS" && (
+            <div className="space-y-2 rounded-md border border-border p-3">
+              <Label className="text-xs font-medium">Video Reel (9:16)</Label>
+              {videoUrl && <video src={videoUrl} controls playsInline className="w-full max-h-80 rounded-md bg-muted aspect-[9/16] object-contain" />}
+              <Button variant="outline" className="w-full min-h-12" onClick={generateReel} disabled={renderingVideo}>
+                {renderingVideo ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ImageIcon className="h-4 w-4 mr-2" />}
+                {renderingVideo ? "Se creează video-ul…" : "Generează video 9:16 din poze"}
+              </Button>
+              <Input placeholder="sau lipește URL video MP4 (https://…)" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} className="text-xs" aria-label="URL video MP4" />
+              {videoError && <p role="alert" className="text-xs text-destructive">{videoError}</p>}
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">{mediaType === "REELS" ? "Copertă" : "Imagine"}</Label>
             {imageUrl ? (
               <div className="relative rounded-md overflow-hidden border border-border aspect-square bg-muted group">
                 <img src={imageUrl} alt="Imaginea postării" className="w-full h-full object-contain" />
@@ -1014,7 +1067,7 @@ function PostEditModal({
               <p className="text-[10px] text-destructive">⚠ Descrierea depășește limita Instagram de {INSTAGRAM_CAPTION_LIMIT} caractere</p>
             )}
           </div>
-          <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleSave} disabled={saving || uploading || preparingImage || !title.trim()}>
+          <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleSave} disabled={saving || uploading || preparingImage || renderingVideo || !title.trim()}>
             {saving ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Pencil className="h-4 w-4 mr-1.5" />}
             {saving ? "Se salvează…" : "Salvează Modificările"}
           </Button>
@@ -1044,7 +1097,7 @@ function SocialCard({
   onGenerate: (id: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   onSchedule: (id: string, date: Date | null) => Promise<void>;
-  onEdit: (id: string, updates: { title?: string; caption?: string; image_url?: string | null }) => Promise<void>;
+  onEdit: (id: string, updates: PostUpdates) => Promise<void>;
   isPosting: boolean;
   postingPlatform: string | null;
 }) {
