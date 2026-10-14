@@ -136,7 +136,7 @@ CERINȚE STRICTE:
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: "google/gemini-3.8-flash",
       messages: [
         { role: "system", content: "Ești copywriter imobiliar premium pentru RealTrust Timișoara (AGENȚIE). Nu menționezi niciodată proprietar, persoană fizică, comision sau agenții. Returnezi DOAR JSON valid." },
         { role: "user", content: prompt },

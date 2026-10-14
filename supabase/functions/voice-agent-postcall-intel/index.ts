@@ -201,7 +201,7 @@ Generează acum pachetul de follow-up.`;
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-3.8-flash",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userMsg },
@@ -266,7 +266,7 @@ Generează acum pachetul de follow-up.`;
     }
 
     draft.generated_at = new Date().toISOString();
-    draft.model = "google/gemini-2.5-flash";
+    draft.model = "google/gemini-3.8-flash";
     draft.is_callback_recovery = isSuccessfulCallback;
     if (isSuccessfulCallback && previousAttempt) {
       draft.previous_attempt = previousAttempt;

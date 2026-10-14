@@ -231,7 +231,7 @@ Răspunde DOAR cu JSON valid.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-3.8-flash",
         messages: [
           { role: "system", content: lang === "en"
               ? (listingType === "inchiriere" ? SYSTEM_PROMPT_RENTAL_EN : SYSTEM_PROMPT_DEFAULT_EN)

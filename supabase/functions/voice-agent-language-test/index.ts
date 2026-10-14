@@ -89,7 +89,7 @@ serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
+            model: "google/gemini-3.8-flash",
             messages: [
               { role: "system", content: ROMANIAN_VOICE_GUARD },
               { role: "user", content: scenario.userMessage },

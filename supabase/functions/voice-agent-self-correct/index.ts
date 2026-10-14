@@ -42,7 +42,7 @@ serve(async (req) => {
           const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
             headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ model: "google/gemini-2.5-flash", temperature: 0.2, messages: [
+            body: JSON.stringify({ model: "google/gemini-3.8-flash", temperature: 0.2, messages: [
               { role: "system", content: "Ești coach sever de vânzări imobiliare telefonice. Răspunzi doar JSON valid." },
               { role: "user", content: `Analizează performanța lui Andrei (asistent AI RealTrust Timișoara) într-un apel real. Criterii: replici scurte, nu se repetă, avansează, tratează obiecțiile, transparență, fără informații inventate.\n\n${convo}\n\nRăspunde STRICT JSON: {"score": 1-10, "strengths": ["..."], "weaknesses": ["..."], "objections": [{"objection": "...", "handled": true|false, "comment": "..."}], "prompt_fixes": ["regulă imperativă, max 200 caractere"]}` },
             ] }),
@@ -96,7 +96,7 @@ REZUMAT: ${sess.ai_summary || "(fără rezumat)"}`;
             method: "POST",
             headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              model: "google/gemini-2.5-flash",
+              model: "google/gemini-3.8-flash",
               messages: [
                 { role: "system", content: "Ești coach pentru un agent vocal de vânzări imobiliare. Răspunzi cu O SINGURĂ FRAZĂ în română, max 200 caractere, fără ghilimele, fără preambul." },
                 { role: "user", content: prompt },

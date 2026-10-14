@@ -12,7 +12,7 @@ const corsHeaders = {
 };
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
-const MODEL = "google/gemini-2.5-flash";
+const MODEL = "google/gemini-3.8-flash";
 const CONF_THRESHOLD = 0.85;
 const SITE = "https://realtrust.ro";
 

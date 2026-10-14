@@ -122,7 +122,7 @@ Output JSON: {"summary": "1-2 propoziții", "gaps": [{"area": "title|meta|schema
     method: "POST",
     headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: "google/gemini-3.8-flash",
       messages: [
         { role: "system", content: "Răspunzi DOAR cu JSON valid în limba română." },
         { role: "user", content: prompt },

@@ -24,7 +24,7 @@ async function ai(messages: any[], key: string, opts: Record<string, unknown> = 
   const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "google/gemini-2.5-flash", messages, ...opts }),
+    body: JSON.stringify({ model: "google/gemini-3.8-flash", messages, ...opts }),
   });
   if (!r.ok) {
     const t = await r.text();

@@ -11,7 +11,7 @@ const corsHeaders = {
   "Content-Type": "application/json",
 };
 
-const MODEL = "google/gemini-2.5-flash";
+const MODEL = "google/gemini-3.8-flash";
 
 interface Row {
   id: string;
