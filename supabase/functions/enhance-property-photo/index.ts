@@ -74,7 +74,16 @@ serve(async (req) => {
         generationConfig: { responseModalities: ["TEXT", "IMAGE"] },
       }),
     });
-...
+
+    if (!response.ok) {
+      const status = response.status;
+      const errText = await response.text().catch(() => "");
+      console.error("AI gateway error:", status, errText);
+      if (status === 429) return new Response(JSON.stringify({ error: "Rate limited" }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (status === 402) return new Response(JSON.stringify({ error: "Credits exhausted" }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: `AI gateway ${status}` }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     const data = await response.json();
     const b64 = data.data?.[0]?.b64_json;
     const generated = b64 ? `data:image/png;base64,${b64}` : (data.data?.[0]?.url ?? null);
