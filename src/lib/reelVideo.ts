@@ -18,11 +18,12 @@ function loadImage(src: string): Promise<HTMLImageElement | null> {
   });
 }
 
-export async function renderReelFromImages(urls: string[], secondsPerImage = 2.5): Promise<Blob> {
+export async function renderReelFromImages(urls: string[], secondsPerImage = 2.5, minimumImages = 1): Promise<Blob> {
   const mime = pickReelMime();
   if (!mime) throw new Error("Browserul nu poate crea MP4. Folosește Chrome actualizat sau lipește un URL de video MP4.");
   const images = (await Promise.all([...new Set(urls)].slice(0, 8).map(loadImage))).filter((i): i is HTMLImageElement => !!i);
   if (!images.length) throw new Error("Nicio poză nu a putut fi încărcată pentru video.");
+  if (images.length < minimumImages) throw new Error(`Video-ul necesită ${minimumImages} fotografii accesibile; unele poze nu au putut fi încărcate.`);
   const canvas = document.createElement("canvas");
   canvas.width = REEL_W; canvas.height = REEL_H;
   const ctx = canvas.getContext("2d");

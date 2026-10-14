@@ -241,19 +241,21 @@ export default function SocialEngine() {
         description: data?.error || error?.message || "Încearcă din nou mai târziu.",
         variant: "destructive",
       });
-      return;
+      throw new Error(data?.error || error?.message || "Generare AI eșuată.");
     }
 
     if (data?.caption) {
       const variants = readSocialVariants(data.variants);
       if (!variants) throw new Error("Variantele generate sunt incomplete.");
-      const sources = [...new Set((data.source_images ?? [post.image_url, ...(post.image_urls ?? [])]).filter(Boolean))].slice(0, 5) as string[];
+      const sources = [...new Set([...(data.source_images ?? []), post.image_url, ...(post.image_urls ?? [])].filter(Boolean))].slice(0, 5) as string[];
       variants.FEED.image_url = sources[0] ?? post.image_url;
       variants.FEED.image_urls = sources;
       variants.STORY.story_link_url = post.source_url;
       try {
         if (!sources[0]) throw new Error("Lipsește fotografia pentru Story.");
-        const blob = await renderStoryImage(sources[0], variants.STORY.overlay_text || post.title);
+        const { data: prepared, error: prepareError } = await supabase.functions.invoke("process-scheduled-posts", { body: { post_id: post.id, dry_run: true, current_media_type: "STORY", current_image: sources[0], preview_image_only: true } });
+        if (prepareError || !prepared?.payload?.imageUrl) throw new Error("Fotografia Story nu poate fi pregătită.");
+        const blob = await renderStoryImage(prepared.payload.imageUrl, variants.STORY.overlay_text || post.title);
         const path = `social/stories/${post.id}-${Date.now()}.jpg`;
         const { error: uploadError } = await supabase.storage.from("property-images").upload(path, blob, { contentType: "image/jpeg" });
         if (uploadError) throw uploadError;
@@ -261,7 +263,7 @@ export default function SocialEngine() {
       } catch (e) { variants.STORY.error = e instanceof Error ? e.message : "Fotografia Story nu a putut fi creată."; }
       try {
         if (sources.length < 3) throw new Error("Reel necesită cel puțin 3 fotografii reale; adaugă poze sau un URL MP4 în editor.");
-        const blob = await renderReelFromImages(sources);
+        const blob = await renderReelFromImages(sources, 2.5, 3);
         const path = `social-engine/reels/${post.id}-${Date.now()}.mp4`;
         const { error: uploadError } = await supabase.storage.from("social-reels").upload(path, blob, { contentType: "video/mp4" });
         if (uploadError) throw uploadError;
