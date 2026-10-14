@@ -1,3 +1,4 @@
+import { renderReelFromImages } from "@/lib/reelVideo";
 import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import { exportPdfReport } from "./socialEngine/exportPdf";
