@@ -31,3 +31,4 @@
 - Social Engine resolves featured images with shared selection, uses inspected blog-only topical fallbacks, and fits Instagram media before webhook delivery without raw fallbacks — avoids unrelated or clipped photos.
 <!-- LOVABLE:END -->
 - Social Engine sends `social_posts` to Make.com only server-side via `process-scheduled-posts` (orchestrator */5, atomic claim, failure → draft, no retry); admin-only RLS — avoids silent no-cors failures and duplicates.
+- AI image/text features run through shared handlers (_shared/aiClient, aiVision, aiText) exposed as `ai-vision` and `ai-text-generation`; legacy function URLs stay as thin entry points and text results are cached by sha256 in `ai_text_cache` — one auth/error/model path without breaking callers, crons or webhooks.
