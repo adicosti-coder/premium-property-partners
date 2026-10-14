@@ -253,7 +253,7 @@ export default function ContentImprovementCenter() {
           </Button>
         ))}
       </div>
-      {mod === "prospecting" && <OwnerConsentFunnel />}
+      {(mod === "outreach" || mod === "all") && <OwnerConsentFunnel />}
       <Tabs defaultValue="pending">
         <TabsList>
           <TabsTrigger value="pending">De aprobat ({pending.length})</TabsTrigger>
