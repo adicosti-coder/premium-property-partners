@@ -86,7 +86,7 @@ serve(async (req) => {
 
     const data = await response.json();
     const b64 = data.data?.[0]?.b64_json;
-    const generated = b64 ? `data:image/png;base64,${b64}` : (data.data?.[0]?.url ?? null);
+    const generated = b64 ? `data:${b64.startsWith("/9j/") ? "image/jpeg" : "image/png"};base64,${b64}` : (data.data?.[0]?.url ?? null);
     if (!generated) {
       console.error("No image in response:", JSON.stringify(data).slice(0, 500));
       return new Response(JSON.stringify({ error: "AI did not return an image" }), {
