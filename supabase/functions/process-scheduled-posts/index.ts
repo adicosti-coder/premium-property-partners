@@ -30,14 +30,33 @@ async function resolveImages(sb: any, post: any): Promise<string[]> {
   return [...new Set(list.map(u => usableSocialImage(u, post.title, post.type)).filter((u): u is string => !!u))].slice(0, 10);
 }
 
+export function mediaTypeOf(post: { media_type?: string | null }, imageCount: number): "IMAGE" | "CAROUSEL" | "REELS" {
+  if (post.media_type === "REELS") return "REELS";
+  if (post.media_type === "CAROUSEL") return imageCount > 1 ? "CAROUSEL" : "IMAGE";
+  if (post.media_type === "IMAGE") return "IMAGE";
+  return imageCount > 1 ? "CAROUSEL" : "IMAGE";
+}
+
 async function payload(sb: any, post: any, platform: string, trigger: string) {
+  const reels = post.media_type === "REELS";
+  let videoUrl: string | null = reels && typeof post.video_url === "string" && /^https:\/\//.test(post.video_url) ? post.video_url : null;
+  const own = videoUrl?.match(/\/storage\/v1\/object\/sign\/social-reels\/([^?]+)/);
+  if (own) {
+    // Reînnoim linkul semnat la trimitere, ca Make.com să primească mereu un URL valid.
+    const { data } = await sb.storage.from("social-reels").createSignedUrl(decodeURIComponent(own[1]), 60 * 60 * 24 * 3);
+    if (data?.signedUrl) videoUrl = data.signedUrl;
+  }
+  if (reels && !videoUrl) throw new Error("Reel Video cere un video MP4 — generează-l din poze sau lipește un URL în ciornă.");
   const originals = await resolveImages(sb, post);
-  if (platform === "instagram" && !originals.length) throw new Error("Nu există o imagine relevantă pentru Instagram — adaugă o fotografie în ciornă.");
-  const imageUrls = platform === "instagram" ? await prepareInstagramImages(originals) : originals;
+  if (platform === "instagram" && !reels && !originals.length) throw new Error("Nu există o imagine relevantă pentru Instagram — adaugă o fotografie în ciornă.");
+  const prepared = platform === "instagram" && !reels ? await prepareInstagramImages(originals) : originals;
+  const media_type = mediaTypeOf(post, prepared.length);
+  const imageUrls = media_type === "IMAGE" ? prepared.slice(0, 1) : media_type === "REELS" ? prepared.slice(0, 1) : prepared;
   return {
     title: post.title,
     caption: formatSocialCaption(post.caption || "", { platform: platform === "instagram" ? "instagram" : "facebook", type: post.type === "blog" ? "blog" : "property", sourceUrl: post.source_url }),
-    imageUrl: imageUrls[0] ?? null, imageUrls, isCarousel: imageUrls.length > 1,
+    media_type, video_url: videoUrl,
+    imageUrl: imageUrls[0] ?? null, imageUrls, isCarousel: media_type === "CAROUSEL",
     sourceUrl: post.source_url, platform, type: post.type, timestamp: new Date().toISOString(), triggered_from: trigger,
   };
 }
