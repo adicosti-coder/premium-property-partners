@@ -9414,6 +9414,7 @@ export type Database = {
           image_url: string | null
           image_urls: string[]
           last_error: string | null
+          media_type: string
           posted_to: string[]
           property_id: string | null
           scheduled_at: string | null
@@ -9423,6 +9424,7 @@ export type Database = {
           type: string
           updated_at: string
           user_id: string | null
+          video_url: string | null
         }
         Insert: {
           caption?: string
@@ -9431,6 +9433,7 @@ export type Database = {
           image_url?: string | null
           image_urls?: string[]
           last_error?: string | null
+          media_type?: string
           posted_to?: string[]
           property_id?: string | null
           scheduled_at?: string | null
@@ -9440,6 +9443,7 @@ export type Database = {
           type: string
           updated_at?: string
           user_id?: string | null
+          video_url?: string | null
         }
         Update: {
           caption?: string
@@ -9448,6 +9452,7 @@ export type Database = {
           image_url?: string | null
           image_urls?: string[]
           last_error?: string | null
+          media_type?: string
           posted_to?: string[]
           property_id?: string | null
           scheduled_at?: string | null
@@ -9457,6 +9462,7 @@ export type Database = {
           type?: string
           updated_at?: string
           user_id?: string | null
+          video_url?: string | null
         }
         Relationships: []
       }
