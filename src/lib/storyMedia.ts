@@ -19,6 +19,12 @@ export async function renderStoryImage(url: string, text: string): Promise<Blob>
   const scale = Math.min(1080 / img.width, 1920 / img.height);
   ctx.drawImage(img, (1080 - img.width * scale) / 2, (1920 - img.height * scale) / 2, img.width * scale, img.height * scale);
   ctx.font = "bold 54px sans-serif";
+  let fontSize = 54;
+  const longest = text.slice(0, 160).split(/\s+/).reduce((a, b) => a.length > b.length ? a : b, "");
+  while (ctx.measureText(longest).width > 880 && fontSize > 16) {
+    fontSize -= 2;
+    ctx.font = `bold ${fontSize}px sans-serif`;
+  }
   const lines: string[] = [];
   let line = "";
   for (const word of text.slice(0, 160).split(/\s+/)) {

@@ -227,6 +227,7 @@ export default function SocialEngine() {
   };
 
   const generateCaption = async (id: string) => {
+    try {
     const post = posts.find((p) => p.id === id);
     if (!post) return;
 
@@ -272,6 +273,10 @@ export default function SocialEngine() {
       const chosen = variants[selectedVariant(mode)];
       await updatePost(id, { content_variants: variants, caption: chosen.caption, image_url: chosen.image_url ?? variants.FEED.image_url, image_urls: sources, video_url: mode === "REELS" ? variants.REELS.video_url ?? null : null, story_link_url: mode === "STORY" ? post.source_url : null, media_type: mode === "IMAGE" && sources.length > 1 ? "CAROUSEL" : mode });
       toast({ title: "Variantele au fost salvate", description: [variants.REELS.error, variants.STORY.error].filter(Boolean).join(" ") || "Feed, Reels și Stories sunt pregătite, fără publicare." });
+    }
+    } catch (e) {
+      toast({ title: "Generarea nu a fost finalizată", description: e instanceof Error ? e.message : "Încearcă din nou.", variant: "destructive" });
+      throw e;
     }
   };
 
@@ -1177,6 +1182,7 @@ function SocialCard({
   const handleGenerate = async () => {
     setGenerating(true);
     try { await onGenerate(post.id); }
+    catch { /* Parent reports the error; retain the existing draft. */ }
     finally { setGenerating(false); }
   };
 
