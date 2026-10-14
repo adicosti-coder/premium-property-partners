@@ -39,7 +39,13 @@ export function mediaTypeOf(post: { media_type?: string | null }, imageCount: nu
 
 async function payload(sb: any, post: any, platform: string, trigger: string) {
   const reels = post.media_type === "REELS";
-  const videoUrl = reels && typeof post.video_url === "string" && /^https:\/\//.test(post.video_url) ? post.video_url : null;
+  let videoUrl: string | null = reels && typeof post.video_url === "string" && /^https:\/\//.test(post.video_url) ? post.video_url : null;
+  const own = videoUrl?.match(/\/storage\/v1\/object\/sign\/social-reels\/([^?]+)/);
+  if (own) {
+    // Reînnoim linkul semnat la trimitere, ca Make.com să primească mereu un URL valid.
+    const { data } = await sb.storage.from("social-reels").createSignedUrl(decodeURIComponent(own[1]), 60 * 60 * 24 * 3);
+    if (data?.signedUrl) videoUrl = data.signedUrl;
+  }
   if (reels && !videoUrl) throw new Error("Reel Video cere un video MP4 — generează-l din poze sau lipește un URL în ciornă.");
   const originals = await resolveImages(sb, post);
   if (platform === "instagram" && !reels && !originals.length) throw new Error("Nu există o imagine relevantă pentru Instagram — adaugă o fotografie în ciornă.");

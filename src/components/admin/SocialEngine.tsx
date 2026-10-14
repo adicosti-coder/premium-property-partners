@@ -895,9 +895,11 @@ function PostEditModal({
       if (!sources.length) throw new Error("Adaugă cel puțin o poză înainte de a genera video-ul.");
       const blob = await renderReelFromImages(sources);
       const fileName = `social-engine/reels/${post.id}-${Date.now()}.mp4`;
-      const { error: upErr } = await supabase.storage.from("property-images").upload(fileName, blob, { contentType: "video/mp4", upsert: true });
+      const { error: upErr } = await supabase.storage.from("social-reels").upload(fileName, blob, { contentType: "video/mp4", upsert: true });
       if (upErr) throw upErr;
-      setVideoUrl(supabase.storage.from("property-images").getPublicUrl(fileName).data.publicUrl);
+      const { data: signed, error: signErr } = await supabase.storage.from("social-reels").createSignedUrl(fileName, 60 * 60 * 24 * 7);
+      if (signErr || !signed) throw signErr ?? new Error("Link video indisponibil");
+      setVideoUrl(signed.signedUrl);
     } catch (e) { setVideoError(e instanceof Error ? e.message : "Generarea video-ului a eșuat"); }
     finally { setRenderingVideo(false); }
   };
