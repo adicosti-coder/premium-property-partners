@@ -1,5 +1,9 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Stories Social Engine
+- [ ] Opțiune Story, fotografie/video 1080×1920 și link opțional precompletat
+- [ ] Salvare și payload Make.com STORY cu link separat; verificări fără publicare reală
+
 ## Audit conversații WhatsApp
 - [x] 10 conversații inspectate; corectate prioritatea refuzului, istoricul AI, comisioanele pe tranzacție și protecția trimiterilor paralele
 - [x] Calitate WhatsApp în Centrul Auto-îmbunătățire: 5 propuneri reale salvate, dovezi cu acces direct, reguli separate de voce și anulare condiționată
