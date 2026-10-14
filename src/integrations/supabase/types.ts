@@ -9420,6 +9420,7 @@ export type Database = {
           scheduled_at: string | null
           source_url: string
           status: string
+          story_link_url: string | null
           title: string
           type: string
           updated_at: string
@@ -9439,6 +9440,7 @@ export type Database = {
           scheduled_at?: string | null
           source_url: string
           status?: string
+          story_link_url?: string | null
           title: string
           type: string
           updated_at?: string
@@ -9458,6 +9460,7 @@ export type Database = {
           scheduled_at?: string | null
           source_url?: string
           status?: string
+          story_link_url?: string | null
           title?: string
           type?: string
           updated_at?: string
