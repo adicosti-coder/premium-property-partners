@@ -63,7 +63,7 @@ async function classifyWithAI(urls: string[]): Promise<Map<string, { label: stri
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: "google/gemini-2.5-flash", messages: [{ role: "user", content }], response_format: { type: "json_object" } }),
+      body: JSON.stringify({ model: "google/gemini-3.8-flash", messages: [{ role: "user", content }], response_format: { type: "json_object" } }),
       signal: AbortSignal.timeout(45000),
     });
     if (!r.ok) return out;
@@ -116,7 +116,7 @@ export async function synthesizeDescription(input: {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-3.8-flash",
         messages: [
           { role: "system", content: "Ești redactor imobiliar în Timișoara. Scrii în română, profesionist, fără exagerări. " +
             "Folosește DOAR informații din textul anunțului, fapte și descrierile pozelor; nu inventa suprafețe, prețuri, zone sau dotări. " +

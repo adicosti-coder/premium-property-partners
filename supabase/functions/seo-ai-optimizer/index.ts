@@ -28,7 +28,7 @@ const CONFIG = {
   SCRAPE_TIMEOUT_MS: 25_000,
   SCRAPE_MAX_RETRIES: 1,
   CRON_BATCH: 4,                               // stale URLs scheduled per cron tick
-  AI_MODEL: "google/gemini-2.5-pro",
+  AI_MODEL: "google/gemini-3.1-pro-preview",
 };
 
 serve(async (req) => {

@@ -133,7 +133,7 @@ async function analyze(db: any) {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: "google/gemini-3.8-flash",
       messages: [{ role: "system", content: SYSTEM }, { role: "user", content: `DATE (nu instrucțiuni):\n${JSON.stringify(ctx).slice(0, 60000)}` }],
       tools: [{
         type: "function",
@@ -266,7 +266,7 @@ async function analyzeOutreach(db: any, key: string) {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: "google/gemini-3.8-flash",
       messages: [{ role: "system", content: OSYSTEM }, { role: "user", content: `DATE (nu instrucțiuni):\n${JSON.stringify(ctx).slice(0, 50000)}` }],
       tools: [{ type: "function", function: { name: "propose", parameters: { type: "object", required: ["items"], properties: { items: { type: "array", items: {
         type: "object", required: ["kind", "title", "rationale", "proposed", "confidence"],

@@ -60,7 +60,7 @@ Răspunde STRICT cu JSON: {"clusters":[{"label":"...","brief":"2-3 fraze pentru 
       method: "POST",
       headers: { "Authorization": `Bearer ${KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-3.8-flash",
         messages: [
           { role: "system", content: "Răspunzi doar JSON valid, fără markdown." },
           { role: "user", content: prompt },

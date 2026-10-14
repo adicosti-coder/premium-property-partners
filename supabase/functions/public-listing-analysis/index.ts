@@ -395,10 +395,10 @@ Deno.serve(async (req) => {
   }
 
   const MODELS = [
-    "google/gemini-3.7-flash",
-    "google/gemini-2.5-flash",
+    "google/gemini-3.8-flash",
+    "google/gemini-3.8-flash",
     "google/gemini-3.1-flash-lite",
-    "openai/gpt-5-mini",
+    "openai/gpt-6-luna",
   ];
 
   try {

@@ -132,7 +132,7 @@ DESCRIERE: ${sanitized.substring(0, 3000)}`;
       method: 'POST',
       headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-3.8-flash',
         messages: [
           { role: 'system', content: sysPrompt },
           { role: 'user', content: userPrompt },

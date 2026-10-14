@@ -11,7 +11,7 @@ const corsHeaders = {
 const json = (b: unknown, s = 200) =>
   new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-const MODEL = "google/gemini-2.5-flash";
+const MODEL = "google/gemini-3.8-flash";
 
 async function callLovableAI(messages: any[], apiKey: string, model = MODEL) {
   const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -98,7 +98,7 @@ Răspunde STRICT în JSON: {"score": 0-100, "passed": true|false, "notes": "max 
         const judgeRaw = await callLovableAI([
           { role: "system", content: "Ești judecător sever. Răspunzi doar JSON valid." },
           { role: "user", content: judgePrompt },
-        ], LOVABLE_API_KEY, "google/gemini-2.5-flash-lite");
+        ], LOVABLE_API_KEY, "google/gemini-3.1-flash-lite");
         const m = judgeRaw.match(/\{[\s\S]*\}/);
         if (m) {
           const parsed = JSON.parse(m[0]);

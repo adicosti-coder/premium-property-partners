@@ -139,7 +139,7 @@ Răspunde EXCLUSIV cu obiect JSON cu această structură:
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: "google/gemini-3.8-flash",
       messages: [
         { role: "system", content: "Ești un expert în vânzări imobiliare premium pentru RealTrust ApartHotel din Timișoara. Răspunzi exclusiv cu JSON valid, fără text suplimentar." },
         { role: "user", content: prompt },
@@ -185,7 +185,7 @@ Returnează un briefing zilnic în JSON cu această structură:
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: "google/gemini-3.8-flash",
       messages: [
         { role: "system", content: "Ești un strateg de vânzări imobiliare. Răspunzi exclusiv JSON valid." },
         { role: "user", content: prompt },

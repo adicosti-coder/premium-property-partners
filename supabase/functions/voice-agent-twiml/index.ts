@@ -197,7 +197,7 @@ async function retryInRomanian(
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: "google/gemini-3.8-flash",
       messages: [
         { role: "system", content: systemPrompt },
         ...history,
@@ -1320,7 +1320,7 @@ serve(async (req) => {
             signal: ctrl.signal,
             headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              model: "google/gemini-2.5-flash-lite",
+              model: "google/gemini-3.1-flash-lite",
               max_tokens: 90,
               temperature: 0.5,
               messages: [

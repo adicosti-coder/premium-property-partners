@@ -82,7 +82,7 @@ Output STRICT JSON:
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-3.8-flash",
         messages: [
           { role: "system", content: "Răspunzi DOAR cu JSON valid în limba română. Niciun text în afara JSON-ului." },
           { role: "user", content: prompt },

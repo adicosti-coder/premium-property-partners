@@ -99,7 +99,7 @@ Format răspuns Markdown:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-3.8-flash",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: "Date drill-down (JSON):\n```json\n" + JSON.stringify(context, null, 2) + "\n```" },

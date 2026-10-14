@@ -63,7 +63,7 @@ Reguli:
       "Authorization": `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: "google/gemini-3.8-flash",
       messages: [
         { role: "system", content: "Ești un asistent care găsește anunțuri reale de cazare și returnează doar JSON valid." },
         { role: "user", content: prompt },
