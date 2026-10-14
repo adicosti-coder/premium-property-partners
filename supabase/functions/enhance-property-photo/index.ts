@@ -62,23 +62,16 @@ serve(async (req) => {
     for (let i = 0; i < imgBuf.length; i++) binary += String.fromCharCode(imgBuf[i]);
     const base64 = btoa(binary);
     const mime = fetched.contentType || "image/jpeg";
-    const dataUri = `data:${mime};base64,${base64}`;
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    // gemini-3.1-flash-lite-image is served only on /v1/images/generations (generate-content format)
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-3.1-flash-lite-image",
-        messages: [
-          {
-            role: "user",
-            content: [
-              { type: "text", text: prompt },
-              { type: "image_url", image_url: { url: dataUri } },
-            ],
-          },
+        contents: [
+          { role: "user", parts: [{ text: prompt }, { inlineData: { mimeType: mime, data: base64 } }] },
         ],
-        modalities: ["image", "text"],
+        generationConfig: { responseModalities: ["TEXT", "IMAGE"] },
       }),
     });
 
@@ -92,8 +85,8 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    // Gemini image returns base64 in message.images[0].image_url.url
-    const generated = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    const b64 = data.data?.[0]?.b64_json;
+    const generated = b64 ? `data:${b64.startsWith("/9j/") ? "image/jpeg" : "image/png"};base64,${b64}` : (data.data?.[0]?.url ?? null);
     if (!generated) {
       console.error("No image in response:", JSON.stringify(data).slice(0, 500));
       return new Response(JSON.stringify({ error: "AI did not return an image" }), {
