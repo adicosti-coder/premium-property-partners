@@ -48,6 +48,7 @@ Deno.serve(async (req) => {
     const type = body?.type === "blog" ? "blog" : body?.type === "property" ? "property" : "";
     const sourceUrl = typeof body?.source_url === "string" && /^https:\/\/(www\.)?realtrust\.ro\//.test(body.source_url) ? body.source_url : "https://realtrust.ro";
     if (!title || !type) return json({ error: "title și type sunt obligatorii" }, 400);
+    if (body.post_id !== undefined && (typeof body.post_id !== "string" || !UUID.test(body.post_id))) return json({ error: "Postare invalidă" }, 400);
     if (body.platform !== undefined && !["instagram", "facebook"].includes(body.platform)) return json({ error: "Platformă invalidă" }, 400);
     const platform = body.platform === "facebook" ? "facebook" : "instagram";
 
@@ -60,10 +61,15 @@ Deno.serve(async (req) => {
     const slug = decodeURIComponent(new URL(sourceUrl).pathname.split("/").filter(Boolean).pop() || "");
     let facts: unknown = null;
     const images: string[] = [];
+    const { data: storedPost } = body.post_id ? await sb.from("social_posts").select("property_id,image_url,image_urls").eq("id", body.post_id).maybeSingle() : { data: null };
+    for (const raw of [storedPost?.image_url, ...(storedPost?.image_urls ?? [])]) {
+      const usable = usableSocialImage(raw, title, type);
+      if (usable) images.push(usable);
+    }
     const featured = await resolveSocialFeaturedImage(sb, { title, type, sourceUrl });
     if (featured) images.push(featured);
     if (type === "property") {
-      const { data: property } = await sb.from("properties").select("id,name,location,description_ro,listing_type,capital_necesar,bedrooms,rooms,bathrooms,size,amenities,floor,parking,furnished,images,is_active").eq(/^[0-9a-f-]{36}$/i.test(slug) ? "id" : "slug", slug).eq("is_active", true).maybeSingle();
+      const { data: property } = await sb.from("properties").select("id,name,location,description_ro,listing_type,capital_necesar,bedrooms,rooms,bathrooms,size,amenities,floor,parking,furnished,images,is_active").eq(storedPost?.property_id || /^[0-9a-f-]{36}$/i.test(slug) ? "id" : "slug", storedPost?.property_id || slug).eq("is_active", true).maybeSingle();
       if (property) {
         const { id, images: gallery, is_active, ...publicFacts } = property;
         facts = publicFacts;

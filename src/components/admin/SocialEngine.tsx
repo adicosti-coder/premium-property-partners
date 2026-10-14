@@ -804,15 +804,16 @@ function PostPreviewModal({ post, open, onOpenChange }: { post: SocialPost; open
                 </div>
                 <span className="text-xs font-semibold text-foreground">realtrust.ro</span>
               </div>
-              <div className="aspect-square bg-primary flex items-center justify-center relative">
-                {post.image_url ? (
-                  <img src={post.image_url} alt={post.title} className="w-full h-full object-cover" />
+              <div className={cn("bg-primary flex items-center justify-center relative", post.media_type === "STORY" || post.media_type === "REELS" ? "aspect-[9/16]" : "aspect-square")}>
+                {post.video_url && (post.media_type === "REELS" || post.media_type === "STORY") ? <video src={post.video_url} controls playsInline className="w-full h-full object-contain" /> : post.image_url ? (
+                  <img src={post.image_url} alt={post.title} className="w-full h-full object-contain" />
                 ) : (
                   <div className="text-center px-6 space-y-2">
                     <ImageIcon className="h-10 w-10 mx-auto text-accent/60" />
                     <p className="text-xs text-primary-foreground/70 font-medium">{post.title}</p>
                   </div>
                 )}
+                {post.media_type === "STORY" && post.story_link_url && <a href={post.story_link_url} target="_blank" rel="noopener noreferrer" className="absolute bottom-12 min-h-12 flex items-center gap-2 bg-background text-foreground px-4 rounded-md"><ExternalLink className="h-4 w-4" />Vezi detaliile</a>}
               </div>
               <div className="px-3 py-2 space-y-1">
                 <div className="flex gap-3">
@@ -849,15 +850,16 @@ function PostPreviewModal({ post, open, onOpenChange }: { post: SocialPost; open
                   {post.caption ? formatSocialCaption(post.caption, { platform: "facebook", type: post.type === "blog" ? "blog" : "property", sourceUrl: post.source_url }) : <span className="text-muted-foreground italic">Nicio descriere încă</span>}
                 </p>
               </div>
-              <div className="aspect-video bg-primary flex items-center justify-center relative">
-                {post.image_url ? (
-                  <img src={post.image_url} alt={post.title} className="w-full h-full object-cover" />
+              <div className={cn("bg-primary flex items-center justify-center relative", post.media_type === "STORY" || post.media_type === "REELS" ? "aspect-[9/16]" : "aspect-video")}>
+                {post.video_url && (post.media_type === "REELS" || post.media_type === "STORY") ? <video src={post.video_url} controls playsInline className="w-full h-full object-contain" /> : post.image_url ? (
+                  <img src={post.image_url} alt={post.title} className="w-full h-full object-contain" />
                 ) : (
                   <div className="text-center px-6 space-y-2">
                     <ImageIcon className="h-10 w-10 mx-auto text-accent/60" />
                     <p className="text-xs text-primary-foreground/70 font-medium">{post.title}</p>
                   </div>
                 )}
+                {post.media_type === "STORY" && post.story_link_url && <a href={post.story_link_url} target="_blank" rel="noopener noreferrer" className="absolute bottom-12 min-h-12 flex items-center gap-2 bg-background text-foreground px-4 rounded-md"><ExternalLink className="h-4 w-4" />Vezi detaliile</a>}
               </div>
               <div className="px-3 py-2 border-t border-border">
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wide">realtrust.ro</p>
