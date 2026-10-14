@@ -20,7 +20,7 @@ export const isMakeWebhook = (u: string) => {
 
 async function resolveImages(sb: any, post: any): Promise<string[]> {
   const list: string[] = [];
-  const featured = await resolveSocialFeaturedImage(sb, { title: post.title, type: post.type, sourceUrl: post.source_url, currentImage: post.image_url });
+  const featured = post.media_type === "STORY" && post.image_url ? usableSocialImage(post.image_url, post.title, post.type) : await resolveSocialFeaturedImage(sb, { title: post.title, type: post.type, sourceUrl: post.source_url, currentImage: post.image_url });
   if (featured) list.push(featured);
   for (const u of post.image_urls ?? []) list.push(u);
   if (post.property_id) {

@@ -1,6 +1,6 @@
 import { renderReelFromImages } from "@/lib/reelVideo";
 import { renderStoryImage, validateStoryVideo } from "@/lib/storyMedia";
-import { selectedVariant, type SocialVariants } from "@/lib/socialVariants";
+import { readSocialVariants, selectedVariant, type SocialVariants } from "@/lib/socialVariants";
 import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import { exportPdfReport } from "./socialEngine/exportPdf";
@@ -127,7 +127,7 @@ export default function SocialEngine() {
     if (error) {
       console.error("Error fetching posts:", error);
     } else {
-      setPosts(data || []);
+      setPosts((data || []).map(p => ({ ...p, content_variants: readSocialVariants(p.content_variants) })));
     }
     setLoading(false);
   }, []);
@@ -244,7 +244,8 @@ export default function SocialEngine() {
     }
 
     if (data?.caption) {
-      const variants = data.variants as SocialVariants;
+      const variants = readSocialVariants(data.variants);
+      if (!variants) throw new Error("Variantele generate sunt incomplete.");
       const sources = [...new Set((data.source_images ?? [post.image_url, ...(post.image_urls ?? [])]).filter(Boolean))].slice(0, 5) as string[];
       variants.FEED.image_url = sources[0] ?? post.image_url;
       variants.FEED.image_urls = sources;
@@ -269,7 +270,7 @@ export default function SocialEngine() {
       } catch (e) { variants.REELS.error = e instanceof Error ? e.message : "Video-ul nu a putut fi creat."; }
       const mode = (post.media_type as MediaType) || "IMAGE";
       const chosen = variants[selectedVariant(mode)];
-      await updatePost(id, { content_variants: variants, caption: chosen.caption, image_url: chosen.image_url ?? variants.FEED.image_url, video_url: mode === "REELS" ? variants.REELS.video_url ?? null : null, story_link_url: mode === "STORY" ? post.source_url : null });
+      await updatePost(id, { content_variants: variants, caption: chosen.caption, image_url: chosen.image_url ?? variants.FEED.image_url, image_urls: sources, video_url: mode === "REELS" ? variants.REELS.video_url ?? null : null, story_link_url: mode === "STORY" ? post.source_url : null, media_type: mode === "IMAGE" && sources.length > 1 ? "CAROUSEL" : mode });
       toast({ title: "Variantele au fost salvate", description: [variants.REELS.error, variants.STORY.error].filter(Boolean).join(" ") || "Feed, Reels și Stories sunt pregătite, fără publicare." });
     }
   };
@@ -1175,8 +1176,8 @@ function SocialCard({
 
   const handleGenerate = async () => {
     setGenerating(true);
-    await onGenerate(post.id);
-    setGenerating(false);
+    try { await onGenerate(post.id); }
+    finally { setGenerating(false); }
   };
 
   const hasImage = !!post.image_url;
