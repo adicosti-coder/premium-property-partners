@@ -1,7 +1,7 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { WA_BUSINESS_ACCOUNT_ID, WA_API_VERSION, waToken } from "../_shared/waConfig.ts";
-import { WA_PUBLISH_CONSENT_TEMPLATE, WA_PUBLISH_CONSENT_LANGUAGE, WA_PUBLISH_CONSENT_COMPONENTS } from "../_shared/waPublishConsentTemplate.ts";
+import { WA_PUBLISH_CONSENT_TEMPLATE, WA_PUBLISH_CONSENT_LANGUAGE, WA_PUBLISH_CONSENT_BODY, WA_PUBLISH_CONSENT_COMPONENTS } from "../_shared/waPublishConsentTemplate.ts";
 
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), {
   status, headers: { ...corsHeaders, "Content-Type": "application/json" },
