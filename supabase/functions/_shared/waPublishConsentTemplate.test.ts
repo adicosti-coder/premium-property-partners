@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { publishConsentRequestText } from "./waAutoReply.ts";
-import { WA_PUBLISH_CONSENT_BODY, WA_PUBLISH_CONSENT_TEMPLATE, consentPropertyLabel, isApprovedConsentTemplate } from "./waPublishConsentTemplate.ts";
+import { WA_PUBLISH_CONSENT_BODY, WA_PUBLISH_CONSENT_TEMPLATE, WA_PUBLISH_CONSENT_LEGACY_BODIES, consentPropertyLabel, isApprovedConsentTemplate } from "./waPublishConsentTemplate.ts";
 
 describe("Owner consent template", () => {
   it("is identical to the direct request with its property variable filled", () => {
