@@ -6,13 +6,13 @@ import { supabase } from "@/integrations/supabase/client";
 import type { LeadRow } from "../hooks/useLeads";
 
 const LABEL: Record<string, string> = {
-  requested: "Cerut – așteptăm DA PUBLIC",
-  granted: "DA PUBLIC primit",
+  requested: "Cerut – așteptăm CONFIRM",
+  granted: "CONFIRM primit",
   published: "Publicat",
   revoked: "Retras (RETRAG)",
 };
 
-/** Starea acordului „DA PUBLIC” și data publicării, după numărul de WhatsApp. */
+/** Starea acordului de publicare („CONFIRM”) și data publicării, după numărul de WhatsApp. */
 export const ConsentCell = ({ lead }: { lead: LeadRow }) => {
   const digits = String((lead as any).whatsapp_number ?? "").replace(/\D/g, "");
   const tail = digits.slice(-9);

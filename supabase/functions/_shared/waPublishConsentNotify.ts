@@ -11,7 +11,7 @@ const esc = (s: string) =>
 
 const STATUS_LABEL: Record<string, string> = {
   requested: "cerere trimisă, așteptăm acordul",
-  granted: "acord primit (DA PUBLIC)",
+  granted: "acord primit (CONFIRM)",
   revoked: "acord retras (RETRAG)",
   published: "anunț publicat pe realtrust.ro",
 };

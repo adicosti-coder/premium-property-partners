@@ -213,7 +213,7 @@ const WaPublishConsents = () => {
         <OwnerQuickReplies />
         <p className="text-sm text-muted-foreground">
           Proprietarul primește pe WhatsApp întrebarea dacă putem prelua anunțul pe realtrust.ro.
-          Răspunsul „DA PUBLIC” înregistrează acordul și pornește preluarea; „RETRAG” scoate
+          Răspunsul „CONFIRM” (sau „DA PUBLIC”, în tranziție) înregistrează acordul și pornește preluarea; „RETRAG” scoate
           imediat anunțul de pe site. Fără acord, niciun anunț nu ajunge pe site.
         </p>
 
