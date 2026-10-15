@@ -31,7 +31,7 @@ describe("WhatsApp regressions", () => {
   });
   it("safe direct request preserves approved Meta body", () => {
     const safe = publishConsentRequestText({ safeDirect: true });
-    expect(safe).toContain("CONFIRM"); expect(safe).not.toMatch(/Comision 0|2 minute|investitori activi/);
+    expect(safe).toContain("DA pentru acord sau NU"); expect(safe).not.toMatch(/Comision 0|2 minute|investitori activi/);
     expect(publishConsentRequestText()).toContain("Comision 0%");
   });
 });
