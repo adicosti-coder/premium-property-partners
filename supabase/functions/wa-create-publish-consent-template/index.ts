@@ -35,7 +35,8 @@ Deno.serve(async (req) => {
       if (existing.status !== "APPROVED") {
         return json({ ok: true, existing: true, template: existing.name, status: existing.status, note: "edit_in_review" });
       }
-      const edit = await fetch(`${base}/${existing.id}`, {
+      const editUrl = `https://graph.facebook.com/${WA_API_VERSION}/${existing.id}`;
+      const edit = await fetch(editUrl, {
         method: "POST", headers,
         body: JSON.stringify({ components: WA_PUBLISH_CONSENT_COMPONENTS, category: existing.category || "MARKETING" }),
       });
