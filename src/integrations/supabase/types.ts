@@ -6444,7 +6444,9 @@ export type Database = {
           seller_type: string
           seller_type_reason: string | null
           size: number | null
+          source_fingerprint: string | null
           source_platform: string
+          source_synced_at: string | null
           source_url: string
           stale_alerted_at: string | null
           status: string | null
@@ -6550,7 +6552,9 @@ export type Database = {
           seller_type?: string
           seller_type_reason?: string | null
           size?: number | null
+          source_fingerprint?: string | null
           source_platform: string
+          source_synced_at?: string | null
           source_url: string
           stale_alerted_at?: string | null
           status?: string | null
@@ -6656,7 +6660,9 @@ export type Database = {
           seller_type?: string
           seller_type_reason?: string | null
           size?: number | null
+          source_fingerprint?: string | null
           source_platform?: string
+          source_synced_at?: string | null
           source_url?: string
           stale_alerted_at?: string | null
           status?: string | null
