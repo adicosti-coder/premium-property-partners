@@ -16,3 +16,4 @@
 - Social Engine resolves featured images with shared selection, uses inspected blog-only topical fallbacks, and fits Instagram media before webhook delivery without raw fallbacks — avoids unrelated or clipped photos.
 <!-- LOVABLE:END -->
 - Subdirectories have their own `AGENTS.md`; read it before changing files there.
+- Firecrawl is a secondary fallback only: every call goes through `_shared/firecrawlBudget.ts` (`firecrawlFetch`) with a DB-backed monthly credit cap; Apify and the internal direct scraper run first — exhausted credits return a soft 402 so imports never block.
