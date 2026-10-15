@@ -2729,6 +2729,30 @@ export type Database = {
           },
         ]
       }
+      firecrawl_usage: {
+        Row: {
+          credit_limit: number
+          credits_used: number
+          exhausted_at: string | null
+          month: string
+          updated_at: string
+        }
+        Insert: {
+          credit_limit?: number
+          credits_used?: number
+          exhausted_at?: string | null
+          month: string
+          updated_at?: string
+        }
+        Update: {
+          credit_limit?: number
+          credits_used?: number
+          exhausted_at?: string | null
+          month?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       frontend_error_logs: {
         Row: {
           correlation_id: string
@@ -12545,6 +12569,14 @@ export type Database = {
       }
       extract_ro_phone_from_text: { Args: { p_text: string }; Returns: string }
       extract_url_domain: { Args: { p_url: string }; Returns: string }
+      firecrawl_adjust_credits: {
+        Args: { _delta: number; _exhausted?: boolean }
+        Returns: undefined
+      }
+      firecrawl_reserve_credits: {
+        Args: { _credits: number }
+        Returns: boolean
+      }
       get_analysis_by_token: {
         Args: { _token: string }
         Returns: {

@@ -1,3 +1,4 @@
+import { directScrape, firecrawlFetch } from "../_shared/firecrawlBudget.ts";
 // Preview-only endpoint. Runs Firecrawl /search for ONE keyword with the
 // per-keyword owner-only filter toggles applied (mirroring `scrape-prospects`)
 // and returns the resulting URLs WITHOUT inserting anything into the DB.
@@ -264,7 +265,7 @@ Deno.serve(async (req) => {
     );
 
     async function runSearch(q: string) {
-      const r = await fetch("https://api.firecrawl.dev/v1/search", {
+      const r = await firecrawlFetch("https://api.firecrawl.dev/v1/search", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${firecrawlKey}`,

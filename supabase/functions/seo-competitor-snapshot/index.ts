@@ -1,3 +1,4 @@
+import { firecrawlFetch } from "../_shared/firecrawlBudget.ts";
 // SEO Competitor Snapshot — uses Firecrawl to scrape competitor URLs,
 // extracts title/meta/h1/schema and asks Gemini to surface the gaps vs our page.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
@@ -84,7 +85,7 @@ async function fetchPage(url: string): Promise<{ html: string; markdown?: string
   url = (await assertSafePublicUrl(url)).toString();
   if (FIRECRAWL_KEY) {
     try {
-      const res = await fetch("https://api.firecrawl.dev/v2/scrape", {
+      const res = await firecrawlFetch("https://api.firecrawl.dev/v2/scrape", {
         method: "POST",
         headers: { Authorization: `Bearer ${FIRECRAWL_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({ url, formats: ["html", "markdown"], onlyMainContent: false }),

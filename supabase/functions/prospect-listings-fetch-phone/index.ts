@@ -1,3 +1,4 @@
+import { directScrape, firecrawlFetch } from "../_shared/firecrawlBudget.ts";
 // Force-fetch a prospect's phone number using a 2-step "hydration" strategy:
 //   1. Render the source page with Firecrawl using `proxy: "stealth"` (residential
 //      proxy pool) + rotating User-Agent (desktop ↔ mobile) + per-platform click
@@ -159,7 +160,7 @@ function buildActionsForUrl(url: string) {
 }
 
 async function firecrawlScrape(url: string, apiKey: string, userAgent: string) {
-  const res = await fetch("https://api.firecrawl.dev/v2/scrape", {
+  const res = await firecrawlFetch("https://api.firecrawl.dev/v2/scrape", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({

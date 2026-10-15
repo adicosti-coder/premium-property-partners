@@ -1,4 +1,5 @@
 // Social Engine · scanează realtrust.ro (Firecrawl) și salvează proprietăți/articole noi ca drafturi în social_posts.
+import { firecrawlFetch } from "../_shared/firecrawlBudget.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requireAdmin } from "../_shared/adminAuth.ts";
@@ -29,7 +30,7 @@ Deno.serve(async (req) => {
     ? { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": apiKey, "Content-Type": "application/json" }
     : { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
   const fcFetch = (path: string, payload: unknown, ms: number) =>
-    fetch(`${FC}/${path}`, { method: "POST", headers: fcHeaders, body: JSON.stringify(payload), signal: AbortSignal.timeout(ms) });
+    firecrawlFetch(`https://api.firecrawl.dev/v2/${path}`, { method: "POST", headers: fcHeaders, body: JSON.stringify(payload), signal: AbortSignal.timeout(ms) });
 
   try {
     const body = await req.json().catch(() => ({}));

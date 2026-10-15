@@ -1,3 +1,4 @@
+import { directScrape, firecrawlFetch } from "../_shared/firecrawlBudget.ts";
 /**
  * auto-publish-listing-worker — single-prospect Fan-out worker.
  *
@@ -53,7 +54,8 @@ async function firecrawlScrape(url: string, key: string, timeoutMs = 22000): Pro
     const ctl = new AbortController();
     const to = setTimeout(() => ctl.abort(), timeoutMs);
     try {
-      const resp = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      const direct = attempt === 0 ? await directScrape(url) : null;
+      const resp = direct && String((direct as any).data?.markdown ?? "").length > 800 ? new Response(JSON.stringify(direct)) : await firecrawlFetch("https://api.firecrawl.dev/v1/scrape", {
         method: "POST",
         headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
         body: JSON.stringify({ url, formats: ["markdown", "html", "links"], waitFor: 2000, onlyMainContent: false, timeout: 18000 }),
