@@ -31,15 +31,23 @@ Deno.serve(async (req) => {
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const projectUrl = Deno.env.get('SUPABASE_URL')!;
 
-  const resp = await fetch(`${projectUrl}/functions/v1/auto-publish-listings`, {
+  // Admin-triggered publish of a single prospect with a recorded owner consent.
+  const prospectId = url.searchParams.get('prospect_id');
+  if (prospectId && !/^[0-9a-f-]{36}$/i.test(prospectId)) {
+    return new Response(JSON.stringify({ error: 'invalid prospect_id' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+  const target = prospectId ? 'auto-publish-listing-worker' : 'auto-publish-listings';
+  const payload = prospectId
+    ? { prospect_id: prospectId, triggered_by: 'admin_consent_override', use_ai_rewrite: true }
+    : { batch_size: batch, use_ai_rewrite: true, triggered_by: 'kickoff' };
+  const resp = await fetch(`${projectUrl}/functions/v1/${target}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${serviceKey}`,
       'x-cron-secret': serviceKey,
-      'apikey': Deno.env.get('SUPABASE_ANON_KEY') || '',
     },
-    body: JSON.stringify({ batch_size: batch, use_ai_rewrite: true, triggered_by: 'kickoff' }),
+    body: JSON.stringify(payload),
   });
   const text = await resp.text();
   return new Response(text, { status: resp.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
