@@ -7,6 +7,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Image, decode } from "https://deno.land/x/imagescript@1.2.17/mod.ts";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { toWebp } from "../_shared/webpEncode.ts";
+import { fetchStoriaDetail } from "../_shared/storiaDetail.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -296,7 +297,7 @@ serve(async (req) => {
 
     const { data: row, error: selErr } = await sb
       .from("prospect_listings")
-      .select("id,title,description,zone,location,rooms,size,price,features,images,category")
+      .select("id,title,description,zone,location,rooms,size,price,features,images,category,source_url")
       .eq("id", prospectId)
       .maybeSingle();
 
