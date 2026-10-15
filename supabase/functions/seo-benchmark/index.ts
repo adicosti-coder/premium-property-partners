@@ -1,3 +1,4 @@
+import { firecrawlFetch } from "../_shared/firecrawlBudget.ts";
 // SEO Benchmark — side-by-side compare RealTrust vs competitor URL.
 // Returns: title/meta/H1/H2 array, schema types + raw blocks, word count,
 // PageSpeed (Core Web Vitals) for mobile, local keyword presence, and a
@@ -108,7 +109,7 @@ async function fetchHtml(url: string): Promise<string> {
   url = (await assertSafePublicUrl(url)).toString();
   if (FIRECRAWL_KEY) {
     try {
-      const r = await fetch("https://api.firecrawl.dev/v2/scrape", {
+      const r = await firecrawlFetch("https://api.firecrawl.dev/v2/scrape", {
         method: "POST",
         headers: { Authorization: `Bearer ${FIRECRAWL_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({ url, formats: ["html"], onlyMainContent: false }),

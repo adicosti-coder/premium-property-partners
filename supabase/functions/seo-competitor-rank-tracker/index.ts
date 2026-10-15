@@ -1,3 +1,4 @@
+import { firecrawlFetch } from "../_shared/firecrawlBudget.ts";
 // Weekly SERP rank tracker: for top 20 queries (or explicit list), Firecrawl-search Google
 // and store our position + competitor positions in seo_competitor_rankings.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
@@ -56,7 +57,7 @@ serve(async (req) => {
 
     for (const q of queries) {
       try {
-        const res = await fetch("https://api.firecrawl.dev/v2/search", {
+        const res = await firecrawlFetch("https://api.firecrawl.dev/v2/search", {
           method: "POST",
           headers: { Authorization: `Bearer ${FIRECRAWL_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({ query: q, limit: 10, lang: "ro", country: "ro" }),

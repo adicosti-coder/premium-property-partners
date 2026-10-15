@@ -1,3 +1,4 @@
+import { firecrawlFetch } from "../_shared/firecrawlBudget.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -179,7 +180,7 @@ async function scrapeReviews(bookingUrl: string, firecrawlKey: string): Promise<
     const reviewsUrl = toReviewsUrl(resolvedUrl);
     console.log(`Scraping reviews from: ${reviewsUrl}`);
 
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    const response = await firecrawlFetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${firecrawlKey}`,

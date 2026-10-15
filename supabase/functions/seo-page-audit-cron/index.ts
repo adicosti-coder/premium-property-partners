@@ -1,3 +1,4 @@
+import { firecrawlFetch } from "../_shared/firecrawlBudget.ts";
 // Weekly on-page audit: scrapes top 25 pages from GSC via Firecrawl, extracts SEO signals,
 // computes health score, stores in seo_page_audits.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
@@ -116,7 +117,7 @@ async function fetchPage(url: string, firecrawlKey?: string): Promise<string> {
   url = (await assertSafePublicUrl(url)).toString();
   if (firecrawlKey) {
     try {
-      const res = await fetch("https://api.firecrawl.dev/v2/scrape", {
+      const res = await firecrawlFetch("https://api.firecrawl.dev/v2/scrape", {
         method: "POST",
         headers: { Authorization: `Bearer ${firecrawlKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({ url, formats: ["html"], onlyMainContent: false }),
