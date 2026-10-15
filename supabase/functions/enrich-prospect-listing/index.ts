@@ -311,6 +311,23 @@ serve(async (req) => {
       .eq("id", prospectId);
 
     const p = row as unknown as ProspectRow;
+
+    // Storia: datele preluate la scanare sunt adesea incomplete (0 poze,
+    // descriere = titlu, fără cartier). Le completăm din pagina anunțului.
+    const srcUrl = String((row as any).source_url || "");
+    if (srcUrl.includes("storia.ro") &&
+        (!(p.images?.length) || (p.description?.length ?? 0) < 300 || !p.zone)) {
+      const d = await fetchStoriaDetail(srcUrl);
+      if (d) {
+        const fix: Record<string, unknown> = {};
+        if (d.images.length > (p.images?.length ?? 0)) { p.images = d.images; fix.images = d.images; }
+        if (d.description && d.description.length > (p.description?.length ?? 0)) {
+          p.description = d.description; fix.description = d.description;
+        }
+        if (!p.zone && d.district) { p.zone = d.district; fix.zone = d.district; }
+        if (Object.keys(fix).length) await sb.from("prospect_listings").update(fix).eq("id", prospectId);
+      }
+    }
     const [rewrite, images] = await Promise.all([
       rewriteWithAI(p),
       enrichImages(sb, prospectId, p),
