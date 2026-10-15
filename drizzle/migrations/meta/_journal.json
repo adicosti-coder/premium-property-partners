@@ -799,6 +799,13 @@
       "when": 1791988333732,
       "tag": "0113_consent_reminder",
       "breakpoints": true
+    },
+    {
+      "idx": 114,
+      "version": "7",
+      "when": 1792092805128,
+      "tag": "0114_firecrawl_monthly_budget",
+      "breakpoints": true
     }
   ]
 }
