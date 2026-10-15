@@ -8,6 +8,11 @@ describe("Owner consent template", () => {
     const link = `https://realtrust.ro/analiza-anunt?url=${encodeURIComponent(u)}`;
     expect(WA_PUBLISH_CONSENT_BODY.replace("{{1}}", link)).toBe(publishConsentRequestText({ source_url: u }));
   });
+  it("accepts the previously approved „DA” body while the „CONFIRM” edit is pending", () => {
+    const legacy = { name: WA_PUBLISH_CONSENT_TEMPLATE, status: "APPROVED", language: "ro", components: [{ type: "BODY", text: WA_PUBLISH_CONSENT_LEGACY_BODIES[0] }] };
+    expect(isApprovedConsentTemplate([legacy])).toBe(true);
+    expect(isApprovedConsentTemplate([{ ...legacy, components: [{ type: "BODY", text: WA_PUBLISH_CONSENT_BODY }] }])).toBe(true);
+  });
   it("never enables pending, rejected, wrong-language or altered templates", () => {
     const row = { name: WA_PUBLISH_CONSENT_TEMPLATE, status: "APPROVED", language: "ro", components: [{ type: "BODY", text: WA_PUBLISH_CONSENT_BODY }] };
     expect(isApprovedConsentTemplate([row])).toBe(true);
