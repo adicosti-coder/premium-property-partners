@@ -1,5 +1,5 @@
 // Inspecția anunțurilor noi pe WhatsApp-ul de administrare: „1/Aprob” publică, „2/Respinge” arhivează.
-// Publicarea respectă în continuare acordul proprietarului („DA PUBLIC”).
+// Publicarea respectă în continuare acordul proprietarului („CONFIRM”).
 import { WA_PHONE_NUMBER_ID, waToken } from "./waConfig.ts";
 
 export const ADMIN_INSPECTION_NUMBER = "40723154520";

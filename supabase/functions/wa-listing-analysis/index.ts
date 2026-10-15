@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
         "Estimare orientativă din anunțurile reale din Timișoara (ultimele 6 luni).",
       ].join("\n");
       // Proprietarul anunțului (telefon identic cu prospectul) → intră în „Anunțuri Preluate Automat”
-      // prin cererea de acord standard; publicarea rămâne doar la „DA PUBLIC”.
+      // prin cererea de acord standard; publicarea rămâne doar la „CONFIRM”.
       const sb = createClient(base, key);
       const bare = url.replace(/^https:\/\/www\./, "https://");
       const { data: pr } = await sb.from("prospect_listings").select("id, phone_normalized")
@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
         }
       }
       text += ownerIntake
-        ? "\n\nSunteți proprietarul acestui anunț. Dacă doriți să-l publicăm gratuit pe realtrust.ro, răspundeți „DA PUBLIC”."
+        ? "\n\nSunteți proprietarul acestui anunț. Dacă doriți să-l publicăm gratuit pe realtrust.ro, răspundeți „CONFIRM”."
         : detailed
           ? "\n\nAm notat cererea de evaluare detaliată — un consultant RealTrust vă scrie aici în curând. Sunteți proprietarul? Răspundeți „DA” și vă ajutăm cu vânzarea sau administrarea."
           : "\nSunteți proprietarul? Vă putem ajuta cu vânzarea sau administrarea — răspundeți „DA” și vă contactăm.";

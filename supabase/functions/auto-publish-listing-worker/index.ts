@@ -257,7 +257,7 @@ Deno.serve(async (req) => {
 
     // ── Acordul proprietarului (obligatoriu) ────────────────────────────────
     // Un anunț ajunge pe realtrust.ro doar dacă proprietarul a dat acordul pe
-    // WhatsApp („DA PUBLIC”) și nu l-a retras între timp.
+    // WhatsApp („CONFIRM”) și nu l-a retras între timp.
     const { data: consentRow } = await supabase
       .from("wa_publish_consents")
       .select("id, status, revoked_at")

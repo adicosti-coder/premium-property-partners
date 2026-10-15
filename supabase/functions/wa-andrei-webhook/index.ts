@@ -41,7 +41,7 @@ function normalizeRoPhone(raw: string): string {
 
 /**
  * Acordul proprietarului pe WhatsApp pentru preluarea anunțului pe realtrust.ro.
- * „DA PUBLIC” → salvăm dovada acordului și pornim publicarea prin fluxul existent.
+ * „CONFIRM” → salvăm dovada acordului și pornim publicarea prin fluxul existent.
  * „RETRAG” → marcăm retragerea și scoatem imediat anunțul de pe site.
  */
 async function handlePublishIntent(
@@ -501,7 +501,7 @@ Deno.serve(async (req) => {
         }
 
         // Acordul proprietarului pentru preluarea anunțului pe realtrust.ro
-        // („DA PUBLIC”) sau retragerea acordului („RETRAG”) — are prioritate
+        // („CONFIRM” sau vechiul „DA PUBLIC”) sau retragerea acordului („RETRAG”) — are prioritate
         // față de orice alt răspuns automat și declanșează publicarea/retragerea.
         const publishIntent = detectPublishIntent(text, { pendingConsent });
         if (publishIntent) {
@@ -585,7 +585,7 @@ Deno.serve(async (req) => {
 
         // Primul răspuns după mesajul de prospectare premium:
         // dacă nu există încă nicio cerere de acord, o creăm și punem automat
-        // întrebarea „DA PUBLIC”, ca Andrei să nu mai scrie manual.
+        // întrebarea „CONFIRM”, ca Andrei să nu mai scrie manual.
         if (
           !publishIntent && outboundCount && !isClearRefusal(text) && !/^\s*stop\b/i.test(text) && !/[?]|comision|costuri|pret/i.test(text) && !String(quick?.kind ?? "").startsWith("owner_") &&
           quick?.kind !== "quick_no" && quick?.kind !== "quick_stop" &&

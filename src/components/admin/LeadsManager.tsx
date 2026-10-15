@@ -941,7 +941,7 @@ const LeadsManager = () => {
                   <TableHead>Mesaj</TableHead>
                   <TableHead>Etapă</TableHead>
                   <TableHead>Conversie</TableHead>
-                  <TableHead>Acord DA PUBLIC</TableHead>
+                  <TableHead>Acord CONFIRM</TableHead>
                   <TableHead>{text.source}</TableHead>
                   <TableHead>{text.date}</TableHead>
                   <TableHead className="w-[80px]">{text.actions}</TableHead>
