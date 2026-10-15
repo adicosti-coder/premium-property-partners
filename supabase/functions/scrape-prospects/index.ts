@@ -1,3 +1,4 @@
+import { directScrape, firecrawlFetch } from "../_shared/firecrawlBudget.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
@@ -610,7 +611,7 @@ async function proxyFetchHtml(
   // Rezervă fără proxy: citire directă cu antete de browser. OLX/Storia au
   // datele în HTML-ul brut; funcționează când actorul Apify e refuzat (403)
   // sau nu e configurat.
-  if (APIFY_STATS.lastStatus === 403 || APIFY_STATS.missingToken) {
+  {
     try {
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), timeoutMs);
@@ -640,7 +641,7 @@ async function proxyFetchHtml(
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
-    const resp = await fetch('https://api.firecrawl.dev/v2/scrape', {
+    const resp = await firecrawlFetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       signal: ctrl.signal,
       headers: { Authorization: `Bearer ${fcKey}`, 'Content-Type': 'application/json' },
@@ -1714,7 +1715,7 @@ async function firecrawlSearchOnce(query: string, key: string, maxResults: numbe
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const resp = await fetch('https://api.firecrawl.dev/v1/search', {
+    const resp = await firecrawlFetch('https://api.firecrawl.dev/v1/search', {
       method: 'POST',
       signal: controller.signal,
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
@@ -1821,7 +1822,7 @@ async function scrapePhoneHydrationOnce(url: string, firecrawlKey: string, mode:
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), mode === 'native' ? 7000 : 9000);
   try {
-    const res = await fetch('https://api.firecrawl.dev/v2/scrape', {
+    const res = await firecrawlFetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       signal: controller.signal,
       headers: { Authorization: `Bearer ${firecrawlKey}`, 'Content-Type': 'application/json' },

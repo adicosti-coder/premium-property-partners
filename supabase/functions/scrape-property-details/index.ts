@@ -1,3 +1,4 @@
+import { directScrape, firecrawlFetch } from "../_shared/firecrawlBudget.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -74,7 +75,7 @@ function parseRatingFromMarkdown(md: string): { rating: number | null; reviews: 
 async function scrapeWithFirecrawl(url: string, prompt: string, firecrawlKey: string): Promise<Record<string, any> | null> {
   try {
     console.log(`Scraping: ${url}`);
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    const response = await firecrawlFetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${firecrawlKey}`,

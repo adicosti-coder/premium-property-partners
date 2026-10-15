@@ -1,3 +1,4 @@
+import { directScrape, firecrawlFetch } from "../_shared/firecrawlBudget.ts";
 // Recovers hidden phone numbers from prospect_listings.source_url by scraping the
 // original page with Firecrawl using click actions on the "show phone" CTA.
 // Updates prospect_listings.phone_normalized + contact_phone when a phone is found.
@@ -101,7 +102,7 @@ function buildActionsForUrl(url: string) {
 }
 
 async function firecrawlScrape(url: string, apiKey: string) {
-  const res = await fetch("https://api.firecrawl.dev/v2/scrape", {
+  const res = await firecrawlFetch("https://api.firecrawl.dev/v2/scrape", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({

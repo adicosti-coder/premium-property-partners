@@ -1,3 +1,4 @@
+import { directScrape, firecrawlFetch } from "../_shared/firecrawlBudget.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -97,7 +98,7 @@ function noteFirecrawlIssue(status: number, payload: unknown) {
 async function scrapePrice(url: string, firecrawlKey: string): Promise<number | null> {
   try {
     console.log(`Scraping price from: ${url}`);
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    const response = await firecrawlFetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${firecrawlKey}`,
@@ -166,7 +167,7 @@ async function scrapeBookingRating(url: string, firecrawlKey: string): Promise<{
     const resolvedUrl = await resolveShareUrl(url);
     console.log(`Scraping rating from: ${resolvedUrl}`);
 
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    const response = await firecrawlFetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${firecrawlKey}`,
@@ -191,7 +192,7 @@ async function scrapeBookingRating(url: string, firecrawlKey: string): Promise<{
     // Fallback: also try JSON extraction if markdown parsing failed
     if (!result.rating || !result.reviews) {
       console.log('Markdown parsing incomplete, trying JSON fallback...');
-      const jsonResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      const jsonResponse = await firecrawlFetch('https://api.firecrawl.dev/v1/scrape', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${firecrawlKey}`,

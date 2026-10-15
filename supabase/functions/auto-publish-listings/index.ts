@@ -1,3 +1,4 @@
+import { directScrape, firecrawlFetch } from "../_shared/firecrawlBudget.ts";
 /**
  * auto-publish-listings — premium scraper → site-injector pipeline (v2: self-healing).
  *
@@ -120,7 +121,8 @@ async function firecrawlScrapeOnce(url: string, key: string, timeoutMs: number):
   const ctl = new AbortController();
   const to = setTimeout(() => ctl.abort(), timeoutMs);
   try {
-    const resp = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    const direct = await directScrape(url);
+    const resp = direct && String((direct as any).data?.markdown ?? '').length > 800 ? new Response(JSON.stringify(direct)) : await firecrawlFetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ url, formats: ['markdown', 'html', 'links'], waitFor: 2000, onlyMainContent: false, timeout: 18000 }),
