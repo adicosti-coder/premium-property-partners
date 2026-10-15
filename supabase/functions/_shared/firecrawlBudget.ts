@@ -5,8 +5,9 @@
 // `directScrape` este scraperul intern (fără credite) folosit înainte de Firecrawl.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-let sbClient: ReturnType<typeof createClient> | null = null;
-const sb = () => sbClient ??= createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+// deno-lint-ignore no-explicit-any
+let sbClient: any = null;
+const sb = (): any => sbClient ??= createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
 
 export function estimateFirecrawlCredits(path: string, body: Record<string, unknown>): number {
   if (/\/search$/.test(path)) {
