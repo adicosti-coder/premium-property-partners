@@ -32,6 +32,11 @@ function genericDescription(html: string): string | null {
   return m ? norm(m[1]) : null;
 }
 
+async function sha(t: string) {
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
+  return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   const denied = await requireInternalOrAdmin(req, corsHeaders);
@@ -53,7 +58,7 @@ Deno.serve(async (req) => {
   for (const p of props ?? []) {
     if (Date.now() - started > BUDGET_MS) break;
     const { data: pr } = await sb.from("prospect_listings")
-      .select("id, source_url, price, currency, images, description, category, title")
+      .select("id, source_url, price, currency, images, description, category, title, source_fingerprint")
       .eq("id", p.migrated_from_prospect_id).maybeSingle();
     const src = String(pr?.source_url ?? "");
     if (!pr || !src || !isUrlAllowed(src).ok) { report.push({ slug: p.slug, status: "no_source" }); continue; }
@@ -72,15 +77,17 @@ Deno.serve(async (req) => {
     const images = (storia?.images ?? genericImages(html)).filter(isValidPropertyImageUrl);
     const description = storia?.description ?? genericDescription(html);
 
-    const oldImgs: string[] = Array.isArray(pr.images) ? pr.images : [];
+    const imgKey = (u: string) => u.split(/[;?]/)[0];
+    const fp = await sha(JSON.stringify({ i: storia ? images.map(imgKey) : [], d: norm(description) }));
     const priceChanged = price != null && Number(pr.price || 0) !== price;
-    // Doar galerii complete (Storia) pot înlocui pozele; og:image singular nu.
-    const imagesChanged = !!storia && images.length >= 3 && images.join("|") !== oldImgs.join("|");
-    const descChanged = !!description && description.length >= 120 && norm(description) !== norm(pr.description);
+    const baseline = !pr.source_fingerprint; // prima trecere: doar memorăm sursa
+    const contentChanged = !baseline && pr.source_fingerprint !== fp;
+    const imagesChanged = contentChanged && !!storia && images.length >= 3;
+    const descChanged = contentChanged && !!description && description.length >= 120;
     const entry: any = { slug: p.slug, status: "unchanged", price_old: pr.price, price_new: price, imagesChanged, descChanged };
 
     if (!dryRun && (priceChanged || imagesChanged || descChanged)) {
-      const patch: Record<string, unknown> = { price_checked_at: new Date().toISOString() };
+      const patch: Record<string, unknown> = { price_checked_at: new Date().toISOString(), source_fingerprint: fp, source_synced_at: new Date().toISOString() };
       if (priceChanged) patch.price = price;
       if (imagesChanged) patch.images = images;
       if (descChanged) patch.description = description;
@@ -100,7 +107,7 @@ Deno.serve(async (req) => {
         entry.status = "price_updated";
       }
     } else if (!dryRun) {
-      await sb.from("prospect_listings").update({ price_checked_at: new Date().toISOString() }).eq("id", pr.id);
+      await sb.from("prospect_listings").update({ price_checked_at: new Date().toISOString(), source_fingerprint: fp, source_synced_at: new Date().toISOString() }).eq("id", pr.id);
     }
     report.push(entry);
   }
