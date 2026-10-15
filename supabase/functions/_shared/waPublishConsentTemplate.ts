@@ -12,12 +12,15 @@ export const WA_PUBLISH_CONSENT_COMPONENTS = [{
 }];
 
 // Corpul aprobat anterior de Meta (cerea „DA”). Rămâne acceptat până când Meta
-// aprobă corpul nou („CONFIRM”), ca șablonul să continue să funcționeze în
+// aprobă corpul nou (DA / NU), ca șablonul să continue să funcționeze în
 // perioada de tranziție în loc să cadă pe șablonul generic de primul mesaj.
 export const WA_PUBLISH_CONSENT_LEGACY_BODIES = [
   "Bună ziua! Am generat o evaluare gratuită de piață pentru proprietatea dvs.: {{1}}\n\n" +
   "Reprezint RealTrust Timișoara și avem investitori activi. Promovarea este 100% gratuită (Comision 0% pentru dvs., fără exclusivitate).\n\n" +
   "Dacă doriți să publicăm anunțul complet cu poze pe site-ul nostru, răspundeți doar cu „DA” și îl activăm în 2 minute.",
+  "Bună ziua! Am generat o evaluare gratuită de piață pentru proprietatea dvs.: {{1}}\n\n" +
+  "Reprezint RealTrust Timișoara și avem investitori activi. Promovarea este 100% gratuită (Comision 0% pentru dvs., fără exclusivitate).\n\n" +
+  "Dacă doriți să publicăm anunțul complet cu poze pe site-ul nostru, răspundeți doar cu „CONFIRM” și îl activăm în 2 minute.",
 ];
 
 export function consentPropertyLabel(p?: { title?: string | null; zone?: string | null } | null): string {

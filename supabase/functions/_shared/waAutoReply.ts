@@ -279,14 +279,14 @@ export function publishConsentRequestText(p?: {
       : "https://realtrust.ro/analiza-anunt");
   if (p?.safeDirect) return [
     `Publicarea pe realtrust.ro este gratuită și separată de serviciul de intermediere. Puteți consulta analiza aici: ${analysisUrl}`,
-    "Dacă doriți publicarea anunțului, răspundeți CONFIRM. Îl verificăm înainte de publicare; retragerea se cere prin RETRAG.",
+    "Sunteți de acord să publicăm anunțul pe RealTrust? Răspundeți DA pentru acord sau NU dacă nu doriți. Îl verificăm înainte de publicare; retragerea se cere oricând prin RETRAG.",
   ].join("\n\n");
   return [
     `Bună ziua! Am generat o evaluare gratuită de piață pentru proprietatea dvs.: ${analysisUrl}`,
     "",
     "Reprezint RealTrust Timișoara și avem investitori activi. Promovarea este 100% gratuită (Comision 0% pentru dvs., fără exclusivitate).",
     "",
-    "Dacă doriți să publicăm anunțul complet cu poze pe site-ul nostru, răspundeți doar cu „CONFIRM” și îl activăm în 2 minute.",
+    "Sunteți de acord să publicăm anunțul complet cu poze pe RealTrust? Răspundeți DA pentru acord sau NU dacă nu doriți.",
   ].join("\n");
 }
 

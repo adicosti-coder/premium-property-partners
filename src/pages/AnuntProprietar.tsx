@@ -424,7 +424,7 @@ export default function AnuntProprietar() {
                   ) : (
                     <p className="flex items-start gap-2 text-muted-foreground">
                       <ShieldAlert className="h-4 w-4 mt-0.5 shrink-0" />
-                      Fără acord scris pe WhatsApp („CONFIRM”) anunțul nu poate fi publicat.
+                      Fără acord scris pe WhatsApp („DA”) anunțul nu poate fi publicat.
                       {consent?.status ? ` Stare acord: ${consent.status}.` : " Trimite mai întâi cererea de acord."}
                     </p>
                   )}

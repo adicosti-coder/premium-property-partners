@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
         }
       }
       text += ownerIntake
-        ? "\n\nSunteți proprietarul acestui anunț. Dacă doriți să-l publicăm gratuit pe realtrust.ro, răspundeți „CONFIRM”."
+        ? "\n\nSunteți proprietarul acestui anunț. Dacă doriți să-l publicăm gratuit pe realtrust.ro, răspundeți DA pentru acord sau NU dacă nu doriți."
         : detailed
           ? "\n\nAm notat cererea de evaluare detaliată — un consultant RealTrust vă scrie aici în curând. Sunteți proprietarul? Răspundeți „DA” și vă ajutăm cu vânzarea sau administrarea."
           : "\nSunteți proprietarul? Vă putem ajuta cu vânzarea sau administrarea — răspundeți „DA” și vă contactăm.";
