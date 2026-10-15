@@ -324,7 +324,7 @@ serve(async (req) => {
         if (d.description && d.description.length > (p.description?.length ?? 0)) {
           p.description = d.description; fix.description = d.description;
         }
-        if (!p.zone && d.district) { p.zone = d.district; fix.zone = d.district; }
+        if (!p.zone && d.district && `${p.title} ${d.description ?? ""}`.toLowerCase().includes(d.district.toLowerCase())) { p.zone = d.district; fix.zone = d.district; }
         if (Object.keys(fix).length) await sb.from("prospect_listings").update(fix).eq("id", prospectId);
       }
     }
