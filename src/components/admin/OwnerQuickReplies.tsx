@@ -9,13 +9,13 @@ import { Loader2, MessageSquareReply, Send, ExternalLink } from "lucide-react";
 /** Răspunsuri rapide aprobate de Admin pentru proprietarii care au răspuns fără acord clar. */
 const REPLIES: { consentId: string; label: string; text: string }[] = [
   { consentId: "d87d2d0d-e551-4743-9550-ce8b84ad9c56", label: "„Dacă nu am costuri este ok”",
-    text: "Bună ziua! Publicarea anunțului dumneavoastră pe site-ul nostru și promovarea sunt 100% gratuite, nu există niciun fel de cost sau comision ascuns pentru publicare. Pentru a putea activa anunțul conform legii, vă rugăm să ne răspundeți la acest mesaj cu textul DA PUBLIC. Vă mulțumim!" },
+    text: "Bună ziua! Publicarea anunțului dumneavoastră pe site-ul nostru și promovarea sunt 100% gratuite, nu există niciun fel de cost sau comision ascuns pentru publicare. Pentru a putea activa anunțul conform legii, vă rugăm să ne răspundeți la acest mesaj cu textul CONFIRM. Vă mulțumim!" },
   { consentId: "4ffe6497-3395-4822-8378-921379788c21", label: "„Colaborare vânzare”",
     text: "Bună ziua! Vă mulțumim pentru interesul acordat unei colaborări pentru vânzarea proprietății. Unul dintre consultanții noștri imobiliari vă va contacta în cel mai scurt timp pentru a stabili detaliile. O zi excelentă!" },
   { consentId: "4b0fd110-a388-4c34-aae9-429dd8f3bdd8", label: "„Cât este comisionul de vânzare?”",
-    text: "Bună ziua! Comisionul nostru standard pentru serviciile de reprezentare și intermediere la vânzare este între 2% și 4%, în funcție de pachetul de servicii ales și de proprietate. Publicarea simplă a anunțului pe platforma noastră rămâne însă complet gratuită. Dacă doriți să vă promovăm proprietatea gratuit pe site, vă rugăm să ne răspundeți cu DA PUBLIC." },
+    text: "Bună ziua! Comisionul nostru standard pentru serviciile de reprezentare și intermediere la vânzare este între 2% și 4%, în funcție de pachetul de servicii ales și de proprietate. Publicarea simplă a anunțului pe platforma noastră rămâne însă complet gratuită. Dacă doriți să vă promovăm proprietatea gratuit pe site, vă rugăm să ne răspundeți cu CONFIRM." },
   { consentId: "f261c802-094a-4c26-8710-c46be4330f06", label: "„Aștept anunțurile”",
-    text: "Bună ziua! Dorim să clarificăm: noi vă oferim posibilitatea de a vă promova și publica anunțul proprietății dumneavoastră pe platforma noastră RealTrust, complet gratuit. Dacă sunteți de acord să vă preluăm și să vă afișăm anunțul pentru a găsi cumpărători/chiriași, vă rugăm să ne răspundeți cu DA PUBLIC." },
+    text: "Bună ziua! Dorim să clarificăm: noi vă oferim posibilitatea de a vă promova și publica anunțul proprietății dumneavoastră pe platforma noastră RealTrust, complet gratuit. Dacă sunteți de acord să vă preluăm și să vă afișăm anunțul pentru a găsi cumpărători/chiriași, vă rugăm să ne răspundeți cu CONFIRM." },
 ];
 
 type Info = { phone: string; status: string; convId: string | null; windowOpen: boolean };
@@ -60,7 +60,7 @@ export default function OwnerQuickReplies() {
     <section className="space-y-3 rounded-lg border p-4" aria-label="Răspunsuri rapide pentru proprietari">
       <h3 className="flex items-center gap-2 font-semibold"><MessageSquareReply className="h-4 w-4" /> Răspunsuri rapide</h3>
       <p className="text-sm text-muted-foreground">
-        Proprietari care au răspuns fără un „DA PUBLIC” clar. Poți edita textul înainte de trimitere.
+        Proprietari care au răspuns fără un „CONFIRM” clar. Poți edita textul înainte de trimitere.
       </p>
       <ul className="space-y-3">
         {REPLIES.map((r) => {

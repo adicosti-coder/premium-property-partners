@@ -234,14 +234,15 @@ export function propertyFinanceBlock(p: {
  * Se verifică ÎNAINTEA regulilor de refuz, ca „da, publicați, mulțumesc” să fie citit corect.
  */
 // Acord explicit de publicare (menționează publicarea) — contează oricând.
+// „CONFIRM” + publicare sau vechiul „DA PUBLIC” (tranziție) — ambele acceptate.
 const PUBLISH_CONSENT_STRONG_RE =
-  /\bda\s*public\b|\bdapublic\b|accept(?:a|ati)?\s+publicarea|sunt de acord (?:cu|sa|să)?\s*public|acord(?:ul)?\s+(?:de|pentru)\s+publicare|pute?ti\s+(?:sa\s+)?publica|publicati\s+anuntul|da,?\s*publica(?:ti|ți)?/;
-// Răspuns pozitiv simplu („DA”, „De acord”, „ok”, „publicati”, 👍) — contează
-// ca acord doar dacă proprietarului i s-a cerut acordul (are o linie în
+  /\bda\s*public\b|\bdapublic\b|confirma(?:ti)?\s+(?:publicarea|public|anuntul)|accept(?:a|ati)?\s+publicarea|sunt de acord (?:cu|sa|să)?\s*public|acord(?:ul)?\s+(?:de|pentru)\s+publicare|pute?ti\s+(?:sa\s+)?publica|publicati\s+anuntul|da,?\s*publica(?:ti|ți)?/;
+// Răspuns pozitiv simplu („DA”, „CONFIRM”, „De acord”, „ok”, „publicati”, 👍) —
+// contează ca acord doar dacă proprietarului i s-a cerut acordul (are o linie în
 // wa_publish_consents), ca un „da” dintr-o conversație obișnuită să nu fie
 // citit drept acord de publicare.
 const PUBLISH_CONSENT_SOFT_RE =
-  /^(?:da+|dapublic|de\s+acord|sunt\s+de\s+acord|ok(?:ee?y)?|ok\s+da|da\s+ok|(?:e|este)\s+ok|(?:e|este)\s+bine|bine|sigur|desigur|aprob|accept(?:am)?|publicati|publica|da,?\s+(?:puteti|se\s+poate|sigur|ok|de\s+acord|accept)|da,?\s+puteti\s+(?:sa\s+)?(?:il\s+)?publica(?:ti)?)(?:[\s!.,?]+(?:multumesc|mersi|va\s+multumesc))?[\s!.,?]*$/;
+  /^(?:da+|dapublic|confirm(?:a|at|ati)?|de\s+acord|sunt\s+de\s+acord|ok(?:ee?y)?|ok\s+da|da\s+ok|(?:e|este)\s+ok|(?:e|este)\s+bine|bine|sigur|desigur|aprob|accept(?:am)?|publicati|publica|da,?\s+(?:puteti|se\s+poate|sigur|ok|de\s+acord|accept)|da,?\s+puteti\s+(?:sa\s+)?(?:il\s+)?publica(?:ti)?)(?:[\s!.,?]+(?:multumesc|mersi|va\s+multumesc))?[\s!.,?]*$/;
 // Acord condiționat de costuri („Dacă nu am costuri e ok”, „Dacă e gratuit, da”).
 const PUBLISH_CONSENT_CONDITIONAL_RE =
   /\bdaca\b.{0,40}\b(?:cost|costuri|plat|bani|gratuit|gratis|comision|taxa)\w*.{0,40}\b(?:e|este|sunt)?\s*(?:ok|bine|de\s+acord|da|accept|in\s+regula)\b/;
@@ -278,14 +279,14 @@ export function publishConsentRequestText(p?: {
       : "https://realtrust.ro/analiza-anunt");
   if (p?.safeDirect) return [
     `Publicarea pe realtrust.ro este gratuită și separată de serviciul de intermediere. Puteți consulta analiza aici: ${analysisUrl}`,
-    "Dacă doriți publicarea anunțului, răspundeți DA PUBLIC. Îl verificăm înainte de publicare; retragerea se cere prin RETRAG.",
+    "Dacă doriți publicarea anunțului, răspundeți CONFIRM. Îl verificăm înainte de publicare; retragerea se cere prin RETRAG.",
   ].join("\n\n");
   return [
     `Bună ziua! Am generat o evaluare gratuită de piață pentru proprietatea dvs.: ${analysisUrl}`,
     "",
     "Reprezint RealTrust Timișoara și avem investitori activi. Promovarea este 100% gratuită (Comision 0% pentru dvs., fără exclusivitate).",
     "",
-    "Dacă doriți să publicăm anunțul complet cu poze pe site-ul nostru, răspundeți doar cu „DA” și îl activăm în 2 minute.",
+    "Dacă doriți să publicăm anunțul complet cu poze pe site-ul nostru, răspundeți doar cu „CONFIRM” și îl activăm în 2 minute.",
   ].join("\n");
 }
 

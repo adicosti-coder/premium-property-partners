@@ -22,7 +22,7 @@ const MAX_DAYS = 30;
 
 export function reminderText(p: { title?: string | null; zone?: string | null }): string {
   const what = p.title ? `„${p.title.slice(0, 80)}”` : `anunțul dumneavoastră${p.zone ? ` din ${p.zone}` : ""}`;
-  return `Bună ziua! Revin pe scurt cu privire la ${what}. Dacă doriți să îl prezentăm gratuit pe realtrust.ro, răspundeți „DA PUBLIC”. Dacă nu, nu vă mai scriem pe acest subiect.`;
+  return `Bună ziua! Revin pe scurt cu privire la ${what}. Dacă doriți să îl prezentăm gratuit pe realtrust.ro, răspundeți „CONFIRM”. Dacă nu, nu vă mai scriem pe acest subiect.`;
 }
 
 Deno.serve(async (req) => {

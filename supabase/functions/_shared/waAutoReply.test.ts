@@ -99,13 +99,13 @@ test("un interval real după cererea de apel este notat", () => {
 
 // ── Acordul de publicare: text cerere + recunoaștere răspuns pozitiv ──
 
-test("cererea de acord arată analiza gratuită și cere „DA”", () => {
+test("cererea de acord arată analiza gratuită și cere „CONFIRM”", () => {
   const text = publishConsentRequestText({ title: "Apartament 2 camere Iosefin", source_url: "https://www.olx.ro/d/oferta/apartament-2-camere-iosefin-IDabc.html?x=1&y=2" });
   expect(text).toContain("Bună ziua! Am generat o evaluare gratuită de piață");
   expect(text).toContain("https://realtrust.ro/analiza-anunt?url=https%3A%2F%2Fwww.olx.ro%2Fd%2Foferta%2Fapartament-2-camere-iosefin-IDabc.html%3Fx%3D1%26y%3D2");
   expect(text).toContain("Comision 0%");
   expect(text).toContain("fără exclusivitate");
-  expect(text).toContain("răspundeți doar cu „DA” și îl activăm în 2 minute");
+  expect(text).toContain("răspundeți doar cu „CONFIRM” și îl activăm în 2 minute");
 });
 
 test("cererea de acord fără link de anunț folosește pagina de analiză simplă", () => {
@@ -114,7 +114,7 @@ test("cererea de acord fără link de anunț folosește pagina de analiză simpl
   expect(text).not.toContain("url=");
 });
 
-test.each(["DA", "da", "De acord", "de acord", "ok", "OK", "publicati", "da public", "👍", "Da 👍"])(
+test.each(["DA", "da", "CONFIRM", "confirm", "Confirmat", "De acord", "de acord", "ok", "OK", "publicati", "da public", "👍", "Da 👍"])(
   "recunoaște acordul: %s",
   (txt) => {
     expect(detectPublishIntent(txt, { pendingConsent: true })).toBe("consent");
@@ -124,9 +124,12 @@ test.each(["DA", "da", "De acord", "de acord", "ok", "OK", "publicati", "da publ
 test("răspunsul pozitiv contează doar dacă i s-a cerut acordul", () => {
   expect(detectPublishIntent("da")).toBeNull();
   expect(detectPublishIntent("ok")).toBeNull();
+  expect(detectPublishIntent("CONFIRM")).toBeNull();
   expect(detectPublishIntent("👍")).toBeNull();
-  // „DA PUBLIC” rămâne acord oricând, chiar fără cerere înregistrată.
+  // „DA PUBLIC” (vechi) și „confirma publicarea” rămân acord oricând,
+  // chiar fără cerere înregistrată.
   expect(detectPublishIntent("da public")).toBe("consent");
+  expect(detectPublishIntent("confirma publicarea")).toBe("consent");
 });
 
 test.each(["De ce nu ajung anunțurile?", "Mâine?", "nu", "Nu, mulțumesc", "2 camere", ""])(

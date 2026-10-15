@@ -1,7 +1,7 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { WA_BUSINESS_ACCOUNT_ID, WA_API_VERSION, waToken } from "../_shared/waConfig.ts";
-import { WA_PUBLISH_CONSENT_TEMPLATE, WA_PUBLISH_CONSENT_LANGUAGE, WA_PUBLISH_CONSENT_COMPONENTS } from "../_shared/waPublishConsentTemplate.ts";
+import { WA_PUBLISH_CONSENT_TEMPLATE, WA_PUBLISH_CONSENT_LANGUAGE, WA_PUBLISH_CONSENT_BODY, WA_PUBLISH_CONSENT_COMPONENTS } from "../_shared/waPublishConsentTemplate.ts";
 
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), {
   status, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
   try {
     const base = `https://graph.facebook.com/${WA_API_VERSION}/${WA_BUSINESS_ACCOUNT_ID}/message_templates`;
     const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
-    const check = await fetch(`${base}?fields=name,status,language,category,components&name=${WA_PUBLISH_CONSENT_TEMPLATE}&limit=100`, { headers });
+    const check = await fetch(`${base}?fields=name,status,language,category,components,id&limit=100&name=${WA_PUBLISH_CONSENT_TEMPLATE}`, { headers });
     if (!check.ok) {
       const details = await check.text();
       console.error("Consent template check failed", check.status, details);
@@ -25,7 +25,29 @@ Deno.serve(async (req) => {
     }
     const existing = (await check.json()).data?.find((t: { name?: string; language?: string }) =>
       t.name === WA_PUBLISH_CONSENT_TEMPLATE && t.language === WA_PUBLISH_CONSENT_LANGUAGE);
-    if (existing) return json({ ok: true, existing: true, template: existing.name, status: existing.status, category: existing.category, components: existing.components });
+    if (existing) {
+      const currentBody = existing.components?.find((c: { type?: string; text?: string }) => c.type === "BODY")?.text ?? "";
+      if (currentBody === WA_PUBLISH_CONSENT_BODY) {
+        return json({ ok: true, existing: true, template: existing.name, status: existing.status, category: existing.category, components: existing.components });
+      }
+      // Corpul dorit s-a schimbat (ex: „DA” → „CONFIRM”): trimitem editarea spre
+      // aprobare. Versiunea aprobată în prezent rămâne funcțională până atunci.
+      if (existing.status !== "APPROVED") {
+        return json({ ok: true, existing: true, template: existing.name, status: existing.status, note: "edit_in_review" });
+      }
+      const editUrl = `https://graph.facebook.com/${WA_API_VERSION}/${existing.id}`;
+      const edit = await fetch(editUrl, {
+        method: "POST", headers,
+        body: JSON.stringify({ components: WA_PUBLISH_CONSENT_COMPONENTS, category: existing.category || "MARKETING" }),
+      });
+      if (!edit.ok) {
+        const details = await edit.text();
+        console.error("Consent template edit failed", edit.status, details);
+        return json({ error: "Meta request failed", status: edit.status, details }, edit.status);
+      }
+      const result = await edit.json();
+      return json({ ok: true, edited: true, template: existing.name, status: result.status ?? "PENDING" });
+    }
     const response = await fetch(base, { method: "POST", headers, body: JSON.stringify({
       name: WA_PUBLISH_CONSENT_TEMPLATE, language: WA_PUBLISH_CONSENT_LANGUAGE,
       category: "MARKETING", components: WA_PUBLISH_CONSENT_COMPONENTS,
