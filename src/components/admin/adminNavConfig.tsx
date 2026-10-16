@@ -191,6 +191,7 @@ const RAW_GROUPS: AdminGroup[] = [
       { value: "andrei-training-lab", label: "Training Lab Andrei", icon: Sparkles, subgroup: "AI Tools", keywords: ["training", "antrenament", "andrei", "simulare", "gemini"] },
       { value: "social-drafts", label: "Drafturi Social Media", icon: Sparkles, subgroup: "AI Tools", keywords: ["facebook", "instagram", "social", "postare", "draft"] },
       { value: "social-posts", label: "Postări publicate", icon: Sparkles, subgroup: "AI Tools", keywords: ["facebook", "instagram", "social", "postare", "publicat", "link"] },
+      { value: "reel-studio", label: "Generator Reels", icon: Sparkles, subgroup: "AI Tools", keywords: ["reels", "video", "instagram", "facebook", "apart"] },
       { value: "social-engine", label: "Social Engine (Make.com)", icon: Sparkles, subgroup: "AI Tools", keywords: ["social", "make", "webhook", "programare", "scraping", "caption"] },
       { value: "content-improvement", label: "Centru Auto-îmbunătățire", icon: Sparkles, subgroup: "AI Tools", keywords: ["auto", "imbunatatire", "seo", "social", "blog", "invatare", "recomandari"] },
       { value: "whatsapp-andrei", label: "Andrei WhatsApp", icon: MessageSquare, subgroup: "WhatsApp & Andrei", keywords: ["whatsapp", "wa", "andrei", "chat"] },
