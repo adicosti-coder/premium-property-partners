@@ -210,7 +210,7 @@ const Preturi = () => {
     },
     {
       question: "Care sunt pachetele de administrare regim hotelier disponibile?",
-      answer: "Oferim 3 pachete de administrare regim hotelier: Starter (15% — listare basic), Esențial (18% — fotografii + curățenie), Standard (20% — cel mai popular, prețuri dinamice + 10+ canale), Premium (25% — manager dedicat + revenue management avansat). Toate includ raportare lunară transparentă.",
+      answer: "Oferim 3 pachete de administrare regim hotelier: Starter (15% — listare basic), Esențial (18% — fotografii + curățenie), Standard (20% — cel mai popular, prețuri dinamice + 10+ canale). Toate includ raportare lunară transparentă.",
     },
     {
       question: "Administrați apartamente în zone cu cerere ridicată (Continental, Hella, Piața 700)?",
