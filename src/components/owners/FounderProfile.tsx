@@ -99,7 +99,7 @@ const FounderProfile = () => {
         ],
       };
 
-  const address = `${BRAND.address.streetAddress}, ${BRAND.address.addressLocality} ${BRAND.address.postalCode}`;
+  const address = `${BRAND.address.addressLocality}, jud. Timiș`;
 
   return (
     <section id="cine-suntem" className="py-16 md:py-20 bg-background scroll-mt-24">
