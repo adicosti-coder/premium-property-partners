@@ -25,12 +25,12 @@ const ContactPage = () => {
 
   const faqItems = isRo
     ? [
-        { q: "Care este programul RealTrust Timișoara?", a: "Programul de consultanță și administrare este Luni-Vineri 09:00-18:00 și Sâmbătă 10:00-14:00. Suport oaspeți disponibil 24/7 prin WhatsApp." },
+        { q: "Care este programul RealTrust Timișoara?", a: "Programul de consultanță și administrare este luni–vineri 10:00–18:00. Suport oaspeți disponibil 24/7 prin WhatsApp." },
         { q: "Unde au loc întâlnirile și vizionările?", a: "Nu primim clienți într-un sediu comercial: consultanța se face online sau telefonic, iar vizionările se programează direct la proprietate — în Centru/Cetate, Iosefin, Fabric, Dumbrăvița sau pe culoarul Aradului." },
         { q: "Cum solicit o evaluare sau o consultanță?", a: "Sunteți la distanță de un apel sau un mesaj: sunați la +40 799 069 256, scrieți pe WhatsApp sau trimiteți formularul de pe această pagină și revenim cu o evaluare online a proprietății." },
       ]
     : [
-        { q: "What are RealTrust's working hours in Timișoara?", a: "Consulting and management hours are Mon-Fri 09:00-18:00 and Sat 10:00-14:00. Guest support is available 24/7 via WhatsApp." },
+        { q: "What are RealTrust's working hours in Timișoara?", a: "Consulting and management hours are Mon–Fri 10:00–18:00. Guest support is available 24/7 via WhatsApp." },
         { q: "Where do meetings and viewings take place?", a: "We don't host clients at a commercial office: consulting is done online or by phone, and viewings are scheduled directly at the property — in Centru/Cetate, Iosefin, Fabric, Dumbrăvița or the Arad corridor." },
         { q: "How do I request a valuation or a consultation?", a: "You're one call or message away: call +40 799 069 256, message us on WhatsApp or submit the form on this page and we'll come back with an online valuation of your property." },
       ];
@@ -55,8 +55,7 @@ const ContactPage = () => {
       "email": "info@realtrust.ro",
       "image": `${BASE_URL}/images/hero-optimized-800w.webp`,
       "openingHoursSpecification": [
-        { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], "opens": "09:00", "closes": "18:00" },
-        { "@type": "OpeningHoursSpecification", "dayOfWeek": "Saturday", "opens": "10:00", "closes": "14:00" },
+        { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], "opens": "10:00", "closes": "18:00" },
       ],
       "areaServed": [
         { "@type": "City", "name": "Timișoara" },
@@ -71,8 +70,7 @@ const ContactPage = () => {
           "availableLanguage": ["ro", "en"],
           "areaServed": "RO",
           "hoursAvailable": [
-            { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], "opens": "09:00", "closes": "18:00" },
-            { "@type": "OpeningHoursSpecification", "dayOfWeek": "Saturday", "opens": "10:00", "closes": "14:00" },
+            { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], "opens": "10:00", "closes": "18:00" },
           ],
         },
         {
@@ -259,7 +257,7 @@ const ContactPage = () => {
                   : "We don't host visitors at an office: all viewings and meetings take place directly at the property, whenever suits you. We cover Centru/Cetate, Iosefin, Fabric, Dumbrăvița and the Arad corridor."}
               </p>
               <ul className="mt-4 space-y-2 text-sm">
-                <li className="flex items-center gap-2"><Clock className="w-4 h-4 text-primary" />{isRo ? "Program L-V 09:00-18:00, S 10:00-14:00" : "Mon-Fri 09:00-18:00, Sat 10:00-14:00"}</li>
+                <li className="flex items-center gap-2"><Clock className="w-4 h-4 text-primary" />{isRo ? "Program L–V 10:00–18:00" : "Mon–Fri 10:00–18:00"}</li>
                 <li className="flex items-center gap-2"><Building2 className="w-4 h-4 text-primary" />{isRo ? "Programezi vizionarea telefonic sau pe WhatsApp" : "Book a viewing by phone or WhatsApp"}</li>
               </ul>
               <div className="flex flex-wrap gap-2 mt-auto pt-6">
