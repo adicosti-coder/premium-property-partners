@@ -1443,14 +1443,14 @@ const PropertyDetail = () => {
                     { icon: '💬', label: 'Guest Relations dedicat', desc: '— comunicare non-stop cu oaspeții' },
                     { icon: '📊', label: 'Raportare lunară detaliată', desc: '— transparență totală financiară' },
                     { icon: '🛡️', label: 'Asigurare 3M EUR', desc: '— proprietatea ta, protejată complet' },
-                    { icon: '💵', label: 'Comision transparent 15-25%', desc: '— fără costuri ascunse' },
+                    { icon: '💵', label: 'Comision transparent 15–20%', desc: '— fără costuri ascunse' },
                     { icon: '✅', label: 'Tu doar încasezi profitul', desc: '— noi ne ocupăm de tot restul' },
                   ] : [
                     { icon: '📸', label: 'Professional photography', desc: 'and optimized listing on all platforms' },
                     { icon: '💬', label: 'Dedicated Guest Relations', desc: '— 24/7 guest communication' },
                     { icon: '📊', label: 'Detailed monthly reports', desc: '— full financial transparency' },
                     { icon: '🛡️', label: '€3M Insurance', desc: '— your property, fully protected' },
-                    { icon: '💵', label: 'Transparent 15-25% commission', desc: '— no hidden fees' },
+                    { icon: '💵', label: 'Transparent 15–20% commission', desc: '— no hidden fees' },
                     { icon: '✅', label: 'You just collect the profit', desc: '— we handle everything else' },
                   ]).map((item, i) => (
                     <div key={i} className="flex items-start gap-2 text-sm">

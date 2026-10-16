@@ -22,7 +22,7 @@ const HomeAuthorityBlocks = () => {
         { icon: Building2, title: "Portfolio", text: "15 apartments and houses currently managed under the ApArt Hotel brand." },
         { icon: ListChecks, title: "Documented process", text: "Onboarding in 7-14 days: valuation, photography, listing on Booking and Airbnb, check-in setup." },
         { icon: LineChart, title: "Reported results", text: "Consolidated guest reputation score of 9.7/10 on Booking; portfolio properties attract an estimated net yield between 6.5% and 9.4% per year, depending on occupancy, location and furnishing." },
-        { icon: FileText, title: "Transparency", text: "Commissions stated up front (15-25% management plus platform fees) and monthly written reporting." },
+        { icon: FileText, title: "Transparency", text: "Commissions stated up front (15–20% management plus platform fees) and monthly written reporting." },
       ]
     : [
         { icon: MapPin, title: "Experiență locală", text: "Echipa lucrează exclusiv în Timișoara și zona metropolitană, deci prețurile și cererea sunt evaluate pe date locale." },

@@ -546,7 +546,7 @@ const BlogPillarHub = () => {
               <strong>Randamentul chiriei în Timișoara</strong> diferă semnificativ în funcție de
               modelul ales. <strong>Chiria clasică</strong> (lunară, contract pe termen lung) oferă un
               randament brut de 4–6% anual și implică risc redus, dar venit limitat.{" "}
-              <strong>Regimul hotelier</strong> administrat profesional generează 9.4% net verificat,
+              <strong>Regimul hotelier</strong> administrat profesional generează un randament net estimat de 6,5–9,4%,
               cu un multiplicator de 1.6–2.5x față de chiria clasică.
             </p>
             <div className="overflow-x-auto rounded-xl border border-border bg-background">

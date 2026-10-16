@@ -20,7 +20,7 @@ export default function HomeRecommendedLinks() {
       to: "/investitii",
       icon: TrendingUp,
       title: isRo ? "Pagina Investiții" : "Investment page",
-      text: isRo ? "Strategia RealTrust pentru investiții cu ROI net verificat de 9.4%." : "RealTrust strategy for verified-yield real estate investments.",
+      text: isRo ? "Strategia RealTrust pentru investiții cu randament net estimat de 6,5–9,4%." : "RealTrust strategy for verified-yield real estate investments.",
       cta: isRo ? "Vezi investițiile" : "View investments",
     },
     {

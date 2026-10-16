@@ -52,7 +52,7 @@ const OwnerCompetitorComparison = () => {
         rows: [
           {
             label: "Comision / cost",
-            realtrust: { text: "15–25% din încasările nete, fără abonament", mark: "yes" },
+            realtrust: { text: "15–20% din încasările nete, fără abonament", mark: "yes" },
             diy: { text: "0% comision propriu, dar 3–17% taxe platformă", mark: "yes" },
             agency: { text: "Ex. 1 chirie la intermediere sau 8–10% administrare", mark: "partial" },
           },
@@ -150,7 +150,7 @@ const OwnerCompetitorComparison = () => {
         rows: [
           {
             label: "Commission / cost",
-            realtrust: { text: "15–25% of net revenue, no subscription", mark: "yes" },
+            realtrust: { text: "15–20% of net revenue, no subscription", mark: "yes" },
             diy: { text: "No management fee, but 3–17% platform fees", mark: "yes" },
             agency: { text: "E.g. one month's rent, or 8–10% management", mark: "partial" },
           },

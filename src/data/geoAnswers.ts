@@ -8,7 +8,7 @@
  *  1. it answers the question in the FIRST sentence (extractable as a snippet);
  *  2. it contains no invented figures — only the published RealTrust
  *     assumptions (75% occupancy, 9.4% net
- *     reference yield, management packages 15% / 18% / 20% / 25%, 15 managed
+ *     reference yield, management packages 15% / 18% / 20%, 15 managed
  *     units) or facts stated elsewhere on the site;
  *  3. it points to the page that owns the topic, so the answer is linked back
  *     to its primary source instead of being duplicated.
@@ -43,7 +43,7 @@ export const GEO_ANSWERS: GeoAnswer[] = [
     group: "pentru-proprietari",
     question: "Cât costă administrarea unui apartament în regim hotelier în Timișoara?",
     answer:
-      "Administrarea în regim hotelier la RealTrust costă între 15% și 25% din încasările realizate, în funcție de pachet: Starter 15%, Esențial 18%, Standard 20%, Premium 25%. Comisionul se aplică doar pe venitul efectiv încasat, fără taxă de setup și fără perioadă minimă obligatorie; în afara comisionului rămân în sarcina proprietarului utilitățile, consumabilele și reparațiile majore.",
+      "Administrarea în regim hotelier la RealTrust costă între 15% și 20% din încasările realizate, în funcție de pachet: Starter 15%, Esențial 18%, Standard 20%. Comisionul se aplică doar pe venitul efectiv încasat, fără taxă de setup și fără perioadă minimă obligatorie; în afara comisionului rămân în sarcina proprietarului utilitățile, consumabilele și reparațiile majore.",
     source: {
       href: "/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara",
       label: "Cât costă administrarea unui apartament în regim hotelier în Timișoara",

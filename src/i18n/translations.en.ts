@@ -91,7 +91,7 @@ export const en: Translations = {
     titleHighlight: "We run the operation.",
     subtitle: "Hotel-grade operations fully handled by our team: you don't reply to messages, coordinate suppliers or handle check-ins. You receive the monthly report and the net income in your account.",
     commission: "Management fee",
-    commissionValue: "15-25%",
+    commissionValue: "15–20%",
     commissionSuffix: "of net income, no hidden costs",
     items: [
       { title: "6.5–9.4% net return on transparent assumptions", description: "• 75% occupancy" },
@@ -276,7 +276,7 @@ export const en: Translations = {
       // Financial transparency
       { 
         question: "How do you ensure transparency of revenue and costs?", 
-        answer: "You receive a detailed monthly report with all income and costs broken down (15-25% management fee + 15-23% platform fees). Our commission-based model, instead of fixed subscriptions, aligns us with growing your occupancy and net income." 
+        answer: "You receive a detailed monthly report with all income and costs broken down (15–20% management fee + 15-23% platform fees). Our commission-based model, instead of fixed subscriptions, aligns us with growing your occupancy and net income." 
       },
       // Location & proximity
       { 
@@ -445,7 +445,7 @@ Thank you!`,
     revenueDescription: "Additional yield vs. long-term rental",
     listingTime: "72h",
     listingTimeLabel: "Average onboarding time",
-    commission: "15-25%",
+    commission: "15–20%",
     commissionLabel: "Management fee",
   },
   

@@ -102,8 +102,7 @@ const ContactSection = () => {
                   <div>
                     <p className="text-sm text-foreground/60 dark:text-muted-foreground">{t.contactSection.location}</p>
                     <address className="not-italic text-foreground font-medium leading-relaxed">
-                      Strada Samuil Micu nr. 14, ap. 4<br />
-                      300125, Timișoara, România
+                      Timișoara, România — vizionările au loc la apartament
                     </address>
                   </div>
                 </div>
@@ -129,11 +128,7 @@ const ContactSection = () => {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-foreground/60 dark:text-muted-foreground">{t.contactSection.mondayFriday}</span>
-                  <span className="text-foreground">09:00 - 18:00</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-foreground/60 dark:text-muted-foreground">{t.contactSection.saturday}</span>
-                  <span className="text-foreground">10:00 - 14:00</span>
+                  <span className="text-foreground">10:00 - 18:00</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-foreground/60 dark:text-muted-foreground">{t.contactSection.guestSupport}</span>
@@ -193,7 +188,7 @@ const ContactSection = () => {
         {/* Embedded Google Map */}
         <div className="mt-12 rounded-2xl overflow-hidden border border-border shadow-lg">
           <iframe
-            src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d1391!2d21.2495!3d45.7672!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4745676e0500c035%3A0xb9f12d5cbb8f8c07!2sStrada%20Samuil%20Micu%2014%2C%20300125%20Timi%C8%99oara!5e0!3m2!1sro!2sro"
+            src="https://www.google.com/maps?q=Timi%C8%99oara&z=12&output=embed"
             width="100%"
             height="350"
             style={{ border: 0 }}

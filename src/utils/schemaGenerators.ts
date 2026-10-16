@@ -48,7 +48,6 @@ export const generateLocalBusinessSchema = () => ({
 
   "address": {
     "@type": "PostalAddress",
-    "streetAddress": "Strada Samuil Micu Nr.14, ap.4",
     "addressLocality": "Timișoara",
     "addressRegion": "Timiș",
     "postalCode": "300125",
@@ -877,7 +876,6 @@ export const generateHomepageRealEstateAgentSchema = () => ({
   "priceRange": "€€",
   "address": {
     "@type": "PostalAddress",
-    "streetAddress": "Strada Samuil Micu Nr.14, ap.4",
     "addressLocality": "Timișoara",
     "addressRegion": "Timiș",
     "postalCode": "300125",

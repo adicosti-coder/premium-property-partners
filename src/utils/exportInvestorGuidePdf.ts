@@ -329,8 +329,8 @@ export const exportInvestorGuidePdf = async ({ language = "ro" }: ExportOptions 
   
   drawSubsection(isRo ? "1. Prețuri Dinamice" : "1. Dynamic Pricing");
   drawParagraph(isRo 
-    ? "Ajustarea automată a tarifelor în funcție de: sezonalitate, evenimente locale (concerte, conferințe, meciuri), zilele săptămânii și nivelul de ocupare din piață. Această strategie singură poate crește veniturile cu 15-25%."
-    : "Automatic rate adjustment based on: seasonality, local events (concerts, conferences, matches), days of the week, and market occupancy levels. This strategy alone can increase revenue by 15-25%."
+    ? "Ajustarea automată a tarifelor în funcție de: sezonalitate, evenimente locale (concerte, conferințe, meciuri), zilele săptămânii și nivelul de ocupare din piață. Această strategie singură poate crește veniturile cu 15–20%."
+    : "Automatic rate adjustment based on: seasonality, local events (concerts, conferences, matches), days of the week, and market occupancy levels. This strategy alone can increase revenue by 15–20%."
   );
   
   drawSubsection(isRo ? "2. Prezență Multi-Canal" : "2. Multi-Channel Presence");

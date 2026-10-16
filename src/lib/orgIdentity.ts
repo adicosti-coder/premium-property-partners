@@ -43,7 +43,6 @@ export const BRAND = {
   url: SITE_ORIGIN,
   foundingDate: "2001",
   address: {
-    streetAddress: "Strada Samuil Micu Nr.14, ap.4",
     addressLocality: "Timișoara",
     addressRegion: "Timiș",
     postalCode: "300125",
@@ -67,7 +66,6 @@ export const HOTEL_BRAND_NAME = "ApArt Hotel Timișoara";
 
 const POSTAL_ADDRESS = {
   "@type": "PostalAddress",
-  streetAddress: BRAND.address.streetAddress,
   addressLocality: BRAND.address.addressLocality,
   addressRegion: BRAND.address.addressRegion,
   postalCode: BRAND.address.postalCode,

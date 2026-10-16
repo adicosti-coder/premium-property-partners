@@ -76,7 +76,7 @@ const CalculatorROI = () => {
             ...REAL_ESTATE_AGENT_REF,
             areaServed: ["Timișoara", "Dumbrăvița", "Ghiroda", "Moșnița Nouă", "Giroc"],
           },
-          feesAndCommissionsSpecification: "Comision de administrare 15-25% din venit brut",
+          feesAndCommissionsSpecification: "Comision de administrare 15–20% din venit brut",
         }]}
       />
       <Header />

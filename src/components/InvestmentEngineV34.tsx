@@ -103,7 +103,7 @@ const InvestmentEngineV34 = ({
       if (isNaN(nightlyRate) || nightlyRate < 5) return null;
       // Hotel regime: nightly rate × 30 days × occupancy%
       chirieEfectiva = nightlyRate * 30 * (occupancyPct / 100);
-      managementFactor = 0.20; // 20% management (mid-range 15-25%)
+      managementFactor = 0.20; // 20% management (mid-range 15–20%)
       venitBrutAnual = chirieEfectiva * 12;
     } else {
       if (isNaN(chirie) || chirie < 10) return null;

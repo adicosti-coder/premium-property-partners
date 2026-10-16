@@ -82,28 +82,6 @@ const packages = {
       ],
       cta: "Alege Standard",
     },
-    {
-      id: "premium",
-      icon: Star,
-      name: "Premium",
-      tagline: "Randament maxim",
-      commission: "25%",
-      commissionNote: "din venitul brut",
-      highlight: false,
-      features: [
-        { text: "Listare pe Airbnb & Booking.com", included: true },
-        { text: "Fotografii & video profesionale", included: true },
-        { text: "Self check-in 24/7 cu smart lock", included: true },
-        { text: "Coordonare curățenie profesională & inspecție calitate", included: true },
-        { text: "Suport clienți 24/7 dedicat", included: true },
-        { text: "Rapoarte financiare în timp real", included: true },
-        { text: "Prețuri dinamice + revenue management", included: true },
-        { text: "Listare pe 10+ canale premium", included: true },
-        { text: "Manager dedicat proprietate", included: true },
-        { text: "Analiză ROI & optimizare avansată", included: true },
-      ],
-      cta: "Alege Premium",
-    },
   ],
   en: [
     {
@@ -172,28 +150,6 @@ const packages = {
       ],
       cta: "Choose Standard",
     },
-    {
-      id: "premium",
-      icon: Star,
-      name: "Premium",
-      tagline: "Maximum yield",
-      commission: "25%",
-      commissionNote: "of gross revenue",
-      highlight: false,
-      features: [
-        { text: "Listing on Airbnb & Booking.com", included: true },
-        { text: "Professional photos & video", included: true },
-        { text: "24/7 self check-in with smart lock", included: true },
-        { text: "Professional cleaning coordination & quality inspection", included: true },
-        { text: "Dedicated 24/7 guest support", included: true },
-        { text: "Real-time financial reports", included: true },
-        { text: "Dynamic pricing + revenue management", included: true },
-        { text: "Listing on 10+ premium channels", included: true },
-        { text: "Dedicated property manager", included: true },
-        { text: "ROI analysis & advanced optimization", included: true },
-      ],
-      cta: "Choose Premium",
-    },
   ],
 };
 
@@ -232,7 +188,7 @@ const Preturi = () => {
   const seo = {
     ro: {
       title: "Prețuri Administrare Apartamente Timișoara | RealTrust",
-      description: "Pachete administrare regim hotelier RealTrust: Starter 15%, Esențial 18%, Standard 20%, Premium 25%. Fără costuri ascunse. Comparație completă.",
+      description: "Pachete administrare regim hotelier RealTrust: Starter 15%, Esențial 18%, Standard 20%. Fără costuri ascunse. Comparație completă.",
     },
     en: {
       title: "Apartment Management Pricing Timișoara | RealTrust",
@@ -246,15 +202,15 @@ const Preturi = () => {
   const pricingFaqItems = [
     {
       question: "Ce costuri implică administrarea unui imobil în Timișoara?",
-      answer: "Costurile de administrare imobil în Timișoara la RealTrust sunt incluse într-un comision unic procentual din venitul brut: Starter 15%, Esențial 18%, Standard 20%, Premium 25%. Acest tarif acoperă listarea pe Booking/Airbnb, check-in, curățenie, suport oaspeți, prețuri dinamice și raportare. Nu există taxe ascunse de setup, abonament sau retragere.",
+      answer: "Costurile de administrare imobil în Timișoara la RealTrust sunt incluse într-un comision unic procentual din venitul brut: Starter 15%, Esențial 18%, Standard 20%. Acest tarif acoperă listarea pe Booking/Airbnb, check-in, curățenie, suport oaspeți, prețuri dinamice și raportare. Nu există taxe ascunse de setup, abonament sau retragere.",
     },
     {
       question: "Care este tariful de administrare proprietăți în Timișoara?",
-      answer: "Tariful de administrare proprietăți în Timișoara variază între 15% și 25% din venitul brut, în funcție de pachet. Pentru un apartament cu venit brut de 1.800€/lună, comisionul Standard (20%) este 360€/lună. Diferența față de auto-administrare este compensată de creșterea ocupării (75% vs 50%) și a tarifului mediu pe noapte.",
+      answer: "Tariful de administrare proprietăți în Timișoara variază între 15% și 20% din venitul brut, în funcție de pachet. Pentru un apartament cu venit brut de 1.800€/lună, comisionul Standard (20%) este 360€/lună. Diferența față de auto-administrare este compensată de creșterea ocupării (75% vs 50%) și a tarifului mediu pe noapte.",
     },
     {
       question: "Care sunt pachetele de administrare regim hotelier disponibile?",
-      answer: "Oferim 4 pachete de administrare regim hotelier: Starter (15% — listare basic), Esențial (18% — fotografii + curățenie), Standard (20% — cel mai popular, prețuri dinamice + 10+ canale), Premium (25% — manager dedicat + revenue management avansat). Toate includ raportare lunară transparentă.",
+      answer: "Oferim 3 pachete de administrare regim hotelier: Starter (15% — listare basic), Esențial (18% — fotografii + curățenie), Standard (20% — cel mai popular, prețuri dinamice + 10+ canale). Toate includ raportare lunară transparentă.",
     },
     {
       question: "Administrați apartamente în zone cu cerere ridicată (Continental, Hella, Piața 700)?",
@@ -274,7 +230,7 @@ const Preturi = () => {
     ...REAL_ESTATE_AGENT_SCHEMA,
     "@type": ["RealEstateAgent", "LocalBusiness"],
     "url": `${BASE_URL}/preturi`,
-    "priceRange": "15%-25%",
+    "priceRange": "15%-20%",
   };
 
   // alias used by servicePriceSchema.provider below
@@ -367,7 +323,7 @@ const Preturi = () => {
       {/* Pricing Cards */}
       <section id="pachete" className="py-16 px-6 scroll-mt-24">
         <div className="container mx-auto max-w-6xl">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {pkgs.map((pkg) => {
               const Icon = pkg.icon;
               return (
