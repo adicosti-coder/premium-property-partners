@@ -905,7 +905,6 @@ function buildStaticRoutes(): PrerenderRoute[] {
       telephone: '+40799069256',
       address: {
         '@type': 'PostalAddress',
-        streetAddress: '',
         addressLocality: 'Timișoara',
         addressRegion: 'Timiș',
         postalCode: '300125',
@@ -1162,7 +1161,6 @@ function buildStaticRoutes(): PrerenderRoute[] {
           areaServed: { '@type': 'City', name: 'Timișoara' },
           address: {
             '@type': 'PostalAddress',
-            streetAddress: '',
             addressLocality: 'Timișoara',
             addressRegion: 'Timiș',
             postalCode: '300125',
@@ -1382,7 +1380,6 @@ function buildStaticRoutes(): PrerenderRoute[] {
         areaServed: 'Timișoara',
         address: {
           '@type': 'PostalAddress',
-          streetAddress: '',
           addressLocality: 'Timișoara',
           addressRegion: 'Timiș',
           postalCode: '300125',
@@ -1484,7 +1481,6 @@ function buildStaticRoutes(): PrerenderRoute[] {
         areaServed: 'Timișoara',
         address: {
           '@type': 'PostalAddress',
-          streetAddress: '',
           addressLocality: 'Timișoara',
           addressRegion: 'Timiș',
           postalCode: '300125',

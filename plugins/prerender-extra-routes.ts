@@ -538,7 +538,6 @@ export function buildRemainingStaticRoutes(): ExtraRoute[] {
         <li><strong>Starter — 15%</strong> din venitul încasat</li>
         <li><strong>Esențial — 18%</strong> din venitul încasat</li>
         <li><strong>Standard — 20%</strong> din venitul încasat</li>
-        <li><strong>Premium — 25%</strong> din venitul încasat</li>
       </ul>
       <p>Comisionul se aplică la venitul efectiv încasat, fără costuri ascunse. Ipotezele folosite în proiecțiile noastre: randament net țintă 9,4%, ocupare medie 75% și 27% deduceri pentru management și taxe.</p>
       <p>Vezi <a href="${BASE_URL}/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara">cât costă administrarea unui apartament în regim hotelier</a>, <a href="${BASE_URL}/pentru-proprietari">serviciul complet pentru proprietari</a> și <a href="${BASE_URL}/calculator-roi">calculatorul de randament</a>.</p>
