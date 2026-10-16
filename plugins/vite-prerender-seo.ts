@@ -891,7 +891,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
   // (Firecrawl, Bingbot, AI Overviews) see local entities without JS.
   routes.push({
     path: '/',
-    title: 'RealTrust Timișoara | Imobiliare, Investiții & Property Management',
+    title: 'RealTrust Timișoara | Imobiliare, Investiții, Administrare',
     description: 'RealTrust Timișoara oferă servicii imobiliare, investiții și administrare de proprietăți în regim hotelier. Analiză de randament, vânzări, închirieri și property management.',
     h1: 'RealTrust Timișoara — Imobiliare, Investiții și Property Management',
     canonical: `${BASE_URL}/`,
@@ -1868,7 +1868,8 @@ function fitTitle(title: string): string {
       candidates.push([subject, ...rest.slice(0, k)].join(' | '));
       if (brand && k < rest.length - 1) candidates.push([subject, ...rest.slice(0, k), brand].join(' | '));
     }
-    const fitted = candidates.find((c) => c.length <= 60 && c.length > 0);
+    // Never shrink to a bare brand/subject: titles under 35 chars score as "too short".
+    const fitted = candidates.find((c) => c.length <= 60 && c.length >= 35);
     if (fitted) return fitted;
   }
 
