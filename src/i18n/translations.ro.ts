@@ -90,7 +90,7 @@ export const ro = {
     titleHighlight: "Noi construim operațiunea.",
     subtitle: "Nu răspunzi mesajelor la 2 noaptea, nu cauți femeie de serviciu, nu negociezi cu nimeni. Noi ducem operarea în regim hotelier de la cap la coadă. Tu primești raportul lunar și banii în cont.",
     commission: "Comision de administrare",
-    commissionValue: "15-25%",
+    commissionValue: "15–20%",
     commissionSuffix: "din încasările nete — fără taxe ascunse, fără costuri surpriză",
     items: [
       { title: "6,5–9,4% net, cu ipotezele pe masă", description: "• Ocupare 75%" },
@@ -275,7 +275,7 @@ export const ro = {
       // Transparență financiară
       { 
         question: "Cum asigurați transparența veniturilor și a costurilor?", 
-        answer: "Primești un raport lunar detaliat, cu toate intrările și costurile defalcate (15-25% comision administrare + 15-23% comisioane platforme). Modelul nostru pe comision, în locul abonamentelor fixe, ne motivează să creștem ocuparea și venitul tău net." 
+        answer: "Primești un raport lunar detaliat, cu toate intrările și costurile defalcate (15–20% comision administrare + 15-23% comisioane platforme). Modelul nostru pe comision, în locul abonamentelor fixe, ne motivează să creștem ocuparea și venitul tău net." 
       },
       // Locație & proximitate
       { 
@@ -444,7 +444,7 @@ Mulțumesc!`,
     revenueDescription: "Venit suplimentar față de închirierea clasică",
     listingTime: "72h",
     listingTimeLabel: "De la semnare la prima listare",
-    commission: "15-25%",
+    commission: "15–20%",
     commissionLabel: "Comision de management",
   },
   

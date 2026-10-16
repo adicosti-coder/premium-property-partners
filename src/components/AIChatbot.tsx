@@ -340,8 +340,8 @@ const getContextualQuickActions = (lang: "ro" | "en"): string[] => {
   
   if (path.startsWith("/pentru-proprietari") || path.startsWith("/investitii")) {
     return lang === "ro"
-      ? ["💰 Calculează randamentul proprietății mele", "📊 Comision 15-25% — ce include fiecare pachet?", "📸 Vreau evaluare gratuită a apartamentului", "📖 Citește Ghidul 2026"]
-      : ["💰 Calculate my property's yield", "📊 15-25% commission — what's included?", "📸 I want a free apartment evaluation", "📖 Read the 2026 Guide"];
+      ? ["💰 Calculează randamentul proprietății mele", "📊 Comision 15–20% — ce include fiecare pachet?", "📸 Vreau evaluare gratuită a apartamentului", "📖 Citește Ghidul 2026"]
+      : ["💰 Calculate my property's yield", "📊 15–20% commission — what's included?", "📸 I want a free apartment evaluation", "📖 Read the 2026 Guide"];
   }
   if (path.startsWith("/proprietate/")) {
     return lang === "ro"

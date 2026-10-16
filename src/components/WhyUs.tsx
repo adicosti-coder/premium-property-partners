@@ -59,7 +59,7 @@ const WhyUs = ({ variant = "owner" }: WhyUsProps) => {
             "Acces direct la sistemul de rezervări, rapoarte clare de venituri și comisioane corecte, direct aliniate cu succesul proprietății. Fără taxe ascunse, fără lock-in abuziv.",
           highlights: [
             "Dashboard & raportare lunară",
-            "Comision 15-25% din net",
+            "Comision 15–20% din net",
             "Fără setup fee sau costuri ascunse",
             "Reziliere cu 30 de zile preaviz",
           ],
@@ -118,7 +118,7 @@ const WhyUs = ({ variant = "owner" }: WhyUsProps) => {
             "Direct access to the booking system, clear revenue reports, and fair commissions aligned with your property's success. No hidden fees, no abusive lock-ins.",
           highlights: [
             "Dashboard & monthly reporting",
-            "15-25% commission on net income",
+            "15–20% commission on net income",
             "No setup fees or hidden costs",
             "30-day notice termination",
           ],

@@ -7,7 +7,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
  * Spells out the full equation behind the estimated 9.4% net ROI so an owner
  * can reconcile the number with their own math. Each cost is listed exactly
  * once (no double counting):
- *  - Property Management RealTrust: 15-25% of revenue, depending on the package
+ *  - Property Management RealTrust: 15–20% of revenue, depending on the package
  *    (same range as the pricing page);
  *  - platform commissions, income tax and consumables are separate costs;
  *  - cleaning fee is paid separately by the guest (not deducted from the owner);
@@ -20,7 +20,7 @@ const YieldTransparencyNote = ({ className = "" }: { className?: string }) => {
   const rows = ro
     ? [
         {
-          title: "Property Management RealTrust — 15-25% din încasări, în funcție de pachet",
+          title: "Property Management RealTrust — 15–20% din încasări, în funcție de pachet",
           body:
             "Acoperă administrarea completă: listarea și optimizarea prețurilor, comunicarea cu oaspeții, check-in digital, coordonarea curățeniei și raportarea lunară.",
         },
@@ -42,7 +42,7 @@ const YieldTransparencyNote = ({ className = "" }: { className?: string }) => {
       ]
     : [
         {
-          title: "RealTrust Property Management — 15-25% of revenue, depending on the package",
+          title: "RealTrust Property Management — 15–20% of revenue, depending on the package",
           body:
             "Covers full management: listing and price optimisation, guest communication, digital check-in, cleaning coordination and monthly reporting.",
         },

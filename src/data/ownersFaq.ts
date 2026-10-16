@@ -20,7 +20,7 @@ export const OWNERS_FAQ_DATA = {
         },
         {
           q: "Care este durata minimă a contractului de property management?",
-          a: "Contractul standard RealTrust este flexibil, fără perioadă minimă obligatorie. Poți renunța oricând cu un preaviz de 30 de zile. Această flexibilitate ne diferențiază de competiție și reflectă încrederea în calitatea serviciilor noastre — proprietarii noștri obțin un ROI net verificat de 9.4%/an. Calculează venitul tău în 60 sec mai jos.",
+          a: "Contractul standard RealTrust este flexibil, fără perioadă minimă obligatorie. Poți renunța oricând cu un preaviz de 30 de zile. Această flexibilitate ne diferențiază de competiție și reflectă încrederea în calitatea serviciilor noastre — proprietarii noștri obțin un randament net estimat de 6,5–9,4%/an. Calculează venitul tău în 60 sec mai jos.",
         },
         {
           q: "Cum se gestionează daunele provocate de oaspeți?",

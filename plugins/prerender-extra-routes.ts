@@ -494,7 +494,7 @@ export function buildComplexRoutes(
 const ENTITY_SHORT =
   'RealTrust este o companie imobiliară din Timișoara (SC Imo Business Centrum SRL, CUI RO14380627) specializată în investiții imobiliare, vânzare, închiriere și administrare de apartamente în regim hotelier sub brandul ApArt Hotel by RealTrust.';
 
-const NAP_HTML = `<p>RealTrust — SC Imo Business Centrum SRL, Strada Samuil Micu Nr.14, ap.4, Timișoara 300125, județul Timiș. Telefon: +40 799 069 256. E-mail: info@realtrust.ro.</p>`;
+const NAP_HTML = `<p>RealTrust — SC Imo Business Centrum SRL, Timișoara 300125, județul Timiș. Telefon: +40 799 069 256. E-mail: info@realtrust.ro.</p>`;
 
 export function buildRemainingStaticRoutes(): ExtraRoute[] {
   const page = (
@@ -529,7 +529,7 @@ export function buildRemainingStaticRoutes(): ExtraRoute[] {
     page(
       '/preturi',
       'Prețuri administrare apartamente Timișoara | RealTrust',
-      'Pachete administrare regim hotelier RealTrust: Starter 15%, Esențial 18%, Standard 20%, Premium 25%. Fără costuri ascunse. Comparație completă.',
+      'Pachete administrare regim hotelier RealTrust: Starter 15%, Esențial 18%, Standard 20%. Fără costuri ascunse. Comparație completă.',
       'Prețuri administrare apartamente în regim hotelier, Timișoara',
       `
       <p>${ENTITY_SHORT}</p>

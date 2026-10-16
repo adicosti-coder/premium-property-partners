@@ -102,7 +102,7 @@ const ContactSection = () => {
                   <div>
                     <p className="text-sm text-foreground/60 dark:text-muted-foreground">{t.contactSection.location}</p>
                     <address className="not-italic text-foreground font-medium leading-relaxed">
-                      Strada Samuil Micu nr. 14, ap. 4<br />
+                      
                       300125, Timișoara, România
                     </address>
                   </div>
