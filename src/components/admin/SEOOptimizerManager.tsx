@@ -157,9 +157,21 @@ const SEOOptimizerManager = () => {
   }, [history, filter, filterLang, minScore]);
 
   const seoStats = useMemo(() => {
+    // Adrese vechi care doar redirecționează — nu sunt pagini reale, nu intră în scor.
+    const LEGACY_REDIRECTS = new Set(["/pentru-oaspeti", "/imobiliare-timisoara", "/servicii-imobiliare-timisoara"]);
+    const normalize = (u: string) => {
+      try {
+        const p = new URL(u);
+        return `${p.hostname.replace(/^www\./, "")}${p.pathname.replace(/\/+$/, "") || "/"}`;
+      } catch { return u; }
+    };
     const latest = new Map<string, AuditRow>();
     history.forEach((audit) => {
-      const key = `${audit.url}::${audit.language}`;
+      const path = normalize(audit.url).replace(/^[^/]+/, "");
+      if (LEGACY_REDIRECTS.has(path)) return;
+      // Audituri eșuate (AI indisponibil) nu reflectă pagina — le ignorăm.
+      if ((audit as any).raw_analysis?.ai_fallback) return;
+      const key = `${normalize(audit.url)}::${audit.language}`;
       if (!latest.has(key)) latest.set(key, audit);
     });
     const audits = Array.from(latest.values());
