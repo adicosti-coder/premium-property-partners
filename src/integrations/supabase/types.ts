@@ -6437,6 +6437,9 @@ export type Database = {
           marked_invalid_at: string | null
           migrated_from_scraper_id: string | null
           next_callback_at: string | null
+          outreach_error: string | null
+          outreach_status: string | null
+          outreach_status_at: string | null
           owner_sentiment: string | null
           persona_generated_at: string | null
           persona_snapshot: Json | null
@@ -6545,6 +6548,9 @@ export type Database = {
           marked_invalid_at?: string | null
           migrated_from_scraper_id?: string | null
           next_callback_at?: string | null
+          outreach_error?: string | null
+          outreach_status?: string | null
+          outreach_status_at?: string | null
           owner_sentiment?: string | null
           persona_generated_at?: string | null
           persona_snapshot?: Json | null
@@ -6653,6 +6659,9 @@ export type Database = {
           marked_invalid_at?: string | null
           migrated_from_scraper_id?: string | null
           next_callback_at?: string | null
+          outreach_error?: string | null
+          outreach_status?: string | null
+          outreach_status_at?: string | null
           owner_sentiment?: string | null
           persona_generated_at?: string | null
           persona_snapshot?: Json | null
