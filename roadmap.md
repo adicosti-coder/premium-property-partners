@@ -89,5 +89,5 @@
 - [x] Ambele rapoarte verificate în browser autentificat, cu titluri reale afișate; funcția de analiză reactivată
 
 ## Marketing
-- [ ] Test outreach Make.com pe numărul lui Adrian
-- [ ] Articol „Regim hotelier vs. chirie clasică în Timișoara – cifre reale” + text r/timisoara
+- [ ] Test outreach Make.com pe numărul lui Adrian — așteaptă numărul de telefon
+- [x] Articol „Regim hotelier vs. chirie clasică în Timișoara – cifre reale” + text r/timisoara
