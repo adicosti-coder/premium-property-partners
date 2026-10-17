@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { ExternalLink, MessageCircle, RefreshCw, ShieldCheck } from "lucide-react";
+import { ExternalLink, Loader2, MessageCircle, RefreshCw, Send, ShieldCheck } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import OwnerConsentFunnel from "./OwnerConsentFunnel";
 import OwnerQuickReplies from "./OwnerQuickReplies";
@@ -117,6 +117,31 @@ const WaPublishConsents = () => {
     return () => { void supabase.removeChannel(channel); };
   }, [load]);
 
+
+  const [makeSending, setMakeSending] = useState<string | null>(null);
+  /** „Trimite acord proprietar” → Make.com (phone +407…, title, zone, price, source_url). */
+  const sendOwnerConsentToMake = async (prospectId: string) => {
+    setMakeSending(prospectId);
+    try {
+      const { data, error } = await supabase.functions.invoke("make-owner-consent", {
+        body: { prospect_id: prospectId },
+      });
+      const res = data as { ok?: boolean; reason?: string } | null;
+      if (error || !res?.ok) {
+        const reason = res?.reason;
+        toast.error(
+          reason === "invalid_phone" ? "Anunțul nu are un număr de mobil valid."
+          : reason === "excluded" ? "Proprietarul este exclus de la contactare."
+          : reason === "agency" ? "Anunțul pare de la o agenție."
+          : "Make.com nu a confirmat trimiterea. Încearcă din nou.",
+        );
+        return;
+      }
+      toast.success("Acord trimis pe WhatsApp cu succes!");
+    } finally {
+      setMakeSending(null);
+    }
+  };
 
   const requestConsent = async (prospectId: string) => {
     setSending(prospectId);
@@ -282,6 +307,20 @@ const WaPublishConsents = () => {
                     >
                       <MessageCircle className="w-4 h-4 mr-2" />
                       Cere acordul pe WhatsApp
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="min-h-[44px]"
+                      disabled={makeSending === p.id}
+                      aria-busy={makeSending === p.id}
+                      onClick={() => void sendOwnerConsentToMake(p.id)}
+                    >
+                      {makeSending === p.id ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Send className="w-4 h-4 mr-2" />
+                      )}
+                      {makeSending === p.id ? "Se trimite…" : "Trimite acord proprietar"}
                     </Button>
                   </div>
                 </div>
