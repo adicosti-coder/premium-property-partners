@@ -87,3 +87,7 @@
 - [x] „Vezi anunțurile” în rapoartele zilnice și pe portaluri/zone: titlul extras de pe platformă și linkul către pagina-sursă, maximum 5 anunțuri, încărcate doar la cerere
 - [x] Exemple cu link și pe cardurile din Centrul Auto-îmbunătățire (Piața anunțurilor), salvate la fiecare analiză
 - [x] Ambele rapoarte verificate în browser autentificat, cu titluri reale afișate; funcția de analiză reactivată
+
+## Marketing
+- [ ] Test outreach Make.com pe numărul lui Adrian
+- [ ] Articol „Regim hotelier vs. chirie clasică în Timișoara – cifre reale” + text r/timisoara
