@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
+import { detectListingTransaction, SALE_PUBLISH_TEXT } from "@/lib/ownerOutreachTemplates";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import type { User } from "@supabase/supabase-js";
 import Header from "@/components/Header";
