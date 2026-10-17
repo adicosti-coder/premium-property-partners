@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
   const auth = await requireAdmin(req, corsHeaders);
   if (!auth.ok) return auth.response!;
 
-  let body: { prospect_id?: string } = {};
+  let body: { prospect_id?: string; message?: string } = {};
   try { body = await req.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
   const id = String(body.prospect_id || "");
   if (!/^[0-9a-f-]{36}$/i.test(id)) return json({ error: "prospect_id invalid" }, 400);
@@ -48,13 +48,16 @@ Deno.serve(async (req) => {
   const url = Deno.env.get("MAKE_OUTREACH_WEBHOOK_URL");
   if (!url) return json({ ok: false, reason: "webhook_not_configured" }, 500);
 
-  const payload = {
+  const payload: Record<string, string> = {
     phone,
     title: p.title ?? "",
     zone: p.zone ?? "",
     price: p.price != null ? String(p.price) : "",
     source_url: p.source_url ?? "",
   };
+  // Textul din caseta „Mesaj către proprietar" pleacă către Make.com, ca
+  // scenariul să trimită exact acest mesaj pe WhatsApp.
+  if (body.message?.trim()) payload.message = body.message.trim().slice(0, 1500);
   try {
     const r = await fetch(url, {
       method: "POST",

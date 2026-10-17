@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { defaultFirstTemplateKey, detectListingTransaction, getTemplate, saleMessageViolations } from "./ownerOutreachTemplates";
+import { defaultFirstTemplateKey, detectListingTransaction, getTemplate, saleMessageViolations, SALE_PUBLISH_TEXT } from "./ownerOutreachTemplates";
 
 describe("outreach template by listing type", () => {
+  it(" predefined sale text offers free publishing and asks DA or NU", () => {
+    expect(SALE_PUBLISH_TEXT).toContain("publicare gratuită");
+    expect(SALE_PUBLISH_TEXT).toContain("DA sau NU");
+    expect(saleMessageViolations(SALE_PUBLISH_TEXT)).toEqual([]);
+  });
   it("maps sale and rent listings", () => {
     const sale = detectListingTransaction({ source_url: "https://www.olx.ro/d/oferta/apartament-2-camere-vanzare-IDx.html" });
     const rent = detectListingTransaction({ title: "Apartament de închiriat, chirie 450 €", source_url: "https://www.storia.ro/ro/oferta/inchiriere-ap" });
