@@ -75,6 +75,11 @@ export function detectListingTransaction(l: {
 export const defaultFirstTemplateKey = (tx: ListingTransaction) =>
   tx === "vanzare" ? "first_sale" : "first_management";
 
+/** Textul predefinit din caseta „Mesaj către proprietar" pentru anunțurile de Vânzare:
+ *  publicare gratuită pe realtrust.ro + răspuns clar DA/NU pentru acord. */
+export const SALE_PUBLISH_TEXT =
+  "Bună ziua, am văzut anunțul dumneavoastră și vă propunem promovarea și publicarea gratuită a proprietății pe site-ul nostru. Doriți să o publicăm? Răspundeți cu DA sau NU.";
+
 /** Ce nu are voie să apară într-un mesaj automat pentru un anunț de vânzare. */
 export function saleMessageViolations(message: string): string[] {
   const t = message.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
