@@ -3,7 +3,7 @@ import { defaultFirstTemplateKey, detectListingTransaction, getTemplate, saleMes
 
 describe("outreach template by listing type", () => {
   it(" predefined sale text offers free publishing and asks DA or NU", () => {
-    expect(SALE_PUBLISH_TEXT).toContain("publicare gratuită");
+    expect(SALE_PUBLISH_TEXT).toContain("publicarea gratuită");
     expect(SALE_PUBLISH_TEXT).toContain("DA sau NU");
     expect(saleMessageViolations(SALE_PUBLISH_TEXT)).toEqual([]);
   });
