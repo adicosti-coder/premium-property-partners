@@ -48,6 +48,7 @@ export default function AnuntProprietar() {
   const [durationMonths, setDurationMonths] = useState("12");
   const [outreachText, setOutreachText] = useState("");
   const [savingOutreach, setSavingOutreach] = useState(false);
+  const [sendingMake, setSendingMake] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -150,6 +151,8 @@ export default function AnuntProprietar() {
     setPubDesc(published?.description ?? listing.enriched_description ?? listing.description ?? "");
     const firstImage = Array.isArray(listing.images) ? String(listing.images[0] ?? "") : "";
     setPubImage(published?.image_url ?? firstImage);
+    // Anunț de Vânzare: textul predefinit axat pe publicare gratuită și răspuns DA/NU.
+    setOutreachText((t) => t || (detectListingTransaction(listing) === "vanzare" ? SALE_PUBLISH_TEXT : t));
   }, [listing, published]);
 
   const canPublish = consent?.status === "consented";
