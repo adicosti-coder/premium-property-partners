@@ -19,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import {
-  ArrowLeft, Copy, ExternalLink, Globe, Loader2, MessageCircle, Phone, ShieldAlert, ShieldCheck, Undo2,
+  ArrowLeft, Copy, ExternalLink, Globe, Loader2, MessageCircle, Pencil, Phone, ShieldAlert, ShieldCheck, Undo2,
 } from "lucide-react";
 
 const eur = (v: number | null, currency?: string | null) =>
@@ -49,6 +49,30 @@ export default function AnuntProprietar() {
   const [outreachText, setOutreachText] = useState("");
   const [savingOutreach, setSavingOutreach] = useState(false);
   const [sendingMake, setSendingMake] = useState(false);
+  const [editingPhone, setEditingPhone] = useState(false);
+  const [phoneDraft, setPhoneDraft] = useState("");
+  const [savingPhone, setSavingPhone] = useState(false);
+
+  /** Salvează telefonul editat; make-owner-consent îl citește apoi la „WhatsApp". */
+  const savePhone = async () => {
+    let d = phoneDraft.replace(/\D/g, "");
+    if (d.startsWith("0040")) d = d.slice(4);
+    else if (d.startsWith("40")) d = d.slice(2);
+    if (d.startsWith("0")) d = d.slice(1);
+    if (!/^7\d{8}$/.test(d)) {
+      toast({ title: "Număr invalid", description: "Introdu un mobil românesc, ex. 0799 069 256.", variant: "destructive" });
+      return;
+    }
+    const local = `0${d}`;
+    setSavingPhone(true);
+    const { error } = await (supabase.from("prospect_listings") as any)
+      .update({ contact_phone: local, phone_normalized: local }).eq("id", id);
+    setSavingPhone(false);
+    if (error) { toast({ title: "Nu s-a salvat", description: error.message, variant: "destructive" }); return; }
+    setEditingPhone(false);
+    toast({ title: "Telefon salvat", description: local });
+    await qc.invalidateQueries({ queryKey: ["owner-listing-detail", id] });
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -403,6 +427,22 @@ export default function AnuntProprietar() {
                   <div className="rounded-lg border p-3">
                     <p className="text-xs text-muted-foreground mb-1">Contact proprietar (date personale)</p>
                     <p className="font-medium">{listing.contact_name || "—"}</p>
+                    {editingPhone ? (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <Input value={phoneDraft} onChange={(e) => setPhoneDraft(e.target.value)}
+                          placeholder="07xx xxx xxx" aria-label="Telefon proprietar" inputMode="tel"
+                          className="min-h-[44px] max-w-[200px]" />
+                        <Button size="sm" className="min-h-[44px]" disabled={savingPhone} onClick={savePhone}>
+                          {savingPhone && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}Salvează
+                        </Button>
+                        <Button size="sm" variant="ghost" className="min-h-[44px]" onClick={() => setEditingPhone(false)}>Anulează</Button>
+                      </div>
+                    ) : (
+                      <Button size="sm" variant="ghost" className="min-h-[44px] mt-1 px-2"
+                        onClick={() => { setPhoneDraft(listing.contact_phone || listing.phone_normalized || ""); setEditingPhone(true); }}>
+                        <Pencil className="h-4 w-4 mr-1.5" /> Editează telefonul
+                      </Button>
+                    )}
                     {listing.contact_phone ? (
                       <div className="flex flex-wrap gap-2 mt-2">
                         <Button asChild size="sm" variant="outline" className="min-h-[44px]">
