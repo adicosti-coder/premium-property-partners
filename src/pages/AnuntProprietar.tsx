@@ -145,6 +145,41 @@ export default function AnuntProprietar() {
     await qc.invalidateQueries({ queryKey: ["owner-listing-outreach", id] });
   };
 
+  /** „Trimite pe WhatsApp": textul din casetă pleacă către Make.com prin make-owner-consent. */
+  const sendWhatsappToMake = async () => {
+    if (!listing) return;
+    const message = outreachText.trim();
+    if (message.length < 10) {
+      toast({ title: "Scrie mesajul", description: "Mesajul are nevoie de cel puțin 10 caractere.", variant: "destructive" });
+      return;
+    }
+    setSendingMake(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("make-owner-consent", {
+        body: { prospect_id: listing.id, message },
+      });
+      if (error) throw error;
+      const res = (data ?? {}) as { ok?: boolean; reason?: string; error?: string };
+      if (res.ok) {
+        toast({ title: "Acord trimis pe WhatsApp cu succes!" });
+      } else if (res.reason === "invalid_phone") {
+        toast({ title: "Numărul nu este mobil valid", description: "Doar numerele 07… pot primi mesajul pe WhatsApp.", variant: "destructive" });
+      } else if (res.reason === "excluded") {
+        toast({ title: "Proprietarul a cerut să nu mai fie contactat", variant: "destructive" });
+      } else if (res.reason === "agency") {
+        toast({ title: "Anunțul pare de la o agenție", description: "Nu trimitem mesaje către agenții.", variant: "destructive" });
+      } else if (res.reason === "webhook_not_configured") {
+        toast({ title: "Webhook-ul Make.com nu este configurat", variant: "destructive" });
+      } else {
+        throw new Error(res.error || res.reason || "Trimiterea a eșuat");
+      }
+    } catch (e) {
+      toast({ title: "Trimiterea către Make.com nu a reușit", description: (e as Error)?.message ?? "Încearcă din nou.", variant: "destructive" });
+    } finally {
+      setSendingMake(false);
+    }
+  };
+
   useEffect(() => {
     if (!listing) return;
     setPubTitle(published?.title ?? listing.enriched_title ?? listing.title ?? "");
@@ -520,14 +555,11 @@ export default function AnuntProprietar() {
                     Salvează mesajul
                   </Button>
                   {listing.phone_normalized && (
-                    <Button asChild variant="outline" className="min-h-[44px]">
-                      <a
-                        href={`https://wa.me/${String(listing.phone_normalized).replace(/[^0-9]/g, "")}?text=${encodeURIComponent(outreachText)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Trimite pe WhatsApp
-                      </a>
+                    <Button onClick={sendWhatsappToMake} disabled={sendingMake || savingOutreach} className="min-h-[44px]">
+                      {sendingMake
+                        ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                        : <MessageCircle className="h-4 w-4 mr-1.5" />}
+                      Trimite pe WhatsApp
                     </Button>
                   )}
                 </div>
