@@ -4,6 +4,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { toOutreachPhone } from "../_shared/waPhone.ts";
+import { isTestPhone } from "../_shared/testPhoneAllowlist.ts";
 
 
 const corsHeaders = {
@@ -35,7 +36,7 @@ Deno.serve(async (req) => {
   if (!phone) reasons.push("not_mobile");
 
   if ((p.agency_suspicion_score ?? 0) >= 70 || ["agency", "agentie"].includes(String(p.seller_type || ""))) reasons.push("agency");
-  if (p.do_not_call || p.auto_blacklisted_at) reasons.push("excluded");
+  if ((p.do_not_call || p.auto_blacklisted_at) && !isTestPhone(phone)) reasons.push("excluded");
   if (["rejected", "expired", "failed", "posted"].includes(String(p.lifecycle_status))) reasons.push("closed");
   if (p.outreach_status && !body.dry_run) reasons.push("already_sent");
   if (reasons.length) return json({ ok: false, skipped: reasons });
