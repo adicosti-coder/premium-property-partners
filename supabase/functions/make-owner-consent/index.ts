@@ -5,6 +5,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { toOutreachPhone } from "../_shared/waPhone.ts";
+import { isTestPhone } from "../_shared/testPhoneAllowlist.ts";
 
 const corsHeaders = {
 
@@ -36,7 +37,7 @@ Deno.serve(async (req) => {
 
   const phone = toOutreachPhone(p.phone_normalized || p.contact_phone);
   if (!phone) return json({ ok: false, reason: "invalid_phone" });
-  if (p.do_not_call || p.auto_blacklisted_at) return json({ ok: false, reason: "excluded" });
+  if ((p.do_not_call || p.auto_blacklisted_at) && !isTestPhone(phone)) return json({ ok: false, reason: "excluded" });
   if ((p.agency_suspicion_score ?? 0) >= 70 || ["agency", "agentie"].includes(String(p.seller_type || "")))
     return json({ ok: false, reason: "agency" });
 
