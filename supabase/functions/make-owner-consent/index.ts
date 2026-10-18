@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
 
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const { data: p, error } = await sb.from("prospect_listings")
-    .select("id,title,zone,price,source_url,phone_normalized,contact_phone,seller_type,agency_suspicion_score,do_not_call,auto_blacklisted_at")
+    .select("id,title,zone,price,source_url,category,phone_normalized,contact_phone,seller_type,agency_suspicion_score,do_not_call,auto_blacklisted_at")
     .eq("id", id).maybeSingle();
   if (error) return json({ error: error.message }, 500);
   if (!p) return json({ error: "not_found" }, 404);
@@ -51,6 +51,7 @@ Deno.serve(async (req) => {
     zone: p.zone ?? "",
     price: p.price != null ? String(p.price) : "",
     source_url: p.source_url ?? "",
+    listing_type: p.category === "vanzare" ? "vanzare" : "inchiriere",
   };
   // Textul din caseta „Mesaj către proprietar" pleacă către Make.com, ca
   // scenariul să trimită exact acest mesaj pe WhatsApp.
