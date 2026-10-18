@@ -35,7 +35,8 @@ Deno.serve(async (req) => {
   const reasons: string[] = [];
   if (!phone) reasons.push("not_mobile");
 
-  if ((p.agency_suspicion_score ?? 0) >= 70 || ["agency", "agentie"].includes(String(p.seller_type || ""))) reasons.push("agency");
+  // Numărul de test al lui Adrian ocolește și excluderea de contact, și verificarea de agenție.
+  if (((p.agency_suspicion_score ?? 0) >= 70 || ["agency", "agentie"].includes(String(p.seller_type || ""))) && !isTestPhone(phone)) reasons.push("agency");
   if ((p.do_not_call || p.auto_blacklisted_at) && !isTestPhone(phone)) reasons.push("excluded");
   if (["rejected", "expired", "failed", "posted"].includes(String(p.lifecycle_status))) reasons.push("closed");
   if (p.outreach_status && !body.dry_run) reasons.push("already_sent");

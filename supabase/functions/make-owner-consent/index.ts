@@ -37,8 +37,9 @@ Deno.serve(async (req) => {
 
   const phone = toOutreachPhone(p.phone_normalized || p.contact_phone);
   if (!phone) return json({ ok: false, reason: "invalid_phone" });
+  // Numărul de test al lui Adrian ocolește și excluderea de contact, și verificarea de agenție.
   if ((p.do_not_call || p.auto_blacklisted_at) && !isTestPhone(phone)) return json({ ok: false, reason: "excluded" });
-  if ((p.agency_suspicion_score ?? 0) >= 70 || ["agency", "agentie"].includes(String(p.seller_type || "")))
+  if (((p.agency_suspicion_score ?? 0) >= 70 || ["agency", "agentie"].includes(String(p.seller_type || ""))) && !isTestPhone(phone))
     return json({ ok: false, reason: "agency" });
 
   const url = Deno.env.get("MAKE_OUTREACH_WEBHOOK_URL");
