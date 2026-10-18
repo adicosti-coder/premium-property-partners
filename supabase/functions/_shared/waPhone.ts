@@ -25,6 +25,17 @@ export function canonicalWaPhone(raw: string | null | undefined): string | null 
   return d ? `+${d}` : null;
 }
 
+/**
+ * Formatul trimite către Make.com: cifre internaționale COMPLETE, fără „+”
+ * (ex. "40799069256"). Prefixul "40" se adaugă automat pentru "07…" / "7…".
+ * Doar numere de mobil românești; altfel null.
+ */
+export function toOutreachPhone(raw: string | null | undefined): string | null {
+  const d = toWaDigits(raw);
+  return d && /^407\d{8}$/.test(d) ? d : null;
+}
+
+
 const SCOPE_PREFIX = "wa-phone-send:";
 
 /**
