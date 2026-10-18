@@ -3,6 +3,8 @@
 // Apelat de triggerul trg_fire_make_outreach (x-cron-secret) sau de Admin (test, dry_run).
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
+import { toOutreachPhone } from "../_shared/waPhone.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,10 +30,10 @@ Deno.serve(async (req) => {
   if (error) return json({ error: error.message }, 500);
   if (!p) return json({ error: "not_found" }, 404);
 
-  const digits = String(p.phone_normalized || p.contact_phone || "").replace(/\D/g, "");
-  const local = digits.startsWith("40") ? "0" + digits.slice(2) : digits;
+  const phone = toOutreachPhone(p.phone_normalized || p.contact_phone);
   const reasons: string[] = [];
-  if (!/^07\d{8}$/.test(local)) reasons.push("not_mobile");
+  if (!phone) reasons.push("not_mobile");
+
   if ((p.agency_suspicion_score ?? 0) >= 70 || ["agency", "agentie"].includes(String(p.seller_type || ""))) reasons.push("agency");
   if (p.do_not_call || p.auto_blacklisted_at) reasons.push("excluded");
   if (["rejected", "expired", "failed", "posted"].includes(String(p.lifecycle_status))) reasons.push("closed");
@@ -39,9 +41,10 @@ Deno.serve(async (req) => {
   if (reasons.length) return json({ ok: false, skipped: reasons });
 
   const payload = {
-    id: p.id, phone: local, title: p.title ?? "", zone: p.zone ?? "",
+    id: p.id, phone: phone ?? "", title: p.title ?? "", zone: p.zone ?? "",
     price: p.price != null ? String(p.price) : "", source_url: p.source_url ?? "",
   };
+
   if (body.dry_run) return json({ ok: true, dry_run: true, payload });
 
   const url = Deno.env.get("MAKE_OUTREACH_WEBHOOK_URL");

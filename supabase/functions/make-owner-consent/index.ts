@@ -1,11 +1,13 @@
 // make-owner-consent — acțiunea Admin „Trimite acord proprietar”: trimite către
 // webhook-ul Make.com de Outreach (MAKE_OUTREACH_WEBHOOK_URL) exact
-// { phone (+407…), title, zone, price, source_url } pentru anunțul selectat.
+// { phone (407…, fără „+”), title, zone, price, source_url } pentru anunțul selectat.
 // Admin-only; respectă aceleași excluderi ca outreach-dispatch.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireAdmin } from "../_shared/adminAuth.ts";
+import { toOutreachPhone } from "../_shared/waPhone.ts";
 
 const corsHeaders = {
+
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -13,15 +15,8 @@ const corsHeaders = {
 const json = (b: unknown, s = 200) =>
   new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-export function toIntlRoMobile(raw?: string | null): string | null {
-  let d = String(raw || "").replace(/\D/g, "");
-  if (d.startsWith("00")) d = d.slice(2);
-  if (d.startsWith("0")) d = "40" + d.slice(1);
-  if (d.startsWith("7") && d.length === 9) d = "40" + d;
-  return /^407\d{8}$/.test(d) ? `+${d}` : null;
-}
-
 Deno.serve(async (req) => {
+
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
   const auth = await requireAdmin(req, corsHeaders);
@@ -39,7 +34,7 @@ Deno.serve(async (req) => {
   if (error) return json({ error: error.message }, 500);
   if (!p) return json({ error: "not_found" }, 404);
 
-  const phone = toIntlRoMobile(p.phone_normalized || p.contact_phone);
+  const phone = toOutreachPhone(p.phone_normalized || p.contact_phone);
   if (!phone) return json({ ok: false, reason: "invalid_phone" }, 422);
   if (p.do_not_call || p.auto_blacklisted_at) return json({ ok: false, reason: "excluded" }, 422);
   if ((p.agency_suspicion_score ?? 0) >= 70 || ["agency", "agentie"].includes(String(p.seller_type || "")))
