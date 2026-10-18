@@ -126,7 +126,11 @@ const WaPublishConsents = () => {
       const { data, error } = await supabase.functions.invoke("make-owner-consent", {
         body: { prospect_id: prospectId },
       });
-      const res = data as { ok?: boolean; reason?: string } | null;
+      let body: any = data;
+      if (error) {
+        try { body = await (error as any).context?.json?.(); } catch { body = null; }
+      }
+      const res = body as { ok?: boolean; reason?: string } | null;
       if (error || !res?.ok) {
         const reason = res?.reason;
         toast.error(
