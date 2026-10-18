@@ -131,6 +131,7 @@ const RouteBoundary = ({ children }: { children: React.ReactNode }) => {
 };
 
 const ContactPage = lazyWithRetry(() => import("./pages/ContactPage"));
+const ColaborareAgenti = lazyWithRetry(() => import("./pages/ColaborareAgenti"));
 const IntrebariFrecvente = lazyWithRetry(() => import("./pages/IntrebariFrecvente"));
 const Rezervare = lazyWithRetry(() => import("./pages/Rezervare"));
 const AdaugaAnunt = lazyWithRetry(() => import("./pages/AdaugaAnunt"));
@@ -347,6 +348,7 @@ const App = () => (
                     <Route path="/admin/properties/fast-review" element={<FastReview />} />
                     <Route path="/prospect-listings" element={<Navigate to="/admin/prospect-listings" replace />} />
                     <Route path="/contact" element={<ContactPage />} />
+                    <Route path="/colaborare-agenti" element={<ColaborareAgenti />} />
                     <Route path="/rezervare" element={<Rezervare />} />
                     <Route path="/adauga-anunt" element={<AdaugaAnunt />} />
                     <Route path="/procesul-nostru" element={<ProcesulNostru />} />
