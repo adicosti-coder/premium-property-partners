@@ -64,9 +64,10 @@ export default function AnuntProprietar() {
       return;
     }
     const local = `0${d}`;
+    const e164 = `+40${d}`;
     setSavingPhone(true);
     const { error } = await (supabase.from("prospect_listings") as any)
-      .update({ contact_phone: local, phone_normalized: local }).eq("id", id);
+      .update({ contact_phone: local, phone_normalized: e164 }).eq("id", id);
     setSavingPhone(false);
     if (error) { toast({ title: "Nu s-a salvat", description: error.message, variant: "destructive" }); return; }
     setEditingPhone(false);
@@ -182,8 +183,12 @@ export default function AnuntProprietar() {
       const { data, error } = await supabase.functions.invoke("make-owner-consent", {
         body: { prospect_id: listing.id, message },
       });
-      if (error) throw error;
-      const res = (data ?? {}) as { ok?: boolean; reason?: string; error?: string };
+      let body: any = data;
+      if (error) {
+        try { body = await (error as any).context?.json?.(); } catch { body = null; }
+        if (!body?.reason) throw error;
+      }
+      const res = (body ?? {}) as { ok?: boolean; reason?: string; error?: string };
       if (res.ok) {
         toast({ title: "Acord trimis pe WhatsApp cu succes!" });
       } else if (res.reason === "invalid_phone") {
