@@ -35,13 +35,13 @@ Deno.serve(async (req) => {
   if (!p) return json({ error: "not_found" }, 404);
 
   const phone = toOutreachPhone(p.phone_normalized || p.contact_phone);
-  if (!phone) return json({ ok: false, reason: "invalid_phone" }, 422);
-  if (p.do_not_call || p.auto_blacklisted_at) return json({ ok: false, reason: "excluded" }, 422);
+  if (!phone) return json({ ok: false, reason: "invalid_phone" });
+  if (p.do_not_call || p.auto_blacklisted_at) return json({ ok: false, reason: "excluded" });
   if ((p.agency_suspicion_score ?? 0) >= 70 || ["agency", "agentie"].includes(String(p.seller_type || "")))
-    return json({ ok: false, reason: "agency" }, 422);
+    return json({ ok: false, reason: "agency" });
 
   const url = Deno.env.get("MAKE_OUTREACH_WEBHOOK_URL");
-  if (!url) return json({ ok: false, reason: "webhook_not_configured" }, 500);
+  if (!url) return json({ ok: false, reason: "webhook_not_configured" });
 
   const payload: Record<string, string> = {
     phone,
@@ -70,6 +70,6 @@ Deno.serve(async (req) => {
     await sb.from("prospect_listings").update({
       outreach_status: "failed", outreach_status_at: new Date().toISOString(), outreach_error: String(e).slice(0, 300),
     }).eq("id", id);
-    return json({ ok: false, reason: "make_error", error: String(e) }, 502);
+    return json({ ok: false, reason: "make_error", error: String(e) });
   }
 });
