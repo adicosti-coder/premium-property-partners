@@ -93,4 +93,4 @@
 - [x] Articol „Regim hotelier vs. chirie clasică în Timișoara – cifre reale” + text r/timisoara
 
 - [x] Cost: înlocuire model AI + curățare cron duplicat
-- [x] Verificare presiune bază de date — curățarea istoricului programărilor așteaptă acordul utilizatorului
+- [x] Verificare presiune bază de date + curățare istoric programări (6,5 GB → 12 MB) + curățare zilnică
