@@ -57,7 +57,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Query 2: Get referrals by email (safe - using .eq() with parameterized value)
     // Only query if email exists and is valid
     let byEmail: typeof byUserId = [];
-    if (email && email.includes("@")) {
+    if (email && email.includes("@") && user.email_confirmed_at) {
       const { data: emailData, error: error2 } = await supabase
         .from("referrals")
         .select(selectFields)

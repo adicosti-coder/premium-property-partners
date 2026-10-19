@@ -212,7 +212,7 @@ Deno.serve(async (req) => {
       status: 'suppressed',
     })
 
-    console.log('Email suppressed', { effectiveRecipient, templateName })
+    console.log('Email suppressed', { templateName })
     return new Response(
       JSON.stringify({ success: false, reason: 'email_suppressed' }),
       {
@@ -450,7 +450,7 @@ Deno.serve(async (req) => {
   })
 
   if (enqueueError) {
-    console.error('Failed to enqueue email', { error: enqueueError, templateName, effectiveRecipient })
+    console.error('Failed to enqueue email', { error: enqueueError, templateName })
     await supabase.from('email_send_log').insert({
       message_id: messageId,
       template_name: templateName,
@@ -465,7 +465,7 @@ Deno.serve(async (req) => {
     })
   }
 
-  console.log('Transactional email enqueued (Lovable Emails fallback)', { templateName, effectiveRecipient })
+  console.log('Transactional email enqueued (Lovable Emails fallback)', { templateName })
   return new Response(
     JSON.stringify({ success: true, queued: true, provider: 'lovable-emails' }),
     { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
