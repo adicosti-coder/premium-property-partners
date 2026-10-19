@@ -67,16 +67,16 @@ REGULI ABSOLUTE:
 5. Ton neutru, profesional, obiectiv, estimativ („poate”, „în mod tipic”, „estimat”). INTERZISE promisiunile absolute: „compensând integral costurile”, „depășind predictibil”, „performanță constantă”, „profit asigurat” și similare.
 6. NU repeta meta-descrierea sau lista de cuvinte-cheie ad-litteram în corpul articolului; folosește formulări și sinonime naturale.
 7. Titlu în stil românesc: majusculă doar la primul cuvânt și la nume proprii (fără Title Case englezesc).
-8. Structura obligatorie (Markdown):
+8. Structura obligatorie pentru content_md (Markdown):
    # Titlu (sub 60 de caractere, cu zona + "Timișoara")
-   > **Meta descriere:** 155-160 de caractere, cu cuvântul cheie principal, fără îndemn la final
-   **Cuvinte cheie:** 5-7 termeni separați prin " · "
    ## Introducere (2 paragrafe)
    ## Despre zona [Zonă] (profil, poziție, caracter)
    ## Piața imobiliară în [Zonă] (folosește doar datele reale + constantele fixe; dacă nu ai cifre, scrii calitativ)
    ## Ce merită urmărit (4-6 argumente bullet)
    ## Concluzie (CTA discret către RealTrust, fără telefon/email inventate)
-9. 700-1200 de cuvinte.`;
+9. 700-1200 de cuvinte.
+10. STRICT: content_md NU conține niciodată etichete „Meta descriere:”, „Cuvinte cheie:”, „Meta description:”, „Keywords:”. Metadatele SEO (meta_description 155-160 caractere fără îndemn final, tags) se trimit EXCLUSIV în câmpurile JSON separate.
+11. Stil editorial fluent: fraze scurte și clare (ideal sub 25 de cuvinte), limbaj natural, accesibil. Evită jargonul administrativ rigid („formulă administrativă”, „în vederea”, „aferent”, „din prisma”, „cadru juridic și fiscal prin care se desfășoară”).`;
 
 interface VariantDef { key: string; angle: string; tokens: string[]; category: string; brief: string; }
 interface ZoneDef { zone: string; tokens: string[]; }
@@ -225,7 +225,12 @@ function optimizeSeo<T extends { title: string; excerpt: string; meta_title: str
   }
   desc = cutWords(desc, 157);
   if (!/[.!?]$/.test(desc)) desc = desc.replace(/[.,;:]+$/, "") + ".";
-  return { ...a, title, meta_title: metaTitle, meta_description: desc };
+  const content_md = (a.content_md || "")
+    .split("\n")
+    .filter((l) => !/^\s*(>\s*)?(\*\*)?\s*(meta\s*descriere|meta\s*description|cuvinte[\s-]*cheie|keywords)\s*:?/i.test(l))
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n");
+  return { ...a, title, meta_title: metaTitle, meta_description: desc, content_md };
 }
 
 Deno.serve(async (req) => {
