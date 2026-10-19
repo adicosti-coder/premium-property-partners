@@ -9,7 +9,7 @@ import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
 const JOB_KEY = "blog.article_draft_autopilot";
 const AUTHOR = "RealTrust Auto-Pilot";
-const MAX_PENDING_DRAFTS = 5;
+const MAX_PENDING_DRAFTS = 15;
 const AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MODEL = "google/gemini-3.8-flash";
 
