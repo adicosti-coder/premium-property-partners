@@ -105,6 +105,14 @@ async function handlePublishIntent(
       if (c.property_id) {
         await supabase.from("properties").update({ is_active: false }).eq("id", c.property_id);
       }
+      // Retragerea acordului scoate imediat și anunțul public al proprietarului.
+      const { data: unpub } = await supabase
+        .from("owner_public_listings")
+        .update({ is_published: false, unpublished_at: nowIso })
+        .or(`consent_id.eq.${c.id}${c.prospect_listing_id ? `,prospect_listing_id.eq.${c.prospect_listing_id}` : ""}`)
+        .eq("is_published", true)
+        .select("id");
+      if (unpub?.length) removedListing = true;
     }
     return { waitingAdmin: false, removedListing };
   }
