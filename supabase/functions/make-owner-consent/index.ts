@@ -51,6 +51,8 @@ Deno.serve(async (req) => {
     zone: p.zone ?? "",
     price: p.price != null ? String(p.price) : "",
     source_url: p.source_url ?? "",
+    id: p.id,
+    type: p.category === "vanzare" ? "vanzare" : "inchiriere",
     listing_type: p.category === "vanzare" ? "vanzare" : "inchiriere",
   };
   // Textul din caseta „Mesaj către proprietar" pleacă către Make.com, ca

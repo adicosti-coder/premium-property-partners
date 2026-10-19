@@ -45,6 +45,7 @@ Deno.serve(async (req) => {
   const payload = {
     id: p.id, phone: phone ?? "", title: p.title ?? "", zone: p.zone ?? "",
     price: p.price != null ? String(p.price) : "", source_url: p.source_url ?? "",
+    type: p.category === "vanzare" ? "vanzare" : "inchiriere",
     listing_type: p.category === "vanzare" ? "vanzare" : "inchiriere",
   };
 
