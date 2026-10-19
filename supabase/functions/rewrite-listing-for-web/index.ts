@@ -14,7 +14,7 @@ const corsHeaders = {
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-const MODEL = "openai/gpt-6-astra";
+const MODEL = "google/gemini-3.8-flash";
 
 // ---------- Sanitizare deterministă ----------
 const PHONE = /(?:\+?\d[\d\s.\-()]{7,}\d)/g;
@@ -118,19 +118,10 @@ Deno.serve(async (req) => {
   let raw = "";
   try {
     const result = streamText({
-      model: provider.responses(MODEL),
+      model: provider.chat(MODEL),
       system: SYSTEM,
       messages: [{ role: "user", content: `Rescrie anunțul pentru realtrust.ro. Răspunde în JSON.\n\n${pre}` }],
       abortSignal: req.signal,
-      providerOptions: {
-        openai: {
-          forceReasoning: true,
-          reasoningEffort: "low",
-          reasoningSummary: "auto",
-          store: false,
-          include: ["reasoning.encrypted_content"],
-        },
-      },
     });
     raw = await result.text;
   } catch (e: any) {

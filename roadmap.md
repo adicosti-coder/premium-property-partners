@@ -91,3 +91,6 @@
 ## Marketing
 - [ ] Test outreach Make.com pe numărul lui Adrian — așteaptă numărul de telefon
 - [x] Articol „Regim hotelier vs. chirie clasică în Timișoara – cifre reale” + text r/timisoara
+
+- [x] Cost: înlocuire model AI + curățare cron duplicat
+- [x] Verificare presiune bază de date — curățarea istoricului programărilor așteaptă acordul utilizatorului
