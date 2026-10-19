@@ -91,7 +91,7 @@ async function handlePublishIntent(
   if (intent === "revoke") {
     const { data: consents } = await supabase
       .from("wa_publish_consents")
-      .select("id, property_id")
+      .select("id, property_id, prospect_listing_id")
       .in("phone_normalized", variants)
       .neq("status", "revoked");
 
