@@ -2,6 +2,7 @@ import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/supabase/vite";
 import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 import vitePrerenderSeo from "./plugins/vite-prerender-seo";
 import viteAsyncCss from "./plugins/vite-async-css";
@@ -58,6 +59,7 @@ export default defineConfig(({ mode }) => {
     define: defineEnv,
     plugins: [
       react(),
+      mcpPlugin(),
       mode === "development" && componentTagger(),
       ViteImageOptimizer({
         test: /\.(jpe?g|png|gif|tiff|webp|svg|avif)$/i,

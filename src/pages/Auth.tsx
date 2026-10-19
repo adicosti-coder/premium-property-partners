@@ -11,6 +11,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import PasswordStrengthIndicator, { validatePassword } from "@/components/PasswordStrengthIndicator";
 import SEOHead from "@/components/SEOHead";
+import { oauthReturnPath } from "@/lib/oauth-return-path";
 
 type AuthMode = "login" | "signup" | "reset";
 
@@ -22,7 +23,8 @@ const Auth = () => {
   const { t, language } = useLanguage();
   
   // Get redirect URL and initial mode from query params
-  const redirectUrl = searchParams.get('redirect') || '/admin';
+  const rawRedirect = searchParams.get('redirect');
+  const redirectUrl = rawRedirect ? oauthReturnPath(rawRedirect) : '/admin';
   const initialMode = searchParams.get('mode') === 'signup' ? 'signup' : 'login';
   
   const [mode, setMode] = useState<AuthMode>(initialMode);
@@ -150,7 +152,7 @@ const Auth = () => {
           email,
           password,
           options: {
-            emailRedirectTo: `${AUTH_SITE_URL}/admin`,
+            emailRedirectTo: rawRedirect ? new URL(redirectUrl, window.location.origin).href : `${AUTH_SITE_URL}/admin`,
           },
         });
         if (error) throw error;

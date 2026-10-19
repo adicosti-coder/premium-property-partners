@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "sdk_version": "3.1.1",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://mvzssjyzbwccioqvhjpo.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "realtrust-apart-hotel",
+      "version": "0.1.0",
+      "title": "RealTrust & ApArt Hotel"
+    },
+    "tools": [
+      {
+        "name": "search_properties",
+        "title": "Search properties",
+        "description": "Search active RealTrust properties in Timișoara by text, listing type and maximum price.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "maxLength": 100,
+              "description": "Text matched against name and location."
+            },
+            "listing_type": {
+              "type": "string",
+              "maxLength": 40,
+              "description": "Listing type, e.g. vanzare, inchiriere, cazare."
+            },
+            "max_price": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Maximum price in EUR."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "description": "Max results (default 20)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_owner_outreach",
+        "title": "List owner outreach",
+        "description": "List recent private-owner prospects and their WhatsApp outreach status (admins only, enforced by database policies).",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "outreach_pending",
+                "whatsapp_sent",
+                "call_completed",
+                "failed"
+              ],
+              "description": "Filter by outreach status."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "description": "Max results (default 20)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

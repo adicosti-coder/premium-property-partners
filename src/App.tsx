@@ -57,6 +57,7 @@ const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
 
 // Lazy loaded pages (code splitting for performance)
 const Auth = lazyWithRetry(() => import("./pages/Auth"));
+const OAuthConsent = lazyWithRetry(() => import("./pages/OAuthConsent"));
 const Admin = lazyWithRetry(() => import("./pages/Admin"));
 const PropertyDetail = lazyWithRetry(() => import("./pages/PropertyDetail"));
 const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword"));
@@ -242,6 +243,7 @@ const App = () => (
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/auth" element={<Auth />} />
+                    <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
                     <Route path="/admin" element={<Admin />} />
                     <Route path="/admin/:adminTab" element={<Admin />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
