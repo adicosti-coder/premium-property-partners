@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { callAI, MODELS, AIError, sha256 } from "./aiClient.ts";
 
 export type TextAction = "TRANSLATE" | "SEO_OPTIMIZE" | "GENERATE_DESCRIPTION" | "EXTRACT_AMENITIES";
-const PROMPT_VERSION = "v2";
+const PROMPT_VERSION = "v3";
 
 const LANGS: Record<string, string> = { ro: "Romanian", en: "English", de: "German", fr: "French", it: "Italian", es: "Spanish", hu: "Hungarian" };
 const langName = (v: unknown, d: string) => {
@@ -19,11 +19,14 @@ function build(action: TextAction, text: string, src: string, tgt: string) {
       return { model: MODELS.cheap, schema: undefined, system: `You are a professional real estate translator. Translate ${src} text to ${tgt}. Keep tone and structure. Return ONLY the translation.` };
     case "SEO_OPTIMIZE":
       return { model: MODELS.text, schema: { name: "seo", schema: obj({ meta_title: { type: "string" }, meta_description: { type: "string" }, keywords: { type: "array", items: { type: "string" } } }) },
-        system: `You are an SEO expert for real estate in Timișoara, Romania. In ${tgt}, write meta_title (max 60 chars), meta_description (max 155 chars) and 5-8 keywords for the text.
+        system: `You are an SEO expert for real estate in Timișoara, Romania. In ${tgt}, write meta_title (max 60 chars), meta_description (155-160 chars) and 5-8 keywords for the text.
+meta_title rules:
+- Romanian sentence case: capitalize ONLY the first word, the first word after a colon, and proper nouns (Timișoara, Cetate, Iosefin, RealTrust). Example: "Regim hotelier vs chirie în Timișoara: Ce profit ai?". NEVER English Title Case.
 meta_description rules:
 - ONLY relevant keywords, location/neighborhood, main amenities and unique property features.
 - NO calls to action or sales phrases at the end or anywhere (forbidden: "Contactează-ne pentru detalii!", "Află mai multe!", "Suntem la un apel distanță!", "Vezi mai jos", "Înregistrează-te", or any invitation to contact/visit/learn more).
-- Max 155 characters (never above 160). Front-load the most important keywords and the location.
+- Aim for 155-160 characters (never above 160). Front-load the most important keywords and the location.
+- Yield, if mentioned, only as "6,5–9,4% net estimat"; never "garantat", "sigur", "standardizat".
 - Never invent facts, prices or locations.` };
     case "GENERATE_DESCRIPTION":
       return { model: MODELS.text, schema: undefined, system: `Rewrite the property information into a professional listing description in ${tgt} (120-220 words). Use only facts present in the input. No contact data, no portal footers.` };

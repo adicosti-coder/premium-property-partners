@@ -52,7 +52,7 @@ const VARIANTS = [
 
 // Constante fixe de brand (permise în text; orice altă cifră doar din datele reale)
 const FIXED_FACTS = `Constante oficiale RealTrust (le poți folosi ca atare):
-- Randament net standardizat regim hotelier: 9,4% pe an.
+- Randament regim hotelier: formulat EXCLUSIV ca „6,5–9,4% net estimat” (niciodată doar „9,4%”).
 - Calculul folosește o ocupare de 75% și deducerea administrării/managementului de 15-20% din încasări.
 - RealTrust activează în Timișoara (jud. Timiș). NU menționa București sau alte orașe.
 - Nu folosi limbaj de agenție ("comision", "vânzător motivat", "urgență").`;
@@ -63,16 +63,20 @@ REGULI ABSOLUTE:
 1. Folosești DOAR cifrele din "date reale" sau constantele oficiale fixe. NU inventezi prețuri, procente, statistici sau evenimente.
 2. Nu menționi alte orașe. Totul se raportează la Timișoara.
 3. Fără limbaj de agenție, fără presiune, fără clickbait mincinos.
-4. Structura obligatorie (Markdown):
+4. Randamentul apare DOAR ca „6,5–9,4% net estimat”. INTERZIS: „randament standardizat”, „garantat”, „sigur”, „asigurat”.
+5. Ton neutru, profesional, obiectiv, estimativ („poate”, „în mod tipic”, „estimat”). INTERZISE promisiunile absolute: „compensând integral costurile”, „depășind predictibil”, „performanță constantă”, „profit asigurat” și similare.
+6. NU repeta meta-descrierea sau lista de cuvinte-cheie ad-litteram în corpul articolului; folosește formulări și sinonime naturale.
+7. Titlu în stil românesc: majusculă doar la primul cuvânt și la nume proprii (fără Title Case englezesc).
+8. Structura obligatorie (Markdown):
    # Titlu (sub 60 de caractere, cu zona + "Timișoara")
-   > **Meta descriere:** 150-160 de caractere, cu cuvântul cheie principal
+   > **Meta descriere:** 155-160 de caractere, cu cuvântul cheie principal, fără îndemn la final
    **Cuvinte cheie:** 5-7 termeni separați prin " · "
    ## Introducere (2 paragrafe)
    ## Despre zona [Zonă] (profil, poziție, caracter)
    ## Piața imobiliară în [Zonă] (folosește doar datele reale + constantele fixe; dacă nu ai cifre, scrii calitativ)
    ## Ce merită urmărit (4-6 argumente bullet)
    ## Concluzie (CTA discret către RealTrust, fără telefon/email inventate)
-5. Ton: profesionist, cald, concis. 700-1200 de cuvinte.`;
+9. 700-1200 de cuvinte.`;
 
 interface VariantDef { key: string; angle: string; tokens: string[]; category: string; brief: string; }
 interface ZoneDef { zone: string; tokens: string[]; }
