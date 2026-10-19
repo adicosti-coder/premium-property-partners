@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { SourceLink } from "@/components/admin/shared/SourceLink";
 import AndreiBatchCampaignControl from "@/components/admin/AndreiBatchCampaignControl";
+import { useWebMCP } from "use-webmcp-tool";
+import { runWebMCPTool } from "@/lib/webmcp-telemetry";
 
 type Row = { id: string; title: string | null; price: number | null; zone: string | null; location: string | null; phone_normalized: string | null; contact_phone: string | null; source_url: string | null; seller_type?: string | null; seller_type_reason?: string | null; reason: "no_mobile" | "no_reply" | "no_whatsapp" };
 const isMobile = (p?: string | null) => /^\+407\d{8}$/.test(p ?? "");
@@ -88,6 +90,18 @@ export default function CallsToMakePanel() {
   };
 
   const rows = q.data ?? [];
+
+  useWebMCP({
+    name: "list_calls_to_make",
+    description: "List the owner prospects currently shown in 'Apeluri de făcut', with reason and zone.",
+    annotations: { readOnlyHint: true, untrustedContentHint: true },
+    execute: () =>
+      runWebMCPTool("list_calls_to_make", () => {
+        if (q.isLoading) return "Still loading.";
+        if (rows.length === 0) return "No calls to make right now.";
+        return rows.map((r) => `${r.id}: ${r.title || "Fără titlu"} · ${r.zone || r.location || "—"} · ${REASON_LABELS[r.reason]}`).join("\n");
+      }),
+  });
   return (
     <div className="space-y-3">
       <div>
