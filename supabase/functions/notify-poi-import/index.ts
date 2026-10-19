@@ -171,6 +171,12 @@ serve(async (req) => {
       const { data: authData } = await supabase.auth.getUser(bearer);
       importerId = authData?.user?.id ?? null;
     }
+    if (!importerId) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     console.log(`Processing import notification for share code: ${shareCode}`);
 
