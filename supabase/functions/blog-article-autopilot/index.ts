@@ -225,7 +225,12 @@ function optimizeSeo<T extends { title: string; excerpt: string; meta_title: str
   }
   desc = cutWords(desc, 157);
   if (!/[.!?]$/.test(desc)) desc = desc.replace(/[.,;:]+$/, "") + ".";
-  return { ...a, title, meta_title: metaTitle, meta_description: desc };
+  const content_md = (a.content_md || "")
+    .split("\n")
+    .filter((l) => !/^\s*(>\s*)?(\*\*)?\s*(meta\s*descriere|meta\s*description|cuvinte[\s-]*cheie|keywords)\s*:?/i.test(l))
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n");
+  return { ...a, title, meta_title: metaTitle, meta_description: desc, content_md };
 }
 
 Deno.serve(async (req) => {
