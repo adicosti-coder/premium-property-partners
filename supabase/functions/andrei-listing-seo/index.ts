@@ -51,7 +51,7 @@ serve(async (req) => {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "openai/gpt-6-astra",
+        model: "google/gemini-3.8-flash",
         reasoning_effort: "low",
         response_format: { type: "json_object" },
         messages: [

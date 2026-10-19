@@ -10,8 +10,8 @@ import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 const JOB_KEY = "blog.article_draft_autopilot";
 const AUTHOR = "RealTrust Auto-Pilot";
 const MAX_PENDING_DRAFTS = 5;
-const AI_URL = "https://ai.gateway.lovable.dev/v1/responses";
-const MODEL = "openai/gpt-6-astra";
+const AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const MODEL = "google/gemini-3.8-flash";
 
 // Zone canonice (mem: doar Centru/Cetate, Iosefin, Fabric, Dumbrăvița, Aradului).
 // Tokenii includ repere stradale frecvente în `properties.location` (adrese complete).
@@ -139,15 +139,15 @@ Răspunde STRICT JSON conform schemei.`;
     },
     body: JSON.stringify({
       model: MODEL,
-      reasoning: { effort: "low" },
-      max_output_tokens: 16000,
-      input: [
+      reasoning_effort: "low",
+      max_tokens: 16000,
+      messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: userContent },
       ],
-      text: {
-        format: {
-          type: "json_schema",
+      response_format: {
+        type: "json_schema",
+        json_schema: {
           name: "blog_article_draft",
           strict: true,
           schema: {
@@ -177,7 +177,7 @@ Răspunde STRICT JSON conform schemei.`;
     throw err;
   }
   const data = await resp.json();
-  const text = extractResponseText(data);
+  const text = String(data?.choices?.[0]?.message?.content ?? "").trim().replace(/^```(?:json)?\s*|\s*```$/g, "");
   if (!text) throw new Error("AI răspuns gol");
   let parsed: any;
   try {
