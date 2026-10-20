@@ -22,8 +22,9 @@ async function g(path: string, params: Record<string, string>, method = "POST"):
 }
 
 async function resolvePage(): Promise<{ pageId: string; pageToken: string; igId: string | null }> {
-  // Token dedicat social (Facebook Business / Instagram) are prioritate față de cel WhatsApp.
-  const userToken = (Deno.env.get("META_SOCIAL_ACCESS_TOKEN") || "").trim() || waToken();
+  // Token Meta Business Suite (META_ACCESS_TOKEN) are prioritate; apoi tokenul social vechi, apoi cel WhatsApp.
+  const userToken = (Deno.env.get("META_ACCESS_TOKEN") || "").trim()
+    || (Deno.env.get("META_SOCIAL_ACCESS_TOKEN") || "").trim() || waToken();
   if (!userToken) throw new Error("Lipsește tokenul Meta");
   const wantedPage = (Deno.env.get("META_FB_PAGE_ID") || "").trim();
   const accounts = await g("/me/accounts", { access_token: userToken, fields: "id,name,access_token,instagram_business_account" }, "GET");
