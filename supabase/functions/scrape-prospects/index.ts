@@ -2482,11 +2482,23 @@ Deno.serve(async (req) => {
     // Wrap the heavy work so we can fire-and-forget under async mode.
     const runScan = async () => {
     if (onlyNewSources || preserveAgencyFilter) {
+      // Citire pe pagini: serverul întoarce maximum 1000 de rânduri per cerere; fără paginare,
+      // anunțurile deja cunoscute peste primele 1000 erau re-salvate la fiecare scanare.
+      const fetchAllRows = async (table: string, columns: string) => {
+        const out: any[] = [];
+        for (let from = 0; from < 50_000; from += 1000) {
+          const { data, error } = await supabase.from(table).select(columns).order('id').range(from, from + 999);
+          if (error || !data?.length) break;
+          out.push(...data);
+          if (data.length < 1000) break;
+        }
+        return { data: out };
+      };
       const [{ data: archiveRows }, { data: prospectRows }, { data: blockRows }, { data: whitelistRows }] = await Promise.all([
-        supabase.from('scraper_leads_archive_2026').select('url, phone, prospect_category, status'),
-        supabase.from('prospect_listings').select('source_url, title, description, price, contact_phone, phone_normalized, zone, rooms, source_platform, prospect_type, is_active, lifecycle_status'),
-        supabase.from('agency_blocklist').select('phone_normalized, domain'),
-        supabase.from('agency_whitelist').select('phone_normalized, domain'),
+        fetchAllRows('scraper_leads_archive_2026', 'url, phone, prospect_category, status'),
+        fetchAllRows('prospect_listings', 'source_url, title, description, price, contact_phone, phone_normalized, zone, rooms, source_platform, prospect_type, is_active, lifecycle_status'),
+        fetchAllRows('agency_blocklist', 'phone_normalized, domain'),
+        fetchAllRows('agency_whitelist', 'phone_normalized, domain'),
       ]);
 
       for (const row of archiveRows || []) {

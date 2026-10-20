@@ -133,10 +133,14 @@ const SEOOptimizerManager = () => {
     queryKey: ["seo-audits-history"],
     queryFn: async () => {
       const { data, error } = await supabase.from("seo_audits")
-        .select("*").order("created_at", { ascending: false }).limit(500);
+        .select("id, url, language, overall_score, title, meta_description, h1_count, word_count, suggested_title, suggested_meta, keyword_gaps, strengths, issues, opportunities, raw_analysis, created_at, local_relevance_score, local_entities_found, local_entities_missing, local_geo_keywords, local_recommendations")
+        .order("created_at", { ascending: false }).limit(300);
       if (error) throw error;
       return (data || []) as AuditRow[];
     },
+    // Istoricul se schimbă doar după un audit nou (invalidat explicit) — fără reîncărcări la fiecare focus.
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
   });
 
   // Find previous audit for the same URL (for comparison)
