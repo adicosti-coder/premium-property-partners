@@ -125,6 +125,7 @@ const NeighborhoodCluster = lazyWithRetry(() => import("./pages/NeighborhoodClus
 const SharedComparison = lazyWithRetry(() => import("./pages/SharedComparison"));
 const CallDashboard = lazyWithRetry(() => import("./pages/CallDashboard"));
 const AdminLeadDashboard = lazyWithRetry(() => import("./pages/AdminLeadDashboard"));
+const DbHealth = lazyWithRetry(() => import("./pages/admin/DbHealth"));
 const FastReview = lazyWithRetry(() => import("./pages/admin/FastReview"));
 const RouteBoundary = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
@@ -347,6 +348,7 @@ const App = () => (
                     <Route path="/admin/anunt-proprietar/:id" element={<AnuntProprietar />} />
                     <Route path="/admin/call-dashboard" element={<CallDashboard />} />
                     <Route path="/admin/lead-dashboard" element={<AdminLeadDashboard />} />
+                    <Route path="/admin/stare-baza" element={<DbHealth />} />
                     <Route path="/admin/properties/fast-review" element={<FastReview />} />
                     <Route path="/prospect-listings" element={<Navigate to="/admin/prospect-listings" replace />} />
                     <Route path="/contact" element={<ContactPage />} />
