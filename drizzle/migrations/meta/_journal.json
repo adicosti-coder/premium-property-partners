@@ -834,6 +834,13 @@
       "when": 1792575632505,
       "tag": "0118_admin_reminders",
       "breakpoints": true
+    },
+    {
+      "idx": 119,
+      "version": "7",
+      "when": 1792607512997,
+      "tag": "0119_db_health_snapshot",
+      "breakpoints": true
     }
   ]
 }
