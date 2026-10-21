@@ -284,6 +284,48 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_reminders: {
+        Row: {
+          body: string
+          created_at: string
+          due_at: string
+          id: string
+          last_error: string | null
+          recipient: string
+          sent_at: string | null
+          source: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          due_at: string
+          id?: string
+          last_error?: string | null
+          recipient?: string
+          sent_at?: string | null
+          source?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          due_at?: string
+          id?: string
+          last_error?: string | null
+          recipient?: string
+          sent_at?: string | null
+          source?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       advanced_simulations: {
         Row: {
           average_stay_duration: number

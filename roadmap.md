@@ -94,3 +94,7 @@
 
 - [x] Cost: înlocuire model AI + curățare cron duplicat
 - [x] Verificare presiune bază de date + curățare istoric programări (6,5 GB → 12 MB) + curățare zilnică
+
+## Mementouri programate
+- [x] Tabela `admin_reminders` + funcția `admin-reminder-check` (cron orar) — mementourile se trimit singure pe email, o singură dată
+- [ ] Vineri 23 octombrie, 09:00 România: verificare presiune bază de date (memento automat pe info@realtrust.ro) — dacă alerta de dimineață revine zilnic, trecere la instanța Small cu acordul lui Adrian
