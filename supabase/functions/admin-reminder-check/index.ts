@@ -82,6 +82,25 @@ Deno.serve(async (req) => {
       supabase,
     );
 
+    // Copie pe WhatsApp, prin același canal Make ca alertele critice.
+    const waUrl = Deno.env.get("WHATSAPP_ALERT_WEBHOOK_URL") || Deno.env.get("LEAD_WEBHOOK_URL");
+    if (waUrl) {
+      try {
+        await fetch(waUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            event: "admin_reminder",
+            timestamp: new Date().toISOString(),
+            to: "+40799069256",
+            message: `⏰ *Memento: ${row.title}*\n\n${row.body || ""}`,
+          }),
+        });
+      } catch (e) {
+        console.error("[admin-reminder-check] WhatsApp relay failed:", (e as Error).message);
+      }
+    }
+
     if (res.sent) {
       await supabase
         .from("admin_reminders")
