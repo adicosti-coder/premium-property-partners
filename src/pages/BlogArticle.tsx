@@ -1,3 +1,4 @@
+import { marked } from "marked";
 import { useParams, Link, useNavigate, Navigate } from "react-router-dom";
 import { resolveConsolidatedArticle } from "@/data/consolidatedArticleRedirects";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -371,7 +372,10 @@ const BlogArticlePage = () => {
   // This hook must run before any early return; otherwise articles crash after the loading state.
   const displayContent = useMemo(() => {
     if (!rawContent) return "";
-    let html = rawContent.replace(/<a\s+([^>]*?)>([\s\S]*?)<\/a>/gi, (match, attrs, inner) => {
+    // SEO optimizer stores Markdown; legacy articles are HTML. Convert Markdown to HTML first.
+    const looksMarkdown = /^#{2,3}\s|\]\(\/|^\s*[-*]\s+\S/m.test(rawContent);
+    const source = looksMarkdown ? (marked.parse(rawContent, { async: false, gfm: true }) as string) : rawContent;
+    let html = source.replace(/<a\s+([^>]*?)>([\s\S]*?)<\/a>/gi, (match, attrs, inner) => {
       const hrefMatch = attrs.match(/href=["']([^"']+)["']/i);
       const href = hrefMatch?.[1] ?? "";
       const isInternal = href.startsWith("/") || href.startsWith("#") || href.includes("realtrust.ro");
