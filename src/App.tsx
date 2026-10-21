@@ -125,6 +125,7 @@ const NeighborhoodCluster = lazyWithRetry(() => import("./pages/NeighborhoodClus
 const SharedComparison = lazyWithRetry(() => import("./pages/SharedComparison"));
 const CallDashboard = lazyWithRetry(() => import("./pages/CallDashboard"));
 const AdminLeadDashboard = lazyWithRetry(() => import("./pages/AdminLeadDashboard"));
+const DbHealth = lazyWithRetry(() => import("./pages/admin/DbHealth"));
 const FastReview = lazyWithRetry(() => import("./pages/admin/FastReview"));
 const RouteBoundary = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
