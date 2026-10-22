@@ -338,15 +338,15 @@ Deno.serve(async (req) => {
     for (let from = 0; ; from += 1000) {
       const { data } = await supabase
         .from("keyword_radar_queries")
-        .select("keyword_normalized, source, priority_score, volume, platforms, category")
+        .select("keyword, source, priority_score, volume, platforms, category")
         .range(from, from + 999);
       for (const e of data ?? []) {
-        existing.set(e.keyword_normalized, JSON.stringify([e.source, Number(e.priority_score), Number(e.volume ?? 0), e.platforms, e.category]));
+        existing.set(e.keyword, JSON.stringify([e.source, Number(e.priority_score), Number(e.volume ?? 0), e.platforms, e.category]));
       }
       if (!data || data.length < 1000) break;
     }
     const changed = rows.filter((r: any) =>
-      existing.get(r.keyword_normalized) !==
+      existing.get(r.keyword) !==
         JSON.stringify([r.source, Number(r.priority_score), Number(r.volume ?? 0), r.platforms, r.category])
     );
     (stats as any).unchanged_skipped = rows.length - changed.length;
