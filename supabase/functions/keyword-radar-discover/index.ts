@@ -333,10 +333,28 @@ Deno.serve(async (req) => {
       metadata: c.metadata,
     }));
 
+    // Scrie doar cuvintele noi sau schimbate (evită rescrierea a ~1.500 rânduri la fiecare rulare).
+    const existing = new Map<string, string>();
+    for (let from = 0; ; from += 1000) {
+      const { data } = await supabase
+        .from("keyword_radar_queries")
+        .select("keyword_normalized, source, priority_score, volume, platforms, category")
+        .range(from, from + 999);
+      for (const e of data ?? []) {
+        existing.set(e.keyword_normalized, JSON.stringify([e.source, Number(e.priority_score), Number(e.volume ?? 0), e.platforms, e.category]));
+      }
+      if (!data || data.length < 1000) break;
+    }
+    const changed = rows.filter((r: any) =>
+      existing.get(r.keyword_normalized) !==
+        JSON.stringify([r.source, Number(r.priority_score), Number(r.volume ?? 0), r.platforms, r.category])
+    );
+    (stats as any).unchanged_skipped = rows.length - changed.length;
+
     // Upsert in batches of 200
     let upserted = 0;
-    for (let i = 0; i < rows.length; i += 200) {
-      const batch = rows.slice(i, i + 200);
+    for (let i = 0; i < changed.length; i += 200) {
+      const batch = changed.slice(i, i + 200);
       const { error } = await supabase
         .from("keyword_radar_queries")
         .upsert(batch, { onConflict: "keyword_normalized", ignoreDuplicates: false });

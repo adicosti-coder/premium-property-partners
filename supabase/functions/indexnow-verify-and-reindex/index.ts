@@ -75,10 +75,20 @@ Deno.serve(async (req) => {
       const results: Array<{ url: string; status: string }> = [];
       for (const url of urls) {
         const status = await probeIndexed(url);
-        await supabase
+        // Actualizează doar ultima înregistrare a paginii, nu tot istoricul ei.
+        const { data: latest } = await supabase
           .from("indexnow_pings")
-          .update({ actual_indexing_status: status, last_verified_at: new Date().toISOString() })
-          .eq("url", url);
+          .select("id")
+          .eq("url", url)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (latest?.id) {
+          await supabase
+            .from("indexnow_pings")
+            .update({ actual_indexing_status: status, last_verified_at: new Date().toISOString() })
+            .eq("id", latest.id);
+        }
         results.push({ url, status });
         // gentle pacing to avoid Google throttling
         await new Promise((r) => setTimeout(r, 250));
