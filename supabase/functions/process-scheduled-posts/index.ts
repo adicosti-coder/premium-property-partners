@@ -132,9 +132,24 @@ Deno.serve(async (req) => {
     return json({ success: true, posted_to });
   }
 
-  // Cron
-  const { data: due, error } = await sb.from("social_posts").select("*")
-    .eq("status", "scheduled").lte("scheduled_at", new Date().toISOString()).limit(20);
+  // Cron. Mod eșalonat pentru Stories: { media_type: "STORY", min_interval_minutes }
+  // → cel mult O story per rulare, la minimum N minute după ultima trimisă, 09–21 ora României.
+  const storyMode = body?.media_type === "STORY";
+  const trigger = storyMode ? "cron_story" : "cron_job";
+  if (storyMode) {
+    const minInterval = Math.max(15, Math.min(720, Number(body.min_interval_minutes) || 60));
+    const hour = Number(new Intl.DateTimeFormat("en-GB", { hour: "2-digit", hour12: false, timeZone: "Europe/Bucharest" }).format(new Date()));
+    if (hour < 9 || hour >= 21) return json({ success: true, skipped: "outside_window", hour });
+    const { data: last } = await sb.from("social_engine_logs").select("created_at")
+      .eq("trigger", trigger).eq("success", true).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (last && Date.now() - new Date(last.created_at).getTime() < minInterval * 60_000) {
+      return json({ success: true, skipped: "interval", last_at: last.created_at });
+    }
+  }
+  let q = sb.from("social_posts").select("*")
+    .eq("status", "scheduled").lte("scheduled_at", new Date().toISOString());
+  q = storyMode ? q.eq("media_type", "STORY").order("scheduled_at", { ascending: true }).limit(1) : q.neq("media_type", "STORY").limit(20);
+  const { data: due, error } = await q;
   if (error) return json({ success: false, error: error.message }, 500);
   let processed = 0, failed = 0;
   for (const post of due ?? []) {
@@ -142,15 +157,19 @@ Deno.serve(async (req) => {
     const { data: claimed } = await sb.from("social_posts").update({ status: "posted" })
       .eq("id", post.id).eq("status", "scheduled").select("id");
     if (!claimed?.length) continue;
+    // Story fără link explicit: folosim pagina articolului (fără „#story”).
+    if (storyMode && !post.story_link_url && typeof post.source_url === "string") {
+      post.story_link_url = post.source_url.replace(/#story$/, "");
+    }
     const todo = PLATFORMS.filter((p) => !(post.posted_to ?? []).includes(p));
     const done: string[] = [...(post.posted_to ?? [])];
     try {
-      for (const p of todo) { await send(sb, webhook, post, p, "cron_job"); done.push(p); }
-      await sb.from("social_posts").update({ posted_to: done, last_error: null }).eq("id", post.id);
+      for (const p of todo) { await send(sb, webhook, post, p, trigger); done.push(p); }
+      await sb.from("social_posts").update({ posted_to: done, last_error: null, updated_at: new Date().toISOString() }).eq("id", post.id);
       processed++;
     } catch (e) {
       // Fără reîncercare automată: revine la draft cu motivul erorii
-      await sb.from("social_posts").update({ status: "draft", posted_to: done, last_error: e instanceof Error ? e.message : String(e) }).eq("id", post.id);
+      await sb.from("social_posts").update({ status: "draft", posted_to: done, last_error: e instanceof Error ? e.message : String(e), updated_at: new Date().toISOString() }).eq("id", post.id);
       failed++;
     }
   }
