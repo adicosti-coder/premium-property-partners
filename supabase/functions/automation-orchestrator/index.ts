@@ -128,12 +128,14 @@ type Job = {
 function isDue(schedule: string | null, lastRunAt: string | null, now: Date): boolean {
   if (!schedule || schedule.trim() === "event-driven") return false;
   try {
-    const cron = new Cron(schedule.trim(), { timezone: TZ });
-    // previousRun returns the most recent scheduled tick at or before `now`
-    const prev = cron.previousRun(now);
-    if (!prev) return false;
-    if (!lastRunAt) return true;
-    return new Date(lastRunAt).getTime() < prev.getTime();
+    // croner.previousRun() returns the instance's last *executed* run (always null
+    // here), so compute the next tick after the later of last_run_at and a 10-min
+    // look-back window; stale last_run_at values cannot trigger a stampede.
+    const cron = new Cron(schedule.trim(), { timezone: TZ, paused: true });
+    const lookback = now.getTime() - 10 * 60_000;
+    const base = Math.max(lastRunAt ? new Date(lastRunAt).getTime() : 0, lookback);
+    const next = cron.nextRun(new Date(base));
+    return !!next && next.getTime() <= now.getTime();
   } catch (_e) {
     return false;
   }
