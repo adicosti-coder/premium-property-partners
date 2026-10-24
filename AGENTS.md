@@ -21,3 +21,5 @@
 - Agent integrations: tools live in `src/lib/mcp/` (one `defineTool` per file, OAuth via caller-scoped client + RLS); the `mcp` function is SDK-generated — never hand-edit, republish after changes.
 - Internal team reminders are scheduled as rows in `public.admin_reminders` and delivered once by `functions/admin-reminder-check` (hourly pg_cron `admin-reminder-check-hourly`, status flips to `sent` before the next tick) — one delivery path prevents duplicate or ad-hoc pings.
 - Admin DB health page `/admin/stare-baza` reads only the admin-gated `admin_db_health_snapshot()` RPC (pg_stat counters, no platform metrics) — keeps instance stats behind the admin role.
+- `automation-orchestrator` is called by pg_cron with `x-cron-secret` and gated by `requireInternalOrAdmin`; due-ness is computed via croner `nextRun` from max(last_run_at, now−10min) — admin-only auth and croner `previousRun` silently stopped every automation for a month.
+- Social Engine cron sends at most one feed post and one Story per hour (09–21 Bucharest), tracked through `social_engine_logs.trigger` (`cron_job` / `cron_story`) — prevents bursts and duplicate sends.
