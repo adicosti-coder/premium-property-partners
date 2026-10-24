@@ -280,6 +280,16 @@ const PreCalcMiniForm = ({
         name: data.name,
         cta_variant: getCtaVariant(),
       });
+      // Ads optimisation event: GA4 `Lead_Submit` + Meta standard `Lead`.
+      if (result.ok) {
+        trackCriticalConversion("Lead_Submit", {
+          source,
+          value: 90,
+          currency: "EUR",
+          name: data.name,
+          cta_variant: getCtaVariant(),
+        });
+      }
     } catch (err) {
       console.error("[PreCalcMiniForm] unexpected error:", err);
     }
