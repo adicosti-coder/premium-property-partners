@@ -27,7 +27,7 @@ const CONSENT_KEY = "cookie_consent_v2";
 
 /** Meta Pixel ID is a publishable value — safe in client code / env. */
 export const META_PIXEL_ID: string | undefined =
-  (import.meta.env.VITE_META_PIXEL_ID as string | undefined) || undefined;
+  (import.meta.env.VITE_META_PIXEL_ID as string | undefined) || "364644483561543";
 
 type ConsentChoice = "all" | "analytics_only" | "declined";
 
@@ -68,7 +68,11 @@ let pixelInitialized = false;
 
 export const initMetaPixel = (): void => {
   if (typeof window === "undefined") return;
-  if (pixelInitialized || !META_PIXEL_ID || !hasAdsConsent()) return;
+  if (!META_PIXEL_ID || !hasAdsConsent()) return;
+  if (pixelInitialized) {
+    window.fbq?.("consent", "grant"); // re-grant after an earlier revoke
+    return;
+  }
   pixelInitialized = true;
 
   // Standard Meta Pixel snippet, TS-safe.
@@ -90,12 +94,20 @@ export const initMetaPixel = (): void => {
     document.head.appendChild(script);
   }
 
-  window.fbq?.("init", META_PIXEL_ID);
+  window.fbq?.("consent", "grant");
+  window.fbq?.("init", META_PIXEL_ID, {}, { agent: "lovable" });
   window.fbq?.("track", "PageView");
+};
+
+/** Stop Meta Pixel hits immediately when ads consent is withdrawn. */
+export const revokeMetaPixel = (): void => {
+  if (typeof window === "undefined") return;
+  window.fbq?.("consent", "revoke");
 };
 
 /** Meta Pixel page view on SPA route changes (no-op without consent/ID). */
 export const trackMetaPageView = (): void => {
+  if (!hasAdsConsent()) return;
   if (!pixelInitialized) {
     initMetaPixel();
     return; // init already sends the first PageView

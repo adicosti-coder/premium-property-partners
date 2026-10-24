@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, forwardRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Shield, SlidersHorizontal } from "lucide-react";
-import { initMetaPixel } from "@/lib/conversionTracking";
+import { initMetaPixel, revokeMetaPixel } from "@/lib/conversionTracking";
 import {
   COOKIE_BANNER_STATE_EVENT,
   OPEN_COOKIE_PREFERENCES_EVENT,
@@ -60,6 +60,7 @@ const updateConsent = (choice: ConsentChoice) => {
 
   // Meta Pixel is an advertising vendor → only loads after full consent.
   if (adsGranted) initMetaPixel();
+  else revokeMetaPixel();
 };
 
 const CookieConsent = forwardRef<HTMLDivElement>((_props, _ref) => {
