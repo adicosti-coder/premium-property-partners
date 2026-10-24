@@ -27,7 +27,7 @@ const CONSENT_KEY = "cookie_consent_v2";
 
 /** Meta Pixel ID is a publishable value — safe in client code / env. */
 export const META_PIXEL_ID: string | undefined =
-  (import.meta.env.VITE_META_PIXEL_ID as string | undefined) || "364644483561543";
+  (import.meta.env.VITE_META_PIXEL_ID as string | undefined) || "2347400952761475";
 
 type ConsentChoice = "all" | "analytics_only" | "declined";
 
