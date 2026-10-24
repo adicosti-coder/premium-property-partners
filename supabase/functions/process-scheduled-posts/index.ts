@@ -136,8 +136,10 @@ Deno.serve(async (req) => {
   // → cel mult O story per rulare, la minimum N minute după ultima trimisă, 09–21 ora României.
   const storyMode = body?.media_type === "STORY";
   const trigger = storyMode ? "cron_story" : "cron_job";
-  if (storyMode) {
-    const minInterval = Math.max(15, Math.min(720, Number(body.min_interval_minutes) || 60));
+  // Atât Stories, cât și postările din feed pleacă eșalonat: max 1 per rulare,
+  // la minimum N minute după ultima trimisă de același tip, 09–21 ora României.
+  {
+    const minInterval = Math.max(15, Math.min(720, Number(body.min_interval_minutes) || (storyMode ? 60 : 55)));
     const hour = Number(new Intl.DateTimeFormat("en-GB", { hour: "2-digit", hour12: false, timeZone: "Europe/Bucharest" }).format(new Date()));
     if (hour < 9 || hour >= 21) return json({ success: true, skipped: "outside_window", hour });
     const { data: last } = await sb.from("social_engine_logs").select("created_at")
@@ -148,7 +150,7 @@ Deno.serve(async (req) => {
   }
   let q = sb.from("social_posts").select("*")
     .eq("status", "scheduled").lte("scheduled_at", new Date().toISOString());
-  q = storyMode ? q.eq("media_type", "STORY").order("scheduled_at", { ascending: true }).limit(1) : q.neq("media_type", "STORY").limit(20);
+  q = (storyMode ? q.eq("media_type", "STORY") : q.neq("media_type", "STORY")).order("scheduled_at", { ascending: true }).limit(1);
   const { data: due, error } = await q;
   if (error) return json({ success: false, error: error.message }, 500);
   let processed = 0, failed = 0;
