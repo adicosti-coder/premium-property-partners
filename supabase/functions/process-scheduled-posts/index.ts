@@ -51,7 +51,8 @@ async function payload(sb: any, post: any, platform: string, trigger: string) {
   if (reels && !videoUrl) throw new Error("Reel Video cere un video MP4 — generează-l din poze sau lipește un URL în ciornă.");
   const originals = await resolveImages(sb, post);
   if ((platform === "instagram" || story) && !videoUrl && !originals.length) throw new Error("Nu există o imagine relevantă — adaugă o fotografie în ciornă.");
-  const prepared = (platform === "instagram" || story) && !videoUrl ? await prepareInstagramImages(story ? originals.slice(0, 1) : originals, story) : originals;
+  // Toate platformele primesc imagini 1:1/4:5 (feed) sau 9:16 (Story) validate — evită eroarea Meta 36003.
+  const prepared = !videoUrl && originals.length ? await prepareInstagramImages(story ? originals.slice(0, 1) : originals, story) : originals;
   const media_type = mediaTypeOf(post, prepared.length);
   const imageUrls = media_type === "CAROUSEL" ? prepared : prepared.slice(0, 1);
   const storyLink = story && typeof post.story_link_url === "string" ? post.story_link_url.trim() : "";

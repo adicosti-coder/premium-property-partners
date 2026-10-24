@@ -37,3 +37,12 @@ describe("social featured image selection", () => {
     expect(f.imageWidth / f.imageHeight).toBeCloseTo(w / h, 1);
   });
 });
+import { metaAspectError } from "../../supabase/functions/_shared/socialImageSelection";
+describe("Meta aspect validation (36003)", () => {
+  it.each([[1920, 1080], [1080, 1920], [800, 1000], [4000, 2239]])("feed frame from %i×%i is accepted", (w, h) => {
+    const f = instagramFrame(w, h); expect(metaAspectError(f.width, f.height)).toBeNull();
+  });
+  it("story frame is 9:16 and accepted", () => { const f = instagramFrame(1920, 1080, true); expect(metaAspectError(f.width, f.height, true)).toBeNull(); });
+  it("rejects landscape 16:9 for feed", () => expect(metaAspectError(1920, 1080)).not.toBeNull());
+  it("rejects square for story", () => expect(metaAspectError(1080, 1080, true)).not.toBeNull());
+});
