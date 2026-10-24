@@ -106,7 +106,7 @@ Folosim Meta Pixel, un instrument oferit de **Meta Platforms Ireland Limited** (
 
 **Doar cu acordul dvs.:** Meta Pixel se încarcă și transmite date (inclusiv evenimentul „Lead”) exclusiv dacă alegeți „Accept toate” în bannerul de cookie-uri. Fără acest acord, nu se trimite nimic către Meta. Baza legală este consimțământul (art. 6 alin. (1) lit. a GDPR).
 
-**Retragerea acordului:** puteți retrage oricând consimțământul din linkul „Setări cookie-uri” din subsolul site-ului. Transmiterea se oprește imediat. Meta poate transfera date în afara SEE (de exemplu în SUA) pe baza mecanismelor de transfer aprobate de Comisia Europeană. Detalii: [Politica de confidențialitate Meta](https://www.facebook.com/privacy/policy/).
+**Retragerea acordului:** puteți retrage oricând consimțământul din linkul „Modifică setările de confidențialitate” din subsolul site-ului. Transmiterea se oprește imediat. Meta poate transfera date în afara SEE (de exemplu în SUA) pe baza mecanismelor de transfer aprobate de Comisia Europeană. Detalii: [Politica de confidențialitate Meta](https://www.facebook.com/privacy/policy/).
 
 ## 9. Securitatea Datelor
 Implementăm măsuri tehnice și organizatorice adecvate: criptare SSL/TLS, anonimizare IP, acces restricționat la date.
@@ -150,7 +150,7 @@ We use Meta Pixel, provided by **Meta Platforms Ireland Limited** (Merrion Road,
 
 **Data sent:** pages visited, the event performed (e.g. "Lead"), technical cookie identifiers (_fbp, _fbc), IP address, browser and device type. We do not send the name, email or phone entered in forms to Meta.
 
-**Only with your consent:** Meta Pixel loads and sends data (including the "Lead" event) only if you choose "Accept all" in the cookie banner. Legal basis: consent (Art. 6(1)(a) GDPR). You can withdraw consent at any time via "Cookie settings" in the site footer; sending stops immediately. Meta may transfer data outside the EEA under transfer mechanisms approved by the European Commission. See [Meta's Privacy Policy](https://www.facebook.com/privacy/policy/).
+**Only with your consent:** Meta Pixel loads and sends data (including the "Lead" event) only if you choose "Accept all" in the cookie banner. Legal basis: consent (Art. 6(1)(a) GDPR). You can withdraw consent at any time via "Modifică setările de confidențialitate" (privacy settings) in the site footer; sending stops immediately. Meta may transfer data outside the EEA under transfer mechanisms approved by the European Commission. See [Meta's Privacy Policy](https://www.facebook.com/privacy/policy/).
 
 ## 9. Data Security
 We implement appropriate technical and organizational measures: SSL/TLS encryption, IP anonymization, restricted data access.
