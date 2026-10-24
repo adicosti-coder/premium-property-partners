@@ -1,3 +1,4 @@
+import ReactMarkdown from "react-markdown";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -28,10 +29,13 @@ Conținutul acestui site (texte, imagini, design, logo-uri) este protejat de dre
 ## 5. Limitarea Răspunderii
 RealTrust nu garantează acuratețea absolută a informațiilor prezentate pe site. Deciziiile de investiție trebuie luate după consultarea cu specialiști.
 
-## 6. Contact
+## 6. Reclame și măsurare
+Site-ul folosește Google Analytics și Meta Pixel pentru măsurarea vizitelor și a cererilor venite din reclame. Aceste instrumente se activează doar cu acordul dvs. din bannerul de cookie-uri, conform [Politicii de confidențialitate](/politica-confidentialitate).
+
+## 7. Contact
 Pentru orice întrebări legate de acești termeni, ne puteți contacta la info@realtrust.ro sau la telefon 0799 069 256.
 
-*Ultima actualizare: Martie 2026*
+*Ultima actualizare: 24 octombrie 2026*
       `,
       bodyEn: `
 ## 1. General Information
@@ -49,10 +53,13 @@ The content of this website (texts, images, design, logos) is protected by copyr
 ## 5. Limitation of Liability
 RealTrust does not guarantee the absolute accuracy of information presented on the site. Investment decisions should be made after consulting with specialists.
 
-## 6. Contact
+## 6. Advertising and measurement
+The site uses Google Analytics and Meta Pixel to measure visits and requests coming from ads. These tools are enabled only with your consent via the cookie banner, as described in our [Privacy Policy](/politica-confidentialitate).
+
+## 7. Contact
 For any questions regarding these terms, you can contact us at info@realtrust.ro or by phone at +40 799 069 256.
 
-*Last updated: March 2026*
+*Last updated: October 24, 2026*
       `,
     },
     privacy: {
@@ -87,15 +94,27 @@ Datele sunt stocate pe durata necesară îndeplinirii scopurilor pentru care au 
 Aveți dreptul la: acces, rectificare, ștergere, restricționare, portabilitate și opoziție. Pentru exercitarea acestor drepturi, contactați-ne la info@realtrust.ro.
 
 ## 7. Cookie-uri
-Utilizăm cookie-uri esențiale pentru funcționarea site-ului și cookie-uri analitice (Google Analytics) cu consimțământul dvs. Puteți gestiona preferințele prin bannerul de cookie-uri.
+Utilizăm cookie-uri esențiale pentru funcționarea site-ului. Cookie-urile analitice (Google Analytics) și cele de publicitate (Meta Pixel) se activează doar cu consimțământul dvs., exprimat prin bannerul de cookie-uri.
 
-## 8. Securitatea Datelor
+## 8. Meta Pixel (Facebook și Instagram)
+Folosim Meta Pixel, un instrument oferit de **Meta Platforms Ireland Limited** (Merrion Road, Dublin 4, D04 X2K5, Irlanda), pentru:
+- **măsurarea conversiilor** – de exemplu, evenimentul „Lead”, trimis când completați cu succes formularul „Calcul al venitului”;
+- **analiza traficului** venit din reclamele noastre pe Facebook și Instagram;
+- **optimizarea campaniilor de publicitate** și afișarea lor către persoane interesate.
+
+**Ce date se transmit:** paginile vizitate, evenimentul realizat (de exemplu „Lead”), identificatori tehnici din cookie-uri (_fbp, _fbc), adresa IP, tipul de browser și dispozitiv. Nu trimitem către Meta numele, emailul sau telefonul introduse în formulare.
+
+**Doar cu acordul dvs.:** Meta Pixel se încarcă și transmite date (inclusiv evenimentul „Lead”) exclusiv dacă alegeți „Accept toate” în bannerul de cookie-uri. Fără acest acord, nu se trimite nimic către Meta. Baza legală este consimțământul (art. 6 alin. (1) lit. a GDPR).
+
+**Retragerea acordului:** puteți retrage oricând consimțământul din linkul „Modifică setările de confidențialitate” din subsolul site-ului. Transmiterea se oprește imediat. Meta poate transfera date în afara SEE (de exemplu în SUA) pe baza mecanismelor de transfer aprobate de Comisia Europeană. Detalii: [Politica de confidențialitate Meta](https://www.facebook.com/privacy/policy/).
+
+## 9. Securitatea Datelor
 Implementăm măsuri tehnice și organizatorice adecvate: criptare SSL/TLS, anonimizare IP, acces restricționat la date.
 
-## 9. Contact DPO
+## 10. Contact DPO
 Pentru întrebări privind protecția datelor: info@realtrust.ro, tel. 0799 069 256.
 
-*Ultima actualizare: Martie 2026*
+*Ultima actualizare: 24 octombrie 2026*
       `,
       bodyEn: `
 ## 1. Data Controller
@@ -124,15 +143,22 @@ Data is stored for the duration necessary to fulfill the purposes for which it w
 You have the right to: access, rectification, erasure, restriction, portability, and objection. To exercise these rights, contact us at info@realtrust.ro.
 
 ## 7. Cookies
-We use essential cookies for site functionality and analytical cookies (Google Analytics) with your consent. You can manage preferences via the cookie banner.
+We use essential cookies for site functionality. Analytics cookies (Google Analytics) and advertising cookies (Meta Pixel) are enabled only with your consent, given through the cookie banner.
 
-## 8. Data Security
+## 8. Meta Pixel (Facebook and Instagram)
+We use Meta Pixel, provided by **Meta Platforms Ireland Limited** (Merrion Road, Dublin 4, D04 X2K5, Ireland), for conversion measurement (e.g. the "Lead" event sent when you successfully submit the "Income calculation" form), analysis of traffic from our Facebook and Instagram ads, and optimisation of our advertising campaigns.
+
+**Data sent:** pages visited, the event performed (e.g. "Lead"), technical cookie identifiers (_fbp, _fbc), IP address, browser and device type. We do not send the name, email or phone entered in forms to Meta.
+
+**Only with your consent:** Meta Pixel loads and sends data (including the "Lead" event) only if you choose "Accept all" in the cookie banner. Legal basis: consent (Art. 6(1)(a) GDPR). You can withdraw consent at any time via "Modifică setările de confidențialitate" (privacy settings) in the site footer; sending stops immediately. Meta may transfer data outside the EEA under transfer mechanisms approved by the European Commission. See [Meta's Privacy Policy](https://www.facebook.com/privacy/policy/).
+
+## 9. Data Security
 We implement appropriate technical and organizational measures: SSL/TLS encryption, IP anonymization, restricted data access.
 
-## 9. DPO Contact
+## 10. DPO Contact
 For data protection inquiries: info@realtrust.ro, phone +40 799 069 256.
 
-*Last updated: March 2026*
+*Last updated: October 24, 2026*
       `,
     },
   };
@@ -149,23 +175,20 @@ For data protection inquiries: info@realtrust.ro, phone +40 799 069 256.
       <main className="container mx-auto px-6 py-16 max-w-3xl">
         <h1 className="text-3xl font-serif font-semibold text-foreground mb-8">{heading}</h1>
         <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground">
-          {body.split('\n').map((line, i) => {
-            if (line.startsWith('## ')) {
-              return <h2 key={i} className="text-lg font-semibold text-foreground mt-8 mb-3">{line.replace('## ', '')}</h2>;
-            }
-            if (line.startsWith('- **')) {
-              const match = line.match(/- \*\*(.+?)\*\*: (.+)/);
-              if (match) return <p key={i} className="ml-4 mb-1"><strong className="text-foreground">{match[1]}</strong>: {match[2]}</p>;
-            }
-            if (line.startsWith('- ')) {
-              return <p key={i} className="ml-4 mb-1">• {line.replace('- ', '')}</p>;
-            }
-            if (line.startsWith('*') && line.endsWith('*')) {
-              return <p key={i} className="text-xs mt-6 italic">{line.replace(/\*/g, '')}</p>;
-            }
-            if (line.trim()) return <p key={i} className="mb-3">{line}</p>;
-            return null;
-          })}
+          <ReactMarkdown
+            components={{
+              h2: ({ children }) => <h2 className="text-lg font-semibold text-foreground mt-8 mb-3">{children}</h2>,
+              strong: ({ children }) => <strong className="text-foreground">{children}</strong>,
+              a: ({ href, children }) =>
+                href?.startsWith("http") ? (
+                  <a href={href} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">{children}</a>
+                ) : (
+                  <a href={href} className="underline underline-offset-2">{children}</a>
+                ),
+            }}
+          >
+            {body.replace(/^ +/gm, "")}
+          </ReactMarkdown>
         </div>
       </main>
       <Footer />
