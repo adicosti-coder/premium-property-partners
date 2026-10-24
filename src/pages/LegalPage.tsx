@@ -1,3 +1,4 @@
+import ReactMarkdown from "react-markdown";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -174,23 +175,20 @@ For data protection inquiries: info@realtrust.ro, phone +40 799 069 256.
       <main className="container mx-auto px-6 py-16 max-w-3xl">
         <h1 className="text-3xl font-serif font-semibold text-foreground mb-8">{heading}</h1>
         <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground">
-          {body.split('\n').map((line, i) => {
-            if (line.startsWith('## ')) {
-              return <h2 key={i} className="text-lg font-semibold text-foreground mt-8 mb-3">{line.replace('## ', '')}</h2>;
-            }
-            if (line.startsWith('- **')) {
-              const match = line.match(/- \*\*(.+?)\*\*: (.+)/);
-              if (match) return <p key={i} className="ml-4 mb-1"><strong className="text-foreground">{match[1]}</strong>: {match[2]}</p>;
-            }
-            if (line.startsWith('- ')) {
-              return <p key={i} className="ml-4 mb-1">• {line.replace('- ', '')}</p>;
-            }
-            if (line.startsWith('*') && line.endsWith('*')) {
-              return <p key={i} className="text-xs mt-6 italic">{line.replace(/\*/g, '')}</p>;
-            }
-            if (line.trim()) return <p key={i} className="mb-3">{line}</p>;
-            return null;
-          })}
+          <ReactMarkdown
+            components={{
+              h2: ({ children }) => <h2 className="text-lg font-semibold text-foreground mt-8 mb-3">{children}</h2>,
+              strong: ({ children }) => <strong className="text-foreground">{children}</strong>,
+              a: ({ href, children }) =>
+                href?.startsWith("http") ? (
+                  <a href={href} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">{children}</a>
+                ) : (
+                  <a href={href} className="underline underline-offset-2">{children}</a>
+                ),
+            }}
+          >
+            {body.replace(/^ +/gm, "")}
+          </ReactMarkdown>
         </div>
       </main>
       <Footer />
