@@ -68,7 +68,11 @@ let pixelInitialized = false;
 
 export const initMetaPixel = (): void => {
   if (typeof window === "undefined") return;
-  if (pixelInitialized || !META_PIXEL_ID || !hasAdsConsent()) return;
+  if (!META_PIXEL_ID || !hasAdsConsent()) return;
+  if (pixelInitialized) {
+    window.fbq?.("consent", "grant"); // re-grant after an earlier revoke
+    return;
+  }
   pixelInitialized = true;
 
   // Standard Meta Pixel snippet, TS-safe.
