@@ -12,6 +12,7 @@ import { withCampaignTracking, getCtaVariant } from "@/lib/campaignAttribution";
 import FormTrustBadges from "@/components/forms/FormTrustBadges";
 import { toast } from "sonner";
 import { trackCriticalConversion } from "@/lib/conversionTracking";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * PreCalcMiniForm
@@ -269,6 +270,23 @@ const PreCalcMiniForm = ({
         // reportError already fired inside the helper; keep UX moving
         console.warn("[PreCalcMiniForm] submitLead failed", result);
       }
+
+      // Fire-and-forget: personalised WhatsApp message via Make.com.
+      void supabase.functions
+        .invoke("handle-lead-whatsapp", {
+          body: {
+            nume: data.name,
+            telefon: data.phone,
+            zona: data.city,
+            numar_camere: data.apartmentType,
+            venit_estimat_min: range[0],
+            venit_estimat_max: range[1],
+          },
+        })
+        .then(({ error }) => {
+          if (error) console.warn("[PreCalcMiniForm] handle-lead-whatsapp failed", error);
+        })
+        .catch(() => {});
 
       // Critical funnel event: the visitor completed the ROI pre-calculation.
       trackCriticalConversion("PreCalc_Completed", {
