@@ -79,7 +79,7 @@ export async function publishToMetaSocial(text: string, images: string[]): Promi
     return [{ platform: "facebook", ok: false, error }, { platform: "instagram", ok: false, error }];
   }
   const out: SocialResult[] = [];
-  try { out.push({ platform: "facebook", ok: true, id: await postFacebook(ctx.pageId, ctx.pageToken, formatSocialCaption(text, { platform: "facebook", type: "property" }), imgs) }); }
+  try { out.push({ platform: "facebook", ok: true, id: await postFacebook(ctx.pageId, ctx.pageToken, formatSocialCaption(text, { platform: "facebook", type: "property" }), await prepareInstagramImages(imgs)) }); }
   catch (e) { out.push({ platform: "facebook", ok: false, error: (e as Error).message }); }
   if (!ctx.igId) out.push({ platform: "instagram", ok: false, error: "Pagina nu are cont Instagram Business legat" });
   else if (!imgs.length) out.push({ platform: "instagram", ok: false, error: "Instagram cere cel puțin o imagine" });

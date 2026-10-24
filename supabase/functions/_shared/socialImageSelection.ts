@@ -31,3 +31,11 @@ export function instagramFrame(width: number, height: number, story = false) {
   const iw = Math.max(1, Math.round(width * scale)), ih = Math.max(1, Math.round(height * scale));
   return { width: w, height: h, imageWidth: iw, imageHeight: ih, x: Math.floor((w - iw) / 2), y: Math.floor((h - ih) / 2) };
 }
+/** Meta Graph: feed 4:5–1.91:1 (we only emit 1:1 / 4:5), Story 9:16; min 320px wide, max 1440. Prevents error 36003. */
+export function metaAspectError(width: number, height: number, story = false): string | null {
+  if (!width || !height) return "Dimensiuni imagine necunoscute";
+  if (width < 320 || width > 1440) return `Lățime nepermisă de Meta (${width}px)`;
+  const r = width / height;
+  const ok = story ? Math.abs(r - 9 / 16) < 0.01 : Math.abs(r - 1) < 0.01 || Math.abs(r - 0.8) < 0.01;
+  return ok ? null : `Raport ${width}×${height} nepermis (${story ? "Story cere 9:16" : "Feed cere 1:1 sau 4:5"})`;
+}
