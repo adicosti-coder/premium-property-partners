@@ -8,7 +8,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { REAL_ESTATE_AGENT_REF, FINANCIAL_SERVICE_SCHEMA } from "@/lib/orgIdentity";
 import { Link } from "react-router-dom";
-import { Coins, Home, Wrench, Receipt, BedDouble, TrendingUp, Wallet, BookOpen, HelpCircle } from "lucide-react";
+import { Coins, Home, Wrench, Receipt, BedDouble, TrendingUp, Wallet, BookOpen, HelpCircle, MessageCircle } from "lucide-react";
 import { lazy, Suspense } from "react";
 
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
@@ -105,17 +105,33 @@ const CalculatorROI = () => {
         <div className="container mx-auto px-4 max-w-4xl">
           <PageBreadcrumb items={breadcrumbItems} />
 
-          <div className="text-center mb-10">
-            <h1 className="text-3xl md:text-4xl font-serif font-semibold text-foreground mb-3">
-              Calculator Randament Imobiliar (ROI) în Timișoara: regim hotelier vs. chirie clasică
+          <div className="text-center mb-6">
+            <h1 className="text-2xl md:text-4xl font-serif font-semibold text-foreground mb-2">
+              Calculator Randament Imobiliar (ROI) Timișoara
             </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              În 3 pași afli ce poate produce apartamentul tău: <strong>chiria clasică vs. venitul net în regim hotelier</strong>, calculate pe chirii reale din fiecare zonă a Timișoarei și pe gradul de ocupare din zonă.
+            <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
+              Chirie clasică vs. regim hotelier, pe chirii reale din zona ta. <strong>Rezultat în 1 minut, gratuit.</strong>
             </p>
+            <ul className="mt-4 flex flex-wrap justify-center gap-2 text-xs md:text-sm" aria-label="Avantaje">
+              <li className="rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-foreground">6,5–9,4% net estimat</li>
+              <li className="rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-foreground">90 zile probă</li>
+              <li className="rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-foreground">9,7/10 recenzii oaspeți</li>
+            </ul>
+            <a
+              href={`https://wa.me/40799069256?text=${encodeURIComponent("Bună! Vreau o estimare de randament pentru apartamentul meu din Timișoara.")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex min-h-12 items-center gap-2 rounded-full bg-whatsapp px-6 text-sm font-semibold text-whatsapp-foreground hover:bg-whatsapp-hover"
+            >
+              <MessageCircle className="h-5 w-5" aria-hidden="true" /> Întreabă direct pe WhatsApp
+            </a>
           </div>
 
-          {/* Table of Contents */}
-          <nav aria-label="Cuprins pagină" className="mb-10 rounded-2xl border border-border bg-card/60 p-5">
+          <div id="calculator" className="scroll-mt-24">
+            <ROICalculatorWidget />
+          </div>
+
+          <nav aria-label="Cuprins pagină" className="mt-10 rounded-2xl border border-border bg-card/60 p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">Cuprins</p>
             <ul className="flex flex-wrap gap-2">
               {tocItems.map((item) => (
@@ -130,10 +146,6 @@ const CalculatorROI = () => {
               ))}
             </ul>
           </nav>
-
-          <div id="calculator">
-            <ROICalculatorWidget />
-          </div>
 
           <section className="mt-12 rounded-2xl border border-primary/20 bg-primary/5 p-6">
             <div className="grid gap-5 md:grid-cols-[1fr_auto] md:items-center">
