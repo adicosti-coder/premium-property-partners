@@ -991,7 +991,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
   // Calculator ROI
   routes.push({
     path: '/calculator-randament',
-    title: 'Randament imobiliar Timișoara: chirie vs hotelier | RealTrust',
+    title: 'Randament imobiliar Timișoara | Calculator RealTrust',
     description: 'Calculator Randament Imobiliar (ROI) Timișoara: compară chiria vs regimul hotelier pe chirii reale din fiecare zonă. Afli venitul net lunar estimat în 3 pași.',
     h1: 'Calculator Randament Imobiliar (ROI) în Timișoara: regim hotelier vs. chirie clasică',
     canonical: `${BASE_URL}/calculator-randament`,
