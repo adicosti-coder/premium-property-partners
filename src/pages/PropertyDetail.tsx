@@ -568,6 +568,27 @@ const PropertyDetail = () => {
   })();
 
 
+  const propertySeo = dbProperty && normalizedListingType !== 'cazare' ? generatePropertySEO({
+    name: displayName,
+    slug: slug || "",
+    location: dbProperty.location || property.location,
+    bedrooms: dbProperty.bedrooms ?? property.bedrooms,
+    size: dbProperty.size ?? property.size,
+    floor: dbProperty.floor,
+    roi_percentage: dbProperty.roi_percentage,
+    capital_necesar: dbProperty.capital_necesar,
+    listing_type: dbProperty.listing_type,
+    year_built: dbProperty.year_built,
+    base_price_per_night: dbProperty.base_price_per_night,
+    capacity: property.capacity,
+    latitude: resolvedCoordinates?.[1],
+    longitude: resolvedCoordinates?.[0],
+    booking_rating: dbProperty.booking_rating,
+    booking_review_count: dbProperty.booking_review_count,
+    booking_url: directBookingUrl,
+    images: galleryImages,
+  }) : null;
+
   const propertySchemas = [
     ...generatePropertyPageSchemas({
       name: displayName,
@@ -718,25 +739,7 @@ const PropertyDetail = () => {
 
 
     // RealEstateListing schema — only for sale/investment/rental listings.
-    ...(dbProperty && normalizedListingType !== 'cazare' ? generatePropertySEO({
-      name: displayName,
-      slug: slug || "",
-      location: dbProperty.location || property.location,
-      bedrooms: dbProperty.bedrooms ?? property.bedrooms,
-      size: dbProperty.size ?? property.size,
-      floor: dbProperty.floor,
-      roi_percentage: dbProperty.roi_percentage,
-      capital_necesar: dbProperty.capital_necesar,
-      listing_type: dbProperty.listing_type,
-      year_built: dbProperty.year_built,
-      base_price_per_night: dbProperty.base_price_per_night,
-      capacity: property.capacity,
-      latitude: resolvedCoordinates?.[1],
-      longitude: resolvedCoordinates?.[0],
-      booking_rating: dbProperty.booking_rating,
-      booking_review_count: dbProperty.booking_review_count,
-      booking_url: directBookingUrl,
-    }).jsonLd : []),
+    ...(propertySeo ? propertySeo.jsonLd : []),
   ];
 
   // FAQ items are registered by PropertyFAQ component only
@@ -747,8 +750,8 @@ const PropertyDetail = () => {
         title={(() => {
           const roi = displayRoi;
           const lt = dbProperty?.listing_type?.toLowerCase();
-          if ((lt === 'investitie' || lt === 'vanzare') && roi) {
-            return `${displayName} | Randament ${roi} randament — Investiție Timișoara`;
+          if (dbProperty && normalizedListingType !== 'cazare' && language === 'ro') {
+            return propertySeo!.title;
           }
           if (normalizedListingType === 'cazare' && seoOverride?.seo_title?.trim()) {
             return `${seoOverride.seo_title.trim()} | RealTrust`.slice(0, 70);
@@ -770,6 +773,9 @@ const PropertyDetail = () => {
           const capital = dbProperty?.capital_necesar;
           const lt = dbProperty?.listing_type?.toLowerCase();
           // Smart meta description: "Descoperă acest apartament în [Zonă]. Ideal pentru investiție cu ROI de [X]%."
+          if (dbProperty && normalizedListingType !== 'cazare' && language === 'ro') {
+            return propertySeo!.description;
+          }
           if ((lt === 'investitie' || lt === 'vanzare') && (roi || capital)) {
             const zone = property.location?.replace(/,?\s*(Timișoara|Timisoara)\s*/gi, '').trim() || 'Timișoara';
             const parts: string[] = [`Descoperă acest apartament în ${zone}, Timișoara.`];
