@@ -265,7 +265,7 @@ const PreCalcMiniForm = ({ source = "pre_calc_owner", eyebrow, variant = "full",
         <div className="max-w-3xl mx-auto">
           <div className="overflow-hidden rounded-3xl border border-gold/30 bg-card shadow-elegant">
             {/* Antet întunecat cu progres auriu */}
-            <div className="bg-primary px-6 pt-6 pb-5 sm:px-10 sm:pt-8 text-primary-foreground">
+            <div className="bg-foreground px-6 pt-6 pb-5 sm:px-10 sm:pt-8 text-background">
               <div className="flex items-center gap-2 mb-3">
                 <Sparkles className="w-4 h-4 text-gold" />
                 <span className="text-xs font-semibold uppercase tracking-widest text-gold">{eyebrow ?? L("Calcul venit · 1 minut", "Income estimate · 1 minute")}</span>
@@ -273,13 +273,13 @@ const PreCalcMiniForm = ({ source = "pre_calc_owner", eyebrow, variant = "full",
               <h2 id="precalc-mini-form-title" className="text-2xl md:text-3xl font-serif font-semibold mb-5">
                 {L("Cât poate câștiga apartamentul tău lunar?", "How much can your apartment earn monthly?")}
               </h2>
-              <div className="relative h-1.5 rounded-full bg-primary-foreground/15" role="progressbar" aria-valuemin={1} aria-valuemax={3} aria-valuenow={step} aria-label={L("Progres formular", "Form progress")}>
+              <div className="relative h-1.5 rounded-full bg-background/15" role="progressbar" aria-valuemin={1} aria-valuemax={3} aria-valuenow={step} aria-label={L("Progres formular", "Form progress")}>
                 <div className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-gold-dark via-gold to-gold-light shadow-[0_0_12px_hsl(var(--gold)/0.6)] transition-[width] duration-500 ease-out" style={{ width: `${Math.max(progress, 6)}%` }} />
               </div>
               <ol className="mt-3 grid grid-cols-3 text-xs font-medium">
                 {steps.map((s, i) => (
                   <li key={s} aria-current={i + 1 === step ? "step" : undefined}
-                    className={`${i === 1 ? "text-center" : i === 2 ? "text-right" : ""} transition-colors ${i + 1 <= step ? "text-gold" : "text-primary-foreground/60"}`}>
+                    className={`${i === 1 ? "text-center" : i === 2 ? "text-right" : ""} transition-colors ${i + 1 <= step ? "text-gold" : "text-background/60"}`}>
                     {i + 1}. {s}
                   </li>
                 ))}
@@ -365,13 +365,13 @@ const PreCalcMiniForm = ({ source = "pre_calc_owner", eyebrow, variant = "full",
 
                 {step === 3 && (
                   <>
-                    <div className="rounded-2xl bg-primary p-6 text-primary-foreground">
+                    <div className="rounded-2xl bg-foreground p-6 text-background">
                       <p className="flex items-center gap-2 text-xs uppercase tracking-widest text-gold"><TrendingUp className="w-4 h-4" />{L("Venit net estimat", "Estimated net income")}</p>
                       <p className="mt-2 font-serif text-4xl sm:text-5xl font-semibold">
                         {range[0].toLocaleString(loc)}–{range[1].toLocaleString(loc)} €
-                        <span className="ml-1 text-base font-sans font-normal text-primary-foreground/70">/{L("lună", "month")}</span>
+                        <span className="ml-1 text-base font-sans font-normal text-background/70">/{L("lună", "month")}</span>
                       </p>
-                      <p className="mt-2 text-sm text-primary-foreground/80">{typeLabel} · {form.zone} · {L("6,5–9,4% net estimat", "6.5–9.4% estimated net")}</p>
+                      <p className="mt-2 text-sm text-background/80">{typeLabel} · {form.zone} · {L("6,5–9,4% net estimat", "6.5–9.4% estimated net")}</p>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-foreground mb-2">{L("Previzualizare mesaj", "Message preview")}</p>
