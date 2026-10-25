@@ -984,7 +984,7 @@ const PropertyDetail = () => {
                 bedrooms={property.bedrooms}
                 capacity={property.capacity}
                 amenities={(property as any).amenities ?? null}
-                size={(property as any).size ?? null}
+                size={(dbProperty?.usable_area ?? (property as any).size) ?? null}
                 tag={(property as any).tag ?? undefined}
                 className="my-2"
               />
@@ -1021,7 +1021,7 @@ const PropertyDetail = () => {
               <PropertyQuickFacts
                 name={property.name}
                 location={displayLocation}
-                size={(dbProperty?.size ?? (property as any).size) as number | null}
+                size={(dbProperty?.usable_area ?? dbProperty?.size ?? (property as any).size) as number | null}
                 floor={dbProperty?.floor ?? null}
                 bedrooms={property.bedrooms}
                 rooms={dbProperty?.rooms ?? null}
@@ -1127,7 +1127,7 @@ const PropertyDetail = () => {
                   propertyName={property.name}
                   propertySlug={property.slug}
                   location={property.location}
-                  size={dbProperty?.size || property.size}
+                  size={dbProperty?.usable_area || dbProperty?.size || property.size}
                   bedrooms={property.bedrooms}
                   bathrooms={property.bathrooms}
                   capacity={property.capacity}
