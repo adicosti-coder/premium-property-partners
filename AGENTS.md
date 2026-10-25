@@ -24,3 +24,4 @@
 - `automation-orchestrator` is called by pg_cron with `x-cron-secret` and gated by `requireInternalOrAdmin`; due-ness is computed via croner `nextRun` from max(last_run_at, now−10min) — admin-only auth and croner `previousRun` silently stopped every automation for a month.
 - Social Engine cron sends at most one feed post and one Story per hour (09–21 Bucharest), tracked through `social_engine_logs.trigger` (`cron_job` / `cron_story`) — prevents bursts and duplicate sends.
 - Property `size` is auto-synced from `usable_area` by trigger `trg_sync_property_size` — all cards read `size`, so usable area shows uniformly.
+- Andrei prompt auto-optimization (`optimize-agent-prompt`) only stores one `pending` row in `agent_prompts_history`; the active `voice_agent_scripts` prompt changes solely via admin RPC `review_agent_prompt`, which snapshots the old version and refuses stale proposals — no unreviewed prompt reaches live calls.
