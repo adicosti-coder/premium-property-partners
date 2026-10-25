@@ -31,13 +31,30 @@ export default function PromptOptimizationWidget() {
       return data as Proposal | null;
     },
   });
+  const { data: lowCount } = useQuery({
+    queryKey: ["agent-prompt-low-count"],
+    queryFn: async () => {
+      const since = new Date(Date.now() - 14 * 86400000).toISOString();
+      const { count } = await supabase.from("voice_call_analyses").select("id", { count: "exact", head: true }).lte("score", 6).gte("created_at", since);
+      return count ?? 0;
+    },
+  });
   const refresh = () => qc.invalidateQueries({ queryKey: ["agent-prompt-pending"] });
 
   const run = async () => {
     setBusy("run");
+    const { data: sess } = await supabase.auth.getSession();
+    if (!sess.session) { setBusy(null); return toast({ title: "Sesiune expirată", description: "Autentificați-vă din nou ca administrator.", variant: "destructive" }); }
     const { data, error } = await supabase.functions.invoke("optimize-agent-prompt", { body: {} });
     setBusy(null);
-    if (error || data?.error) return toast({ title: "Re-antrenarea a eșuat", description: data?.error || error?.message, variant: "destructive" });
+    if (error || data?.error) {
+      const status = (error as any)?.context?.status;
+      const description = status === 401 ? "Sesiunea nu e validă. Ieșiți din cont și intrați din nou."
+        : status === 403 ? "Contul curent nu are rol de administrator."
+        : status === 402 ? "Creditele AI s-au epuizat." : status === 429 ? "Prea multe cereri AI. Reîncercați peste un minut."
+        : data?.error || error?.message;
+      return toast({ title: "Re-antrenarea a eșuat", description, variant: "destructive" });
+    }
     toast({ title: RUN_MSG[data?.status] ?? "Gata" });
     refresh();
   };
@@ -47,7 +64,8 @@ export default function PromptOptimizationWidget() {
     const { error } = await supabase.rpc("review_agent_prompt", { _id: p.id, _approve: approve });
     setBusy(null);
     if (error) return toast({ title: "Nu s-a putut salva", description: error.message, variant: "destructive" });
-    toast({ title: approve ? "Promptul nou este activ la apeluri" : "Propunerea a fost respinsă" });
+    toast({ title: approve ? "Aplicat în producție" : "Propunerea a fost respinsă", description: approve ? "Promptul nou e activ la apeluri; versiunea veche e salvată în istoric." : undefined });
+    qc.invalidateQueries({ queryKey: ["agent-prompt-low-count"] });
     refresh();
   };
 
@@ -67,7 +85,12 @@ export default function PromptOptimizationWidget() {
         </Button>
       </CardHeader>
       <CardContent>
-        {isLoading ? <p className="text-sm text-muted-foreground">Se încarcă…</p> : !p ? (
+        {busy === "run" ? (
+          <div role="status" className="flex items-center gap-2 rounded-md border p-4 text-sm">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Analizăm cele {lowCount ?? "…"} de conversații cu notă ≤ 6…
+          </div>
+        ) : isLoading ? <p className="text-sm text-muted-foreground">Se încarcă…</p> : !p ? (
           <p className="text-sm text-muted-foreground">Nicio propunere în așteptare.</p>
         ) : (
           <div className="space-y-4">

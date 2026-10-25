@@ -189,6 +189,7 @@ const RAW_GROUPS: AdminGroup[] = [
       { value: "ai-cache", label: "AI Cache", icon: Sparkles, subgroup: "AI Tools", keywords: ["cache", "ai content"] },
       { value: "voice-agent", label: "Voice Agent", icon: Phone, subgroup: "AI Tools", keywords: ["voice", "apel ai"] },
       { value: "andrei-training-lab", label: "Training Lab Andrei", icon: Sparkles, subgroup: "AI Tools", keywords: ["training", "antrenament", "andrei", "simulare", "gemini"] },
+      { value: "andrei-prompt-optimization", label: "Optimizare prompt Andrei", icon: Sparkles, subgroup: "AI Tools", externalRoute: "/admin/andrei", keywords: ["prompt", "optimizare", "andrei", "re-antrenare", "aprobare"] },
       { value: "social-drafts", label: "Drafturi Social Media", icon: Sparkles, subgroup: "AI Tools", keywords: ["facebook", "instagram", "social", "postare", "draft"] },
       { value: "social-posts", label: "Postări publicate", icon: Sparkles, subgroup: "AI Tools", keywords: ["facebook", "instagram", "social", "postare", "publicat", "link"] },
       { value: "reel-studio", label: "Generator Reels", icon: Sparkles, subgroup: "AI Tools", keywords: ["reels", "video", "instagram", "facebook", "apart"] },
