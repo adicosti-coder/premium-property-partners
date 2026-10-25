@@ -67,7 +67,7 @@ const CalculatorROI = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Randament imobiliar Timișoara: chirie vs hotelier | RealTrust"
+        title="Randament imobiliar Timișoara | Calculator RealTrust"
         description="Calculator Randament Imobiliar (ROI) Timișoara: compară chiria vs regimul hotelier pe chirii reale din fiecare zonă. Afli venitul net lunar estimat în 3 pași."
         url="https://realtrust.ro/calculator-randament"
         breadcrumbItems={[
