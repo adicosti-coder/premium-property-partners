@@ -3,13 +3,14 @@ import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import type { User } from "@supabase/supabase-js";
-import { ArrowDownUp, RefreshCw } from "lucide-react";
+import { ArrowDownUp, MessageCircle, RefreshCw } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { waLeadLink } from "@/lib/waLeadLink";
 
 type Row = {
   id: string;
@@ -42,6 +43,38 @@ function income(sd: Record<string, unknown> | null): string {
   if (min != null && max != null) return `${Math.round(min)}–${Math.round(max)} €/lună`;
   return "—";
 }
+
+const PhoneCell = ({ phone, name }: { phone: string | null; name: string | null }) => {
+  const href = waLeadLink(phone);
+  if (!href) {
+    return (
+      <Badge variant="outline" className="text-xs font-normal text-muted-foreground">
+        Fără telefon
+      </Badge>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline underline-offset-2 hover:text-primary"
+      >
+        {phone}
+      </a>
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`Deschide WhatsApp cu ${name || phone}`}
+        className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-whatsapp text-whatsapp-foreground transition-transform hover:scale-110 hover:bg-whatsapp-hover"
+      >
+        <MessageCircle className="h-4 w-4" />
+      </a>
+    </span>
+  );
+};
 
 const CereriRandament = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -122,9 +155,7 @@ const CereriRandament = () => {
                       <tr key={r.id} className="border-b border-border/60">
                         <td className="py-2 pr-3 whitespace-nowrap">{fmtDate(r.created_at)}</td>
                         <td className="py-2 pr-3">{r.name || "—"}</td>
-                        <td className="py-2 pr-3 whitespace-nowrap">
-                          {r.whatsapp_number ? <a className="underline" href={`tel:${r.whatsapp_number}`}>{r.whatsapp_number}</a> : "—"}
-                        </td>
+                        <td className="py-2 pr-3 whitespace-nowrap"><PhoneCell phone={r.whatsapp_number} name={r.name} /></td>
                         <td className="py-2 pr-3">{zone}</td>
                         <td className="py-2 pr-3">{type}</td>
                         <td className="py-2 pr-3 whitespace-nowrap font-medium">{income(sd)}</td>
