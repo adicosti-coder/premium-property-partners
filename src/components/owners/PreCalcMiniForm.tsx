@@ -24,17 +24,19 @@ import { supabase } from "@/integrations/supabase/client";
  * în gestul utilizatorului ca să nu fie blocat pe mobil.
  */
 
-// Factor de zonă aplicat intervalului mediu Timișoara.
-const ZONES = [
-  { label: "ISHO", factor: 1.15 },
-  { label: "City of Mara", factor: 1.0 },
-  { label: "NordOne", factor: 1.05 },
-  { label: "Ring Residence", factor: 1.0 },
-  { label: "Fructus Plaza", factor: 1.05 },
-  { label: "Calea Torontalului", factor: 0.95 },
-  { label: "Complex Studențesc", factor: 0.97 },
-  { label: "Central / Iosefin / Elisabetin", factor: 1.15 },
-  { label: "Altă zonă", factor: 0.92 },
+// Factor de zonă = chiria mediană reală pe zonă / mediana Timișoara (≈460 €, 2 camere).
+// Sursa: anunțurile de închiriere colectate de RealTrust în ultimele 12 luni (25.10.2026).
+// Ring Residence nu are încă destule anunțuri → 1,00 (media orașului).
+export const ZONES = [
+  { label: "ISHO", factor: 1.43 },               // 2 cam. mediană 660 € (14 anunțuri)
+  { label: "City of Mara", factor: 1.3 },        // 600 € (12)
+  { label: "NordOne", factor: 1.41 },            // 650 € (4)
+  { label: "Ring Residence", factor: 1.0 },      // date insuficiente
+  { label: "Fructus Plaza", factor: 1.04 },      // 3 cam. 600 € (3)
+  { label: "Calea Torontalului", factor: 1.09 }, // 500 € (13)
+  { label: "Complex Studențesc", factor: 0.76 }, // 350 € (5)
+  { label: "Central / Iosefin / Elisabetin", factor: 0.93 }, // 430 € (42)
+  { label: "Altă zonă", factor: 0.98 },          // 450 € (105)
 ] as const;
 
 const APARTMENT_TYPES = [
