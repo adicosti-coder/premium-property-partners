@@ -20,7 +20,7 @@ const STATIC_HUB_PAGES: Array<{ path: string; title: string; topic: string }> = 
   { path: "/pentru-proprietari", title: "Pentru Proprietari", topic: "Administrare regim hotelier, ROI, calculator" },
   { path: "/cazare", title: "Pentru Oaspeți", topic: "Cazare premium Timișoara, apartamente verificate" },
   { path: "/investitii", title: "Investiții", topic: "Catalog investiții imobiliare, dealroom, ROI" },
-  { path: "/calculator-roi", title: "Calculator ROI", topic: "Compară ROI hotelier vs închiriere clasică" },
+  { path: "/calculator-roi", title: "Calculator de randament imobiliar", topic: "Compară randamentul hotelier vs închiriere clasică" },
   { path: "/blog", title: "Blog ApArt Hotel", topic: "Ghiduri investiții și regim hotelier" },
   { path: "/cere-evaluare", title: "Evaluare proprietate", topic: "Form evaluare 4 pași" },
 ];

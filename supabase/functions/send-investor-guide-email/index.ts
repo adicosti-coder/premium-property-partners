@@ -126,7 +126,7 @@ serve(async (req) => {
         ${isRo ? "💬 WhatsApp" : "💬 WhatsApp"}
       </a>
       <a href="${calcUrl}" style="display:inline-block;padding:14px 32px;background:#1f2937;color:#fff;font-size:15px;font-weight:700;text-decoration:none;border-radius:10px;margin:0 6px 8px;">
-        ${isRo ? "🧮 Calculator ROI" : "🧮 ROI Calculator"}
+        ${isRo ? "🧮 Calculator de randament" : "🧮 ROI Calculator"}
       </a>
     </div>
 

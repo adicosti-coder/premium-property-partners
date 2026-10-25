@@ -102,7 +102,7 @@ const Investitii = () => {
       heroSubtitle: "Oportunități selectate, cu randament țintă calculat transparent. Le identificăm, le administrăm, tu primești venitul net.",
       heroBadge: "Deal Room · RealTrust",
       ctaContact: "Programează o discuție",
-      ctaCalculator: "Calculator ROI",
+      ctaCalculator: "Calculator de randament",
       gridTitle: "Oportunități active",
       gridSubtitle: "Proprietăți cu potențial de investiție evaluat și administrare profesională inclusă.",
       cardCapital: "Capital necesar",

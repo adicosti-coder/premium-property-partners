@@ -92,7 +92,7 @@ const Footer = () => {
     { href: "/harta-preturi", label: "Harta prețurilor și randamentelor" },
     { href: "/alerte-oportunitati", label: "Alerte oportunități" },
     { href: "/catalog-investitii", label: language === "ro" ? "Catalog 2026" : "Catalog 2026" },
-    { href: "/calculator-roi", label: "Calculator ROI" },
+    { href: "/calculator-roi", label: "Calculator de randament imobiliar" },
     { href: "/analiza-roi-apartament", label: language === "ro" ? "Analiza ROI Apartament" : "Apartment ROI Analysis" },
     { href: "/evaluare-gratuita", label: language === "ro" ? "Evaluare gratuită" : "Free Valuation" },
     { href: "/piata-imobiliara-timisoara", label: language === "ro" ? "Piața imobiliară" : "Real Estate Market" },

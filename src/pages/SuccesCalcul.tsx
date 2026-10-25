@@ -68,7 +68,7 @@ const SuccesCalcul = () => {
       ? "Proprietar apartament · Iulius Town"
       : "Apartment owner · Iulius Town",
     backHome: isRo ? "Înapoi la pagina principală" : "Back to home",
-    seeRoi: isRo ? "Calculator ROI complet" : "Full ROI calculator",
+    seeRoi: isRo ? "Calculatorul de randament complet" : "Full ROI calculator",
   };
 
   const handleWhatsApp = () => {
