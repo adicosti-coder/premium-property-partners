@@ -135,6 +135,11 @@ export function generatePropertySEO(property: PropertySEOInput): PropertySEOOutp
       }
     : null;
 
+  const imgs = [property.image_path, ...(property.images || [])].filter(
+    (u): u is string => !!u && /^https?:\/\//.test(u),
+  );
+  const firstImage = imgs[0] || "";
+
   // JSON-LD: a single RealEstateListing node (no Product — this is a real
   // estate offer, not a retail product).
   const jsonLd: Record<string, unknown>[] = [
@@ -152,8 +157,21 @@ export function generatePropertySEO(property: PropertySEOInput): PropertySEOOutp
           "priceCurrency": "EUR",
           "availability": "https://schema.org/InStock",
           "url": canonical,
+          "businessFunction": isRent
+            ? "http://purl.org/goodrelations/v1#LeaseOut"
+            : "http://purl.org/goodrelations/v1#Sell",
+          ...(isRent && {
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": property.capital_necesar,
+              "priceCurrency": "EUR",
+              "unitCode": "MON",
+            },
+          }),
+          "seller": { "@id": `${BASE_URL}/#realestateagent` },
         },
       }),
+      ...(firstImage && { "image": firstImage }),
       "numberOfRooms": rooms,
       ...(property.size && { "floorSize": { "@type": "QuantitativeValue", "value": property.size, "unitCode": "MTK" } }),
       "address": {
@@ -173,6 +191,15 @@ export function generatePropertySEO(property: PropertySEOInput): PropertySEOOutp
       ...(property.year_built && { "yearBuilt": property.year_built }),
       ...(bookingUrl && { "sameAs": bookingUrl }),
       ...(reserveAction && { "potentialAction": reserveAction }),
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Acasă", "item": `${BASE_URL}/` },
+        { "@type": "ListItem", "position": 2, "name": "Imobiliare Timișoara", "item": `${BASE_URL}/servicii-imobiliare` },
+        { "@type": "ListItem", "position": 3, "name": property.name, "item": canonical },
+      ],
     },
   ];
 
