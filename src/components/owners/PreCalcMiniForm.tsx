@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { CalendarCheck, MessageCircle, MapPin, Home, User, Sparkles, Loader2, ArrowRight, ArrowLeft, Phone, Ruler, Settings2 } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
+import { CalendarCheck, MessageCircle, User, Sparkles, Loader2, ArrowRight, ArrowLeft, Phone, CheckCircle2, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { submitLead } from "@/lib/leadSubmission";
 import { withCampaignTracking, getCtaVariant } from "@/lib/campaignAttribution";
@@ -16,58 +15,37 @@ import { trackCriticalConversion } from "@/lib/conversionTracking";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * PreCalcMiniForm
- * ----------------
- * Mini owner-lead capture form (name + city + apartment type) that:
- *   1. Persists the lead in `leads` (source = "pre_calc_owner") so we never lose it.
- *   2. Generates a pre-formatted ROI pre-calculation message in Romanian/English.
- *   3. Opens a WhatsApp conversation directly with the consultancy team
- *      (+40 799 069 256), seeding the chat with the message and a request
- *      to schedule a consultation.
- *
- * NOTE: The `leads` table requires `whatsapp_number` (NOT NULL) and
- * `property_area` (NOT NULL number). Since this mini-form intentionally only
- * collects 3 lightweight fields, we store sentinel values (`PRECALC_NO_PHONE`,
- * `0`) and put the real qualifying info in `message` + `simulation_data`.
+ * PreCalcMiniForm — formularul „Calcul venit" în 3 pași:
+ *   1. Apartament (nume + telefon obligatorii, restul opțional ca pills)
+ *   2. Administrare & detalii
+ *   3. Rezultat + previzualizare mesaj + WhatsApp / consultanță
+ * Lead-ul se salvează în `leads`; datele complete pleacă spre Make prin
+ * `handle-lead-whatsapp` (fire-and-forget), iar wa.me se deschide imediat
+ * în gestul utilizatorului ca să nu fie blocat pe mobil.
  */
 
-// Extended list — Timișoara + key metropolitan & nearby high-demand areas.
-// Order: city center first, then metropolitan ring, then secondary cities in Timiș county.
-const TIMISOARA_CITIES = [
-  "Timișoara",
-  "Dumbrăvița",
-  "Giroc",
-  "Chișoda",
-  "Moșnița Nouă",
-  "Moșnița Veche",
-  "Ghiroda",
-  "Săcălaz",
-  "Freidorf",
-  "Sânandrei",
-  "Șag",
-  "Remetea Mare",
-  "Sânmihaiu Român",
-  "Becicherecu Mic",
-  "Dudeștii Noi",
-  "Recaș",
-  "Lugoj",
-  "Jimbolia",
-  "Deta",
-  "Altă localitate",
+// Factor de zonă aplicat intervalului mediu Timișoara.
+const ZONES = [
+  { label: "ISHO", factor: 1.15 },
+  { label: "City of Mara", factor: 1.0 },
+  { label: "NordOne", factor: 1.05 },
+  { label: "Ring Residence", factor: 1.0 },
+  { label: "Fructus Plaza", factor: 1.05 },
+  { label: "Calea Torontalului", factor: 0.95 },
+  { label: "Complex Studențesc", factor: 0.97 },
+  { label: "Central / Iosefin / Elisabetin", factor: 1.15 },
+  { label: "Altă zonă", factor: 0.92 },
 ] as const;
 
 const APARTMENT_TYPES = [
   { value: "garsoniera", labelRo: "Garsonieră", labelEn: "Studio" },
-  { value: "2-camere", labelRo: "Apartament 2 camere", labelEn: "1-bedroom apartment" },
-  { value: "3-camere", labelRo: "Apartament 3 camere", labelEn: "2-bedroom apartment" },
-  { value: "4-camere", labelRo: "Apartament 4 camere", labelEn: "3-bedroom apartment" },
+  { value: "2-camere", labelRo: "2 camere", labelEn: "1-bedroom" },
+  { value: "3-camere", labelRo: "3 camere", labelEn: "2-bedroom" },
+  { value: "4-camere", labelRo: "4 camere", labelEn: "3-bedroom" },
   { value: "casa", labelRo: "Casă / Vilă", labelEn: "House / Villa" },
 ] as const;
 
-// Realistic monthly NET revenue (after platform commission, cleaning, utilities, management fee).
-// Calibrated on hotel-regime portfolio averages — Timișoara central & metropolitan zones,
-// 75–85% occupancy, mixed Booking/Airbnb channels, 2025–2026 tariffs.
-// Sources: internal RealTrust performance data (verified ROI ≈ 9.4% net annual).
+// Venit NET lunar mediu regim hotelier Timișoara (după comision, curățenie, utilități, taxe).
 const MONTHLY_NET_RANGE: Record<string, [number, number]> = {
   garsoniera: [1600, 2400],
   "2-camere": [2200, 3300],
@@ -80,58 +58,36 @@ const WHATSAPP_NUMBER = "40799069256";
 
 const OPT = {
   condition: [
-    { v: "renovat_recent", ro: "Renovat recent", en: "Recently renovated" },
-    { v: "stare_buna", ro: "Stare bună", en: "Good condition" },
-    { v: "necesita_renovare", ro: "Necesită renovare", en: "Needs renovation" },
+    { v: "renovat_recent", ro: "Renovat recent", en: "Renovated" },
+    { v: "stare_buna", ro: "Stare bună", en: "Good" },
+    { v: "necesita_renovare", ro: "De renovat", en: "Needs work" },
   ],
   furnished: [
-    { v: "complet", ro: "Mobilat complet", en: "Fully furnished" },
-    { v: "partial", ro: "Parțial mobilat", en: "Partly furnished" },
+    { v: "complet", ro: "Mobilat", en: "Furnished" },
+    { v: "partial", ro: "Parțial", en: "Partly" },
     { v: "nemobilat", ro: "Nemobilat", en: "Unfurnished" },
+  ],
+  service: [
+    { v: "regim_hotelier", ro: "Regim Hotelier Complet (20% net)", en: "Full short-term management (20% net)" },
+    { v: "inchiriere_clasica", ro: "Chirie pe termen lung", en: "Long-term rental" },
+    { v: "consultanta", ro: "Consultanță / Evaluare", en: "Consulting / Valuation" },
   ],
   availability: [
     { v: "imediat", ro: "Imediat", en: "Immediately" },
     { v: "1-3_luni", ro: "În 1–3 luni", en: "In 1–3 months" },
-    { v: "peste_3_luni", ro: "Peste 3 luni", en: "Later than 3 months" },
-  ],
-  current: [
-    { v: "liber", ro: "Liber / nefolosit", en: "Empty" },
-    { v: "inchiriat_clasic", ro: "Închiriat pe termen lung", en: "Long-term rented" },
-    { v: "airbnb_singur", ro: "Îl administrez singur pe Airbnb/Booking", en: "Self-managed on Airbnb/Booking" },
-    { v: "locuit", ro: "Locuit de mine", en: "Owner-occupied" },
-  ],
-  service: [
-    { v: "regim_hotelier", ro: "Administrare completă regim hotelier", en: "Full short-term management" },
-    { v: "inchiriere_clasica", ro: "Închiriere pe termen lung", en: "Long-term rental" },
-    { v: "nu_stiu", ro: "Nu știu încă, vreau o recomandare", en: "Not sure, I want advice" },
+    { v: "momentan_inchiriat", ro: "Momentan închiriat", en: "Currently rented" },
   ],
 } as const;
 
 const step1Schema = z.object({
   name: z.string().trim().min(2, { message: "Numele trebuie să aibă minim 2 caractere" }).max(80, { message: "Numele este prea lung" }),
-  phone: z.string().trim().regex(/^(\+?4?0)?7\d{8}$/, { message: "Introdu un număr de telefon valid (ex: 0722 123 456)" }),
-  city: z.string().trim().min(2, { message: "Selectează un oraș" }).max(60),
-  apartmentType: z.enum(["garsoniera", "2-camere", "3-camere", "4-camere", "casa"]),
-  area: z
-    .string()
-    .trim()
-    .refine((v) => v === "" || (/^\d{2,4}$/.test(v) && +v >= 10 && +v <= 1000), {
-      message: "Suprafața trebuie să fie între 10 și 1000 mp",
-    }),
+  phone: z.string().trim().regex(/^(\+?4?0)?7\d{8}$/, { message: "Introdu un mobil valid (ex: 0722 123 456)" }),
+  area: z.string().refine((v) => v === "" || (+v >= 10 && +v <= 1000), { message: "Între 10 și 1000 mp" }),
 });
 
 type FormState = {
-  name: string;
-  phone: string;
-  city: string;
-  apartmentType: string;
-  area: string;
-  condition: string;
-  furnished: string;
-  availability: string;
-  current: string;
-  service: string;
-  notes: string;
+  name: string; phone: string; zone: string; apartmentType: string; area: string;
+  condition: string; furnished: string; service: string; availability: string; notes: string;
 };
 type FieldKey = keyof FormState;
 
@@ -142,55 +98,70 @@ interface PreCalcMiniFormProps {
   className?: string;
 }
 
+const Pill = ({ active, onClick, children, small }: { active: boolean; onClick: () => void; children: React.ReactNode; small?: boolean }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-pressed={active}
+    className={`rounded-full border transition-all duration-200 active:scale-[0.97] ${small ? "min-h-10 px-3.5 text-xs" : "min-h-12 px-4 text-sm"} font-medium ${
+      active ? "border-gold bg-gold/15 text-foreground shadow-sm ring-1 ring-gold" : "border-border bg-background text-muted-foreground hover:border-gold/50 hover:text-foreground"
+    }`}
+  >
+    {children}
+  </button>
+);
+
 const PreCalcMiniForm = ({ source = "pre_calc_owner", eyebrow, variant = "full", className = "" }: PreCalcMiniFormProps) => {
   const { language } = useLanguage();
   const ro = language !== "en";
   const L = (r: string, e: string) => (ro ? r : e);
-  const navigate = useNavigate();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [form, setForm] = useState<FormState>({
-    name: "", phone: "", city: "Timișoara", apartmentType: "2-camere", area: "",
-    condition: "", furnished: "", availability: "", current: "", service: "", notes: "",
+    name: "", phone: "", zone: "Central / Iosefin / Elisabetin", apartmentType: "2-camere", area: "",
+    condition: "", furnished: "", service: "regim_hotelier", availability: "", notes: "",
   });
   const [errors, setErrors] = useState<Partial<Record<FieldKey, string>>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [consultOpen, setConsultOpen] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const set = (k: FieldKey, v: string) => {
     setForm((p) => ({ ...p, [k]: v }));
     if (errors[k]) setErrors((p) => ({ ...p, [k]: undefined }));
   };
-  const optLabel = (group: keyof typeof OPT, v: string) => {
-    const o = OPT[group].find((x) => x.v === v);
+  const toggle = (k: FieldKey, v: string) => set(k, form[k] === v ? "" : v);
+  const optLabel = (g: keyof typeof OPT, v: string) => {
+    const o = OPT[g].find((x) => x.v === v);
     return o ? (ro ? o.ro : o.en) : "";
   };
 
-  const range = (MONTHLY_NET_RANGE[form.apartmentType] ?? [2000, 3000]) as [number, number];
+  const factor = ZONES.find((z) => z.label === form.zone)?.factor ?? 1;
+  const base = MONTHLY_NET_RANGE[form.apartmentType] ?? [2000, 3000];
+  const range: [number, number] = [Math.round((base[0] * factor) / 10) * 10, Math.round((base[1] * factor) / 10) * 10];
+  const loc = ro ? "ro-RO" : "en-US";
+  const typeLabel = (() => {
+    const t = APARTMENT_TYPES.find((a) => a.value === form.apartmentType);
+    return (ro ? t?.labelRo : t?.labelEn) ?? form.apartmentType;
+  })();
 
   const buildMessage = (d: FormState): string => {
-    const [min, max] = range;
-    const type = APARTMENT_TYPES.find((a) => a.value === d.apartmentType);
-    const typeLabel = (ro ? type?.labelRo : type?.labelEn) ?? d.apartmentType;
-    const loc = ro ? "ro-RO" : "en-US";
     const details = [
       d.area && `${L("Suprafață", "Area")}: ${d.area} mp`,
       d.condition && `${L("Stare", "Condition")}: ${optLabel("condition", d.condition)}`,
       d.furnished && `${L("Mobilare", "Furnishing")}: ${optLabel("furnished", d.furnished)}`,
-      d.current && `${L("Acum", "Currently")}: ${optLabel("current", d.current)}`,
-      d.availability && `${L("Disponibil", "Available")}: ${optLabel("availability", d.availability)}`,
-      d.service && `${L("Mă interesează", "Interested in")}: ${optLabel("service", d.service)}`,
+      d.service && `${L("Administrare", "Management")}: ${optLabel("service", d.service)}`,
+      d.availability && `${L("Disponibilitate", "Availability")}: ${optLabel("availability", d.availability)}`,
     ].filter(Boolean).map((x) => `• ${x}`);
     return [
-      L(`Salut, sunt ${d.name} din ${d.city}.`, `Hello, I'm ${d.name} from ${d.city}.`),
-      ``,
-      L(`Aș dori un calcul de venit pentru ${typeLabel.toLowerCase()}.`, `I'd like an income estimate for my ${typeLabel.toLowerCase()}.`),
-      ...(details.length ? [``, L("🏠 Detalii:", "🏠 Details:"), ...details] : []),
+      L(`Salut, sunt ${d.name || "…"}.`, `Hello, I'm ${d.name || "…"}.`),
+      L(`Am un apartament ${typeLabel.toLowerCase()} în zona ${d.zone}.`, `I have a ${typeLabel.toLowerCase()} in ${d.zone}.`),
+      ...(details.length ? [``, ...details] : []),
       ...(d.notes.trim() ? [``, `${L("Observații", "Notes")}: ${d.notes.trim()}`] : []),
       ``,
-      L("📊 Estimare venit net regim hotelier (medie Timișoara):", "📊 Estimated net short-term income (Timișoara average):"),
-      `• ${L("Lunar", "Monthly")}: ${min.toLocaleString(loc)} € – ${max.toLocaleString(loc)} €`,
-      L("• Randament: 6,5–9,4% net estimat", "• Yield: 6.5–9.4% estimated net"),
+      `📊 ${L("Estimare venit net", "Estimated net income")}: ${range[0].toLocaleString(loc)} – ${range[1].toLocaleString(loc)} €/${L("lună", "month")}`,
+      L("(6,5–9,4% net estimat)", "(6.5–9.4% estimated net)"),
       ``,
-      L("Vă rog să confirmați un slot pentru consultanță gratuită ca să rafinăm cifrele.", "Please confirm a slot for a free consultation to refine the numbers."),
+      L("Aș dori o discuție scurtă ca să rafinăm cifrele.", "I'd like a short call to refine the numbers."),
     ].join("\n");
   };
 
@@ -198,240 +169,247 @@ const PreCalcMiniForm = ({ source = "pre_calc_owner", eyebrow, variant = "full",
     const parsed = step1Schema.safeParse(form);
     if (!parsed.success) {
       const fe = parsed.error.flatten().fieldErrors;
-      setErrors({ name: fe.name?.[0], phone: fe.phone?.[0], city: fe.city?.[0], apartmentType: fe.apartmentType?.[0], area: fe.area?.[0] });
+      setErrors({ name: fe.name?.[0], phone: fe.phone?.[0], area: fe.area?.[0] });
       return;
     }
     setErrors({});
     setStep(2);
   };
 
-  const persist = async (): Promise<string | null> => {
-    if (submitting) return null;
-    if (!step1Schema.safeParse(form).success) { setStep(1); return null; }
-    setSubmitting(true);
+  /** Salvează lead-ul și trimite pachetul complet spre Make. Nu aruncă niciodată. */
+  const persist = async (channel: "whatsapp" | "consult"): Promise<boolean> => {
     const d = { ...form, notes: form.notes.trim().slice(0, 500) };
-    const message = buildMessage(d);
     const area = d.area ? Number(d.area) : 0;
+    const message = buildMessage(d);
+    let ok = false;
     try {
       const result = await submitLead({
         name: d.name,
         whatsapp_number: d.phone,
         property_type: d.apartmentType,
         property_area: area,
-        message: `[${source}] Zonă: ${d.city} · Tip: ${d.apartmentType}${area ? ` · ${area} mp` : ""}${d.service ? ` · Serviciu: ${d.service}` : ""}${d.notes ? ` · Obs: ${d.notes}` : ""}`,
+        message: `[${source}/${channel}] Zonă: ${d.zone} · Tip: ${d.apartmentType}${area ? ` · ${area} mp` : ""} · Admin: ${d.service || "-"} · Disp: ${d.availability || "-"}${d.notes ? ` · Obs: ${d.notes}` : ""}`,
         source,
         simulation_data: withCampaignTracking({
-          city: d.city,
-          apartment_type: d.apartmentType,
-          area_sqm: area || null,
-          condition: d.condition || null,
-          furnished: d.furnished || null,
-          availability: d.availability || null,
-          current_usage: d.current || null,
-          desired_service: d.service || null,
-          notes: d.notes || null,
-          estimated_monthly_min: range[0],
-          estimated_monthly_max: range[1],
-          generated_message: message,
-          language,
+          zone: d.zone, apartment_type: d.apartmentType, area_sqm: area || null,
+          condition: d.condition || null, furnished: d.furnished || null,
+          desired_service: d.service || null, availability: d.availability || null, notes: d.notes || null,
+          estimated_monthly_min: range[0], estimated_monthly_max: range[1],
+          channel, generated_message: message, language,
         }) as never,
       });
+      ok = result.ok;
       if (!result.ok) console.warn("[PreCalcMiniForm] submitLead failed", result);
 
       void supabase.functions
         .invoke("handle-lead-whatsapp", {
           body: {
-            nume: d.name,
-            telefon: d.phone,
-            zona: d.city,
-            numar_camere: d.apartmentType,
-            venit_estimat_min: range[0],
-            venit_estimat_max: range[1],
+            nume: d.name, telefon: d.phone, zona: d.zone, numar_camere: d.apartmentType,
+            venit_estimat_min: range[0], venit_estimat_max: range[1],
             ...(area ? { suprafata_mp: area } : {}),
             ...(d.condition ? { stare: d.condition } : {}),
             ...(d.furnished ? { mobilat: d.furnished } : {}),
-            ...(d.availability ? { disponibilitate: d.availability } : {}),
-            ...(d.current ? { situatie_actuala: d.current } : {}),
             ...(d.service ? { tip_administrare: d.service } : {}),
+            ...(d.availability ? { disponibilitate: d.availability } : {}),
             ...(d.notes ? { observatii: d.notes } : {}),
+            sursa: `${source}_${channel}`,
           },
         })
         .then(({ error }) => { if (error) console.warn("[PreCalcMiniForm] handle-lead-whatsapp failed", error); })
         .catch(() => {});
 
       trackCriticalConversion("PreCalc_Completed", {
-        source, value: range[1] * 12, currency: "EUR", apartment_type: d.apartmentType, city: d.city, name: d.name, cta_variant: getCtaVariant(),
+        source, value: range[1] * 12, currency: "EUR", apartment_type: d.apartmentType, city: d.zone, name: d.name, cta_variant: getCtaVariant(),
       });
-      if (result.ok) {
-        trackCriticalConversion("Lead_Submit", { source, value: 90, currency: "EUR", name: d.name, cta_variant: getCtaVariant() });
-      }
+      if (ok) trackCriticalConversion("Lead_Submit", { source, value: 90, currency: "EUR", name: d.name, cta_variant: getCtaVariant() });
     } catch (err) {
       console.error("[PreCalcMiniForm] unexpected error:", err);
     }
-    return message;
+    return ok;
+  };
+
+  const handleWhatsapp = () => {
+    if (submitting) return;
+    // Deschidem wa.me sincron (gest utilizator) ca să nu fie blocat pe mobil;
+    // salvarea + Make rulează în fundal și nu pot bloca butonul.
+    const msg = buildMessage(form);
+    trackCriticalConversion("WhatsApp_Click", { source: `${source}_whatsapp`, cta_variant: getCtaVariant() });
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank", "noopener,noreferrer");
+    setSaved(true);
+    toast.success(L("Mesajul e gata în WhatsApp — apasă Trimite acolo.", "Your message is ready in WhatsApp — tap Send there."));
+    void persist("whatsapp");
   };
 
   const handleConsult = async () => {
-    const msg = await persist();
-    if (msg === null) return;
-    const params = new URLSearchParams({ nume: form.name, telefon: form.phone, oras: form.city, tip: form.apartmentType, source });
-    toast.success(L("Te redirecționăm către formularul de consultanță", "Redirecting you to the consultation form"));
-    navigate(`/evaluare-gratuita?${params.toString()}`);
+    if (submitting) return;
+    setSubmitting(true);
+    await persist("consult");
     setSubmitting(false);
-  };
-
-  const handleWhatsapp = async () => {
-    const msg = await persist();
-    if (msg === null) return;
-    toast.success(L("Mesajul a fost generat — te redirecționăm către WhatsApp", "Message generated — redirecting you to WhatsApp"));
-    trackCriticalConversion("WhatsApp_Click", { source: `${source}_whatsapp`, cta_variant: getCtaVariant() });
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank", "noopener,noreferrer");
-    setSubmitting(false);
+    setSaved(true);
+    setConsultOpen(true);
   };
 
   const isCompact = variant === "compact";
-  const steps = [L("Apartament", "Apartment"), L("Administrare", "Management"), "WhatsApp"];
-
-  const err = (k: FieldKey) =>
-    errors[k] ? <p id={`precalc-${k}-error`} className="mt-1 text-sm text-destructive">{errors[k]}</p> : null;
-
-  const choiceSelect = (k: FieldKey, group: keyof typeof OPT, label: string) => (
-    <div>
-      <Label htmlFor={`precalc-${k}`} className="mb-2 block">{label}</Label>
-      <Select value={form[k]} onValueChange={(v) => set(k, v)}>
-        <SelectTrigger id={`precalc-${k}`}><SelectValue placeholder={L("Alege (opțional)", "Choose (optional)")} /></SelectTrigger>
-        <SelectContent>
-          {OPT[group].map((o) => <SelectItem key={o.v} value={o.v}>{ro ? o.ro : o.en}</SelectItem>)}
-        </SelectContent>
-      </Select>
+  const steps = [L("Apartament", "Apartment"), L("Administrare", "Management"), L("Rezultat", "Result")];
+  const progress = ((step - 1) / 2) * 100;
+  const err = (k: FieldKey) => (errors[k] ? <p id={`precalc-${k}-error`} className="mt-1 text-sm text-destructive">{errors[k]}</p> : null);
+  const pills = (k: FieldKey, g: keyof typeof OPT, small?: boolean) => (
+    <div className="flex flex-wrap gap-2">
+      {OPT[g].map((o) => <Pill key={o.v} small={small} active={form[k] === o.v} onClick={() => toggle(k, o.v)}>{ro ? o.ro : o.en}</Pill>)}
     </div>
   );
 
   return (
     <section className={`relative ${isCompact ? "py-12" : "py-16 md:py-20"} ${className}`} aria-labelledby="precalc-mini-form-title">
-      <div className="container mx-auto px-6">
+      <div className="container mx-auto px-4 sm:px-6">
         <div className="max-w-3xl mx-auto">
-          <div className="rounded-3xl border border-primary/20 bg-gradient-to-br from-card via-card to-primary/5 shadow-elegant p-6 sm:p-10">
-            <div className="flex items-center gap-2 mb-4">
-              <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-xs font-semibold uppercase tracking-widest text-primary">
-                {eyebrow ?? L("Calcul venit · 1 minut", "Income estimate · 1 minute")}
-              </span>
-            </div>
-            <h2 id="precalc-mini-form-title" className="text-2xl md:text-3xl font-serif font-semibold text-foreground mb-3">
-              {L("Vezi cât poți câștiga lunar — fără calcule complicate", "See how much you can earn monthly — no complicated math")}
-            </h2>
-            <p className="text-muted-foreground mb-6">
-              {L("Trei pași scurți: apartamentul, cum vrei să fie administrat și mesajul gata de trimis pe WhatsApp.",
-                "Three short steps: your apartment, how you want it managed and a ready-to-send WhatsApp message.")}
-            </p>
-
-            <ol className="flex items-center gap-2 mb-8" aria-label={L("Etapele formularului", "Form steps")}>
-              {steps.map((s, i) => {
-                const n = i + 1;
-                const active = n === step;
-                const done = n < step;
-                return (
-                  <li key={s} className="flex-1" aria-current={active ? "step" : undefined}>
-                    <div className={`h-1.5 rounded-full ${done || active ? "bg-primary" : "bg-border"}`} />
-                    <span className={`mt-2 block text-xs font-medium ${active ? "text-primary" : "text-muted-foreground"}`}>
-                      {n}. {s}
-                    </span>
+          <div className="overflow-hidden rounded-3xl border border-gold/30 bg-card shadow-elegant">
+            {/* Antet întunecat cu progres auriu */}
+            <div className="bg-foreground px-6 pt-6 pb-5 sm:px-10 sm:pt-8 text-background">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="w-4 h-4 text-gold" />
+                <span className="text-xs font-semibold uppercase tracking-widest text-gold">{eyebrow ?? L("Calcul venit · 1 minut", "Income estimate · 1 minute")}</span>
+              </div>
+              <h2 id="precalc-mini-form-title" className="text-2xl md:text-3xl font-serif font-semibold mb-5">
+                {L("Cât poate câștiga apartamentul tău lunar?", "How much can your apartment earn monthly?")}
+              </h2>
+              <div className="relative h-1.5 rounded-full bg-background/15" role="progressbar" aria-valuemin={1} aria-valuemax={3} aria-valuenow={step} aria-label={L("Progres formular", "Form progress")}>
+                <div className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-gold-dark via-gold to-gold-light shadow-[0_0_12px_hsl(var(--gold)/0.6)] transition-[width] duration-500 ease-out" style={{ width: `${Math.max(progress, 6)}%` }} />
+              </div>
+              <ol className="mt-3 grid grid-cols-3 text-xs font-medium">
+                {steps.map((s, i) => (
+                  <li key={s} aria-current={i + 1 === step ? "step" : undefined}
+                    className={`${i === 1 ? "text-center" : i === 2 ? "text-right" : ""} transition-colors ${i + 1 <= step ? "text-gold" : "text-background/60"}`}>
+                    {i + 1}. {s}
                   </li>
-                );
-              })}
-            </ol>
+                ))}
+              </ol>
+            </div>
 
-            <form onSubmit={(e) => { e.preventDefault(); if (step === 1) goStep2(); else if (step === 2) setStep(3); }} className="space-y-5" noValidate>
-              {step === 1 && (
-                <>
-                  <div className="grid sm:grid-cols-2 gap-5">
-                    <div>
-                      <Label htmlFor="precalc-name" className="flex items-center gap-2 mb-2"><User className="w-4 h-4 text-primary" />{L("Numele tău", "Your name")}</Label>
-                      <Input id="precalc-name" autoComplete="name" maxLength={80} placeholder={L("Ex: Andrei Popescu", "e.g. John Smith")}
-                        value={form.name} onChange={(e) => set("name", e.target.value)} aria-invalid={!!errors.name} aria-describedby={errors.name ? "precalc-name-error" : undefined} />
-                      {err("name")}
+            <form onSubmit={(e) => { e.preventDefault(); if (step === 1) goStep2(); else if (step === 2) setStep(3); }} className="p-6 sm:p-10" noValidate>
+              <div key={step} className="space-y-6 animate-fade-in">
+                {step === 1 && (
+                  <>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="precalc-name" className="flex items-center gap-2 mb-2"><User className="w-4 h-4 text-gold" />{L("Numele tău", "Your name")}</Label>
+                        <Input id="precalc-name" autoComplete="name" maxLength={80} placeholder={L("Ex: Andrei Popescu", "e.g. John Smith")} className="h-12"
+                          value={form.name} onChange={(e) => set("name", e.target.value)} aria-invalid={!!errors.name} aria-describedby={errors.name ? "precalc-name-error" : undefined} />
+                        {err("name")}
+                      </div>
+                      <div>
+                        <Label htmlFor="precalc-phone" className="flex items-center gap-2 mb-2"><Phone className="w-4 h-4 text-gold" />{L("Telefon", "Phone")}</Label>
+                        <Input id="precalc-phone" type="tel" inputMode="tel" autoComplete="tel" maxLength={20} placeholder="07xx xxx xxx" className="h-12"
+                          value={form.phone} onChange={(e) => set("phone", e.target.value)} aria-invalid={!!errors.phone} aria-describedby={errors.phone ? "precalc-phone-error" : undefined} />
+                        {err("phone")}
+                      </div>
                     </div>
-                    <div>
-                      <Label htmlFor="precalc-phone" className="flex items-center gap-2 mb-2"><Phone className="w-4 h-4 text-primary" />{L("Telefon", "Phone")}</Label>
-                      <Input id="precalc-phone" type="tel" inputMode="tel" autoComplete="tel" maxLength={20} placeholder="07xx xxx xxx"
-                        value={form.phone} onChange={(e) => set("phone", e.target.value)} aria-invalid={!!errors.phone} aria-describedby={errors.phone ? "precalc-phone-error" : undefined} />
-                      {err("phone")}
-                    </div>
-                    <div>
-                      <Label htmlFor="precalc-city" className="flex items-center gap-2 mb-2"><MapPin className="w-4 h-4 text-primary" />{L("Cartier / Localitate", "Neighborhood / Locality")}</Label>
-                      <Select value={form.city} onValueChange={(v) => set("city", v)}>
-                        <SelectTrigger id="precalc-city" aria-invalid={!!errors.city}><SelectValue /></SelectTrigger>
-                        <SelectContent>{TIMISOARA_CITIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-                      </Select>
-                      {err("city")}
-                    </div>
-                    <div>
-                      <Label htmlFor="precalc-type" className="flex items-center gap-2 mb-2"><Home className="w-4 h-4 text-primary" />{L("Tip apartament", "Apartment type")}</Label>
-                      <Select value={form.apartmentType} onValueChange={(v) => set("apartmentType", v)}>
-                        <SelectTrigger id="precalc-type"><SelectValue /></SelectTrigger>
-                        <SelectContent>{APARTMENT_TYPES.map((a) => <SelectItem key={a.value} value={a.value}>{ro ? a.labelRo : a.labelEn}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="precalc-area" className="flex items-center gap-2 mb-2"><Ruler className="w-4 h-4 text-primary" />{L("Suprafață (mp, opțional)", "Area (sqm, optional)")}</Label>
-                      <Input id="precalc-area" inputMode="numeric" maxLength={4} placeholder={L("Ex: 55", "e.g. 55")}
-                        value={form.area} onChange={(e) => set("area", e.target.value.replace(/\D/g, ""))} aria-invalid={!!errors.area} aria-describedby={errors.area ? "precalc-area-error" : undefined} />
+                    <fieldset>
+                      <legend className="mb-2 text-sm font-medium text-foreground">{L("Zonă / Complex", "Area / Complex")}</legend>
+                      <div className="flex flex-wrap gap-2">
+                        {ZONES.map((z) => <Pill key={z.label} active={form.zone === z.label} onClick={() => set("zone", z.label)}>{z.label}</Pill>)}
+                      </div>
+                    </fieldset>
+                    <fieldset>
+                      <legend className="mb-2 text-sm font-medium text-foreground">{L("Tip apartament", "Apartment type")}</legend>
+                      <div className="flex flex-wrap gap-2">
+                        {APARTMENT_TYPES.map((a) => <Pill key={a.value} active={form.apartmentType === a.value} onClick={() => set("apartmentType", a.value)}>{ro ? a.labelRo : a.labelEn}</Pill>)}
+                      </div>
+                    </fieldset>
+                    <div className="rounded-2xl border border-dashed border-border p-4 space-y-3">
+                      <p className="text-xs uppercase tracking-wider text-muted-foreground">{L("Opțional — pentru o estimare mai precisă", "Optional — for a sharper estimate")}</p>
+                      <div className="flex items-center gap-2">
+                        <Input id="precalc-area" aria-label={L("Suprafață în mp", "Area in sqm")} inputMode="numeric" maxLength={4} placeholder="mp" className="h-10 w-24 rounded-full text-center"
+                          value={form.area} onChange={(e) => set("area", e.target.value.replace(/\D/g, ""))} aria-invalid={!!errors.area} aria-describedby={errors.area ? "precalc-area-error" : undefined} />
+                        <span className="text-xs text-muted-foreground">{L("suprafață", "area")}</span>
+                      </div>
                       {err("area")}
+                      {pills("condition", "condition", true)}
+                      {pills("furnished", "furnished", true)}
                     </div>
-                    {choiceSelect("condition", "condition", L("Starea apartamentului", "Apartment condition"))}
-                    {choiceSelect("furnished", "furnished", L("Mobilare", "Furnishing"))}
-                  </div>
-                  <Button type="submit" size="lg" className="w-full group">
-                    {L("Continuă", "Continue")}<ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </>
-              )}
-
-              {step === 2 && (
-                <>
-                  <div className="flex items-center gap-2 text-foreground font-medium"><Settings2 className="w-4 h-4 text-primary" />{L("Preferințe de administrare", "Management preferences")}</div>
-                  <div className="grid sm:grid-cols-2 gap-5">
-                    {choiceSelect("service", "service", L("Ce tip de administrare te interesează?", "Which management type interests you?"))}
-                    {choiceSelect("current", "current", L("Ce se întâmplă acum cu apartamentul?", "What's the apartment used for now?"))}
-                    {choiceSelect("availability", "availability", L("Când poate fi disponibil?", "When can it be available?"))}
-                  </div>
-                  <div>
-                    <Label htmlFor="precalc-notes" className="mb-2 block">{L("Altceva important? (opțional)", "Anything else? (optional)")}</Label>
-                    <Textarea id="precalc-notes" maxLength={500} rows={3} value={form.notes} onChange={(e) => set("notes", e.target.value)}
-                      placeholder={L("Ex: vreau să folosesc apartamentul câteva săptămâni pe an", "e.g. I'd like to use it a few weeks per year")} />
-                  </div>
-                  <div className="flex gap-3">
-                    <Button type="button" variant="outline" size="lg" onClick={() => setStep(1)}><ArrowLeft className="w-5 h-5 mr-2" />{L("Înapoi", "Back")}</Button>
-                    <Button type="submit" size="lg" className="flex-1 group">{L("Vezi mesajul", "See message")}<ArrowRight className="w-5 h-5 ml-2" /></Button>
-                  </div>
-                </>
-              )}
-
-              {step === 3 && (
-                <>
-                  <div>
-                    <p className="text-sm font-medium text-foreground mb-2">{L("Mesajul tău pentru WhatsApp", "Your WhatsApp message")}</p>
-                    <pre className="whitespace-pre-wrap rounded-xl border border-border bg-muted/50 p-4 text-sm text-foreground font-sans">{buildMessage(form)}</pre>
-                  </div>
-                  <Button type="button" size="lg" disabled={submitting} onClick={handleWhatsapp} className="w-full">
-                    {submitting ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <MessageCircle className="w-5 h-5 mr-2" />}
-                    {submitting ? L("Se procesează...", "Processing...") : L("Trimite pe WhatsApp", "Send on WhatsApp")}
-                  </Button>
-                  <div className="flex gap-3">
-                    <Button type="button" variant="outline" size="lg" onClick={() => setStep(2)} disabled={submitting}><ArrowLeft className="w-5 h-5 mr-2" />{L("Înapoi", "Back")}</Button>
-                    <Button type="button" variant="outline" size="lg" onClick={handleConsult} disabled={submitting} className="flex-1">
-                      <CalendarCheck className="w-5 h-5 mr-2" />{L("Rezervă consultanță gratuită", "Book free consultation")}
+                    <Button type="submit" size="lg" className="w-full h-12 group">
+                      {L("Continuă", "Continue")}<ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                     </Button>
-                  </div>
-                </>
-              )}
-              <p className="text-xs text-muted-foreground">{L("Nu trimitem spam. Datele se folosesc doar pentru estimare și consultanță.", "No spam. Data is used only for estimation and consultancy.")}</p>
-              <FormTrustBadges className="mt-2" />
+                  </>
+                )}
+
+                {step === 2 && (
+                  <>
+                    <fieldset>
+                      <legend className="mb-2 text-sm font-medium text-foreground">{L("Tip de administrare", "Management type")}</legend>
+                      <div className="grid gap-2">
+                        {OPT.service.map((o) => (
+                          <button key={o.v} type="button" aria-pressed={form.service === o.v} onClick={() => set("service", o.v)}
+                            className={`flex min-h-12 items-center justify-between rounded-xl border px-4 text-left text-sm font-medium transition-all active:scale-[0.99] ${form.service === o.v ? "border-gold bg-gold/10 ring-1 ring-gold text-foreground" : "border-border text-muted-foreground hover:border-gold/50"}`}>
+                            {ro ? o.ro : o.en}
+                            {form.service === o.v && <CheckCircle2 className="w-5 h-5 text-gold" />}
+                          </button>
+                        ))}
+                      </div>
+                    </fieldset>
+                    <fieldset>
+                      <legend className="mb-2 text-sm font-medium text-foreground">{L("Disponibilitate", "Availability")}</legend>
+                      {pills("availability", "availability")}
+                    </fieldset>
+                    <div>
+                      <Label htmlFor="precalc-notes" className="mb-2 block">{L("Observații / cerințe speciale (opțional)", "Notes / special requests (optional)")}</Label>
+                      <Textarea id="precalc-notes" maxLength={500} rows={3} value={form.notes} onChange={(e) => set("notes", e.target.value)}
+                        placeholder={L("Ex: vreau să folosesc apartamentul câteva săptămâni pe an", "e.g. I'd like to use it a few weeks per year")} />
+                    </div>
+                    <div className="flex gap-3">
+                      <Button type="button" variant="outline" size="lg" className="h-12" onClick={() => setStep(1)}><ArrowLeft className="w-5 h-5 mr-2" />{L("Înapoi", "Back")}</Button>
+                      <Button type="submit" size="lg" className="flex-1 h-12">{L("Vezi estimarea", "See estimate")}<ArrowRight className="w-5 h-5 ml-2" /></Button>
+                    </div>
+                  </>
+                )}
+
+                {step === 3 && (
+                  <>
+                    <div className="rounded-2xl bg-foreground p-6 text-background">
+                      <p className="flex items-center gap-2 text-xs uppercase tracking-widest text-gold"><TrendingUp className="w-4 h-4" />{L("Venit net estimat", "Estimated net income")}</p>
+                      <p className="mt-2 font-serif text-4xl sm:text-5xl font-semibold">
+                        {range[0].toLocaleString(loc)}–{range[1].toLocaleString(loc)} €
+                        <span className="ml-1 text-base font-sans font-normal text-background/70">/{L("lună", "month")}</span>
+                      </p>
+                      <p className="mt-2 text-sm text-background/80">{typeLabel} · {form.zone} · {L("6,5–9,4% net estimat", "6.5–9.4% estimated net")}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground mb-2">{L("Previzualizare mesaj", "Message preview")}</p>
+                      <pre className="max-h-56 overflow-auto whitespace-pre-wrap rounded-xl border border-border bg-muted/50 p-4 text-sm text-foreground font-sans">{buildMessage(form)}</pre>
+                    </div>
+                    <Button type="button" size="lg" onClick={handleWhatsapp} className="w-full h-14 text-base bg-gold text-gold-foreground hover:bg-gold-dark">
+                      <MessageCircle className="w-5 h-5 mr-2" />{L("Trimite pe WhatsApp", "Send on WhatsApp")}
+                    </Button>
+                    <div className="flex flex-col-reverse sm:flex-row gap-3">
+                      <Button type="button" variant="outline" size="lg" className="h-12" onClick={() => setStep(2)}><ArrowLeft className="w-5 h-5 mr-2" />{L("Înapoi", "Back")}</Button>
+                      <Button type="button" variant="outline" size="lg" onClick={handleConsult} disabled={submitting || saved} className="flex-1 h-12">
+                        {submitting ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <CalendarCheck className="w-5 h-5 mr-2" />}
+                        {saved ? L("Cerere trimisă", "Request sent") : L("Rezervă consultanță gratuită", "Book free consultation")}
+                      </Button>
+                    </div>
+                  </>
+                )}
+                <p className="text-xs text-muted-foreground">{L("Doar numele și telefonul sunt obligatorii. Nu trimitem spam.", "Only name and phone are required. No spam.")}</p>
+                <FormTrustBadges className="mt-2" />
+              </div>
             </form>
           </div>
         </div>
       </div>
+
+      <Dialog open={consultOpen} onOpenChange={setConsultOpen}>
+        <DialogContent className="sm:max-w-md text-center">
+          <DialogHeader>
+            <CheckCircle2 className="mx-auto mb-2 h-12 w-12 text-gold" />
+            <DialogTitle className="text-center">{L("Consultanța e rezervată", "Consultation booked")}</DialogTitle>
+            <DialogDescription className="text-center">
+              {L(`Mulțumim, ${form.name.split(" ")[0]}! Te sunăm în cel mult 24 de ore (L–V) ca să stabilim o oră potrivită.`,
+                `Thanks, ${form.name.split(" ")[0]}! We'll call you within 24 hours (Mon–Fri) to set a time.`)}
+            </DialogDescription>
+          </DialogHeader>
+          <Button onClick={() => setConsultOpen(false)} className="w-full h-12">OK</Button>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };
