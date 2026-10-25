@@ -40,6 +40,7 @@ const ROOM_LABELS: Record<string, string> = {
   "3-camere": "apartamentul de 3 camere",
   "4-camere": "apartamentul de 4 camere",
   casa: "casa",
+  penthouse: "penthouse-ul",
 };
 
 /** Romanian mobile → full international digits without "+" (07… → 407…). */
@@ -96,6 +97,12 @@ Deno.serve(async (req) => {
     situatie_actuala: d.situatie_actuala ?? null,
     tip_administrare: d.tip_administrare ?? null,
     observatii: d.observatii ?? null,
+    email: d.email ?? null,
+    parcare: d.parcare ?? null,
+    finisaje: d.finisaje ?? null,
+    chirie_clasica: d.chirie_clasica ?? null,
+    venit_net_realtrust: d.venit_net_realtrust ?? null,
+    sursa: d.sursa ?? "calcul_venit",
     message: mesaj,
   };
 
