@@ -50,6 +50,7 @@ const AICacheManager = () => {
   const [coverage, setCoverage] = useState<CoverageData | null>(null);
   const [properties, setProperties] = useState<PropertyInfo[]>([]);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [advisorRows, setAdvisorRows] = useState<{ slug: string; name: string; area: number | null; date: string }[]>([]);
 
   const analyzeCoverage = async () => {
     setAnalyzing(true);
@@ -57,7 +58,7 @@ const AICacheManager = () => {
       // Fetch all properties
       const { data: propsData } = await supabase
         .from("properties" as any)
-        .select("slug, name, images")
+        .select("slug, name, images, usable_area, size")
         .order("name");
 
       const props: PropertyInfo[] = (propsData || []).map((p: any) => ({
@@ -70,7 +71,20 @@ const AICacheManager = () => {
       // Fetch advisor cache entries
       const { data: advisorData } = await supabase
         .from("advisor_cache")
-        .select("property_slug");
+        .select("property_slug, created_at, language")
+        .order("created_at", { ascending: false });
+      const areaBySlug = new Map((propsData || []).map((p: any) => [p.slug, p.usable_area ?? p.size ?? null]));
+      const nameBySlug = new Map((propsData || []).map((p: any) => [p.slug, p.name]));
+      setAdvisorRows(
+        (advisorData || [])
+          .filter((a: any) => a.language === "ro" && nameBySlug.has(a.property_slug))
+          .map((a: any) => ({
+            slug: a.property_slug,
+            name: nameBySlug.get(a.property_slug) || a.property_slug,
+            area: areaBySlug.get(a.property_slug) != null ? Number(areaBySlug.get(a.property_slug)) : null,
+            date: a.created_at,
+          })),
+      );
 
       const advisorSlugs = new Set((advisorData || []).map((a: any) => a.property_slug));
       const propsWithSlug = props.filter((p) => p.slug);
@@ -337,6 +351,27 @@ const AICacheManager = () => {
               <p className="text-xs text-green-600 flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5" /> Toate proprietățile au analiză AI!
               </p>
+            )}
+            {advisorRows.length > 0 && (
+              <div className="mt-3 max-h-72 overflow-y-auto border-t border-border/50 pt-2">
+                <p className="text-xs font-medium mb-1">Analize generate (cele mai noi primele):</p>
+                <table className="w-full text-xs">
+                  <thead className="text-muted-foreground text-left">
+                    <tr><th className="py-1">Proprietate</th><th>Suprafață utilă</th><th>Generată</th></tr>
+                  </thead>
+                  <tbody>
+                    {advisorRows.map((r) => (
+                      <tr key={r.slug} className="border-t border-border/30">
+                        <td className="py-1 pr-2">
+                          <a href={`/proprietate/${r.slug}`} target="_blank" rel="noopener noreferrer" className="hover:underline">{r.name}</a>
+                        </td>
+                        <td>{r.area != null ? `${r.area.toLocaleString("ro-RO")} m²` : "—"}</td>
+                        <td className="whitespace-nowrap">{new Date(r.date).toLocaleString("ro-RO", { timeZone: "Europe/Bucharest", dateStyle: "short", timeStyle: "short" })}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </CoverageCard>
 
