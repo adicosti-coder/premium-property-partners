@@ -62,45 +62,57 @@ function getPropertyType(listingType?: string | null, bedrooms?: number | null):
   return "Apartament";
 }
 
+/** Romanian intent verb for the listing type ("de vânzare" / "de închiriat"). */
+export function listingIntent(listingType?: string | null): string {
+  const lt = (listingType || "").toLowerCase();
+  if (lt === "inchiriere") return "de închiriat";
+  if (lt === "investitie") return "pentru investiție";
+  return "de vânzare";
+}
+
 /**
  * Generates SEO metadata for a property listing.
+ * Targets "imobiliare Timișoara": title ≤ 65 chars, description 150–160 chars.
  */
 export function generatePropertySEO(property: PropertySEOInput): PropertySEOOutput {
   const zone = extractZone(property.location);
   const type = getPropertyType(property.listing_type, property.bedrooms);
   const rooms = property.bedrooms || 1;
   const slug = property.slug || property.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  const lt = (property.listing_type || "").toLowerCase();
+  const intent = listingIntent(lt);
+  const isRent = lt === "inchiriere";
 
-  // Title: "Apartament [Rooms] camere în [Zone], Timișoara | [Price]€"
-  const pricePart = property.capital_necesar
-    ? `${property.capital_necesar.toLocaleString("ro-RO")}€`
-    : property.base_price_per_night
-    ? `${property.base_price_per_night}€/noapte`
+  const price = property.capital_necesar
+    ? `${property.capital_necesar.toLocaleString("ro-RO")} €${isRent ? "/lună" : ""}`
     : "";
 
-  const title = pricePart
-    ? `${type} în ${zone}, Timișoara | ${pricePart} | RealTrust`
-    : `${type} în ${zone}, Timișoara | RealTrust`;
+  const zonePart = zone !== "Timișoara" ? `, ${zone}` : "";
+  const candidates = [
+    `${type} ${intent}${zonePart} | Imobiliare Timișoara`,
+    `${type} ${intent} | Imobiliare Timișoara`,
+    `${type}${zonePart} | Imobiliare Timișoara`,
+  ];
+  const title = candidates.find((t) => t.length <= 65) || candidates[candidates.length - 1];
 
-  // Description template
-  const descParts: string[] = [];
-  descParts.push(`Descoperă acest ${type.toLowerCase()} situat în ${zone}`);
-  if (property.floor) descParts[0] += `, etaj ${property.floor}`;
-  descParts[0] += ".";
-  if (property.roi_percentage) {
-    descParts.push(`Ideal pentru investiție cu un randament estimat de ${property.roi_percentage}.`);
+  const facts: string[] = [];
+  if (property.size) facts.push(`${Math.round(property.size)} m² utili`);
+  if (property.floor) facts.push(`etaj ${property.floor}`);
+  if (price) facts.push(price);
+  let description = `${type} ${intent} în ${zone}, Timișoara${facts.length ? ` — ${facts.join(", ")}` : ""}.`;
+  const fillers = [
+    " Imobiliare Timișoara verificate de RealTrust.",
+    " Vizionare la apartament, detalii și poze reale.",
+    " Contact direct pe WhatsApp.",
+  ];
+  for (const f of fillers) {
+    if ((description + f).length <= 160) description += f;
   }
-  descParts.push("Administrare prin RealTrust inclusă.");
-  const description = descParts.join(" ").slice(0, 160);
+  description = description.slice(0, 160);
 
-  // H1
-  const h1 = `${type} de vânzare în ${zone}, Timișoara`;
-
-  // Canonical
+  const h1 = `${type} ${intent} în ${zone}, Timișoara`;
   const canonical = `${BASE_URL}/proprietate/${slug}`;
-
-  // Image alt
-  const imageAlt = `${type} - Apartament de vânzare în zona ${zone}, Timișoara`;
+  const imageAlt = `${type} ${intent} în zona ${zone}, Timișoara`;
 
   // Motorul real de rezervări (Pynbooking) — legat în datele structurate.
   // Doar URL-uri http(s) reale; valorile placeholder ("-", "#") sunt ignorate.
