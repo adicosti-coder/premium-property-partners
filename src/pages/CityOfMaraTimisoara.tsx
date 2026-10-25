@@ -167,7 +167,7 @@ const viewingChecklist = [
 
 const riskSignals = [
   { title: "Preț bun, cost total slab", text: "Unele unități par atractive doar prin prețul de intrare. Fără parcare, mobilare sau cu poziție mai slabă, costul total poate deveni mai puțin competitiv." },
-  { title: "Randament estimat fără scenariu real", text: "Un ROI credibil are nevoie de chirie probabilă, grad de ocupare, costuri operaționale și buget de lansare, nu doar de un procent orientativ." },
+  { title: "Randament estimat fără scenariu real", text: "Un randament credibil are nevoie de chirie probabilă, grad de ocupare, costuri operaționale și buget de lansare, nu doar de un procent orientativ." },
   { title: "Decizie grăbită fără comparație", text: "În același buget, două apartamente din același complex pot avea rezultate foarte diferite în funcție de etaj, orientare și pregătirea pentru utilizare imediată." },
 ];
 
@@ -311,8 +311,8 @@ const CityOfMaraTimisoara = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="City of Mara Timișoara | Analiză ROI | RealTrust"
-        description="Analiză financiară pentru complexul City of Mara din Timișoara: calcul ROI, prețuri medii și administrare în regim hotelier prin ApArt Hotel."
+        title="City of Mara Timișoara | Analiză Randament | RealTrust"
+        description="Analiză financiară pentru complexul City of Mara din Timișoara: calcul randament, prețuri medii și administrare în regim hotelier prin ApArt Hotel."
         url="https://realtrust.ro/complexe/city-of-mara"
         image="https://realtrust.ro/assets/apt-03.webp"
         jsonLd={jsonLd}
@@ -397,7 +397,7 @@ const CityOfMaraTimisoara = () => {
                 <h2 id="tipuri-apartamente-city-of-mara" className="text-3xl font-bold text-foreground">Tipuri de apartamente City of Mara</h2>
                 <p className="mt-3 text-muted-foreground">Tabel orientativ pentru vânzare apartamente noi City of Mara și analiza randamentului.</p>
               </div>
-              <Button asChild variant="outline"><Link to="/analiza-roi-apartament">Calculează ROI</Link></Button>
+              <Button asChild variant="outline"><Link to="/analiza-roi-apartament">Calculează Randamentul Imobiliar (ROI)</Link></Button>
             </div>
             <div className="overflow-x-auto rounded-lg border border-border bg-card">
               <table className="w-full min-w-[720px] text-left text-sm">
@@ -406,7 +406,7 @@ const CityOfMaraTimisoara = () => {
                     <th className="p-4 font-semibold">Tip</th>
                     <th className="p-4 font-semibold">Suprafață</th>
                     <th className="p-4 font-semibold">Utilizare recomandată</th>
-                    <th className="p-4 font-semibold">ROI estimat</th>
+                    <th className="p-4 font-semibold">Randament estimat</th>
                     <th className="p-4 font-semibold">Preț orientativ</th>
                   </tr>
                 </thead>
@@ -707,7 +707,7 @@ const CityOfMaraTimisoara = () => {
               <div className="mt-6 space-y-3 text-sm text-muted-foreground">
                 {[
                   "Filtrare după buget, etaj, parcare și scop investițional",
-                  "Estimare ROI pentru chirie clasică vs. administrare profesională",
+                  "Estimare randament pentru chirie clasică vs. administrare profesională",
                   "Recomandare rapidă: cumpără, negociază sau așteaptă",
                 ].map((item) => <p key={item} className="flex gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{item}</p>)}
               </div>
@@ -876,7 +876,7 @@ const CityOfMaraTimisoara = () => {
           <div className="grid gap-4 md:grid-cols-3">
             <Link to="/analiza-roi-apartament" className="rounded-lg border border-border bg-card p-6 transition-colors hover:border-primary/40">
               <Calculator className="h-6 w-6 text-primary" />
-              <h2 id="resurse-city-of-mara" className="mt-4 text-xl font-semibold text-foreground">Analiza ROI apartament</h2>
+              <h2 id="resurse-city-of-mara" className="mt-4 text-xl font-semibold text-foreground">Analiză Randament apartament</h2>
               <p className="mt-2 text-sm text-muted-foreground">Calculează rapid scenarii de randament pentru bugetul și tipul tău de apartament.</p>
             </Link>
             <Link to="/piata-imobiliara-timisoara" className="rounded-lg border border-border bg-card p-6 transition-colors hover:border-primary/40">

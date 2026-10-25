@@ -175,7 +175,7 @@ const AnalizaPartajata = () => {
           {[
             { label: "Scor AI", value: `${fmt(a.scor)}/${a.max_scor || 100}` },
             { label: "Tarif/noapte", value: fmt(a.tarif_noapte, " RON") },
-            { label: "ROI estimat", value: a.roi_estimat || "—" },
+            { label: "Randament estimat", value: a.roi_estimat || "—" },
           ].map((m) => (
             <div key={m.label} className="rounded-xl border border-border bg-card p-4">
               <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{m.label}</p>

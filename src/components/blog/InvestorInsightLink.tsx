@@ -16,13 +16,13 @@ const InvestorInsightLink = ({ zoneName, language = "ro" }: InvestorInsightLinkP
       ? {
           badge: "Investor Insight",
           title: `See yield analysis for ${zoneName} in the 2026 Investment Guide`,
-          desc: `ROI charts, monthly yield and price appreciation 2020–2026 for ${zoneName}, Timișoara.`,
+          desc: `Randament charts, monthly yield and price appreciation 2020–2026 for ${zoneName}, Timișoara.`,
           cta: "Read the 2026 Investment Guide",
         }
       : {
           badge: "Insight pentru Investitori",
           title: `Vezi analiza randamentului pentru zona ${zoneName} în Ghidul Investițiilor 2026`,
-          desc: `Grafice ROI, yield lunar și apreciere preț 2020–2026 pentru ${zoneName}, Timișoara.`,
+          desc: `Grafice randament, yield lunar și apreciere preț 2020–2026 pentru ${zoneName}, Timișoara.`,
           cta: "Citește Ghidul Investițiilor 2026",
         };
 

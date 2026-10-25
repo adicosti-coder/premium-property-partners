@@ -80,7 +80,7 @@ const OwnerSeasonalityChart = () => {
         disclaimer:
           "Cifre ilustrative pentru un apartament cu 2 camere, mobilat modern, în Cetate. Rezultatele reale depind de zonă, dotări, capacitate și recenzii. Îți facem proiecția pe apartamentul tău, cu cifrele tale.",
         ctaPrimary: "Cere proiecția mea lunară",
-        ctaSecondary: "Deschide calculatorul ROI",
+        ctaSecondary: "Deschide calculatorul randament imobiliar (ROI)",
         tooltipOccupancy: "Ocupare",
         tooltipNet: "Net",
         tooltipAdr: "Tarif mediu",

@@ -168,7 +168,7 @@ export function generateAnalysisPdf(input: AnalysisPdfInput): jsPDF {
   const cards = [
     { label: "Scor AI", value: `${num(a.scor)}/${a.max_scor || 100}` },
     { label: "Tarif / noapte", value: num(a.tarif_noapte, " RON") },
-    { label: "ROI estimat", value: a.roi_estimat || "-" },
+    { label: "Randament estimat", value: a.roi_estimat || "-" },
   ];
   const cardW = (contentW - 16) / 3;
   ensure(64);

@@ -93,7 +93,7 @@ export const generateLocalBusinessSchema = () => ({
     "Booking.com management",
     "regim hotelier Timișoara",
     "investiții imobiliare Timișoara",
-    "ROI apartamente Timișoara",
+    "Randament apartamente Timișoara",
     "administrare apartamente",
     "real estate investment Romania",
     "vacation rental management",

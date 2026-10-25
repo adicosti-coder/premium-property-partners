@@ -828,7 +828,7 @@ export default function InvestmentAnalysisManager() {
                         <TableCell className="font-medium" scope="row">{row.nume}</TableCell>
                         <TableCell className="text-right tabular-nums">{fmtEur(row.pret)}</TableCell>
                         <TableCell className={cn("text-right font-semibold tabular-nums", roiTone(row.result.roi_procentual))}>
-                          <span aria-label={`ROI ${row.result.roi_procentual.toFixed(1)} la sută`}>
+                          <span aria-label={`Randament ${row.result.roi_procentual.toFixed(1)} la sută`}>
                             {row.result.roi_procentual.toFixed(1)}%
                           </span>
                         </TableCell>

@@ -204,7 +204,7 @@ const AboutUs = () => {
       story: {
         title: "Our Story",
         subtitle: "From the first transaction to 15 properties managed",
-        intro: "We started in Timișoara as a local real estate agency, focused on fair transactions and long-term relationships. As the market matured, we noticed more owners sought passive income without hassle — that's how ApArt Hotel was born, our short-term rental division. Today we manage 15 apartments with an estimated 6.5–9.4% net yearly ROI and a consolidated 9.7/10 rating.",
+        intro: "We started in Timișoara as a local real estate agency, focused on fair transactions and long-term relationships. As the market matured, we noticed more owners sought passive income without hassle — that's how ApArt Hotel was born, our short-term rental division. Today we manage 15 apartments with an estimated 6.5–9.4% net yearly randament and a consolidated 9.7/10 rating.",
         realEstate: {
           title: "Complete Real Estate Services",
           description: "Under the RealTrust brand, we offer a complete spectrum of real estate services covering all needs of owners and investors:",
@@ -340,7 +340,7 @@ const AboutUs = () => {
     },
     en: {
       title: "About RealTrust: Real Estate & Short-Term Rentals Timișoara",
-      description: "RealTrust team: real estate and short-term rental experts in Timișoara. 15 properties managed with an estimated 6.5–9.4% net yearly ROI. Contact us today!"
+      description: "RealTrust team: real estate and short-term rental experts in Timișoara. 15 properties managed with an estimated 6.5–9.4% net yearly randament. Contact us today!"
     }
   };
 
@@ -702,10 +702,10 @@ const AboutUs = () => {
               <div className="text-center mb-10">
                 <Badge variant="outline" className="mb-4 px-4 py-2 text-sm font-medium border-primary/30 bg-primary/5">
                   <TrendingUp className="w-4 h-4 mr-2 text-primary" />
-                  {language === "ro" ? "Studiu de Caz · ROI Verificat" : "Case Study · Verified ROI"}
+                  {language === "ro" ? "Studiu de Caz · randament Verificat" : "Case Study · Verified ROI"}
                 </Badge>
                 <h2 className="text-3xl md:text-4xl font-bold mb-3">
-                  {language === "ro" ? "Cum ajungem la 6,5–9,4% ROI net" : "How we reach 6.5–9.4% net ROI"}
+                  {language === "ro" ? "Cum ajungem la 6,5–9,4% randament net" : "How we reach 6.5–9.4% net randament"}
                 </h2>
                 <p className="text-muted-foreground">
                   {language === "ro"
@@ -739,7 +739,7 @@ const AboutUs = () => {
                   <div className="md:col-span-2 flex flex-col sm:flex-row gap-3 pt-4 border-t border-border">
                     <Button asChild className="flex-1">
                       <Link to="/calculator-randament">
-                        {language === "ro" ? "Calculează ROI pentru proprietatea ta" : "Calculate ROI for your property"}
+                        {language === "ro" ? "Calculează Randamentul Imobiliar (ROI) pentru proprietatea ta" : "Calculate ROI for your property"}
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Link>
                     </Button>

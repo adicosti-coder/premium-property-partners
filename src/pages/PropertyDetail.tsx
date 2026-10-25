@@ -748,7 +748,7 @@ const PropertyDetail = () => {
           const roi = displayRoi;
           const lt = dbProperty?.listing_type?.toLowerCase();
           if ((lt === 'investitie' || lt === 'vanzare') && roi) {
-            return `${displayName} | Randament ${roi} ROI — Investiție Timișoara`;
+            return `${displayName} | Randament ${roi} randament — Investiție Timișoara`;
           }
           if (normalizedListingType === 'cazare' && seoOverride?.seo_title?.trim()) {
             return `${seoOverride.seo_title.trim()} | RealTrust`.slice(0, 70);
@@ -773,7 +773,7 @@ const PropertyDetail = () => {
           if ((lt === 'investitie' || lt === 'vanzare') && (roi || capital)) {
             const zone = property.location?.replace(/,?\s*(Timișoara|Timisoara)\s*/gi, '').trim() || 'Timișoara';
             const parts: string[] = [`Descoperă acest apartament în ${zone}, Timișoara.`];
-            if (roi) parts.push(`Ideal pentru investiție cu ROI de ${roi}.`);
+            if (roi) parts.push(`Ideal pentru investiție cu randament de ${roi}.`);
             if (capital) parts.push(`Capital necesar: €${capital.toLocaleString('ro-RO')}.`);
             parts.push('Vezi detalii și randament estimat.');
             return parts.join(' ').slice(0, 160);
@@ -808,7 +808,7 @@ const PropertyDetail = () => {
           const roi = displayRoi;
           const lt = dbProperty?.listing_type?.toLowerCase();
           if ((lt === 'investitie' || lt === 'vanzare') && roi) {
-            return `${displayName} — investiție imobiliară Timișoara, randament ${roi} ROI, property management regim hotelier`;
+            return `${displayName} — investiție imobiliară Timișoara, randament ${roi} randament, property management regim hotelier`;
           }
           return staticProperty ? getImageAlt(staticProperty, 0, language as 'ro' | 'en') : `${displayName} — cazare regim hotelier ${property.location}, Timișoara`;
         })()}

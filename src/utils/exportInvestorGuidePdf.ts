@@ -154,7 +154,7 @@ export const exportInvestorGuidePdf = async ({ language = "ro" }: ExportOptions 
   
   const stats = isRo 
     ? [
-        { value: "6,5–9,4%", label: "ROI net estimat / an" },
+        { value: "6,5–9,4%", label: "Randament net estimat / an" },
         { value: "+30%", label: "vs Clasic" },
         { value: "85%", label: "Ocupare" }
       ]
@@ -377,7 +377,7 @@ export const exportInvestorGuidePdf = async ({ language = "ro" }: ExportOptions 
         { name: "Piața Unirii / Cetate", roi: "8.5-10%", desc: "Zonă istorică premium cu arhitectură barocă. Ideală pentru sejururi culturale și romantice." },
         { name: "Iulius Town / Dâmbovița", roi: "8-9.5%", desc: "Hub modern cu mall, birouri IT și acces facil. Popular pentru călătorii de business de lungă durată." },
         { name: "Take Ionescu / Complexul Studențesc", roi: "7.5-9%", desc: "Zonă vibrantă cu viață de noapte. Populară pentru grupuri și tineri profesioniști." },
-        { name: "Fabric / Iosefin", roi: "7-8.5%", desc: "Zone în dezvoltare cu potențial de creștere. Prețuri de achiziție mai accesibile, ROI în creștere." }
+        { name: "Fabric / Iosefin", roi: "7-8.5%", desc: "Zone în dezvoltare cu potențial de creștere. Prețuri de achiziție mai accesibile, randament în creștere." }
       ]
     : [
         { name: "Victory Square / Historic Center", roi: "9.5-11%", desc: "Most sought-after location for tourists and business travelers. Close to restaurants, museums, Opera." },

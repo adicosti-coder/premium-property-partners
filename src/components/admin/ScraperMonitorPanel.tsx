@@ -625,7 +625,7 @@ export default function ScraperMonitorPanel() {
               ? "border-amber-500/50 bg-amber-500/5 text-amber-700 dark:text-amber-300"
               : "border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-300";
           const labels: Record<string, string> = {
-            "piata-roi": "Piață / ROI", "social-leads": "Social Leads", "complexes": "Complexuri Premium",
+            "piata-roi": "Piață / randament", "social-leads": "Social Leads", "complexes": "Complexuri Premium",
           };
           const Icon = a.level === "ok" ? CheckCircle2 : AlertTriangle;
           return (
@@ -808,7 +808,7 @@ export default function ScraperMonitorPanel() {
           <Tabs value={vertical} onValueChange={(v) => setVertical(v as Vertical)}>
             <TabsList className="flex-wrap h-auto">
               <TabsTrigger value="all">Toate</TabsTrigger>
-              <TabsTrigger value="piata-roi" className="gap-1.5"><TrendingUp className="h-3.5 w-3.5" /> Piață / ROI</TabsTrigger>
+              <TabsTrigger value="piata-roi" className="gap-1.5"><TrendingUp className="h-3.5 w-3.5" /> Piață / randament</TabsTrigger>
               <TabsTrigger value="social-leads" className="gap-1.5"><Users className="h-3.5 w-3.5" /> Social Leads</TabsTrigger>
               <TabsTrigger value="complexes" className="gap-1.5"><Building2 className="h-3.5 w-3.5" /> Complexuri Premium</TabsTrigger>
             </TabsList>

@@ -72,7 +72,7 @@ const PhotoPropertyAnalysis = () => {
   const t = {
     ro: {
       title: "Analiză Vizuală AI",
-      subtitle: "Încarcă până la 20 de fotografii cu proprietatea ta și primești instant evaluare AI cu scor, ROI și recomandări.",
+      subtitle: "Încarcă până la 20 de fotografii cu proprietatea ta și primești instant evaluare AI cu scor, randament și recomandări.",
       analyzeBtn: "ANALIZEAZĂ CU AI",
       analyzing: "Se analizează",
       compressing: "Se optimizează imaginile",

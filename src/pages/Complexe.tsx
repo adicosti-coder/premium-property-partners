@@ -96,7 +96,7 @@ const Complexe = () => {
     },
     en: {
       title: "Residential Complexes Timișoara | Short-Term Rental Management",
-      metaDescription: "Professional short-term rental management for Timișoara's most sought-after residential complexes: Fructus Plaza, City of Mara, Ateneo, Ring, Vivalia and more. Estimated 6.5–9.4% net yearly ROI.",
+      metaDescription: "Professional short-term rental management for Timișoara's most sought-after residential complexes: Fructus Plaza, City of Mara, Ateneo, Ring, Vivalia and more. Estimated 6.5–9.4% net yearly randament.",
       heroTitle: "Residential Complexes",
       heroTitleHighlight: "Timișoara",
       heroSubtitle: "We manage properties in Timișoara's most exclusive residential complexes. Discover your complex and find out your income potential.",

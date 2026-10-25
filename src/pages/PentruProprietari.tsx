@@ -227,7 +227,7 @@ const PentruProprietari = () => {
       secondaryCtaB: "Vezi pachetele și costurile",
       variantLabel: "Variantă CTA",
       stats: [
-        { value: "6,5–9,4%", label: "ROI net estimat / an", description: "Calculat pe ipoteze publice (ocupare 75%)" },
+        { value: "6,5–9,4%", label: "Randament net estimat / an", description: "Calculat pe ipoteze publice (ocupare 75%)" },
         { value: "15–20%", label: "Property Management RealTrust", description: "Aplicat la încasări, în funcție de pachet" },
         { value: "~75%", label: "Ocupare medie", description: "Observată în portofoliul administrat" },
         { value: "24/7", label: "Operare hotelieră", description: "Echipă dedicată pentru tine și pentru oaspeți" },
@@ -304,7 +304,7 @@ const PentruProprietari = () => {
     },
     en: {
       title: "Property Management Timișoara — Apartment Management, 6.5–9.4% Net",
-      description: "Property management in Timișoara: full short-term rental management — listing, vetted guests, cleaning, maintenance, monthly reports. 6.5–9.4% estimated net yearly ROI.",
+      description: "Property management in Timișoara: full short-term rental management — listing, vetted guests, cleaning, maintenance, monthly reports. 6.5–9.4% estimated net yearly randament.",
     },
   };
 
@@ -328,7 +328,7 @@ const PentruProprietari = () => {
         "areaServed": "Timișoara, România",
         "offers": {
           "@type": "Offer",
-          "description": "ROI net estimat 6,5–9,4% pe an. Pachete: Starter 15%, Esențial 18%, Standard 20%."
+          "description": "Randament net estimat 6,5–9,4% pe an. Pachete: Starter 15%, Esențial 18%, Standard 20%."
         }
       };
       // RealEstateAgent schema — canonical identity + page-specific extensions.

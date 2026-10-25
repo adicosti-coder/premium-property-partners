@@ -80,9 +80,9 @@ const ChartCard = ({
 
 export const RoiByNeighborhoodChart = () => (
   <ChartCard
-    title="ROI net anual: Regim Hotelier vs Chirie Clasică (2026)"
+    title="Randament net anual: Regim Hotelier vs Chirie Clasică (2026)"
     subtitle="Date agregate din portofoliul RealTrust — randament % după Property Management RealTrust (15-20%) și taxe"
-    alt="Grafic randament imobiliar Timișoara — ROI net anual pe cartiere, regim hotelier vs chirie clasică, 2026"
+    alt="Grafic randament imobiliar Timișoara — randament net anual pe cartiere, regim hotelier vs chirie clasică, 2026"
   >
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={roiData} margin={{ top: 10, right: 10, left: -10, bottom: 40 }}>

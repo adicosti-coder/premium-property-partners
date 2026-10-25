@@ -91,11 +91,11 @@ const Imobiliare = () => {
   const seoContent = {
     ro: {
       title: "Imobiliare Timișoara: Vânzări, Închirieri, Regim Hotelier | RealTrust",
-      description: "Investește profitabil în imobiliare Timișoara! Apartamente regim hotelier, vânzări, închirieri lângă UVT, Iulius Town, Aeroport. Calculează ROI gratuit!"
+      description: "Investește profitabil în imobiliare Timișoara! Apartamente regim hotelier, vânzări, închirieri lângă UVT, Iulius Town, Aeroport. Calculează Randamentul Imobiliar (ROI) gratuit!"
     },
     en: {
       title: "Real Estate Timișoara: Sales, Rentals, Hotel-Style | RealTrust",
-      description: "Profitable real estate investment in Timișoara! Hotel-style apartments, sales, rentals near UVT, Iulius Town, Airport. Free ROI calculator."
+      description: "Profitable real estate investment in Timișoara! Hotel-style apartments, sales, rentals near UVT, Iulius Town, Airport. Free randament calculator."
     }
   };
 
@@ -606,8 +606,8 @@ const Imobiliare = () => {
               </div>
               <p className="text-sm md:text-base font-medium text-foreground">
                 {language === "ro"
-                  ? "Cauți investiții? Vezi topul cartierelor din Timișoara cu ROI de peste 9%"
-                  : "Looking to invest? See top Timișoara neighborhoods with 9%+ ROI"}
+                  ? "Cauți investiții? Vezi topul cartierelor din Timișoara cu randament de peste 9%"
+                  : "Looking to invest? See top Timișoara neighborhoods with 9%+ randament"}
               </p>
             </div>
             <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary group-hover:underline shrink-0">

@@ -23,8 +23,8 @@ export function SEODualCTASection() {
         ? "Investiții Imobiliare în Ansambluri Rezidențiale Timișoara"
         : "Real Estate Investments in Residential Complexes Timișoara",
       desc: isRo
-        ? "Analizăm constant randamentul activelor din cele mai importante complexe din Timișoara, precum ISHO, Paltim, Cetate sau City of Mara, pentru a-ți oferi oportunități cu ROI ridicat."
-        : "We constantly analyze asset yields in Timișoara's top residential complexes — ISHO, Paltim, Cetate, City of Mara — to bring you high-ROI opportunities.",
+        ? "Analizăm constant randamentul activelor din cele mai importante complexe din Timișoara, precum ISHO, Paltim, Cetate sau City of Mara, pentru a-ți oferi oportunități cu randament ridicat."
+        : "We constantly analyze asset yields in Timișoara's top residential complexes — ISHO, Paltim, Cetate, City of Mara — to bring you high-randament opportunities.",
       cta: isRo
         ? "Vezi Catalogul complet de Ansambluri Rezidențiale în Timișoara"
         : "Browse the full Residential Complexes Catalog in Timișoara",
@@ -33,20 +33,20 @@ export function SEODualCTASection() {
       to: "/analiza-roi-apartament",
       icon: Calculator,
       h2: isRo
-        ? "Calculează ROI-ul Apartamentului Tău în Regim Hotelier"
+        ? "Calculează Randamentul Imobiliar (ROI) Apartamentului Tău în Regim Hotelier"
         : "Calculate Your Apartment's ROI in Short-Term Rental",
       desc: isRo
         ? "Rulează o simulare avansată pentru a vedea dacă proprietatea ta generează un randament mai bun pe termen scurt (ApArt Hotel) comparativ cu o închiriere tradițională."
         : "Run an advanced simulation to see if your property generates better short-term yields (ApArt Hotel) compared to traditional long-term rental.",
       cta: isRo
-        ? "Rulează o Analiză ROI Apartament"
+        ? "Rulează o Analiză Randament Apartament"
         : "Run an Apartment ROI Analysis",
     },
   ];
 
   return (
     <section
-      aria-label={isRo ? "Investiții și calcul ROI" : "Investments and ROI calculator"}
+      aria-label={isRo ? "Investiții și calcul randament" : "Investments and ROI calculator"}
       className="w-full bg-muted/30 py-14 md:py-20 border-b border-border/40"
     >
       <div className="container mx-auto px-4 md:px-6 lg:px-8">

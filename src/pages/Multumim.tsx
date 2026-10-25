@@ -43,7 +43,7 @@ const Multumim = () => {
       ? "Vrei rezultate concrete? Hai la o evaluare la fața locului"
       : "Want concrete results? Let's meet on-site",
     nextStepDesc: isRo
-      ? "Un specialist RealTrust vine la apartamentul tău, măsoară potențialul real (regim hotelier, ROI, setup) și îți construiește planul personalizat."
+      ? "Un specialist RealTrust vine la apartamentul tău, măsoară potențialul real (regim hotelier, randament, setup) și îți construiește planul personalizat."
       : "A RealTrust specialist visits your apartment, measures the real potential (short-term rentals, ROI, setup) and builds your personalized plan.",
     ctaWhatsApp: isRo
       ? "Cere evaluare gratuită la locație"

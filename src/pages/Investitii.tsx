@@ -271,7 +271,7 @@ const Investitii = () => {
 
             <div className="flex flex-wrap justify-center gap-6 mb-10">
               {[
-                { value: "6,5–9,4%", label: language === "ro" ? "ROI net estimat / an" : "Estimated net ROI / yr" },
+                { value: "6,5–9,4%", label: language === "ro" ? "Randament net estimat / an" : "Estimated net ROI / yr" },
                 { value: "~75%", label: language === "ro" ? "Ocupare medie" : "Average occupancy" },
                 { value: "10k+", label: language === "ro" ? "Sejururi în portofoliu" : "Stays in portfolio" },
                 { value: "9,7/10", label: language === "ro" ? "Scor recenzii" : "Reviews score" },

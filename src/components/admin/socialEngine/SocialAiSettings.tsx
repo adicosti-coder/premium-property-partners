@@ -44,7 +44,7 @@ export default function SocialAiSettings() {
           <SelectTrigger id="caption-tone"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="luxury">Luxury / Exclusiv</SelectItem>
-            <SelectItem value="investment">Investiție / ROI</SelectItem>
+            <SelectItem value="investment">Investiție / randament</SelectItem>
             <SelectItem value="warm">Warm / Prietenos</SelectItem>
           </SelectContent>
         </Select>

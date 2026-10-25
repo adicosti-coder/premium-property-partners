@@ -51,7 +51,7 @@ const OwnerLegalTaxGuide = () => {
           { label: "Property Management RealTrust", a: "− 15-20%", b: "− 5%" },
           { label: "Venit net / lună", a: "1.130 €", b: "500 €" },
           { label: "Venit net / an", a: "13.560 €", b: "6.000 €" },
-          { label: "ROI net (la 145.000 €)", a: "9,4%", b: "4,1%" },
+          { label: "Randament net (la 145.000 €)", a: "9,4%", b: "4,1%" },
           { label: "Efort lunar proprietar", a: "0 ore", b: "3–6 ore" },
         ],
         yieldNote:

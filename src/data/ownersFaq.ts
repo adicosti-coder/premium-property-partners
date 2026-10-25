@@ -28,7 +28,7 @@ export const OWNERS_FAQ_DATA = {
         },
         {
           q: "Ce servicii de property management Timișoara oferă RealTrust?",
-          a: "Pachet complet: listare multi-channel (Airbnb, Booking, Expedia), pricing dinamic AI, check-in/check-out automatizat (smart locks), curățenie profesională, schimbare lenjerie, mentenanță 24/7, suport oaspeți multilingv, rapoarte financiare lunare detaliate, fotografii profesionale și optimizare SEO listări. Proprietarii noștri ating constant 9%+ ROI net cu zero implicare zilnică.",
+          a: "Pachet complet: listare multi-channel (Airbnb, Booking, Expedia), pricing dinamic AI, check-in/check-out automatizat (smart locks), curățenie profesională, schimbare lenjerie, mentenanță 24/7, suport oaspeți multilingv, rapoarte financiare lunare detaliate, fotografii profesionale și optimizare SEO listări. Proprietarii noștri ating constant 9%+ randament net cu zero implicare zilnică.",
         },
         {
           q: "Ce taxe locale plătesc pentru regim hotelier în Timișoara?",

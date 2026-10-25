@@ -34,23 +34,23 @@ const CalculatorROI = () => {
   const faqItems = [
     {
       question: "Ce randament (ROI) este considerat bun pentru o investiție imobiliară în Timișoara?",
-      answer: "Pentru chirie clasică în Timișoara, un ROI net de 6-8% este considerat solid. În regim hotelier administrat de RealTrust, randamentul net estimat este între 6,5% și 9,4% pe an, calculat pe ipoteze publice (ocupare 75%, costuri și taxe).",
+      answer: "Pentru chirie clasică în Timișoara, un randament net de 6-8% este considerat solid. În regim hotelier administrat de RealTrust, randamentul net estimat este între 6,5% și 9,4% pe an, calculat pe ipoteze publice (ocupare 75%, costuri și taxe).",
     },
     {
-      question: "Cum afectează impozitul pe proprietate ROI-ul?",
-      answer: "Impozitul anual local pentru un apartament în Timișoara variază între 0,08% și 0,2% din valoarea impozabilă. Pentru un apartament de 80.000€, costul anual este 80-160€ — un impact de aproximativ 0,1-0,2% pe ROI net, deja inclus în calcul.",
+      question: "Cum afectează impozitul pe proprietate randamentul?",
+      answer: "Impozitul anual local pentru un apartament în Timișoara variază între 0,08% și 0,2% din valoarea impozabilă. Pentru un apartament de 80.000€, costul anual este 80-160€ — un impact de aproximativ 0,1-0,2% pe randament net, deja inclus în calcul.",
     },
     {
-      question: "Care este diferența între ROI și cash flow?",
-      answer: "ROI măsoară randamentul anual ca procent din investiția totală (de ex. 6,5–9,4%). Cash flow-ul este venitul net lunar sau anual disponibil după toate costurile. O proprietate poate avea ROI bun și cash flow mai mic dacă există rată ipotecară.",
+      question: "Care este diferența între randament și cash flow?",
+      answer: "Randament măsoară randamentul anual ca procent din investiția totală (de ex. 6,5–9,4%). Cash flow-ul este venitul net lunar sau anual disponibil după toate costurile. O proprietate poate avea randament bun și cash flow mai mic dacă există rată ipotecară.",
     },
     {
       question: "În cât timp se amortizează o investiție imobiliară?",
-      answer: "La un ROI net între 6,5% și 9,4%, recuperarea capitalului propriu se face în aproximativ 10-15 ani. Dacă proprietatea se apreciază cu 5-8% pe an, randamentul total (yield + apreciere) ajunge la 11-17% pe an, în funcție de zonă.",
+      answer: "La un randament net între 6,5% și 9,4%, recuperarea capitalului propriu se face în aproximativ 10-15 ani. Dacă proprietatea se apreciază cu 5-8% pe an, randamentul total (yield + apreciere) ajunge la 11-17% pe an, în funcție de zonă.",
     },
     {
       question: "Ce costuri operaționale sunt incluse în calcul?",
-      answer: "Calculatorul deduce automat din venitul brut Property Management RealTrust (15-20% din încasări), curățenia, consumabilele, mentenanța, utilitățile parțial neacoperite și taxele locale. Rezultatul afișat este ROI net, după aceste costuri.",
+      answer: "Calculatorul deduce automat din venitul brut Property Management RealTrust (15-20% din încasări), curățenia, consumabilele, mentenanța, utilitățile parțial neacoperite și taxele locale. Rezultatul afișat este randament net, după aceste costuri.",
     },
     {
       question: "Chirie vs hotelier în Timișoara: ce aduce mai mult?",
@@ -142,7 +142,7 @@ const CalculatorROI = () => {
                 <p className="mt-2 text-muted-foreground">Compară rezultatul cu oportunitățile active sau trimite proprietatea pentru o estimare personalizată.</p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <Link to="/analiza-roi-apartament" className="inline-flex min-h-12 items-center rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Analiză ROI personalizată</Link>
+                <Link to="/analiza-roi-apartament" className="inline-flex min-h-12 items-center rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Analiză Randament personalizată</Link>
                 <Link to="/catalog-investitii" className="inline-flex min-h-12 items-center rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Vezi catalogul de investiții</Link>
                 <Link to="/pentru-proprietari" className="inline-flex min-h-12 items-center rounded-md border border-input bg-background px-5 text-sm font-semibold text-foreground hover:bg-accent hover:text-accent-foreground">Discută cu echipa</Link>
               </div>
@@ -223,7 +223,7 @@ const CalculatorROI = () => {
                 <h2 className="text-2xl font-serif font-semibold text-foreground">Glosarul investitorului imobiliar</h2>
               </div>
               <dl className="space-y-3 text-muted-foreground">
-                <div><dt className="font-semibold text-foreground inline">ROI (Return on Investment): </dt><dd className="inline">randament anual ca % din capitalul investit.</dd></div>
+                <div><dt className="font-semibold text-foreground inline">ROI (Return on Investment): </dt><dd className="inline">Randament anual ca % din capitalul investit.</dd></div>
                 <div><dt className="font-semibold text-foreground inline">Yield brut: </dt><dd className="inline">venit anual / preț achiziție × 100.</dd></div>
                 <div><dt className="font-semibold text-foreground inline">Yield net: </dt><dd className="inline">venit anual după toate costurile / preț achiziție × 100.</dd></div>
                 <div><dt className="font-semibold text-foreground inline">Cash flow: </dt><dd className="inline">flux de numerar net lunar/anual disponibil investitorului.</dd></div>
@@ -237,7 +237,7 @@ const CalculatorROI = () => {
             <div id="faq">
               <div className="flex items-center gap-2 mb-4">
                 <HelpCircle className="w-5 h-5 text-primary" />
-                <h2 className="text-2xl font-serif font-semibold text-foreground">Întrebări frecvente despre ROI imobiliar</h2>
+                <h2 className="text-2xl font-serif font-semibold text-foreground">Întrebări frecvente despre randament imobiliar</h2>
               </div>
               <Accordion type="single" collapsible className="rounded-2xl border border-border bg-card px-6" itemScope itemType="https://schema.org/FAQPage">
                 {faqItems.map((item, idx) => (

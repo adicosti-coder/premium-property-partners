@@ -29,10 +29,10 @@ const ServiciiImobiliareTimisoara = () => {
     },
     {
       question: isRo ? "Cum pot accesa Catalogul de Investiții?" : "How can I access the Investment Catalog?",
-      answer: isRo ? "Catalogul de Investiții este disponibil din meniul principal și include oportunități verificate, analiză ROI și estimări pentru administrare profesională." : "The Investment Catalog is available from the main navigation and includes verified opportunities, ROI analysis and professional management estimates.",
+      answer: isRo ? "Catalogul de Investiții este disponibil din meniul principal și include oportunități verificate, analiză randament și estimări pentru administrare profesională." : "The Investment Catalog is available from the main navigation and includes verified opportunities, ROI analysis and professional management estimates.",
     },
     {
-      question: isRo ? "Ce ROI pot obține prin administrare în regim hotelier?" : "What ROI can I get with short-term rental management?",
+      question: isRo ? "Ce randament pot obține prin administrare în regim hotelier?" : "What ROI can I get with short-term rental management?",
       answer: isRo ? "Randamentul net estimat folosit de RealTrust este 6,5–9,4% pe an, calculat pe baza ocupării medii de 75%, a costurilor de operare și a Property Management RealTrust (15-20% din încasări)." : "RealTrust uses a 6.5–9.4% estimated net yearly yield, calculated from occupancy, operational costs and management/tax deductions.",
     },
     {
@@ -121,8 +121,8 @@ const ServiciiImobiliareTimisoara = () => {
       icon: Briefcase,
       title: isRo ? "Consultanță Investiții" : "Investment Consulting",
       desc: isRo
-        ? "Catalog de oportunități investiționale verificate, analiză ROI și deal-room pentru investitori activi pe piața imobiliară Timișoara."
-        : "Catalog of verified investment opportunities, ROI analysis and a deal-room for active investors in the Timișoara real estate market.",
+        ? "Catalog de oportunități investiționale verificate, analiză randament și deal-room pentru investitori activi pe piața imobiliară Timișoara."
+        : "Catalog of verified investment opportunities, randament analysis and a deal-room for active investors in the Timișoara real estate market.",
       link: "/catalog-investitii",
     },
   ];
@@ -139,7 +139,7 @@ const ServiciiImobiliareTimisoara = () => {
   const recommendedResources = [
     { to: "/investitii", icon: TrendingUp, label: isRo ? "Investiții imobiliare Timișoara" : "Timișoara real estate investments" },
     { to: "/calculator-randament", icon: Calculator, label: isRo ? "Calculator de randament imobiliar" : "Short-term rental ROI calculator" },
-    { to: "/blog/analiza-roi-timisoara-2026", icon: FileText, label: isRo ? "Analiză ROI Timișoara 2026" : "Timișoara ROI analysis 2026" },
+    { to: "/blog/analiza-roi-timisoara-2026", icon: FileText, label: isRo ? "Analiză Randament Timișoara 2026" : "Timișoara randament analysis 2026" },
   ];
 
   return (
