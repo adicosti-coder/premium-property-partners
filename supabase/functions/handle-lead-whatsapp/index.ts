@@ -2,6 +2,7 @@
 // WhatsApp message to Make.com via MAKE_WHATSAPP_WEBHOOK_URL.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3";
+import { sendToMake } from "./sendToMake.ts";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -50,7 +51,7 @@ Deno.serve(async (req) => {
   const webhookUrl = Deno.env.get("MAKE_WHATSAPP_WEBHOOK_URL");
   if (!webhookUrl) {
     console.warn("MAKE_WHATSAPP_WEBHOOK_URL not configured");
-    return json({ skipped: true, reason: "webhook_not_configured" });
+    return json({ ok: true, webhook: "not_configured" });
   }
 
   const prenume = d.nume.split(/\s+/)[0];
@@ -76,20 +77,15 @@ Deno.serve(async (req) => {
     message: mesaj,
   };
 
-  try {
-    const res = await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const text = await res.text();
-    if (!res.ok) {
-      console.error(`Make webhook failed [${res.status}]: ${text}`);
-      return json({ error: "Webhook failed", status: res.status, details: text }, 502);
-    }
-    return json({ ok: true });
-  } catch (err) {
-    console.error("handle-lead-whatsapp error:", err);
-    return json({ error: (err as Error).message }, 500);
+  // Make.com e un canal secundar: vizitatorul are cererea salvată deja, deci
+  // așteptăm webhook-ul maximum 3 secunde și răspundem mereu cu succes.
+  // Un Make lent, stricat sau indisponibil se înregistrează în loguri, nu
+  // blochează formularul și nu afișează o eroare clientului.
+  const sent = await sendToMake(webhookUrl, payload);
+  if (sent.status !== "sent") {
+    console.error(
+      `handle-lead-whatsapp: Make webhook ${sent.status} after ${sent.elapsedMs}ms: ${sent.detail}`,
+    );
   }
+  return json({ ok: true, webhook: sent.status });
 });
