@@ -498,7 +498,7 @@ const Imobiliare = () => {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-              <Link to="/calculator-roi">
+              <Link to="/calculator-randament">
                 <Button variant="hero" size="lg">
                   <Calculator className="w-5 h-5 mr-2" />
                   {language === "ro" ? "Calculează randamentul" : "Calculate ROI"}

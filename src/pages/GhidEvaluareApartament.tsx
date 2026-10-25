@@ -254,7 +254,7 @@ const GhidEvaluareApartament = () => {
                 </Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link to="/calculator-roi">Simulează randamentul net</Link>
+                <Link to="/calculator-randament">Simulează randamentul net</Link>
               </Button>
             </div>
           </section>

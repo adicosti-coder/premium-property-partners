@@ -296,7 +296,7 @@ export const CLUSTER_LINKS: Record<string, ContextualLink[]> = {
   "pentru-proprietari": [
     { href: "/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara", label: "cât costă administrarea unui apartament în regim hotelier", description: "Comisioane 15–20%, ce este inclus și ce rămâne în sarcina proprietarului." },
     { href: "/preturi", label: "comisioanele și pachetele de administrare", description: "Ce reținem din venit și ce servicii sunt incluse." },
-    { href: "/calculator-roi", label: "analiza de randament pentru apartamentul tău", description: "Estimare de venit lunar cu ipoteze transparente." },
+    { href: "/calculator-randament", label: "analiza de randament pentru apartamentul tău", description: "Estimare de venit lunar cu ipoteze transparente." },
     { href: "/evaluare-gratuita", label: "evaluare gratuită a proprietății", description: "Primești o estimare de preț și de potențial de închiriere." },
     { href: "/investitii", label: "investiții imobiliare în Timișoara", description: "Cum arată randamentele reale din portofoliul administrat." },
     { href: "/hostscan-ai", label: "analiza AI a potențialului de cazare", description: "Scanare automată a apartamentului, în câteva minute." },
@@ -306,7 +306,7 @@ export const CLUSTER_LINKS: Record<string, ContextualLink[]> = {
     { href: "/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara", label: "cât costă administrarea unui apartament în regim hotelier", description: "Comisioane 15–20%, ce este inclus și ce rămâne în sarcina proprietarului." },
     { href: "/catalog-investitii", label: "catalogul de investiții disponibile", description: "Apartamente cu capital necesar și randament estimat." },
     { href: "/zone-investitii-timisoara", label: "cele mai bune zone pentru investiții în Timișoara", description: "Preț, chirie, cerere, lichiditate și risc, zonă cu zonă." },
-    { href: "/calculator-roi", label: "simulare de randament net", description: "Compară regimul hotelier cu chiria clasică." },
+    { href: "/calculator-randament", label: "simulare de randament net", description: "Compară regimul hotelier cu chiria clasică." },
     { href: "/cartiere", label: "prețuri și randamente pe zone", description: "Care cartiere din Timișoara susțin cel mai bine investiția." },
     { href: "/ansambluri-rezidentiale", label: "ansamblurile rezidențiale din Timișoara", description: "Proiecte noi cu cerere constantă de cazare." },
     { href: "/pentru-proprietari", label: "administrarea apartamentului în regim hotelier", description: "Ce se întâmplă după achiziție, operațional." },

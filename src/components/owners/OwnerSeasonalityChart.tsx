@@ -254,7 +254,7 @@ const OwnerSeasonalityChart = () => {
                 </a>
               </Button>
               <Button asChild variant="outline" className="flex-1">
-                <Link to="/calculator-roi" aria-label={t.ctaSecondary}>
+                <Link to="/calculator-randament" aria-label={t.ctaSecondary}>
                   {t.ctaSecondary}
                   <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
                 </Link>

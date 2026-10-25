@@ -489,7 +489,7 @@ const EvaluareGratuita = () => {
                 Vezi cum vindem proprietățile
               </Link>{" "}
               sau{" "}
-              <Link to="/calculator-roi" className="text-primary underline">
+              <Link to="/calculator-randament" className="text-primary underline">
                 calculează randamentul investiției
               </Link>
               .

@@ -57,7 +57,7 @@ const QUICK_URLS = [
   "https://realtrust.ro/catalog-investitii",
   "https://realtrust.ro/imobiliare",
   "https://realtrust.ro/cartiere",
-  "https://realtrust.ro/calculator-roi",
+  "https://realtrust.ro/calculator-randament",
   "https://realtrust.ro/analiza-roi-apartament",
   "https://realtrust.ro/piata-imobiliara-timisoara",
   // Cartiere prioritare (NeighborhoodDetail)

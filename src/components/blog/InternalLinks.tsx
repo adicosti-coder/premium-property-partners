@@ -47,7 +47,7 @@ const SITE_LINKS: InternalLink[] = [
   {
     label: "analiza de randament pentru apartamentul tău",
     labelEn: "yield analysis for your apartment",
-    href: "/calculator-roi",
+    href: "/calculator-randament",
     matchCategories: ["Investiții", "Financiar"],
     matchTags: ["roi", "calcul", "randament", "yield", "venit"],
   },

@@ -61,17 +61,17 @@ const CalculatorROI = () => {
       <SEOHead
         title="Calculator de randament imobiliar Timișoara | RealTrust"
         description="Calculator gratuit de randament imobiliar pentru Timișoara: compară chiria clasică cu venitul net în regim hotelier, pe chirii reale din fiecare zonă."
-        url="https://realtrust.ro/calculator-roi"
+        url="https://realtrust.ro/calculator-randament"
         breadcrumbItems={[
           { name: "Acasă", url: "https://realtrust.ro" },
-          { name: "Calculator de randament imobiliar", url: "https://realtrust.ro/calculator-roi" },
+          { name: "Calculator de randament imobiliar", url: "https://realtrust.ro/calculator-randament" },
         ]}
         jsonLd={[FINANCIAL_SERVICE_SCHEMA as unknown as Record<string, unknown>, {
           "@context": "https://schema.org",
           "@type": "FinancialProduct",
           name: "Calculator de randament imobiliar Timișoara — regim hotelier vs. chirie clasică",
           description: "Calculator gratuit de randament imobiliar: compară venitul lunar net între regim hotelier și chirie clasică, pe chirii reale din Timișoara.",
-          url: "https://realtrust.ro/calculator-roi",
+          url: "https://realtrust.ro/calculator-randament",
           provider: {
             ...REAL_ESTATE_AGENT_REF,
             areaServed: ["Timișoara", "Dumbrăvița", "Ghiroda", "Moșnița Nouă", "Giroc"],

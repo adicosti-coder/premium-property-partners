@@ -528,7 +528,7 @@ const BlogPillarHub = () => {
 
             <p className="text-sm text-muted-foreground mt-4">
               Vezi și{" "}
-              <Link to="/calculator-roi" className="text-primary hover:underline">
+              <Link to="/calculator-randament" className="text-primary hover:underline">
                 Calculatorul ROI
               </Link>{" "}
               pentru o estimare rapidă a randamentului.
@@ -583,7 +583,7 @@ const BlogPillarHub = () => {
             </div>
             <p className="text-sm text-muted-foreground mt-4">
               Calculează propriul randament cu{" "}
-              <Link to="/calculator-roi" className="text-primary hover:underline">
+              <Link to="/calculator-randament" className="text-primary hover:underline">
                 Calculatorul ROI
               </Link>{" "}
               sau citește{" "}

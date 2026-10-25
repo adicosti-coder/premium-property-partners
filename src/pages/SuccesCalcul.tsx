@@ -156,7 +156,7 @@ const SuccesCalcul = () => {
           {/* Secondary actions */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button asChild variant="outline" size="sm">
-              <Link to="/calculator-roi">
+              <Link to="/calculator-randament">
                 <Calculator className="w-4 h-4 mr-2" />
                 {t.seeRoi}
               </Link>
