@@ -8,11 +8,11 @@ describe("estimateOwnerIncome", () => {
     const r = estimateOwnerIncome(base);
     expect(r.netRealTrust).toBe(Math.round(r.grossHotel * 0.73));
   });
-  it("chirie clasică 2 camere City of Mara 55 mp standard = 460 €", () => {
-    expect(estimateOwnerIncome(base).classicRent).toBe(460);
+  it("chirie clasică 2 camere City of Mara 55 mp standard = 598 € (mediană reală 600 €)", () => {
+    expect(estimateOwnerIncome(base).classicRent).toBe(598);
   });
   it("locul de parcare adaugă 40 € la chiria clasică", () => {
-    expect(estimateOwnerIncome({ ...base, parking: true }).classicRent).toBe(500);
+    expect(estimateOwnerIncome({ ...base, parking: true }).classicRent).toBe(638);
   });
   it("finisajele premium cresc venitul net", () => {
     expect(estimateOwnerIncome({ ...base, finish: "premium" }).netRealTrust).toBeGreaterThan(

@@ -10,16 +10,19 @@ export const PROPERTY_TYPES = [
   { value: "penthouse", label: "Penthouse", refSqm: 110, classicRent: 1000, adr: 130 },
 ] as const;
 
+// rent = chiria mediană reală pe zonă / mediana Timișoara (~460 €, 2 camere),
+// din anunțurile de închiriere colectate de RealTrust în ultimele 12 luni (oct. 2026).
+// adr/occupancy = cererea pe termen scurt (centrul și ISHO atrag cei mai mulți turiști).
 export const ZONES = [
-  { value: "isho", label: "ISHO", rent: 1.15, adr: 1.15, occupancy: 0.78 },
-  { value: "city-of-mara", label: "City of Mara", rent: 1.0, adr: 1.0, occupancy: 0.72 },
-  { value: "nordone", label: "NordOne", rent: 1.05, adr: 1.05, occupancy: 0.74 },
+  { value: "isho", label: "ISHO", rent: 1.43, adr: 1.2, occupancy: 0.78 },
+  { value: "city-of-mara", label: "City of Mara", rent: 1.3, adr: 1.05, occupancy: 0.72 },
+  { value: "nordone", label: "NordOne", rent: 1.41, adr: 1.1, occupancy: 0.74 },
   { value: "ring-residence", label: "Ring Residence", rent: 1.0, adr: 1.0, occupancy: 0.73 },
-  { value: "fructus", label: "Fructus", rent: 1.05, adr: 1.05, occupancy: 0.75 },
-  { value: "torontalului", label: "Torontalului", rent: 0.95, adr: 0.95, occupancy: 0.7 },
-  { value: "complex-studentesc", label: "Complex Studențesc", rent: 1.0, adr: 0.95, occupancy: 0.76 },
-  { value: "central", label: "Central", rent: 1.1, adr: 1.2, occupancy: 0.8 },
-  { value: "alta-zona", label: "Altă zonă", rent: 0.95, adr: 0.95, occupancy: 0.7 },
+  { value: "fructus", label: "Fructus Plaza", rent: 1.04, adr: 1.05, occupancy: 0.75 },
+  { value: "torontalului", label: "Calea Torontalului", rent: 1.09, adr: 0.95, occupancy: 0.7 },
+  { value: "complex-studentesc", label: "Complex Studențesc", rent: 0.76, adr: 0.9, occupancy: 0.74 },
+  { value: "central", label: "Central / Iosefin / Elisabetin", rent: 0.93, adr: 1.2, occupancy: 0.8 },
+  { value: "alta-zona", label: "Altă zonă", rent: 0.98, adr: 0.95, occupancy: 0.7 },
 ] as const;
 
 export type PropertyTypeValue = (typeof PROPERTY_TYPES)[number]["value"];

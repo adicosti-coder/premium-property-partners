@@ -90,7 +90,7 @@ const CalculatorROI = () => {
               Calculator ROI imobiliare Timișoara: regim hotelier vs. chirie clasică
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Estimează în câteva secunde ce poate produce apartamentul tău: <strong>venit lunar, cash flow și perioada de amortizare</strong>, calculate pe date din piața Timișoara și pe ipoteze publice (ocupare 75%).
+              În 3 pași afli ce poate produce apartamentul tău: <strong>chiria clasică vs. venitul net în regim hotelier</strong>, calculate pe chirii reale din fiecare zonă a Timișoarei și pe gradul de ocupare din zonă.
             </p>
           </div>
 

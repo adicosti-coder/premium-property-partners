@@ -24,7 +24,7 @@ const WHATSAPP_NUMBER = "40799069256";
 const leadSchema = z.object({
   name: z.string().trim().min(2, "Introdu numele (minim 2 caractere)").max(80),
   phone: z.string().trim().regex(/^(\+?4?0)?7\d{8}$/, "Introdu un mobil valid (ex: 0722 123 456)"),
-  email: z.string().trim().email("Email invalid").max(255),
+  email: z.union([z.literal(""), z.string().trim().email("Email invalid").max(255)]),
 });
 
 const fmt = (n: number) => n.toLocaleString("ro-RO");
@@ -102,6 +102,9 @@ const ROICalculatorWidget = () => {
     setSubmitting(true);
     const d = parsed.data;
     const message = buildMessage(d.name);
+    // Deschidem WhatsApp imediat, în gestul utilizatorului — după un await
+    // browserele de pe telefon blochează fereastra nouă.
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
     const specs = {
       property_type: type,
       zone: zoneLabel,
@@ -119,7 +122,7 @@ const ROICalculatorWidget = () => {
       const result = await submitLead({
         name: d.name,
         whatsapp_number: formatPhoneInput(d.phone),
-        email: d.email,
+        email: d.email || undefined,
         property_type: type,
         property_area: surfaceNum,
         message: `[calculator_roi] ${typeLabel} · ${zoneLabel} · ${surfaceNum} mp · Parcare: ${parking ? "Da" : "Nu"} · Finisaje: ${finishLabel}`,
@@ -127,8 +130,7 @@ const ROICalculatorWidget = () => {
         simulation_data: withCampaignTracking({ ...specs, generated_message: message }) as never,
       });
       if (result.ok !== true) {
-        toast.error(result.reason === "validation" ? "Verifică datele introduse." : "Nu am putut trimite cererea. Încearcă din nou.");
-        return;
+        console.warn("[ROICalculator] submitLead failed", result);
       }
 
       void supabase.functions
@@ -136,7 +138,7 @@ const ROICalculatorWidget = () => {
           body: {
             nume: d.name,
             telefon: d.phone,
-            email: d.email,
+            ...(d.email ? { email: d.email } : {}),
             zona: zoneLabel,
             numar_camere: type,
             suprafata_mp: surfaceNum,
@@ -152,11 +154,12 @@ const ROICalculatorWidget = () => {
         .then(({ error }) => { if (error) console.warn("[ROICalculator] handle-lead-whatsapp failed", error); })
         .catch(() => {});
 
-      trackConversion({ event: "roi_calculator_lead", source: "calculator_roi_widget", name: d.name, phone: d.phone, email: d.email });
-      trackCriticalConversion("Lead_Submit", { source: "calculator_roi_widget", value: 90, currency: "EUR", name: d.name });
+      if (result.ok) {
+        trackConversion({ event: "roi_calculator_lead", source: "calculator_roi_widget", name: d.name, phone: d.phone, email: d.email || undefined });
+        trackCriticalConversion("Lead_Submit", { source: "calculator_roi_widget", value: 90, currency: "EUR", name: d.name });
+      }
 
-      toast.success("Proiecția a fost trimisă. Te redirecționăm către WhatsApp.");
-      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+      toast.success("Proiecția e salvată. Apasă Trimite în WhatsApp.");
       setOpen(false);
     } finally {
       setSubmitting(false);
@@ -181,7 +184,7 @@ const ROICalculatorWidget = () => {
           const reached = n <= step;
           return (
             <li key={s} className="flex-1" aria-current={n === step ? "step" : undefined}>
-              <div className={`h-1.5 rounded-full ${reached ? "bg-primary" : "bg-border"}`} />
+              <div className="h-1.5 rounded-full bg-border overflow-hidden"><div className={`h-full rounded-full bg-gradient-to-r from-gold-dark via-gold to-gold-light transition-all duration-500 ease-out ${reached ? "w-full" : "w-0"}`} /></div>
               <span className={`mt-2 block text-xs font-medium ${n === step ? "text-primary" : "text-muted-foreground"}`}>
                 {n}. {s}
               </span>
@@ -191,7 +194,7 @@ const ROICalculatorWidget = () => {
       </ol>
 
       {step === 1 && (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in">
           <fieldset>
             <legend className="mb-3 text-sm font-semibold text-foreground">Tip proprietate</legend>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -232,7 +235,7 @@ const ROICalculatorWidget = () => {
       )}
 
       {step === 2 && (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in">
           <fieldset>
             <legend className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground"><Car className="w-4 h-4 text-primary" />Loc de parcare</legend>
             <div className="grid grid-cols-2 gap-2 max-w-sm">
@@ -255,14 +258,14 @@ const ROICalculatorWidget = () => {
       )}
 
       {step === 3 && (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in">
           <p className="text-sm text-muted-foreground">
             {typeLabel} · {zoneLabel} · {surfaceNum} mp · Parcare: {parking ? "Da" : "Nu"} · Finisaje: {finishLabel}
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-border bg-muted/40 p-5">
-              <p className="text-sm text-muted-foreground">Chirie clasică</p>
-              <p className="mt-1 text-3xl font-semibold text-foreground">{fmt(r.classicRent)} €<span className="text-base font-normal text-muted-foreground">/lună</span></p>
+              <p className="text-sm text-muted-foreground">Chirie clasică (mediană reală în zonă)</p>
+              <p className="mt-1 text-3xl font-semibold text-foreground">~{fmt(r.classicRent)} €<span className="text-base font-normal text-muted-foreground">/lună</span></p>
               <div className="mt-4 h-2 rounded-full bg-border overflow-hidden">
                 <div className="h-full bg-muted-foreground" style={{ width: `${(r.classicRent / maxBar) * 100}%` }} />
               </div>
@@ -278,7 +281,7 @@ const ROICalculatorWidget = () => {
           {r.monthlyDelta > 0 && (
             <p className="flex items-center gap-2 text-foreground font-medium">
               <TrendingUp className="w-5 h-5 text-primary" />
-              Aproximativ +{fmt(r.monthlyDelta)} €/lună față de chiria clasică
+              Aproximativ +{fmt(r.monthlyDelta)} €/lună, adică ~{fmt(r.monthlyDelta * 12)} €/an în plus față de chiria clasică
             </p>
           )}
           <ul className="grid gap-1 text-sm text-muted-foreground">
@@ -286,9 +289,9 @@ const ROICalculatorWidget = () => {
             <li className="flex gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />Deja scăzute: administrare, curățenie, comisioane platforme și taxe (~27%)</li>
             <li className="flex gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />Randament 6,5–9,4% net estimat; cifrele finale depind de apartament</li>
           </ul>
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col-reverse sm:flex-row gap-3">
             <Button variant="outline" size="lg" onClick={() => setStep(2)}><ArrowLeft className="w-5 h-5 mr-2" />Modifică</Button>
-            <Button size="lg" className="flex-1" onClick={() => setOpen(true)}>
+            <Button size="lg" className="flex-1 bg-gold text-gold-foreground hover:bg-gold-dark" onClick={() => setOpen(true)}>
               <MessageCircle className="w-5 h-5 mr-2" />Trimite proiecția pe WhatsApp
             </Button>
           </div>
@@ -304,7 +307,7 @@ const ROICalculatorWidget = () => {
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             {(["name", "phone", "email"] as const).map((k) => (
               <div key={k}>
-                <Label htmlFor={`roi-${k}`}>{k === "name" ? "Nume" : k === "phone" ? "Telefon" : "Email"}</Label>
+                <Label htmlFor={`roi-${k}`}>{k === "name" ? "Nume" : k === "phone" ? "Telefon" : "Email (opțional)"}</Label>
                 <Input
                   id={`roi-${k}`}
                   type={k === "phone" ? "tel" : k === "email" ? "email" : "text"}
