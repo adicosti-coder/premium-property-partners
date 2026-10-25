@@ -243,7 +243,7 @@ const IntrebariFrecvente = () => {
               <Link to="/pentru-proprietari" className="text-primary hover:underline">
                 {copy.ownersLink}
               </Link>
-              <Link to="/calculator-roi" className="text-primary hover:underline">
+              <Link to="/calculator-randament" className="text-primary hover:underline">
                 {copy.calcLink}
               </Link>
             </div>

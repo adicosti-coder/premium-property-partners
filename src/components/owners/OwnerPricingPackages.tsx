@@ -246,7 +246,7 @@ const OwnerPricingPackages = () => {
   };
 
   const calculatorUrl =
-    "/calculator-roi?utm_source=site&utm_medium=pricing_packages&utm_campaign=owners";
+    "/calculator-randament?utm_source=site&utm_medium=pricing_packages&utm_campaign=owners";
 
   const whatsappUrl = (extraContext = "") => {
     const message = isRo

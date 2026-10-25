@@ -79,7 +79,7 @@ export const GEO_ANSWERS: GeoAnswer[] = [
     question: "Este mai profitabil Airbnb sau chiria clasică?",
     answer:
       "În Timișoara, un apartament bine poziționat produce în regim hotelier un venit brut de aproximativ 1,6 ori mai mare decât chiria clasică pe termen lung, dar are și costuri operaționale semnificativ mai mari (curățenie, lenjerie, consumabile, comisioane de platformă, administrare) și sezonalitate. Chiria clasică rămâne mai potrivită pentru zonele fără generatori de trafic și pentru proprietarii care vor venit previzibil cu implicare zero.",
-    source: { href: "/calculator-roi", label: "compară regimul hotelier cu chiria clasică" },
+    source: { href: "/calculator-randament", label: "compară regimul hotelier cu chiria clasică" },
   },
   {
     id: "costuri-regim-hotelier",
@@ -121,7 +121,7 @@ export const GEO_ANSWERS: GeoAnswer[] = [
     question: "Cât câștigă un apartament în regim hotelier în Timișoara?",
     answer:
       "Reperul nostru este un randament net de 9,4% pe an din capitalul total investit, calculat la o ocupare medie de 75% și după costurile de operare, impozit și Property Management RealTrust (15-20% din încasări). La un apartament de 120.000 € înseamnă aproximativ 11.280 € net pe an, adică în jur de 940 € pe lună — o estimare, nu un venit garantat: rezultatul depinde de adresă, de standardul amenajării și de sezon.",
-    source: { href: "/calculator-roi", label: "calculator de randament" },
+    source: { href: "/calculator-randament", label: "calculator de randament" },
   },
   {
     id: "randament-investitie",
@@ -137,7 +137,7 @@ export const GEO_ANSWERS: GeoAnswer[] = [
     question: "Cum se calculează ROI-ul unei investiții imobiliare?",
     answer:
       "ROI net = venitul net anual împărțit la capitalul total investit, înmulțit cu 100. Venitul net anual se obține din încasările brute estimate (tarif mediu pe noapte × nopți ocupate, sau chiria lunară × 12) minus costurile operaționale, impozitul și comisionul de administrare; capitalul total investit include prețul de achiziție, taxele notariale și de intabulare, amenajarea și dotarea. Ipoteza noastră implicită este o ocupare de 75%.",
-    source: { href: "/calculator-roi", label: "calculul pas cu pas al randamentului" },
+    source: { href: "/calculator-randament", label: "calculul pas cu pas al randamentului" },
   },
   {
     id: "cum-aleg-apartament-investitie",
@@ -172,7 +172,7 @@ export const GEO_ANSWERS: GeoAnswer[] = [
     question: "Cum arată cash-flow-ul lunar al unui apartament în regim hotelier?",
     answer:
       "Cash-flow-ul lunar = încasările lunii minus comisioanele platformelor, curățenia și lenjeria, consumabilele, utilitățile, taxa hotelieră, impozitul, comisionul de administrare și, dacă există, rata la credit. Este neuniform pe parcursul anului: lunile de vârf acoperă lunile slabe, așa că un apartament în regim hotelier se judecă pe an întreg, nu pe o lună.",
-    source: { href: "/calculator-roi", label: "simulare de venit lunar" },
+    source: { href: "/calculator-randament", label: "simulare de venit lunar" },
   },
   {
     id: "finantare",

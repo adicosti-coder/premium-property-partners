@@ -76,7 +76,7 @@ function detectPageType(p: string): string {
   if (p.startsWith("/proprietate/")) return "property_detail";
   if (p.startsWith("/blog/")) return "article";
   if (p.startsWith("/cartiere")) return "neighborhood";
-  if (p.startsWith("/calculator-roi") || p.startsWith("/analiza-roi-apartament")) return "tool";
+  if (p.startsWith("/calculator-randament") || p.startsWith("/analiza-roi-apartament")) return "tool";
   return "general";
 }
 

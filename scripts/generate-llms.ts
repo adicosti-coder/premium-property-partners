@@ -191,7 +191,7 @@ function build(props: Prop[]): string {
   for (const [label, path] of [
     ["Pentru proprietari (administrare regim hotelier)", "/pentru-proprietari"],
     ["Pentru oaspeți (cazare)", "/cazare"],
-    ["Calculator ROI", "/calculator-roi"],
+    ["Calculator ROI", "/calculator-randament"],
     ["Catalog investiții", "/catalog-investitii"],
     ["Analiză proprietate (AI)", "/hostscan-ai"],
     ["Rezervare directă", "/rezervare"],

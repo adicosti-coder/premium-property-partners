@@ -154,7 +154,7 @@ const HOMEPAGE_SEO_BODY = `
   <p><strong>Închirieri apartamente studenți Bulevardul Vasile Pârvan</strong> — artera principală care traversează Complexul Studențesc Timișoara, oferind acces direct (sub 5 minute pe jos) la UVT — Universitatea de Vest, Politehnica Timișoara (UPT) și UMF „Victor Babeș". Apartamente cu 1, 2 și 3 camere mobilate, contracte 9–12 luni cu utilități incluse, internet de mare viteză și verificare proprietar pentru siguranța studenților și părinților.</p>
 
   <h3>Randament chirie Timișoara — comparație termen lung vs regim hotelier</h3>
-  <p><strong>Randament chirie Timișoara</strong>: chirie clasică pe termen lung oferă 4,5–6% anual brut (după impozit 8% și ANAF rămân 4–5,5% net), în timp ce regimul hotelier administrat de RealTrust generează un <strong>randament net estimat de 6,5–9,4%</strong> anual datorită ocupării 78–88% și ADR de 55–95 €/noapte. Vezi <a href="https://realtrust.ro/calculator-roi">calculatorul de randament</a> pentru o comparație personalizată pe proprietatea ta.</p>
+  <p><strong>Randament chirie Timișoara</strong>: chirie clasică pe termen lung oferă 4,5–6% anual brut (după impozit 8% și ANAF rămân 4–5,5% net), în timp ce regimul hotelier administrat de RealTrust generează un <strong>randament net estimat de 6,5–9,4%</strong> anual datorită ocupării 78–88% și ADR de 55–95 €/noapte. Vezi <a href="https://realtrust.ro/calculator-randament">calculatorul de randament</a> pentru o comparație personalizată pe proprietatea ta.</p>
 
   <h3>Evaluator ANEVAR Timișoara — evaluări oficiale acreditate</h3>
   <p>Pentru tranzacțiile bancare, succesiuni, partaje sau credite ipotecare colaborăm cu <strong>evaluator ANEVAR Timișoara</strong> acreditat (Asociația Națională a Evaluatorilor Autorizați din România). Rapoarte de evaluare oficiale acceptate de toate băncile (BCR, BRD, Raiffeisen, ING, Banca Transilvania), notari și instanțe — livrare 3–5 zile lucrătoare, prețuri transparente.</p>
@@ -220,7 +220,7 @@ const neighborhoods = [
     <h3>Spații comerciale &amp; terenuri ISHO Fabric</h3>
     <p>Zona include și <strong>spații comerciale Timișoara</strong> de tip street retail în ISHO Galleria și pe Bulevardul Take Ionescu, plus <strong>terenuri de vânzare Timișoara</strong> intravilan în Fabric pentru dezvoltări mici. RealTrust intermediază închirieri și vânzări pentru investitori interesați de yield comercial 7–9% net.</p>
     <h3>Piața imobiliară Timișoara — context ISHO</h3>
-    <p><strong>Piața imobiliară Timișoara</strong> crește anual cu 5–8% în 2025–2026, iar ISHO este pol de creștere cu apreciere peste medie. Vezi <a href="https://realtrust.ro/piata-imobiliara-timisoara">analiza completă a pieței</a> și <a href="https://realtrust.ro/calculator-roi">calculatorul de randament</a>.</p>
+    <p><strong>Piața imobiliară Timișoara</strong> crește anual cu 5–8% în 2025–2026, iar ISHO este pol de creștere cu apreciere peste medie. Vezi <a href="https://realtrust.ro/piata-imobiliara-timisoara">analiza completă a pieței</a> și <a href="https://realtrust.ro/calculator-randament">calculatorul de randament</a>.</p>
   ` },
   { slug: 'iosefin', name: 'Iosefin', fullName: 'Iosefin', avgPrice: 1850, faq: [
     { q: 'Care este prețul mediu pe metru pătrat în Iosefin Timișoara?', a: 'Prețurile apartamentelor în Iosefin variază între 1.700 și 2.100 €/mp (medie 1.850 €/mp). Garsonierele se tranzacționează între 60.000 și 75.000 €.' },
@@ -239,7 +239,7 @@ const neighborhoods = [
     <h3>Puncte de interes lângă Iosefin</h3>
     <p><strong>Piața Iosefin</strong> (reper comercial, 2 min), <strong>Sinagoga din Iosefin</strong> (monument istoric, 5 min), Catedrala Romano-Catolică (3 min), malul Begăi (1 min), Piața Unirii (8 min pe jos), Gara de Nord (5 min), UVT (10 min cu tramvaiul de pe Bulevardul 16 Decembrie 1989), Iulius Town (10 min).</p>
     <h3>Apartamente de închiriat Iosefin Timișoara</h3>
-    <p>Pentru chirie clasică, Iosefin atrage expați, profesioniști creativi și familii tinere. Chirie medie 1 cameră: 380–480 €/lună; 2 camere: 520–680 €/lună. Pentru regim hotelier, ocupare 78–85% și ADR 55–80€/noapte. Vezi <a href="https://realtrust.ro/calculator-roi">calculatorul de randament</a> și <a href="https://realtrust.ro/piata-imobiliara-timisoara">analiza pieței Timișoara</a>.</p>
+    <p>Pentru chirie clasică, Iosefin atrage expați, profesioniști creativi și familii tinere. Chirie medie 1 cameră: 380–480 €/lună; 2 camere: 520–680 €/lună. Pentru regim hotelier, ocupare 78–85% și ADR 55–80€/noapte. Vezi <a href="https://realtrust.ro/calculator-randament">calculatorul de randament</a> și <a href="https://realtrust.ro/piata-imobiliara-timisoara">analiza pieței Timișoara</a>.</p>
   ` },
   { slug: 'elisabetin', name: 'Elisabetin', fullName: 'Elisabetin', avgPrice: 1820, faq: [
     { q: 'Ce face Elisabetin un cartier premium?', a: 'Elisabetin se distinge prin arhitectura interbelică, vile elegante, Parcul Rozelor și o densitate ridicată de cafenele și restaurante de autor. Atmosferă rezidențială liniștită la 10 minute pietonal de Piața Victoriei.' },
@@ -249,7 +249,7 @@ const neighborhoods = [
     <h2>Apartamente în Elisabetin, Timișoara — cartier rezidențial premium</h2>
     <p><strong>Elisabetin</strong> este unul dintre cele mai elegante cartiere rezidențiale ale Timișoarei, recunoscut pentru vilele interbelice, străzile umbrite și atmosfera liniștită. Situat la sud de centrul istoric, oferă acces pietonal de 10 minute spre Piața Victoriei și legătură directă de tramvai către UVT și UPT.</p>
     <h3>Prețuri și randament</h3>
-    <p>Prețul mediu este de aproximativ 1.820 €/mp. Zona include Parcul Rozelor și o densitate ridicată de cafenele specialty, ceea ce susține ocuparea în regim hotelier și randamente nete de 7–9%. Vezi <a href="https://realtrust.ro/calculator-roi">calculatorul de randament</a> și <a href="https://realtrust.ro/cartiere">celelalte cartiere</a>.</p>
+    <p>Prețul mediu este de aproximativ 1.820 €/mp. Zona include Parcul Rozelor și o densitate ridicată de cafenele specialty, ceea ce susține ocuparea în regim hotelier și randamente nete de 7–9%. Vezi <a href="https://realtrust.ro/calculator-randament">calculatorul de randament</a> și <a href="https://realtrust.ro/cartiere">celelalte cartiere</a>.</p>
   ` },
   { slug: 'dumbravita', name: 'Dumbrăvița', fullName: 'Dumbrăvița', avgPrice: 1680, faq: [
     { q: 'Care este prețul mediu pe metru pătrat în Dumbrăvița?', a: 'Apartamente noi 1.680 €/mp, cu 15–20% sub media Timișoara. Case și vile între 180.000 și 380.000 €.' },
@@ -281,7 +281,7 @@ const neighborhoods = [
     <h3>Piața imobiliară Dumbrăvița — analiză 2026</h3>
     <p>Dumbrăvița a crescut cu ~6% în 2025, susținută de cererea familiilor tinere și a profesioniștilor IT relocați. Preț mediu apartamente noi: 1.680 €/mp (vs. 2.000+ €/mp în Centru). Comparativ cu Giroc (1.650 €/mp) și Moșnița Nouă (1.580 €/mp), Dumbrăvița oferă cea mai bună infrastructură și acces la aeroport.</p>
 
-    <p>Vezi <a href="https://realtrust.ro/calculator-roi">calculatorul de randament</a> și <a href="https://realtrust.ro/evaluare-gratuita">evaluarea gratuită</a> pentru proprietățile tale din Dumbrăvița.</p>
+    <p>Vezi <a href="https://realtrust.ro/calculator-randament">calculatorul de randament</a> și <a href="https://realtrust.ro/evaluare-gratuita">evaluarea gratuită</a> pentru proprietățile tale din Dumbrăvița.</p>
   ` },
   { slug: 'giroc', name: 'Giroc', fullName: 'Giroc', avgPrice: 1620, faq: [
     { q: 'Care este prețul mediu pe metru pătrat în Giroc?', a: 'Apartamente 1.500–1.800 €/mp (medie 1.620 €/mp). Case 165.000–320.000 €. Terenuri intravilane 70–130 €/mp.' },
@@ -316,7 +316,7 @@ const neighborhoods = [
     <h3>Avantaje și dezavantaje Giroc</h3>
     <p><strong>Avantaje</strong>: liniște, spațiu verde abundent (lacul Giroc, parcuri), aer curat, taxe locale mai mici, școli bune. <strong>Dezavantaje</strong>: trafic aglomerat dimineața pe DJ595, distanță față de Centrul Vechi (10–25 min).</p>
 
-    <p>Vezi <a href="https://realtrust.ro/calculator-roi">calculatorul de randament</a> și <a href="https://realtrust.ro/evaluare-gratuita">evaluarea gratuită</a> pentru proprietățile tale din Giroc.</p>
+    <p>Vezi <a href="https://realtrust.ro/calculator-randament">calculatorul de randament</a> și <a href="https://realtrust.ro/evaluare-gratuita">evaluarea gratuită</a> pentru proprietățile tale din Giroc.</p>
   ` },
 ];
 
@@ -990,17 +990,20 @@ function buildStaticRoutes(): PrerenderRoute[] {
 
   // Calculator ROI
   routes.push({
-    path: '/calculator-roi',
-    title: 'Calculator ROI Regim Hotelier vs Chirie Clasică | RealTrust',
-    description: 'Calculează randamentul apartamentului tău: regim hotelier vs chirie clasică. Compară veniturile lunare și ROI-ul anual cu management RealTrust.',
-    h1: 'Calculator ROI — Regim Hotelier',
-    canonical: `${BASE_URL}/calculator-roi`,
+    path: '/calculator-randament',
+    title: 'Randament imobiliar Timișoara: chirie vs hotelier | RealTrust',
+    description: 'Calculator de randament imobiliar Timișoara: compară chiria vs regimul hotelier pe chirii reale din fiecare zonă. Afli venitul net lunar estimat în 3 pași.',
+    h1: 'Calculator de randament imobiliar în Timișoara: regim hotelier vs. chirie clasică',
+    canonical: `${BASE_URL}/calculator-randament`,
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'WebApplication',
-      name: 'Calculator ROI RealTrust',
-      description: 'Calculator randament investiție imobiliară regim hotelier vs chirie clasică Timișoara',
-      url: `${BASE_URL}/calculator-roi`,
+      name: 'Calculator de randament imobiliar Timișoara',
+      description: 'Calculator randament imobiliar Timișoara: chirie vs hotelier, venit net lunar estimat pe zone',
+      operatingSystem: 'Web',
+      inLanguage: 'ro-RO',
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
+      url: `${BASE_URL}/calculator-randament`,
       applicationCategory: 'FinanceApplication',
     },
   });
@@ -1359,7 +1362,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       <p>Modelul nostru de <strong>regim hotelier Timișoara</strong> generează randament net estimat 6,5–9,4% pe portofoliul activ (15 apartamente). Include marketing pe Booking, Airbnb și platforme directe, check-in / check-out 24/7, curățenie hotelieră, mentenanță, raportare lunară și yield management dinamic. Comision 15–20% management + 15–23% comision platforme. Capital necesar de la 75.000 € pentru o garsonieră în Centru sau Complex Studențesc.</p>
 
       <h3>Calculator taxe notariale și costuri tranzacție</h3>
-      <p>Costurile complete pentru cumpărarea unui apartament în Timișoara includ: <strong>onorariu notarial</strong> (~1% din valoarea tranzacției, conform grilei Camerei Notarilor Timiș), <strong>impozit pe tranzacție</strong> (3% peste 450.000 RON pentru proprietăți deținute sub 3 ani de vânzător; 1% peste 3 ani — suportat de vânzător), <strong>taxe ANCPI</strong> (intabulare ~0,15% + tarife fixe), <strong>comision agenție</strong> (2% RealTrust). Exemplu: pentru un apartament de 100.000 €, costurile suplimentare ale cumpărătorului sunt aproximativ 3.500–4.500 €. Folosește <a href="${BASE_URL}/calculator-roi" tabindex="-1">calculatorul ROI</a> pentru proiecția completă a investiției.</p>
+      <p>Costurile complete pentru cumpărarea unui apartament în Timișoara includ: <strong>onorariu notarial</strong> (~1% din valoarea tranzacției, conform grilei Camerei Notarilor Timiș), <strong>impozit pe tranzacție</strong> (3% peste 450.000 RON pentru proprietăți deținute sub 3 ani de vânzător; 1% peste 3 ani — suportat de vânzător), <strong>taxe ANCPI</strong> (intabulare ~0,15% + tarife fixe), <strong>comision agenție</strong> (2% RealTrust). Exemplu: pentru un apartament de 100.000 €, costurile suplimentare ale cumpărătorului sunt aproximativ 3.500–4.500 €. Folosește <a href="${BASE_URL}/calculator-randament" tabindex="-1">calculatorul ROI</a> pentru proiecția completă a investiției.</p>
 
       <h3>Credit ipotecar Timișoara — finanțare investiții</h3>
       <p>Consultanță gratuită <strong>credit ipotecar Timișoara</strong> prin parteneriatele cu BCR, BRD, Raiffeisen, ING și Banca Transilvania. Pentru investiții optime: avans 25–35%, perioadă 25–30 ani, DAE competitiv 6,5–7,5% (aprilie 2026). Te ajutăm să compari ofertele și să optimizezi structura financiară pentru maximizarea cash-flow-ului lunar.</p>
@@ -1670,7 +1673,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   proprietate: 'Proprietăți',
   'imobiliare-timisoara': 'Cartiere',
   complexe: 'Ansambluri rezidențiale',
-  'calculator-roi': 'Calculator ROI',
+  'calculator-randament': 'Calculator de randament imobiliar',
   'analiza-roi-apartament': 'Analiză ROI apartament',
   'piata-imobiliara-timisoara': 'Piața imobiliară Timișoara',
   'evaluare-gratuita': 'Evaluare gratuită',

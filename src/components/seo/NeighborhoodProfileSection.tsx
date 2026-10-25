@@ -108,7 +108,7 @@ const NeighborhoodProfileSection = ({ profile }: { profile: NeighborhoodProfile 
         Ipoteze publice folosite în analizele noastre: ocupare 75%,
         randament net de referință 9,4%. Prețul mediu pe metru pătrat afișat pe această pagină este
         un indice intern RealTrust, nu o cotație oficială de piață. Verifică scenariul tău în{" "}
-        <Link to="/calculator-roi" className="text-primary underline underline-offset-2">
+        <Link to="/calculator-randament" className="text-primary underline underline-offset-2">
           analiza de randament
         </Link>
         .

@@ -61,7 +61,7 @@ serve(async (req) => {
     const isRo = (language ?? "ro") === "ro";
     const siteUrl = "https://www.realtrust.ro";
     const guideUrl = `${siteUrl}/blog/ghid-investitii-imobiliare-timisoara-2026`;
-    const calcUrl = `${siteUrl}/calculator-roi`;
+    const calcUrl = `${siteUrl}/calculator-randament`;
     const whatsappUrl = "https://wa.me/40733558454?text=" + encodeURIComponent(
       isRo
         ? "Bună! Am descărcat Ghidul Investitorului 2026 și aș dori o consultanță."

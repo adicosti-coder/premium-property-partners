@@ -804,7 +804,7 @@ const TaxOptimizationSection = () => {
               <ArrowRight className="w-4 h-4" />
             </Button>
             <Button asChild variant="outline" size="lg">
-              <Link to="/calculator-roi">{t.cta.secondary}</Link>
+              <Link to="/calculator-randament">{t.cta.secondary}</Link>
             </Button>
           </div>
         </div>

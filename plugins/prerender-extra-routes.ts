@@ -462,7 +462,7 @@ export function buildComplexRoutes(
         <h2>Servicii RealTrust în ${esc(c.name)}</h2>
         <ul>
           <li>Administrare apartamente în regim hotelier sub brandul ApArt Hotel by RealTrust</li>
-          <li>Analiză de randament și <a href="${BASE_URL}/calculator-roi">calculator ROI</a></li>
+          <li>Analiză de randament și <a href="${BASE_URL}/calculator-randament">calculator ROI</a></li>
           <li>Vânzări și închirieri prin <a href="${BASE_URL}/servicii-imobiliare">serviciile imobiliare RealTrust</a></li>
         </ul>
         <p>Vezi toate <a href="${BASE_URL}/ansambluri-rezidentiale">ansamblurile rezidențiale</a> și <a href="${BASE_URL}/cartiere">cartierele din Timișoara</a>. Contact: +40 799 069 256, info@realtrust.ro.</p>
@@ -540,7 +540,7 @@ export function buildRemainingStaticRoutes(): ExtraRoute[] {
         <li><strong>Standard — 20%</strong> din venitul încasat</li>
       </ul>
       <p>Comisionul se aplică la venitul efectiv încasat, fără costuri ascunse. Ipotezele folosite în proiecțiile noastre: randament net țintă 9,4%, ocupare medie 75% și 27% deduceri pentru management și taxe.</p>
-      <p>Vezi <a href="${BASE_URL}/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara">cât costă administrarea unui apartament în regim hotelier</a>, <a href="${BASE_URL}/pentru-proprietari">serviciul complet pentru proprietari</a> și <a href="${BASE_URL}/calculator-roi">calculatorul de randament</a>.</p>
+      <p>Vezi <a href="${BASE_URL}/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara">cât costă administrarea unui apartament în regim hotelier</a>, <a href="${BASE_URL}/pentru-proprietari">serviciul complet pentru proprietari</a> și <a href="${BASE_URL}/calculator-randament">calculatorul de randament</a>.</p>
       `,
       'WebPage',
       { about: { '@type': 'Service', name: 'Administrare apartamente în regim hotelier', areaServed: 'Timișoara' } },
@@ -565,7 +565,7 @@ export function buildRemainingStaticRoutes(): ExtraRoute[] {
       `
       <p>${ENTITY_SHORT}</p>
       <p>Fiecare oportunitate din catalog include zona, tipul de apartament, capitalul necesar și randamentul estimat. Proiecțiile pornesc de la ipotezele publicate: 9,4% randament net țintă, 75% ocupare medie și 27% deduceri pentru management și taxe.</p>
-      <p>Vezi <a href="${BASE_URL}/investitii">pagina de investiții</a>, <a href="${BASE_URL}/zone-investitii-timisoara">zonele recomandate pentru investiții</a> și <a href="${BASE_URL}/calculator-roi">calculatorul de randament</a>.</p>
+      <p>Vezi <a href="${BASE_URL}/investitii">pagina de investiții</a>, <a href="${BASE_URL}/zone-investitii-timisoara">zonele recomandate pentru investiții</a> și <a href="${BASE_URL}/calculator-randament">calculatorul de randament</a>.</p>
       `,
       'CollectionPage',
     ),

@@ -25,7 +25,7 @@ const BodySchema = z.object({
   situatie_actuala: z.string().trim().max(40).optional(),
   tip_administrare: z.string().trim().max(40).optional(),
   observatii: z.string().trim().max(500).optional(),
-  // Calculatorul ROI (/calculator-roi).
+  // Calculatorul ROI (/calculator-randament).
   email: z.string().trim().email().max(255).optional(),
   parcare: z.boolean().optional(),
   finisaje: z.enum(["standard", "premium"]).optional(),

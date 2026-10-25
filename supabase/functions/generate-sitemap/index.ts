@@ -74,7 +74,7 @@ serve(async (req: Request) => {
       { url: "/catalog-investitii", priority: "0.7", changefreq: "weekly" },
       { url: "/contact", priority: "0.7", changefreq: "monthly" },
       { url: "/adauga-anunt", priority: "0.6", changefreq: "monthly" },
-      { url: "/calculator-roi", priority: "0.8", changefreq: "weekly" },
+      { url: "/calculator-randament", priority: "0.8", changefreq: "weekly" },
       { url: "/evaluare-gratuita", priority: "0.7", changefreq: "monthly" },
       
       { url: "/piata-imobiliara-timisoara", priority: "0.7", changefreq: "weekly" },

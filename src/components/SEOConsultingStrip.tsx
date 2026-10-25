@@ -33,7 +33,7 @@ export function SEOConsultingStrip() {
         : "Free apartment valuation in Timișoara with a detailed 24h report: market price, recent comparables and listing recommendations.",
     },
     {
-      to: "/calculator-roi",
+      to: "/calculator-randament",
       icon: LineChart,
       h3: isRo ? "Randament închiriere Timișoara" : "Rental yield Timișoara",
       desc: isRo

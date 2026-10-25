@@ -395,7 +395,7 @@ const Blog = () => {
                 Articolele noastre acoperă <strong>prețurile imobiliare Timișoara</strong> pe cartiere, <strong>evoluția pieței imobiliare Timișoara</strong> și <strong>randamentul chiriei</strong> — clasic vs regim hotelier. Ghiduri practice pentru investitori, proprietari și angajați ai hub-urilor business: <Link to="/imobiliare-timisoara/zona-aradului" className="text-primary hover:underline">apartamente lângă Continental Timișoara</Link>, zona <strong>Pădurea Verde</strong>, cazare lângă <strong>Spitalul Premiere</strong> și Spitalul Județean.
               </p>
               <div className="flex flex-wrap gap-2 text-sm">
-                <Link to="/calculator-roi" className="rounded-full border border-border bg-background px-3 py-1.5 hover:border-primary/40 hover:text-primary transition-colors">
+                <Link to="/calculator-randament" className="rounded-full border border-border bg-background px-3 py-1.5 hover:border-primary/40 hover:text-primary transition-colors">
                   Calculator de randament imobiliar
                 </Link>
                 <Link to="/piata-imobiliara-timisoara" className="rounded-full border border-border bg-background px-3 py-1.5 hover:border-primary/40 hover:text-primary transition-colors">

@@ -107,7 +107,7 @@ export const BLOG_CATEGORIES: BlogCategoryMeta[] = [
       "fiscalitate Airbnb România",
     ],
     ctaLabel: "Calculator de randament net",
-    ctaHref: "/calculator-roi",
+    ctaHref: "/calculator-randament",
   },
 ];
 

@@ -164,12 +164,12 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/adauga-anunt" />
   </url>
 <url>
-    <loc>https://realtrust.ro/calculator-roi</loc>
+    <loc>https://realtrust.ro/calculator-randament</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/calculator-roi" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/calculator-roi" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/calculator-roi" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/calculator-randament" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/calculator-randament" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/calculator-randament" />
   </url>
 <url>
     <loc>https://realtrust.ro/evaluare-gratuita</loc>
