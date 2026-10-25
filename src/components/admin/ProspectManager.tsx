@@ -194,7 +194,7 @@ const QUICK_REPLY_CATEGORIES = [
         label: '👋 Prim contact dezvoltator',
         icon: MessageSquare,
         getMessage: (l: ProspectListing) => {
-          return `Bună ziua! 👋\n\nSunt de la RealTrust ApartHotel — administrăm apartamente în regim hotelier în Timișoara.\n\nAm văzut proiectul dvs. din ${l.zone || 'Timișoara'} și cred că apartamentele ar avea un randament excelent în regim hotelier.\n\n🏠 Putem prelua blocuri întregi sau apartamente individuale\n📈 ROI 8-12% anual pentru investitori\n🤝 Parteneriat exclusiv pe complex\n\nAți fi deschis(ă) la o întâlnire de 30 min pentru a discuta posibilitățile? 🏗️`;
+          return `Bună ziua! 👋\n\nSunt de la RealTrust ApartHotel — administrăm apartamente în regim hotelier în Timișoara.\n\nAm văzut proiectul dvs. din ${l.zone || 'Timișoara'} și cred că apartamentele ar avea un randament excelent în regim hotelier.\n\n🏠 Putem prelua blocuri întregi sau apartamente individuale\n📈 randament 8-12% anual pentru investitori\n🤝 Parteneriat exclusiv pe complex\n\nAți fi deschis(ă) la o întâlnire de 30 min pentru a discuta posibilitățile? 🏗️`;
         },
       },
       {
@@ -202,7 +202,7 @@ const QUICK_REPLY_CATEGORIES = [
         label: '🔄 Follow-up dezvoltator',
         icon: Clock,
         getMessage: (l: ProspectListing) => {
-          return `Bună ziua! 😊\n\nRevenim cu propunerea pentru complexul din ${l.zone || 'Timișoara'}.\n\nAm pregătit o analiză de randament pentru apartamentele tip studio și 2 camere. Rezultatele arată:\n\n📊 Studio: 900-1.300€/lună net\n📊 2 camere: 1.200-1.800€/lună net\n📊 ROI: 9-12% anual\n\nPutem organiza o prezentare la sediul dvs.? Durează max 30 minute. 📅`;
+          return `Bună ziua! 😊\n\nRevenim cu propunerea pentru complexul din ${l.zone || 'Timișoara'}.\n\nAm pregătit o analiză de randament pentru apartamentele tip studio și 2 camere. Rezultatele arată:\n\n📊 Studio: 900-1.300€/lună net\n📊 2 camere: 1.200-1.800€/lună net\n📊 randament: 9-12% anual\n\nPutem organiza o prezentare la sediul dvs.? Durează max 30 minute. 📅`;
         },
       },
       {

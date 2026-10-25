@@ -56,7 +56,7 @@ const ROICaseStudySection = () => {
       perMonth: "/lună",
       occupancy: "Ocupare",
       increase: "creștere",
-      roi: "ROI anual",
+      roi: "Randament anual",
     },
     en: {
       badge: "Real Case Studies",

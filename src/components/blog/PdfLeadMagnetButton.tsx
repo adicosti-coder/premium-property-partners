@@ -23,8 +23,8 @@ const PdfLeadMagnetButton = () => {
       </h3>
       <p className="text-sm md:text-base text-muted-foreground max-w-md mx-auto mb-5">
         {language === "ro"
-          ? "Ghidul Investițiilor Timișoara 2026 — 24 pagini cu grafice ROI, yield lunar și prognoze pe cartiere."
-          : "Timișoara Investment Guide 2026 — 24 pages with ROI charts, monthly yield and neighborhood forecasts."}
+          ? "Ghidul Investițiilor Timișoara 2026 — 24 pagini cu grafice randament, yield lunar și prognoze pe cartiere."
+          : "Timișoara Investment Guide 2026 — 24 pages with randament charts, monthly yield and neighborhood forecasts."}
       </p>
       <Button onClick={open} variant="hero" size="lg">
         <FileDown className="w-5 h-5 mr-2" />

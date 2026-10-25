@@ -201,7 +201,7 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
       a.camere ? `Camere: ${a.camere}` : null,
       a.pret_listare ? `Preț listare: ${a.pret_listare} ${a.moneda || "EUR"}` : null,
       typeof a.scor === "number" ? `Scor AI: ${a.scor}/${a.max_scor || 100}` : null,
-      a.roi_estimat ? `ROI estimat AI: ${a.roi_estimat}` : null,
+      a.roi_estimat ? `Randament estimat AI: ${a.roi_estimat}` : null,
       result.sourceUrl ? `Link anunț: ${result.sourceUrl}` : null,
       result.mode === "photos" ? `Fotografii analizate: ${result.photoCount}` : null,
     ]
@@ -381,7 +381,7 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {[
                     { label: "Tarif/noapte", value: fmt(result.analysis.tarif_noapte, " RON") },
-                    { label: "ROI estimat", value: result.analysis.roi_estimat || "—" },
+                    { label: "Randament estimat", value: result.analysis.roi_estimat || "—" },
                     { label: "Preț listare", value: `${fmt(result.analysis.pret_listare)} ${result.analysis.moneda || ""}`.trim() },
                   ].map((m) => (
                     <div key={m.label} className="rounded-lg border border-border p-3">

@@ -65,7 +65,7 @@ const MainNavigationCards = () => {
         {
           icon: TrendingUp,
           title: "Investiții imobiliare",
-          description: "Catalog verificat, analiză ROI și deal-room.\nDecizii bazate pe date, nu pe promisiuni.",
+          description: "Catalog verificat, analiză randament și deal-room.\nDecizii bazate pe date, nu pe promisiuni.",
           cta: "Vezi oportunitățile",
           link: "/investitii",
           accent: "from-purple-500/20 to-purple-600/5",

@@ -344,7 +344,7 @@ const QUICK_REPLY_CATEGORIES = [
     replies: [
       {
         id: "dev-intro", label: "👋 Prim contact", icon: MessageCircle,
-        getMessage: () => `Bună ziua! 👋\n\nAdministrăm apartamente în regim hotelier în Timișoara.\n\n🏠 Preluăm blocuri sau apartamente individuale\n📈 ROI 8-12% anual\n🤝 Parteneriat exclusiv pe complex\n\nAți fi deschis la o întâlnire de 30 min? 🏗️`,
+        getMessage: () => `Bună ziua! 👋\n\nAdministrăm apartamente în regim hotelier în Timișoara.\n\n🏠 Preluăm blocuri sau apartamente individuale\n📈 randament 8-12% anual\n🤝 Parteneriat exclusiv pe complex\n\nAți fi deschis la o întâlnire de 30 min? 🏗️`,
       },
       {
         id: "dev-bulk", label: "📦 Ofertă bloc", icon: CalendarCheck,

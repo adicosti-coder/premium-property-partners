@@ -728,7 +728,7 @@ const AdaugaAnunt = () => {
                   <p className="text-[11px] text-muted-foreground -mt-1">
                     {language === "en"
                       ? "Fill in financial data to auto-calculate ROI. Listings with ROI ≥ 70% are auto-tagged as excellent investment opportunities."
-                      : "Completează datele financiare pentru calculul automat al ROI. Anunțurile cu ROI ≥ 70% primesc automat tag-ul ROI_EXCELENT."}
+                      : "Completează datele financiare pentru calculul automat al randament. Anunțurile cu randament ≥ 70% primesc automat tag-ul ROI_EXCELENT."}
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="space-y-1.5">

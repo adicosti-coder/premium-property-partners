@@ -241,7 +241,7 @@ export const FINANCIAL_SERVICE_SCHEMA = {
         "@type": "Offer",
         itemOffered: {
           "@type": "Service",
-          name: "Analiză ROI apartament",
+          name: "Analiză Randament apartament",
           description:
             "Proiecție de venit și randament net pentru un apartament dat în regim hotelier, pe ipoteze publice.",
         },

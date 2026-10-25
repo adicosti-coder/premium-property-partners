@@ -150,7 +150,7 @@ const InvestorGuideButton = ({
             </p>
             <ul className="space-y-1 text-xs text-muted-foreground">
               <li>📊 {isRo ? "Analiza Pieței Timișoara 2026" : "Timișoara Market Analysis 2026"}</li>
-              <li>💰 {isRo ? "ROI: Hotelier vs Clasic (cu cifre reale)" : "ROI: Hotel-style vs Classic (real numbers)"}</li>
+              <li>💰 {isRo ? "Randament: Hotelier vs Clasic (cu cifre reale)" : "ROI: Hotel-style vs Classic (real numbers)"}</li>
               <li>🎯 {isRo ? "Strategii pentru +30% profit" : "Strategies for +30% profit"}</li>
               <li>📍 {isRo ? "Zone premium cu randament maxim" : "Premium zones with maximum returns"}</li>
             </ul>

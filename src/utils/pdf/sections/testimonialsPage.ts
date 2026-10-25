@@ -25,7 +25,7 @@ export const drawTestimonialsPage = (ctx: PdfContext) => {
           name: "Maria P.",
           role: "Investitor — 1 apartament",
           stars: 5,
-          text: "Am cumpărat apartamentul prin recomandarea lor și în 3 luni era deja listat și genera venit. ROI-ul a depășit 9% în primul an. Recomand cu încredere!",
+          text: "Am cumpărat apartamentul prin recomandarea lor și în 3 luni era deja listat și genera venit. randamentul a depășit 9% în primul an. Recomand cu încredere!",
           months: 11,
         },
         {

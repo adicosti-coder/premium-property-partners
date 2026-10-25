@@ -121,7 +121,7 @@ const zones: Record<string, ZoneData> = {
     descriptionEn: "Fabric is Timișoara's fastest-growing neighborhood, with massive infrastructure investments and a unique mix of renovated historic buildings and new projects. Purchase prices are 20-30% lower than downtown, but hospitality income is comparable.",
     highlights: [
       "Prețuri de achiziție cu 20-30% sub centru",
-      "ROI superior: 10-12% anual",
+      "Randament superior: 10-12% anual",
       "Investiții masive în infrastructură",
       "Rata de ocupare: 82-90%",
       "Venit mediu: €750-1.100/lună",
@@ -138,10 +138,10 @@ const zones: Record<string, ZoneData> = {
     rating: "4.7",
     seoTitle: "Cazare Regim Hotelier Fabric & Aradului Timișoara",
     seoTitleEn: "Hotel-Regime Accommodation Fabric & Aradului Timișoara",
-    seoDescription: "Cazare regim hotelier în Fabric Timișoara — apartamente renovate lângă Calea Aradului, ROI 10%+, prețuri accesibile, potențial maxim de creștere.",
-    seoDescriptionEn: "Hotel-regime accommodation in Fabric Timișoara — renovated apartments near Aradului, ROI 10%+, affordable prices, maximum growth potential.",
-    summaryRo: "Cazare regim hotelier în Fabric Timișoara: apartamente renovate cu ROI 10%+, prețuri cu 20-30% sub centru. Cartierul cu cel mai mare potențial de creștere din Timișoara.",
-    summaryEn: "Hotel-regime accommodation in Fabric Timișoara: renovated apartments with 10%+ ROI, prices 20-30% below downtown. Timișoara's highest growth potential neighborhood.",
+    seoDescription: "Cazare regim hotelier în Fabric Timișoara — apartamente renovate lângă Calea Aradului, randament 10%+, prețuri accesibile, potențial maxim de creștere.",
+    seoDescriptionEn: "Hotel-regime accommodation in Fabric Timișoara — renovated apartments near Aradului, randament 10%+, affordable prices, maximum growth potential.",
+    summaryRo: "Cazare regim hotelier în Fabric Timișoara: apartamente renovate cu randament 10%+, prețuri cu 20-30% sub centru. Cartierul cu cel mai mare potențial de creștere din Timișoara.",
+    summaryEn: "Hotel-regime accommodation in Fabric Timișoara: renovated apartments with 10%+ randament, prices 20-30% below downtown. Timișoara's highest growth potential neighborhood.",
   },
 };
 

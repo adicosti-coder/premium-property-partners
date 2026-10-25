@@ -33,7 +33,7 @@ const DualServicePaths = () => {
           question: "Vrei să investești?",
           subtitle: "Cumpără inteligent, profită de pe prima zi",
           description: "Te ghidăm de la achiziție la amenajare și operare — cu analize de randament reale, strategii de maximizare și acces la oferte premium din proiecte noi.",
-          benefits: ["ROI estimat 8-12% anual", "Analiză completă de piață", "Sistem all-inclusive de operare"],
+          benefits: ["Randament estimat 8-12% anual", "Analiză completă de piață", "Sistem all-inclusive de operare"],
           cta: "Vreau investiție profitabilă",
           link: "/investitii",
         },

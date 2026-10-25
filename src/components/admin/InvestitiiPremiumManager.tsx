@@ -509,7 +509,7 @@ export default function InvestitiiPremiumManager() {
           </div>
           <div>
             <h2 className="text-xl font-semibold text-foreground">Investiții Premium</h2>
-            <p className="text-sm text-muted-foreground">Gestionare apartamente investiție premium cu randament și ROI</p>
+            <p className="text-sm text-muted-foreground">Gestionare apartamente investiție premium cu randament și randament</p>
           </div>
         </div>
         <Button onClick={openNew} className="gap-2">

@@ -150,7 +150,7 @@ const AnalizaProprietate = () => {
           operatingSystem: "Web",
           inLanguage: "ro-RO",
           description:
-            "Instrument gratuit care analizează linkul anunțului sau fotografiile proprietății și estimează tariful pe noapte, venitul net lunar și ROI-ul în regim hotelier în Timișoara.",
+            "Instrument gratuit care analizează linkul anunțului sau fotografiile proprietății și estimează tariful pe noapte, venitul net lunar și randamentul în regim hotelier în Timișoara.",
           offers: { "@type": "Offer", price: 0, priceCurrency: "RON" },
           areaServed: { "@type": "City", name: "Timișoara" },
         }}

@@ -111,7 +111,7 @@ const InvestmentGuideLeadModal = ({ triggerOrigin = "auto" }: InvestmentGuideLea
       }
     : {
         title: "Download the detailed PDF analysis",
-        desc: "Enter your details and we'll email the 2026 Timișoara Investment Guide (PDF, 24 pages, ROI charts).",
+        desc: "Enter your details and we'll email the 2026 Timișoara Investment Guide (PDF, 24 pages, randament charts).",
         name: "Full name",
         namePlaceholder: "e.g. Adrian Popescu",
         email: "Email",

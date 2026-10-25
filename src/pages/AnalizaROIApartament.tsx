@@ -66,7 +66,7 @@ const investmentLevers = [
 ];
 
 const decisionRules = [
-  { label: "Cumpără", threshold: "82+", text: "ROI net competitiv, ocupare bună și potențial de apreciere peste media zonei." },
+  { label: "Cumpără", threshold: "82+", text: "Randament net competitiv, ocupare bună și potențial de apreciere peste media zonei." },
   { label: "Negociază", threshold: "68–81", text: "Proprietatea poate funcționa, dar prețul, mobilarea sau costurile trebuie optimizate." },
   { label: "Evită temporar", threshold: "sub 68", text: "Riscul operațional sau prețul de intrare pot bloca randamentul net." },
 ];
@@ -79,7 +79,7 @@ const zoneCriteria = [
 ];
 
 const relatedGuides = [
-  { label: "Calculator de randament", href: "/calculator-randament", text: "Compară rapid chiria clasică și regimul hotelier." },
+  { label: "Calculator Randament Imobiliar (ROI)", href: "/calculator-randament", text: "Compară rapid chiria clasică și regimul hotelier." },
   { label: "Catalog Investiții", href: "/catalog-investitii", text: "Vezi oportunități filtrate după randament și risc." },
   { label: "Piața imobiliară", href: "/piata-imobiliara-timisoara", text: "Urmărește tendințe locale, prețuri și cerere." },
 ];
@@ -94,16 +94,16 @@ const investorChecklist = [
 const riskSignals = [
   { title: "Preț peste media zonei", text: "Un discount mic la achiziție poate reduce ani întregi de profit net." },
   { title: "Fără diferențiator pentru oaspeți", text: "Apartamentele greu de poziționat au ocupare mai volatilă și tarife mai mici." },
-  { title: "Costuri operaționale ignorate", text: "Curățenia, mentenanța și taxele trebuie scăzute înainte de a comunica ROI-ul." },
+  { title: "Costuri operaționale ignorate", text: "Curățenia, mentenanța și taxele trebuie scăzute înainte de a comunica randamentul." },
 ];
 
 const faqItems = [
   { question: "Cum se calculează randamentul unei investiții imobiliare?", answer: "Randamentul net se calculează împărțind venitul anual după costuri la valoarea totală a investiției. În analiza RealTrust includem ocuparea, tariful mediu, costurile operaționale." },
   { question: "Ce înseamnă analiză profit apartament în România?", answer: "Este o estimare completă a profitului lunar și anual pentru un apartament, comparând chiria clasică, regimul hotelier, aprecierea prețului și lichiditatea zonei." },
-  { question: "De ce sunt importante complexele rezidențiale în analiza ROI?", answer: "Complexele noi au de obicei cerere mai bună, costuri de mentenanță mai previzibile și poziționare mai ușor de promovat către oaspeți sau chiriași premium." },
+  { question: "De ce sunt importante complexele rezidențiale în analiză randament?", answer: "Complexele noi au de obicei cerere mai bună, costuri de mentenanță mai previzibile și poziționare mai ușor de promovat către oaspeți sau chiriași premium." },
   { question: "Pot folosi calculatorul pentru orice oraș din România?", answer: "Da, modelul funcționează pentru orice oraș dacă ajustezi prețul de achiziție, chiria, tariful pe noapte și ocuparea. Pentru Timișoara folosim repere operaționale verificate RealTrust." },
   { question: "Când merită cumpărat un apartament pentru investiție?", answer: "Merită analizat când randamentul net depășește chiria clasică, zona are cerere constantă, costurile sunt previzibile și există potențial de revânzare sau apreciere pe termen mediu." },
-  { question: "Ce documente sunt utile pentru o analiză ROI completă?", answer: "Sunt utile prețul final de achiziție, suprafața, planul apartamentului, costurile de mobilare, istoricul zonei, taxele lunare și obiectivul investitorului: cashflow, apreciere sau revânzare." },
+  { question: "Ce documente sunt utile pentru o analiză randament completă?", answer: "Sunt utile prețul final de achiziție, suprafața, planul apartamentului, costurile de mobilare, istoricul zonei, taxele lunare și obiectivul investitorului: cashflow, apreciere sau revânzare." },
 ];
 
 const AnalizaROIApartament = () => {
@@ -161,19 +161,19 @@ const AnalizaROIApartament = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Analiza ROI Apartament | Randament investiții imobiliare"
-        description="Calculează randamentul unei investiții imobiliare: ROI net, evoluția prețurilor și zonele potrivite pentru investiții în complexe din Timișoara."
+        title="Analiză Randament Apartament | Randament investiții imobiliare"
+        description="Calculează Randamentul Imobiliar (ROI) unei investiții imobiliare: randament net, evoluția prețurilor și zonele potrivite pentru investiții în complexe din Timișoara."
         url="https://realtrust.ro/analiza-roi-apartament"
         breadcrumbItems={[
           { name: "Acasă", url: "https://realtrust.ro" },
-          { name: "Analiza ROI Apartament", url: "https://realtrust.ro/analiza-roi-apartament" },
+          { name: "Analiză Randament Apartament", url: "https://realtrust.ro/analiza-roi-apartament" },
         ]}
         jsonLd={{
           "@context": "https://schema.org",
           "@graph": [
             {
               "@type": "FinancialProduct",
-              name: "Analiza ROI Apartament România",
+              name: "Analiză Randament Apartament România",
               description: "Calculator interactiv pentru randament investiții imobiliare, profit apartament și proiecții de apreciere a prețurilor în România.",
               url: "https://realtrust.ro/analiza-roi-apartament",
               provider: { ...REAL_ESTATE_AGENT_REF, areaServed: "România" },
@@ -203,7 +203,7 @@ const AnalizaROIApartament = () => {
       <main className="pt-24 pb-16">
         <section className="border-b border-border bg-gradient-to-b from-background to-muted/40">
           <div className="container mx-auto px-4 py-10 md:py-16">
-            <PageBreadcrumb items={[{ label: "Analiza ROI Apartament" }]} className="mb-8" />
+            <PageBreadcrumb items={[{ label: "Analiză Randament Apartament" }]} className="mb-8" />
             <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
               <div>
                 <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
@@ -216,12 +216,12 @@ const AnalizaROIApartament = () => {
                   Estimează profitul net al unui apartament, compară chiria clasică cu administrarea în regim hotelier și verifică evoluția prețurilor pe zone cu cerere ridicată.
                 </p>
                 <div className="mt-7 flex flex-wrap gap-3">
-                  <Button asChild size="lg"><a href="#calculator">Calculează randamentul</a></Button>
+                  <Button asChild size="lg"><a href="#calculator">Calculează Randamentul Imobiliar (ROI)</a></Button>
                   <Button asChild size="lg" variant="outline"><Link to="/ansambluri-rezidentiale">Vezi Complexe <ArrowRight className="h-4 w-4" /></Link></Button>
                 </div>
               </div>
               <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-                <Card className="border-primary/20 bg-primary/5"><CardContent className="p-5"><p className="text-sm text-muted-foreground">ROI net estimat</p><p className="mt-1 text-3xl font-bold text-primary">9.4%</p></CardContent></Card>
+                <Card className="border-primary/20 bg-primary/5"><CardContent className="p-5"><p className="text-sm text-muted-foreground">Randament net estimat</p><p className="mt-1 text-3xl font-bold text-primary">9.4%</p></CardContent></Card>
                 <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Ocupare medie modelată</p><p className="mt-1 text-3xl font-bold text-foreground">75%</p></CardContent></Card>
                 <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Property Management RealTrust</p><p className="mt-1 text-3xl font-bold text-foreground">15-20%</p></CardContent></Card>
               </div>
@@ -271,8 +271,8 @@ const AnalizaROIApartament = () => {
             <Card className="border-primary/20 bg-primary/5">
               <CardContent className="p-6">
                 <div className="grid gap-4 sm:grid-cols-3">
-                  <div><p className="text-sm text-muted-foreground">ROI chirie clasică</p><p className="text-3xl font-bold text-foreground">{calculations.classicRoi}%</p></div>
-                  <div><p className="text-sm text-muted-foreground">ROI net regim hotelier</p><p className="text-3xl font-bold text-primary">{calculations.hotelRoi}%</p></div>
+                  <div><p className="text-sm text-muted-foreground">Randament chirie clasică</p><p className="text-3xl font-bold text-foreground">{calculations.classicRoi}%</p></div>
+                  <div><p className="text-sm text-muted-foreground">Randament net regim hotelier</p><p className="text-3xl font-bold text-primary">{calculations.hotelRoi}%</p></div>
                   <div><p className="text-sm text-muted-foreground">Diferență anuală</p><p className="text-3xl font-bold text-foreground">+{calculations.delta.toLocaleString("ro-RO")}€</p></div>
                 </div>
                 <div className="mt-5 grid gap-3 rounded-lg border border-primary/20 bg-background/80 p-4 sm:grid-cols-3">
@@ -303,7 +303,7 @@ const AnalizaROIApartament = () => {
               <div>
                 <div className="mb-2 flex items-center gap-2 text-primary"><Gauge className="h-5 w-5" /><span className="text-sm font-semibold uppercase">Scor investițional</span></div>
                 <h2 className="text-2xl font-bold text-foreground">Profil {calculations.scoreLabel} pentru investiție imobiliară</h2>
-                <p className="mt-2 text-muted-foreground">Scorul combină ROI net, ocupare estimată, aprecierea anuală și diferența față de chiria clasică pentru o decizie mai rapidă.</p>
+                <p className="mt-2 text-muted-foreground">Scorul combină randament net, ocupare estimată, aprecierea anuală și diferența față de chiria clasică pentru o decizie mai rapidă.</p>
               </div>
               <Button asChild variant="outline"><Link to="/evaluare-gratuita">Cere validare RealTrust</Link></Button>
             </CardContent>
@@ -330,7 +330,7 @@ const AnalizaROIApartament = () => {
             </div>
             <Card className="mt-6 border-primary/20 bg-primary/5">
               <CardContent className="p-6">
-                <div className="mb-4 flex items-center gap-2 text-primary"><MapPin className="h-5 w-5" /><h3 className="text-xl font-semibold text-foreground">Criterii de zonă cu impact direct în ROI</h3></div>
+                <div className="mb-4 flex items-center gap-2 text-primary"><MapPin className="h-5 w-5" /><h3 className="text-xl font-semibold text-foreground">Criterii de zonă cu impact direct în randament</h3></div>
                 <div className="grid gap-3 md:grid-cols-2">
                   {zoneCriteria.map((item) => (
                     <div key={item} className="flex gap-3 rounded-lg border border-border bg-background p-4 text-sm text-muted-foreground">
@@ -395,7 +395,7 @@ const AnalizaROIApartament = () => {
                   <div className="mt-5 grid gap-3 text-sm">
                     <div className="flex justify-between gap-3"><span className="text-muted-foreground">Ocupare</span><span className="font-semibold text-foreground">{scenario.occupancy}</span></div>
                     <div className="flex justify-between gap-3"><span className="text-muted-foreground">Tarif/noapte</span><span className="font-semibold text-foreground">{scenario.adr}</span></div>
-                    <div className="flex justify-between gap-3"><span className="text-muted-foreground">ROI net</span><span className="font-semibold text-primary">{scenario.roi}</span></div>
+                    <div className="flex justify-between gap-3"><span className="text-muted-foreground">Randament net</span><span className="font-semibold text-primary">{scenario.roi}</span></div>
                   </div>
                   <p className="mt-5 text-sm text-muted-foreground">{scenario.note}</p>
                 </CardContent>
@@ -442,7 +442,7 @@ const AnalizaROIApartament = () => {
 
         <section className="bg-muted/40 py-14 md:py-20">
           <div className="container mx-auto px-4">
-          <div className="mb-8 max-w-3xl"><div className="mb-3 flex items-center gap-2 text-primary"><Building2 className="h-5 w-5" /><span className="text-sm font-semibold uppercase">Link-uri strategice</span></div><h2 className="text-3xl font-bold text-foreground">Complexe recomandate pentru analiză ROI</h2><p className="mt-3 text-muted-foreground">Compară potențialul de randament al apartamentelor din ansambluri cu cerere ridicată și poziționare bună pentru închiriere.</p></div>
+          <div className="mb-8 max-w-3xl"><div className="mb-3 flex items-center gap-2 text-primary"><Building2 className="h-5 w-5" /><span className="text-sm font-semibold uppercase">Link-uri strategice</span></div><h2 className="text-3xl font-bold text-foreground">Complexe recomandate pentru analiză randament</h2><p className="mt-3 text-muted-foreground">Compară potențialul de randament al apartamentelor din ansambluri cu cerere ridicată și poziționare bună pentru închiriere.</p></div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {complexLinks.map((item) => (
               <Link key={item.name} to={item.href} className="group rounded-lg border border-border bg-card p-5 transition-colors hover:border-primary/50">
@@ -465,7 +465,7 @@ const AnalizaROIApartament = () => {
             <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
               <div>
                 <h2 className="text-2xl font-bold text-foreground">Continuă analiza cu ghidurile potrivite</h2>
-                <p className="mt-2 text-muted-foreground">Leagă estimarea ROI de paginile care ajută decizia: calculator, catalog și context de piață.</p>
+                <p className="mt-2 text-muted-foreground">Leagă estimarea randament de paginile care ajută decizia: calculator, catalog și context de piață.</p>
               </div>
               <Button asChild size="lg"><Link to="/catalog-investitii">Catalog Investiții <ArrowRight className="h-4 w-4" /></Link></Button>
             </div>

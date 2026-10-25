@@ -233,7 +233,7 @@ const CatalogInvestitii = () => {
         { id: "market", label: "Piața imobiliară & prețuri" },
         { id: "properties", label: "Proprietăți de vânzare" },
         { id: "portfolio", label: "Portofoliu activ" },
-        { id: "comparison", label: "Comparație ROI" },
+        { id: "comparison", label: "Comparație randament" },
         { id: "faq", label: "Întrebări frecvente" },
       ]
     : [
@@ -258,9 +258,9 @@ const CatalogInvestitii = () => {
             "Da, oferim consultanță pentru terenuri în Giroc, Dumbrăvița, Moșnița Nouă, Ghiroda și Săcălaz, cu prețuri între 60–180 EUR/mp în funcție de utilități, PUZ și zonificare. Sunt ideale pentru dezvoltatori sau investitori care construiesc case sau mici ansambluri de închiriat.",
         },
         {
-          question: "Ce ROI pot obține din investiții în regim hotelier vs. chirie clasică?",
+          question: "Ce randament pot obține din investiții în regim hotelier vs. chirie clasică?",
           answer:
-            "Apartamentele administrate în regim hotelier de RealTrust au un ROI net estimat de 6,5–9,4% pe an, comparativ cu 3–4% pe modelul chirie clasică pe termen lung. Estimarea depinde de ocupare și de costurile reale; pentru un apartament de 140.000 EUR diferența anuală este de aproximativ +5.800–8.300 EUR.",
+            "Apartamentele administrate în regim hotelier de RealTrust au un randament net estimat de 6,5–9,4% pe an, comparativ cu 3–4% pe modelul chirie clasică pe termen lung. Estimarea depinde de ocupare și de costurile reale; pentru un apartament de 140.000 EUR diferența anuală este de aproximativ +5.800–8.300 EUR.",
         },
         {
           question: "Care este structura de comision RealTrust?",
@@ -317,7 +317,7 @@ const CatalogInvestitii = () => {
     ? [
         { icon: TrendingUp, text: "Creștere turistică +40% — Capitala Culturală Europeană", gradient: "from-amber-500/20 to-yellow-500/10" },
         { icon: Building, text: "Al 2-lea hub IT din România — cerere constantă", gradient: "from-blue-500/20 to-indigo-500/10" },
-        { icon: BarChart3, text: "ROI 8-11% hotelier vs 3-4% chirie clasică", gradient: "from-emerald-500/20 to-green-500/10" },
+        { icon: BarChart3, text: "Randament 8-11% hotelier vs 3-4% chirie clasică", gradient: "from-emerald-500/20 to-green-500/10" },
         { icon: Euro, text: "Prețuri cu 30-50% sub București sau Cluj", gradient: "from-amber-500/20 to-orange-500/10" },
         { icon: Plane, text: "Infrastructură modernizată: aeroport, tramvaie, regenerare urbană", gradient: "from-purple-500/20 to-violet-500/10" },
       ]
@@ -386,7 +386,7 @@ const CatalogInvestitii = () => {
               <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto">
                 {[
                   { value: loading ? "—" : String(properties.length), label: isRo ? "Proprietăți" : "Properties" },
-                  { value: "6,5–9,4%", label: isRo ? "ROI net estimat / an" : "Estimated net ROI / yr" },
+                  { value: "6,5–9,4%", label: isRo ? "Randament net estimat / an" : "Estimated net ROI / yr" },
                   { value: "85%", label: isRo ? "Ocupare" : "Occupancy" },
                 ].map((stat, i) => (
                   <motion.div
@@ -469,7 +469,7 @@ const CatalogInvestitii = () => {
                   <div className="space-y-2">
                     {[
                       isRo ? "Analiză completă de piață Timișoara 2026" : "Complete Timișoara 2026 market analysis",
-                      isRo ? "Proprietăți cu ROI dovedit de 8-11%" : "Properties with proven 8-11% ROI",
+                      isRo ? "Proprietăți cu randament dovedit de 8-11%" : "Properties with proven 8-11% ROI",
                       isRo ? "Comparație financiară hotelier vs. clasic" : "Hotel-style vs. classic financial comparison",
                       isRo ? "Studii de caz din portofoliul activ" : "Case studies from active portfolio",
                     ].map((item, i) => (

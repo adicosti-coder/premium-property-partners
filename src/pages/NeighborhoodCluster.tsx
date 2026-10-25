@@ -50,8 +50,8 @@ const data: Record<string, NeighborhoodData> = {
     slug: "isho",
     name: "ISHO",
     hero: {
-      ro: "Investiții ISHO Timișoara — Apartamente Regim Hotelier cu ROI 9.2%",
-      en: "ISHO Timișoara Investments — Short-Term Rental Apartments with 9.2% ROI",
+      ro: "Investiții ISHO Timișoara — Apartamente Regim Hotelier cu randament 9.2%",
+      en: "ISHO Timișoara Investments — Short-Term Rental Apartments with 9.2% randament",
     },
     intro: {
       ro: "ISHO este unul dintre cele mai dorite ansambluri rezidențiale din Timișoara, cu acces direct la Centrul Vechi, Piața Unirii și principalele atracții turistice. Apartamentele administrate de RealTrust în ISHO generează în medie €1.200/lună cu o rată de ocupare de 92%.",
@@ -81,7 +81,7 @@ const data: Record<string, NeighborhoodData> = {
         "Locație ultracentral cu cerere turistică ridicată tot anul",
         "Apartamente noi cu finisaje premium și parcare subterană",
         "Cerere puternică din partea turiștilor business și culturali",
-        "ROI verificat 9.2% net cu break-even în ~10 ani",
+        "Randament verificat 9.2% net cu break-even în ~10 ani",
         "Potențial de apreciere a valorii proprietății cu 5-7% anual",
       ],
       en: [
@@ -115,8 +115,8 @@ const data: Record<string, NeighborhoodData> = {
           a: "Prețurile pornesc de la €85.000 pentru o garsonieră modernă și ajung la €180.000 pentru un apartament cu 3 camere. Investiția medie pentru regim hotelier este de €95.000.",
         },
         {
-          q: "Ce ROI pot obține cu un apartament în ISHO administrat în regim hotelier?",
-          a: "ROI-ul net mediu verificat în ISHO este de 9.2% anual, cu venituri lunare medii de €1.200 și ocupare de 92%. Datele provin din portofoliul real RealTrust pe ultimele 24 de luni.",
+          q: "Ce randament pot obține cu un apartament în ISHO administrat în regim hotelier?",
+          a: "Randamentul net mediu verificat în ISHO este de 9.2% anual, cu venituri lunare medii de €1.200 și ocupare de 92%. Datele provin din portofoliul real RealTrust pe ultimele 24 de luni.",
         },
         {
           q: "Sunt permise apartamentele Airbnb în ISHO?",
@@ -144,8 +144,8 @@ const data: Record<string, NeighborhoodData> = {
     slug: "iulius-town",
     name: "Iulius Town",
     hero: {
-      ro: "Investiții Iulius Town Timișoara — Apartamente Regim Hotelier cu ROI 9.3%",
-      en: "Iulius Town Timișoara Investments — Short-Term Rental Apartments with 9.3% ROI",
+      ro: "Investiții Iulius Town Timișoara — Apartamente Regim Hotelier cu randament 9.3%",
+      en: "Iulius Town Timișoara Investments — Short-Term Rental Apartments with 9.3% randament",
     },
     intro: {
       ro: "Iulius Town este cel mai mare proiect mixed-use din vestul României, integrând shopping, birouri clasa A, restaurante și apartamente premium. Zona generează cerere constantă din partea turiștilor business, oaspeților UnitedBusinessCenter și călătorilor în tranzit.",

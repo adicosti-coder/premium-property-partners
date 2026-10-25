@@ -355,7 +355,7 @@ const getContextualQuickActions = (lang: "ro" | "en"): string[] => {
   }
   if (path.startsWith("/zona/")) {
     return lang === "ro"
-      ? ["📊 Randamentul mediu în această zonă", "🏠 Apartamente disponibile aici", "📈 Comparație ROI cu alte zone", "🗓️ Programează o vizită în zonă"]
+      ? ["📊 Randamentul mediu în această zonă", "🏠 Apartamente disponibile aici", "📈 Comparație randament cu alte zone", "🗓️ Programează o vizită în zonă"]
       : ["📊 Average yield in this area", "🏠 Available apartments here", "📈 ROI comparison with other areas", "🗓️ Schedule a visit in this area"];
   }
   if (path.startsWith("/blog")) {
@@ -431,8 +431,8 @@ const AIChatbot = () => {
     ro: {
       title: "Digital Concierge",
       status: "RealTrust Advisory 24/7",
-      greeting: "Bună ziua! Sunt **Digital Concierge RealTrust & ApArt Hotel**. 🏛️✨\n\nVă pot ajuta cu **disponibilitate live**, **portofoliu investițional verificat**, **simulare ROI**, **HostScan din fotografii** și **programare consultanță**.\n\nPentru oportunități imobiliare recomand exclusiv proprietăți RealTrust administrate, verificate sau curate editorial — fără marketplace-uri și fără anunțuri externe neverificate.",
-      placeholder: "Întrebați despre cazare, ROI, investiții sau consultanță...",
+      greeting: "Bună ziua! Sunt **Digital Concierge RealTrust & ApArt Hotel**. 🏛️✨\n\nVă pot ajuta cu **disponibilitate live**, **portofoliu investițional verificat**, **simulare randament**, **HostScan din fotografii** și **programare consultanță**.\n\nPentru oportunități imobiliare recomand exclusiv proprietăți RealTrust administrate, verificate sau curate editorial — fără marketplace-uri și fără anunțuri externe neverificate.",
+      placeholder: "Întrebați despre cazare, randament, investiții sau consultanță...",
       power: "Curated Portfolio · Live Data",
       quickActions: getContextualQuickActions("ro"),
       error: "A apărut o eroare. Te rog încearcă din nou.",
@@ -450,7 +450,7 @@ const AIChatbot = () => {
     en: {
       title: "Digital Concierge",
       status: "RealTrust Advisory 24/7",
-      greeting: "Welcome to **RealTrust & ApArt Hotel Timișoara**. 🏛️✨ I can help with **live availability**, **verified investment listings**, **ROI simulations**, **photo-based HostScan**, and **private advisory scheduling**.\n\nFor real estate opportunities, I recommend only managed, verified, or editorially curated RealTrust properties — no marketplaces and no unverified external ads.",
+      greeting: "Welcome to **RealTrust & ApArt Hotel Timișoara**. 🏛️✨ I can help with **live availability**, **verified investment listings**, **randament simulations**, **photo-based HostScan**, and **private advisory scheduling**.\n\nFor real estate opportunities, I recommend only managed, verified, or editorially curated RealTrust properties — no marketplaces and no unverified external ads.",
       placeholder: "Ask about stays, ROI, investments or advisory...",
       power: "Curated Portfolio · Live Data",
       quickActions: getContextualQuickActions("en"),
@@ -1210,7 +1210,7 @@ const AIChatbot = () => {
                         size="lg"
                         className="w-full gap-2"
                         onClick={() => window.open(`https://wa.me/40799069256?text=${encodeURIComponent(
-                          `Scor HostScan: ${propertyReport.scor}/${propertyReport.max_scor} pentru ${propertyReport.zona}. ROI estimat: ${propertyReport.roi_estimat}. Vreau o evaluare detaliată.`
+                          `Scor HostScan: ${propertyReport.scor}/${propertyReport.max_scor} pentru ${propertyReport.zona}. randament estimat: ${propertyReport.roi_estimat}. Vreau o evaluare detaliată.`
                         )}`, '_blank', 'noopener,noreferrer')}
                       >
                         {language === "ro" ? "CONTACTEAZĂ ECHIPA" : "CONTACT TEAM"}
@@ -1230,7 +1230,7 @@ const AIChatbot = () => {
                           className="w-full px-4 py-3 rounded-2xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/30 text-sm font-semibold text-primary hover:from-primary/20 hover:to-accent/20 transition-all flex items-center justify-center gap-2"
                         >
                           <TrendingUp className="w-4 h-4" />
-                          {language === "ro" ? "📊 Analiză Proprietate — Află Scorul și ROI-ul" : "📊 Property Analysis — Get Score & ROI"}
+                          {language === "ro" ? "📊 Analiză Proprietate — Află Scorul și randamentul" : "📊 Property Analysis — Get Score & ROI"}
                         </motion.button>
                       )}
                       <div className="flex flex-wrap gap-2 justify-center px-4">
@@ -1259,7 +1259,7 @@ const AIChatbot = () => {
                           {language === "ro" ? "Analiză Proprietate" : "Property Analysis"}
                         </h3>
                         <p className="text-xs text-muted-foreground">
-                          {language === "ro" ? "Completează pentru o analiză personalizată cu scor și ROI" : "Fill in for a personalized score and ROI analysis"}
+                          {language === "ro" ? "Completează pentru o analiză personalizată cu scor și randament" : "Fill in for a personalized score and ROI analysis"}
                         </p>
                       </div>
                       

@@ -355,7 +355,7 @@ const OwnerContactLeadForm = ({
         wantsYieldAnalysis ? " · Solicită analiză gratuită de randament" : ""
       }${
         roiPrefill
-          ? ` · Calculator ROI: chirie clasică ${roiPrefill.monthlyRent} €/lună · venit net estimat ${roiPrefill.netAnnualIncome} €/an`
+          ? ` · Calculator Randament Imobiliar (ROI): chirie clasică ${roiPrefill.monthlyRent} €/lună · venit net estimat ${roiPrefill.netAnnualIncome} €/an`
           : ""
       }`,
       source,

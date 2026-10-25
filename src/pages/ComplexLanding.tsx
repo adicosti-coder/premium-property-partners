@@ -267,8 +267,8 @@ const ComplexLanding = () => {
           ? `Apartamente de închiriat și vânzare în ${complex.name} Timișoara | RealTrust`
           : `Apartments for rent and sale in ${complex.name} Timișoara | RealTrust`}
         description={isRo
-          ? `Apartamente disponibile în ${complex.name}, Timișoara. ROI ${complex.roi}, venit ${complex.avgIncome}/lună, ocupare ${complex.occupancy}. Cele mai recente anunțuri verificate de RealTrust + analiză financiară completă pentru regim hotelier.`
-          : `Apartments available in ${complex.name}, Timișoara. ROI ${complex.roi}, income ${complex.avgIncome}/month, occupancy ${complex.occupancy}. Latest RealTrust-verified listings plus complete short-term-rental financial analysis.`}
+          ? `Apartamente disponibile în ${complex.name}, Timișoara. randament ${complex.roi}, venit ${complex.avgIncome}/lună, ocupare ${complex.occupancy}. Cele mai recente anunțuri verificate de RealTrust + analiză financiară completă pentru regim hotelier.`
+          : `Apartments available in ${complex.name}, Timișoara. randament ${complex.roi}, income ${complex.avgIncome}/month, occupancy ${complex.occupancy}. Latest RealTrust-verified listings plus complete short-term-rental financial analysis.`}
 
         url={`https://realtrust.ro/complexe/${complex.slug}`}
         jsonLd={jsonLd}
@@ -307,7 +307,7 @@ const ComplexLanding = () => {
               </h1>
               <p className="text-lg text-muted-foreground mb-8">
                 {isRo
-                  ? `ROI net țintă ${complex.roi}, calculat pe ipoteze publice (ocupare 75%). Venit lunar estimat ${complex.avgIncome}, ocupare observată ${complex.occupancy}. Operațiuni gestionate end-to-end de echipa RealTrust și ApArt Hotel.`
+                  ? `Randament net țintă ${complex.roi}, calculat pe ipoteze publice (ocupare 75%). Venit lunar estimat ${complex.avgIncome}, ocupare observată ${complex.occupancy}. Operațiuni gestionate end-to-end de echipa RealTrust și ApArt Hotel.`
                   : `Target net ROI ${complex.roi}, calculated on public assumptions (75% occupancy). Estimated monthly income ${complex.avgIncome}, observed occupancy ${complex.occupancy}. Operations handled end-to-end by the RealTrust and ApArt Hotel team.`}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6">

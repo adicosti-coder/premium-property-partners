@@ -172,7 +172,7 @@ const AnalysisAdjustPanel = ({ analysis, onRecalculated }: Props) => {
         {[
           { label: "Venit brut/lună", value: `${fmt(preview.venit_lunar_brut || 0)} RON` },
           { label: "Venit net/lună", value: `${fmt(preview.venit_lunar_net || 0)} RON` },
-          { label: "ROI estimat", value: preview.roi_estimat || "—" },
+          { label: "Randament estimat", value: preview.roi_estimat || "—" },
         ].map((m) => (
           <div key={m.label} className="rounded-lg border border-border bg-background p-3">
             <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{m.label}</p>

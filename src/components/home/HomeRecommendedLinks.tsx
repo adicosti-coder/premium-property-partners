@@ -7,8 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const fallbackRoiArticles = [
-  { title: "Analiză ROI Timișoara 2026", slug: "analiza-roi-timisoara-2026", excerpt: "Repere pentru randament, ocupare și zone cu potențial investițional." },
-  { title: "Studiu de caz ROI în regim hotelier", slug: "studiu-caz-roi-regim-hotelier", excerpt: "Cum arată diferența dintre chiria clasică și administrarea profesională." },
+  { title: "Analiză Randament Timișoara 2026", slug: "analiza-roi-timisoara-2026", excerpt: "Repere pentru randament, ocupare și zone cu potențial investițional." },
+  { title: "Studiu de caz randament în regim hotelier", slug: "studiu-caz-roi-regim-hotelier", excerpt: "Cum arată diferența dintre chiria clasică și administrarea profesională." },
 ];
 
 export default function HomeRecommendedLinks() {
@@ -33,8 +33,8 @@ export default function HomeRecommendedLinks() {
     {
       to: "/analiza-roi-apartament",
       icon: Calculator,
-      title: isRo ? "Analiza ROI Apartament" : "Apartment ROI Analysis",
-      text: isRo ? "Calculează randamentul, profitul net și evoluția prețului pentru un apartament." : "Estimate yield, net profit and price evolution for an apartment.",
+      title: isRo ? "Analiză Randament Apartament" : "Apartment ROI Analysis",
+      text: isRo ? "Calculează Randamentul Imobiliar (ROI), profitul net și evoluția prețului pentru un apartament." : "Estimate yield, net profit and price evolution for an apartment.",
       cta: isRo ? "Analizează profitul" : "Analyze profit",
     },
   ];
@@ -70,7 +70,7 @@ export default function HomeRecommendedLinks() {
               <TrendingUp className="h-4 w-4" /> {isRo ? "Recomandate pentru investitori" : "Recommended for investors"}
             </p>
             <h2 id="homepage-recommended-title" className="text-3xl font-bold text-foreground md:text-4xl">
-              {isRo ? "Investiții, catalog și analize ROI" : "Investments, catalog and ROI analysis"}
+              {isRo ? "Investiții, catalog și analize randament" : "Investments, catalog and ROI analysis"}
             </h2>
             <p className="mt-3 text-muted-foreground">
               {isRo

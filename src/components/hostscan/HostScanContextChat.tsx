@@ -54,7 +54,7 @@ const HostScanContextChat = ({ report, analysisText, language, ownerName, zone }
       open: "💬 Discută cu consultantul AI despre scorul tău",
       suggestions: [
         "🎯 Ce acțiuni concrete îmi cresc scorul cel mai rapid?",
-        "💰 Ce investiție minimă ar avea cel mai mare impact pe ROI?",
+        "💰 Ce investiție minimă ar avea cel mai mare impact pe randament?",
         "📊 Cum se compară zona mea cu alte zone din Timișoara?",
         "📸 Ce îmbunătățiri vizuale atrag mai mulți oaspeți?",
       ],
@@ -86,7 +86,7 @@ const HostScanContextChat = ({ report, analysisText, language, ownerName, zone }
 
     try {
       const contextPrefix = language === "ro"
-        ? `[Context analiză: Scor ${report.scor}/${report.max_scor}, Zonă ${report.zona}, ROI ${report.roi_estimat}, Tarif ${report.tarif_noapte}€/noapte, Categorie: ${report.categorie || "Standard"}. Recomandări: ${report.recomandari?.join("; ")}. Nota consultant: ${report.note_consultant}]\n\nÎntrebarea utilizatorului: `
+        ? `[Context analiză: Scor ${report.scor}/${report.max_scor}, Zonă ${report.zona}, randament ${report.roi_estimat}, Tarif ${report.tarif_noapte}€/noapte, Categorie: ${report.categorie || "Standard"}. Recomandări: ${report.recomandari?.join("; ")}. Nota consultant: ${report.note_consultant}]\n\nÎntrebarea utilizatorului: `
         : `[Analysis context: Score ${report.scor}/${report.max_scor}, Zone ${report.zona}, ROI ${report.roi_estimat}, Rate ${report.tarif_noapte}€/night, Category: ${report.categorie || "Standard"}. Recommendations: ${report.recomandari?.join("; ")}. Consultant note: ${report.note_consultant}]\n\nUser question: `;
 
       const apiKey = getSupabasePublishableKey();

@@ -38,7 +38,7 @@ const ProcessStepsTimeline = () => {
       titleEn: "Analysis & estimate in 24h",
       descriptionRo: "Îți spunem realist ce poate produce proprietatea și ce upgrade-uri merită.",
       descriptionEn: "We realistically tell you what your property can generate and which upgrades are worth it.",
-      ctaRo: "Calculează randamentul acum",
+      ctaRo: "Calculează Randamentul Imobiliar (ROI) acum",
       ctaEn: "Calculate ROI now",
       onCta: openCalculator,
     },

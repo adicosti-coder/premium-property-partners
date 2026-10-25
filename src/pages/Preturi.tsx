@@ -78,7 +78,7 @@ const packages = {
         { text: "Prețuri dinamice automate", included: true },
         { text: "Listare pe 10+ canale premium", included: true },
         { text: "Manager dedicat proprietate", included: false },
-        { text: "Analiză ROI & optimizare avansată", included: false },
+        { text: "Analiză Randament & optimizare avansată", included: false },
       ],
       cta: "Alege Standard",
     },

@@ -113,7 +113,7 @@ export const ro = {
       { title: "Evaluare și cifre reale", description: "• Audit al apartamentului\n• Comparabile din zona ta\n• Estimare de venit pe ipoteze publice" },
       { title: "Punem apartamentul pe piață", description: "• Fotografie profesională\n• Listare pe 30+ canale\n• Setup operațional complet" },
       { title: "Operăm, tu te uiți la rapoarte", description: "• Rezervări și oaspeți gestionați\n• Mentenanță coordonată\n• Pricing ajustat săptămânal" },
-      { title: "Încasezi lunar, la dată fixă", description: "• Transfer în aceeași zi a lunii\n• Raport detaliat de venituri\n• Analiză ROI și recomandări" },
+      { title: "Încasezi lunar, la dată fixă", description: "• Transfer în aceeași zi a lunii\n• Raport detaliat de venituri\n• Analiză Randament și recomandări" },
     ],
   },
   

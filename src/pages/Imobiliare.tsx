@@ -91,11 +91,11 @@ const Imobiliare = () => {
   const seoContent = {
     ro: {
       title: "Imobiliare Timișoara: Vânzări, Închirieri, Regim Hotelier | RealTrust",
-      description: "Investește profitabil în imobiliare Timișoara! Apartamente regim hotelier, vânzări, închirieri lângă UVT, Iulius Town, Aeroport. Calculează ROI gratuit!"
+      description: "Investește profitabil în imobiliare Timișoara! Apartamente regim hotelier, vânzări, închirieri lângă UVT, Iulius Town, Aeroport. Calculează Randamentul Imobiliar (ROI) gratuit!"
     },
     en: {
       title: "Real Estate Timișoara: Sales, Rentals, Hotel-Style | RealTrust",
-      description: "Profitable real estate investment in Timișoara! Hotel-style apartments, sales, rentals near UVT, Iulius Town, Airport. Free ROI calculator."
+      description: "Profitable real estate investment in Timișoara! Hotel-style apartments, sales, rentals near UVT, Iulius Town, Airport. Free randament calculator."
     }
   };
 
@@ -491,7 +491,7 @@ const Imobiliare = () => {
           <div className="mt-12 max-w-4xl mx-auto rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 justify-between">
             <div className="flex-1 text-center md:text-left">
               <h3 className="text-lg md:text-xl font-semibold text-foreground mb-1">
-                {language === "ro" ? "Calculează randamentul investiției tale în 30 secunde" : "Calculate your investment yield in 30 seconds"}
+                {language === "ro" ? "Calculează Randamentul Imobiliar (ROI) investiției tale în 30 secunde" : "Calculate your investment yield in 30 seconds"}
               </h3>
               <p className="text-sm text-muted-foreground">
                 {language === "ro" ? "Compară regim hotelier vs. chirie clasică pentru proprietatea ta din Timișoara." : "Compare hotel-style vs. classic rental for your Timișoara property."}
@@ -501,7 +501,7 @@ const Imobiliare = () => {
               <Link to="/calculator-randament">
                 <Button variant="hero" size="lg">
                   <Calculator className="w-5 h-5 mr-2" />
-                  {language === "ro" ? "Calculează randamentul" : "Calculate ROI"}
+                  {language === "ro" ? "Calculează Randamentul Imobiliar (ROI)" : "Calculate ROI"}
                 </Button>
               </Link>
               <Link to="/investitii">
@@ -606,8 +606,8 @@ const Imobiliare = () => {
               </div>
               <p className="text-sm md:text-base font-medium text-foreground">
                 {language === "ro"
-                  ? "Cauți investiții? Vezi topul cartierelor din Timișoara cu ROI de peste 9%"
-                  : "Looking to invest? See top Timișoara neighborhoods with 9%+ ROI"}
+                  ? "Cauți investiții? Vezi topul cartierelor din Timișoara cu randament de peste 9%"
+                  : "Looking to invest? See top Timișoara neighborhoods with 9%+ randament"}
               </p>
             </div>
             <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary group-hover:underline shrink-0">

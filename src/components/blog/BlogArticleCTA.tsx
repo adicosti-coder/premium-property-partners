@@ -23,7 +23,7 @@ const BlogArticleCTA = () => {
       ownerFooter: "Plățile intră direct la tine · structură transparentă · fără obligații.",
       aiLabel: "ANALIZĂ AI",
       aiTitle: "Analizează-ți proprietatea cu AI",
-      aiDescription: "Încarcă poze, primește scor instant (0-140) și estimare ROI personalizată. Gratuit, fără obligații.",
+      aiDescription: "Încarcă poze, primește scor instant (0-140) și estimare randament personalizată. Gratuit, fără obligații.",
       aiCta: "Începe analiza AI",
     },
     en: {

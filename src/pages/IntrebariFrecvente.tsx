@@ -68,7 +68,7 @@ const EXTRA_FAQ = {
       a: "Short-term rental means renting the apartment by the night, with dynamic pricing, listings on Booking and Airbnb, and cleaning plus linen between guests. Compared with a classic long-term lease, gross revenue is roughly 1.6x higher and non-paying tenant risk disappears — guests pay before check-in.",
     },
     {
-      q: "What ROI can I realistically expect in Timișoara?",
+      q: "What randament can I realistically expect in Timișoara?",
       a: "Our benchmark is 6.5–9.4% net per year, as an estimate, based on roughly 75% occupancy and after RealTrust Property Management (15-20% of revenue) and real operating costs. A well-located 2-room apartment in Cetate, Iosefin or near Iulius Town approaches that figure; check your own scenario in the yield calculator.",
     },
     {
@@ -120,10 +120,10 @@ const COPY = {
     whatsapp: "Scrie pe WhatsApp",
     email: "Trimite e-mail",
     ownersLink: "Vezi serviciile de administrare",
-    calcLink: "Calculează randamentul",
+    calcLink: "Calculează Randamentul Imobiliar (ROI)",
   },
   en: {
-    seoTitle: "Short-Term Rental FAQ — Management & ROI in Timișoara | RealTrust",
+    seoTitle: "Short-Term Rental FAQ — Management & randament in Timișoara | RealTrust",
     seoDescription:
       "Answers about short-term rental, apartment management and yield (6.5–9.4% estimated net ROI) in Timișoara: licensing, taxes, contract, damages and payouts.",
     badge: "Frequently asked questions",

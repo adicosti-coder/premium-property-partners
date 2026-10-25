@@ -121,7 +121,7 @@ const HOMEPAGE_SEO_BODY = `
   <p><strong>Administrare proprietăți Timișoara</strong> oferită de RealTrust acoperă tot ciclul: marketing pe Booking, Airbnb și directe, check-in / check-out 24/7, curățenie hotelieră, mentenanță, raportare lunară financiară transparentă și optimizare yield management. <strong>Administrare apartamente regim hotelier Timișoara</strong> cu randament net mediu raportat de 9,4% anual — partener de încredere pentru proprietari și investitori.</p>
 
   <h3>Servicii oferite</h3>
-  <p>Investiții imobiliare Timișoara cu randament verificat, vânzări apartamente Timișoara, închirieri pe termen lung Timișoara, evaluare gratuită proprietate, calculator ROI online, consultanță investiții imobiliare și administrare profesională pentru proprietari, investitori și oaspeți.</p>
+  <p>Investiții imobiliare Timișoara cu randament verificat, vânzări apartamente Timișoara, închirieri pe termen lung Timișoara, evaluare gratuită proprietate, calculator randament imobiliar (ROI) online, consultanță investiții imobiliare și administrare profesională pentru proprietari, investitori și oaspeți.</p>
 
   <h3>Proximitate landmark-uri Timișoara și acces transport public</h3>
   <p>Toate proprietățile noastre sunt aproape de universități (UVT, UPT, UMF), mall-uri (Iulius Town, Shopping City Timișoara), parcuri (Parcul Central, Parcul Rozelor, Parcul Botanic), Catedrala Mitropolitană, malul Bega, Spitalul Județean Timișoara, Aeroportul Internațional și Gara de Nord — la 5, 10 sau 15 minute pe jos sau cu transport public. Acces facil la stația de tramvai (linii 1, 2, 4, 8) și autobuz (E1, E4, 33, 40), cu mijloc de transport în comun la sub 100m de fiecare proprietate.</p>
@@ -206,12 +206,12 @@ const neighborhoods = [
   { slug: 'isho', name: 'ISHO', fullName: 'ISHO & Fabric', avgPrice: 2150, faq: [
     { q: 'Ce face ISHO diferit?', a: 'Cel mai iconic proiect de regenerare urbană din Timișoara — complex mixed-use pe malul Begăi.' },
     { q: 'Care este prețul mediu la ISHO?', a: '2.150 €/mp, cel mai ridicat din Timișoara.' },
-    { q: 'Ce randament au investițiile imobiliare în ISHO?', a: 'ROI net 8–10% în regim hotelier RealTrust, datorită cererii constante și aprecierii capitalului peste media pieței Timișoara.' },
+    { q: 'Ce randament au investițiile imobiliare în ISHO?', a: 'Randament net 8–10% în regim hotelier RealTrust, datorită cererii constante și aprecierii capitalului peste media pieței Timișoara.' },
     { q: 'Ce este în apropiere de ISHO și Fabric?', a: 'Piața Traian, City Business Centre, Iulius Town, malul Begăi, Centrul Vechi (Piața Unirii) — toate la 5–15 minute pe jos sau cu mașina.' },
   ], seoBody: `
     <h2>Apartamente de vânzare în ISHO &amp; Fabric, Timișoara</h2>
     <p>Cartierul <strong>ISHO</strong> și zona istorică <strong>Fabric</strong> formează cea mai dinamică micro-piață imobiliară din Timișoara. ISHO este cel mai iconic proiect de regenerare urbană din oraș — complex mixed-use pe malul Begăi cu apartamente premium, birouri, retail și spații verzi. Preț mediu 2.150 €/mp, cu apreciere constantă și cerere de chirie ridicată.</p>
-    <h2>Investiții imobiliare ISHO Timișoara — randament și ROI</h2>
+    <h2>Investiții imobiliare ISHO Timișoara — randament și randament</h2>
     <p>Apartamentele din ISHO oferă <strong>randament net 8–10% în regim hotelier</strong> administrat de RealTrust, datorită proximității față de <strong>City Business Centre</strong>, <strong>Iulius Town</strong>, Vox Park și Centrul Vechi. Cumpărătorii pot accesa <strong>credit ipotecar Timișoara</strong> cu DAE de la 6,2% prin partenerii noștri bancari.</p>
     <h3>Puncte de interes lângă ISHO &amp; Fabric</h3>
     <p><strong>Piața Traian</strong> (reper istoric Fabric, 5 min), <strong>City Business Centre</strong> (hub corporate, 7 min), Iulius Town &amp; Openville (10 min), Centrul Vechi cu Piața Unirii și Catedrala Mitropolitană (10 min), Spitalul Județean (8 min), UVT &amp; Politehnica (12 min), Aeroport (15 min).</p>
@@ -992,13 +992,13 @@ function buildStaticRoutes(): PrerenderRoute[] {
   routes.push({
     path: '/calculator-randament',
     title: 'Randament imobiliar Timișoara: chirie vs hotelier | RealTrust',
-    description: 'Calculator de randament imobiliar Timișoara: compară chiria vs regimul hotelier pe chirii reale din fiecare zonă. Afli venitul net lunar estimat în 3 pași.',
-    h1: 'Calculator de randament imobiliar în Timișoara: regim hotelier vs. chirie clasică',
+    description: 'Calculator Randament Imobiliar (ROI) Timișoara: compară chiria vs regimul hotelier pe chirii reale din fiecare zonă. Afli venitul net lunar estimat în 3 pași.',
+    h1: 'Calculator Randament Imobiliar (ROI) în Timișoara: regim hotelier vs. chirie clasică',
     canonical: `${BASE_URL}/calculator-randament`,
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'WebApplication',
-      name: 'Calculator de randament imobiliar Timișoara',
+      name: 'Calculator Randament Imobiliar (ROI) Timișoara',
       description: 'Calculator randament imobiliar Timișoara: chirie vs hotelier, venit net lunar estimat pe zone',
       operatingSystem: 'Web',
       inLanguage: 'ro-RO',
@@ -1011,21 +1011,21 @@ function buildStaticRoutes(): PrerenderRoute[] {
   // Analiza ROI Apartament
   routes.push({
     path: '/analiza-roi-apartament',
-    title: 'Analiza ROI Apartament | Randament investiții imobiliare',
-    description: 'Analiză profit apartament România: calculează randament investiții imobiliare, ROI net, evoluția prețurilor și zonele potrivite pentru investiții în complexe.',
-    h1: 'Analiza ROI Apartament pentru investiții profitabile în România',
+    title: 'Analiză Randament Apartament | Randament investiții imobiliare',
+    description: 'Analiză profit apartament România: calculează randament investiții imobiliare, randament net, evoluția prețurilor și zonele potrivite pentru investiții în complexe.',
+    h1: 'Analiză Randament Apartament pentru investiții profitabile în România',
     canonical: `${BASE_URL}/analiza-roi-apartament`,
     seoBody: `
       <h2>Randament investiții imobiliare și analiză profit apartament România</h2>
-      <p>Pagina Analiza ROI Apartament oferă un calculator interactiv pentru investitori care vor să compare chiria clasică, administrarea în regim hotelier și aprecierea capitalului. Modelul folosește ocupare de 75%, deducere operațională de 27% și scenarii de randament pentru apartamente standard, RealTrust standard și complex premium.</p>
-      <h2>Complexe rezidențiale recomandate pentru ROI</h2>
+      <p>Pagina Analiză Randament Apartament oferă un calculator interactiv pentru investitori care vor să compare chiria clasică, administrarea în regim hotelier și aprecierea capitalului. Modelul folosește ocupare de 75%, deducere operațională de 27% și scenarii de randament pentru apartamente standard, RealTrust standard și complex premium.</p>
+      <h2>Complexe rezidențiale recomandate pentru randament</h2>
       <p>Analiza conectează direct investitorii cu <a href="${BASE_URL}/complexe" tabindex="-1">secțiunea Complexe</a>, inclusiv ISHO, City of Mara, Ateneo și Fructus Plaza — zone unde randamentul depinde de poziționare, cerere corporate, lichiditate și calitatea administrării.</p>
     `,
     jsonLd: [
       {
         '@context': 'https://schema.org',
         '@type': 'FinancialProduct',
-        name: 'Analiza ROI Apartament România',
+        name: 'Analiză Randament Apartament România',
         description: 'Calculator pentru randament investiții imobiliare, profit apartament și evoluția prețurilor în România.',
         url: `${BASE_URL}/analiza-roi-apartament`,
         provider: { '@type': 'RealEstateAgent', name: 'RealTrust' },
@@ -1035,7 +1035,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
         '@type': 'FAQPage',
         mainEntity: [
           { '@type': 'Question', name: 'Cum se calculează randamentul unei investiții imobiliare?', acceptedAnswer: { '@type': 'Answer', text: 'Randamentul net se calculează împărțind venitul anual după costuri la valoarea totală a investiției.' } },
-          { '@type': 'Question', name: 'De ce sunt importante complexele rezidențiale în analiza ROI?', acceptedAnswer: { '@type': 'Answer', text: 'Complexele noi au cerere mai bună, costuri previzibile și poziționare mai ușor de promovat către chiriași sau oaspeți premium.' } },
+          { '@type': 'Question', name: 'De ce sunt importante complexele rezidențiale în analiză randament?', acceptedAnswer: { '@type': 'Answer', text: 'Complexele noi au cerere mai bună, costuri previzibile și poziționare mai ușor de promovat către chiriași sau oaspeți premium.' } },
         ],
       },
     ],
@@ -1051,7 +1051,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       <h2>Apartamente City of Mara — investiții imobiliare Timișoara centru</h2>
       <p>City of Mara este un complex rezidențial central din Timișoara, potrivit pentru cumpărători care caută apartamente noi, parcare, acces rapid către Iulius Town și potențial de randament prin închiriere sau regim hotelier.</p>
       <h2>Vânzare apartamente noi City of Mara</h2>
-      <p>RealTrust oferă consultanță pentru selecția unităților disponibile, analiză ROI, comparație cu ISHO, Ateneo și Fructus Plaza și solicitare rapidă a listei actualizate de disponibilități.</p>
+      <p>RealTrust oferă consultanță pentru selecția unităților disponibile, analiză randament, comparație cu ISHO, Ateneo și Fructus Plaza și solicitare rapidă a listei actualizate de disponibilități.</p>
     `,
     jsonLd: {
       '@context': 'https://schema.org',
@@ -1350,7 +1350,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
     canonical: `${BASE_URL}/investitii`,
     seoBody: `
       <h2>Tipuri de investiții imobiliare în Timișoara</h2>
-      <p>Ca <strong>consultant imobiliar Timișoara</strong>, RealTrust structurează portofoliul de oportunități pentru investitori pe trei direcții clare: <strong>investiții în regim hotelier</strong> (randament net mediu raportat de 9,4% anual), <strong>investiții buy-to-let</strong> pentru chirii pe termen lung (randament 6–7% brut) și <strong>flip imobiliar</strong> cu renovare strategică pentru revânzare (marjă 15–20% în 8–14 luni). Fiecare oportunitate include due diligence complet, proiecții ROI conservative și administrare profesională inclusă.</p>
+      <p>Ca <strong>consultant imobiliar Timișoara</strong>, RealTrust structurează portofoliul de oportunități pentru investitori pe trei direcții clare: <strong>investiții în regim hotelier</strong> (randament net mediu raportat de 9,4% anual), <strong>investiții buy-to-let</strong> pentru chirii pe termen lung (randament 6–7% brut) și <strong>flip imobiliar</strong> cu renovare strategică pentru revânzare (marjă 15–20% în 8–14 luni). Fiecare oportunitate include due diligence complet, proiecții randament conservative și administrare profesională inclusă.</p>
 
       <h2>Evoluție prețuri imobiliare Timișoara 2020–2026</h2>
       <p><strong>Evoluție prețuri imobiliare Timișoara</strong>: media €/mp a crescut de la 1.250 € (2020) la 1.890 € (Q1 2026), cu un CAGR de aproximativ 7,1%. Cele mai puternice creșteri s-au înregistrat în ISHO (+62%), Circumvalațiunii / City of Mara (+48%) și Complex Studențesc (+41%). Prognoză 2026–2028: apreciere medie 5–8% anual, susținută de cererea din partea companiilor mari (Continental, Nokia, Hella, Flex, Atos) și de fluxul universitar (UVT, UPT, UMF — peste 40.000 studenți activi).</p>
@@ -1362,7 +1362,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       <p>Modelul nostru de <strong>regim hotelier Timișoara</strong> generează randament net estimat 6,5–9,4% pe portofoliul activ (15 apartamente). Include marketing pe Booking, Airbnb și platforme directe, check-in / check-out 24/7, curățenie hotelieră, mentenanță, raportare lunară și yield management dinamic. Comision 15–20% management + 15–23% comision platforme. Capital necesar de la 75.000 € pentru o garsonieră în Centru sau Complex Studențesc.</p>
 
       <h3>Calculator taxe notariale și costuri tranzacție</h3>
-      <p>Costurile complete pentru cumpărarea unui apartament în Timișoara includ: <strong>onorariu notarial</strong> (~1% din valoarea tranzacției, conform grilei Camerei Notarilor Timiș), <strong>impozit pe tranzacție</strong> (3% peste 450.000 RON pentru proprietăți deținute sub 3 ani de vânzător; 1% peste 3 ani — suportat de vânzător), <strong>taxe ANCPI</strong> (intabulare ~0,15% + tarife fixe), <strong>comision agenție</strong> (2% RealTrust). Exemplu: pentru un apartament de 100.000 €, costurile suplimentare ale cumpărătorului sunt aproximativ 3.500–4.500 €. Folosește <a href="${BASE_URL}/calculator-randament" tabindex="-1">calculatorul ROI</a> pentru proiecția completă a investiției.</p>
+      <p>Costurile complete pentru cumpărarea unui apartament în Timișoara includ: <strong>onorariu notarial</strong> (~1% din valoarea tranzacției, conform grilei Camerei Notarilor Timiș), <strong>impozit pe tranzacție</strong> (3% peste 450.000 RON pentru proprietăți deținute sub 3 ani de vânzător; 1% peste 3 ani — suportat de vânzător), <strong>taxe ANCPI</strong> (intabulare ~0,15% + tarife fixe), <strong>comision agenție</strong> (2% RealTrust). Exemplu: pentru un apartament de 100.000 €, costurile suplimentare ale cumpărătorului sunt aproximativ 3.500–4.500 €. Folosește <a href="${BASE_URL}/calculator-randament" tabindex="-1">calculatorul randament imobiliar (ROI)</a> pentru proiecția completă a investiției.</p>
 
       <h3>Credit ipotecar Timișoara — finanțare investiții</h3>
       <p>Consultanță gratuită <strong>credit ipotecar Timișoara</strong> prin parteneriatele cu BCR, BRD, Raiffeisen, ING și Banca Transilvania. Pentru investiții optime: avans 25–35%, perioadă 25–30 ani, DAE competitiv 6,5–7,5% (aprilie 2026). Te ajutăm să compari ofertele și să optimizezi structura financiară pentru maximizarea cash-flow-ului lunar.</p>
@@ -1371,7 +1371,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       <p>Ca <strong>consultant imobiliar Timișoara</strong> de top, RealTrust verifică pentru fiecare oportunitate: situația juridică (extras CF actualizat, sarcini, litigii), starea tehnică (expertiză structurală, instalații), eficiența energetică, istoricul tranzacțiilor și potențialul real de venit (analiză comparabilă cu portofoliul nostru de 15 proprietăți administrate). Raportul complet de due diligence este livrat în 5–7 zile.</p>
 
       <h3>Ghid investitor 2026 — descarcă gratuit</h3>
-      <p>Ghidul investitorului 2026 (PDF, 40 pagini) include: analiză detaliată pe cartiere, calculator ROI cu scenarii multiple, structură fiscală optimă (PFA vs SRL), checklist due diligence, top 5 ansambluri rezidențiale recomandate și studii de caz reale din portofoliul RealTrust.</p>
+      <p>Ghidul investitorului 2026 (PDF, 40 pagini) include: analiză detaliată pe cartiere, calculator randament imobiliar (ROI) cu scenarii multiple, structură fiscală optimă (PFA vs SRL), checklist due diligence, top 5 ansambluri rezidențiale recomandate și studii de caz reale din portofoliul RealTrust.</p>
     `,
     jsonLd: [
       {
@@ -1409,7 +1409,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
           {
             '@type': 'Question',
             name: 'Care este randamentul mediu al investițiilor imobiliare în Timișoara?',
-            acceptedAnswer: { '@type': 'Answer', text: 'Pentru regim hotelier administrat de RealTrust, ROI mediu este 9.4% net anual, verificat pe portofoliul de 15 apartamente. Pentru chirii pe termen lung, randamentul brut este 6–7%.' },
+            acceptedAnswer: { '@type': 'Answer', text: 'Pentru regim hotelier administrat de RealTrust, randament mediu este 9.4% net anual, verificat pe portofoliul de 15 apartamente. Pentru chirii pe termen lung, randamentul brut este 6–7%.' },
           },
           {
             '@type': 'Question',
@@ -1579,7 +1579,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
     {
       slug: 'investitii-imobiliare',
       name: 'Investiții Imobiliare',
-      title: 'Investiții Imobiliare Timișoara — Randament, ROI, Studii de Caz | RealTrust',
+      title: 'Investiții Imobiliare Timișoara — Randament, randament, Studii de Caz | RealTrust',
       description: 'Analize de piață, randament net estimat 6,5–9,4%, studii de caz reale și ghiduri pentru investitori imobiliari în Timișoara — inclusiv regim hotelier.',
       intro: 'Strategii verificate de investiții imobiliare în Timișoara: de la calcul randament până la exit strategy.',
     },
@@ -1673,8 +1673,8 @@ const SEGMENT_LABELS: Record<string, string> = {
   proprietate: 'Proprietăți',
   'imobiliare-timisoara': 'Cartiere',
   complexe: 'Ansambluri rezidențiale',
-  'calculator-randament': 'Calculator de randament imobiliar',
-  'analiza-roi-apartament': 'Analiză ROI apartament',
+  'calculator-randament': 'Calculator Randament Imobiliar (ROI)',
+  'analiza-roi-apartament': 'Analiză Randament apartament',
   'piata-imobiliara-timisoara': 'Piața imobiliară Timișoara',
   'evaluare-gratuita': 'Evaluare gratuită',
 };

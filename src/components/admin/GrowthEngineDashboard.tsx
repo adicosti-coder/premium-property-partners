@@ -197,7 +197,7 @@ export default function GrowthEngineDashboard() {
       lines.push("");
     }
     if (metrics.conversionRate < 15 && metrics.totalCalls7d >= 5) {
-      lines.push(`> ⚠ Conversia Andrei ${metrics.conversionRate}% sub țintă (15%). Rafinează scriptul de calificare în voice-agent-context: deschidere mai scurtă, întrebare ancoră despre zona+preț în primele 20s, mențiune explicită ROI 9.4% net regim hotelier.`);
+      lines.push(`> ⚠ Conversia Andrei ${metrics.conversionRate}% sub țintă (15%). Rafinează scriptul de calificare în voice-agent-context: deschidere mai scurtă, întrebare ancoră despre zona+preț în primele 20s, mențiune explicită randament 9.4% net regim hotelier.`);
       lines.push("");
     }
     lines.push("## Obiective strategice nerealizate (forțează implementarea acum)");
@@ -216,7 +216,7 @@ export default function GrowthEngineDashboard() {
     lines.push("1. Folosește datele de mai sus pentru a propune modificări CONCRETE de cod (fișiere + funcții).");
     lines.push("2. Prioritizează refactor-uri care reduc rata de respingere și cresc conversia Andrei.");
     lines.push("3. Orice modificare la regex sau sanitizer trebuie reflectată simultan în `QuickKeywordSimulator.tsx` (DEFAULT_*) și în edge functions backend, ca să rămână în sincron.");
-    lines.push("4. Respectă regulile din memory: Timișoara only, brand RealTrust (Blue/Gold), ROI 9.4% net, fără dark patterns, no stock photos locale.");
+    lines.push("4. Respectă regulile din memory: Timișoara only, brand RealTrust (Blue/Gold), randament 9.4% net, fără dark patterns, no stock photos locale.");
     lines.push("5. Răspunde cu un plan scurt + diff-uri minimale pe fișierele existente, nu rescrieri complete.");
     return lines.join("\n");
   }, [metrics, checklist]);

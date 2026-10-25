@@ -30,7 +30,7 @@ const ProcesulNostru = () => {
     ro: {
       seoTitle: "Procesul Nostru — 5 Pași spre Profit | RealTrust Timișoara",
       seoDescription:
-        "Vezi cei 5 pași pe care RealTrust îi parcurge pentru a transforma apartamentul tău din Timișoara într-o sursă de venit pasiv cu peste 9% ROI net.",
+        "Vezi cei 5 pași pe care RealTrust îi parcurge pentru a transforma apartamentul tău din Timișoara într-o sursă de venit pasiv cu peste 9% randament net.",
       breadcrumb: "Procesul Nostru",
       badge: "Procesul RealTrust · 5 pași",
       title: "Cum transformăm apartamentul tău",
@@ -81,8 +81,8 @@ const ProcesulNostru = () => {
         {
           icon: Rocket,
           title: "Profit lunar",
-          desc: "Banii intră direct în contul tău lunar, însoțiți de raport financiar transparent. ROI net verificat de 9%+ pe an.",
-          result: "6,5–9,4% ROI net anual",
+          desc: "Banii intră direct în contul tău lunar, însoțiți de raport financiar transparent. randament net verificat de 9%+ pe an.",
+          result: "6,5–9,4% randament net anual",
           duration: "De la ziua 30",
         },
       ],
@@ -90,7 +90,7 @@ const ProcesulNostru = () => {
     en: {
       seoTitle: "Our Process — 5 Steps to Profit | RealTrust Timișoara",
       seoDescription:
-        "See the 5 steps RealTrust takes to turn your Timișoara apartment into a passive income source with over 9% net ROI.",
+        "See the 5 steps RealTrust takes to turn your Timișoara apartment into a passive income source with over 9% net randament.",
       breadcrumb: "Our Process",
       badge: "The RealTrust Process · 5 steps",
       title: "How we turn your apartment",
@@ -104,7 +104,7 @@ const ProcesulNostru = () => {
       duration: "Duration",
       expertTitle: "Coordinated by the RealTrust founder",
       expertBody:
-        "Every stage is personally supervised by Adrian Costi, founder & CEO of RealTrust, with over 20 years of experience in the Timișoara real estate market. Adrian has coordinated onboarding for 180+ properties and maintains an estimated 6.5–9.4% net yearly ROI standard for our owners.",
+        "Every stage is personally supervised by Adrian Costi, founder & CEO of RealTrust, with over 20 years of experience in the Timișoara real estate market. Adrian has coordinated onboarding for 180+ properties and maintains an estimated 6.5–9.4% net yearly randament standard for our owners.",
       expertCta: "About Adrian Costi",
       finalTitle: "Ready to start?",
       finalSubtitle: "Calculate your income in 60 seconds — no hidden fees.",

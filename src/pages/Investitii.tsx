@@ -102,7 +102,7 @@ const Investitii = () => {
       heroSubtitle: "Oportunități selectate, cu randament țintă calculat transparent. Le identificăm, le administrăm, tu primești venitul net.",
       heroBadge: "Deal Room · RealTrust",
       ctaContact: "Programează o discuție",
-      ctaCalculator: "Calculator de randament",
+      ctaCalculator: "Calculator Randament Imobiliar (ROI)",
       gridTitle: "Oportunități active",
       gridSubtitle: "Proprietăți cu potențial de investiție evaluat și administrare profesională inclusă.",
       cardCapital: "Capital necesar",
@@ -271,7 +271,7 @@ const Investitii = () => {
 
             <div className="flex flex-wrap justify-center gap-6 mb-10">
               {[
-                { value: "6,5–9,4%", label: language === "ro" ? "ROI net estimat / an" : "Estimated net ROI / yr" },
+                { value: "6,5–9,4%", label: language === "ro" ? "Randament net estimat / an" : "Estimated net ROI / yr" },
                 { value: "~75%", label: language === "ro" ? "Ocupare medie" : "Average occupancy" },
                 { value: "10k+", label: language === "ro" ? "Sejururi în portofoliu" : "Stays in portfolio" },
                 { value: "9,7/10", label: language === "ro" ? "Scor recenzii" : "Reviews score" },

@@ -29,13 +29,13 @@ const InvestmentAnalysisModal = ({ open, onOpenChange, propertyId, propertyName 
 
   const t = {
     ro: {
-      title: "Solicită Analiză ROI",
+      title: "Solicită Analiză Randament",
       description: `Primești analiza detaliată pentru ${propertyName} direct pe email.`,
       name: "Nume complet",
       email: "Adresa de email",
       submit: "Trimite Solicitarea",
       submitting: "Se trimite...",
-      success: "Analiza ROI și mesajul audio personalizat sunt în drum spre email-ul tău!",
+      success: "Analiză Randament și mesajul audio personalizat sunt în drum spre email-ul tău!",
       errorName: "Introduceți numele",
       errorEmail: "Introduceți un email valid",
       errorTurnstile: "Vă rugăm completați verificarea de securitate",

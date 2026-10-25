@@ -365,7 +365,7 @@ const calculate_roi = async (params: {
     let roiText = "";
     if (params.purchase_price && params.purchase_price > 0) {
       const roi = ((netYearly / params.purchase_price) * 100).toFixed(1);
-      roiText = `ROI Net estimat: ${roi}% pe an (bazat pe preț de achiziție ${params.purchase_price.toLocaleString()} €).`;
+      roiText = `Randament Net estimat: ${roi}% pe an (bazat pe preț de achiziție ${params.purchase_price.toLocaleString()} €).`;
     }
 
     const result = [

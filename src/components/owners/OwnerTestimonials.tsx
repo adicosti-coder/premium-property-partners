@@ -14,28 +14,28 @@ const OwnerTestimonials = () => {
       badge: "Proprietari mulțumiți",
       title: "Liniște completă, randament real",
       subtitle:
-        "Citate reale de la proprietari care au ales managementul complet RealTrust și au depășit pragul de 9% ROI net anual.",
+        "Citate reale de la proprietari care au ales managementul complet RealTrust și au depășit pragul de 9% randament net anual.",
       items: [
         {
           quote:
             "Am uitat că am apartament. Primesc raportul lunar, banii intră în cont, iar randamentul a depășit 9.6% în primul an. Liniște absolută.",
           name: "Mihai D.",
           role: "Proprietar 2 apartamente · ISHO",
-          roi: "9.6% ROI net",
+          roi: "9.6% randament net",
         },
         {
           quote:
             "Locuiesc în Germania, apartamentul e în Timișoara. RealTrust se ocupă de tot — oaspeți, curățenie, mentenanță. Eu doar verific încasările.",
           name: "Andreea P.",
           role: "Proprietar · Cetate (Centrul Istoric)",
-          roi: "9.2% ROI net",
+          roi: "9.2% randament net",
         },
         {
           quote:
-            "Am comparat 3 firme de management. RealTrust a fost singura care mi-a arătat un calcul transparent, fără costuri ascunse. ROI promis = ROI livrat.",
+            "Am comparat 3 firme de management. RealTrust a fost singura care mi-a arătat un calcul transparent, fără costuri ascunse. randament promis = randament livrat.",
           name: "Cristian B.",
           role: "Investitor · 4 apartamente Dumbrăvița",
-          roi: "9.8% ROI net",
+          roi: "9.8% randament net",
         },
       ],
     },
@@ -50,21 +50,21 @@ const OwnerTestimonials = () => {
             "I forgot I own an apartment. I get the monthly report, money lands in my account, and yield went above 9.6% in year one. Absolute peace of mind.",
           name: "Mihai D.",
           role: "Owner of 2 apartments · ISHO",
-          roi: "9.6% net ROI",
+          roi: "9.6% net randament",
         },
         {
           quote:
             "I live in Germany, the apartment is in Timișoara. RealTrust handles everything — guests, cleaning, maintenance. I just check the payouts.",
           name: "Andreea P.",
           role: "Owner · Cetate (Historic Center)",
-          roi: "9.2% net ROI",
+          roi: "9.2% net randament",
         },
         {
           quote:
             "I compared 3 management firms. RealTrust was the only one with a transparent calculation, no hidden fees. Promised ROI = delivered ROI.",
           name: "Cristian B.",
           role: "Investor · 4 apartments Dumbrăvița",
-          roi: "9.8% net ROI",
+          roi: "9.8% net randament",
         },
       ],
     },

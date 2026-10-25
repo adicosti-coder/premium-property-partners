@@ -134,9 +134,9 @@ export const GEO_ANSWERS: GeoAnswer[] = [
   {
     id: "calcul-roi",
     group: "investitii",
-    question: "Cum se calculează ROI-ul unei investiții imobiliare?",
+    question: "Cum se calculează randamentul imobiliar (ROI) unei investiții imobiliare?",
     answer:
-      "ROI net = venitul net anual împărțit la capitalul total investit, înmulțit cu 100. Venitul net anual se obține din încasările brute estimate (tarif mediu pe noapte × nopți ocupate, sau chiria lunară × 12) minus costurile operaționale, impozitul și comisionul de administrare; capitalul total investit include prețul de achiziție, taxele notariale și de intabulare, amenajarea și dotarea. Ipoteza noastră implicită este o ocupare de 75%.",
+      "Randament net = venitul net anual împărțit la capitalul total investit, înmulțit cu 100. Venitul net anual se obține din încasările brute estimate (tarif mediu pe noapte × nopți ocupate, sau chiria lunară × 12) minus costurile operaționale, impozitul și comisionul de administrare; capitalul total investit include prețul de achiziție, taxele notariale și de intabulare, amenajarea și dotarea. Ipoteza noastră implicită este o ocupare de 75%.",
     source: { href: "/calculator-randament", label: "calculul pas cu pas al randamentului" },
   },
   {
