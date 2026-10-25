@@ -192,15 +192,6 @@ export function generatePropertySEO(property: PropertySEOInput): PropertySEOOutp
       ...(bookingUrl && { "sameAs": bookingUrl }),
       ...(reserveAction && { "potentialAction": reserveAction }),
     },
-    {
-      "@context": "https://schema.org",
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        { "@type": "ListItem", "position": 1, "name": "Acasă", "item": `${BASE_URL}/` },
-        { "@type": "ListItem", "position": 2, "name": "Imobiliare Timișoara", "item": `${BASE_URL}/servicii-imobiliare` },
-        { "@type": "ListItem", "position": 3, "name": property.name, "item": canonical },
-      ],
-    },
   ];
 
 
