@@ -25,6 +25,13 @@ const BodySchema = z.object({
   situatie_actuala: z.string().trim().max(40).optional(),
   tip_administrare: z.string().trim().max(40).optional(),
   observatii: z.string().trim().max(500).optional(),
+  // Calculatorul ROI (/calculator-roi).
+  email: z.string().trim().email().max(255).optional(),
+  parcare: z.boolean().optional(),
+  finisaje: z.enum(["standard", "premium"]).optional(),
+  chirie_clasica: z.number().int().min(0).max(100000).optional(),
+  venit_net_realtrust: z.number().int().min(0).max(100000).optional(),
+  sursa: z.string().trim().max(40).optional(),
 });
 
 const ROOM_LABELS: Record<string, string> = {
@@ -33,6 +40,7 @@ const ROOM_LABELS: Record<string, string> = {
   "3-camere": "apartamentul de 3 camere",
   "4-camere": "apartamentul de 4 camere",
   casa: "casa",
+  penthouse: "penthouse-ul",
 };
 
 /** Romanian mobile → full international digits without "+" (07… → 407…). */
@@ -89,6 +97,12 @@ Deno.serve(async (req) => {
     situatie_actuala: d.situatie_actuala ?? null,
     tip_administrare: d.tip_administrare ?? null,
     observatii: d.observatii ?? null,
+    email: d.email ?? null,
+    parcare: d.parcare ?? null,
+    finisaje: d.finisaje ?? null,
+    chirie_clasica: d.chirie_clasica ?? null,
+    venit_net_realtrust: d.venit_net_realtrust ?? null,
+    sursa: d.sursa ?? "calcul_venit",
     message: mesaj,
   };
 

@@ -1,398 +1,329 @@
-import { useState, useMemo, lazy, Suspense } from "react";
-import { Calculator, TrendingUp, ArrowUpRight, ArrowDownRight, Download } from "lucide-react";
-import { Slider } from "@/components/ui/slider";
+import { useMemo, useState } from "react";
+import { z } from "zod";
+import { ArrowLeft, ArrowRight, Building2, Car, Check, MessageCircle, Sparkles, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from "recharts";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { submitLead } from "@/lib/leadSubmission";
 import { supabase } from "@/lib/supabaseClient";
 import { withCampaignTracking } from "@/lib/campaignAttribution";
-import { trackConversion, formatPhoneInput } from "@/lib/conversionTracking";
+import { trackConversion, trackCriticalConversion, formatPhoneInput } from "@/lib/conversionTracking";
+import {
+  PROPERTY_TYPES,
+  ZONES,
+  estimateOwnerIncome,
+  type Finish,
+  type PropertyTypeValue,
+  type ZoneValue,
+} from "@/lib/ownerIncomeEstimate";
 
-/** Randament net de referință RealTrust: interval 6,5–9,4% pe an (ocupare 75%). */
-const TARGET_NET_YIELD_MIN = 0.065;
-const TARGET_NET_YIELD_MAX = 0.094;
+const WHATSAPP_NUMBER = "40799069256";
 
-const TIERS = [
-  { value: 15, label: "15%" },
-  { value: 18, label: "18%" },
-  { value: 20, label: "20%" },
-  { value: 25, label: "25%" },
-];
+const leadSchema = z.object({
+  name: z.string().trim().min(2, "Introdu numele (minim 2 caractere)").max(80),
+  phone: z.string().trim().regex(/^(\+?4?0)?7\d{8}$/, "Introdu un mobil valid (ex: 0722 123 456)"),
+  email: z.string().trim().email("Email invalid").max(255),
+});
+
+const fmt = (n: number) => n.toLocaleString("ro-RO");
+
+const Choice = ({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-pressed={active}
+    className={`min-h-12 rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors text-left ${
+      active
+        ? "border-primary bg-primary/10 text-primary ring-1 ring-primary"
+        : "border-border bg-background text-foreground hover:border-primary/40"
+    }`}
+  >
+    {children}
+  </button>
+);
 
 const ROICalculatorWidget = () => {
-  const [propertyValue, setPropertyValue] = useState(120000);
-  const [surface, setSurface] = useState(55);
-  const [selectedTier, setSelectedTier] = useState(20);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formSubmitted, setFormSubmitted] = useState(false);
-  const [formData, setFormData] = useState({ name: "", phone: "", email: "" });
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [type, setType] = useState<PropertyTypeValue>("2-camere");
+  const [zone, setZone] = useState<ZoneValue>("central");
+  const [surface, setSurface] = useState("55");
+  const [parking, setParking] = useState(false);
+  const [finish, setFinish] = useState<Finish>("standard");
+  const [open, setOpen] = useState(false);
+  const [lead, setLead] = useState({ name: "", phone: "", email: "" });
+  const [errors, setErrors] = useState<Partial<Record<"name" | "phone" | "email" | "surface", string>>>({});
   const [submitting, setSubmitting] = useState(false);
 
-  const calculations = useMemo(() => {
-    // Chirie clasică: valoare × 0.004 / lună
-    const classicRent = propertyValue * 0.004;
-    // Venit RealTrust: chirie clasică × 1.6 × (1 - tier%)
-    const realtrustIncome = classicRent * 1.6 * (1 - selectedTier / 100);
-    const monthlyDelta = realtrustIncome - classicRent;
-    // ROI anual
-    const classicROI = ((classicRent * 12) / propertyValue) * 100;
-    const realtrustROI = ((realtrustIncome * 12) / propertyValue) * 100;
+  const surfaceNum = Number(surface);
+  const r = useMemo(
+    () => estimateOwnerIncome({ type, zone, surface: surfaceNum, parking, finish }),
+    [type, zone, surfaceNum, parking, finish],
+  );
+  const typeLabel = PROPERTY_TYPES.find((t) => t.value === type)!.label;
+  const zoneLabel = ZONES.find((z) => z.value === zone)!.label;
+  const finishLabel = finish === "premium" ? "Premium Lux" : "Standard";
+  const maxBar = Math.max(r.classicRent, r.netRealTrust, 1);
 
-    // Referință RealTrust: randament net țintă 6,5–9,4% pe an.
-    const targetNetAnnualMin = propertyValue * TARGET_NET_YIELD_MIN;
-    const targetNetAnnualMax = propertyValue * TARGET_NET_YIELD_MAX;
+  const goStep2 = () => {
+    if (!/^\d{2,4}$/.test(surface) || surfaceNum < 15 || surfaceNum > 400) {
+      setErrors({ surface: "Suprafața trebuie să fie între 15 și 400 mp" });
+      return;
+    }
+    setErrors({});
+    setStep(2);
+  };
 
-    return {
-      targetNetAnnualMin: Math.round(targetNetAnnualMin),
-      targetNetAnnualMax: Math.round(targetNetAnnualMax),
-      targetNetMonthlyMin: Math.round(targetNetAnnualMin / 12),
-      targetNetMonthlyMax: Math.round(targetNetAnnualMax / 12),
-      classicRent: Math.round(classicRent),
-      realtrustIncome: Math.round(realtrustIncome),
-      monthlyDelta: Math.round(monthlyDelta),
-      classicROI: classicROI.toFixed(1),
-      realtrustROI: realtrustROI.toFixed(1),
-    };
-  }, [propertyValue, surface, selectedTier]);
-
-  const chartData = [
-    { name: "Chirie Clasică", value: calculations.classicRent, color: "hsl(var(--muted-foreground))" },
-    { name: "RealTrust", value: calculations.realtrustIncome, color: "hsl(var(--primary))" },
-  ];
+  const buildMessage = (name: string) =>
+    [
+      `Salut, sunt ${name}. Am folosit calculatorul RealTrust:`,
+      ``,
+      `🏠 ${typeLabel} · ${zoneLabel} · ${surfaceNum} mp`,
+      `• Parcare: ${parking ? "Da" : "Nu"} · Finisaje: ${finishLabel}`,
+      ``,
+      `📊 Proiecție lunară:`,
+      `• Chirie clasică: ~${fmt(r.classicRent)} €`,
+      `• Venit net RealTrust: ${fmt(r.netMin)} – ${fmt(r.netMax)} € (6,5–9,4% net estimat)`,
+      ``,
+      `Aș vrea o discuție scurtă ca să rafinăm cifrele.`,
+    ].join("\n");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
-    if (!formData.name || !formData.phone || !formData.email) {
-      toast.error("Completează toate câmpurile");
+    const parsed = leadSchema.safeParse(lead);
+    if (!parsed.success) {
+      const fe = parsed.error.flatten().fieldErrors;
+      setErrors({ name: fe.name?.[0], phone: fe.phone?.[0], email: fe.email?.[0] });
       return;
     }
-
+    setErrors({});
     setSubmitting(true);
+    const d = parsed.data;
+    const message = buildMessage(d.name);
+    const specs = {
+      property_type: type,
+      zone: zoneLabel,
+      surface_sqm: surfaceNum,
+      parking,
+      finish,
+      classic_rent: r.classicRent,
+      nightly_rate: r.nightlyRate,
+      occupancy: r.occupancy,
+      realtrust_net: r.netRealTrust,
+      realtrust_net_min: r.netMin,
+      realtrust_net_max: r.netMax,
+    };
     try {
       const result = await submitLead({
-        name: formData.name,
-        whatsapp_number: formatPhoneInput(formData.phone),
-        email: formData.email,
-        property_type: "apartament",
-        property_area: surface,
-        message: `[calculator_roi] Valoare: ${propertyValue} € · Suprafață: ${surface} mp · Tier management: ${selectedTier}%`,
+        name: d.name,
+        whatsapp_number: formatPhoneInput(d.phone),
+        email: d.email,
+        property_type: type,
+        property_area: surfaceNum,
+        message: `[calculator_roi] ${typeLabel} · ${zoneLabel} · ${surfaceNum} mp · Parcare: ${parking ? "Da" : "Nu"} · Finisaje: ${finishLabel}`,
         source: "calculator_roi_widget",
-        simulation_data: withCampaignTracking({
-          property_value: propertyValue,
-          surface,
-          management_tier: selectedTier,
-          classic_rent: calculations.classicRent,
-          realtrust_income: calculations.realtrustIncome,
-          target_net_yield_min: TARGET_NET_YIELD_MIN,
-          target_net_yield_max: TARGET_NET_YIELD_MAX,
-          target_net_annual_min: calculations.targetNetAnnualMin,
-          target_net_annual_max: calculations.targetNetAnnualMax,
-        }) as never,
+        simulation_data: withCampaignTracking({ ...specs, generated_message: message }) as never,
       });
-
       if (result.ok !== true) {
-        if (result.reason === "validation") {
-          toast.error("Verifică numele, telefonul și emailul introduse.");
-        } else {
-          toast.error("Nu am putut trimite cererea. Te rugăm să încerci din nou.");
-        }
+        toast.error(result.reason === "validation" ? "Verifică datele introduse." : "Nu am putut trimite cererea. Încearcă din nou.");
         return;
       }
 
-      trackConversion({
-        event: "roi_calculator_lead",
-        source: "calculator_roi_widget",
-        name: formData.name,
-        phone: formData.phone,
-        email: formData.email,
-      });
-
-      // Notificare echipă + confirmare proprietar (best-effort)
-      try {
-        await supabase.functions.invoke("notify-evaluation-request", {
+      void supabase.functions
+        .invoke("handle-lead-whatsapp", {
           body: {
-            name: formData.name,
-            email: formData.email,
-            phone: formatPhoneInput(formData.phone),
-            propertyValue,
-            surface,
-            managementTier: selectedTier,
-            classicRent: calculations.classicRent,
-            realtrustIncome: calculations.realtrustIncome,
-            targetNetAnnualMin: calculations.targetNetAnnualMin,
-            targetNetAnnualMax: calculations.targetNetAnnualMax,
-            targetNetMonthlyMin: calculations.targetNetMonthlyMin,
-            targetNetMonthlyMax: calculations.targetNetMonthlyMax,
-            source: "calculator_roi_widget",
+            nume: d.name,
+            telefon: d.phone,
+            email: d.email,
+            zona: zoneLabel,
+            numar_camere: type,
+            suprafata_mp: surfaceNum,
+            parcare: parking,
+            finisaje: finish,
+            chirie_clasica: r.classicRent,
+            venit_net_realtrust: r.netRealTrust,
+            venit_estimat_min: r.netMin,
+            venit_estimat_max: r.netMax,
+            sursa: "calculator_roi",
           },
-        });
-      } catch (notifyError) {
-        console.error("notify-evaluation-request failed:", notifyError);
-      }
+        })
+        .then(({ error }) => { if (error) console.warn("[ROICalculator] handle-lead-whatsapp failed", error); })
+        .catch(() => {});
 
-      setFormSubmitted(true);
-      toast.success("Cerere trimisă! Îți trimitem proiecția pe email.");
+      trackConversion({ event: "roi_calculator_lead", source: "calculator_roi_widget", name: d.name, phone: d.phone, email: d.email });
+      trackCriticalConversion("Lead_Submit", { source: "calculator_roi_widget", value: 90, currency: "EUR", name: d.name });
 
+      toast.success("Proiecția a fost trimisă. Te redirecționăm către WhatsApp.");
+      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+      setOpen(false);
     } finally {
       setSubmitting(false);
     }
   };
 
+  const steps = ["Proprietate", "Dotări", "Rezultat"];
+
   return (
-    <div className="bg-card border border-border rounded-2xl p-6 md:p-8 shadow-sm">
-      {/* Header */}
-      <div className="flex items-center gap-2 mb-6">
-        <Calculator className="w-5 h-5 text-primary" />
-        <h2 className="text-xl font-semibold text-foreground">
-          Calculator ROI — Regim Hotelier vs. Chirie Clasică
-        </h2>
+    <div className="bg-card border border-border rounded-3xl p-6 md:p-10 shadow-elegant">
+      <div className="flex items-center gap-2 mb-2">
+        <Sparkles className="w-4 h-4 text-primary" />
+        <span className="text-xs font-semibold uppercase tracking-widest text-primary">Calculator venit · 3 pași</span>
       </div>
+      <h2 className="text-2xl md:text-3xl font-serif font-semibold text-foreground mb-6">
+        Cât produce apartamentul tău în Timișoara?
+      </h2>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Sliders */}
-        <div className="space-y-6">
-          {/* Property value */}
-          <div>
-            <div className="flex justify-between mb-2">
-              <Label className="text-sm font-medium">Valoarea proprietății</Label>
-              <span className="text-sm font-bold text-primary">
-                {propertyValue.toLocaleString("ro-RO")} €
+      <ol className="flex gap-2 mb-8" aria-label="Etapele calculatorului">
+        {steps.map((s, i) => {
+          const n = (i + 1) as 1 | 2 | 3;
+          const reached = n <= step;
+          return (
+            <li key={s} className="flex-1" aria-current={n === step ? "step" : undefined}>
+              <div className={`h-1.5 rounded-full ${reached ? "bg-primary" : "bg-border"}`} />
+              <span className={`mt-2 block text-xs font-medium ${n === step ? "text-primary" : "text-muted-foreground"}`}>
+                {n}. {s}
               </span>
-            </div>
-            <Slider
-              value={[propertyValue]}
-              onValueChange={([v]) => setPropertyValue(v)}
-              min={50000}
-              max={500000}
-              step={5000}
-              className="w-full"
-              aria-label="Valoarea proprietății"
-            />
-            <div className="flex justify-between text-xs text-muted-foreground mt-1">
-              <span>50.000 €</span>
-              <span>500.000 €</span>
-            </div>
-          </div>
+            </li>
+          );
+        })}
+      </ol>
 
-          {/* Surface */}
-          <div>
-            <div className="flex justify-between mb-2">
-              <Label className="text-sm font-medium">Suprafață</Label>
-              <span className="text-sm font-bold text-primary">{surface} mp</span>
-            </div>
-            <Slider
-              value={[surface]}
-              onValueChange={([v]) => setSurface(v)}
-              min={30}
-              max={150}
-              step={5}
-              className="w-full"
-              aria-label="Suprafață proprietate"
-            />
-            <div className="flex justify-between text-xs text-muted-foreground mt-1">
-              <span>30 mp</span>
-              <span>150 mp</span>
-            </div>
-          </div>
-
-          {/* Management tier */}
-          <div>
-            <Label className="text-sm font-medium mb-3 block">Tier management</Label>
-            <div className="flex rounded-xl overflow-hidden border border-border">
-              {TIERS.map((tier) => (
-                <button
-                  key={tier.value}
-                  type="button"
-                  aria-pressed={selectedTier === tier.value}
-                  onClick={() => setSelectedTier(tier.value)}
-                  className={`flex-1 min-h-12 py-2.5 text-sm font-semibold transition-colors ${
-                    selectedTier === tier.value
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-card text-muted-foreground hover:bg-muted/50"
-                  }`}
-                >
-                  {tier.label}
-                </button>
+      {step === 1 && (
+        <div className="space-y-6">
+          <fieldset>
+            <legend className="mb-3 text-sm font-semibold text-foreground">Tip proprietate</legend>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {PROPERTY_TYPES.map((t) => (
+                <Choice key={t.value} active={type === t.value} onClick={() => { setType(t.value); setSurface(String(t.refSqm)); }}>
+                  {t.label}
+                </Choice>
               ))}
             </div>
-          </div>
-        </div>
-
-        {/* Results */}
-        <div className="space-y-4">
-          {/* Classic rent */}
-          <div className="bg-muted/30 rounded-xl p-4">
-            <p className="text-sm text-muted-foreground mb-1">Chirie clasică estimată</p>
-            <p className="text-2xl font-bold text-foreground">
-              {calculations.classicRent.toLocaleString("ro-RO")} €<span className="text-sm font-normal text-muted-foreground">/lună</span>
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              ROI anual: {calculations.classicROI}%
-            </p>
-          </div>
-
-          {/* RealTrust income */}
-          <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
-            <p className="text-sm text-primary mb-1">Venit RealTrust estimat</p>
-            <p className="text-2xl font-bold text-primary">
-              {calculations.realtrustIncome.toLocaleString("ro-RO")} €<span className="text-sm font-normal text-muted-foreground">/lună</span>
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              ROI anual: {calculations.realtrustROI}%
-            </p>
-          </div>
-
-          {/* Randament net de referință 6,5–9,4% */}
-          <div className="bg-muted/20 border border-border rounded-xl p-4">
-            <p className="text-sm text-muted-foreground mb-1">
-              Estimare la randamentul net de referință RealTrust (6,5–9,4%)
-            </p>
-            <p className="text-xl font-bold text-foreground">
-              {calculations.targetNetAnnualMin.toLocaleString("ro-RO")}–{calculations.targetNetAnnualMax.toLocaleString("ro-RO")} €
-              <span className="text-sm font-normal text-muted-foreground">/an net</span>
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              ≈ {calculations.targetNetMonthlyMin.toLocaleString("ro-RO")}–{calculations.targetNetMonthlyMax.toLocaleString("ro-RO")} €/lună · ipoteze: ocupare 75%, costuri operaționale și taxe
-            </p>
-          </div>
-
-          {/* Delta */}
-          <div className="flex items-center gap-3">
-            <div
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-semibold ${
-                calculations.monthlyDelta > 0
-                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                  : "bg-destructive/10 text-destructive"
-              }`}
-            >
-              {calculations.monthlyDelta > 0 ? (
-                <ArrowUpRight className="w-4 h-4" />
-              ) : (
-                <ArrowDownRight className="w-4 h-4" />
-              )}
-              {calculations.monthlyDelta > 0 ? "+" : ""}
-              {calculations.monthlyDelta.toLocaleString("ro-RO")} €/lună
+          </fieldset>
+          <fieldset>
+            <legend className="mb-3 text-sm font-semibold text-foreground">Zonă / Complex</legend>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {ZONES.map((z) => (
+                <Choice key={z.value} active={zone === z.value} onClick={() => setZone(z.value)}>
+                  {z.label}
+                </Choice>
+              ))}
             </div>
-            <span className="text-sm text-muted-foreground">diferență lunară</span>
+          </fieldset>
+          <div className="max-w-xs">
+            <Label htmlFor="calc-surface" className="mb-2 block font-semibold">Suprafață (mp)</Label>
+            <Input
+              id="calc-surface"
+              inputMode="numeric"
+              maxLength={4}
+              value={surface}
+              onChange={(e) => setSurface(e.target.value.replace(/\D/g, ""))}
+              aria-invalid={!!errors.surface}
+              aria-describedby={errors.surface ? "calc-surface-error" : undefined}
+            />
+            {errors.surface && <p id="calc-surface-error" className="mt-1 text-sm text-destructive">{errors.surface}</p>}
           </div>
+          <Button size="lg" className="w-full sm:w-auto" onClick={goStep2}>
+            Continuă <ArrowRight className="w-5 h-5 ml-2" />
+          </Button>
+        </div>
+      )}
 
-          {/* Chart */}
-          <div className="h-48 mt-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} barSize={60}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" tickFormatter={(v) => `${v}€`} />
-                <Tooltip
-                  formatter={(value: number) => [`${value.toLocaleString("ro-RO")} €/lună`, ""]}
-                  contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))" }}
-                />
-                <Bar dataKey="value" radius={[8, 8, 0, 0]}>
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+      {step === 2 && (
+        <div className="space-y-6">
+          <fieldset>
+            <legend className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground"><Car className="w-4 h-4 text-primary" />Loc de parcare</legend>
+            <div className="grid grid-cols-2 gap-2 max-w-sm">
+              <Choice active={parking} onClick={() => setParking(true)}>Da</Choice>
+              <Choice active={!parking} onClick={() => setParking(false)}>Nu</Choice>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground"><Building2 className="w-4 h-4 text-primary" />Nivel finisaje</legend>
+            <div className="grid grid-cols-2 gap-2 max-w-sm">
+              <Choice active={finish === "standard"} onClick={() => setFinish("standard")}>Standard</Choice>
+              <Choice active={finish === "premium"} onClick={() => setFinish("premium")}>Premium Lux</Choice>
+            </div>
+          </fieldset>
+          <div className="flex gap-3">
+            <Button variant="outline" size="lg" onClick={() => setStep(1)}><ArrowLeft className="w-5 h-5 mr-2" />Înapoi</Button>
+            <Button size="lg" onClick={() => setStep(3)}>Vezi rezultatul <ArrowRight className="w-5 h-5 ml-2" /></Button>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* CTA Card */}
-      <div className="mt-8 bg-primary/5 border border-primary/20 rounded-xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div>
-          <p className="font-semibold text-foreground">Descarcă proiecția completă</p>
+      {step === 3 && (
+        <div className="space-y-6">
           <p className="text-sm text-muted-foreground">
-            Primești un raport detaliat cu estimări lunare și anuale personalizate.
+            {typeLabel} · {zoneLabel} · {surfaceNum} mp · Parcare: {parking ? "Da" : "Nu"} · Finisaje: {finishLabel}
           </p>
-        </div>
-        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogTrigger asChild>
-            <Button className="shrink-0">
-              <Download className="w-4 h-4 mr-2" />
-              Vreau proiecția gratuită
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Proiecție ROI Personalizată</DialogTitle>
-            </DialogHeader>
-            {formSubmitted ? (
-              <div className="text-center py-8">
-                <div className="text-4xl mb-3">✅</div>
-                <p className="font-semibold text-foreground mb-1">Cerere trimisă cu succes!</p>
-                <p className="text-sm text-muted-foreground">
-                  Vei primi proiecția pe email în maxim 24 de ore.
-                </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-2xl border border-border bg-muted/40 p-5">
+              <p className="text-sm text-muted-foreground">Chirie clasică</p>
+              <p className="mt-1 text-3xl font-semibold text-foreground">{fmt(r.classicRent)} €<span className="text-base font-normal text-muted-foreground">/lună</span></p>
+              <div className="mt-4 h-2 rounded-full bg-border overflow-hidden">
+                <div className="h-full bg-muted-foreground" style={{ width: `${(r.classicRent / maxBar) * 100}%` }} />
               </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="roi-name">Nume</Label>
-                  <Input
-                    id="roi-name"
-                    type="text"
-                    autoComplete="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Numele tău"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="roi-phone">Telefon</Label>
-                  <Input
-                    id="roi-phone"
-                    type="tel"
-                    inputMode="tel"
-                    autoComplete="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="07XX XXX XXX"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="roi-email">Email</Label>
-                  <Input
-                    id="roi-email"
-                    type="email"
-                    inputMode="email"
-                    autoComplete="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="email@exemplu.ro"
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={submitting}>
-                  {submitting ? "Se trimite..." : "Vreau proiecția gratuită"}
-                </Button>
-              </form>
-            )}
-          </DialogContent>
-        </Dialog>
-      </div>
+            </div>
+            <div className="rounded-2xl border border-primary/40 bg-primary/5 p-5">
+              <p className="text-sm text-primary font-medium">Venit net RealTrust</p>
+              <p className="mt-1 text-3xl font-semibold text-foreground">{fmt(r.netMin)}–{fmt(r.netMax)} €<span className="text-base font-normal text-muted-foreground">/lună net</span></p>
+              <div className="mt-4 h-2 rounded-full bg-border overflow-hidden">
+                <div className="h-full bg-primary" style={{ width: `${(r.netRealTrust / maxBar) * 100}%` }} />
+              </div>
+            </div>
+          </div>
+          {r.monthlyDelta > 0 && (
+            <p className="flex items-center gap-2 text-foreground font-medium">
+              <TrendingUp className="w-5 h-5 text-primary" />
+              Aproximativ +{fmt(r.monthlyDelta)} €/lună față de chiria clasică
+            </p>
+          )}
+          <ul className="grid gap-1 text-sm text-muted-foreground">
+            <li className="flex gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />Tarif mediu estimat: ~{r.nightlyRate} €/noapte, ocupare {Math.round(r.occupancy * 100)}% în zonă</li>
+            <li className="flex gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />Deja scăzute: administrare, curățenie, comisioane platforme și taxe (~27%)</li>
+            <li className="flex gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />Randament 6,5–9,4% net estimat; cifrele finale depind de apartament</li>
+          </ul>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button variant="outline" size="lg" onClick={() => setStep(2)}><ArrowLeft className="w-5 h-5 mr-2" />Modifică</Button>
+            <Button size="lg" className="flex-1" onClick={() => setOpen(true)}>
+              <MessageCircle className="w-5 h-5 mr-2" />Trimite proiecția pe WhatsApp
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Trimite proiecția pe WhatsApp</DialogTitle>
+            <DialogDescription>Îți trimitem calculul și te sună un consultant pentru cifrele exacte.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+            {(["name", "phone", "email"] as const).map((k) => (
+              <div key={k}>
+                <Label htmlFor={`roi-${k}`}>{k === "name" ? "Nume" : k === "phone" ? "Telefon" : "Email"}</Label>
+                <Input
+                  id={`roi-${k}`}
+                  type={k === "phone" ? "tel" : k === "email" ? "email" : "text"}
+                  autoComplete={k === "phone" ? "tel" : k}
+                  maxLength={k === "email" ? 255 : 80}
+                  placeholder={k === "name" ? "Numele tău" : k === "phone" ? "07XX XXX XXX" : "email@exemplu.ro"}
+                  value={lead[k]}
+                  onChange={(e) => { setLead({ ...lead, [k]: e.target.value }); setErrors((p) => ({ ...p, [k]: undefined })); }}
+                  aria-invalid={!!errors[k]}
+                />
+                {errors[k] && <p className="mt-1 text-sm text-destructive">{errors[k]}</p>}
+              </div>
+            ))}
+            <Button type="submit" className="w-full" size="lg" disabled={submitting}>
+              {submitting ? "Se trimite..." : "Trimite proiecția pe WhatsApp"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
