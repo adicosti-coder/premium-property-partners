@@ -16,7 +16,7 @@ const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversion
 const CalculatorROI = () => {
   const breadcrumbItems = [
     { label: "Acasă", href: "/" },
-    { label: "Calculator ROI" },
+    { label: "Calculator de randament" },
   ];
 
   const tocItems = [
@@ -59,18 +59,18 @@ const CalculatorROI = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Calculator ROI: hotelier vs. chirie | RealTrust"
-        description="Estimează randamentul apartamentului tău în Timișoara: regim hotelier vs. chirie clasică. Venit lunar și ROI anual, calculate pe ipoteze publice."
+        title="Calculator de randament imobiliar Timișoara | RealTrust"
+        description="Calculator gratuit de randament imobiliar pentru Timișoara: compară chiria clasică cu venitul net în regim hotelier, pe chirii reale din fiecare zonă."
         url="https://realtrust.ro/calculator-roi"
         breadcrumbItems={[
           { name: "Acasă", url: "https://realtrust.ro" },
-          { name: "Calculator ROI", url: "https://realtrust.ro/calculator-roi" },
+          { name: "Calculator de randament imobiliar", url: "https://realtrust.ro/calculator-roi" },
         ]}
         jsonLd={[FINANCIAL_SERVICE_SCHEMA as unknown as Record<string, unknown>, {
           "@context": "https://schema.org",
           "@type": "FinancialProduct",
-          name: "Calculator ROI imobiliare Timișoara — regim hotelier vs. chirie clasică",
-          description: "Calculator gratuit de randament imobiliar: compară venitul lunar și ROI-ul anual între regim hotelier și chirie clasică. Include cash flow și amortizarea investiției.",
+          name: "Calculator de randament imobiliar Timișoara — regim hotelier vs. chirie clasică",
+          description: "Calculator gratuit de randament imobiliar: compară venitul lunar net între regim hotelier și chirie clasică, pe chirii reale din Timișoara.",
           url: "https://realtrust.ro/calculator-roi",
           provider: {
             ...REAL_ESTATE_AGENT_REF,
@@ -87,7 +87,7 @@ const CalculatorROI = () => {
 
           <div className="text-center mb-10">
             <h1 className="text-3xl md:text-4xl font-serif font-semibold text-foreground mb-3">
-              Calculator ROI imobiliare Timișoara: regim hotelier vs. chirie clasică
+              Calculator de randament imobiliar în Timișoara: regim hotelier vs. chirie clasică
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               În 3 pași afli ce poate produce apartamentul tău: <strong>chiria clasică vs. venitul net în regim hotelier</strong>, calculate pe chirii reale din fiecare zonă a Timișoarei și pe gradul de ocupare din zonă.

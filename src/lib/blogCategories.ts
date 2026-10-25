@@ -106,7 +106,7 @@ export const BLOG_CATEGORIES: BlogCategoryMeta[] = [
       "TVA închiriere apartament",
       "fiscalitate Airbnb România",
     ],
-    ctaLabel: "Calculator ROI net",
+    ctaLabel: "Calculator de randament net",
     ctaHref: "/calculator-roi",
   },
 ];

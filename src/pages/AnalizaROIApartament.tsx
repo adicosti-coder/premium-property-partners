@@ -79,7 +79,7 @@ const zoneCriteria = [
 ];
 
 const relatedGuides = [
-  { label: "Calculator ROI", href: "/calculator-roi", text: "Compară rapid chiria clasică și regimul hotelier." },
+  { label: "Calculator de randament", href: "/calculator-roi", text: "Compară rapid chiria clasică și regimul hotelier." },
   { label: "Catalog Investiții", href: "/catalog-investitii", text: "Vezi oportunități filtrate după randament și risc." },
   { label: "Piața imobiliară", href: "/piata-imobiliara-timisoara", text: "Urmărește tendințe locale, prețuri și cerere." },
 ];

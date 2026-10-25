@@ -196,7 +196,7 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
     {
       id: "calculator",
       icon: Calculator,
-      label: language === 'ro' ? "Calculator ROI" : "ROI Calculator",
+      label: language === 'ro' ? "Calculator randament" : "ROI Calculator",
       onClick: () => {
         lightTap();
         window.dispatchEvent(new CustomEvent('open-inline-calculator'));
