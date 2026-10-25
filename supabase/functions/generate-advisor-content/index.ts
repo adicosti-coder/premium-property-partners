@@ -127,9 +127,11 @@ serve(async (req) => {
 
     // Read actual GPS from the property, rather than trusting AI to place its district.
     const { data: storedProperty } = await sb.from("properties")
-      .select("latitude, longitude, location")
+      .select("latitude, longitude, location, usable_area, size")
       .eq(propertySlug ? "slug" : "name", propertySlug || propertyName)
       .limit(1).maybeSingle();
+    // Usable area from DB always wins over the client-sent size.
+    const realSize = Number(storedProperty?.usable_area) > 0 ? Number(storedProperty?.usable_area) : (Number(storedProperty?.size) > 0 ? Number(storedProperty?.size) : size);
     const geoContext = buildAdvisorGeoContext(storedProperty?.location || location || propertyName || "", storedProperty?.latitude, storedProperty?.longitude);
 
     // --- Check cache first (unless forceRegenerate=true from admin) ---
@@ -191,7 +193,7 @@ serve(async (req) => {
 
 Property: ${propertyName}
 Location: ${location}, Timișoara, Romania
-Size: ${size || "N/A"} sqm
+Size: ${realSize || "N/A"} sqm (usable area — use exactly this number)
 Bedrooms: ${bedrooms || "N/A"} | Bathrooms: ${bathrooms || "N/A"} | Capacity: ${capacity || "N/A"} guests
 Floor: ${floor || "N/A"}
 Year built: ${yearBuilt || "N/A"}
@@ -209,7 +211,7 @@ Respond with VALID JSON ONLY. ENGLISH ONLY.`
 
 Proprietate: ${propertyName}
 Locație: ${location}, Timișoara
-Suprafață: ${size || "N/A"} mp
+Suprafață utilă: ${realSize || "N/A"} mp (folosește exact această valoare)
 Dormitoare: ${bedrooms || "N/A"} | Băi: ${bathrooms || "N/A"} | Capacitate: ${capacity || "N/A"} oaspeți
 Etaj: ${floor || "N/A"}
 Anul construcției: ${yearBuilt || "N/A"}
