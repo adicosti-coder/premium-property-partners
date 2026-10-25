@@ -43,6 +43,7 @@ export default function PromptOptimizationWidget() {
 
   const run = async () => {
     setBusy("run");
+    toast({ title: "Re-antrenare pornită", description: `Analizăm ${lowCount ?? "…"} conversații cu notă ≤ 6. Poate dura până la un minut.` });
     const { data: sess } = await supabase.auth.getSession();
     if (!sess.session) { setBusy(null); return toast({ title: "Sesiune expirată", description: "Autentificați-vă din nou ca administrator.", variant: "destructive" }); }
     const { data, error } = await supabase.functions.invoke("optimize-agent-prompt", { body: {} });
@@ -55,7 +56,7 @@ export default function PromptOptimizationWidget() {
         : data?.error || error?.message;
       return toast({ title: "Re-antrenarea a eșuat", description, variant: "destructive" });
     }
-    toast({ title: RUN_MSG[data?.status] ?? "Gata" });
+    toast({ title: RUN_MSG[data?.status] ?? "Gata", description: data?.status === "created" ? "Propunerea e gata de verificat mai jos." : undefined });
     refresh();
   };
   const review = async (approve: boolean) => {
@@ -71,17 +72,23 @@ export default function PromptOptimizationWidget() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
-        <div>
-          <CardTitle className="flex items-center gap-2 text-lg">
+      <CardHeader className="flex flex-col items-start gap-4 space-y-0 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <CardTitle className="flex flex-wrap items-center gap-2 text-lg">
             Optimizare prompt Andrei
             {p && <Badge className="gap-1"><Sparkles className="h-3 w-3" />Auto-Optimization Ready</Badge>}
           </CardTitle>
           <CardDescription>Propuneri din apelurile reale și simulările din Laborator cu notă mică.</CardDescription>
         </div>
-        <Button variant="outline" onClick={run} disabled={!!busy} className="min-h-12">
+        <Button
+          variant="outline"
+          onClick={run}
+          disabled={!!busy}
+          aria-busy={busy === "run"}
+          className="min-h-12 w-full shrink-0 whitespace-normal text-center sm:w-auto"
+        >
           {busy === "run" ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-          Rulează Re-antrenare Acum
+          {busy === "run" ? `Analizăm ${lowCount ?? "…"} de conversații...` : "Rulează Re-antrenare Acum"}
         </Button>
       </CardHeader>
       <CardContent>
@@ -116,12 +123,12 @@ export default function PromptOptimizationWidget() {
                 </TabsContent>
               ))}
             </Tabs>
-            <div className="flex flex-wrap gap-2">
-              <Button onClick={() => review(true)} disabled={!!busy} className="min-h-12">
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button onClick={() => review(true)} disabled={!!busy} className="min-h-12 w-full whitespace-normal sm:w-auto">
                 {busy === "approve" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                 Aprobă & Aplică în Producție
               </Button>
-              <Button variant="outline" onClick={() => review(false)} disabled={!!busy} className="min-h-12">
+              <Button variant="outline" onClick={() => review(false)} disabled={!!busy} className="min-h-12 w-full sm:w-auto">
                 <X className="h-4 w-4" />Respinge
               </Button>
             </div>
