@@ -545,6 +545,56 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_prompts_history: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          current_prompt: string
+          evidence: Json
+          id: string
+          proposed_prompt: string
+          reasoning: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          script_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          current_prompt: string
+          evidence?: Json
+          id?: string
+          proposed_prompt: string
+          reasoning: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          script_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          current_prompt?: string
+          evidence?: Json
+          id?: string
+          proposed_prompt?: string
+          reasoning?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          script_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_prompts_history_script_id_fkey"
+            columns: ["script_id"]
+            isOneToOne: false
+            referencedRelation: "voice_agent_scripts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_text_cache: {
         Row: {
           action: string
@@ -13356,6 +13406,10 @@ export type Database = {
         Returns: Json
       }
       retry_failed_crm_syncs: { Args: never; Returns: number }
+      review_agent_prompt: {
+        Args: { _approve: boolean; _id: string }
+        Returns: string
+      }
       revoke_admin_mfa: { Args: never; Returns: undefined }
       run_scraper_cron: {
         Args: { _body: Json; _fn: string }

@@ -126,6 +126,7 @@ const SharedComparison = lazyWithRetry(() => import("./pages/SharedComparison"))
 const CallDashboard = lazyWithRetry(() => import("./pages/CallDashboard"));
 const AdminLeadDashboard = lazyWithRetry(() => import("./pages/AdminLeadDashboard"));
 const DbHealth = lazyWithRetry(() => import("./pages/admin/DbHealth"));
+const AndreiDashboard = lazyWithRetry(() => import("./pages/admin/AndreiDashboard"));
 const CereriRandament = lazyWithRetry(() => import("./pages/admin/CereriRandament"));
 const FastReview = lazyWithRetry(() => import("./pages/admin/FastReview"));
 const RouteBoundary = ({ children }: { children: React.ReactNode }) => {
@@ -324,6 +325,7 @@ const App = () => (
                     <Route path="/calculator-randament" element={<CalculatorROI />} />
                     <Route path="/calculator-roi" element={<Navigate to="/calculator-randament" replace />} />
                     <Route path="/admin/cereri-randament" element={<CereriRandament />} />
+                    <Route path="/admin/andrei" element={<AndreiDashboard />} />
                     <Route path="/analiza-roi-apartament" element={<AnalizaROIApartament />} />
                     <Route path="/piata-imobiliara-timisoara" element={<PiataImobiliara />} />
                     <Route path="/evaluare-gratuita" element={<EvaluareGratuita />} />
