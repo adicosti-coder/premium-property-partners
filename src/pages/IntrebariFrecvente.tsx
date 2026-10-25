@@ -120,7 +120,7 @@ const COPY = {
     whatsapp: "Scrie pe WhatsApp",
     email: "Trimite e-mail",
     ownersLink: "Vezi serviciile de administrare",
-    calcLink: "Calculează randamentul",
+    calcLink: "Calculează Randamentul Imobiliar (ROI)",
   },
   en: {
     seoTitle: "Short-Term Rental FAQ — Management & randament in Timișoara | RealTrust",

@@ -176,7 +176,7 @@ Direct pe https://realtrust.ro/rezervare sau prin linkul Pynbooking al fiecărui
 
 - Pentru proprietari (administrare regim hotelier): https://realtrust.ro/pentru-proprietari
 - Pentru oaspeți (cazare): https://realtrust.ro/cazare
-- Calculator de randament imobiliar: https://realtrust.ro/calculator-randament
+- Calculator Randament Imobiliar (ROI): https://realtrust.ro/calculator-randament
 - Catalog investiții: https://realtrust.ro/catalog-investitii
 - Analiză proprietate (AI): https://realtrust.ro/hostscan-ai
 - Rezervare directă: https://realtrust.ro/rezervare

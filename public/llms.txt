@@ -54,7 +54,7 @@ Lista completă cu specificații, facilități și linkuri de rezervare: [/llms-
 - [Acasă](/): Prezentare RealTrust și ApArt Hotel — imobiliare și operare hotelieră în Timișoara.
 - [Cazare regim hotelier](/cazare): Cazare în apartamente premium în regim hotelier în Timișoara.
 - [Pentru proprietari](/pentru-proprietari): Servicii de administrare apartamente în regim hotelier.
-- [Calculator de randament imobiliar](/calculator-randament): Calculator randament net pentru apartamente în regim hotelier vs. închiriere clasică.
+- [Calculator Randament Imobiliar (ROI)](/calculator-randament): Calculator randament net pentru apartamente în regim hotelier vs. închiriere clasică.
 - [Catalog investiții](/catalog-investitii): Apartamente cu randament calculat transparent (9,4% net).
 - [Imobiliare Timișoara](/imobiliare): Anunțuri vânzări și închirieri în Timișoara.
 - [Hub cartiere](/cartiere): Ghid pe cartiere — Cetate, Iosefin, Fabric, Dumbrăvița, Aradului.

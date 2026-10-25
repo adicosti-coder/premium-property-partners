@@ -79,7 +79,7 @@ const zoneCriteria = [
 ];
 
 const relatedGuides = [
-  { label: "Calculator de randament", href: "/calculator-randament", text: "Compară rapid chiria clasică și regimul hotelier." },
+  { label: "Calculator Randament Imobiliar (ROI)", href: "/calculator-randament", text: "Compară rapid chiria clasică și regimul hotelier." },
   { label: "Catalog Investiții", href: "/catalog-investitii", text: "Vezi oportunități filtrate după randament și risc." },
   { label: "Piața imobiliară", href: "/piata-imobiliara-timisoara", text: "Urmărește tendințe locale, prețuri și cerere." },
 ];
@@ -162,7 +162,7 @@ const AnalizaROIApartament = () => {
     <div className="min-h-screen bg-background">
       <SEOHead
         title="Analiză Randament Apartament | Randament investiții imobiliare"
-        description="Calculează randamentul unei investiții imobiliare: randament net, evoluția prețurilor și zonele potrivite pentru investiții în complexe din Timișoara."
+        description="Calculează Randamentul Imobiliar (ROI) unei investiții imobiliare: randament net, evoluția prețurilor și zonele potrivite pentru investiții în complexe din Timișoara."
         url="https://realtrust.ro/analiza-roi-apartament"
         breadcrumbItems={[
           { name: "Acasă", url: "https://realtrust.ro" },
@@ -216,7 +216,7 @@ const AnalizaROIApartament = () => {
                   Estimează profitul net al unui apartament, compară chiria clasică cu administrarea în regim hotelier și verifică evoluția prețurilor pe zone cu cerere ridicată.
                 </p>
                 <div className="mt-7 flex flex-wrap gap-3">
-                  <Button asChild size="lg"><a href="#calculator">Calculează randamentul</a></Button>
+                  <Button asChild size="lg"><a href="#calculator">Calculează Randamentul Imobiliar (ROI)</a></Button>
                   <Button asChild size="lg" variant="outline"><Link to="/ansambluri-rezidentiale">Vezi Complexe <ArrowRight className="h-4 w-4" /></Link></Button>
                 </div>
               </div>

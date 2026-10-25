@@ -529,7 +529,7 @@ const AboutUs = () => {
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
                   { to: "/cartiere", label: language === "ro" ? "Vânzări apartamente & case Timișoara" : "Apartments & houses for sale Timișoara", icon: Building2 },
-                  { to: "/calculator-randament", label: language === "ro" ? "Calculator de randament imobiliar" : "Short-term Rental ROI Calculator", icon: TrendingUp },
+                  { to: "/calculator-randament", label: language === "ro" ? "Calculator Randament Imobiliar (ROI)" : "Short-term Rental ROI Calculator", icon: TrendingUp },
                   { to: "/cazare", label: language === "ro" ? "Cazare Premium pentru oaspeți" : "Premium stays for guests", icon: Home },
                   { to: "/evaluare-gratuita", label: language === "ro" ? "Evaluare gratuită proprietate" : "Free property valuation", icon: Award }
                 ].map((p, i) => (

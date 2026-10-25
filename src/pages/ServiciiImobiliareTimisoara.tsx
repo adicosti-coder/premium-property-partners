@@ -138,7 +138,7 @@ const ServiciiImobiliareTimisoara = () => {
 
   const recommendedResources = [
     { to: "/investitii", icon: TrendingUp, label: isRo ? "Investiții imobiliare Timișoara" : "Timișoara real estate investments" },
-    { to: "/calculator-randament", icon: Calculator, label: isRo ? "Calculator de randament imobiliar" : "Short-term rental ROI calculator" },
+    { to: "/calculator-randament", icon: Calculator, label: isRo ? "Calculator Randament Imobiliar (ROI)" : "Short-term rental ROI calculator" },
     { to: "/blog/analiza-roi-timisoara-2026", icon: FileText, label: isRo ? "Analiză Randament Timișoara 2026" : "Timișoara randament analysis 2026" },
   ];
 

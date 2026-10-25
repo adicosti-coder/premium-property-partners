@@ -34,7 +34,7 @@ export default function HomeRecommendedLinks() {
       to: "/analiza-roi-apartament",
       icon: Calculator,
       title: isRo ? "Analiză Randament Apartament" : "Apartment ROI Analysis",
-      text: isRo ? "Calculează randamentul, profitul net și evoluția prețului pentru un apartament." : "Estimate yield, net profit and price evolution for an apartment.",
+      text: isRo ? "Calculează Randamentul Imobiliar (ROI), profitul net și evoluția prețului pentru un apartament." : "Estimate yield, net profit and price evolution for an apartment.",
       cta: isRo ? "Analizează profitul" : "Analyze profit",
     },
   ];
