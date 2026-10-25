@@ -380,7 +380,7 @@ const PreCalcMiniForm = ({ source = "pre_calc_owner", eyebrow, variant = "full",
                     <Button type="button" size="lg" onClick={handleWhatsapp} className="w-full h-14 text-base bg-gold text-gold-foreground hover:bg-gold-dark">
                       <MessageCircle className="w-5 h-5 mr-2" />{L("Trimite pe WhatsApp", "Send on WhatsApp")}
                     </Button>
-                    <div className="flex gap-3">
+                    <div className="flex flex-col-reverse sm:flex-row gap-3">
                       <Button type="button" variant="outline" size="lg" className="h-12" onClick={() => setStep(2)}><ArrowLeft className="w-5 h-5 mr-2" />{L("Înapoi", "Back")}</Button>
                       <Button type="button" variant="outline" size="lg" onClick={handleConsult} disabled={submitting || saved} className="flex-1 h-12">
                         {submitting ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <CalendarCheck className="w-5 h-5 mr-2" />}
