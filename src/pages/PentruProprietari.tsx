@@ -844,7 +844,7 @@ const PentruProprietari = () => {
               >
                 <Link to="/calculator-roi">
                   <TrendingUp className="w-5 h-5 mr-2" />
-                  {language === "ro" ? "Calculează ROI Acum" : "Calculate ROI Now"}
+                  {language === "ro" ? "Calculează randamentul acum" : "Calculate ROI Now"}
                   <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>

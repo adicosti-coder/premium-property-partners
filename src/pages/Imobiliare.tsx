@@ -501,7 +501,7 @@ const Imobiliare = () => {
               <Link to="/calculator-roi">
                 <Button variant="hero" size="lg">
                   <Calculator className="w-5 h-5 mr-2" />
-                  {language === "ro" ? "Calculează ROI" : "Calculate ROI"}
+                  {language === "ro" ? "Calculează randamentul" : "Calculate ROI"}
                 </Button>
               </Link>
               <Link to="/investitii">
