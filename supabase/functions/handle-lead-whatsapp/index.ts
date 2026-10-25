@@ -25,6 +25,13 @@ const BodySchema = z.object({
   situatie_actuala: z.string().trim().max(40).optional(),
   tip_administrare: z.string().trim().max(40).optional(),
   observatii: z.string().trim().max(500).optional(),
+  // Calculatorul ROI (/calculator-roi).
+  email: z.string().trim().email().max(255).optional(),
+  parcare: z.boolean().optional(),
+  finisaje: z.enum(["standard", "premium"]).optional(),
+  chirie_clasica: z.number().int().min(0).max(100000).optional(),
+  venit_net_realtrust: z.number().int().min(0).max(100000).optional(),
+  sursa: z.string().trim().max(40).optional(),
 });
 
 const ROOM_LABELS: Record<string, string> = {
