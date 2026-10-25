@@ -72,10 +72,22 @@ Deno.serve(async (req) => {
 
   const prenume = d.nume.split(/\s+/)[0];
   const tip = ROOM_LABELS[d.numar_camere] ?? d.numar_camere;
+  const detalii = [
+    `• Zonă: ${d.zona}`,
+    `• Tip apartament: ${tip}`,
+    d.suprafata_mp ? `• Suprafață: ${d.suprafata_mp} mp` : null,
+    d.stare ? `• Stare: ${d.stare}` : null,
+    d.mobilat ? `• Mobilare: ${d.mobilat}` : null,
+    d.tip_administrare ? `• Administrare dorită: ${d.tip_administrare}` : null,
+    d.disponibilitate ? `• Disponibilitate: ${d.disponibilitate}` : null,
+    d.observatii ? `• Observații: ${d.observatii}` : null,
+  ].filter(Boolean) as string[];
   const mesaj = [
     `Bună, ${prenume}! Sunt de la RealTrust Timișoara.`,
     ``,
-    `Am primit calculul de venit pentru ${tip} din ${d.zona}.`,
+    `Am primit calculul de venit cu detaliile:`,
+    ...detalii,
+    ``,
     `Estimarea în regim hotelier: ${fmt(d.venit_estimat_min)} – ${fmt(d.venit_estimat_max)} € pe lună, randament 6,5–9,4% net estimat.`,
     ``,
     `Cifrele exacte depind de apartament. Când ți-ar fi comod o discuție scurtă de 10 minute?`,
