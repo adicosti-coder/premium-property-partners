@@ -52,6 +52,14 @@ const CalculatorROI = () => {
       question: "Ce costuri operaționale sunt incluse în calcul?",
       answer: "Calculatorul deduce automat din venitul brut Property Management RealTrust (15-20% din încasări), curățenia, consumabilele, mentenanța, utilitățile parțial neacoperite și taxele locale. Rezultatul afișat este ROI net, după aceste costuri.",
     },
+    {
+      question: "Chirie vs hotelier în Timișoara: ce aduce mai mult?",
+      answer: "Depinde de zonă. În ISHO, City of Mara și în centru, regimul hotelier aduce de obicei un venit net estimat mai mare decât chiria clasică, datorită cererii turistice și de business. În zone cu puțini turiști, chiria pe termen lung poate fi mai stabilă. Calculatorul compară ambele variante pe chirii reale din zona ta.",
+    },
+    {
+      question: "Care este randamentul imobiliar în Timișoara în 2026?",
+      answer: "Pentru chirie clasică, randamentul brut tipic este de 4,5–6% pe an. În regim hotelier administrat de RealTrust, randamentul este de 6,5–9,4% net estimat, în funcție de zonă, ocupare și dotări.",
+    },
   ];
 
   useRegisterFAQs("calculator-roi", faqItems);
@@ -59,8 +67,8 @@ const CalculatorROI = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Calculator de randament imobiliar Timișoara | RealTrust"
-        description="Calculator gratuit de randament imobiliar pentru Timișoara: compară chiria clasică cu venitul net în regim hotelier, pe chirii reale din fiecare zonă."
+        title="Randament imobiliar Timișoara: chirie vs hotelier | RealTrust"
+        description="Calculator de randament imobiliar Timișoara: compară chiria vs regimul hotelier pe chirii reale din fiecare zonă. Afli venitul net lunar estimat în 3 pași."
         url="https://realtrust.ro/calculator-randament"
         breadcrumbItems={[
           { name: "Acasă", url: "https://realtrust.ro" },
@@ -77,6 +85,18 @@ const CalculatorROI = () => {
             areaServed: ["Timișoara", "Dumbrăvița", "Ghiroda", "Moșnița Nouă", "Giroc"],
           },
           feesAndCommissionsSpecification: "Comision de administrare 15–20% din venit brut",
+        }, {
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          name: "Calculator de randament imobiliar Timișoara",
+          alternateName: ["Calculator chirie vs hotelier Timișoara", "Randament imobiliar Timișoara"],
+          url: "https://realtrust.ro/calculator-randament",
+          applicationCategory: "FinanceApplication",
+          operatingSystem: "Web",
+          inLanguage: "ro-RO",
+          isAccessibleForFree: true,
+          offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" },
+          areaServed: { "@type": "City", name: "Timișoara" },
         }]}
       />
       <Header />

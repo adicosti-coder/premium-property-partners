@@ -991,15 +991,18 @@ function buildStaticRoutes(): PrerenderRoute[] {
   // Calculator ROI
   routes.push({
     path: '/calculator-randament',
-    title: 'Calculator ROI Regim Hotelier vs Chirie Clasică | RealTrust',
-    description: 'Calculează randamentul apartamentului tău: regim hotelier vs chirie clasică. Compară veniturile lunare și ROI-ul anual cu management RealTrust.',
-    h1: 'Calculator ROI — Regim Hotelier',
+    title: 'Randament imobiliar Timișoara: chirie vs hotelier | RealTrust',
+    description: 'Calculator de randament imobiliar Timișoara: compară chiria vs regimul hotelier pe chirii reale din fiecare zonă. Afli venitul net lunar estimat în 3 pași.',
+    h1: 'Calculator de randament imobiliar în Timișoara: regim hotelier vs. chirie clasică',
     canonical: `${BASE_URL}/calculator-randament`,
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'WebApplication',
-      name: 'Calculator ROI RealTrust',
-      description: 'Calculator randament investiție imobiliară regim hotelier vs chirie clasică Timișoara',
+      name: 'Calculator de randament imobiliar Timișoara',
+      description: 'Calculator randament imobiliar Timișoara: chirie vs hotelier, venit net lunar estimat pe zone',
+      operatingSystem: 'Web',
+      inLanguage: 'ro-RO',
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
       url: `${BASE_URL}/calculator-randament`,
       applicationCategory: 'FinanceApplication',
     },
