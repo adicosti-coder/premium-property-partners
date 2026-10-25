@@ -17,6 +17,14 @@ const BodySchema = z.object({
   numar_camere: z.string().trim().min(1).max(30),
   venit_estimat_min: z.number().int().min(0).max(100000),
   venit_estimat_max: z.number().int().min(0).max(100000),
+  // Detalii opționale din etapele 2-3 ale formularului.
+  suprafata_mp: z.number().int().min(10).max(1000).optional(),
+  stare: z.string().trim().max(40).optional(),
+  mobilat: z.string().trim().max(40).optional(),
+  disponibilitate: z.string().trim().max(40).optional(),
+  situatie_actuala: z.string().trim().max(40).optional(),
+  tip_administrare: z.string().trim().max(40).optional(),
+  observatii: z.string().trim().max(500).optional(),
 });
 
 const ROOM_LABELS: Record<string, string> = {
@@ -74,6 +82,13 @@ Deno.serve(async (req) => {
     numar_camere: d.numar_camere,
     venit_estimat_min: d.venit_estimat_min,
     venit_estimat_max: d.venit_estimat_max,
+    suprafata_mp: d.suprafata_mp ?? null,
+    stare: d.stare ?? null,
+    mobilat: d.mobilat ?? null,
+    disponibilitate: d.disponibilitate ?? null,
+    situatie_actuala: d.situatie_actuala ?? null,
+    tip_administrare: d.tip_administrare ?? null,
+    observatii: d.observatii ?? null,
     message: mesaj,
   };
 
