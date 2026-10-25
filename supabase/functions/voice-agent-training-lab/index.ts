@@ -3,7 +3,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { listUpcomingAndreiEvents } from "../_shared/andreiCalendar.ts";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
-import { andreiConversationPolicy, andreiListingObjections, normalizeAndreiBranch } from "../_shared/andreiConversationPolicy.ts";
+import { andreiConversationPolicy, andreiListingObjections, normalizeAndreiBranch, validateCommissionReply, isPrematureClose } from "../_shared/andreiConversationPolicy.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -244,7 +244,7 @@ Vorbești natural, în română, ca la telefon: o replică scurtă (max 25 de cu
     const raw = await ai([
       { role: "system", content: "Ești coach sever de vânzări imobiliare telefonice. Răspunzi doar JSON valid." },
       { role: "user", content: `Analizează performanța lui Andrei (asistent AI RealTrust Timișoara) în conversația de mai jos. Criterii: replici scurte, nu se repetă, avansează (obiectiv → termen → preț → acord pentru analiză), tratează obiecțiile, transparență, fără informații inventate.
-Profil proprietar: ${persona}. Tip anunț: ${branch}. Verifică și dacă Andrei a folosit DOAR argumentele potrivite tipului de anunț. Reguli stricte (penalizează sever): (1) orice mențiune a comisionului trebuie urmată imediat, în aceeași replică, de propunerea trimiterii analizei pe WhatsApp; (2) zona folosită trebuie să fie STRICT cea din anunț (${listingZone || "necunoscută — Andrei trebuie să întrebe o singură dată"}); orice cartier inventat sau presupus = greșeală gravă; (3) la „toate agențiile vor doar comision”, Andrei trebuie să confirme că nu cere contract/angajament și doar trimite gratuit raportul de evaluare pe WhatsApp. IMPORTANT: dacă proprietarul refuză de două ori, închiderea politicoasă a apelului este comportamentul CORECT și dorit — NU o penaliza ca slăbiciune și nu cere insistență.
+Profil proprietar: ${persona}. Tip anunț: ${branch}. Verifică și dacă Andrei a folosit DOAR argumentele potrivite tipului de anunț. Reguli stricte (penalizează sever): (1) orice mențiune a comisionului trebuie urmată imediat, în aceeași replică, de propunerea trimiterii analizei pe WhatsApp; (2) zona folosită trebuie să fie STRICT cea din anunț (${listingZone || "necunoscută — Andrei trebuie să întrebe o singură dată"}); orice cartier inventat sau presupus = greșeală gravă; (3) răspunsul la comision conține în aceeași replică: modul de lucru la rezultat/procentul, analiza gratuită și propunerea de trimitere pe WhatsApp; „Nu oferim servicii fără comision” = greșeală gravă; (4) după un PRIM refuz moale („găsesc singur chiriaș”, „nu plătesc comision”) Andrei face o pivotare de calificare (disponibilitate/termen) înainte să închidă; închiderea imediată = greșeală; (5) la „toate agențiile vor doar comision”, Andrei trebuie să confirme că nu cere contract/angajament și doar trimite gratuit raportul de evaluare pe WhatsApp. IMPORTANT: dacă proprietarul refuză de două ori, închiderea politicoasă a apelului este comportamentul CORECT și dorit — NU o penaliza ca slăbiciune și nu cere insistență.
 
 ${convo}
 
@@ -263,6 +263,23 @@ Răspunde STRICT JSON: {"score": 1-10, "strengths": ["..."], "weaknesses": ["...
     if (strict.commission_answer_ok === false || (/comision/i.test(transcript.filter((t) => t.role === "andrei").map((t) => t.text).join(" ")) && !strict.mentioned_whatsapp)) penalty += 2;
     if (strict.zone_hallucination) penalty += 3;
     if (strict.skeptic_pivot_ok === false) penalty += 2;
+    // regulile 3 elemente comision + fără capitulare prematură
+    const commission_rule_failures: string[] = [];
+    let premature_close = false;
+    for (let i = 1; i < transcript.length; i++) {
+      const prev = transcript[i - 1], cur = transcript[i];
+      if (cur.role !== "andrei" || prev.role !== "proprietar") continue;
+      if (/comision|gratis|gratuit/i.test(prev.text) && /comision|rezultat/i.test(cur.text)) {
+        const v = validateCommissionReply(cur.text);
+        if (!v.ok) commission_rule_failures.push(...v.missing);
+      }
+      if (isPrematureClose(prev.text, cur.text)) premature_close = true;
+    }
+    (strict as any).commission_three_elements_ok = commission_rule_failures.length === 0;
+    (strict as any).commission_missing = [...new Set(commission_rule_failures)];
+    (strict as any).premature_close = premature_close;
+    if (commission_rule_failures.length) penalty += 2;
+    if (premature_close) penalty += 2;
     if (penalty) analysis.score = Math.max(1, analysis.score - penalty);
     return { transcript, analysis, branch, persona, listingZone, strict };
 }
