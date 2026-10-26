@@ -199,7 +199,7 @@ const ROICalculatorWidget = () => {
       {step === 1 && (
         <div className="space-y-6 animate-fade-in">
           <fieldset>
-            <legend className="mb-3 text-sm font-semibold text-foreground">Tip proprietate</legend>
+            <legend className="mb-3 text-sm font-semibold text-foreground">Tip proprietate (camere) *</legend>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {PROPERTY_TYPES.map((t) => (
                 <Choice key={t.value} active={type === t.value} onClick={() => { setType(t.value); setSurface(String(t.refSqm)); }}>
