@@ -94,16 +94,18 @@ export const OWNER_OUTREACH_TEMPLATES: OutreachTemplate[] = [
   {
     key: "first_sale",
     label: "Primul mesaj — vânzare",
-    hint: "Reprezentare la vânzare și cumpărători/investitori verificați; fără chirie sau administrare.",
+    hint: "Ofertare deschisă: oferte scrise după vizionări, prag minim stabilit de proprietar; DA = vrea să discute.",
     kind: "first",
     build: (ctx) =>
       [
         greeting(ctx),
         "",
-        `Sunt Andrei, de la RealTrust Timișoara. Am văzut ${listingRef(ctx)}, scos la vânzare.`,
-        "Vă putem ajuta să îl vindeți mai repede, la un preț corect: evaluare pe piața din Timișoara, cumpărători verificați înainte de vizionare și asistență până la semnare. Lucrăm și cu investitori care caută apartamente în zonă.",
+        `Sunt Andrei, de la RealTrust Timișoara. Am văzut anunțul pentru ${listingRef(ctx)}.`,
+        "Cea mai grea decizie la vânzare este prețul. Nu lăsați primul cumpărător care vă face o ofertă să decidă cât valorează proprietatea dumneavoastră.",
         "",
-        "Vă trimit o evaluare gratuită?",
+        "Prin ofertarea deschisă, după vizionări fiecare cumpărător trimite o ofertă scrisă. Dumneavoastră stabiliți pragul minim, vedeți toate ofertele și decideți, fără nicio obligație.",
+        "",
+        "Doriți să discutăm dacă această strategie se potrivește proprietății dumneavoastră? Răspundeți cu DA, sau NU dacă nu doriți să vă mai contactăm.",
       ].join("\n"),
   },
   {
