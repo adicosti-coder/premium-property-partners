@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
 
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const { data: p, error } = await sb.from("prospect_listings")
-    .select("id,title,zone,price,source_url,category,phone_normalized,contact_phone,seller_type,agency_suspicion_score,do_not_call,auto_blacklisted_at,lifecycle_status,outreach_status")
+    .select("id,title,description,location,zone,price,source_url,category,phone_normalized,contact_phone,seller_type,agency_suspicion_score,do_not_call,auto_blacklisted_at,lifecycle_status,outreach_status")
     .eq("id", id).maybeSingle();
   if (error) return json({ error: error.message }, 500);
   if (!p) return json({ error: "not_found" }, 404);
@@ -39,6 +39,10 @@ Deno.serve(async (req) => {
   if (((p.agency_suspicion_score ?? 0) >= 70 || ["agency", "agentie"].includes(String(p.seller_type || ""))) && !isTestPhone(phone)) reasons.push("agency");
   if ((p.do_not_call || p.auto_blacklisted_at) && !isTestPhone(phone)) reasons.push("excluded");
   if (["rejected", "expired", "failed", "posted"].includes(String(p.lifecycle_status))) reasons.push("closed");
+  // Doar locuințe din Timiș: anunțurile din alte orașe sau terenurile nu primesc mesaj.
+  const text = `${p.title ?? ""} ${p.location ?? ""} ${String(p.description ?? "").slice(0, 400)}`.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  if (/bucuresti|\bsector [1-6]\b|berceni|iancului|mihai bravu|pipera|ilfov|turda|cluj|\biasi\b|brasov|constanta|\barad\b(?! *(calea|str))/.test(text)) reasons.push("out_of_area");
+  if (/\bteren\b|\bterenuri\b|spatiu comercial|hala\b/.test(String(p.title ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""))) reasons.push("not_residential");
   if (p.outreach_status && !body.dry_run) reasons.push("already_sent");
   if (reasons.length) return json({ ok: false, skipped: reasons });
 

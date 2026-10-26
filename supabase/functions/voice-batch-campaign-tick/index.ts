@@ -68,6 +68,13 @@ Deno.serve(async (req) => {
     next = (rows ?? []).find((r: any) => !((r.tags as string[]) || []).includes("apelat-andrei") && okPhone(r));
   }
   if (!next) {
+    // Proprietari care n-au răspuns nici la cererea de acord, nici la memento (o singură dată).
+    const { data: cn } = await sb.from("prospect_listings").select("id, title, contact_name, phone_normalized, contact_phone, tags")
+      .contains("tags", ["consent-no-reply"]).eq("is_active", true).eq("do_not_call", false).eq("seller_type", "privat")
+      .order("created_at", { ascending: true }).limit(200);
+    next = (cn ?? []).find((r: any) => !((r.tags as string[]) || []).includes("apelat-andrei") && okPhone(r));
+  }
+  if (!next) {
     const { data: rc } = await sb.from("prospect_listings").select("id, title, contact_name, phone_normalized, contact_phone, tags")
       .eq("expiry_check_status", "inactiv_sursa").eq("do_not_call", false).eq("seller_type", "privat")
       .order("last_expiry_check_at", { ascending: true }).limit(200);
