@@ -49,7 +49,7 @@ const ROICalculatorWidget = () => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [type, setType] = useState<PropertyTypeValue>("2-camere");
   const [zone, setZone] = useState<ZoneValue>("central");
-  const [surface, setSurface] = useState("55");
+  const [surface, setSurface] = useState("");
   const [parking, setParking] = useState(false);
   const [finish, setFinish] = useState<Finish>("standard");
   const [open, setOpen] = useState(false);
@@ -68,8 +68,10 @@ const ROICalculatorWidget = () => {
   const maxBar = Math.max(r.classicRent, r.netRealTrust, 1);
 
   const goStep2 = () => {
+    // Pasul 1 cere obligatoriu tipul (numărul de camere) și suprafața utilă
+    // înainte de orice; datele de contact se cer doar în pasul 3.
     if (!/^\d{2,4}$/.test(surface) || surfaceNum < 15 || surfaceNum > 400) {
-      setErrors({ surface: "Suprafața trebuie să fie între 15 și 400 mp" });
+      setErrors({ surface: "Introdu suprafața utilă (între 15 și 400 mp)" });
       return;
     }
     setErrors({});
@@ -217,7 +219,7 @@ const ROICalculatorWidget = () => {
             </div>
           </fieldset>
           <div className="max-w-xs">
-            <Label htmlFor="calc-surface" className="mb-2 block font-semibold">Suprafață (mp)</Label>
+            <Label htmlFor="calc-surface" className="mb-2 block font-semibold">Suprafață utilă (mp) *</Label>
             <Input
               id="calc-surface"
               inputMode="numeric"
