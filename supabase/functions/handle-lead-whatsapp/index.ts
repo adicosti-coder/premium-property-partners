@@ -121,7 +121,6 @@ Deno.serve(async (req) => {
     situatie_actuala: d.situatie_actuala ?? null,
     tip_administrare: d.tip_administrare ?? null,
     observatii: d.observatii ?? null,
-    email: d.email ?? null,
     parcare: d.parcare ?? null,
     finisaje: d.finisaje ?? null,
     chirie_clasica: d.chirie_clasica ?? null,
