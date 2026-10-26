@@ -395,22 +395,35 @@ const handler = async (req: Request): Promise<Response> => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const rawData: ReferralNotificationRequest = await req.json();
-    // Escape every free-text field before it reaches the email templates.
+    const body = await req.json();
+    const referralId = String(body?.referralId ?? "");
+    if (!/^[0-9a-f-]{36}$/i.test(referralId)) {
+      return new Response(JSON.stringify({ error: "referralId invalid" }), { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } });
+    }
+    // Recipient and names come from the stored referral, never from the request body.
+    const { data: ref, error: refErr } = await supabase
+      .from("referrals")
+      .select("referrer_name, referrer_email, referrer_user_id, owner_name, property_location")
+      .eq("id", referralId)
+      .maybeSingle();
+    if (refErr || !ref || !ref.referrer_email) {
+      return new Response(JSON.stringify({ error: "referral_not_found" }), { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } });
+    }
+    const opt = (v: unknown) => (v ? escapeHtml(v) : undefined);
     const data: ReferralNotificationRequest = {
-      ...rawData,
-      referrerName: escapeHtml(rawData.referrerName),
-      ownerName: escapeHtml(rawData.ownerName),
-      propertyLocation: rawData.propertyLocation ? escapeHtml(rawData.propertyLocation) : rawData.propertyLocation,
-      rewardPropertyName: rawData.rewardPropertyName ? escapeHtml(rawData.rewardPropertyName) : rawData.rewardPropertyName,
+      referrerName: escapeHtml(ref.referrer_name ?? ""),
+      referrerEmail: ref.referrer_email,
+      referrerUserId: ref.referrer_user_id ?? undefined,
+      ownerName: escapeHtml(ref.owner_name ?? ""),
+      propertyLocation: opt(ref.property_location),
+      newStatus: String(body?.newStatus ?? ""),
+      oldStatus: String(body?.oldStatus ?? ""),
+      rewardPropertyName: opt(body?.rewardPropertyName),
+      rewardCheckIn: opt(body?.rewardCheckIn),
+      rewardCheckOut: opt(body?.rewardCheckOut),
     };
-    
-    console.log("Received referral notification request:", {
-      referrerEmail: data.referrerEmail,
-      referrerUserId: data.referrerUserId,
-      newStatus: data.newStatus,
-      oldStatus: data.oldStatus,
-    });
+
+    console.log("Received referral notification request:", { referralId, newStatus: data.newStatus, oldStatus: data.oldStatus });
 
     // Don't send notification if status hasn't changed
     if (data.newStatus === data.oldStatus) {

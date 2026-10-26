@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
         });
         const respText = await res.text().catch(() => "");
         if (!res.ok) {
-          console.error("[automation-daily-digest] send failed", { to, status: res.status, body: respText.slice(0, 500) });
+          console.error("[automation-daily-digest] send failed", { status: res.status, body: respText.slice(0, 500) });
           emailResults.push({ to, ok: false, status: res.status, error: respText.slice(0, 500) });
         } else {
           emailResults.push({ to, ok: true, status: res.status });
