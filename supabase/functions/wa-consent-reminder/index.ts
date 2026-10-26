@@ -169,9 +169,7 @@ async function queueSilentForAndrei(sb: any, now: number): Promise<number> {
     if (dnc) continue;
     const { data: conv } = await sb.from("wa_conversations").select("last_inbound_at").in("phone_normalized", variants)
       .order("last_inbound_at", { ascending: false, nullsFirst: false }).limit(1).maybeSingle();
-    if (conv?.last_inbound_at && new Date(conv.last_inbound_at).getTime() >= new Date(r.reminder_sent_at).getTime() - 864e5 * 30) {
-      if (new Date(conv.last_inbound_at).getTime() > new Date(r.reminder_sent_at).getTime()) continue;
-    }
+    if (conv?.last_inbound_at && new Date(conv.last_inbound_at).getTime() > new Date(r.reminder_sent_at).getTime()) continue;
     await sb.from("prospect_listings").update({ tags: [...new Set([...tags, "consent-no-reply"])] }).eq("id", p.id);
     n++;
   }
