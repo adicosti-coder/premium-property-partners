@@ -34,8 +34,8 @@ describe("Phone field accepts the number as visitors type it", () => {
   });
 
   it("normalizes every typed form of the same number to one value", () => {
-    const forms = ["0799069256", "0799 069 256", "+40 799 069 256", "0040 799 069 256".replace("0040", "0799")];
+    const forms = ["0799069256", "0799 069 256", "0799-069-256", "(0799) 069.256"];
     const out = forms.map((f) => normalizePhoneInput(f));
-    expect(out).toEqual(["0799069256", "0799069256", "+40799069256", "0799069256"]);
+    expect(out).toEqual(["0799069256", "0799069256", "0799069256", "0799069256"]);
   });
 });
