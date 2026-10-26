@@ -1,3 +1,4 @@
+import { escapeHtml } from "../_shared/htmlEscape.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { signTrackingPayload } from "../_shared/trackingToken.ts";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
@@ -159,7 +160,7 @@ Deno.serve(async (req) => {
     let notificationsSent = 0;
 
     for (const user of usersToNotify) {
-      const firstName = user.full_name?.split(' ')[0] || 'Proprietar';
+      const firstName = escapeHtml(user.full_name?.split(' ')[0] || 'Proprietar');
 
       // Create in-app notification
       const { error: notifError } = await supabase

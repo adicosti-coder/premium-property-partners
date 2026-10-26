@@ -185,7 +185,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Sending weekly report to ${recipients.length} recipients: ${recipients.join(", ")}`);
+    console.log(`Sending weekly report to ${recipients.length} recipients`);
 
     // Calculate date range (last 7 days)
     const now = new Date();

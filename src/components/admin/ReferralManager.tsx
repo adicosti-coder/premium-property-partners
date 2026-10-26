@@ -212,6 +212,7 @@ const ReferralManager = () => {
         try {
           const { error: emailError } = await supabase.functions.invoke("send-referral-notification", {
             body: {
+              referralId: selectedReferral.id,
               referrerName: selectedReferral.referrer_name,
               referrerEmail: selectedReferral.referrer_email,
               referrerUserId: selectedReferral.referrer_user_id,
