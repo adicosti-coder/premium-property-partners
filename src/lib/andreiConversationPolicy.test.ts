@@ -16,6 +16,17 @@ describe("Andrei concise policy", () => {
     for (const rule of ["asistent AI", "necesită acord", "STOP", "nu inventezi", "două camere", "nu sunt date"]) expect(policy).toContain(rule);
   });
 });
+describe("Andrei open-offer sales strategy", () => {
+  it("appears only on sales calls and closes at the apartment", () => {
+    expect(andreiConversationPolicy("vanzare")).toContain("OFERTARE DESCHISĂ");
+    expect(andreiConversationPolicy("vanzare")).toContain("LA APARTAMENT");
+    expect(andreiConversationPolicy("inchiriere")).not.toContain("OFERTARE DESCHISĂ");
+    expect(andreiConversationPolicy("cazare")).not.toContain("OFERTARE DESCHISĂ");
+  });
+  it("bans guarantee claims for the offer process", () => {
+    expect(andreiConversationPolicy("vanzare")).toMatch(/Interzis: „licitație”, „100% protejat”, „garantat”/);
+  });
+});
 describe("Andrei value propositions per listing type", () => {
   it("uses only the matching value proposition", () => {
     const v = andreiConversationPolicy("vanzare"), i = andreiConversationPolicy("inchiriere"), c = andreiConversationPolicy("cazare");
