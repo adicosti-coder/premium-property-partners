@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { submitLead } from "@/lib/leadSubmission";
+import { roMobileField } from "@/lib/phoneField";
 import { withCampaignTracking } from "@/lib/campaignAttribution";
 import { trackConversion, trackCriticalConversion, OWNER_FUNNEL_VALUE_EUR } from "@/lib/conversionTracking";
 import { BRAND } from "@/lib/orgIdentity";
@@ -77,13 +78,9 @@ const makeSchema = (isRo: boolean) =>
       .trim()
       .min(2, isRo ? "Introdu numele tău (minim 2 caractere)" : "Enter your name (min. 2 characters)")
       .max(80, isRo ? "Numele este prea lung" : "Name is too long"),
-    phone: z
-      .string()
-      .trim()
-      .regex(
-        /^(\+?4?0)?7\d{8}$/,
-        isRo ? "Introdu un număr de telefon valid (ex: 0722 123 456)" : "Enter a valid phone number (e.g. 0722 123 456)",
-      ),
+    phone: roMobileField(
+      isRo ? "Introdu un număr de telefon valid (ex: 0722 123 456)" : "Enter a valid phone number (e.g. 0722 123 456)",
+    ),
     email: z
       .string()
       .trim()

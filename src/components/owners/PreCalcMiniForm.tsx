@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { submitLead } from "@/lib/leadSubmission";
+import { roMobileField } from "@/lib/phoneField";
 import { withCampaignTracking, getCtaVariant } from "@/lib/campaignAttribution";
 import FormTrustBadges from "@/components/forms/FormTrustBadges";
 import { toast } from "sonner";
@@ -83,7 +84,7 @@ const OPT = {
 
 const step1Schema = z.object({
   name: z.string().trim().min(2, { message: "Numele trebuie să aibă minim 2 caractere" }).max(80, { message: "Numele este prea lung" }),
-  phone: z.string().trim().regex(/^(\+?4?0)?7\d{8}$/, { message: "Introdu un mobil valid (ex: 0722 123 456)" }),
+  phone: roMobileField("Introdu un mobil valid (ex: 0722 123 456)"),
   area: z.string().refine((v) => v === "" || (+v >= 10 && +v <= 1000), { message: "Între 10 și 1000 mp" }),
 });
 
