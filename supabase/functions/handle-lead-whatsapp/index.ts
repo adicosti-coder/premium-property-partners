@@ -12,7 +12,12 @@ const json = (body: unknown, status = 200) =>
 
 const BodySchema = z.object({
   nume: z.string().trim().min(2).max(80),
-  telefon: z.string().trim().regex(/^(\+?4?0)?7\d{8}$/),
+  // Separatorii sunt o chestiune de afișare: vizitatorul tastează „0722 123 456”
+  // sau browserul completează „+40 722 123 456”; cifra rămâne una și aceeași.
+  telefon: z.preprocess(
+    (v) => (typeof v === "string" ? v.replace(/[\s\-().]/g, "") : v),
+    z.string().trim().regex(/^(\+?4?0)?7\d{8}$/),
+  ),
   zona: z.string().trim().min(2).max(60),
   numar_camere: z.string().trim().min(1).max(30),
   venit_estimat_min: z.number().int().min(0).max(100000),

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { submitLead } from "@/lib/leadSubmission";
+import { roMobileField } from "@/lib/phoneField";
 import { supabase } from "@/lib/supabaseClient";
 import { withCampaignTracking } from "@/lib/campaignAttribution";
 import { trackConversion, trackCriticalConversion, formatPhoneInput } from "@/lib/conversionTracking";
@@ -23,7 +24,7 @@ const WHATSAPP_NUMBER = "40799069256";
 
 const leadSchema = z.object({
   name: z.string().trim().min(2, "Introdu numele (minim 2 caractere)").max(80),
-  phone: z.string().trim().regex(/^(\+?4?0)?7\d{8}$/, "Introdu un mobil valid (ex: 0722 123 456)"),
+  phone: roMobileField("Introdu un mobil valid (ex: 0722 123 456)"),
   email: z.union([z.literal(""), z.string().trim().email("Email invalid").max(255)]),
 });
 
