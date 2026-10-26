@@ -101,7 +101,14 @@ Deno.serve(async (req) => {
   const payload = {
     event: "calcul_venit_lead",
     timestamp: new Date().toISOString(),
+    // Chei canonice cerute de scenariul Make (formularul calculator_roi_widget).
+    name: d.nume,
     phone: toIntl(d.telefon),
+    email: d.email ?? null,
+    location: d.zona,
+    rooms: d.numar_camere,
+    surface: d.suprafata_mp ?? null,
+    // Cheile istorice rămân în payload pentru compatibilitatea hărții Make.
     nume: d.nume,
     zona: d.zona,
     numar_camere: d.numar_camere,
