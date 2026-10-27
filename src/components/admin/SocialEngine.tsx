@@ -1330,7 +1330,11 @@ function SocialCard({
             </div>
           ) : (
             <p className="text-xs text-muted-foreground whitespace-pre-line line-clamp-4 bg-muted/50 rounded-md p-2.5 leading-relaxed">
-              {post.caption || <span className="italic">Nicio descriere — generează cu AI</span>}
+              {post.caption.trim() || (
+                <span className="italic text-foreground/70">
+                  Apasă pe „Generează 3 variante” sau „Descriere AI” pentru a crea textul postării…
+                </span>
+              )}
             </p>
           )}
         </div>
