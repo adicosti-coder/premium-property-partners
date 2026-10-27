@@ -10,6 +10,8 @@ import OwnerOverview from "@/components/owner/OwnerOverview";
 import OwnerCalendar from "@/components/owner/OwnerCalendar";
 import OwnerFinancials from "@/components/owner/OwnerFinancials";
 import OwnerMaintenance from "@/components/owner/OwnerMaintenance";
+import OwnerOffers from "@/components/owner/OwnerOffers";
+import { Gavel } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -210,7 +212,7 @@ const OwnerDashboard = () => {
             </div>
           ) : (
             <Tabs defaultValue="overview" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+              <TabsList className="grid h-auto w-full grid-cols-3 sm:grid-cols-5 lg:w-auto lg:inline-grid">
                 <TabsTrigger value="overview" className="gap-2">
                   <LayoutDashboard className="w-4 h-4 hidden sm:block" />
                   {t.overview}
@@ -226,6 +228,10 @@ const OwnerDashboard = () => {
                 <TabsTrigger value="maintenance" className="gap-2">
                   <Wrench className="w-4 h-4 hidden sm:block" />
                   {t.maintenance}
+                </TabsTrigger>
+                <TabsTrigger value="offers" className="gap-2">
+                  <Gavel className="w-4 h-4 hidden sm:block" />
+                  Oferte
                 </TabsTrigger>
               </TabsList>
 
@@ -250,6 +256,12 @@ const OwnerDashboard = () => {
               <TabsContent value="maintenance">
                 {selectedPropertyId && (
                   <OwnerMaintenance propertyId={selectedPropertyId} />
+                )}
+              </TabsContent>
+
+              <TabsContent value="offers">
+                {selectedPropertyId && (
+                  <OwnerOffers propertyId={selectedPropertyId} />
                 )}
               </TabsContent>
             </Tabs>
