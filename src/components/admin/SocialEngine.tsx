@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import SocialEngineLogs from "./socialEngine/SocialEngineLogs";
 import SocialAiSettings from "./socialEngine/SocialAiSettings";
+import { SafePostImage, isValidImageUrl } from "./socialEngine/SafePostImage";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Popover,
@@ -617,33 +618,33 @@ export default function SocialEngine() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="drafts" className="text-sm gap-1.5">
+        <TabsList className="flex w-full justify-start overflow-x-auto whitespace-nowrap h-auto gap-1 p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <TabsTrigger value="drafts" className="text-sm gap-1.5 shrink-0">
             <Pencil className="h-3.5 w-3.5" />
             Ciorne
             {allDrafts.length > 0 && (
               <Badge variant="secondary" className="ml-1 text-[10px] h-5 min-w-[20px] px-1.5">{allDrafts.length}</Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="scheduled" className="text-sm gap-1.5">
+          <TabsTrigger value="scheduled" className="text-sm gap-1.5 shrink-0">
             <Clock className="h-3.5 w-3.5" />
             Programate
             {allScheduled.length > 0 && (
               <Badge variant="secondary" className="ml-1 text-[10px] h-5 min-w-[20px] px-1.5">{allScheduled.length}</Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="posted" className="text-sm gap-1.5">
+          <TabsTrigger value="posted" className="text-sm gap-1.5 shrink-0">
             <Send className="h-3.5 w-3.5" />
             Publicate
             {allPosted.length > 0 && (
               <Badge variant="secondary" className="ml-1 text-[10px] h-5 min-w-[20px] px-1.5">{allPosted.length}</Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="text-sm gap-1.5">
+          <TabsTrigger value="analytics" className="text-sm gap-1.5 shrink-0">
             <BarChart3 className="h-3.5 w-3.5" />
             Analize
           </TabsTrigger>
-          <TabsTrigger value="logs" className="text-sm gap-1.5">Istoric / Logs</TabsTrigger>
+          <TabsTrigger value="logs" className="text-sm gap-1.5 shrink-0">Istoric / Logs</TabsTrigger>
         </TabsList>
 
         <TabsContent value="drafts">
@@ -811,8 +812,8 @@ function PostPreviewModal({ post, open, onOpenChange }: { post: SocialPost; open
                 <span className="text-xs font-semibold text-foreground">realtrust.ro</span>
               </div>
               <div className={cn("bg-primary flex items-center justify-center relative", post.media_type === "STORY" || post.media_type === "REELS" ? "aspect-[9/16]" : "aspect-square")}>
-                {post.video_url && (post.media_type === "REELS" || post.media_type === "STORY") ? <video src={post.video_url} controls playsInline className="w-full h-full object-contain" /> : post.image_url ? (
-                  <img src={post.image_url} alt={post.title} className="w-full h-full object-contain" />
+                {post.video_url && (post.media_type === "REELS" || post.media_type === "STORY") ? <video src={post.video_url} controls playsInline className="w-full h-full object-contain" /> : true ? (
+                  <SafePostImage candidates={[post.image_url, ...(post.image_urls ?? []), post.content_variants?.FEED?.image_url]} alt={post.title} fallbackTitle={post.title} className="w-full h-full object-contain" />
                 ) : (
                   <div className="text-center px-6 space-y-2">
                     <ImageIcon className="h-10 w-10 mx-auto text-accent/60" />
@@ -857,8 +858,8 @@ function PostPreviewModal({ post, open, onOpenChange }: { post: SocialPost; open
                 </p>
               </div>
               <div className={cn("bg-primary flex items-center justify-center relative", post.media_type === "STORY" || post.media_type === "REELS" ? "aspect-[9/16]" : "aspect-video")}>
-                {post.video_url && (post.media_type === "REELS" || post.media_type === "STORY") ? <video src={post.video_url} controls playsInline className="w-full h-full object-contain" /> : post.image_url ? (
-                  <img src={post.image_url} alt={post.title} className="w-full h-full object-contain" />
+                {post.video_url && (post.media_type === "REELS" || post.media_type === "STORY") ? <video src={post.video_url} controls playsInline className="w-full h-full object-contain" /> : true ? (
+                  <SafePostImage candidates={[post.image_url, ...(post.image_urls ?? []), post.content_variants?.FEED?.image_url]} alt={post.title} fallbackTitle={post.title} className="w-full h-full object-contain" />
                 ) : (
                   <div className="text-center px-6 space-y-2">
                     <ImageIcon className="h-10 w-10 mx-auto text-accent/60" />
@@ -1082,7 +1083,7 @@ function PostEditModal({
             <Label className="text-xs font-medium">{mediaType === "REELS" ? "Copertă" : "Imagine"}</Label>
             {imageUrl ? (
               <div className={cn("relative rounded-md overflow-hidden border border-border bg-muted group", mediaType === "STORY" ? "aspect-[9/16]" : "aspect-square")}>
-                <img src={imageUrl} alt="Imaginea postării" className="w-full h-full object-contain" />
+                <SafePostImage candidates={[imageUrl, ...(post.image_urls ?? [])]} alt="Imaginea postării" className="w-full h-full object-contain" />
                 <div className="absolute inset-0 bg-background/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                   <label className="cursor-pointer">
                     <input type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
@@ -1194,7 +1195,7 @@ function SocialCard({
     finally { setGenerating(false); }
   };
 
-  const hasImage = !!post.image_url;
+  const hasImage = [post.image_url, ...(post.image_urls ?? []), post.content_variants?.FEED?.image_url].some(isValidImageUrl);
   const alreadyOnIG = post.posted_to.includes("instagram");
   const alreadyOnFB = post.posted_to.includes("facebook");
   const alreadyOnBoth = alreadyOnIG && alreadyOnFB;
@@ -1204,7 +1205,7 @@ function SocialCard({
       {/* Image / Placeholder */}
       <div className="relative w-full aspect-[16/10] bg-primary overflow-hidden">
         {hasImage ? (
-          <img src={post.image_url ?? ""} alt={post.title} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
+          <SafePostImage candidates={[post.image_url, ...(post.image_urls ?? []), post.content_variants?.FEED?.image_url]} alt={post.title} fallbackTitle={post.title} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-primary/70 flex items-center justify-center">
             <div className="text-center px-6 space-y-2">
