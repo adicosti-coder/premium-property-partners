@@ -106,43 +106,76 @@ Deno.serve(async (req) => {
 
     // ── MODE: SAVE with pre-edited data ──
     if (mode === 'save' && editedData) {
-      console.log(`[Save] Saving edited listing from ${platform}: ${url}`);
-
-      const finalListingType = listing_type || editedData.listing_type_hint || 'vanzare';
-      const propertyData = buildPropertyData(editedData, url, platform, finalListingType);
-
-      const { data: newProperty, error: insertError } = await supabase
-        .from('properties')
-        .insert(propertyData)
-        .select('id, slug, name')
-        .single();
-
-      if (insertError) {
-        console.error('[Save] Insert error:', insertError.message);
+      const jsonErr = (status: number, step: string, err: unknown) => {
+        const message = err instanceof Error ? err.message : String((err as any)?.message ?? err);
+        console.error(`[Save] ${step}: ${message}`);
         return new Response(
-          JSON.stringify({ success: false, error: `Failed to create: ${insertError.message}` }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({ success: false, error: `${step}: ${message}`, step }),
+          { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
+      };
+      try {
+        if (typeof editedData !== 'object' || Array.isArray(editedData)) {
+          return jsonErr(400, 'Date invalide', 'editedData trebuie să fie obiect');
+        }
+        console.log(`[Save] Saving edited listing from ${platform}: ${url}`);
+        const allowedTypes = ['vanzare', 'inchiriere', 'cazare', 'investitie'];
+        const finalListingType = listing_type || editedData.listing_type || editedData.listing_type_hint || 'vanzare';
+        if (!allowedTypes.includes(finalListingType)) {
+          return jsonErr(400, 'Tip anunț invalid', finalListingType);
+        }
+        const rawMin = editedData.minimum_price ?? editedData.min_price_eur;
+        const minimumPrice = rawMin === undefined || rawMin === null || rawMin === '' ? null : Number(rawMin);
+        if (minimumPrice !== null && (!Number.isFinite(minimumPrice) || minimumPrice <= 0)) {
+          return jsonErr(400, 'Preț minim invalid', String(rawMin));
+        }
+
+        const propertyData = buildPropertyData(editedData, url, platform, finalListingType);
+        // Ensure unique slug (unique index idx_properties_slug)
+        const baseSlug = propertyData.slug || `import-${Date.now()}`;
+        const { data: clash } = await supabase.from('properties').select('slug').like('slug', `${baseSlug}%`);
+        const taken = new Set((clash || []).map((r: any) => r.slug));
+        let slug = baseSlug; let n = 2;
+        while (taken.has(slug)) slug = `${baseSlug}-${n++}`;
+        propertyData.slug = slug;
+
+        const { data: newProperty, error: insertError } = await supabase
+          .from('properties').insert(propertyData).select('id, slug, name').single();
+        if (insertError) return jsonErr(400, 'Creare proprietate eșuată', insertError);
+
+        if (minimumPrice !== null && (finalListingType === 'vanzare' || finalListingType === 'investitie')) {
+          const { error: msErr } = await supabase.from('property_sale_settings').upsert({
+            property_id: newProperty.id, min_price_eur: minimumPrice, updated_at: new Date().toISOString(),
+          }, { onConflict: 'property_id' });
+          if (msErr) console.error('[Save] min price:', msErr.message);
+        }
+
+        // Large galleries exceeded CPU limits: cap uploads, keep extra originals as drafts by URL.
+        const MAX_IMAGES = 25;
+        const publishedUrls = (Array.isArray(editedData.images) ? editedData.images : [])
+          .filter((u: unknown) => typeof u === 'string' && /^https?:\/\//.test(u)).slice(0, MAX_IMAGES);
+        const allOriginalUrls = (Array.isArray(editedData.allOriginalImages) ? editedData.allOriginalImages : publishedUrls)
+          .filter((u: unknown) => typeof u === 'string' && /^https?:\/\//.test(u)).slice(0, MAX_IMAGES);
+        for (const u of publishedUrls) if (!allOriginalUrls.includes(u)) allOriginalUrls.push(u);
+        console.log(`[Save] Uploading ${allOriginalUrls.length} images (${publishedUrls.length} published)`);
+        let result = { published: [] as string[], drafts: 0 };
+        try {
+          result = await uploadImagesForProperty(allOriginalUrls, publishedUrls, supabase, newProperty.id);
+        } catch (imgErr) {
+          console.error('[Save] Image upload failed (property saved):', (imgErr as Error)?.message);
+        }
+
+        return new Response(
+          JSON.stringify({
+            success: true, property: newProperty, extracted: editedData,
+            images_uploaded: result.published.length, drafts_saved: result.drafts,
+            listing_type: finalListingType, minimum_price: minimumPrice,
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (err) {
+        return jsonErr(500, 'Eroare neașteptată la salvare', err);
       }
-
-      // Upload ALL original images (draft + published)
-      const publishedUrls = Array.isArray(editedData.images) ? editedData.images : [];
-      const allOriginalUrls = Array.isArray(editedData.allOriginalImages) ? editedData.allOriginalImages : publishedUrls;
-      console.log(`[Save] Uploading ${allOriginalUrls.length} total images (${publishedUrls.length} published, ${allOriginalUrls.length - publishedUrls.length} drafts)...`);
-      const result = await uploadImagesForProperty(allOriginalUrls, publishedUrls, supabase, newProperty.id);
-
-      console.log(`[Save] Done. Property: ${newProperty.name}, published: ${result.published.length}, drafts: ${result.drafts}`);
-      return new Response(
-        JSON.stringify({
-          success: true,
-          property: newProperty,
-          extracted: editedData,
-          images_uploaded: result.published.length,
-          drafts_saved: result.drafts,
-          listing_type: finalListingType,
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
     }
 
     // ── MODE: PREVIEW ──
