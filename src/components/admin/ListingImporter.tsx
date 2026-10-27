@@ -245,6 +245,38 @@ const ListingImporter = () => {
     }
   };
 
+  // One click: extract + save as inactive draft (verifiable later in Proprietăți)
+  const handleQuickImport = async () => {
+    const extractUrl = url.trim();
+    if (!isValidHttpUrl(extractUrl)) return;
+    setIsLoading(true);
+    setError(null);
+    setSaveResult(null);
+    setLastImportUrl(extractUrl);
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke("scrape-listing", {
+        body: { url: extractUrl, listing_type: userPickedType ? listingType : undefined, mode: "quick" },
+      });
+      if (fnError && !data) throw new Error(fnError.message);
+      if (!data?.success) {
+        throw Object.assign(new Error(data?.error || "Import eșuat"), { logs: data?.logs });
+      }
+      setExtracted(data.extracted);
+      setEditData({ ...data.extracted });
+      setSaveResult(data);
+      setStep(2);
+      toast({
+        title: "✅ Anunț salvat ca ciornă",
+        description: `„${data.property.name}" — ${data.images_uploaded} imagini. Nu e publicat până nu îl activezi.`,
+      });
+    } catch (err: any) {
+      setError({ message: err?.message || "Eroare necunoscută", status: null, logs: Array.isArray(err?.logs) ? err.logs : [] });
+      toast({ title: "Eroare import", description: err?.message, variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
 
   const handlePickScraperLead = (lead: any) => {
     setUrl(lead.source_url);
@@ -557,6 +589,14 @@ const ListingImporter = () => {
                 ) : (
                   <><Eye className="w-4 h-4 mr-2" />Previzualizează &amp; Extrage Date</>
                 )}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleQuickImport}
+                disabled={isLoading || !isValidHttpUrl(url)}
+                className="w-full"
+              >
+                <Zap className="w-4 h-4 mr-2" />Import rapid (salvează direct ca ciornă)
               </Button>
 
               {/* Retry progress: visible only during loading */}
