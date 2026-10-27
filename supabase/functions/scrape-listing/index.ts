@@ -5,8 +5,10 @@ import {
   extractFromMarkdownWithAI,
   collectImages,
   buildExtracted,
+  htmlToTextAndLinks,
 } from "./extract.ts";
 import { uploadImagesForProperty } from "./storage.ts";
+import { cleanListingUrl, directFetchHtml, parseStructuredHtml } from "./directFetch.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -85,14 +87,16 @@ Deno.serve(async (req) => {
   if (!auth.ok) return auth.response!;
 
   try {
-    const { url, listing_type, mode, editedData, wait_selector, geo_code, custom_wait } = await req.json();
+    const { url: rawUrl, listing_type, mode, editedData, wait_selector, geo_code, custom_wait } = await req.json();
 
-    if (!url) {
+    if (!rawUrl || typeof rawUrl !== 'string') {
       return new Response(
         JSON.stringify({ success: false, error: 'URL is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    const cleanUrl = cleanListingUrl(rawUrl);
+    const url = cleanUrl;
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -142,47 +146,67 @@ Deno.serve(async (req) => {
     }
 
     // ── MODE: PREVIEW ──
-    const scrapeDoKey = Deno.env.get('SCRAPE_DO_API_KEY');
-    if (!scrapeDoKey) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'SCRAPE_DO_API_KEY not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    console.log(`[Preview] Scraping listing from ${platform}: ${url}`);
-
-    // Step 1: Fetch JS-rendered HTML via Scrape.do
-    const scrapeOpts: Record<string, unknown> = {};
-    if (typeof wait_selector === 'string' && wait_selector.trim()) scrapeOpts.waitSelector = wait_selector.trim();
-    if (typeof geo_code === 'string' && geo_code.trim()) scrapeOpts.geoCode = geo_code.trim();
-    if (typeof custom_wait === 'number' && Number.isFinite(custom_wait)) scrapeOpts.customWait = custom_wait;
-    const { jsonData, markdown, pageLinks, logs: scrapeLogs, attempts } = await scrapeWithScrapeDo(url, scrapeDoKey, scrapeOpts);
-    const logs = [...scrapeLogs];
+    const logs: string[] = [];
     const pushLog = (m: string) => { const l = `[${new Date().toISOString()}] ${m}`; logs.push(l); console.log(l); };
+    if (cleanUrl !== url) pushLog(`[Preview] URL curățat de parametri de urmărire: ${cleanUrl}`);
 
-    // Step 2: Check if structured extraction returned data
-    const hasStructuredData = Object.values(jsonData).some(v => v !== null && v !== undefined && v !== '');
-    let finalJsonData = jsonData;
-
-    if (!hasStructuredData && markdown.length > 50) {
-      pushLog('[Preview] Structured extraction empty — running AI extraction on markdown');
-      const aiExtracted = await extractFromMarkdownWithAI(markdown, url);
-      finalJsonData = { ...jsonData, ...aiExtracted };
-      pushLog(`[Preview] AI extraction returned ${Object.keys(aiExtracted).length} fields`);
-    } else if (!hasStructuredData) {
-      pushLog('[Preview] Both structured and markdown extraction empty. The page may be blocked or require JS.');
+    // Step 1a: free direct fetch (server-rendered sites, agency sites, JSON-LD)
+    let markdown = '';
+    let pageLinks: string[] = [];
+    let structured: Record<string, any> = {};
+    let attempts = 0;
+    const directHtml = await directFetchHtml(cleanUrl);
+    if (directHtml) {
+      const parsed = htmlToTextAndLinks(directHtml, cleanUrl);
+      structured = parseStructuredHtml(directHtml);
+      markdown = parsed.text;
+      pageLinks = [...parsed.images, ...parsed.links];
+      pushLog(`[Direct] Pagină citită direct: ${parsed.text.length} caractere, ${parsed.images.length} imagini, câmpuri structurate: ${Object.keys(structured).join(', ') || '—'}`);
+    } else {
+      pushLog('[Direct] Pagina nu se poate citi direct — folosesc Scrape.do');
     }
 
-    // Step 2.5: If contact info is missing, try AI extraction specifically for contacts
-    const hasContactInfo = finalJsonData.contact_name || finalJsonData.contact_phone || finalJsonData.contact_email;
-    if (!hasContactInfo && markdown.length > 50) {
-      pushLog('[Preview] Contact info missing — targeted AI extraction for contacts');
-      const contactData = await extractFromMarkdownWithAI(markdown, url);
-      if (contactData.contact_name) finalJsonData.contact_name = contactData.contact_name;
-      if (contactData.contact_phone) finalJsonData.contact_phone = contactData.contact_phone;
-      if (contactData.contact_email) finalJsonData.contact_email = contactData.contact_email;
+    // Step 1b: Scrape.do for JS-rendered / protected portals
+    const directGood = markdown.length > 800 && (structured.title || structured.price);
+    if (!directGood) {
+      const scrapeDoKey = Deno.env.get('SCRAPE_DO_API_KEY');
+      if (scrapeDoKey) {
+        const scrapeOpts: Record<string, unknown> = {};
+        if (typeof wait_selector === 'string' && wait_selector.trim()) scrapeOpts.waitSelector = wait_selector.trim();
+        if (typeof geo_code === 'string' && geo_code.trim()) scrapeOpts.geoCode = geo_code.trim();
+        if (typeof custom_wait === 'number' && Number.isFinite(custom_wait)) scrapeOpts.customWait = custom_wait;
+        try {
+          const r = await scrapeWithScrapeDo(cleanUrl, scrapeDoKey, scrapeOpts);
+          logs.push(...r.logs);
+          attempts = r.attempts;
+          if (r.markdown.length > markdown.length) { markdown = r.markdown; pageLinks = [...pageLinks, ...r.pageLinks]; }
+        } catch (e: any) {
+          logs.push(...(Array.isArray(e?.logs) ? e.logs : []));
+          if (!markdown) throw e;
+          pushLog(`[Preview] Scrape.do a eșuat (${e?.message}) — continui cu datele citite direct`);
+        }
+      } else if (!markdown) {
+        throw new Error('Pagina nu a putut fi citită și SCRAPE_DO_API_KEY lipsește');
+      }
     }
+
+    // Step 2: AI extraction on text, structured data wins where present
+    let finalJsonData: Record<string, any> = {};
+    if (markdown.length > 50) {
+      pushLog('[Preview] Extracție AI din textul paginii');
+      finalJsonData = await extractFromMarkdownWithAI(markdown, cleanUrl);
+    } else {
+      pushLog('[Preview] Pagina pare blocată sau goală.');
+    }
+    for (const [k, v] of Object.entries(structured)) {
+      if (k === 'images') continue;
+      if (v !== null && v !== undefined && v !== '') finalJsonData[k] = v;
+    }
+    if (Array.isArray(structured.images)) {
+      finalJsonData.images = [...structured.images, ...(Array.isArray(finalJsonData.images) ? finalJsonData.images : [])];
+    }
+
+    // (Contacts come from the same AI pass above — a second identical call only doubled cost and time.)
 
     // Step 3: Collect images from all sources
     const imageUrls = collectImages(finalJsonData, pageLinks, markdown, url);

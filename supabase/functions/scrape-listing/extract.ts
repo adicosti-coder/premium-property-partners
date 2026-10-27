@@ -61,7 +61,7 @@ export interface ExtractedListing {
 }
 
 /** Convert raw HTML into clean text + extract <img>/<a> URLs. */
-function htmlToTextAndLinks(html: string, baseUrl: string): { text: string; images: string[]; links: string[] } {
+export function htmlToTextAndLinks(html: string, baseUrl: string): { text: string; images: string[]; links: string[] } {
   if (!html) return { text: '', images: [], links: [] };
 
   const images: string[] = [];
