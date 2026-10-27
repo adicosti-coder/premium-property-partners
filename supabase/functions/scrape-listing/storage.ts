@@ -22,8 +22,11 @@ export async function downloadAndUploadImage(
     }
 
     const uint8 = new Uint8Array(await response.arrayBuffer());
-    // Passive WebP conversion (JPEG/PNG → WebP), falls back to original bytes.
-    const stored = await toWebp(uint8);
+    // WebP re-encoding of big photos exhausts edge CPU; store large files as-is.
+    const ct = response.headers.get('content-type') || 'image/jpeg';
+    const stored = uint8.byteLength > 1_500_000
+      ? { bytes: uint8, ext: ct.includes('png') ? 'png' : ct.includes('webp') ? 'webp' : 'jpg', contentType: ct }
+      : await toWebp(uint8);
 
     const filePath = `${propertyId}/imported-${index}.${stored.ext}`;
 
@@ -80,7 +83,7 @@ export async function uploadImagesForProperty(
       is_published: isPublished,
     });
 
-    if (i < allOriginalUrls.length - 1) await new Promise(r => setTimeout(r, 300));
+    if (i < allOriginalUrls.length - 1) await new Promise(r => setTimeout(r, 100));
   }
 
   // Update properties with only published images
