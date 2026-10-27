@@ -816,7 +816,6 @@ function PostPreviewModal({ post, open, onOpenChange }: { post: SocialPost; open
                   <SafePostImage candidates={[post.image_url, ...(post.image_urls ?? []), post.content_variants?.FEED?.image_url]} alt={post.title} fallbackTitle={post.title} className="w-full h-full object-contain" />
                 ) : (
                   <div className="text-center px-6 space-y-2">
-                    <ImageIcon className="h-10 w-10 mx-auto text-accent/60" />
                     <p className="text-xs text-primary-foreground/70 font-medium">{post.title}</p>
                   </div>
                 )}
@@ -862,7 +861,6 @@ function PostPreviewModal({ post, open, onOpenChange }: { post: SocialPost; open
                   <SafePostImage candidates={[post.image_url, ...(post.image_urls ?? []), post.content_variants?.FEED?.image_url]} alt={post.title} fallbackTitle={post.title} className="w-full h-full object-contain" />
                 ) : (
                   <div className="text-center px-6 space-y-2">
-                    <ImageIcon className="h-10 w-10 mx-auto text-accent/60" />
                     <p className="text-xs text-primary-foreground/70 font-medium">{post.title}</p>
                   </div>
                 )}
@@ -1209,7 +1207,6 @@ function SocialCard({
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-primary/70 flex items-center justify-center">
             <div className="text-center px-6 space-y-2">
-              <ImageIcon className="h-8 w-8 mx-auto text-accent/50" />
               <p className="text-xs text-primary-foreground/60 font-medium leading-snug max-w-[200px] mx-auto line-clamp-2">
                 {post.title}
               </p>
