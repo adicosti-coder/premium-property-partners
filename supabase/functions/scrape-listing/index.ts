@@ -206,15 +206,7 @@ Deno.serve(async (req) => {
       finalJsonData.images = [...structured.images, ...(Array.isArray(finalJsonData.images) ? finalJsonData.images : [])];
     }
 
-    // Step 2.5: If contact info is missing, try AI extraction specifically for contacts
-    const hasContactInfo = finalJsonData.contact_name || finalJsonData.contact_phone || finalJsonData.contact_email;
-    if (!hasContactInfo && markdown.length > 50) {
-      pushLog('[Preview] Contact info missing — targeted AI extraction for contacts');
-      const contactData = await extractFromMarkdownWithAI(markdown, url);
-      if (contactData.contact_name) finalJsonData.contact_name = contactData.contact_name;
-      if (contactData.contact_phone) finalJsonData.contact_phone = contactData.contact_phone;
-      if (contactData.contact_email) finalJsonData.contact_email = contactData.contact_email;
-    }
+    // (Contacts come from the same AI pass above — a second identical call only doubled cost and time.)
 
     // Step 3: Collect images from all sources
     const imageUrls = collectImages(finalJsonData, pageLinks, markdown, url);
