@@ -25,3 +25,4 @@
 - Blog autopilot saves one factual DRAFT per run; admin publishes; 402/403 pauses it.
 - WhatsApp audits use real ordered turns; approved lessons stay separate from voice, with compare-and-restore rollback — prevents wrong-channel training.
 - `handle-lead-whatsapp` always answers 200 and waits at most 3s for MAKE_WHATSAPP_WEBHOOK_URL via `_shared`-style local `sendToMake.ts` (never throws) — the "Calcul venit" form must show success even when Make is slow or down; webhook failures are logged only.
+- `scrape-listing` cleans tracking/redirect URLs, reads the page directly first (JSON-LD/OpenGraph + one AI pass) and uses Scrape.do only when that fails; mode `quick` saves an inactive draft in one call — cheaper, faster imports from server-rendered sites.
