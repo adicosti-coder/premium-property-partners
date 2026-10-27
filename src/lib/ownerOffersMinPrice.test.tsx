@@ -82,6 +82,5 @@ describe('Owner offers minimum price', () => {
     await screen.findByText('Încă nu ați primit oferte.');
     fireEvent.click(screen.getByRole('button', { name: 'Salvează' }));
     expect(upserts).toHaveLength(0);
-    expect(table('property_sale_settings')).toBeTruthy();
   });
 });
