@@ -6,9 +6,22 @@ import { Image } from "https://deno.land/x/imagescript@1.2.17/mod.ts";
 import { instagramFrame, metaAspectError } from "./socialImageSelection.ts";
 import { isUrlAllowed, fetchWithSizeCap } from "./urlGuard.ts";
 
+// Supabase Storage sources are downscaled server-side first so decoding stays within edge CPU limits.
+function smallerSource(url: string): string {
+  const m = url.match(/^(https:\/\/[^/]+\.supabase\.co)\/storage\/v1\/object\/public\/(.+?)(\?.*)?$/);
+  return m ? `${m[1]}/storage/v1/render/image/public/${m[2]}?width=1080&height=1350&resize=contain&quality=85` : url;
+}
+
 async function optimizeOne(url: string, key: string, story = false): Promise<string> {
   if (!isUrlAllowed(url, { extraHostSuffixes: ["olxcdn.com", "img.publi24.ro", "realtrust.ro"] }).ok) throw new Error("Sursa imaginii nu este permisă");
-  const res = await fetchWithSizeCap(url, { redirect: "error" }, 15 * 1024 * 1024);
+  const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const path = `social/instagram/${key}.jpg`;
+  const cachedUrl = sb.storage.from("property-images").getPublicUrl(path).data.publicUrl;
+  // Already prepared earlier (same source + format): reuse without re-decoding.
+  const head = await fetch(cachedUrl, { method: "HEAD" }).catch(() => null);
+  if (head?.ok) return cachedUrl;
+  let res = await fetchWithSizeCap(smallerSource(url), { redirect: "error" }, 15 * 1024 * 1024);
+  if ((!res.ok || !res.bytes) && smallerSource(url) !== url) res = await fetchWithSizeCap(url, { redirect: "error" }, 15 * 1024 * 1024);
   if (!res.ok || !res.bytes) throw new Error(res.error || "download failed");
   const img = await decodeSource(res.bytes);
   const f = instagramFrame(img.width, img.height, story);
@@ -17,17 +30,13 @@ async function optimizeOne(url: string, key: string, story = false): Promise<str
   const bad = metaAspectError(out.width, out.height, story);
   if (bad) throw new Error(bad);
   const jpeg = await out.encodeJPEG(88);
-  const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-  const path = `social/instagram/${key}.jpg`;
   const { error } = await sb.storage.from("property-images").upload(path, jpeg, { contentType: "image/jpeg", upsert: true });
   if (error) throw error;
   const publicUrl = sb.storage.from("property-images").getPublicUrl(path).data.publicUrl;
   // Verificăm fișierul public efectiv (cache/CDN) înainte să-l trimitem către Make/Meta.
-  const check = await fetchWithSizeCap(publicUrl, { redirect: "error" }, 15 * 1024 * 1024);
-  if (!check.ok || !check.bytes) throw new Error("Imaginea pregătită nu este accesibilă public");
-  const final = await decodeSource(check.bytes);
-  const finalBad = metaAspectError(final.width, final.height, story);
-  if (finalBad) throw new Error(`Imagine respinsă înainte de Meta: ${finalBad}`);
+  // Dimensions were validated on the encoded frame above; only confirm public reachability (no re-decode).
+  const check = await fetch(publicUrl, { method: "HEAD" }).catch(() => null);
+  if (!check?.ok) throw new Error("Imaginea pregătită nu este accesibilă public");
   return publicUrl;
 }
 
