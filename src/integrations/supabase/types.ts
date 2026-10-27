@@ -6178,6 +6178,82 @@ export type Database = {
           },
         ]
       }
+      property_sale_offers: {
+        Row: {
+          amount_eur: number
+          buyer_label: string
+          conditions: string | null
+          created_at: string
+          id: string
+          payment_method: string | null
+          property_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_eur: number
+          buyer_label: string
+          conditions?: string | null
+          created_at?: string
+          id?: string
+          payment_method?: string | null
+          property_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_eur?: number
+          buyer_label?: string
+          conditions?: string | null
+          created_at?: string
+          id?: string
+          payment_method?: string | null
+          property_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_sale_offers_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_sale_settings: {
+        Row: {
+          deadline: string | null
+          min_price_eur: number | null
+          property_id: string
+          start_price_eur: number | null
+          updated_at: string
+        }
+        Insert: {
+          deadline?: string | null
+          min_price_eur?: number | null
+          property_id: string
+          start_price_eur?: number | null
+          updated_at?: string
+        }
+        Update: {
+          deadline?: string | null
+          min_price_eur?: number | null
+          property_id?: string
+          start_price_eur?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_sale_settings_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: true
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       property_seo_suggestions: {
         Row: {
           applied_at: string | null
@@ -13264,6 +13340,7 @@ export type Database = {
         Args: { _delta?: number; _id: string }
         Returns: undefined
       }
+      is_property_owner: { Args: { _property_id: string }; Returns: boolean }
       list_orphan_prospects: {
         Args: { _limit?: number; _since_hours?: number }
         Returns: {
