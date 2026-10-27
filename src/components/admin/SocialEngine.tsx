@@ -1317,7 +1317,7 @@ function SocialCard({
           </div>
           {editing ? (
             <div className="space-y-1">
-              <Textarea value={post.caption} onChange={(e) => onCaptionChange(post.id, e.target.value)} className="text-xs min-h-[100px] resize-none" />
+              <Textarea value={post.caption} onChange={(e) => onCaptionChange(post.id, e.target.value)} className="text-xs min-h-[100px] resize-none" placeholder="Apasă pe „Generează 3 variante” sau „Descriere AI” pentru a crea textul…" />
               <div className="flex justify-between">
                 <span className={cn(
                   "text-[10px] tabular-nums",
