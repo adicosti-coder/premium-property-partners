@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,10 +17,22 @@ const statusLabel: Record<string, string> = {
   primita: "Primită", acceptata: "Acceptată", respinsa: "Respinsă", retrasa: "Retrasă",
 };
 
+// The visible minimum must always belong to the property currently selected.
+// A value typed by the user counts only while it was typed for that property,
+// so switching listings can never leave another listing's minimum in the box.
+const getMinPriceInput = (
+  propertyId: string,
+  edit: { propertyId: string; value: string } | null,
+  saved: unknown,
+) => {
+  if (edit && edit.propertyId === propertyId) return edit.value;
+  return saved == null ? "" : String(saved);
+};
+
 const OwnerOffers = ({ propertyId }: { propertyId: string }) => {
   const qc = useQueryClient();
   const db = supabase as any;
-  const [minPrice, setMinPrice] = useState("");
+  const [minEdit, setMinEdit] = useState<{ propertyId: string; value: string } | null>(null);
   const [saving, setSaving] = useState(false);
 
   const { data, isLoading } = useQuery({
@@ -35,12 +47,11 @@ const OwnerOffers = ({ propertyId }: { propertyId: string }) => {
     },
   });
 
-  useEffect(() => {
-    if (data?.settings?.min_price_eur != null) setMinPrice(String(data.settings.min_price_eur));
-  }, [data?.settings?.min_price_eur]);
+  const savedMin = data?.settings?.min_price_eur;
+  const minInput = getMinPriceInput(propertyId, minEdit, savedMin);
 
   const saveMin = async () => {
-    const v = Number(minPrice.replace(/[^\d]/g, ""));
+    const v = Number(minInput.replace(/[^\d]/g, ""));
     if (!v) return toast({ title: "Introduceți un preț minim valid", variant: "destructive" });
     setSaving(true);
     const { error } = await db.from("property_sale_settings")
@@ -48,8 +59,10 @@ const OwnerOffers = ({ propertyId }: { propertyId: string }) => {
     setSaving(false);
     if (error) return toast({ title: "Nu am putut salva prețul minim", description: error.message, variant: "destructive" });
     toast({ title: "Preț minim salvat", description: "Doar dumneavoastră și echipa RealTrust îl vedeți." });
+    setMinEdit(null);
     qc.invalidateQueries({ queryKey: ["owner-offers", propertyId] });
   };
+
 
   if (isLoading) return <Skeleton className="h-64 w-full" />;
   const offers = data?.offers ?? [];
@@ -69,7 +82,7 @@ const OwnerOffers = ({ propertyId }: { propertyId: string }) => {
         <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <div className="flex-1 space-y-1">
             <Label htmlFor="min-price">Sub această sumă nu acceptați nicio ofertă (EUR)</Label>
-            <Input id="min-price" inputMode="numeric" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} placeholder="ex. 120000" className="h-12" />
+            <Input id="min-price" inputMode="numeric" value={minInput} onChange={(e) => setMinEdit({ propertyId, value: e.target.value })} placeholder="ex. 120000" className="h-12" />
           </div>
           <Button onClick={saveMin} disabled={saving} className="h-12">{saving ? "Se salvează..." : "Salvează"}</Button>
         </CardContent>
