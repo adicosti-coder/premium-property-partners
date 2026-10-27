@@ -38,6 +38,7 @@ const isValidHttpUrl = (value: string): boolean => {
 };
 
 interface ExtractedData {
+  minimum_price?: number | null;
   title: string | null;
   description_short: string | null;
   description_full: string | null;
@@ -354,11 +355,23 @@ const ListingImporter = () => {
           mode: "save", 
           editedData: {
             ...editData,
-            allOriginalImages,
+            listing_type: listingType,
+            minimum_price: editData.minimum_price ? Number(editData.minimum_price) : null,
+            // Send only image URLs (never base64/blobs) to keep the payload small.
+            images: (editData.images || []).filter((u) => typeof u === "string" && /^https?:\/\//.test(u)),
+            allOriginalImages: (allOriginalImages || []).filter((u) => typeof u === "string" && /^https?:\/\//.test(u)),
           },
         },
       });
-      if (fnError) throw new Error(fnError.message);
+      if (fnError) {
+        let detail = fnError.message;
+        try {
+          const ctx: any = (fnError as any).context;
+          const body = ctx && typeof ctx.json === "function" ? await ctx.json() : null;
+          if (body?.error) detail = body.error;
+        } catch { /* keep generic message */ }
+        throw new Error(detail);
+      }
       if (!data?.success) throw new Error(data?.error || "Salvare eșuată");
 
       // If regim hotelier with financials, also save to property_listings
@@ -801,6 +814,8 @@ const ListingImporter = () => {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {renderFieldRow(<BadgeEuro className="w-4 h-4" />, "Preț", "price", "number", "75000")}
+              {(listingType === "vanzare" || listingType === "investitie") &&
+                renderFieldRow(<BadgeEuro className="w-4 h-4" />, "Preț minim (opțional)", "minimum_price", "number", "70000")}
               {renderFieldRow(<Ruler className="w-4 h-4" />, "Suprafață (m²)", "size", "number", "65")}
               {renderFieldRow(<BedDouble className="w-4 h-4" />, "Camere", "rooms", "number", "2")}
               {renderFieldRow(<Bath className="w-4 h-4" />, "Băi", "bathrooms", "number", "1")}
