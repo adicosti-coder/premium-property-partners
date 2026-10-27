@@ -33,10 +33,18 @@ async function optimizeOne(url: string, key: string, story = false): Promise<str
 
 export async function prepareInstagramImages(images: string[], story = false): Promise<string[]> {
   const prepared: string[] = [];
+  const failures: string[] = [];
   for (const u of images) {
     const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(u));
     const key = (story ? "story-v2-" : "fit-v3-") + Array.from(new Uint8Array(hash), b => b.toString(16).padStart(2, "0")).join("");
-    prepared.push(await optimizeOne(u, key, story));
+    // Skip dead sources (e.g. 404 from a removed portal photo) instead of failing the whole post.
+    try { prepared.push(await optimizeOne(u, key, story)); } catch (e) { failures.push(String((e as Error)?.message || e)); }
+  }
+  if (!prepared.length && images.length) {
+    const dead = failures.some((f) => /Upstream 4\d\d/.test(f));
+    throw new Error(dead
+      ? "Imaginea postării nu mai există la sursă (404). Încarcă o imagine nouă în ciornă, apoi publică din nou."
+      : `Nicio imagine nu a putut fi pregătită pentru Meta: ${failures[0] || "eroare necunoscută"}`);
   }
   return prepared;
 }
