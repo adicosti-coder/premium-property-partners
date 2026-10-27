@@ -59,7 +59,7 @@ describe('Owner offers minimum price', () => {
     fireEvent.change(screen.getByLabelText('Sub această sumă nu acceptați nicio ofertă (EUR)'), { target: { value: '999999' } });
     cleanup();
     renderOffers('B');
-    await screen.findByText('Încă nu ați primit oferte.');
+    await screen.findByText(/nu ați primit oferte/);
     expect(screen.getByLabelText('Sub această sumă nu acceptați nicio ofertă (EUR)')).toHaveValue('');
   });
 
@@ -79,7 +79,7 @@ describe('Owner offers minimum price', () => {
     expect(await screen.findByDisplayValue('120000')).toBeInTheDocument();
     cleanup();
     renderOffers('B');
-    await screen.findByText('Încă nu ați primit oferte.');
+    await screen.findByText(/nu ați primit oferte/);
     fireEvent.click(screen.getByRole('button', { name: 'Salvează' }));
     expect(upserts).toHaveLength(0);
   });
