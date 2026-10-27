@@ -19,6 +19,8 @@ import OwnerOffers from '@/components/owner/OwnerOffers';
 const OFFERS = { A: [{ id: 'o1', amount_eur: 110000 }], B: [], C: [{ id: 'o2', amount_eur: 90000 }] };
 const SETTINGS = { A: { min_price_eur: 120000 }, B: null, C: { min_price_eur: 95000 } };
 
+const upserts: any[] = [];
+
 const buildChain = (propertyId: string) => ({
   select: () => ({
     eq: (_col: string, id: string) => ({
@@ -26,7 +28,10 @@ const buildChain = (propertyId: string) => ({
       maybeSingle: () => Promise.resolve({ data: SETTINGS[id as keyof typeof SETTINGS] ?? null, error: null }),
     }),
   }),
-  upsert: vi.fn(() => Promise.resolve({ error: null })),
+  upsert: (row: any) => {
+    upserts.push(row);
+    return Promise.resolve({ error: null });
+  },
 });
 
 const renderOffers = (propertyId: string) => {
@@ -68,15 +73,15 @@ describe('Owner offers minimum price', () => {
   });
 
   it('never saves a minimum carried over from another property', async () => {
+    upserts.length = 0;
     table.mockImplementation(buildChain);
     renderOffers('A');
     expect(await screen.findByDisplayValue('120000')).toBeInTheDocument();
     cleanup();
-    const chains = renderOffers('B');
+    renderOffers('B');
     await screen.findByText('Încă nu ați primit oferte.');
     fireEvent.click(screen.getByRole('button', { name: 'Salvează' }));
-    const upsert = table('property_sale_settings').upsert;
-    expect(chains).toBeTruthy();
-    expect(typeof upsert).toBe('function');
+    expect(upserts).toHaveLength(0);
+    expect(table('property_sale_settings')).toBeTruthy();
   });
 });
