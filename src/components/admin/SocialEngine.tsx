@@ -132,7 +132,19 @@ export default function SocialEngine() {
     if (error) {
       console.error("Error fetching posts:", error);
     } else {
-      setPosts((data || []).map(p => ({ ...p, content_variants: readSocialVariants(p.content_variants) })));
+      const rows = data || [];
+      // Posts without their own image fall back to the linked listing's stored photos.
+      const needIds = [...new Set(rows.filter((p: any) => p.property_id && !p.image_url && !(p.image_urls?.length)).map((p: any) => p.property_id as string))];
+      const propImages: Record<string, string[]> = {};
+      if (needIds.length) {
+        const { data: props } = await supabase.from("properties").select("id, images").in("id", needIds);
+        for (const pr of (props as any[]) || []) propImages[pr.id] = Array.isArray(pr.images) ? pr.images.filter((x: unknown) => typeof x === "string") : [];
+      }
+      setPosts(rows.map((p: any) => ({
+        ...p,
+        image_urls: p.image_urls?.length ? p.image_urls : (p.property_id && !p.image_url ? propImages[p.property_id] ?? [] : p.image_urls),
+        content_variants: readSocialVariants(p.content_variants),
+      })));
     }
     setLoading(false);
   }, []);
