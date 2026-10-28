@@ -2617,6 +2617,7 @@ Deno.serve(async (req) => {
           auto_fallback_enabled: enableAutoFallback, auto_fallback_threshold: autoFallbackThreshold,
           engine_stats: engineStats,
           blocked_alerts: blockedAlerts.slice(-20),
+          platform_report: PLATFORM_REPORT,
           session_deduped: sessionDedupedSkipped,
         },
       });
