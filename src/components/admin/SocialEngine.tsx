@@ -382,10 +382,18 @@ export default function SocialEngine() {
       setSettingsOpen(true);
       return;
     }
+    const post = posts.find((p) => p.id === id);
+    const cover = post && [post.image_url, ...(post.image_urls ?? []), post.content_variants?.FEED?.image_url].find(isValidImageUrl);
+    const needsImage = platforms.includes("instagram") || post?.media_type === "STORY";
+    if (needsImage && !cover && !post?.video_url) {
+      toast({ title: "Lipsește imaginea principală", description: "Instagram cere o fotografie. Adaugă o imagine în ciornă sau publică doar pe Facebook.", variant: "destructive" });
+      return;
+    }
     setPostingId(id);
     setPostingPlatform(platforms.length > 1 ? "both" : platforms[0]);
     try {
-      const { data, error } = await supabase.functions.invoke("process-scheduled-posts", { body: { post_id: id, platforms } });
+      if (post && cover && !post.image_url) setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, image_url: cover } : p)));
+      const { data, error } = await supabase.functions.invoke("process-scheduled-posts", { body: { post_id: id, platforms, current_image: post?.image_url ? undefined : cover ?? undefined } });
       if (error || !data?.success) {
         let msg = data?.error || error?.message || "Webhook-ul Make.com nu a răspuns.";
         try { const ctx = (error as any)?.context; if (ctx?.json) msg = (await ctx.json())?.error || msg; } catch { /* ignore */ }
