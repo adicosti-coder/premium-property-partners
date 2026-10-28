@@ -94,7 +94,7 @@ export default function OwnerFlowWorkspace() {
             </div>
           }
         >
-          {active === "contact" && <div className="mb-4"><AndreiBulkCallTable /></div>}
+          {active === "contact" && <div id="andrei-whatsapp" className="mb-4 scroll-mt-24"><AndreiBulkCallTable /></div>}
           <activeStep.Component />
         </Suspense>
       </AdminErrorBoundary>

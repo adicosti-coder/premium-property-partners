@@ -116,8 +116,8 @@ export default function DailyCommandCenter() {
   const cards: ActionCard[] = d ? [
     { key: "new", label: "Anunțuri noi (24h)", hint: "găsite automat pe portaluri", count: d.newToday, tab: "flux-proprietari", icon: Search, tone: "blue" },
     { key: "verify", label: "De verificat", hint: "așteaptă aprobarea ta", count: d.toVerify, tab: "flux-proprietari", icon: CheckCircle2, tone: "amber" },
-    { key: "hot", label: "Proprietari fierbinți", hint: "scor peste 80, gata de contact", count: d.hot, tab: "flux-proprietari", icon: Flame, tone: "rose" },
-    { key: "outreach", label: "Mesaje pregătite", hint: "oferte de trimis proprietarilor", count: d.outreachPending, tab: "flux-proprietari", icon: MessageSquare, tone: "green" },
+    { key: "hot", label: "Proprietari fierbinți", hint: "scor peste 80, gata de contact", count: d.hot, tab: "flux-proprietari", route: "/admin/flux-proprietari?step=contact", icon: Flame, tone: "rose" },
+    { key: "outreach", label: "Mesaje pregătite", hint: "oferte de trimis proprietarilor", count: d.outreachPending, tab: "flux-proprietari", route: "/admin/flux-proprietari?step=contact", icon: MessageSquare, tone: "green" },
     { key: "wa", label: "În coada WhatsApp", hint: "așteaptă trimiterea", count: d.waPending, tab: "whatsapp-queue", icon: MessageSquare, tone: "slate" },
     { key: "wa-failed", label: "WhatsApp eșuate", hint: "necesită reluare manuală", count: d.waFailed, tab: "whatsapp-queue", icon: AlertTriangle, tone: d.waFailed > 0 ? "rose" : "slate" },
     { key: "drops", label: "Scăderi de preț (24h)", hint: "ocazii de negociere", count: d.priceDrops, tab: "price-drops", icon: TrendingDown, tone: "green" },
