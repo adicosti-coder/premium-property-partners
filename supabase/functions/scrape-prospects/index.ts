@@ -3232,6 +3232,34 @@ Deno.serve(async (req) => {
       console.warn(JSON.stringify({ kind: 'apify_alert_error', message: (e as Error).message }));
     }
 
+    // Alertă pe platformă când serviciul de deblocare răspunde 402 (fără credite).
+    // Doar se înregistrează — celelalte platforme au rulat deja normal.
+    for (const [platform, rep] of Object.entries(PLATFORM_REPORT)) {
+      try {
+        const target = `proxy_402_${platform.toLowerCase()}`;
+        const { data: openInc } = await supabase.from('scraper_health_incidents')
+          .select('id, occurrences').eq('target', target).eq('status', 'open').limit(1).maybeSingle();
+        const now = new Date().toISOString();
+        if (rep.last_error && /HTTP 402/.test(rep.last_error) && rep.cards === 0) {
+          const remediation = `${platform}: serviciul de deblocare nu mai are credite (402). Adaugă credite; celelalte platforme continuă normal.`;
+          const detail = { ...rep, at: now };
+          if (openInc) {
+            await supabase.from('scraper_health_incidents').update({
+              occurrences: (openInc.occurrences ?? 1) + 1, last_seen_at: now, detail, remediation,
+            }).eq('id', openInc.id);
+          } else {
+            await supabase.from('scraper_health_incidents').insert({
+              kind: 'proxy_no_credits', target, severity: 'warning', detail, remediation,
+            });
+          }
+        } else if (openInc && rep.cards > 0) {
+          await supabase.from('scraper_health_incidents').update({ status: 'resolved', resolved_at: now }).eq('id', openInc.id);
+        }
+      } catch (e) {
+        console.warn(JSON.stringify({ kind: 'platform_alert_error', platform, message: (e as Error).message }));
+      }
+    }
+
     const payload = {
       success: true,
       scan_mode: scanMode,
