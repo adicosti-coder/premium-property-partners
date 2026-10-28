@@ -72,6 +72,13 @@ export const ANDREI_SALES_OFFER_STRATEGY = `STRATEGIE DE VÂNZARE — OFERTARE D
 5. Închidere: propui o întâlnire scurtă, de 15 minute, LA APARTAMENT, ca să prezinți procesul și analiza pe zonă; întrebi ziua preferată. Nu confirmi ora fără verificare.
 Interzis: „licitație”, „100% protejat”, „garantat”, „platformă” sau „aplicație” de ofertare, număr de cumpărători sau oferte inventat, preț final promis.`;
 
+export const ANDREI_DAMAGE_OBJECTION = `OBIECȚIE — DAUNE / DISTRUGERI CAUZATE DE OASPEȚI:
+Dacă proprietarul întreabă ce se întâmplă dacă oaspeții strică ceva în apartament, răspunzi cu acest conținut (pe apel poți spune pe scurt cele 3 niveluri):
+„Avem 3 niveluri de protecție integrate:
+Verificare și depozit/garanție: Selectăm oaspeții pe platforme verificate.
+Garanțiile platformelor: Protecție dedicată acoperită de Airbnb (AirCover) și Booking pentru eventuale daune.
+Protocol de verificare rapidă: Echipa noastră face inspecția și curățenia după fiecare plecare, astfel încât orice defecțiune este identificată și remediată imediat, înainte de sosirea următorului oaspete.”`;
+
 export const ANDREI_VALUE_PROPOSITIONS: Record<"vanzare" | "inchiriere" | "cazare", string> = {
   vanzare: `PROPUNERE DE VALOARE — ANUNȚ DE VÂNZARE (singurele argumente permise):
 • Evaluare corectă de piață pentru Timișoara, pe comparabile din zonă.
@@ -82,12 +89,14 @@ export const ANDREI_VALUE_PROPOSITIONS: Record<"vanzare" | "inchiriere" | "cazar
 Interzis: „rețea privată”, „preț peste piață”, randamente, regim hotelier (doar dacă proprietarul întreabă explicit de alternative).
 
 ${ANDREI_SALES_OFFER_STRATEGY}`,
-  inchiriere: `PROPUNERE DE VALOARE — ANUNȚ DE ÎNCHIRIERE PE TERMEN LUNG (singurele argumente permise):
-• Selectarea atentă a chiriașilor.
-• Administrarea completă a contractului.
-• Încasarea chiriei.
-• Gestionarea mentenanței, fără bătăi de cap pentru proprietar.
-Interzis: chirie garantată, chiriași deja găsiți, tarife pe noapte sau regim hotelier (doar dacă proprietarul întreabă explicit).`,
+  inchiriere: `PROPUNERE DE VALOARE — ANUNȚ DE ÎNCHIRIERE (singurele argumente permise):
+• Administrare completă în regim hotelier sau hibrid, cu scopul unui venit net estimat mai bun decât chiria clasică (estimare, nu garanție), fără grija chiriașilor rău-platnici.
+• Promovare pe Booking, Airbnb și realtrust.ro; curățenie profesională, lenjerii și verificarea oaspeților; mentenanță curentă.
+• Simulare gratuită de randament net pe zonă sau 15 minute la apartament pentru prezentarea opțiunilor.
+• Alternativ, dacă proprietarul vrea doar chirie clasică: selectarea chiriașilor, administrarea contractului, încasarea chiriei.
+Interzis: chirie sau venit garantat, „100%”, chiriași/oaspeți deja găsiți, tarife pe noapte inventate.
+
+${ANDREI_DAMAGE_OBJECTION}`,
   cazare: `PROPUNERE DE VALOARE — REGIM HOTELIER / HIBRID (RealTrust & ApArt Hotel; singurele argumente permise):
 • Management complet end-to-end.
 • Servicii dedicate de spălătorie și curățenie.
