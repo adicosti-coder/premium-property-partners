@@ -100,7 +100,9 @@ ${ANDREI_DAMAGE_OBJECTION}`,
   cazare: `PROPUNERE DE VALOARE — REGIM HOTELIER / HIBRID (RealTrust & ApArt Hotel; singurele argumente permise):
 • Management complet end-to-end.
 • Servicii dedicate de spălătorie și curățenie.
-• Optimizare dinamică a tarifelor, pentru un randament net estimat de 6,5%–9,4% pe an (estimare, nu garanție).`,
+• Optimizare dinamică a tarifelor, pentru un randament net estimat de 6,5%–9,4% pe an (estimare, nu garanție).
+
+${ANDREI_DAMAGE_OBJECTION}`,
 };
 
 export function normalizeAndreiBranch(branch: string): "vanzare" | "inchiriere" | "cazare" {
