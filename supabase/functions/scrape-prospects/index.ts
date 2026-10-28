@@ -784,6 +784,7 @@ export function describePlatformFailure(label: string, last?: { status: number; 
   if (!last) return `${label}: nicio cerere trimisă (buget proxy epuizat sau eroare înainte de rețea)`;
   if (last.ok && last.len > 0) return `${label}: Selector not found — pagina s-a încărcat (${last.len} caractere) dar nu am găsit carduri de anunț`;
   if (last.status === 403 || last.status === 503) return `${label}: Cloudflare/anti-bot blocked (HTTP ${last.status}), proxy-ul nu a reușit`;
+  if (last.status === 402) return `${label}: Cloudflare/anti-bot blocked, iar serviciul proxy de rezervă nu mai are credite (HTTP 402)`;
   if (last.status === 429) return `${label}: Rate limited (HTTP 429), proxy-ul nu a reușit`;
   if (last.status === 0) return `${label}: Timeout / fără răspuns (sau buget proxy epuizat)`;
   return `${label}: HTTP ${last.status}`;
