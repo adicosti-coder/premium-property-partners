@@ -1206,6 +1206,7 @@ function SocialCard({
   };
 
   const hasImage = [post.image_url, ...(post.image_urls ?? []), post.content_variants?.FEED?.image_url].some(isValidImageUrl);
+  const clampStyle = (lines: number) => ({ display: "-webkit-box", WebkitLineClamp: lines, WebkitBoxOrient: "vertical" as const, overflow: "hidden" });
   const alreadyOnIG = post.posted_to.includes("instagram");
   const alreadyOnFB = post.posted_to.includes("facebook");
   const alreadyOnBoth = alreadyOnIG && alreadyOnFB;
@@ -1219,7 +1220,7 @@ function SocialCard({
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-primary/70 flex items-center justify-center px-6 pt-11 pb-12">
             <div className="text-center space-y-2">
-              <p className="text-xs text-primary-foreground/60 font-medium leading-relaxed max-w-[220px] mx-auto line-clamp-3 break-words">
+              <p className="text-xs text-primary-foreground/60 font-medium leading-relaxed max-w-[220px] mx-auto line-clamp-3 break-words" style={clampStyle(3)}>
                 {post.title}
               </p>
             </div>
@@ -1295,7 +1296,7 @@ function SocialCard({
       {/* Content */}
       <CardHeader className="pb-2 pt-3 flex-row items-start justify-between space-y-0 gap-2">
         <div className="min-w-0">
-          <CardTitle className="text-sm font-heading leading-snug line-clamp-2">{post.title}</CardTitle>
+          <CardTitle className="text-sm font-heading leading-snug line-clamp-2" style={clampStyle(2)}>{post.title}</CardTitle>
           <p className="text-[10px] text-muted-foreground mt-1">
             {format(new Date(post.created_at), "dd MMM yyyy, HH:mm")}
             {post.scheduled_at && (
@@ -1338,7 +1339,7 @@ function SocialCard({
               </div>
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground whitespace-pre-line line-clamp-4 overflow-hidden break-words bg-muted/50 rounded-md p-2.5 leading-relaxed">
+            <p className="text-xs text-muted-foreground whitespace-pre-line line-clamp-4 overflow-hidden break-words bg-muted/50 rounded-md p-2.5 leading-relaxed" style={clampStyle(4)}>
               {post.caption.trim() || (
                 <span className="italic text-foreground/70">
                   Apasă pe „Generează 3 variante” sau „Descriere AI” pentru a crea textul postării…
