@@ -2,6 +2,7 @@
 // Header obligatoriu: x-outreach-secret = MAKE_OUTREACH_CALLBACK_SECRET.
 // Body: { "id": "<uuid>", "status": "whatsapp_sent" | "call_completed" | "failed" | ..., "error"?: "..." }
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { queueVoiceFallback } from "../_shared/voiceFallback.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,5 +40,7 @@ Deno.serve(async (req) => {
     .eq("id", id).select("id").maybeSingle();
   if (error) return json({ error: error.message }, 500);
   if (!data) return json({ error: "not_found" }, 404);
-  return json({ ok: true, id, status });
+  // WhatsApp nelivrat (număr fără cont, eroare Meta) → Andrei sună o dată, ca fallback.
+  const voice_fallback = status === "failed" ? await queueVoiceFallback(sb, id) : false;
+  return json({ ok: true, id, status, voice_fallback });
 });

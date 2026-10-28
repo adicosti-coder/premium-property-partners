@@ -19,4 +19,7 @@ describe("andreiIneligibleReason", () => {
   it("blocks already processed listings", () => {
     expect(andreiIneligibleReason({ ...base, lifecycle_status: "calling" })).toBe("Procesat");
   });
+  it("blocks owners already contacted on WhatsApp", () => {
+    expect(andreiIneligibleReason({ ...base, outreach_status: "whatsapp_sent" })).toBe("Trimis pe WhatsApp");
+  });
 });

@@ -1668,7 +1668,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
             >
-              Trimite către Andrei (AI Voice Call)
+              Trimite către Andrei (WhatsApp)
             </Button>
             <Button
               type="button"

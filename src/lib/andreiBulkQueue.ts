@@ -7,6 +7,7 @@ export interface AndreiQueueRow {
   andrei_queued_at: string | null;
   tags: string[] | null;
   category?: string | null;
+  outreach_status?: string | null;
 }
 
 export function toRoE164(p?: string | null): string {
@@ -18,6 +19,7 @@ export function toRoE164(p?: string | null): string {
 /** Motivul pentru care rândul nu poate fi trimis, sau null dacă e eligibil. */
 export function andreiIneligibleReason(r: AndreiQueueRow): string | null {
   if (r.andrei_queued_at || (r.tags ?? []).includes("apelat-andrei")) return "Trimis la Andrei";
+  if (r.outreach_status) return "Trimis pe WhatsApp";
   if (!/^\+407\d{8}$/.test(toRoE164(r.phone_normalized || r.contact_phone))) return "Telefon invalid";
   if (r.seller_type !== "privat") return "Neconfirmat";
   if (!["new", "callback"].includes(r.lifecycle_status ?? "")) return "Procesat";
