@@ -1,7 +1,8 @@
 /**
- * Trimitere în masă către Andrei (apeluri AI) din „Flux proprietari”.
+ * Trimitere în masă către Andrei (WhatsApp) din „Flux proprietari”.
  * Doar proprietari privați confirmați, mobil 07…, status nou/revenire.
- * Apelurile pleacă pe rând, L–S 09:00–20:00.
+ * Canal principal: WhatsApp. Apelul vocal pornește automat doar ca fallback
+ * pentru numerele unde mesajul WhatsApp nu poate fi livrat (L–S 09:00–20:00).
  */
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -10,11 +11,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, PhoneCall } from "lucide-react";
+import { Loader2, MessageCircle, PhoneCall } from "lucide-react";
 import { toast } from "sonner";
 import { andreiIneligibleReason, andreiScenario, toRoE164 } from "@/lib/andreiBulkQueue";
 
@@ -35,6 +34,7 @@ interface Row {
   tags: string[] | null;
   andrei_queued_at: string | null;
   andrei_call_after: string | null;
+  outreach_status: string | null;
 }
 
 const QK = ["andrei-bulk-queue-rows"];
@@ -44,7 +44,6 @@ export default function AndreiBulkCallTable() {
   const qc = useQueryClient();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [open, setOpen] = useState(false);
-  const [schedule, setSchedule] = useState<"now" | "10:00">("now");
   const [sending, setSending] = useState(false);
 
   const { data: rows = [], isLoading, error } = useQuery({
@@ -52,7 +51,7 @@ export default function AndreiBulkCallTable() {
     staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase.from("prospect_listings")
-        .select("id,title,zone,rooms,price,currency,contact_name,contact_phone,phone_normalized,source_platform,lifecycle_status,seller_type,category,tags,andrei_queued_at,andrei_call_after")
+        .select("id,title,zone,rooms,price,currency,contact_name,contact_phone,phone_normalized,source_platform,lifecycle_status,seller_type,category,tags,andrei_queued_at,andrei_call_after,outreach_status")
         .eq("is_active", true).eq("seller_type", "privat").eq("do_not_call", false)
         .order("created_at", { ascending: false }).limit(200);
       if (error) throw error;
@@ -74,7 +73,7 @@ export default function AndreiBulkCallTable() {
     setSending(true);
     try {
       const { data, error } = await supabase.functions.invoke("andrei-bulk-queue", {
-        body: { prospect_ids: chosen.map((r) => r.id), schedule, scenario: scenarios.join(" / ") },
+        body: { prospect_ids: chosen.map((r) => r.id), channel: "whatsapp", scenario: scenarios.join(" / ") },
       });
       if (error) {
         const ctx = (error as { context?: Response }).context;
@@ -82,8 +81,9 @@ export default function AndreiBulkCallTable() {
         throw new Error(details || error.message);
       }
       const skipped = (data?.skipped ?? []).length;
-      toast.success(`${data?.queued ?? 0} proprietari trimiși la Andrei`, {
-        description: `Apelurile pornesc ${schedule === "now" ? "acum, pe rând" : `la ${fmtDate(data.call_after)}`}${skipped ? ` · ${skipped} săriți (deja trimiși sau neeligibili)` : ""}.`,
+      const fb = data?.voice_fallback ?? 0;
+      toast.success(`${data?.whatsapp ?? 0} proprietari trimiși pe WhatsApp`, {
+        description: [fb ? `${fb} fără WhatsApp livrat → sunați de Andrei (fallback)` : null, skipped ? `${skipped} săriți (deja contactați sau neeligibili)` : null].filter(Boolean).join(" · ") || "Mesajele pleacă acum prin WhatsApp.",
       });
       setOpen(false);
       setSelected(new Set());
@@ -99,12 +99,15 @@ export default function AndreiBulkCallTable() {
     <Card>
       <CardHeader className="gap-3 sm:flex-row sm:items-start sm:justify-between space-y-0">
         <div>
-          <CardTitle className="text-base">Apeluri Andrei (AI)</CardTitle>
-          <CardDescription>Proprietari privați confirmați. Andrei sună pe rând, luni–sâmbătă 09:00–20:00.</CardDescription>
+          <CardTitle className="text-base flex items-center gap-2"><MessageCircle className="h-4 w-4 text-primary" /> Andrei · WhatsApp</CardTitle>
+          <CardDescription>
+            Proprietari privați confirmați. Canal principal: <strong>WhatsApp</strong>.{" "}
+            <span className="inline-flex items-center gap-1"><PhoneCall className="h-3 w-3" /> Apel vocal doar ca fallback</span>, automat, pentru numerele fără WhatsApp livrat (L–S 09:00–20:00).
+          </CardDescription>
         </div>
         <Button onClick={() => setOpen(true)} disabled={chosen.length === 0} className="min-h-[48px] gap-2">
-          <PhoneCall className="h-4 w-4" />
-          {chosen.length ? `Trimite ${chosen.length} proprietari către Andrei` : "Trimite către Andrei (AI Voice Call)"}
+          <MessageCircle className="h-4 w-4" />
+          {chosen.length ? `Trimite ${chosen.length} proprietari către Andrei (WhatsApp)` : "Trimite către Andrei (WhatsApp)"}
         </Button>
       </CardHeader>
       <CardContent className="overflow-x-auto">
@@ -146,7 +149,7 @@ export default function AndreiBulkCallTable() {
                     <TableCell className="whitespace-nowrap text-xs">{andreiScenario(r.category).replace("Scenariu ", "")}</TableCell>
                     <TableCell className="whitespace-nowrap">
                       {reason === "Trimis la Andrei" ? (
-                        <Badge variant="secondary">{r.andrei_call_after ? `Trimis la Andrei · ${fmtDate(r.andrei_call_after)}` : r.lifecycle_status === "calling" ? "În curs de apelare" : "Trimis la Andrei"}</Badge>
+                        <Badge variant="secondary">{r.lifecycle_status === "calling" ? "În curs de apelare" : r.andrei_call_after ? `Apel fallback · ${fmtDate(r.andrei_call_after)}` : "Trimis la Andrei"}</Badge>
                       ) : reason ? <Badge variant="outline">{reason}</Badge> : <Badge>Validat / Neprocesat</Badge>}
                     </TableCell>
                   </TableRow>
@@ -160,8 +163,8 @@ export default function AndreiBulkCallTable() {
       <Dialog open={open} onOpenChange={(v) => !sending && setOpen(v)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Trimiți {chosen.length} proprietari către Andrei?</DialogTitle>
-            <DialogDescription>{scenarios.join(" / ") || "—"}. Fiecare număr e sunat o singură dată, pe rând.</DialogDescription>
+            <DialogTitle>Trimiți {chosen.length} proprietari către Andrei pe WhatsApp?</DialogTitle>
+            <DialogDescription>{scenarios.join(" / ") || "—"}. Fiecare proprietar primește un singur mesaj WhatsApp. Dacă mesajul nu poate fi livrat (număr fără WhatsApp), Andrei îl sună o dată, automat, L–S 09:00–20:00.</DialogDescription>
           </DialogHeader>
           <ul className="max-h-56 space-y-1 overflow-y-auto rounded-md border border-border p-2 text-sm">
             {chosen.map((r) => (
@@ -171,10 +174,6 @@ export default function AndreiBulkCallTable() {
               </li>
             ))}
           </ul>
-          <RadioGroup value={schedule} onValueChange={(v) => setSchedule(v as "now" | "10:00")} className="gap-3">
-            <div className="flex items-center gap-2"><RadioGroupItem value="now" id="andrei-now" /><Label htmlFor="andrei-now">Apelează acum (dacă e în afara orarului, pornește la 09:00)</Label></div>
-            <div className="flex items-center gap-2"><RadioGroupItem value="10:00" id="andrei-10" /><Label htmlFor="andrei-10">Programează apelurile la ora 10:00 (următoarea zi lucrătoare L–S)</Label></div>
-          </RadioGroup>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setOpen(false)} disabled={sending} className="min-h-[48px]">Renunță</Button>
             <Button onClick={confirm} disabled={sending || chosen.length === 0} className="min-h-[48px] gap-2">
