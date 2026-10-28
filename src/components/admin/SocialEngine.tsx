@@ -1217,9 +1217,9 @@ function SocialCard({
         {hasImage ? (
           <SafePostImage candidates={[post.image_url, ...(post.image_urls ?? []), post.content_variants?.FEED?.image_url]} alt={post.title} fallbackTitle={post.title} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-primary/70 flex items-center justify-center">
-            <div className="text-center px-6 space-y-2">
-              <p className="text-xs text-primary-foreground/60 font-medium leading-snug max-w-[200px] mx-auto line-clamp-2">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-primary/70 flex items-center justify-center px-6 pt-11 pb-12">
+            <div className="text-center space-y-2">
+              <p className="text-xs text-primary-foreground/60 font-medium leading-relaxed max-w-[220px] mx-auto line-clamp-3 break-words">
                 {post.title}
               </p>
             </div>
@@ -1338,7 +1338,7 @@ function SocialCard({
               </div>
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground whitespace-pre-line line-clamp-4 bg-muted/50 rounded-md p-2.5 leading-relaxed">
+            <p className="text-xs text-muted-foreground whitespace-pre-line line-clamp-4 overflow-hidden break-words bg-muted/50 rounded-md p-2.5 leading-relaxed">
               {post.caption.trim() || (
                 <span className="italic text-foreground/70">
                   Apasă pe „Generează 3 variante” sau „Descriere AI” pentru a crea textul postării…
@@ -1348,16 +1348,17 @@ function SocialCard({
           )}
         </div>
 
-        {/* Schedule */}
-        {post.status !== "posted" && (
-          <SchedulePicker
-            scheduledAt={post.scheduled_at}
-            onSchedule={(date) => onSchedule(post.id, date)}
-          />
-        )}
+        {/* Bottom controls: pinned to the card bottom, clear space from the description */}
+        <div className="mt-auto pt-3 border-t border-border/60 space-y-2.5">
+          {post.status !== "posted" && (
+            <SchedulePicker
+              scheduledAt={post.scheduled_at}
+              onSchedule={(date) => onSchedule(post.id, date)}
+            />
+          )}
 
-        {/* Publish Buttons */}
-        <div className="flex flex-col gap-2 mt-auto pt-1">
+          {/* Publish Buttons */}
+          <div className="flex flex-col gap-2">
           {/* Publish both */}
           {!alreadyOnBoth && (
             <Button
