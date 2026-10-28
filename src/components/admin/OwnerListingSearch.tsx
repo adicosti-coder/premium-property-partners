@@ -1663,9 +1663,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
               size="sm"
               className="h-8 text-xs"
               onClick={() => {
-                const p = new URLSearchParams(window.location.search);
-                p.set("step", "contact");
-                navigate(`${window.location.pathname}?${p.toString()}`);
+                // Mereu duce la Flux proprietari → pasul 3, indiferent din ce filă e deschisă căutarea.
+                navigate("/admin?tab=flux-proprietari&step=contact");
+                window.scrollTo({ top: 0, behavior: "smooth" });
               }}
             >
               Trimite către Andrei (AI Voice Call)
