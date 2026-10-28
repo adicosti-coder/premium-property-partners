@@ -12736,6 +12736,10 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      developer_agency_signal: {
+        Args: { p_description: string; p_title: string }
+        Returns: string
+      }
       email_queue_dispatch: { Args: never; Returns: undefined }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
@@ -12746,6 +12750,7 @@ export type Database = {
         Returns: number
       }
       extract_ro_phone_from_text: { Args: { p_text: string }; Returns: string }
+      extract_surface_sqm: { Args: { p_text: string }; Returns: number }
       extract_url_domain: { Args: { p_url: string }; Returns: string }
       firecrawl_adjust_credits: {
         Args: { _delta: number; _exhausted?: boolean }
