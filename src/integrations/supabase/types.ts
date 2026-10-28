@@ -6551,6 +6551,9 @@ export type Database = {
           agency_suspicion_score: number | null
           ai_score_breakdown: Json | null
           ai_scored_at: string | null
+          andrei_call_after: string | null
+          andrei_queue_scenario: string | null
+          andrei_queued_at: string | null
           assigned_to: string | null
           auto_blacklist_reason: string | null
           auto_blacklisted_at: string | null
@@ -6662,6 +6665,9 @@ export type Database = {
           agency_suspicion_score?: number | null
           ai_score_breakdown?: Json | null
           ai_scored_at?: string | null
+          andrei_call_after?: string | null
+          andrei_queue_scenario?: string | null
+          andrei_queued_at?: string | null
           assigned_to?: string | null
           auto_blacklist_reason?: string | null
           auto_blacklisted_at?: string | null
@@ -6773,6 +6779,9 @@ export type Database = {
           agency_suspicion_score?: number | null
           ai_score_breakdown?: Json | null
           ai_scored_at?: string | null
+          andrei_call_after?: string | null
+          andrei_queue_scenario?: string | null
+          andrei_queued_at?: string | null
           assigned_to?: string | null
           auto_blacklist_reason?: string | null
           auto_blacklisted_at?: string | null
