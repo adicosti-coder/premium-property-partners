@@ -1,4 +1,5 @@
 import { renderReelFromImages } from "@/lib/reelVideo";
+import { Sparkles as AiSparkles, Loader2 as AiLoader } from "lucide-react";
 import { renderStoryImage, validateStoryVideo } from "@/lib/storyMedia";
 import { readSocialVariants, selectedVariant, type SocialVariants } from "@/lib/socialVariants";
 import { useState, useEffect, useCallback } from "react";
@@ -1203,6 +1204,21 @@ function SocialCard({
 }) {
   const [editing, setEditing] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [aiImageLoading, setAiImageLoading] = useState(false);
+  const { toast: aiToast } = useToast();
+  const handleAiImage = async () => {
+    setAiImageLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("social-post-image", { body: { post_id: post.id } });
+      let msg = data?.error as string | undefined;
+      if (error) { try { msg = (await (error as any).context?.json())?.error ?? error.message; } catch { msg = error.message; } }
+      if (msg || !data?.url) throw new Error(msg || "Imaginea nu a fost generată.");
+      await onEdit(post.id, { image_url: data.url, image_urls: [data.url] });
+      aiToast({ title: "Imagine AI salvată", description: "Imaginea a devenit imaginea principală a postării." });
+    } catch (e) {
+      aiToast({ title: "Generarea imaginii a eșuat", description: e instanceof Error ? e.message : String(e), variant: "destructive" });
+    } finally { setAiImageLoading(false); }
+  };
   const [previewOpen, setPreviewOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
 
@@ -1227,10 +1243,14 @@ function SocialCard({
           <SafePostImage candidates={[post.image_url, ...(post.image_urls ?? []), post.content_variants?.FEED?.image_url]} alt={post.title} fallbackTitle={post.title} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-primary/70 flex items-center justify-center px-6 pt-11 pb-12">
-            <div className="text-center space-y-2">
+            <div className="text-center space-y-3">
               <p className="text-xs text-primary-foreground/60 font-medium leading-relaxed max-w-[220px] mx-auto line-clamp-3 break-words" style={clampStyle(3)}>
                 {post.title}
               </p>
+              <Button size="sm" className="min-h-12 bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleAiImage} disabled={aiImageLoading}>
+                {aiImageLoading ? <AiLoader className="h-4 w-4 mr-1.5 animate-spin" /> : <AiSparkles className="h-4 w-4 mr-1.5" />}
+                {aiImageLoading ? "Se generează imaginea…" : "Generează Imagine AI"}
+              </Button>
             </div>
           </div>
         )}
