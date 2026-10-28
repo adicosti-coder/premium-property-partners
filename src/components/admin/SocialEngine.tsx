@@ -661,7 +661,7 @@ export default function SocialEngine() {
 
         <TabsContent value="drafts">
           {drafts.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-8">
               {drafts.map((post) => (
                 <SocialCard key={post.id} post={post} onCaptionChange={updateCaption} onPost={handlePost} onPostBoth={handlePostBoth} onGenerate={generateCaption} onDelete={deletePost} onSchedule={schedulePost} onEdit={updatePost} isPosting={postingId === post.id} postingPlatform={postingPlatform} />
               ))}
@@ -683,7 +683,7 @@ export default function SocialEngine() {
 
         <TabsContent value="scheduled">
           {scheduled.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-8">
               {scheduled.map((post) => (
                 <SocialCard key={post.id} post={post} onCaptionChange={updateCaption} onPost={handlePost} onPostBoth={handlePostBoth} onGenerate={generateCaption} onDelete={deletePost} onSchedule={schedulePost} onEdit={updatePost} isPosting={postingId === post.id} postingPlatform={postingPlatform} />
               ))}
@@ -699,7 +699,7 @@ export default function SocialEngine() {
 
         <TabsContent value="posted">
           {posted.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-8">
               {posted.map((post) => (
                 <SocialCard key={post.id} post={post} onCaptionChange={updateCaption} onPost={handlePost} onPostBoth={handlePostBoth} onGenerate={generateCaption} onDelete={deletePost} onSchedule={schedulePost} onEdit={updatePost} isPosting={false} postingPlatform={null} />
               ))}
@@ -1206,6 +1206,7 @@ function SocialCard({
   };
 
   const hasImage = [post.image_url, ...(post.image_urls ?? []), post.content_variants?.FEED?.image_url].some(isValidImageUrl);
+  const clampStyle = (lines: number) => ({ display: "-webkit-box", WebkitLineClamp: lines, WebkitBoxOrient: "vertical" as const, overflow: "hidden" });
   const alreadyOnIG = post.posted_to.includes("instagram");
   const alreadyOnFB = post.posted_to.includes("facebook");
   const alreadyOnBoth = alreadyOnIG && alreadyOnFB;
@@ -1217,9 +1218,9 @@ function SocialCard({
         {hasImage ? (
           <SafePostImage candidates={[post.image_url, ...(post.image_urls ?? []), post.content_variants?.FEED?.image_url]} alt={post.title} fallbackTitle={post.title} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-primary/70 flex items-center justify-center">
-            <div className="text-center px-6 space-y-2">
-              <p className="text-xs text-primary-foreground/60 font-medium leading-snug max-w-[200px] mx-auto line-clamp-2">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-primary/70 flex items-center justify-center px-6 pt-11 pb-12">
+            <div className="text-center space-y-2">
+              <p className="text-xs text-primary-foreground/60 font-medium leading-relaxed max-w-[220px] mx-auto line-clamp-3 break-words" style={clampStyle(3)}>
                 {post.title}
               </p>
             </div>
@@ -1295,7 +1296,7 @@ function SocialCard({
       {/* Content */}
       <CardHeader className="pb-2 pt-3 flex-row items-start justify-between space-y-0 gap-2">
         <div className="min-w-0">
-          <CardTitle className="text-sm font-heading leading-snug line-clamp-2">{post.title}</CardTitle>
+          <CardTitle className="text-sm font-heading leading-snug line-clamp-2" style={clampStyle(2)}>{post.title}</CardTitle>
           <p className="text-[10px] text-muted-foreground mt-1">
             {format(new Date(post.created_at), "dd MMM yyyy, HH:mm")}
             {post.scheduled_at && (
@@ -1338,26 +1339,29 @@ function SocialCard({
               </div>
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground whitespace-pre-line line-clamp-4 bg-muted/50 rounded-md p-2.5 leading-relaxed">
-              {post.caption.trim() || (
-                <span className="italic text-foreground/70">
-                  Apasă pe „Generează 3 variante” sau „Descriere AI” pentru a crea textul postării…
-                </span>
-              )}
-            </p>
+            <div className="bg-muted/50 rounded-md p-2.5 overflow-hidden">
+              <p className="text-xs text-muted-foreground leading-relaxed line-clamp-4" style={clampStyle(4)}>
+                {post.caption.trim() || (
+                  <span className="italic text-foreground/70">
+                    Apasă pe „Generează 3 variante” sau „Descriere AI” pentru a crea textul postării…
+                  </span>
+                )}
+              </p>
+            </div>
           )}
         </div>
 
-        {/* Schedule */}
-        {post.status !== "posted" && (
-          <SchedulePicker
-            scheduledAt={post.scheduled_at}
-            onSchedule={(date) => onSchedule(post.id, date)}
-          />
-        )}
+        {/* Bottom controls: pinned to the card bottom, clear space from the description */}
+        <div className="mt-auto pt-3 border-t border-border/60 space-y-2.5">
+          {post.status !== "posted" && (
+            <SchedulePicker
+              scheduledAt={post.scheduled_at}
+              onSchedule={(date) => onSchedule(post.id, date)}
+            />
+          )}
 
-        {/* Publish Buttons */}
-        <div className="flex flex-col gap-2 mt-auto pt-1">
+          {/* Publish Buttons */}
+          <div className="flex flex-col gap-2">
           {/* Publish both */}
           {!alreadyOnBoth && (
             <Button
@@ -1383,6 +1387,7 @@ function SocialCard({
               {isPosting && postingPlatform === "facebook" ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Facebook className="h-3.5 w-3.5 mr-1" />}
               {alreadyOnFB ? "✓ FB" : "Facebook"}
             </Button>
+          </div>
           </div>
         </div>
       </CardContent>
