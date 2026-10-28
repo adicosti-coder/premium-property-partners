@@ -45,3 +45,17 @@ describe("outreach template by listing type", () => {
     expect(msg).not.toMatch(/100%|garant/i);
   });
 });
+
+import { rentalFirstMessage as rfm } from "./ownerOutreachTemplates";
+describe("rentalFirstMessage", () => {
+  it("folosește camerele și zona când există ambele", () => {
+    expect(rfm(2, "Iosefin")).toContain("pentru apartamentul cu 2 camere din Iosefin, propus spre închiriere");
+  });
+  it("folosește textul de rezervă când lipsește zona sau camerele", () => {
+    expect(rfm(2, "")).toContain("pentru apartamentul dumneavoastră din Timișoara, propus");
+    expect(rfm(null, "Cetate")).toContain("pentru apartamentul dumneavoastră din Timișoara, propus");
+  });
+  it("are opțiune clară de refuz", () => {
+    expect(rfm(3, "Fabric")).toContain("răspundeți NU și nu vă mai deranjăm");
+  });
+});
