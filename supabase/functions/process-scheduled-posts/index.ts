@@ -64,7 +64,7 @@ async function payload(sb: any, post: any, platform: string, trigger: string) {
     title: post.title,
     caption: formatSocialCaption(post.caption || "", { platform: platform === "instagram" ? "instagram" : "facebook", type: post.type === "blog" ? "blog" : "property", sourceUrl: post.source_url }),
     media_type, video_url: videoUrl, story_link_url: storyLink || null,
-    imageUrl: imageUrls[0] ?? null, imageUrls, isCarousel: media_type === "CAROUSEL",
+    imageUrl: imageUrls[0] ?? null, image_url: imageUrls[0] ?? null, media_url: videoUrl ?? imageUrls[0] ?? null, imageUrls, isCarousel: media_type === "CAROUSEL",
     sourceUrl: post.source_url, platform, type: post.type, timestamp: new Date().toISOString(), triggered_from: trigger,
   };
 }
@@ -121,6 +121,11 @@ Deno.serve(async (req) => {
     if (!platforms.length) return json({ success: false, error: "Platformă invalidă" }, 400);
     const { data: post } = await sb.from("social_posts").select("*").eq("id", body.post_id).maybeSingle();
     if (!post) return json({ success: false, error: "Postare negăsită" }, 404);
+    // Copertă afișată în ciornă: devine imaginea principală dacă postarea nu are una.
+    if (typeof body.current_image === "string" && /^https:\/\//.test(body.current_image) && !post.image_url) {
+      post.image_url = body.current_image;
+      await sb.from("social_posts").update({ image_url: body.current_image }).eq("id", post.id);
+    }
     try {
       for (const p of platforms) await send(sb, webhook, post, p, "admin_manual");
     } catch (e) {
