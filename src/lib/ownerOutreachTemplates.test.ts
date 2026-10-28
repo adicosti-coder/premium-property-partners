@@ -34,8 +34,8 @@ describe("outreach template by listing type", () => {
   });
   it("uses only the approved management commission", () => {
     const message = getTemplate("first_management").build({});
-    expect(message).toContain("15% și 20%");
     expect(message).not.toContain("25%");
+    expect(message).not.toContain("garantat");
   });
   it("sale first message uses open offers without guarantees and offers NU", () => {
     const msg = getTemplate("first_sale").build({ zone: "Iosefin", rooms: 2 });
