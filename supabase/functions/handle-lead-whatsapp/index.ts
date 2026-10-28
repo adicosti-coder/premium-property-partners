@@ -88,14 +88,14 @@ Deno.serve(async (req) => {
     d.observatii ? `• Observații: ${d.observatii}` : null,
   ].filter(Boolean) as string[];
   const mesaj = [
-    `Bună, ${prenume}! Sunt de la RealTrust Timișoara.`,
+    `Bună ziua! Cu mare drag vă ajutăm cu o estimare exactă de randament pentru Timișoara! 📊`,
     ``,
-    `Am primit calculul de venit cu detaliile:`,
-    ...detalii,
+    `Pentru a vă calcula venitul net estimat (chirie clasică vs. regim hotelier), scrieți-ne scurt:`,
     ``,
-    `Estimarea în regim hotelier: ${fmt(d.venit_estimat_min)} – ${fmt(d.venit_estimat_max)} € pe lună, randament 6,5–9,4% net estimat.`,
+    `• În ce zonă / complex se află apartamentul? (ex: ISHO, Torontalului, Complex, Centru)`,
+    `• Câte camere are și ce stare/dotări are?`,
     ``,
-    `Cifrele exacte depind de apartament. Când ți-ar fi comod o discuție scurtă de 10 minute?`,
+    `Analizăm datele pe zonă și revenim direct aici pe WhatsApp cu simularea detaliată!`,
   ].join("\n");
 
   const payload = {
