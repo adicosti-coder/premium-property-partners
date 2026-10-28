@@ -767,6 +767,34 @@ async function fetchHtmlUnblockable(
   referer?: string,
   opts: { alwaysProxy?: boolean; budget?: 'search' | 'detail'; raw?: boolean } = {},
 ): Promise<{ ok: boolean; status: number; html: string; unblocked: boolean }> {
+  const res = await fetchHtmlUnblockableInner(url, timeoutMs, referer, opts);
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, '');
+    LAST_FETCH[host] = { status: res.status, ok: res.ok, len: res.html.length, budget: !res.ok && res.status === 0 };
+  } catch { /* ignore */ }
+  return res;
+}
+
+/** Ultimul rezultat de rețea pe domeniu — folosit pentru motivul exact al eșecului pe platformă. */
+const LAST_FETCH: Record<string, { status: number; ok: boolean; len: number; budget: boolean }> = {};
+/** Raport pe platformă: câte căutări, câte carduri și ultima eroare explicită. */
+const PLATFORM_REPORT: Record<string, { searches: number; cards: number; failures: number; last_error: string | null }> = {};
+
+export function describePlatformFailure(label: string, last?: { status: number; ok: boolean; len: number }): string {
+  if (!last) return `${label}: nicio cerere trimisă (buget proxy epuizat sau eroare înainte de rețea)`;
+  if (last.ok && last.len > 0) return `${label}: Selector not found — pagina s-a încărcat (${last.len} caractere) dar nu am găsit carduri de anunț`;
+  if (last.status === 403 || last.status === 503) return `${label}: Cloudflare/anti-bot blocked (HTTP ${last.status}), proxy-ul nu a reușit`;
+  if (last.status === 429) return `${label}: Rate limited (HTTP 429), proxy-ul nu a reușit`;
+  if (last.status === 0) return `${label}: Timeout / fără răspuns (sau buget proxy epuizat)`;
+  return `${label}: HTTP ${last.status}`;
+}
+
+async function fetchHtmlUnblockableInner(
+  url: string,
+  timeoutMs: number,
+  referer: string | undefined,
+  opts: { alwaysProxy?: boolean; budget?: 'search' | 'detail'; raw?: boolean },
+): Promise<{ ok: boolean; status: number; html: string; unblocked: boolean }> {
   if (!opts.alwaysProxy) {
     const direct = await fetchHtml(url, timeoutMs, referer);
     if (direct.ok && direct.html) return { ...direct, unblocked: false };
@@ -1309,44 +1337,52 @@ async function directImobiliareSearch(query: string, max: number): Promise<FreeR
 }
 
 async function directPubli24Search(query: string, max: number): Promise<FreeResult[]> {
-  const clean = simplifyForFreeEngine(query, 4);
-  if (!clean) return [];
   const intent = searchIntent(query);
-  const transaction = intent.rent ? 'inchirieri' : 'vanzari';
+  // Structura actuală Publi24: /de-vanzare/ și /de-inchiriat/, filtrul de
+  // proprietari este `?f=proprietar` (vechile `vanzari`/`inchirieri` dau 404).
+  const transaction = intent.rent ? 'de-inchiriat' : 'de-vanzare';
   const category = intent.house ? 'case' : intent.land ? 'terenuri' : 'apartamente';
-  const slug = encodeURIComponent(clean.replace(/\s+/g, '+'));
-  // Două pagini: căutarea cu termen + lista filtrată pe proprietari (unele
-  // interogări nu întorc nimic pe `?q=`, dar lista de proprietari e plină).
   const urls = [
-    `https://www.publi24.ro/anunturi/imobiliare/${transaction}/${category}/timis/timisoara/?q=${slug}&tip_proprietar=proprietar`,
-    `https://www.publi24.ro/anunturi/imobiliare/${transaction}/${category}/timis/timisoara/?tip_proprietar=proprietar`,
+    `https://www.publi24.ro/anunturi/imobiliare/${transaction}/${category}/timis/timisoara/?f=proprietar`,
+    `https://www.publi24.ro/anunturi/imobiliare/timis/timisoara/?f=proprietar`,
   ];
   const out: FreeResult[] = [];
   const seen = new Set<string>();
-  const adHref = /<a[^>]+href="(https?:\/\/(?:www\.)?publi24\.ro\/anunturi\/[^"#?]+\/anunt\/[^"#?]+\/[a-z0-9]+\.html)"([^>]*)>([\s\S]{0,900}?)<\/a>/gi;
   for (const url of urls) {
     if (out.length >= max) break;
-    const { ok, html } = await fetchHtmlUnblockable(url, 5500, 'https://www.publi24.ro/', { budget: 'search' });
+    const { ok, html } = await fetchHtmlUnblockable(url, 6500, 'https://www.publi24.ro/', { budget: 'search' });
     if (!ok || !html) continue;
-    let m: RegExpExecArray | null;
-    adHref.lastIndex = 0;
-    while ((m = adHref.exec(html)) && out.length < max) {
-      const href = m[1];
-      const attrs = m[2] || '';
-      const inner = m[3] || '';
-      // titlul poate sta în alt="", title="" sau în textul ancorei
-      const title = decodeBasicHtml(
-        inner.match(/<img[^>]+alt="([^"]+)"/i)?.[1] ||
-        attrs.match(/title="([^"]+)"/i)?.[1] ||
-        inner.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
-      ).slice(0, 200);
-      const priceTxt = decodeBasicHtml(inner).match(/([\d.\s]{3,12})\s*(?:€|eur|lei)/i)?.[0] ?? '';
-      if (title) {
-        pushUniqueResult(out, seen, {
-          url: href, title, markdown: `${title} ${priceTxt}`.trim(),
-        }, max);
-      }
+    for (const r of parsePubli24Cards(html)) {
+      if (out.length >= max) break;
+      pushUniqueResult(out, seen, r, max);
     }
+  }
+  return out;
+}
+
+/** Parsează cardurile `div.article-item` din lista Publi24. */
+export function parsePubli24Cards(html: string): FreeResult[] {
+  const out: FreeResult[] = [];
+  const blocks = html.split(/<div class="article-item[\s"]/).slice(1);
+  for (const block of blocks) {
+    const href = block.match(/href="(https?:\/\/(?:www\.)?publi24\.ro\/anunturi\/[^"#?]+\/anunt\/[^"#?]+\.html)"/i)?.[1];
+    if (!href) continue;
+    const strip = (x?: string) => decodeBasicHtml((x || '').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
+    const title = strip(block.match(/<h2[^>]*class="article-title"[^>]*>([\s\S]*?)<\/h2>/i)?.[1])
+      || strip(block.match(/<img[^>]+alt="([^"]+)"/i)?.[1]);
+    if (!title) continue;
+    const price = strip(block.match(/<span class="article-price">([\s\S]*?)<\/span>/i)?.[1]);
+    const short = strip(block.match(/<p class="article-description[^"]*"[^>]*>([\s\S]*?)<\/p>/i)?.[1]);
+    const surface = strip(block.match(/<p class="article-short-info[^"]*"[^>]*>([\s\S]*?)<\/p>/i)?.[1]).replace(/m\s*2/i, 'm²');
+    const location = strip(block.match(/<p class="article-location"[^>]*>([\s\S]*?)<\/p>/i)?.[1]);
+    const img = block.match(/<img[^>]+(?:data-src|src)="(https:\/\/s3\.publi24\.ro\/[^"]+)"/i)?.[1];
+    const facts = [price && `Preț: ${price}`, surface && `Suprafață: ${surface}`, location && `Localitate: ${location}`].filter(Boolean).join(' · ');
+    out.push({
+      url: href,
+      title: title.slice(0, 200),
+      description: [short, facts].filter(Boolean).join(' '),
+      markdown: [title, short, facts, img ? `![](${img})` : ''].filter(Boolean).join('\n'),
+    });
   }
   return out;
 }
@@ -1583,12 +1619,19 @@ async function freeSearchWithRetry(
       const dt = Date.now() - t0;
       if (stats) { stats.olx_direct.hits++; stats.olx_direct.ms += dt; stats.olx_direct.urls += direct.length; }
       opts.logger?.({ kind: `free_${directHit.name}`, platform, results: direct.length, ms: dt });
+      const rep = (PLATFORM_REPORT[platform] ??= { searches: 0, cards: 0, failures: 0, last_error: null });
+      rep.searches++; rep.cards += direct.length;
       if (direct.length > 0) { pushAll(direct); primarySource = 'free_direct'; }
-      else if (stats && blocked) {
-        stats.olx_direct.blocked++;
-        blocked.push({ platform, engine: directHit.name, reason: '0 carduri (probabil anti-bot/HTML schimbat)', keyword: kwShort });
+      else {
+        const reason = describePlatformFailure(platform, domain ? LAST_FETCH[domain.split('/')[0]] : undefined);
+        rep.failures++; rep.last_error = reason;
+        console.warn(JSON.stringify({ kind: 'platform_failed', platform, reason, keyword: kwShort }));
+        if (stats) stats.olx_direct.blocked++;
+        blocked?.push({ platform, engine: directHit.name, reason, keyword: kwShort });
       }
     } catch (e) {
+      const rep = (PLATFORM_REPORT[platform] ??= { searches: 0, cards: 0, failures: 0, last_error: null });
+      rep.searches++; rep.failures++; rep.last_error = `${platform}: ${(e as Error).message}`;
       if (stats) { stats.olx_direct.hits++; stats.olx_direct.errors++; stats.olx_direct.ms += Date.now() - t0; }
       opts.logger?.({ kind: `free_${directHit.name}_error`, platform, message: (e as Error).message });
     }
@@ -3214,6 +3257,7 @@ Deno.serve(async (req) => {
       session_deduped_skipped: sessionDedupedSkipped,
       engine_stats: engineStats,
       blocked_alerts: blockedAlerts,
+      platform_report: PLATFORM_REPORT,
       agency_filter: {
         blocked_phones: blockedPhones.size,
         blocked_domains: blockedDomains.size,
