@@ -1661,6 +1661,18 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             <Button
               type="button"
               size="sm"
+              className="h-8 text-xs"
+              onClick={() => {
+                const p = new URLSearchParams(window.location.search);
+                p.set("step", "contact");
+                navigate(`${window.location.pathname}?${p.toString()}`);
+              }}
+            >
+              Trimite către Andrei (AI Voice Call)
+            </Button>
+            <Button
+              type="button"
+              size="sm"
               variant="outline"
               className="h-8 text-xs"
               disabled={main.length === 0}
