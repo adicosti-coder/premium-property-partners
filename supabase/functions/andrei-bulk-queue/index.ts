@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
       accepted.splice(0, accepted.length, ...done);
     }
     await sb.from("admin_audit_log").insert({
-      action: "andrei_bulk_queue", user_id: admin.userId ?? null,
+      action: "andrei_bulk_queue", actor_user_id: admin.userId ?? null, entity_type: "prospect_listings", severity: "info",
       details: { queued: accepted.length, skipped: skipped.length, schedule, scenario, call_after: callAfter.toISOString() },
     }).then(() => {}, () => {});
 
