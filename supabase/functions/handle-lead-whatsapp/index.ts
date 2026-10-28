@@ -39,14 +39,6 @@ const BodySchema = z.object({
   sursa: z.string().trim().max(40).optional(),
 });
 
-const ROOM_LABELS: Record<string, string> = {
-  garsoniera: "garsoniera",
-  "2-camere": "apartamentul de 2 camere",
-  "3-camere": "apartamentul de 3 camere",
-  "4-camere": "apartamentul de 4 camere",
-  casa: "casa",
-  penthouse: "penthouse-ul",
-};
 
 /** Romanian mobile → full international digits without "+" (07… → 407…). */
 const toIntl = (p: string) => {
@@ -56,7 +48,6 @@ const toIntl = (p: string) => {
   return `40${d}`;
 };
 
-const fmt = (n: number) => n.toLocaleString("ro-RO");
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -75,18 +66,6 @@ Deno.serve(async (req) => {
     return json({ ok: true, webhook: "not_configured" });
   }
 
-  const prenume = d.nume.split(/\s+/)[0];
-  const tip = ROOM_LABELS[d.numar_camere] ?? d.numar_camere;
-  const detalii = [
-    `• Zonă: ${d.zona}`,
-    `• Tip apartament: ${tip}`,
-    d.suprafata_mp ? `• Suprafață: ${d.suprafata_mp} mp` : null,
-    d.stare ? `• Stare: ${d.stare}` : null,
-    d.mobilat ? `• Mobilare: ${d.mobilat}` : null,
-    d.tip_administrare ? `• Administrare dorită: ${d.tip_administrare}` : null,
-    d.disponibilitate ? `• Disponibilitate: ${d.disponibilitate}` : null,
-    d.observatii ? `• Observații: ${d.observatii}` : null,
-  ].filter(Boolean) as string[];
   const mesaj = [
     `Bună ziua! Cu mare drag vă ajutăm cu o estimare exactă de randament pentru Timișoara! 📊`,
     ``,
