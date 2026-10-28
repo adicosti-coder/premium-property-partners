@@ -1240,8 +1240,10 @@ async function directOlxSearch(query: string, max: number): Promise<FreeResult[]
       candidates: candidates.length, anchors: anchorTitles.size, htmlLen: html.length,
     }));
     // Rezervă: doar dacă termenul țintit nu a adus nimic util.
-    if (i === urls.length - 1 && url === targetedUrl && out.length < 2 && canSpendProxy('search')) {
-      urls.push(genericUrl);
+    if (i === urls.length - 1 && out.length < 2 && canSpendProxy('search')) {
+      if (url === targetedUrl) urls.push(genericUrl);
+      // Ultima rezervă: toată categoria imobiliare Timișoara, doar proprietari.
+      else if (url === genericUrl) urls.push('https://www.olx.ro/imobiliare/timisoara/?search%5Bprivate_business%5D=private&search%5Border%5D=created_at:desc');
     }
   }
   return out;
