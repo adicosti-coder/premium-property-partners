@@ -11,6 +11,7 @@ const OwnerListingSearch = lazy(() => import("@/components/admin/OwnerListingSea
 const ProspectTriageQueue = lazy(() => import("@/components/admin/ProspectTriageQueue"));
 const OwnerContactPanel = lazy(() => import("@/components/admin/OwnerContactPanel"));
 const OwnerFollowUpPanel = lazy(() => import("@/components/admin/OwnerFollowUpPanel"));
+const AndreiBulkCallTable = lazy(() => import("@/components/admin/AndreiBulkCallTable"));
 
 type StepKey = "search" | "verify" | "contact" | "follow";
 
@@ -93,6 +94,7 @@ export default function OwnerFlowWorkspace() {
             </div>
           }
         >
+          {active === "contact" && <div className="mb-4"><AndreiBulkCallTable /></div>}
           <activeStep.Component />
         </Suspense>
       </AdminErrorBoundary>

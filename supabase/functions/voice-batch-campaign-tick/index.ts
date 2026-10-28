@@ -33,7 +33,12 @@ Deno.serve(async (req) => {
   const { data: c } = await sb.from("voice_batch_campaign").select("*").eq("id", 1).maybeSingle();
   const save = async (patch: Record<string, unknown>) =>
     sb.from("voice_batch_campaign").update({ ...patch, last_tick_at: now.toISOString(), updated_at: now.toISOString() }).eq("id", 1);
-  if (!c?.enabled) return json({ skipped: "paused" });
+  // Coada manuală „Trimite către Andrei” rulează și când campania automată e oprită.
+  const { count: queuedDue } = await sb.from("prospect_listings").select("id", { count: "exact", head: true })
+    .lte("andrei_call_after", now.toISOString());
+  if (!c) return json({ skipped: "no_campaign_row" });
+  const queueOnly = !c.enabled;
+  if (queueOnly && !queuedDue) return json({ skipped: "paused" });
 
   // 1. Apel în curs?
   if (c.current_session_id) {
@@ -60,7 +65,20 @@ Deno.serve(async (req) => {
     .ilike("last_error", "%131026%").not("prospect_listing_id", "is", null).limit(1000);
   const ids = [...new Set((q ?? []).map((r: any) => r.prospect_listing_id))];
   let next: any = null;
-  if (ids.length) {
+  let fromQueue = false;
+  // 0. Coada manuală trimisă de admin (prima prioritate, în ordinea trimiterii).
+  {
+    const { data: mq } = await sb.from("prospect_listings").select("id, title, contact_name, phone_normalized, contact_phone, tags")
+      .lte("andrei_call_after", now.toISOString()).eq("do_not_call", false).eq("seller_type", "privat")
+      .order("andrei_queued_at", { ascending: true }).limit(50);
+    next = (mq ?? []).find((r: any) => !((r.tags as string[]) || []).includes("apelat-andrei") && okPhone(r)) ?? null;
+    // Cele care nu mai sunt eligibile ies din coadă ca să nu o blocheze.
+    const stale = (mq ?? []).filter((r: any) => r !== next && (((r.tags as string[]) || []).includes("apelat-andrei") || !okPhone(r))).map((r: any) => r.id);
+    if (stale.length) await sb.from("prospect_listings").update({ andrei_call_after: null }).in("id", stale);
+    if (next) fromQueue = true;
+  }
+  if (!next && queueOnly) { await save({}); return json({ skipped: "paused" }); }
+  if (!next && ids.length) {
     const { data: rows } = await sb.from("prospect_listings").select("id, title, contact_name, phone_normalized, contact_phone, tags")
       .in("id", ids).eq("is_active", true).is("published_at", null).eq("do_not_call", false)
       .eq("seller_type", "privat") // SellerScan: doar proprietari privați confirmați
@@ -83,6 +101,8 @@ Deno.serve(async (req) => {
   if (!next) { await save({ last_message: "Nu mai sunt prospecte fără WhatsApp sau anunțuri de reverificat de sunat." }); return json({ skipped: "all_called" }); }
 
   const to = toE164(next.phone_normalized || next.contact_phone);
+  // Scoatem din coadă înainte de apel: niciun număr nu e sunat de două ori.
+  if (fromQueue) await sb.from("prospect_listings").update({ andrei_call_after: null, lifecycle_status: "calling", auto_call_triggered_at: now.toISOString() }).eq("id", next.id);
   const res = await fetch(`${URL_}/functions/v1/voice-agent-initiate`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-webhook-secret": KEY, Authorization: `Bearer ${KEY}` },
