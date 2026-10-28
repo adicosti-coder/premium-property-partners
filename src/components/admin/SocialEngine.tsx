@@ -1339,7 +1339,7 @@ function SocialCard({
               </div>
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground whitespace-pre-line line-clamp-4 overflow-hidden break-words bg-muted/50 rounded-md p-2.5 leading-relaxed" style={clampStyle(4)}>
+            <p className="text-xs text-muted-foreground line-clamp-4 overflow-hidden break-words bg-muted/50 rounded-md p-2.5 leading-relaxed" style={clampStyle(4)}>
               {post.caption.trim() || (
                 <span className="italic text-foreground/70">
                   Apasă pe „Generează 3 variante” sau „Descriere AI” pentru a crea textul postării…
