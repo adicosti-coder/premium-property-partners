@@ -31,8 +31,11 @@ describe("Andrei value propositions per listing type", () => {
   it("uses only the matching value proposition", () => {
     const v = andreiConversationPolicy("vanzare"), i = andreiConversationPolicy("inchiriere"), c = andreiConversationPolicy("cazare");
     expect(v).toContain("asistență juridică până la semnare".replace("asistență", "Asistență"));
-    expect(v).not.toContain("Încasarea chiriei");
-    expect(i).toContain("Încasarea chiriei");
+    expect(v).not.toContain("încasarea chiriei");
+    expect(i).toContain("încasarea chiriei");
+    expect(i).toContain("Airbnb (AirCover)");
+    expect(c).toContain("3 niveluri de protecție");
+    expect(v).not.toContain("AirCover");
     expect(i).not.toContain("6,5%–9,4%");
     expect(c).toContain("6,5%–9,4%");
     expect(c).not.toContain("calificarea cumpărătorilor");

@@ -34,8 +34,8 @@ describe("outreach template by listing type", () => {
   });
   it("uses only the approved management commission", () => {
     const message = getTemplate("first_management").build({});
-    expect(message).toContain("15% și 20%");
     expect(message).not.toContain("25%");
+    expect(message).not.toContain("garantat");
   });
   it("sale first message uses open offers without guarantees and offers NU", () => {
     const msg = getTemplate("first_sale").build({ zone: "Iosefin", rooms: 2 });
@@ -43,5 +43,19 @@ describe("outreach template by listing type", () => {
     expect(msg).toContain("ofertă scrisă");
     expect(msg).toContain("NU");
     expect(msg).not.toMatch(/100%|garant/i);
+  });
+});
+
+import { rentalFirstMessage as rfm } from "./ownerOutreachTemplates";
+describe("rentalFirstMessage", () => {
+  it("folosește camerele și zona când există ambele", () => {
+    expect(rfm(2, "Iosefin")).toContain("pentru apartamentul cu 2 camere din Iosefin, propus spre închiriere");
+  });
+  it("folosește textul de rezervă când lipsește zona sau camerele", () => {
+    expect(rfm(2, "")).toContain("pentru apartamentul dumneavoastră din Timișoara, propus");
+    expect(rfm(null, "Cetate")).toContain("pentru apartamentul dumneavoastră din Timișoara, propus");
+  });
+  it("are opțiune clară de refuz", () => {
+    expect(rfm(3, "Fabric")).toContain("răspundeți NU și nu vă mai deranjăm");
   });
 });

@@ -9,6 +9,27 @@
  *  - orașul este Timișoara.
  */
 
+/** Primul mesaj WhatsApp pentru anunțurile de închiriere (sincron cu supabase/functions/_shared/rentalIntroMessage.ts). */
+export function rentalFirstMessage(rooms?: number | string | null, zone?: string | null): string {
+  const r = rooms != null && String(rooms).trim() !== "" && Number(rooms) > 0 ? String(Number(rooms)) : "";
+  const z = (zone ?? "").trim();
+  const ref = r && z ? `apartamentul cu ${r} camere din ${z}` : "apartamentul dumneavoastră din Timișoara";
+  return [
+    `Bună ziua! Sunt Andrei de la RealTrust Timișoara. Am văzut anunțul dumneavoastră pentru ${ref}, propus spre închiriere.`,
+    "",
+    "Preluăm apartamente în administrare completă în Timișoara (regim hotelier sau hibrid). Scopul este un venit net estimat mai bun decât chiria clasică, fără grija chiriașilor rău-platnici.",
+    "",
+    "Ne ocupăm de:",
+    "• promovare pe Booking, Airbnb și realtrust.ro",
+    "• curățenie profesională, lenjerii și verificarea oaspeților",
+    "• mentenanță curentă",
+    "",
+    "Vă pot trimite gratuit o simulare de randament net pentru zona dumneavoastră. Pot trece și 15 minute pe la apartament să vă prezint opțiunile.",
+    "",
+    "Când v-ar fi mai comod să discutăm: azi spre seară sau mâine? Dacă nu vă interesează, răspundeți NU și nu vă mai deranjăm.",
+  ].join("\n");
+}
+
 export interface OutreachContext {
   ownerName?: string | null;
   title?: string | null;
@@ -110,24 +131,10 @@ export const OWNER_OUTREACH_TEMPLATES: OutreachTemplate[] = [
   },
   {
     key: "first_management",
-    label: "Primul mesaj — administrare",
-    hint: "Prezentare RealTrust și propunere de administrare în regim hotelier.",
+    label: "Primul mesaj — închiriere (administrare)",
+    hint: "Prezentare administrare regim hotelier/hibrid; zonă/camere cu text de rezervă; NU = opt-out.",
     kind: "first",
-    build: (ctx) => {
-      const offer = money(ctx.offerPrice, ctx.currency);
-      const duration = ctx.durationMonths ? `${ctx.durationMonths} luni` : "12 luni";
-      return [
-        greeting(ctx),
-        "",
-        `Sunt Andrei, de la RealTrust Timișoara. Am văzut ${listingRef(ctx)} și aș vrea să vă fac o propunere concretă.`,
-        offer
-          ? `Vă putem prelua apartamentul în administrare cu un venit estimat de ${offer} pe lună, pe un contract de ${duration}.`
-          : `Vă putem prelua apartamentul în administrare pe un contract de ${duration}, cu un venit lunar garantat prin contract.`,
-        "Ne ocupăm de tot: promovare, oaspeți, curățenie, mentenanță și încasări. Comisionul de administrare RealTrust este între 15% și 20%, în funcție de pachetul ales.",
-        "",
-        "Dacă vă interesează, vin la apartament la o oră care vă e comodă și vă arăt calculul exact. Vă convine?",
-      ].join("\n");
-    },
+    build: (ctx) => rentalFirstMessage(ctx.rooms, ctx.zone),
   },
   {
     key: "first_rent_offer",
