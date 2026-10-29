@@ -78,7 +78,8 @@ const LeadEngagementWidget = ({
     const typeLabel = PROPERTY_TYPES.find((t) => t.value === parsed.data.propertyType)?.label ?? "";
     const res = await submitLead({
       name: parsed.data.name,
-      whatsapp_number: parsed.data.phone,
+      // Lead storage expects international format (+407…); the field returns 07…
+      whatsapp_number: parsed.data.phone.replace(/\D/g, "").replace(/^0/, "+40").replace(/^(?!\+)/, "+"),
       property_type: typeLabel,
       property_area: 0,
       message: parsed.data.message,
