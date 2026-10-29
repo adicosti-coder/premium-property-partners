@@ -10,7 +10,6 @@ const GlobalLeadWidget = () => {
   return (
     <Suspense fallback={null}>
       <LeadEngagementWidget
-        source={`lead_engagement_widget${pathname === "/" ? "" : `:${pathname}`.slice(0, 70)}`}
         className="bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-[136px]"
       />
     </Suspense>

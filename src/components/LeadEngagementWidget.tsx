@@ -32,16 +32,17 @@ const PROPERTY_TYPES: { value: LeadPropertyType; label: string }[] = [
   { value: "administrare_regim_hotelier", label: "Administrare regim hotelier" },
 ];
 
-const QUICK_MESSAGES = [
-  "Vreau un calcul de randament",
-  "Vreau servicii de administrare regim hotelier",
-  "Vreau să vând proprietatea",
-];
+export const LEAD_INTENTS = ["Simulare randament", "Administrare regim hotelier"] as const;
+export type LeadIntent = (typeof LEAD_INTENTS)[number];
+
+/** Source tag saved on the lead: `lead_engagement_widget:<pathname>` (max 100 chars). */
+export const buildWidgetSource = (pathname: string) => `lead_engagement_widget:${pathname || "/"}`.slice(0, 100);
 
 const schema = z.object({
   name: z.string().trim().min(2, "Scrieți numele (minim 2 caractere).").max(120),
   phone: roMobileField("Introduceți un număr de mobil valid (07XX XXX XXX)."),
   propertyType: z.enum(["apartament", "casa_istorica", "administrare_regim_hotelier"]),
+  intent: z.enum(LEAD_INTENTS),
   message: z.string().trim().max(1000, "Mesajul poate avea maxim 1000 de caractere."),
 });
 
@@ -60,7 +61,8 @@ const LeadEngagementWidget = ({
     name: "",
     phone: "",
     propertyType: "apartament" as LeadPropertyType,
-    message: QUICK_MESSAGES[0],
+    intent: LEAD_INTENTS[0] as LeadIntent,
+    message: "",
   });
 
   const waHref = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
@@ -82,8 +84,14 @@ const LeadEngagementWidget = ({
       whatsapp_number: parsed.data.phone.replace(/\D/g, "").replace(/^0/, "+40").replace(/^(?!\+)/, "+"),
       property_type: typeLabel,
       property_area: 0,
-      message: parsed.data.message,
-      source,
+      message: [`Intenție: ${parsed.data.intent}`, parsed.data.message].filter(Boolean).join("\n"),
+      source: source === "lead_engagement_widget" ? buildWidgetSource(window.location.pathname) : source,
+      simulation_data: {
+        page_url: window.location.href,
+        intent: parsed.data.intent,
+        mesaj: parsed.data.message || parsed.data.intent,
+        phone_verified: true,
+      },
     });
     setSending(false);
     if (!res.ok) {
@@ -94,7 +102,7 @@ const LeadEngagementWidget = ({
       description: "De regulă răspundem în aceeași zi lucrătoare.",
     });
     onLeadSubmitted?.({ name: parsed.data.name, phone: parsed.data.phone, propertyType: parsed.data.propertyType });
-    setForm((f) => ({ ...f, name: "", phone: "", message: QUICK_MESSAGES[0] }));
+    setForm((f) => ({ ...f, name: "", phone: "", message: "" }));
     setOpen(false);
     setExpanded(false);
   };
@@ -149,6 +157,19 @@ const LeadEngagementWidget = ({
             <DialogDescription>Lăsați-ne datele și vă sunăm sau vă scriem pe WhatsApp.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+            <fieldset className="space-y-1.5">
+              <legend className="text-sm font-medium">Ce vă interesează?</legend>
+              <div role="radiogroup" className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {LEAD_INTENTS.map((i) => (
+                  <button key={i} type="button" role="radio" aria-checked={form.intent === i}
+                    onClick={() => setForm({ ...form, intent: i })}
+                    className={cn("min-h-12 rounded-lg border px-3 text-sm transition-colors",
+                      form.intent === i ? "border-accent bg-accent/10 font-semibold" : "border-border hover:bg-muted")}>
+                    {i}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
             <div className="space-y-1.5">
               <Label htmlFor="lew-name">Nume</Label>
               <Input id="lew-name" autoComplete="name" value={form.name} maxLength={120}
@@ -156,8 +177,8 @@ const LeadEngagementWidget = ({
               {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="lew-phone">Telefon</Label>
-              <Input id="lew-phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="07XX XXX XXX"
+              <Label htmlFor="lew-phone">Telefon <span className="text-destructive" aria-hidden="true">*</span></Label>
+              <Input id="lew-phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="07XX XXX XXX" required aria-required="true"
                 value={form.phone} maxLength={20} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
               {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
             </div>
@@ -175,16 +196,7 @@ const LeadEngagementWidget = ({
               </div>
             </fieldset>
             <div className="space-y-1.5">
-              <Label htmlFor="lew-msg">Mesaj</Label>
-              <div className="flex flex-wrap gap-2">
-                {QUICK_MESSAGES.map((m) => (
-                  <button key={m} type="button" onClick={() => setForm({ ...form, message: m })}
-                    className={cn("rounded-full border px-3 py-1.5 text-xs",
-                      form.message === m ? "border-success bg-success/10 text-success" : "border-border hover:bg-muted")}>
-                    {m}
-                  </button>
-                ))}
-              </div>
+              <Label htmlFor="lew-msg">Mesaj (opțional)</Label>
               <Textarea id="lew-msg" rows={3} maxLength={1000} value={form.message}
                 onChange={(e) => setForm({ ...form, message: e.target.value })} />
               {errors.message && <p className="text-xs text-destructive">{errors.message}</p>}
