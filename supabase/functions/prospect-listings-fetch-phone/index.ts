@@ -180,7 +180,15 @@ async function firecrawlScrape(url: string, apiKey: string, userAgent: string) {
     }),
   });
   const data = await res.json().catch(() => null);
-  if (!res.ok) throw new Error(data?.error || `Firecrawl ${res.status}`);
+  if (!res.ok) {
+    // Budget exhausted / Firecrawl failure → free internal scraper fallback
+    const direct = await directScrape(url);
+    const d = (direct?.data ?? null) as Record<string, string> | null;
+    if (d) return { markdown: d.markdown ?? "", html: d.html ?? "", rawHtml: d.rawHtml ?? "", via: "direct" };
+    const err = new Error(data?.error || `Firecrawl ${res.status}`) as Error & { budget?: boolean };
+    err.budget = res.status === 402;
+    throw err;
+  }
   const doc = data?.data ?? data;
   return {
     markdown: doc?.markdown ?? "",
@@ -287,6 +295,7 @@ Deno.serve(async (req) => {
       } catch (e: any) {
         lastErr = e?.message || String(e);
         console.warn(`[fetch-phone] attempt ${i + 1} failed: ${lastErr}`);
+        if (e?.budget) break; // budget exhausted + direct fallback failed — retries won't help
         if (i < maxAttempts - 1) {
           await new Promise((r) => setTimeout(r, 1500 * (i + 1)));
         }

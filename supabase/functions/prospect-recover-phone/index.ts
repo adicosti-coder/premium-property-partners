@@ -122,7 +122,15 @@ async function firecrawlScrape(url: string, apiKey: string) {
     }),
   });
   const data = await res.json().catch(() => null);
-  if (!res.ok) throw new Error(data?.error || `Firecrawl ${res.status}`);
+  if (!res.ok) {
+    // Budget exhausted / Firecrawl failure → free internal scraper fallback
+    const direct = await directScrape(url);
+    const d = (direct?.data ?? null) as Record<string, string> | null;
+    if (d) return { markdown: d.markdown ?? "", html: d.html ?? "", rawHtml: d.rawHtml ?? "", via: "direct" };
+    const err = new Error(data?.error || `Firecrawl ${res.status}`) as Error & { budget?: boolean };
+    err.budget = res.status === 402;
+    throw err;
+  }
   // v2 may wrap in data
   const doc = data?.data ?? data;
   return {
