@@ -258,6 +258,15 @@ Deno.serve(async (req) => {
     // Legacy save mode (without editedData)
     const finalListingType = listing_type || extracted.listing_type_hint || 'vanzare';
     const propertyData = buildPropertyData(extracted, url, platform, finalListingType);
+    {
+      // unique index idx_properties_slug — same de-dup as the 'save' branch
+      const baseSlug = propertyData.slug || `import-${Date.now()}`;
+      const { data: clash } = await supabase.from('properties').select('slug').like('slug', `${baseSlug}%`);
+      const taken = new Set((clash ?? []).map((r: { slug: string }) => r.slug));
+      let slug = baseSlug; let n = 2;
+      while (taken.has(slug)) slug = `${baseSlug}-${n++}`;
+      propertyData.slug = slug;
+    }
 
     const { data: newProperty, error: insertError } = await supabase
       .from('properties')
@@ -272,7 +281,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    const result = await uploadImagesForProperty(imageUrls, imageUrls, supabase, newProperty.id);
+    const cappedUrls = (imageUrls as unknown[])
+      .filter((u: unknown) => typeof u === 'string' && /^https?:\/\//.test(u as string)).slice(0, 25) as string[];
+    const result = await uploadImagesForProperty(cappedUrls, cappedUrls, supabase, newProperty.id);
 
     return new Response(
       JSON.stringify({
