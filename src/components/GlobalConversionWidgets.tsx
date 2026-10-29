@@ -139,7 +139,8 @@ const GlobalConversionWidgets = ({
         <Suspense fallback={null}>
           
           <PWAInstallPrompt />
-          {showChatbot && <AIChatbot />}
+          {/* AI chatbot launcher replaced by the global LeadEngagementWidget (same corner). */}
+          {false && showChatbot && <AIChatbot />}
            {showVoiceWidget && !isMobile && <ElevenLabsWidgetLazy />}
           {showExitIntent && <ExitIntentPopup />}
           <ReferralPopup />
