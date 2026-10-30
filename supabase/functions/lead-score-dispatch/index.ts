@@ -7,6 +7,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { isInternalCall } from "../_shared/cronAuth.ts";
 import { fetchWithRetry } from "../_shared/fetchRetry.ts";
+import { buildAutoReplyMessage, shouldAutoReply } from "./autoReply.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -295,6 +296,59 @@ Deno.serve(async (req) => {
   } else {
     results.whatsapp = isPriority ? "skipped: no valid phone" : "skipped: score below 60";
   }
+
+  // 3) Widget leads scored Warm+ → first confirmation/qualification WhatsApp via Make (once per lead)
+  if (shouldAutoReply({ source: record.source, score, phone, reEngaged: isReEngaged })) {
+    const makeUrl = Deno.env.get("MAKE_WHATSAPP_WEBHOOK_URL");
+    const { count } = await supabase
+      .from("communication_logs")
+      .select("id", { count: "exact", head: true })
+      .eq("lead_id", record.id)
+      .eq("source", "lead-auto-reply")
+      .eq("status", "sent");
+    if (!makeUrl) {
+      results.auto_reply = "skipped: no MAKE_WHATSAPP_WEBHOOK_URL";
+    } else if ((count ?? 0) > 0) {
+      results.auto_reply = "skipped: already sent";
+    } else {
+      const intent = (sim.intent || sim.mesaj || null) as string | null;
+      const message = buildAutoReplyMessage(record.name, intent);
+      const res = await fetchWithRetry(
+        makeUrl,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            event: "widget_lead_auto_reply",
+            timestamp: new Date().toISOString(),
+            lead_id: record.id,
+            name: record.name,
+            phone, // digits, no "+", same shape as other Make payloads
+            email: record.email ?? null,
+            intent,
+            page_url: (sim.page_url as string) ?? null,
+            score,
+            grade,
+            source: record.source,
+            message,
+          }),
+        },
+        { label: "lead-auto-reply", maxAttempts: 3 },
+      );
+      results.auto_reply = { status: res.status, ok: res.ok, attempts: res.attempts };
+      await supabase.from("communication_logs").insert({
+        channel: "whatsapp",
+        direction: "outbound",
+        source: "lead-auto-reply",
+        to_number: `+${phone}`,
+        lead_id: record.id,
+        status: res.ok ? "sent" : "failed",
+        outcome: res.ok ? "auto_reply_sent" : res.error ?? `http_${res.status}`,
+        metadata: { score, grade, intent, attempts: res.attempts },
+      });
+    }
+  }
+
 
 
   return new Response(JSON.stringify({ success: true, ...results }), {
