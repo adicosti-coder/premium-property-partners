@@ -498,7 +498,6 @@ const PentruProprietari = () => {
         ]}
       />
       <Header />
-      <section id="ghid-proprietar" className="container mx-auto px-6 pt-24"><h2 className="text-xl font-semibold mb-4">Ghidul Proprietarului din Timișoara</h2><OwnerLegalTaxGuide /></section>
       <Suspense fallback={null}>
       
       {/* AI-friendly page summary for extraction */}
@@ -1076,7 +1075,7 @@ const PentruProprietari = () => {
       <FounderCallBooking />
 
       {/* Interactive legal & tax guide + downloadable owner guide (lead magnet) */}
-      <OwnerLegalTaxGuide />
+      <div id="ghid-proprietar" className="scroll-mt-24"><OwnerLegalTaxGuide /></div>
 
       {/* Risks, minimum requirements, furnishing standards, guarantees */}
       <OwnerRisksLimits />

@@ -3,6 +3,7 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3";
 import { sendToMake } from "./sendToMake.ts";
+import { appendSocialFollow, runtimeSocialProfiles } from "../_shared/socialFollow.ts";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -105,7 +106,7 @@ Deno.serve(async (req) => {
     chirie_clasica: d.chirie_clasica ?? null,
     venit_net_realtrust: d.venit_net_realtrust ?? null,
     sursa: d.sursa ?? "calcul_venit",
-    message: mesaj,
+    message: appendSocialFollow(mesaj, runtimeSocialProfiles()),
   };
 
   // Make.com e un canal secundar: vizitatorul are cererea salvată deja, deci

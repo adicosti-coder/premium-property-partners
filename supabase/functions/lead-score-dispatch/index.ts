@@ -8,6 +8,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { isInternalCall } from "../_shared/cronAuth.ts";
 import { fetchWithRetry } from "../_shared/fetchRetry.ts";
 import { buildAutoReplyMessage, shouldAutoReply } from "./autoReply.ts";
+import { appendSocialFollow, runtimeSocialProfiles } from "../_shared/socialFollow.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -312,7 +313,7 @@ Deno.serve(async (req) => {
       results.auto_reply = "skipped: already sent";
     } else {
       const intent = (sim.intent || sim.mesaj || null) as string | null;
-      const message = buildAutoReplyMessage(record.name, intent);
+      const message = appendSocialFollow(buildAutoReplyMessage(record.name, intent), runtimeSocialProfiles());
       const res = await fetchWithRetry(
         makeUrl,
         {

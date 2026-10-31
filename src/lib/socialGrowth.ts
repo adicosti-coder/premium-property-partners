@@ -11,7 +11,7 @@ export const CAMPAIGN_DESTINATIONS = {
 } as const;
 export type CampaignDestination = keyof typeof CAMPAIGN_DESTINATIONS;
 export function campaignTarget(destination: string, platform: string, campaign: string): string | null {
-  if (!(destination in CAMPAIGN_DESTINATIONS) || !['instagram', 'facebook', 'whatsapp'].includes(platform) || !/^[a-z0-9_-]{1,80}$/.test(campaign)) return null;
+  if (!Object.hasOwn(CAMPAIGN_DESTINATIONS, destination) || !['instagram', 'facebook', 'whatsapp'].includes(platform) || !/^[a-z0-9_-]{1,80}$/.test(campaign)) return null;
   const target = new URL(CAMPAIGN_DESTINATIONS[destination as CampaignDestination].path, 'https://realtrust.ro');
   target.searchParams.set('utm_source', platform);
   target.searchParams.set('utm_medium', 'social');

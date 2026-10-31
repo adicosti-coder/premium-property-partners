@@ -1,5 +1,8 @@
 # Project Architecture Rules
 
+- Social growth reads only published feed previews through a bounded public RPC; campaign redirects resolve admin-created allowlisted destinations with social UTM tags — prevents draft exposure and open redirects.
+- Social WhatsApp P.S. modifies only existing free-text confirmations/follow-ups, never Meta-approved templates or consent/STOP messages — preserves consent and send counts.
+
 - Keep the homepage hero LCP image sets strictly separated by mobile/desktop media queries so high-DPR phones never fetch desktop assets.
 - Start the decorative desktop hero video only after genuine user interaction so the responsive image remains the stable LCP candidate.
 - Auto-consented listings view joins prospect/contact data with normalized WhatsApp names and exports filtered rows via shared tested helpers — avoids invented owner data.
