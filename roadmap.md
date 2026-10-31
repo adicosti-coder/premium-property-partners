@@ -1,8 +1,8 @@
 # Roadmap — optimizări sistem analiză și administrare
 
 ## Corectare constatări SEO — 31 octombrie
-- [ ] Verificare actuală a celor trei constatări SEO istorice și a scanării de bază
-- [ ] Corectare metadate și previzualizări unde există probleme confirmate; verificare și actualizare constatări
+- [x] Scanare nouă: nouă verificări de bază trecute; 13 pagini publice cu metadate și previzualizări distincte, canonice proprii și imagini absolute
+- [x] Titlu proprietari scurtat și descriere 157 caractere sincronizată cu prerandarea; eliminată promisiunea de randament garantat din metadatele prerandate ale investițiilor; trei teste SEO și verificare în pagină trecute, build OK
 - [ ] Publicarea schimbărilor — necesită publicare aprobată de utilizator
 
 ## Generator imagini din articole în Social Engine
