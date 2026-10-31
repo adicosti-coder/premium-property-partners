@@ -34,6 +34,13 @@ const OwnerOffers = ({ propertyId }: { propertyId: string }) => {
   const db = supabase as any;
   const [minEdit, setMinEdit] = useState<{ propertyId: string; value: string } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deciding, setDeciding] = useState<string | null>(null);
+  const decide = async (id: string, decision: "acceptata" | "respinsa") => {
+    setDeciding(id);
+    try { const { error } = await supabase.rpc("decide_property_sale_offer", { _offer_id: id, _decision: decision }); if (error) throw error; await qc.invalidateQueries({ queryKey: ["owner-offers", propertyId] }); toast({ title: decision === "acceptata" ? "Oferta a fost acceptată" : "Oferta a fost respinsă" }); }
+    catch (e) { toast({ title: "Decizia nu a fost salvată", description: e instanceof Error ? e.message : String(e), variant: "destructive" }); }
+    finally { setDeciding(null); }
+  };
 
   const { data, isLoading } = useQuery({
     queryKey: ["owner-offers", propertyId],
@@ -107,10 +114,11 @@ const OwnerOffers = ({ propertyId }: { propertyId: string }) => {
                         {o.conditions ? ` · ${o.conditions}` : ""}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="text-lg font-semibold">{eur(o.amount_eur)}</span>
                       {below && <Badge variant="outline">Sub prețul minim</Badge>}
                       <Badge variant="secondary">{statusLabel[o.status] ?? o.status}</Badge>
+                      {o.status === "primita" && <div className="flex flex-wrap gap-2"><Button className="min-h-12" disabled={below || deciding !== null} onClick={() => decide(o.id, "acceptata")}>Acceptă oferta</Button><Button variant="outline" className="min-h-12" disabled={deciding !== null} onClick={() => decide(o.id, "respinsa")}>Respinge</Button></div>}
                     </div>
                   </li>
                 );
