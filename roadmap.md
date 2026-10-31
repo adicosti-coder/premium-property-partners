@@ -1,6 +1,7 @@
 # Roadmap — optimizări sistem analiză și administrare
 
 ## Social Growth — 31 octombrie
+- [ ] Review reclame Meta 24–31 octombrie: stare live, tracking și recomandări; fără modificări reclamelor/bugetului
 - [ ] Mesaj personal pentru cinci clienți mulțumiți, pentru recomandarea unui proprietar; numai pregătire, fără trimitere
 - [ ] Invitație Follow după simulare și în articole; preview postări publicate în footer și confirmarea widgetului
 - [ ] PS social în confirmări/follow-up WhatsApp existente, fără mesaje suplimentare
