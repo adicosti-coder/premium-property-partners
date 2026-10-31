@@ -16,6 +16,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 
 const CookieConsent = lazy(() => import("@/components/CookieConsent"));
 const GlobalLeadWidget = lazy(() => import("@/components/GlobalLeadWidget"));
+const SocialCampaign = lazy(() => import("@/pages/SocialCampaign"));
 
 // Handle dynamic import failures (stale cache) by reloading the page
 const handleDynamicImportError = (error: Error): never => {
@@ -301,6 +302,7 @@ const App = () => (
                     <Route path="/comunitate/profil/:userId" element={<PublicProfile />} />
                     <Route path="/recomanda-proprietar" element={<ReferralProgram />} />
                     <Route path="/recomanda" element={<ReferralProgram />} />
+                    <Route path="/s/:slug" element={<SocialCampaign />} />
 
                     {/* Canonical: /ansambluri-rezidentiale (hub). Detail pages keep /complexe/:slug. */}
                     <Route path="/ansambluri-rezidentiale" element={<Complexe />} />

@@ -498,6 +498,7 @@ const PentruProprietari = () => {
         ]}
       />
       <Header />
+      <section id="ghid-proprietar" className="container mx-auto px-6 pt-24"><h2 className="text-xl font-semibold mb-4">Ghidul Proprietarului din Timișoara</h2><OwnerLegalTaxGuide /></section>
       <Suspense fallback={null}>
       
       {/* AI-friendly page summary for extraction */}

@@ -17,6 +17,7 @@ import SocialEngineLogs from "./socialEngine/SocialEngineLogs";
 import SocialAiSettings from "./socialEngine/SocialAiSettings";
 import ArticleImageGenerator from "./socialEngine/ArticleImageGenerator";
 import EditorImageGenerator from "./socialEngine/EditorImageGenerator";
+import SocialGrowthCampaigns from "./socialEngine/SocialGrowthCampaigns";
 import { requireSocialGallery, type GalleryImage } from "@/lib/socialGallery";
 import { SafePostImage, isValidImageUrl } from "./socialEngine/SafePostImage";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -681,6 +682,7 @@ export default function SocialEngine() {
           </TabsTrigger>
           <TabsTrigger value="logs" className="text-sm gap-1.5 shrink-0">Istoric / Logs</TabsTrigger>
           <TabsTrigger value="images" className="text-sm gap-1.5 shrink-0"><ImageIcon className="h-3.5 w-3.5" />Imagini articole</TabsTrigger>
+          <TabsTrigger value="growth" className="text-sm gap-1.5 shrink-0">Social Growth</TabsTrigger>
         </TabsList>
 
         <TabsContent value="drafts">
@@ -741,6 +743,7 @@ export default function SocialEngine() {
           <SocialAnalytics posts={posts} />
         </TabsContent>
         <TabsContent value="images"><ArticleImageGenerator posts={posts} onSaved={fetchPosts} /></TabsContent>
+        <TabsContent value="growth"><SocialGrowthCampaigns /></TabsContent>
         <TabsContent value="logs">
           <SocialEngineLogs />
         </TabsContent>

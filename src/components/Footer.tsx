@@ -11,6 +11,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { neighborhoods } from "@/data/neighborhoods";
 import PropertyRequestModal from "@/components/PropertyRequestModal";
+import { SocialPreview } from "@/components/social/SocialFollow";
 
 const emailSchema = z.string().trim().email().max(255);
 
@@ -192,6 +193,8 @@ const Footer = () => {
             )}
           </div>
         </div>
+
+        <div className="border-t border-border/50 py-6 mb-6 max-w-lg"><SocialPreview /></div>
 
         {/* Neighborhood Links for SEO */}
         <div className="border-t border-border/50 pt-6 mb-6">
