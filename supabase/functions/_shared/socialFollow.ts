@@ -16,5 +16,6 @@ export function appendSocialFollow(message: string, profiles = DEFAULT_PROFILES)
  return `${message}\n\n${ps}`;
 }
 export function runtimeSocialProfiles() {
- return { instagram: Deno.env.get('SOCIAL_INSTAGRAM_URL') ?? DEFAULT_PROFILES.instagram, facebook: Deno.env.get('SOCIAL_FACEBOOK_URL') ?? DEFAULT_PROFILES.facebook };
+ const runtime = globalThis as typeof globalThis & { Deno?: { env: { get: (key: string) => string | undefined } } };
+ return { instagram: runtime.Deno?.env.get('SOCIAL_INSTAGRAM_URL') ?? DEFAULT_PROFILES.instagram, facebook: runtime.Deno?.env.get('SOCIAL_FACEBOOK_URL') ?? DEFAULT_PROFILES.facebook };
 }

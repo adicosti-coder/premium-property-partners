@@ -450,7 +450,7 @@ Răspunde DOAR cu JSON: {"reply": "textul mesajului", "intent": "hot" | "interes
   }
 
   // 7. Send via wa-andrei-send
-  const socialAlreadySent = chronological.some(m => m.direction === "outbound" && String(m.body ?? "").includes("P.S. Vezi ultimele"));
+  const socialAlreadySent = chronological.some(m => m.direction === "outbound" && String(m.content ?? "").includes("P.S. Vezi ultimele"));
   if (!socialAlreadySent && /(?:confirm|am primit|mulțum|revenim|estimare|simulare)/i.test(replyText)) {
     replyText = appendSocialFollow(replyText, runtimeSocialProfiles());
   }
