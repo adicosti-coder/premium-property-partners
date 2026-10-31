@@ -299,8 +299,8 @@ const PentruProprietari = () => {
 
   const seoContent = {
     ro: {
-      title: "Administrare Regim Hotelier & Property Management Timișoara | RealTrust",
-      description: "Servicii complete de administrare apartamente și case în regim hotelier în Timișoara. Property management profesional cu randament net estimat de 6,5–9,4% pe an.",
+      title: "Administrare regim hotelier Timișoara | RealTrust",
+      description: "Administrare regim hotelier în Timișoara: rezervări, curățenie, mentenanță și raportare lunară. Randament net estimat de 6,5–9,4%, în funcție de proprietate.",
     },
     en: {
       title: "Property Management Timișoara — Apartment Management, 6.5–9.4% Net",
