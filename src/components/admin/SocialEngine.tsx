@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import SocialEngineLogs from "./socialEngine/SocialEngineLogs";
 import SocialAiSettings from "./socialEngine/SocialAiSettings";
+import ArticleImageGenerator from "./socialEngine/ArticleImageGenerator";
 import { SafePostImage, isValidImageUrl } from "./socialEngine/SafePostImage";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -666,6 +667,7 @@ export default function SocialEngine() {
             Analize
           </TabsTrigger>
           <TabsTrigger value="logs" className="text-sm gap-1.5 shrink-0">Istoric / Logs</TabsTrigger>
+          <TabsTrigger value="images" className="text-sm gap-1.5 shrink-0"><ImageIcon className="h-3.5 w-3.5" />Imagini articole</TabsTrigger>
         </TabsList>
 
         <TabsContent value="drafts">
@@ -725,6 +727,7 @@ export default function SocialEngine() {
         <TabsContent value="analytics">
           <SocialAnalytics posts={posts} />
         </TabsContent>
+        <TabsContent value="images"><ArticleImageGenerator posts={posts} onSaved={fetchPosts} /></TabsContent>
         <TabsContent value="logs">
           <SocialEngineLogs />
         </TabsContent>
