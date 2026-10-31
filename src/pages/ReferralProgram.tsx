@@ -83,17 +83,17 @@ const ReferralProgram = () => {
   const t = {
     ro: {
       heroTitle: "Recomandă un Proprietar",
-      heroHighlight: "Câștigă un Weekend Gratuit",
-      heroSubtitle: "Cunoști pe cineva cu un apartament perfect pentru închiriere în regim hotelier? Recomandă-l și primești un weekend de cazare gratuit în unul din apartamentele noastre premium!",
+      heroHighlight: "Cazare Gratis sau Comision",
+      heroSubtitle: "Cunoști un proprietar din Timișoara interesat de administrare în regim hotelier? Recomandă-l, cu acordul lui. Alegi 2 nopți de cazare gratuite sau comision, doar după ce proprietatea intră în administrare RealTrust.",
       howItWorks: "Cum Funcționează",
       step1Title: "Recomanzi",
       step1Desc: "Completează formularul cu datele proprietarului pe care îl recomanzi",
       step2Title: "Contactăm",
       step2Desc: "Echipa noastră contactează proprietarul și evaluează apartamentul",
-      step3Title: "Semnare",
-      step3Desc: "Dacă proprietarul semnează contractul de administrare",
+      step3Title: "Intrare în administrare",
+      step3Desc: "Proprietarul semnează contractul, iar proprietatea intră în administrare RealTrust",
       step4Title: "Premiu",
-      step4Desc: "Primești un weekend gratuit în orice apartament din portofoliul nostru!",
+      step4Desc: "Abia după intrarea proprietății în administrare alegi Cazare Gratis sau Comision",
       formTitle: "Trimite o Recomandare",
       formSubtitle: "Completează datele și noi ne ocupăm de rest",
       yourInfo: "Datele Tale",
@@ -113,12 +113,12 @@ const ReferralProgram = () => {
       submit: "Trimite Recomandarea",
       submitting: "Se trimite...",
       successTitle: "Recomandare Trimisă cu Succes! 🎉",
-      successMessage: "Te vom contacta în curând cu detalii despre statusul recomandării tale.",
+      successMessage: "Te vom contacta cu detalii despre recomandare. Recompensa Cazare Gratis sau Comision se acordă doar după intrarea proprietății în administrare RealTrust.",
       submitAnother: "Trimite altă recomandare",
       terms: "Prin trimiterea acestui formular, confirmi că ai acordul proprietarului să ne transmiți datele sale de contact.",
       prizeTitle: "Premiul Tău",
-      prizeDesc: "Weekend gratuit (2 nopți) în oricare dintre apartamentele noastre premium din Timișoara",
-      prizeValue: "Valoare: până la 300€",
+      prizeDesc: "Alegi 2 nopți de cazare gratuite sau comision. Recompensa se acordă doar după ce proprietatea recomandată intră în administrare RealTrust.",
+      prizeValue: "Cazare Gratis sau Comision",
       apartment: "Apartament",
       studio: "Studio",
       house: "Casă",
@@ -126,24 +126,24 @@ const ReferralProgram = () => {
       selectRooms: "Selectează",
       whyRefer: "De Ce Să Recomanzi?",
       benefit1: "Ajuți un prieten să obțină venituri pasive",
-      benefit2: "Primești un weekend gratuit de vis",
+      benefit2: "Alegi Cazare Gratis sau Comision după intrarea proprietății în administrare",
       benefit3: "Contribui la comunitatea RealTrust",
       trustTitle: "Program de Încredere",
       trustDesc: "Peste 50 de proprietari mulțumiți ne-au recomandat prietenilor lor",
     },
     en: {
       heroTitle: "Refer an Owner",
-      heroHighlight: "Win a Free Weekend",
-      heroSubtitle: "Know someone with an apartment perfect for short-term rental? Refer them and get a free weekend stay in one of our premium apartments!",
+      heroHighlight: "Free Stay or Commission",
+      heroSubtitle: "Know a property owner in Timișoara interested in short-term rental management? Refer them with their consent. Choose 2 free nights or commission, only after the property enters RealTrust management.",
       howItWorks: "How It Works",
       step1Title: "Refer",
       step1Desc: "Fill out the form with the owner's details you're recommending",
       step2Title: "We Contact",
       step2Desc: "Our team contacts the owner and evaluates the apartment",
-      step3Title: "Signing",
-      step3Desc: "If the owner signs the management contract",
+      step3Title: "Management begins",
+      step3Desc: "The owner signs the contract and the property enters RealTrust management",
       step4Title: "Reward",
-      step4Desc: "You get a free weekend in any apartment from our portfolio!",
+      step4Desc: "Only after the property enters management can you choose Free Stay or Commission",
       formTitle: "Submit a Referral",
       formSubtitle: "Fill in the details and we'll take care of the rest",
       yourInfo: "Your Information",
@@ -163,12 +163,12 @@ const ReferralProgram = () => {
       submit: "Submit Referral",
       submitting: "Submitting...",
       successTitle: "Referral Submitted Successfully! 🎉",
-      successMessage: "We'll contact you soon with details about your referral status.",
+      successMessage: "We'll contact you with details about your referral. Free Stay or Commission is awarded only after the property enters RealTrust management.",
       submitAnother: "Submit another referral",
       terms: "By submitting this form, you confirm that you have the owner's consent to share their contact details.",
       prizeTitle: "Your Prize",
-      prizeDesc: "Free weekend (2 nights) in any of our premium apartments in Timișoara",
-      prizeValue: "Value: up to €300",
+      prizeDesc: "Choose 2 free nights or commission. The reward is awarded only after the referred property enters RealTrust management.",
+      prizeValue: "Free Stay or Commission",
       apartment: "Apartment",
       studio: "Studio",
       house: "House",
@@ -176,7 +176,7 @@ const ReferralProgram = () => {
       selectRooms: "Select",
       whyRefer: "Why Refer?",
       benefit1: "Help a friend earn passive income",
-      benefit2: "Get a dream free weekend",
+      benefit2: "Choose Free Stay or Commission after the property enters management",
       benefit3: "Contribute to the RealTrust community",
       trustTitle: "Trust Program",
       trustDesc: "Over 50 satisfied owners have recommended us to their friends",
@@ -272,12 +272,12 @@ const ReferralProgram = () => {
 
   const seoContent = {
     ro: {
-      title: "Program Recomandare | Câștigă o Noapte Gratuită | RealTrust",
-      description: "Recomandă un proprietar și câștigă o noapte gratuită de cazare. Program exclusiv RealTrust & ApArt Hotel."
+      title: "Recomandări: Cazare Gratis sau Comision | RealTrust",
+      description: "Recomandă un proprietar din Timișoara și alege Cazare Gratis sau Comision. Recompensa se acordă doar după intrarea proprietății în administrare RealTrust."
     },
     en: {
-      title: "Referral Program | Win a Free Night | RealTrust",
-      description: "Refer a property owner and win a free night stay. Exclusive RealTrust & ApArt Hotel program."
+      title: "Referrals: Free Stay or Commission | RealTrust",
+      description: "Refer a property owner in Timișoara and choose Free Stay or Commission. The reward is awarded only after the property enters RealTrust management."
     }
   };
 
@@ -296,8 +296,8 @@ const ReferralProgram = () => {
       />
       <Header />
       <PageSummary
-        summaryRo="Programul de recomandare RealTrust — recomandă un proprietar și primești o noapte gratuită de cazare. Urmărește statusul recomandărilor tale și câștigă recompense."
-        summaryEn="RealTrust Referral Program — recommend a property owner and get a free night stay. Track your referral status and earn rewards."
+        summaryRo="Programul de recomandare RealTrust: Cazare Gratis sau Comision. Alegi 2 nopți de cazare gratuite sau comision, doar după intrarea proprietății recomandate în administrare RealTrust."
+        summaryEn="RealTrust Referral Program: Free Stay or Commission. Choose 2 free nights or commission, only after the referred property enters RealTrust management."
       />
       <ConfettiEffect isActive={showConfetti} duration={4000} particleCount={80} />
       

@@ -606,11 +606,11 @@ export function buildRemainingStaticRoutes(): ExtraRoute[] {
     ),
     page(
       '/recomanda-proprietar',
-      'Program de recomandare proprietari | RealTrust',
-      'Recomandă un proprietar de apartament din Timișoara și primești cazare gratuită sau comision, dacă apartamentul intră în administrare RealTrust.',
+      'Recomandări: Cazare Gratis sau Comision | RealTrust',
+      'Recomandă un proprietar din Timișoara și alege Cazare Gratis sau Comision. Recompensa se acordă doar după intrarea proprietății în administrare RealTrust.',
       'Recomandă un proprietar',
       `
-      <p>Dacă recomanzi un proprietar de apartament din Timișoara și apartamentul intră în administrare RealTrust, primești cazare gratuită sau comision.</p>
+      <p>Recomandă un proprietar din Timișoara, cu acordul lui. Alegi Cazare Gratis sau Comision: 2 nopți de cazare gratuite sau comision, doar după ce proprietatea recomandată intră în administrare RealTrust.</p>
       <p>Vezi <a href="${BASE_URL}/pentru-proprietari">ce include administrarea</a> și <a href="${BASE_URL}/preturi">pachetele de preț</a>.</p>
       `,
       'WebPage',
