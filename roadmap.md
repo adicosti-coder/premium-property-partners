@@ -1,5 +1,9 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Generator imagini din articole în Social Engine
+- [ ] Modul de selecție articol și generare din titlu plus conținut, cu imagine salvată în ciorna socială
+- [ ] Teste pentru context, păstrarea fotografiilor și verificare autentificată fără publicare socială
+
 ## Stories Social Engine
 - [x] Generare Feed/Reels/Stories cu descrieri separate, Reel din 3–5 poze (lipsa pozelor/MP4 semnalată) și text suprapus pe Story
 - [x] Trimitere doar a variantei selectate cu media_type, video_url, story_link_url și caption
