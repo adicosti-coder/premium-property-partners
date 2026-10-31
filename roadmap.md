@@ -1,5 +1,10 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Audit lucrări nefinalizate — 31 octombrie, 21:44 UTC
+- [ ] Confruntă toate sarcinile deschise cu implementarea, testele și interfața publicată; separă blocajele externe de verificările restante
+- [ ] Verifică eroarea de generare imagini și eroarea Firecrawl din capturile utilizatorului
+- [ ] Livrează lista reală a restanțelor, fără a confunda implementarea cu publicarea sau livrarea WhatsApp/socială
+
 ## Calculator — Lead unic
 - [x] Eliminat evenimentul Lead duplicat; păstrat Lead_Submit cu același ID pentru Pixel/CAPI, consimțământul și notificările existente
 - [x] 26 teste trecute; formular verificat în pagină cu trimiteri simulate: un Lead la acceptare, zero la refuz și o notificare în ambele cazuri; fără mesaje reale
