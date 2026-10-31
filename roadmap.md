@@ -1,5 +1,10 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Corectare constatări SEO — 31 octombrie
+- [ ] Verificare actuală a celor trei constatări SEO istorice și a scanării de bază
+- [ ] Corectare metadate și previzualizări unde există probleme confirmate; verificare și actualizare constatări
+- [ ] Publicarea schimbărilor — necesită publicare aprobată de utilizator
+
 ## Generator imagini din articole în Social Engine
 - [x] Galerie AI minimum trei imagini, selecție/regenerare/adăugare și salvare image_urls; carusel Feed și cadre Story complete în payload Make
 - [x] 14 teste trecute; trei generări reale 4:5, selecție minimum trei, salvare și redeschidere autentificate; ciorna de probă și imaginile șterse, fără publicare socială
