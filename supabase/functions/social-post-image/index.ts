@@ -73,16 +73,20 @@ Deno.serve(async (req) => {
       const parsed = EditorImageSchema.safeParse(body);
       if (!parsed.success) return json({ error: "Completează titlul, descrierea și un format valid.", details: parsed.error.flatten().fieldErrors }, 400);
       const input = parsed.data;
+      let reference = input.description;
       if (input.post_id) {
         const { data: post, error } = await sb.from("social_posts").select(cols).eq("id", input.post_id).maybeSingle();
         if (error) return json({ error: error.message }, 500);
         if (!post) return json({ error: "Postarea nu există." }, 404);
         if (!canGenerateArticleImage(post)) return json({ error: "Folosește fotografii reale pentru proprietăți. Generarea este disponibilă pentru articole nepublicate." }, 400);
+        const slug = new URL(post.source_url, "https://realtrust.ro").pathname.split("/").filter(Boolean).pop();
+        const { data: article } = await sb.from("blog_articles").select("content,excerpt").eq("slug", slug).maybeSingle();
+        if (article) reference += `\nARTICLE: ${article.content ?? article.excerpt ?? ""}`;
       }
       const upstream = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
         method: "POST",
         headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ model: MODEL, prompt: buildEditorImagePrompt(input.title, input.description, input.ratio), size: socialImageDimensions(input.ratio).size, quality: "medium", ...(input.stream ? { stream: true, partial_images: 1 } : {}) }),
+        body: JSON.stringify({ model: MODEL, prompt: buildEditorImagePrompt(input.title, reference, input.ratio, input.frame), size: socialImageDimensions(input.ratio).size, quality: "medium", ...(input.stream ? { stream: true, partial_images: 1 } : {}) }),
       });
       return new Response(upstream.body, { status: upstream.status, headers: { ...corsHeaders, "Content-Type": upstream.headers.get("Content-Type") ?? "application/json", "Cache-Control": "no-cache" } });
     }

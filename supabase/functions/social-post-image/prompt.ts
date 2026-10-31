@@ -7,8 +7,9 @@ export function socialImageDimensions(ratio: SocialImageRatio) {
     : { size: "1024x1024", width: 1080, height: 1080 };
 }
 
-export function buildEditorImagePrompt(title: string, description: string, ratio: SocialImageRatio): string {
-  return buildArticleImagePrompt({ title, content: description }).replace("balanced square composition", `balanced ${ratio} composition with the subject fully visible`);
+export function buildEditorImagePrompt(title: string, description: string, ratio: SocialImageRatio, frame = 0): string {
+  const views = ["Wide editorial overview of the main subject and its context", "Close-up of a relevant premium detail, material or process", "Complementary conceptual scene showing use, access or location without depicting a real building"];
+  return buildArticleImagePrompt({ title, content: description }).replace("balanced square composition", `balanced ${ratio} composition with the subject fully visible`) + `\nFRAME ${frame + 1}: ${views[frame % 3]}. Create a distinct complementary composition, not a duplicate. Illustrations only, never pretend this is a photograph of an actual listing.`;
 }
 
 export function buildArticleImagePrompt(article: ArticleImageSource): string {

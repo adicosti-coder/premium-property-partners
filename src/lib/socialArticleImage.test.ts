@@ -17,6 +17,13 @@ describe("article image generation", () => {
     expect(prompt).toContain("Acces digital și verificarea inventarului");
     expect(prompt).toContain("9:16 composition");
   });
+  it("requests three complementary editorial angles", () => {
+    const frames = [0, 1, 2].map(frame => buildEditorImagePrompt("Administrare", "Inventar și acces digital", "4:5", frame));
+    expect(new Set(frames).size).toBe(3);
+    expect(frames[0]).toContain("Wide editorial overview");
+    expect(frames[1]).toContain("Close-up");
+    expect(frames[2]).toContain("Complementary conceptual scene");
+  });
   it("uses the actual article title and full body instead of its social caption", () => {
     const prompt = buildArticleImagePrompt({ title: "PFA sau SRL", excerpt: "Rezumat", content: "<p>Impozitare și contabilitate pentru PFA.</p>" });
     expect(prompt).toContain("PFA sau SRL");

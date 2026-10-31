@@ -52,9 +52,10 @@ async function payload(sb: any, post: any, platform: string, trigger: string) {
   const originals = await resolveImages(sb, post);
   if ((platform === "instagram" || story) && !videoUrl && !originals.length) throw new Error("Nu există o imagine relevantă — adaugă o fotografie în ciornă.");
   // Toate platformele primesc imagini 1:1/4:5 (feed) sau 9:16 (Story) validate — evită eroarea Meta 36003.
-  const prepared = !videoUrl && originals.length ? await prepareInstagramImages(story ? originals.slice(0, 1) : originals, story) : originals;
+  const prepared = !videoUrl && originals.length ? await prepareInstagramImages(originals, story) : originals;
+  if (originals.length >= 3 && prepared.length < 3) throw new Error("Minimum 3 imagini trebuie să fie accesibile și valide pentru pachetul vizual.");
   const media_type = mediaTypeOf(post, prepared.length);
-  const imageUrls = media_type === "CAROUSEL" ? prepared : prepared.slice(0, 1);
+  const imageUrls = media_type === "CAROUSEL" || story ? prepared : prepared.slice(0, 1);
   const storyLink = story && typeof post.story_link_url === "string" ? post.story_link_url.trim() : "";
   if (storyLink) {
     const link = new URL(storyLink);
@@ -64,7 +65,7 @@ async function payload(sb: any, post: any, platform: string, trigger: string) {
     title: post.title,
     caption: formatSocialCaption(post.caption || "", { platform: platform === "instagram" ? "instagram" : "facebook", type: post.type === "blog" ? "blog" : "property", sourceUrl: post.source_url }),
     media_type, video_url: videoUrl, story_link_url: storyLink || null,
-    imageUrl: imageUrls[0] ?? null, image_url: imageUrls[0] ?? null, media_url: videoUrl ?? imageUrls[0] ?? null, imageUrls, isCarousel: media_type === "CAROUSEL",
+    imageUrl: imageUrls[0] ?? null, image_url: imageUrls[0] ?? null, media_url: videoUrl ?? imageUrls[0] ?? null, imageUrls, image_urls: imageUrls, isMultiStory: story && imageUrls.length > 1, story_frames: story && !videoUrl ? imageUrls.map((url, index) => ({ image_url: url, sequence: index + 1, story_link_url: storyLink || null })) : [], isCarousel: media_type === "CAROUSEL",
     sourceUrl: post.source_url, platform, type: post.type, timestamp: new Date().toISOString(), triggered_from: trigger,
   };
 }
