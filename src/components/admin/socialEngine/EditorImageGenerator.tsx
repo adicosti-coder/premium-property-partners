@@ -51,7 +51,7 @@ export default function EditorImageGenerator({ postId, title, description, story
     finally { setBusy(false); onBusy(false); }
   };
   return <div className="space-y-2">
-    {!story && <Select value={ratio} disabled={busy || disabled} onValueChange={value => setRatio(value as SocialImageRatio)}>
+    {!story && <Select value={ratio} disabled={busy || disabled} onValueChange={value => { setRatio(value as SocialImageRatio); onImages([]); }}>
       <SelectTrigger aria-label="Format imagine AI" className="min-h-12"><SelectValue /></SelectTrigger>
       <SelectContent><SelectItem value="1:1">Feed pătrat 1:1</SelectItem><SelectItem value="4:5">Feed portret 4:5</SelectItem></SelectContent>
     </Select>}

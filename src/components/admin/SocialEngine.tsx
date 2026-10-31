@@ -983,7 +983,7 @@ function PostEditModal({
       setVariants(post.content_variants ?? null);
       setGeneratedImage("");
       setGallery([...new Set([post.image_url, ...(post.image_urls ?? [])].filter((url): url is string => Boolean(url)))].map(url => ({ url, selected: true })));
-      setGalleryEdited(false);
+      setGalleryEdited(isNew);
     }
   }, [open, post]);
 
@@ -991,7 +991,6 @@ function PostEditModal({
     setRenderingVideo(true);
     setVideoError("");
     try {
-      const selectedImages = galleryEdited ? requireSocialGallery(gallery) : null;
       const sources = [imageUrl, ...(post.image_urls ?? [])].filter(Boolean) as string[];
       if (!sources.length) throw new Error("Adaugă cel puțin o poză înainte de a genera video-ul.");
       const blob = await renderReelFromImages(sources);
@@ -1044,6 +1043,7 @@ function PostEditModal({
     setSaving(true);
     setSaveError("");
     try {
+      const selectedImages = galleryEdited ? requireSocialGallery(gallery) : null;
       const hasVideo = mediaType === "REELS" || mediaType === "STORY";
       if (hasVideo && videoUrl.trim() && !/^https:\/\//.test(videoUrl.trim())) throw new Error("URL-ul video trebuie să înceapă cu https://");
       if (mediaType === "STORY" && storyLinkUrl.trim()) {
