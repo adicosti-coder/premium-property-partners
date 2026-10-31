@@ -1,7 +1,7 @@
 # Roadmap — optimizări sistem analiză și administrare
 
 ## Social Growth — 31 octombrie
-- [ ] Review reclame Meta 24–31 octombrie: stare live, tracking și recomandări; fără modificări reclamelor/bugetului
+- [x] Review reclame Meta 24–31 octombrie: cont/reclame active, 352,32 RON și 13 Lead atribuite; dublarea Lead a calculatorului confirmată în codul publicat; 8 cereri calculator salvate, fără echivalare cu leaduri Meta; recomandare corectare tracking, fără modificări campaniei/bugetului
 - [x] Mesaj personal pentru cinci clienți mulțumiți pregătit în chat, personalizabil cu prenumele; fără trimitere
 - [x] Invitație Follow după simulare și în articole; preview numai postări publicate în footer și confirmarea widgetului
 - [x] PS social în confirmări/follow-up WhatsApp existente, fără mesaje suplimentare; șabloane aprobate și STOP excluse, funcții activate, fără trimitere reală de test
