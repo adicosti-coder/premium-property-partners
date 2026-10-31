@@ -11,7 +11,7 @@ import { roMobileField } from "@/lib/phoneField";
 import { SocialFollow } from "@/components/social/SocialFollow";
 import { supabase } from "@/lib/supabaseClient";
 import { withCampaignTracking } from "@/lib/campaignAttribution";
-import { trackConversion, trackCriticalConversion, formatPhoneInput } from "@/lib/conversionTracking";
+import { trackCriticalConversion, formatPhoneInput } from "@/lib/conversionTracking";
 import {
   PROPERTY_TYPES,
   ZONES,
@@ -159,7 +159,7 @@ const ROICalculatorWidget = () => {
         .catch(() => {});
 
       if (result.ok) {
-        trackConversion({ event: "roi_calculator_lead", source: "calculator_roi_widget", name: d.name, phone: d.phone, email: d.email || undefined });
+        // One saved request → one canonical Lead; Pixel/CAPI share its event ID.
         trackCriticalConversion("Lead_Submit", { source: "calculator_roi_widget", value: 90, currency: "EUR", name: d.name });
       }
 
