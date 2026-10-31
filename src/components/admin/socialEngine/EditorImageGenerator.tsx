@@ -20,7 +20,7 @@ export default function EditorImageGenerator({ postId, title, description, story
     if (busy) return;
     setBusy(true); onBusy(true); setError(""); setPreview(null);
     const selectedRatio = story ? "9:16" : ratio;
-    let next = [...images];
+    let next = count === 3 && replaceIndex === undefined ? [] : [...images];
     try {
       const { data } = await supabase.auth.getSession();
       if (!data.session) throw new Error("Sesiunea a expirat. Autentifică-te din nou.");
@@ -51,14 +51,14 @@ export default function EditorImageGenerator({ postId, title, description, story
     finally { setBusy(false); onBusy(false); }
   };
   return <div className="space-y-2">
+    <Button className="w-full min-h-12 h-auto py-3 bg-accent text-accent-foreground hover:bg-accent/90 font-semibold whitespace-normal" onClick={() => generate(3)} disabled={disabled || busy || title.trim().length < 2 || description.trim().length < 2}>
+      {busy ? <Loader2 className="mr-2 h-4 w-4 shrink-0 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4 shrink-0" />}
+      {busy ? "Se generează imaginile…" : "Generează 3 Imagini AI"}
+    </Button>
     {!story && <Select value={ratio} disabled={busy || disabled} onValueChange={value => { setRatio(value as SocialImageRatio); onImages([]); }}>
       <SelectTrigger aria-label="Format imagine AI" className="min-h-12"><SelectValue /></SelectTrigger>
       <SelectContent><SelectItem value="1:1">Feed pătrat 1:1</SelectItem><SelectItem value="4:5">Feed portret 4:5</SelectItem></SelectContent>
     </Select>}
-    <Button className="w-full min-h-12 bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => generate(3)} disabled={disabled || busy || title.trim().length < 2 || description.trim().length < 2}>
-      {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-      {busy ? "Se generează imaginea…" : "Generează 3 Imagini AI"}
-    </Button>
     <p className="text-xs text-muted-foreground">Minim 3 pentru publicare · {images.filter(image => image.selected).length} selectate</p>
     <div className="grid grid-cols-3 gap-2">
       {images.map((image, index) => <div key={image.url} className="min-w-0 space-y-1">
