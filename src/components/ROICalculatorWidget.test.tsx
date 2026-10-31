@@ -15,7 +15,8 @@ async function submitCalculator() {
   fireEvent.click(screen.getByRole("button", { name: "Trimite proiecția pe WhatsApp" }));
   fireEvent.change(screen.getByLabelText("Nume"), { target: { value: "Test Calculator" } });
   fireEvent.change(screen.getByLabelText("Telefon"), { target: { value: "0722 123 456" } });
-  fireEvent.click(screen.getAllByRole("button", { name: "Trimite proiecția pe WhatsApp" }).at(-1) as HTMLElement);
+  const submitButtons = screen.getAllByRole("button", { name: "Trimite proiecția pe WhatsApp" });
+  fireEvent.click(submitButtons[submitButtons.length - 1]);
   await waitFor(() => expect(mocks.invoke).toHaveBeenCalledWith("handle-lead-whatsapp", expect.any(Object)));
 }
 
@@ -25,8 +26,8 @@ describe("calculator Lead reporting", () => {
     localStorage.clear();
     sessionStorage.clear();
     window.dataLayer = [];
-    window.fbq = vi.fn();
-    window.gtag = vi.fn();
+    window.fbq = vi.fn<(...args: unknown[]) => void>();
+    window.gtag = vi.fn<(...args: unknown[]) => void>();
     vi.spyOn(window, "open").mockReturnValue(null);
     mocks.submitLead.mockResolvedValue({ ok: true, leadId: "test-lead" });
     mocks.invoke.mockResolvedValue({ data: {}, error: null });
