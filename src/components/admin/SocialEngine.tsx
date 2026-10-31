@@ -16,6 +16,7 @@ import { Calendar } from "@/components/ui/calendar";
 import SocialEngineLogs from "./socialEngine/SocialEngineLogs";
 import SocialAiSettings from "./socialEngine/SocialAiSettings";
 import ArticleImageGenerator from "./socialEngine/ArticleImageGenerator";
+import EditorImageGenerator from "./socialEngine/EditorImageGenerator";
 import { SafePostImage, isValidImageUrl } from "./socialEngine/SafePostImage";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -81,6 +82,7 @@ import {
 } from "@/components/ui/select";
 
 type SocialPost = {
+  property_id?: string | null;
   id: string;
   title: string;
   type: string;
@@ -124,6 +126,7 @@ export default function SocialEngine() {
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | "property" | "blog">("all");
   const [activeTab, setActiveTab] = useState("drafts");
+  const [newPost, setNewPost] = useState<SocialPost | null>(null);
   const { toast } = useToast();
 
   const fetchPosts = useCallback(async () => {
@@ -217,6 +220,13 @@ export default function SocialEngine() {
     if (error) throw new Error("Modificările nu au putut fi salvate. Încearcă din nou.");
     setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates } : p)));
     toast({ title: "Postare actualizată", description: "Modificările au fost salvate." });
+  };
+
+  const createPost = async (id: string, updates: PostUpdates) => {
+    const { error } = await supabase.from("social_posts").insert({ id, title: updates.title ?? "", caption: updates.caption ?? "", type: "blog", source_url: "https://realtrust.ro/blog", status: "draft", posted_to: [], ...updates });
+    if (error) throw new Error(error.message);
+    await fetchPosts();
+    toast({ title: "Postare creată", description: "Ciorna a fost salvată fără publicare." });
   };
 
   const deletePost = async (id: string) => {
@@ -488,6 +498,7 @@ export default function SocialEngine() {
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" className="min-h-12" onClick={() => setNewPost({ id: crypto.randomUUID(), title: "", caption: "", type: "blog", source_url: "https://realtrust.ro/blog", image_url: null, status: "draft", posted_to: [], created_at: new Date().toISOString(), updated_at: new Date().toISOString(), scheduled_at: null })}><Pencil className="h-4 w-4 mr-2" />Postare nouă</Button>
           <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={generateAllCaptions} disabled={bulkGenerating || withoutCaptions === 0}>
             {bulkGenerating ? (
               <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> Generare {bulkProgress.done}/{bulkProgress.total}…</>
@@ -570,6 +581,7 @@ export default function SocialEngine() {
       </div>
 
       {/* Stats Summary */}
+      {newPost && <PostEditModal post={newPost} open onOpenChange={value => { if (!value) setNewPost(null); }} onSave={createPost} isNew />}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="rounded-xl border border-border bg-card p-3 flex items-center gap-3">
           <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
@@ -913,11 +925,13 @@ function PostEditModal({
   open,
   onOpenChange,
   onSave,
+  isNew = false,
 }: {
   post: SocialPost;
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onSave: (id: string, updates: PostUpdates) => Promise<void>;
+  isNew?: boolean;
 }) {
   const [title, setTitle] = useState(post.title);
   const [caption, setCaption] = useState(post.caption);
@@ -934,6 +948,8 @@ function PostEditModal({
   const [storyLinkUrl, setStoryLinkUrl] = useState(post.story_link_url ?? (post.media_type === "STORY" ? "" : post.source_url));
   const [saveError, setSaveError] = useState("");
   const [variants, setVariants] = useState<SocialVariants | null>(post.content_variants ?? null);
+  const [generatingImage, setGeneratingImage] = useState(false);
+  const [generatedImage, setGeneratedImage] = useState("");
   const switchMedia = (value: MediaType) => {
     const nextVariants = variants ? { ...variants, [selectedVariant(mediaType)]: { ...variants[selectedVariant(mediaType)], caption, image_url: imageUrl, video_url: videoUrl || null, story_link_url: mediaType === "STORY" ? storyLinkUrl || null : null } } : null;
     setVariants(nextVariants);
@@ -960,6 +976,7 @@ function PostEditModal({
       setStoryLinkUrl(post.story_link_url ?? (post.media_type === "STORY" ? "" : post.source_url));
       setSaveError("");
       setVariants(post.content_variants ?? null);
+      setGeneratedImage("");
     }
   }, [open, post]);
 
@@ -1028,7 +1045,7 @@ function PostEditModal({
       let savedImage = imageUrl;
       if (mediaType === "STORY") {
         if (videoUrl.trim()) await validateStoryVideo(videoUrl.trim());
-        else savedImage = await getPreparedImage("STORY");
+        else if (imageUrl !== generatedImage) savedImage = await getPreparedImage("STORY");
       }
       const updatedVariants = variants ? { ...variants, [selectedVariant(mediaType)]: { ...variants[selectedVariant(mediaType)], caption, image_url: savedImage || null, video_url: hasVideo ? videoUrl.trim() || null : null, story_link_url: mediaType === "STORY" ? storyLinkUrl.trim() || null : null, error: null } } : null;
       await onSave(post.id, { title, caption, image_url: savedImage || null, media_type: mediaType, video_url: hasVideo ? (videoUrl.trim() || null) : null, story_link_url: mediaType === "STORY" ? (storyLinkUrl.trim() || null) : null, content_variants: updatedVariants });
@@ -1040,6 +1057,15 @@ function PostEditModal({
   const captionOverLimit = caption.length > INSTAGRAM_CAPTION_LIMIT;
 
   const getPreparedImage = async (format: MediaType): Promise<string> => {
+    if (isNew) {
+      if (!imageUrl) throw new Error("Adaugă o imagine pentru Story.");
+      if (format !== "STORY") return imageUrl;
+      const blob = await renderStoryImage(imageUrl, "");
+      const path = `social-ai/story-${crypto.randomUUID()}.jpg`;
+      const { error } = await supabase.storage.from("property-images").upload(path, blob, { contentType: "image/jpeg" });
+      if (error) throw error;
+      return supabase.storage.from("property-images").getPublicUrl(path).data.publicUrl;
+    }
     const { data, error } = await supabase.functions.invoke("process-scheduled-posts", { body: { post_id: post.id, dry_run: true, current_image: imageUrl || null, current_media_type: format, preview_image_only: true } });
     if (error) {
       const response = (error as { context?: Response }).context;
@@ -1060,10 +1086,10 @@ function PostEditModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={value => { if (!generatingImage) onOpenChange(value); }}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-heading">Editează Postarea</DialogTitle>
+          <DialogTitle className="font-heading">{isNew ? "Postare nouă" : "Editează Postarea"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 pt-2">
           <div className="space-y-1.5">
@@ -1073,7 +1099,7 @@ function PostEditModal({
 
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Tip conținut</Label>
-            <Select value={mediaType} onValueChange={(v) => switchMedia(v as MediaType)}>
+            <Select value={mediaType} disabled={generatingImage} onValueChange={(v) => switchMedia(v as MediaType)}>
               <SelectTrigger className="min-h-12" aria-label="Tip conținut"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {(Object.keys(MEDIA_LABELS) as MediaType[]).map((k) => <SelectItem key={k} value={k}>{MEDIA_LABELS[k]}</SelectItem>)}
@@ -1103,6 +1129,7 @@ function PostEditModal({
 
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">{mediaType === "REELS" ? "Copertă" : "Imagine"}</Label>
+            {post.type === "blog" && !post.property_id && ["draft", "scheduled"].includes(post.status) && (mediaType === "IMAGE" || mediaType === "STORY") && <EditorImageGenerator postId={isNew ? undefined : post.id} title={title} description={caption} story={mediaType === "STORY"} disabled={saving || uploading || preparingImage || renderingVideo} onBusy={setGeneratingImage} onImage={url => { setImageUrl(url); setGeneratedImage(url); }} />}
             {imageUrl ? (
               <div className={cn("relative rounded-md overflow-hidden border border-border bg-muted group", mediaType === "STORY" ? "aspect-[9/16]" : "aspect-square")}>
                 <SafePostImage candidates={[imageUrl, ...(post.image_urls ?? [])]} alt="Imaginea postării" className="w-full h-full object-contain" />
@@ -1171,9 +1198,9 @@ function PostEditModal({
             )}
           </div>
           {saveError && <p role="alert" className="text-xs text-destructive">{saveError}</p>}
-          <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleSave} disabled={saving || uploading || preparingImage || renderingVideo || !title.trim()}>
+          <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleSave} disabled={saving || uploading || preparingImage || renderingVideo || generatingImage || !title.trim()}>
             {saving ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Pencil className="h-4 w-4 mr-1.5" />}
-            {saving ? "Se salvează…" : "Salvează Modificările"}
+            {saving ? "Se salvează…" : isNew ? "Salvează Postarea" : "Salvează Modificările"}
           </Button>
         </div>
       </DialogContent>
