@@ -955,7 +955,7 @@ function PostEditModal({
   const [galleryEdited, setGalleryEdited] = useState(false);
   const switchMedia = (value: MediaType) => {
     setGeneratedImage("");
-    if (value !== mediaType) { setGallery([]); setGalleryEdited(false); }
+    if (value !== mediaType) { setGallery([]); setGalleryEdited(true); }
     const nextVariants = variants ? { ...variants, [selectedVariant(mediaType)]: { ...variants[selectedVariant(mediaType)], caption, image_url: imageUrl, video_url: videoUrl || null, story_link_url: mediaType === "STORY" ? storyLinkUrl || null : null } } : null;
     setVariants(nextVariants);
     const chosen = nextVariants?.[selectedVariant(value)];
@@ -983,7 +983,7 @@ function PostEditModal({
       setVariants(post.content_variants ?? null);
       setGeneratedImage("");
       setGallery([...new Set([post.image_url, ...(post.image_urls ?? [])].filter((url): url is string => Boolean(url)))].map(url => ({ url, selected: true })));
-      setGalleryEdited(isNew);
+      setGalleryEdited(post.type === "blog" && !post.property_id && ["draft", "scheduled"].includes(post.status));
     }
   }, [open, post]);
 
@@ -1137,7 +1137,7 @@ function PostEditModal({
 
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">{mediaType === "REELS" ? "Copertă" : "Imagine"}</Label>
-            {post.type === "blog" && !post.property_id && ["draft", "scheduled"].includes(post.status) && mediaType !== "REELS" && <EditorImageGenerator postId={isNew ? undefined : post.id} title={title} description={caption} story={mediaType === "STORY"} disabled={saving || uploading || preparingImage || renderingVideo} images={gallery} onBusy={setGeneratingImage} onImages={images => { setGallery(images); setGalleryEdited(true); const cover = images.find(image => image.selected)?.url ?? ""; setImageUrl(cover); setGeneratedImage(cover); }} />}
+            {post.type === "blog" && !post.property_id && ["draft", "scheduled"].includes(post.status) && mediaType !== "REELS" && <EditorImageGenerator key={mediaType === "STORY" ? "story" : "feed"} postId={isNew ? undefined : post.id} title={title} description={caption} story={mediaType === "STORY"} disabled={saving || uploading || preparingImage || renderingVideo} images={gallery} onBusy={setGeneratingImage} onImages={images => { setGallery(images); setGalleryEdited(true); setSaveError(""); const cover = images.find(image => image.selected)?.url ?? ""; setImageUrl(cover); setGeneratedImage(cover); }} />}
             {imageUrl ? (
               <div className={cn("relative rounded-md overflow-hidden border border-border bg-muted group", mediaType === "STORY" ? "aspect-[9/16] max-h-[480px]" : "aspect-square")}>
                 <SafePostImage candidates={[imageUrl, ...(post.image_urls ?? [])]} alt="Imaginea postării" className="!w-full !h-full object-contain" />
