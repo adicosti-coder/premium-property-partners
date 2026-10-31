@@ -1,5 +1,19 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Audit lucrări nefinalizate — 31 octombrie, 21:44 UTC
+- [x] Confruntate sarcinile deschise cu implementarea, testele și interfața publicată; audit fără modificări de produs, mesaje externe sau publicare
+- [x] Butonul AI verificat autentificat pe mobil în preview și realtrust.ro: vizibil în ciorna blog Story, absent la proprietăți din cauza condiției `post.type === "blog" && !post.property_id`; păstrarea fotografiilor reale la proprietăți rămâne obligatorie
+- [x] Jurnalul AI confirmă trei generări reușite la 21:38 UTC; nu confirmă upload/salvare integrală. Captura de extracție Firecrawl corespunde dependenței exclusive din scrape-realtrust; citirea actuală indică 1079/1500 credite, cu exhausted_at vechi (nu dovedește epuizare actuală)
+- [x] Site public: CTA nou și tab Social Growth confirmate; 0 ciorne blog, 2 mementouri sent; baza sănătoasă (48% memorie, 11% disc, 23/90 conexiuni, fără alerte recente)
+- [x] 27 teste selectate trecute: calculator Lead unic, galerie, imagini articole, Social Growth și prag minim proprietar; build curent OK
+- [x] Restanțele comunicate în chat; următoarele sunt inventar, nu remedieri efectuate
+- [ ] Extragere Social Engine: înlocuirea dependenței primare Firecrawl cu datele publicate ale site-ului; necesită implementare separată
+- [ ] Oferte proprietari: formular Admin de creare/gestionare property_sale_offers absent; panourile WhatsApp nu sunt acest flux
+- [ ] Postări automate: diagnosticare lipsă cron_job/cron_story în ultimele 48h; programări active și ultime statusuri success nu dovedesc publicare externă
+- [ ] Raport SEO săptămânal: diagnosticare email_dispatch_failed (3 eșecuri consecutive, ultima rulare 26 octombrie)
+- [ ] Verificări finale fără dovadă curentă: save/publish anunț cu listing_type/minimum_price și imagini mari, Reel din 3–5 poze, Lead Meta după salvare reală, WhatsApp widget/P.S., DA→publicare→RETRAG; trimiterile/apelurile externe necesită acord specific
+- [ ] Stories multiple și Sticker Link: blocaj extern, nu există conexiune Make accesibilă în conexiunile disponibile
+
 ## Calculator — Lead unic
 - [x] Eliminat evenimentul Lead duplicat; păstrat Lead_Submit cu același ID pentru Pixel/CAPI, consimțământul și notificările existente
 - [x] 26 teste trecute; formular verificat în pagină cu trimiteri simulate: un Lead la acceptare, zero la refuz și o notificare în ambele cazuri; fără mesaje reale
@@ -12,7 +26,7 @@
 - [x] PS social în confirmări/follow-up WhatsApp existente, fără mesaje suplimentare; șabloane aprobate și STOP excluse, funcții activate, fără trimitere reală de test
 - [x] Social Growth & Campaign Links în Social Engine: creare/recitire autentificată, redirect allowlist cu UTM, linkul de test șters
 - [x] 15 teste și build OK; simulare, Admin și preview public (3 postări) verificate; fără publicare sau mesaje externe
-- [ ] Publicarea interfeței Social Growth — necesită acordul utilizatorului; confirmarea widgetului cu cerere reală și WhatsApp P.S. real nu au fost testate pentru a evita mesaje externe
+- [x] Interfața Social Growth verificată pe realtrust.ro la 31 octombrie 21:48 UTC; confirmarea widgetului cu cerere reală și WhatsApp P.S. real rămân în verificările restante ale auditului
 
 ## Corectare constatări SEO — 31 octombrie
 - [x] Scanare nouă: nouă verificări de bază trecute; 13 pagini publice cu metadate și previzualizări distincte, canonice proprii și imagini absolute
@@ -52,7 +66,7 @@
 - [x] Extragere fotografie principală originală, respingere fallback generic
 - [x] Asociere automată cu imagini editoriale existente pentru taxe, finanțe și acces digital; fără AI/Unsplash recurent
 - [x] Format Instagram 1:1/4:5 înainte de webhook; 17 teste și dry-run autentificat pe ciornă reală, JPEG 1080×1080, fără publicare
-- [ ] Verificarea butonului nou din dialog — blocată de verificarea suplimentară Admin prin cod e-mail
+- [x] Butonul AI din dialog verificat autentificat pe realtrust.ro în ciorna blog Story; la postările de proprietăți este ascuns intenționat de condiția actuală
 
 ## Descrieri Social Engine pe platforme
 - [x] Instagram fără URL, cu CTA de profil, titlu cu emoji, paragrafe și hashtag-uri finale
@@ -125,4 +139,4 @@
 
 ## Mementouri programate
 - [x] Tabela `admin_reminders` + funcția `admin-reminder-check` (cron orar) — mementourile se trimit singure pe email, o singură dată
-- [ ] Vineri 23 octombrie, 09:00 România: verificare presiune bază de date (memento automat pe info@realtrust.ro) — dacă alerta de dimineață revine zilnic, trecere la instanța Small cu acordul lui Adrian
+- [x] Mementourile sunt sent; verificarea bazei din 31 octombrie confirmă lipsa presiunii și a alertelor recente după trecerea anterior efectuată la Small
