@@ -1132,8 +1132,8 @@ function PostEditModal({
             <Label className="text-xs font-medium">{mediaType === "REELS" ? "Copertă" : "Imagine"}</Label>
             {post.type === "blog" && !post.property_id && ["draft", "scheduled"].includes(post.status) && (mediaType === "IMAGE" || mediaType === "STORY") && <EditorImageGenerator postId={isNew ? undefined : post.id} title={title} description={caption} story={mediaType === "STORY"} disabled={saving || uploading || preparingImage || renderingVideo} onBusy={setGeneratingImage} onImage={url => { setImageUrl(url); setGeneratedImage(url); }} />}
             {imageUrl ? (
-              <div className={cn("relative rounded-md overflow-hidden border border-border bg-muted group", mediaType === "STORY" ? "aspect-[9/16]" : "aspect-square")}>
-                <SafePostImage candidates={[imageUrl, ...(post.image_urls ?? [])]} alt="Imaginea postării" className="w-full h-full object-contain" />
+              <div className={cn("relative rounded-md overflow-hidden border border-border bg-muted group", mediaType === "STORY" ? "aspect-[9/16] max-h-[480px]" : "aspect-square")}>
+                <SafePostImage candidates={[imageUrl, ...(post.image_urls ?? [])]} alt="Imaginea postării" className="!w-full !h-full object-contain" />
                 <div className="absolute inset-0 bg-background/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                   <label className="cursor-pointer">
                     <input type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
@@ -1306,7 +1306,7 @@ function SocialCard({
           <Button variant="ghost" size="sm" aria-label={`Previzualizează postarea ${post.title}`} className="h-7 w-7 p-0 bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 hover:text-white" onClick={() => setPreviewOpen(true)}>
             <Eye className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 hover:text-white" onClick={() => setEditOpen(true)}>
+          <Button variant="ghost" size="sm" aria-label={`Editează postarea ${post.title}`} className="h-7 w-7 p-0 bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 hover:text-white" onClick={() => setEditOpen(true)}>
             <Pencil className="h-3.5 w-3.5" />
           </Button>
           <AlertDialog>
