@@ -9568,6 +9568,42 @@ export type Database = {
         }
         Relationships: []
       }
+      social_campaign_links: {
+        Row: {
+          active: boolean
+          campaign: string
+          created_at: string
+          created_by: string
+          destination: string
+          id: string
+          platform: string
+          slug: string
+          title: string
+        }
+        Insert: {
+          active?: boolean
+          campaign: string
+          created_at?: string
+          created_by?: string
+          destination: string
+          id?: string
+          platform: string
+          slug?: string
+          title: string
+        }
+        Update: {
+          active?: boolean
+          campaign?: string
+          created_at?: string
+          created_by?: string
+          destination?: string
+          id?: string
+          platform?: string
+          slug?: string
+          title?: string
+        }
+        Relationships: []
+      }
       social_engine_logs: {
         Row: {
           created_at: string
@@ -13473,6 +13509,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      public_social_preview: {
+        Args: never
+        Returns: {
+          id: string
+          image_url: string
+          posted_to: string[]
+          published_at: string
+          source_url: string
+          title: string
+        }[]
+      }
       purge_expired_idempotency_keys: { Args: never; Returns: number }
       reactivate_scraper_keyword: { Args: { _id: string }; Returns: undefined }
       read_email_batch: {
@@ -13495,6 +13542,15 @@ export type Database = {
       reset_prospect_invalid_status: {
         Args: { p_prospect_id: string }
         Returns: Json
+      }
+      resolve_social_campaign: {
+        Args: { p_slug: string }
+        Returns: {
+          campaign: string
+          destination: string
+          platform: string
+          title: string
+        }[]
       }
       retry_failed_crm_syncs: { Args: never; Returns: number }
       review_agent_prompt: {
