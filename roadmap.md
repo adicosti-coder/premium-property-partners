@@ -1,6 +1,7 @@
 # Roadmap — optimizări sistem analiză și administrare
 
 ## Generator imagini din articole în Social Engine
+- [ ] Galerie AI minimum trei imagini, selecție/regenerare, salvare și transmitere completă către Make
 - [x] Generare AI din titlu și descriere în editor și postare nouă; Feed 1:1/4:5, Story 9:16; salvare explicită
 - [x] 10 teste trecute; generare Story reală 1080×1920, salvare, redeschidere și editare verificate autentificat; ciorna de probă și imaginea șterse, fără publicare socială
 - [x] Modul de selecție articol și generare din titlu plus conținut, cu imagine salvată în ciorna socială
