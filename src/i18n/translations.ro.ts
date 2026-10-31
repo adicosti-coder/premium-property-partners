@@ -22,7 +22,7 @@ export const ro = {
     titleMid: "Imobiliare, Investiții",
     titleHighlight: "și Property Management",
     subtitle: "Vânzări, cumpărări, închirieri pe termen lung și administrare apartamente în regim hotelier.\nSoluții complete pentru proprietari și investitori imobiliari.\nRandament net estimat între 6,5% și 9,4% pe an, în funcție de ocupare, locație și amenajare.",
-    cta: "Calculează venitul din chirie",
+    cta: "Calculează venitul din închiriere",
     ctaSecondary: "Vezi oportunitățile de investiție",
     ctaGuests: "Pentru oaspeți",
     ctaQuickStart: "Start rapid",
