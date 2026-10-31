@@ -1,6 +1,7 @@
 # Roadmap — optimizări sistem analiză și administrare
 
 ## Social Growth — 31 octombrie
+- [ ] Mesaj personal pentru cinci clienți mulțumiți, pentru recomandarea unui proprietar; numai pregătire, fără trimitere
 - [ ] Invitație Follow după simulare și în articole; preview postări publicate în footer și confirmarea widgetului
 - [ ] PS social în confirmări/follow-up WhatsApp existente, fără mesaje suplimentare
 - [ ] Social Growth & Campaign Links în Social Engine: linkuri scurte și campanii pentru ghiduri existente
