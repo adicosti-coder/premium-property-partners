@@ -1139,7 +1139,7 @@ function PostEditModal({
           </div>}
 
           <div className="space-y-1.5">
-            {post.type === "blog" && !post.property_id && ["draft", "scheduled"].includes(post.status) && mediaType !== "REELS" && <EditorImageGenerator key={mediaType === "STORY" ? "story" : "feed"} postId={isNew ? undefined : post.id} title={title} description={caption} story={mediaType === "STORY"} disabled={saving || uploading || preparingImage || renderingVideo} images={gallery} onBusy={setGeneratingImage} onImages={images => { setGallery(images); setGalleryEdited(true); setSaveError(""); const cover = images.find(image => image.selected)?.url ?? ""; setImageUrl(cover); setGeneratedImage(cover); }} />}
+            {["draft", "scheduled"].includes(post.status) && <EditorImageGenerator key={mediaType === "STORY" ? "story" : "feed"} postId={isNew ? undefined : post.id} title={title} description={caption} story={mediaType === "STORY"} disabled={saving || uploading || preparingImage || renderingVideo} images={gallery} onBusy={setGeneratingImage} onImages={images => { setGallery(images); setGalleryEdited(true); setSaveError(""); const cover = images.find(image => image.selected)?.url ?? ""; setImageUrl(cover); setGeneratedImage(cover); }} />}
             <Label className="text-xs font-medium">{mediaType === "REELS" ? "Copertă" : "Imagine"}</Label>
             {imageUrl ? (
               <div className={cn("relative rounded-md overflow-hidden border border-border bg-muted group", mediaType === "STORY" ? "aspect-[9/16] w-full max-w-[240px] mx-auto" : "aspect-square")}>

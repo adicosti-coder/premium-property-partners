@@ -78,10 +78,10 @@ Deno.serve(async (req) => {
         const { data: post, error } = await sb.from("social_posts").select(cols).eq("id", input.post_id).maybeSingle();
         if (error) return json({ error: error.message }, 500);
         if (!post) return json({ error: "Postarea nu există." }, 404);
-        if (!canGenerateArticleImage(post)) return json({ error: "Folosește fotografii reale pentru proprietăți. Generarea este disponibilă pentru articole nepublicate." }, 400);
+        if (!["draft", "scheduled"].includes(post.status)) return json({ error: "Generarea este disponibilă pentru postări nepublicate." }, 400);
         const slug = new URL(post.source_url, "https://realtrust.ro").pathname.split("/").filter(Boolean).pop();
         const { data: article } = await sb.from("blog_articles").select("content,excerpt").eq("slug", slug).maybeSingle();
-        if (article) reference += `\nARTICLE: ${article.content ?? article.excerpt ?? ""}`;
+        if (post.type === "blog" && article) reference += `\nARTICLE: ${article.content ?? article.excerpt ?? ""}`;
       }
       const upstream = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
         method: "POST",
