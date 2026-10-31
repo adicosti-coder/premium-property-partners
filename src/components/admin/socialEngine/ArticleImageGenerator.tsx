@@ -72,7 +72,7 @@ export default function ArticleImageGenerator({ posts, onSaved }: { posts: Artic
         {error && <p role="alert" className="break-words text-sm text-destructive">{error}</p>}
       </div>
       <div className="relative aspect-square min-w-0 overflow-hidden rounded-lg border border-border bg-muted">
-        {(visible?.url || existing) ? <img src={visible?.url || existing || ""} alt={selected?.title ?? "Imagine articol"} className={cn("h-full w-full object-contain", visible && !visible.final && "blur-lg")} /> : <div className="flex h-full items-center justify-center text-muted-foreground"><ImagePlus className="h-12 w-12" /></div>}
+        {(visible?.url || existing) ? <img src={visible?.url || existing || ""} alt={selected?.title ?? "Imagine articol"} className={cn("absolute inset-0 h-full w-full object-contain", visible && !visible.final && "blur-lg")} /> : <div className="absolute inset-0 flex items-center justify-center text-muted-foreground"><ImagePlus className="h-12 w-12" /></div>}
         {busy && <div role="status" className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 bg-background/95 p-4 text-sm"><Loader2 className="h-4 w-4 animate-spin" />{visible?.final ? "Se salvează imaginea…" : "Se generează imaginea…"}</div>}
       </div>
     </div>
