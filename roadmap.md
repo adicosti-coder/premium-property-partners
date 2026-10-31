@@ -1,5 +1,10 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Calculator — Lead unic
+- [x] Eliminat evenimentul Lead duplicat; păstrat Lead_Submit cu același ID pentru Pixel/CAPI, consimțământul și notificările existente
+- [x] 26 teste trecute; formular verificat în pagină cu trimiteri simulate: un Lead la acceptare, zero la refuz și o notificare în ambele cazuri; fără mesaje reale
+- [ ] Publicarea corectării și verificarea primirii reale în Meta — necesită publicare aprobată; istoricul conversiilor nu este recalculat
+
 ## Social Growth — 31 octombrie
 - [x] Review reclame Meta 24–31 octombrie: cont/reclame active, 352,32 RON și 13 Lead atribuite; dublarea Lead a calculatorului confirmată în codul publicat; 8 cereri calculator salvate, fără echivalare cu leaduri Meta; recomandare corectare tracking, fără modificări campaniei/bugetului
 - [x] Mesaj personal pentru cinci clienți mulțumiți pregătit în chat, personalizabil cu prenumele; fără trimitere
