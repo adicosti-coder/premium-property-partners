@@ -1075,7 +1075,7 @@ const PentruProprietari = () => {
       <FounderCallBooking />
 
       {/* Interactive legal & tax guide + downloadable owner guide (lead magnet) */}
-      <OwnerLegalTaxGuide />
+      <div id="ghid-proprietar" className="scroll-mt-24"><OwnerLegalTaxGuide /></div>
 
       {/* Risks, minimum requirements, furnishing standards, guarantees */}
       <OwnerRisksLimits />

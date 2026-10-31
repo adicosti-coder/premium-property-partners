@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { submitLead } from "@/lib/leadSubmission";
 import { roMobileField } from "@/lib/phoneField";
+import { SocialPreview } from "@/components/social/SocialFollow";
 
 export type LeadPropertyType = "apartament" | "casa_istorica" | "administrare_regim_hotelier";
 
@@ -56,6 +57,7 @@ const LeadEngagementWidget = ({
   const [expanded, setExpanded] = useState(false);
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState({
     name: "",
@@ -103,7 +105,7 @@ const LeadEngagementWidget = ({
     });
     onLeadSubmitted?.({ name: parsed.data.name, phone: parsed.data.phone, propertyType: parsed.data.propertyType });
     setForm((f) => ({ ...f, name: "", phone: "", message: "" }));
-    setOpen(false);
+    setSubmitted(true);
     setExpanded(false);
   };
 
@@ -130,7 +132,7 @@ const LeadEngagementWidget = ({
             </a>
             <button
               type="button"
-              onClick={() => setOpen(true)}
+              onClick={() => { setSubmitted(false); setOpen(true); }}
               className="flex min-h-12 items-center gap-2 rounded-full border border-accent/40 bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-lg transition-transform hover:scale-[1.03]"
             >
               <MessageSquare className="h-4 w-4 text-accent" aria-hidden="true" />
@@ -153,10 +155,10 @@ const LeadEngagementWidget = ({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Cerere rapidă</DialogTitle>
-            <DialogDescription>Lăsați-ne datele și vă sunăm sau vă scriem pe WhatsApp.</DialogDescription>
+            <DialogTitle>{submitted ? "Cerere trimisă" : "Cerere rapidă"}</DialogTitle>
+            <DialogDescription>{submitted ? "Mulțumim! Vă contactăm în cel mai scurt timp." : "Lăsați-ne datele și vă sunăm sau vă scriem pe WhatsApp."}</DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          {submitted ? <div className="space-y-4"><SocialPreview /><Button variant="outline" className="min-h-12 w-full" onClick={() => setOpen(false)}>Închide</Button></div> : <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <fieldset className="space-y-1.5">
               <legend className="text-sm font-medium">Ce vă interesează?</legend>
               <div role="radiogroup" className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -209,7 +211,7 @@ const LeadEngagementWidget = ({
               <ShieldCheck className="h-3.5 w-3.5 text-success" aria-hidden="true" />
               Datele sunt folosite doar pentru a vă răspunde.
             </p>
-          </form>
+          </form>}
         </DialogContent>
       </Dialog>
     </>

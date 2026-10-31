@@ -11,6 +11,7 @@ import { useArticleViewTracking } from "@/hooks/useArticleViewTracking";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
+import { SocialFollow } from "@/components/social/SocialFollow";
 
 const BlogComments = lazy(() => import("@/components/BlogComments"));
 const BlogNewsletterCTA = lazy(() => import("@/components/BlogNewsletterCTA"));
@@ -1007,6 +1008,7 @@ const BlogArticlePage = () => {
 
           {/* Dual CTA Sections */}
           <BlogArticleCTA />
+          <SocialFollow dismissible />
 
           {/* Comments Section */}
           <BlogComments articleId={article.id} />

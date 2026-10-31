@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { toast } from "sonner";
 import { submitLead } from "@/lib/leadSubmission";
 import { roMobileField } from "@/lib/phoneField";
+import { SocialFollow } from "@/components/social/SocialFollow";
 import { supabase } from "@/lib/supabaseClient";
 import { withCampaignTracking } from "@/lib/campaignAttribution";
 import { trackConversion, trackCriticalConversion, formatPhoneInput } from "@/lib/conversionTracking";
@@ -298,6 +299,7 @@ const ROICalculatorWidget = () => {
               <MessageCircle className="w-5 h-5 mr-2" />Trimite proiecția pe WhatsApp
             </Button>
           </div>
+          <SocialFollow dismissible />
         </div>
       )}
 

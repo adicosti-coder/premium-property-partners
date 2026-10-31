@@ -1,5 +1,14 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Social Growth — 31 octombrie
+- [x] Review reclame Meta 24–31 octombrie: cont/reclame active, 352,32 RON și 13 Lead atribuite; dublarea Lead a calculatorului confirmată în codul publicat; 8 cereri calculator salvate, fără echivalare cu leaduri Meta; recomandare corectare tracking, fără modificări campaniei/bugetului
+- [x] Mesaj personal pentru cinci clienți mulțumiți pregătit în chat, personalizabil cu prenumele; fără trimitere
+- [x] Invitație Follow după simulare și în articole; preview numai postări publicate în footer și confirmarea widgetului
+- [x] PS social în confirmări/follow-up WhatsApp existente, fără mesaje suplimentare; șabloane aprobate și STOP excluse, funcții activate, fără trimitere reală de test
+- [x] Social Growth & Campaign Links în Social Engine: creare/recitire autentificată, redirect allowlist cu UTM, linkul de test șters
+- [x] 15 teste și build OK; simulare, Admin și preview public (3 postări) verificate; fără publicare sau mesaje externe
+- [ ] Publicarea interfeței Social Growth — necesită acordul utilizatorului; confirmarea widgetului cu cerere reală și WhatsApp P.S. real nu au fost testate pentru a evita mesaje externe
+
 ## Corectare constatări SEO — 31 octombrie
 - [x] Scanare nouă: nouă verificări de bază trecute; 13 pagini publice cu metadate și previzualizări distincte, canonice proprii și imagini absolute
 - [x] Titlu proprietari scurtat și descriere 157 caractere sincronizată cu prerandarea; eliminată promisiunea de randament garantat din metadatele prerandate ale investițiilor; trei teste SEO și verificare în pagină trecute, build OK
