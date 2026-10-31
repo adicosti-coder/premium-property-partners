@@ -17,6 +17,7 @@ import SocialEngineLogs from "./socialEngine/SocialEngineLogs";
 import SocialAiSettings from "./socialEngine/SocialAiSettings";
 import ArticleImageGenerator from "./socialEngine/ArticleImageGenerator";
 import EditorImageGenerator from "./socialEngine/EditorImageGenerator";
+import { requireSocialGallery, type GalleryImage } from "@/lib/socialGallery";
 import { SafePostImage, isValidImageUrl } from "./socialEngine/SafePostImage";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -950,8 +951,11 @@ function PostEditModal({
   const [variants, setVariants] = useState<SocialVariants | null>(post.content_variants ?? null);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [generatedImage, setGeneratedImage] = useState("");
+  const [gallery, setGallery] = useState<GalleryImage[]>(() => [...new Set([post.image_url, ...(post.image_urls ?? [])].filter((url): url is string => Boolean(url)))].map(url => ({ url, selected: true })));
+  const [galleryEdited, setGalleryEdited] = useState(false);
   const switchMedia = (value: MediaType) => {
     setGeneratedImage("");
+    if (value !== mediaType) { setGallery([]); setGalleryEdited(false); }
     const nextVariants = variants ? { ...variants, [selectedVariant(mediaType)]: { ...variants[selectedVariant(mediaType)], caption, image_url: imageUrl, video_url: videoUrl || null, story_link_url: mediaType === "STORY" ? storyLinkUrl || null : null } } : null;
     setVariants(nextVariants);
     const chosen = nextVariants?.[selectedVariant(value)];
@@ -978,6 +982,8 @@ function PostEditModal({
       setSaveError("");
       setVariants(post.content_variants ?? null);
       setGeneratedImage("");
+      setGallery([...new Set([post.image_url, ...(post.image_urls ?? [])].filter((url): url is string => Boolean(url)))].map(url => ({ url, selected: true })));
+      setGalleryEdited(false);
     }
   }, [open, post]);
 
@@ -985,6 +991,7 @@ function PostEditModal({
     setRenderingVideo(true);
     setVideoError("");
     try {
+      const selectedImages = galleryEdited ? requireSocialGallery(gallery) : null;
       const sources = [imageUrl, ...(post.image_urls ?? [])].filter(Boolean) as string[];
       if (!sources.length) throw new Error("Adaugă cel puțin o poză înainte de a genera video-ul.");
       const blob = await renderReelFromImages(sources);
@@ -1043,13 +1050,13 @@ function PostEditModal({
         const link = new URL(storyLinkUrl.trim());
         if (!["https:", "http:"].includes(link.protocol) || link.href.length > 2048) throw new Error("Story Link URL trebuie să fie o adresă web validă.");
       }
-      let savedImage = imageUrl;
+      let savedImage = selectedImages?.[0] ?? imageUrl;
       if (mediaType === "STORY") {
         if (videoUrl.trim()) await validateStoryVideo(videoUrl.trim());
-        else if (!imageUrl || imageUrl !== generatedImage) savedImage = await getPreparedImage("STORY");
+        else if (!selectedImages && (!imageUrl || imageUrl !== generatedImage)) savedImage = await getPreparedImage("STORY");
       }
       const updatedVariants = variants ? { ...variants, [selectedVariant(mediaType)]: { ...variants[selectedVariant(mediaType)], caption, image_url: savedImage || null, video_url: hasVideo ? videoUrl.trim() || null : null, story_link_url: mediaType === "STORY" ? storyLinkUrl.trim() || null : null, error: null } } : null;
-      await onSave(post.id, { title, caption, image_url: savedImage || null, ...(generatedImage && savedImage === generatedImage ? { image_urls: [savedImage] } : {}), media_type: mediaType, video_url: hasVideo ? (videoUrl.trim() || null) : null, story_link_url: mediaType === "STORY" ? (storyLinkUrl.trim() || null) : null, content_variants: updatedVariants });
+      await onSave(post.id, { title, caption, image_url: savedImage || null, ...(selectedImages ? { image_urls: selectedImages } : generatedImage && savedImage === generatedImage ? { image_urls: [savedImage] } : {}), media_type: selectedImages && mediaType !== "STORY" ? "CAROUSEL" : mediaType, video_url: hasVideo ? (videoUrl.trim() || null) : null, story_link_url: mediaType === "STORY" ? (storyLinkUrl.trim() || null) : null, content_variants: updatedVariants ? { ...updatedVariants, [selectedVariant(mediaType)]: { ...updatedVariants[selectedVariant(mediaType)], ...(selectedImages ? { image_urls: selectedImages } : {}) } } : null });
       onOpenChange(false);
     } catch (e) { setSaveError(e instanceof Error ? e.message : "Salvarea a eșuat."); }
     finally { setSaving(false); }
@@ -1130,7 +1137,7 @@ function PostEditModal({
 
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">{mediaType === "REELS" ? "Copertă" : "Imagine"}</Label>
-            {post.type === "blog" && !post.property_id && ["draft", "scheduled"].includes(post.status) && (mediaType === "IMAGE" || mediaType === "STORY") && <EditorImageGenerator postId={isNew ? undefined : post.id} title={title} description={caption} story={mediaType === "STORY"} disabled={saving || uploading || preparingImage || renderingVideo} onBusy={setGeneratingImage} onImage={url => { setImageUrl(url); setGeneratedImage(url); }} />}
+            {post.type === "blog" && !post.property_id && ["draft", "scheduled"].includes(post.status) && mediaType !== "REELS" && <EditorImageGenerator postId={isNew ? undefined : post.id} title={title} description={caption} story={mediaType === "STORY"} disabled={saving || uploading || preparingImage || renderingVideo} images={gallery} onBusy={setGeneratingImage} onImages={images => { setGallery(images); setGalleryEdited(true); const cover = images.find(image => image.selected)?.url ?? ""; setImageUrl(cover); setGeneratedImage(cover); }} />}
             {imageUrl ? (
               <div className={cn("relative rounded-md overflow-hidden border border-border bg-muted group", mediaType === "STORY" ? "aspect-[9/16] max-h-[480px]" : "aspect-square")}>
                 <SafePostImage candidates={[imageUrl, ...(post.image_urls ?? [])]} alt="Imaginea postării" className="!w-full !h-full object-contain" />
