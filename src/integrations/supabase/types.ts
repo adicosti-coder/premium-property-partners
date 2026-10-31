@@ -12777,6 +12777,26 @@ export type Database = {
       cleanup_capi_delivery_log: { Args: never; Returns: undefined }
       cleanup_old_e2e_runs: { Args: never; Returns: number }
       cleanup_old_tracking_data: { Args: never; Returns: Json }
+      decide_property_sale_offer: {
+        Args: { _decision: string; _offer_id: string }
+        Returns: {
+          amount_eur: number
+          buyer_label: string
+          conditions: string | null
+          created_at: string
+          id: string
+          payment_method: string | null
+          property_id: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "property_sale_offers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean

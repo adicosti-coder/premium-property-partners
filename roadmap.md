@@ -1,5 +1,12 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Remedieri critice Admin — 31 octombrie, 21:52 UTC
+- [ ] Extragere Social Engine exclusiv din proprietăți active și articole publicate, fără Firecrawl
+- [ ] Generator și galerie AI pentru toate tipurile de postări, păstrând imaginile ilustrative distincte de fotografiile reale
+- [ ] Formular Admin creare/editare oferte și decizie securizată în portalul proprietarului
+- [ ] Diagnosticare programări/carusele/Stories și raport SEO; Make rămâne verificabil numai cu acces la scenariu
+- [ ] Teste, verificare autentificată și activarea funcțiilor modificate
+
 ## Audit lucrări nefinalizate — 31 octombrie, 21:44 UTC
 - [x] Confruntate sarcinile deschise cu implementarea, testele și interfața publicată; audit fără modificări de produs, mesaje externe sau publicare
 - [x] Butonul AI verificat autentificat pe mobil în preview și realtrust.ro: vizibil în ciorna blog Story, absent la proprietăți din cauza condiției `post.type === "blog" && !post.property_id`; păstrarea fotografiilor reale la proprietăți rămâne obligatorie

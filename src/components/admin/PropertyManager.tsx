@@ -37,6 +37,7 @@ import {
 import { PropertyTableRow } from "./property/columns/propertyColumns";
 import PortfolioSeoPanel from "./property/PortfolioSeoPanel";
 import CoverRotationPanel from "./CoverRotationPanel";
+import AdminSaleOffers from "./property/AdminSaleOffers";
 import { PropertyEditor } from "./property/dialogs/PropertyEditor";
 
 export default function PropertyManager() {
@@ -295,6 +296,7 @@ export default function PropertyManager() {
         stats={statsBlock}
         filters={filtersBlock}
       >
+        <AdminSaleOffers properties={rows} />
         <PortfolioSeoPanel />
         <details className="bg-card rounded-xl border border-border mb-6 p-4">
           <summary className="font-semibold text-foreground cursor-pointer min-h-12 flex items-center">Coperțile anunțurilor publicate (A/B rapid)</summary>
