@@ -1344,8 +1344,8 @@ function buildStaticRoutes(): PrerenderRoute[] {
   // /investitii — investor-focused pillar page (distinct from /pentru-proprietari)
   routes.push({
     path: '/investitii',
-    title: 'Investiții Imobiliare Timișoara | Randament 9.4% Net | RealTrust',
-    description: 'Investiții imobiliare profitabile în Timișoara cu RealTrust. randament net estimat 6,5–9,4%, randament garantat, ghid gratuit 2026. Descarcă analiza completă.',
+    title: 'Investiții imobiliare Timișoara | RealTrust',
+    description: 'Investiții imobiliare în Timișoara cu analiză de randament și administrare profesională. Randament net estimat de 6,5–9,4%, în funcție de proprietate și ocupare.',
     h1: 'Investiții Imobiliare Timișoara: Ghid Complet pentru Randament Profitabil',
     canonical: `${BASE_URL}/investitii`,
     seoBody: `
@@ -1429,8 +1429,8 @@ function buildStaticRoutes(): PrerenderRoute[] {
   // /pentru-proprietari — pillar page for property owners
   routes.push({
     path: '/pentru-proprietari',
-    title: 'Administrare Regim Hotelier & Property Management Timișoara | RealTrust',
-    description: 'Servicii complete de administrare apartamente și case în regim hotelier în Timișoara. Property management profesional cu randament mediu de 9,4% net.',
+    title: 'Administrare regim hotelier Timișoara | RealTrust',
+    description: 'Administrare regim hotelier în Timișoara: rezervări, curățenie, mentenanță și raportare lunară. Randament net estimat de 6,5–9,4%, în funcție de proprietate.',
     h1: 'Administrare apartamente și case în regim hotelier în Timișoara',
     canonical: `${BASE_URL}/pentru-proprietari`,
     seoBody: `
