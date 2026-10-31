@@ -1,5 +1,11 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Social Growth — 31 octombrie
+- [ ] Invitație Follow după simulare și în articole; preview postări publicate în footer și confirmarea widgetului
+- [ ] PS social în confirmări/follow-up WhatsApp existente, fără mesaje suplimentare
+- [ ] Social Growth & Campaign Links în Social Engine: linkuri scurte și campanii pentru ghiduri existente
+- [ ] Teste și verificare pagini publice / Admin; fără publicare sau mesaje externe neaprobate
+
 ## Corectare constatări SEO — 31 octombrie
 - [x] Scanare nouă: nouă verificări de bază trecute; 13 pagini publice cu metadate și previzualizări distincte, canonice proprii și imagini absolute
 - [x] Titlu proprietari scurtat și descriere 157 caractere sincronizată cu prerandarea; eliminată promisiunea de randament garantat din metadatele prerandate ale investițiilor; trei teste SEO și verificare în pagină trecute, build OK
