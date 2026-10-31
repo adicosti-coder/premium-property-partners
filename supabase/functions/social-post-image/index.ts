@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
 
   try {
     if (body.mode === "editor") {
-      if (internal) return json({ error: "Ce mode nécessite une session admin." }, 403);
+      if (internal) return json({ error: "Generarea în editor necesită o sesiune admin." }, 403);
       const parsed = EditorImageSchema.safeParse(body);
       if (!parsed.success) return json({ error: "Completează titlul, descrierea și un format valid.", details: parsed.error.flatten().fieldErrors }, 400);
       const input = parsed.data;

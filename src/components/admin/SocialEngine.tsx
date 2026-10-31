@@ -951,6 +951,7 @@ function PostEditModal({
   const [generatingImage, setGeneratingImage] = useState(false);
   const [generatedImage, setGeneratedImage] = useState("");
   const switchMedia = (value: MediaType) => {
+    setGeneratedImage("");
     const nextVariants = variants ? { ...variants, [selectedVariant(mediaType)]: { ...variants[selectedVariant(mediaType)], caption, image_url: imageUrl, video_url: videoUrl || null, story_link_url: mediaType === "STORY" ? storyLinkUrl || null : null } } : null;
     setVariants(nextVariants);
     const chosen = nextVariants?.[selectedVariant(value)];
@@ -1045,10 +1046,10 @@ function PostEditModal({
       let savedImage = imageUrl;
       if (mediaType === "STORY") {
         if (videoUrl.trim()) await validateStoryVideo(videoUrl.trim());
-        else if (imageUrl !== generatedImage) savedImage = await getPreparedImage("STORY");
+        else if (!imageUrl || imageUrl !== generatedImage) savedImage = await getPreparedImage("STORY");
       }
       const updatedVariants = variants ? { ...variants, [selectedVariant(mediaType)]: { ...variants[selectedVariant(mediaType)], caption, image_url: savedImage || null, video_url: hasVideo ? videoUrl.trim() || null : null, story_link_url: mediaType === "STORY" ? storyLinkUrl.trim() || null : null, error: null } } : null;
-      await onSave(post.id, { title, caption, image_url: savedImage || null, media_type: mediaType, video_url: hasVideo ? (videoUrl.trim() || null) : null, story_link_url: mediaType === "STORY" ? (storyLinkUrl.trim() || null) : null, content_variants: updatedVariants });
+      await onSave(post.id, { title, caption, image_url: savedImage || null, ...(generatedImage && savedImage === generatedImage ? { image_urls: [savedImage] } : {}), media_type: mediaType, video_url: hasVideo ? (videoUrl.trim() || null) : null, story_link_url: mediaType === "STORY" ? (storyLinkUrl.trim() || null) : null, content_variants: updatedVariants });
       onOpenChange(false);
     } catch (e) { setSaveError(e instanceof Error ? e.message : "Salvarea a eșuat."); }
     finally { setSaving(false); }
