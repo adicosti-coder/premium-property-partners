@@ -1,6 +1,7 @@
 # Roadmap — optimizări sistem analiză și administrare
 
 ## Generator imagini din articole în Social Engine
+- [ ] Generare AI în editor și postare nouă, format Feed/Story și salvare la confirmare
 - [x] Modul de selecție articol și generare din titlu plus conținut, cu imagine salvată în ciorna socială
 - [x] 24 teste trecute; generare reală 1024×1024 pentru articolul fiscalitate, salvare și recitire autentificată confirmate, fără publicare socială
 

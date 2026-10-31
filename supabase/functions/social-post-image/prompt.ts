@@ -1,5 +1,16 @@
 export type ArticleImageSource = { title: string; excerpt?: string | null; content?: string | null };
 
+export type SocialImageRatio = "1:1" | "4:5" | "9:16";
+export function socialImageDimensions(ratio: SocialImageRatio) {
+  return ratio === "9:16" ? { size: "1152x2048", width: 1080, height: 1920 }
+    : ratio === "4:5" ? { size: "1024x1280", width: 1080, height: 1350 }
+    : { size: "1024x1024", width: 1080, height: 1080 };
+}
+
+export function buildEditorImagePrompt(title: string, description: string, ratio: SocialImageRatio): string {
+  return buildArticleImagePrompt({ title, content: description }).replace("balanced square composition", `balanced ${ratio} composition with the subject fully visible`);
+}
+
 export function buildArticleImagePrompt(article: ArticleImageSource): string {
   const content = (article.content ?? article.excerpt ?? "")
     .replace(/<[^>]*>/g, " ")

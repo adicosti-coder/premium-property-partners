@@ -5,6 +5,8 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { isInternalCall } from "../_shared/cronAuth.ts";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { buildArticleImagePrompt, canGenerateArticleImage } from "./prompt.ts";
+import { buildEditorImagePrompt, socialImageDimensions } from "./prompt.ts";
+import { EditorImageSchema } from "./editor.ts";
 
 const MODEL = "openai/gpt-image-2.5-sunburst";
 const MAX_PER_RUN = 3;
@@ -66,6 +68,24 @@ Deno.serve(async (req) => {
   const cols = "id, title, caption, type, status, image_url, image_urls, property_id, source_url";
 
   try {
+    if (body.mode === "editor") {
+      if (internal) return json({ error: "Ce mode nécessite une session admin." }, 403);
+      const parsed = EditorImageSchema.safeParse(body);
+      if (!parsed.success) return json({ error: "Completează titlul, descrierea și un format valid.", details: parsed.error.flatten().fieldErrors }, 400);
+      const input = parsed.data;
+      if (input.post_id) {
+        const { data: post, error } = await sb.from("social_posts").select(cols).eq("id", input.post_id).maybeSingle();
+        if (error) return json({ error: error.message }, 500);
+        if (!post) return json({ error: "Postarea nu există." }, 404);
+        if (!canGenerateArticleImage(post)) return json({ error: "Folosește fotografii reale pentru proprietăți. Generarea este disponibilă pentru articole nepublicate." }, 400);
+      }
+      const upstream = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model: MODEL, prompt: buildEditorImagePrompt(input.title, input.description, input.ratio), size: socialImageDimensions(input.ratio).size, quality: "medium", ...(input.stream ? { stream: true, partial_images: 1 } : {}) }),
+      });
+      return new Response(upstream.body, { status: upstream.status, headers: { ...corsHeaders, "Content-Type": upstream.headers.get("Content-Type") ?? "application/json", "Cache-Control": "no-cache" } });
+    }
     if (postId) {
       const { data: p, error } = await sb.from("social_posts").select(cols).eq("id", postId).maybeSingle();
       if (error) return json({ error: error.message }, 500);
