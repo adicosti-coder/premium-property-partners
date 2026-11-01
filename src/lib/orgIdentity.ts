@@ -55,7 +55,7 @@ export const BRAND = {
   // Only externally verifiable profiles belong here.
   sameAs: [
     "https://www.facebook.com/realtrust.ro",
-    "https://www.instagram.com/realtrust_timisoara",
+    "https://www.instagram.com/ap.art.hotel/",
     GOOGLE_BUSINESS_PROFILE_URL,
   ],
 } as const;

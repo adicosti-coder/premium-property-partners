@@ -1,5 +1,5 @@
 export const SOCIAL_PROFILES = {
-  instagram: 'https://www.instagram.com/realtrust_timisoara',
+  instagram: 'https://www.instagram.com/ap.art.hotel/',
   facebook: 'https://www.facebook.com/realtrust.ro',
 } as const;
 export const CAMPAIGN_DESTINATIONS = {
