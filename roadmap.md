@@ -168,7 +168,8 @@
 - [x] Mementourile sunt sent; verificarea bazei din 31 octombrie confirmă lipsa presiunii și a alertelor recente după trecerea anterior efectuată la Small
 
 ## Asistent WhatsApp leaduri — 1 noiembrie
-- [ ] Răspuns 24/7, oferte din prețuri, programare, predare către Adrian — necesită clarificări
+- [x] Asistentul existent răspunde 24/7 cu comisioanele; adăugate programare evaluare (L–S 09–19) și predare cu alertă WhatsApp; 7 teste
+- [ ] Test real cu un mesaj WhatsApp — necesită un mesaj trimis de pe un telefon
 
 ## Reparații System Health — 1 noiembrie
 - [x] GA4/concurenți marcate fals neterminate
