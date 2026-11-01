@@ -225,7 +225,7 @@ export default function SocialEngine() {
   };
 
   const createPost = async (id: string, updates: PostUpdates) => {
-    const { error } = await supabase.from("social_posts").insert({ id, title: updates.title ?? "", caption: updates.caption ?? "", type: "blog", source_url: "https://realtrust.ro/blog", status: "draft", posted_to: [], ...updates });
+    const { error } = await supabase.from("social_posts").insert({ id, title: updates.title ?? "", caption: updates.caption ?? "", type: "blog", status: "draft", posted_to: [], ...updates, source_url: `https://realtrust.ro/blog?manual=${id}` });
     if (error) throw new Error(error.message);
     await fetchPosts();
     toast({ title: "Postare creată", description: "Ciorna a fost salvată fără publicare." });
