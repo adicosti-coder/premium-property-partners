@@ -2,7 +2,7 @@
 
 ## Buton generator imagini — 1 noiembrie
 - [x] Reprodus autentificat pe mobil: editorul unei postări publicate nu afișa generatorul; eliminată restricția draft/scheduled fără republicare automată
-- [ ] Verificare după corectare în editorul postărilor publicate și ciornelor
+- [x] Verificat autentificat la 384×709: buton în postare publicată, Story, ciornă proprietate și postare nouă; trei teste galerie trecute, build OK; restricția server editor eliminată și funcția activată, fără generare AI contra cost
 - [ ] Publicare pe realtrust.ro — necesită cererea explicită de publicare
 
 ## Remedieri critice Admin — 31 octombrie, 21:52 UTC
