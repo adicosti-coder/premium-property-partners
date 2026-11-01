@@ -308,6 +308,7 @@ const Investitii = () => {
       {/* Benefits Grid */}
       <section className="py-12 bg-muted/30">
         <div className="container mx-auto px-6">
+          <h2 className="sr-only">{language === "en" ? "Why invest with RealTrust" : "De ce să investești cu RealTrust"}</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {t.benefits.map((benefit, index) => (
               <div 
