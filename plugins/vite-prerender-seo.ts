@@ -1738,6 +1738,17 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
     ? html.replace(canonicalRe, canonicalTag)
     : html.replace('</head>', `  ${canonicalTag}\n</head>`);
 
+  // hreflang alternates for crawlers that read the static HTML (RO default,
+  // EN via ?lang=en, x-default = RO). Must match CanonicalHreflang.tsx.
+  html = html.replace(/<link rel="alternate" hreflang="[^"]*" href="[^"]*"\s*\/?>\s*/g, '');
+  const roHref = route.canonical.split('?')[0];
+  const hreflangTags = [
+    `<link rel="alternate" hreflang="ro" href="${roHref}" />`,
+    `<link rel="alternate" hreflang="en" href="${roHref}?lang=en" />`,
+    `<link rel="alternate" hreflang="x-default" href="${roHref}" />`,
+  ].join('\n  ');
+  html = html.replace('</head>', `  ${hreflangTags}\n</head>`);
+
   // Per-route Open Graph / Twitter tags. The static shell ships sitewide
   // values; without this, every prerendered page shares the homepage preview.
   // Social crawlers drop relative images, so normalise to an absolute URL.
