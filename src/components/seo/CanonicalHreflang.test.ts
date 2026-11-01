@@ -14,3 +14,14 @@ describe("buildLangAlternates", () => {
     expect(r.canonical).toBe(`${base}?lang=en`);
   });
 });
+
+import { buildLangAlternates as build2 } from "./CanonicalHreflang";
+import { describe as d2, it as i2, expect as e2 } from "vitest";
+d2("complex canonical", () => {
+  i2("points /complex/:slug with a landing page at /complexe/:slug", () => {
+    e2(build2("/complex/isho", "").canonical).toBe("https://realtrust.ro/complexe/isho");
+  });
+  i2("keeps /complex/:slug without a landing page", () => {
+    e2(build2("/complex/alt-complex", "").canonical).toBe("https://realtrust.ro/complex/alt-complex");
+  });
+});
