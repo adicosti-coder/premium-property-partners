@@ -171,7 +171,7 @@
 - [ ] Răspuns 24/7, oferte din prețuri, programare, predare către Adrian — necesită clarificări
 
 ## Reparații System Health — 1 noiembrie
-- [ ] GA4/concurenți marcate fals neterminate
-- [ ] Raport SEO săptămânal
-- [ ] Eșec WhatsApp Make
-- [ ] Publicare
+- [x] GA4/concurenți marcate fals neterminate
+- [x] Raport SEO săptămânal
+- [ ] Eșec WhatsApp Make — scenariul Make pentru mesaje primite e oprit; necesită pornire în Make
+- [x] Publicare
