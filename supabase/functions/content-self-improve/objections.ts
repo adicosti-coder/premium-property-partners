@@ -45,7 +45,7 @@ export async function analyzeObjections(db: any) {
     if (key) try {
       const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", { method: "POST",
         headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "google/gemini-3-flash-preview", messages: [
+        body: JSON.stringify({ model: "google/gemini-3.1-flash-lite", messages: [
           { role: "system", content: "Ești antrenor pentru Andrei, consultant RealTrust Timișoara pe WhatsApp. Scrie O SINGURĂ replică în română, max 220 caractere, caldă, fără presiune, cu o singură întrebare. Interzis: procente, garanții, cumpărători inventați, întâlniri la birou (nu avem birou; vizionări la apartament). Dacă e despre comision, începe cu „Analiza de piață e gratuită.”. Răspunde doar cu textul replicii." },
           { role: "user", content: `Obiecție repetată: ${o.label}\nExemple reale:\n- ${g.samples.join("\n- ")}` }] }) });
       const t = r.ok ? String((await r.json()).choices?.[0]?.message?.content ?? "").trim().replace(/^["„]|["”]$/g, "") : "";

@@ -16,7 +16,7 @@ const corsHeaders = {
 };
 
 const AI_GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const MODEL = "google/gemini-3-flash-preview";
+const MODEL = "google/gemini-3.1-flash-lite";
 
 const SYSTEM_PROMPT = `Ești un analist de vânzări imobiliare în Timișoara care creează profiluri de vânzător pe baza anunțurilor publicate.
 Scopul e să ajuți un agent telefonic să sune empatic și pregătit, NU robotic.
