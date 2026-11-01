@@ -8,6 +8,28 @@ import { formatSocialCaption } from "../_shared/socialCaption.ts";
 import { prepareInstagramImages } from "../_shared/instagramImages.ts";
 import { resolveSocialFeaturedImage } from "../_shared/socialImages.ts";
 import { usableSocialImage } from "../_shared/socialImageSelection.ts";
+import { publishToMetaSocial } from "../_shared/metaSocial.ts";
+
+/** Feed photo posts go directly to Meta Graph API (confirmed post IDs); Make only answers "accepted". */
+async function publishFeedDirect(sb: any, post: any, platforms: string[], trigger: string) {
+  const images = await resolveImages(sb, post);
+  if (!images.length) throw new Error("Postarea nu are nicio imagine publicabilă");
+  const captions = {
+    facebook: formatSocialCaption(post.caption || "", { platform: "facebook", type: post.type === "blog" ? "blog" : "property", sourceUrl: post.source_url }),
+    instagram: formatSocialCaption(post.caption || "", { platform: "instagram", type: post.type === "blog" ? "blog" : "property", sourceUrl: post.source_url }),
+  };
+  const results = await publishToMetaSocial(post.caption || "", images, { platforms: platforms as any, captions, maxImages: 10 });
+  await sb.from("social_autopost_logs").insert(results.map((r) => ({
+    property_id: post.property_id ?? null, title: post.title, platform: r.platform,
+    status: r.ok ? "posted" : "failed", external_id: r.id ?? null, error_message: r.error ?? null,
+  })));
+  await sb.from("social_engine_logs").insert(results.map((r) => ({
+    post_id: post.id, post_title: post.title, platform: r.platform, trigger, success: r.ok,
+    http_status: r.ok ? 200 : 502, response_body: r.id ? JSON.stringify({ id: r.id }) : null, error: r.error ?? null, image_count: images.length,
+  })));
+  return results;
+}
+const isFeedPhoto = (post: any) => !post.video_url && !["STORY", "REELS"].includes(post.media_type);
 
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -127,6 +149,22 @@ Deno.serve(async (req) => {
     if (typeof body.current_image === "string" && /^https:\/\//.test(body.current_image) && !post.image_url) {
       post.image_url = body.current_image;
       await sb.from("social_posts").update({ image_url: body.current_image }).eq("id", post.id);
+    }
+    if (isFeedPhoto(post)) {
+      let results;
+      try { results = await publishFeedDirect(sb, post, platforms, "admin_manual"); }
+      catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        await sb.from("social_posts").update({ last_error: msg }).eq("id", post.id);
+        return json({ success: false, error: msg }, 502);
+      }
+      const ok = results.filter((r) => r.ok).map((r) => r.platform);
+      const failed = results.filter((r) => !r.ok);
+      const errText = failed.map((r) => `${r.platform}: ${r.error}`).join(" · ") || null;
+      const posted_to = [...new Set([...(post.posted_to ?? []), ...ok])];
+      await sb.from("social_posts").update(ok.length ? { status: "posted", posted_to, last_error: errText } : { last_error: errText }).eq("id", post.id);
+      if (!ok.length) return json({ success: false, error: errText ?? "Meta a respins postarea" }, 502);
+      return json({ success: true, posted_to, partial_error: errText });
     }
     try {
       for (const p of platforms) await send(sb, webhook, post, p, "admin_manual");

@@ -70,8 +70,17 @@ async function postInstagram(igId: string, token: string, text: string, images: 
 }
 
 /** Publică pe Facebook și Instagram; nu aruncă excepții — returnează rezultatul pe fiecare platformă. */
-export async function publishToMetaSocial(text: string, images: string[]): Promise<SocialResult[]> {
-  const imgs = images.filter(Boolean).slice(0, 3);
+export type PublishOptions = {
+  platforms?: Array<"facebook" | "instagram">;
+  /** Captions already formatted per platform (skips default property formatting). */
+  captions?: { facebook?: string; instagram?: string };
+  maxImages?: number;
+};
+
+export async function publishToMetaSocial(text: string, images: string[], opts: PublishOptions = {}): Promise<SocialResult[]> {
+  const imgs = images.filter(Boolean).slice(0, opts.maxImages ?? 3);
+  const want = opts.platforms ?? ["facebook", "instagram"];
+  const cap = (pl: "facebook" | "instagram") => opts.captions?.[pl] ?? formatSocialCaption(text, { platform: pl, type: "property" });
   let ctx;
   try { ctx = await resolvePage(); }
   catch (e) {
@@ -79,12 +88,15 @@ export async function publishToMetaSocial(text: string, images: string[]): Promi
     return [{ platform: "facebook", ok: false, error }, { platform: "instagram", ok: false, error }];
   }
   const out: SocialResult[] = [];
-  try { out.push({ platform: "facebook", ok: true, id: await postFacebook(ctx.pageId, ctx.pageToken, formatSocialCaption(text, { platform: "facebook", type: "property" }), await prepareInstagramImages(imgs)) }); }
-  catch (e) { out.push({ platform: "facebook", ok: false, error: (e as Error).message }); }
-  if (!ctx.igId) out.push({ platform: "instagram", ok: false, error: "Pagina nu are cont Instagram Business legat" });
+  if (want.includes("facebook")) {
+    try { out.push({ platform: "facebook", ok: true, id: await postFacebook(ctx.pageId, ctx.pageToken, cap("facebook"), await prepareInstagramImages(imgs)) }); }
+    catch (e) { out.push({ platform: "facebook", ok: false, error: (e as Error).message }); }
+  }
+  if (!want.includes("instagram")) { /* skip */ }
+  else if (!ctx.igId) out.push({ platform: "instagram", ok: false, error: "Pagina nu are cont Instagram Business legat" });
   else if (!imgs.length) out.push({ platform: "instagram", ok: false, error: "Instagram cere cel puțin o imagine" });
   else {
-    try { out.push({ platform: "instagram", ok: true, id: await postInstagram(ctx.igId, ctx.pageToken, formatSocialCaption(text, { platform: "instagram", type: "property" }), await prepareInstagramImages(imgs)) }); }
+    try { out.push({ platform: "instagram", ok: true, id: await postInstagram(ctx.igId, ctx.pageToken, cap("instagram"), await prepareInstagramImages(imgs)) }); }
     catch (e) { out.push({ platform: "instagram", ok: false, error: (e as Error).message }); }
   }
   return out;
