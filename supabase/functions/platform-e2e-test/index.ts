@@ -52,10 +52,10 @@ Deno.serve(async (req) => {
     const [p, a, sched] = await Promise.all([
       sb.from("properties").select("id", { count: "exact", head: true }).eq("is_active", true),
       sb.from("blog_articles").select("id", { count: "exact", head: true }).eq("is_published", true),
-      sb.from("social_posts").select("id,title,caption,image_url,image_urls,video_url,media_type").eq("status", "scheduled").limit(200),
+      sb.from("social_posts").select("id,title,caption,image_url,image_urls,video_url,media_type,property_id").eq("status", "scheduled").limit(200),
     ]);
     if (p.error || a.error || sched.error) throw new Error((p.error || a.error || sched.error)!.message);
-    const bad = (sched.data ?? []).filter((x: any) => !x.caption?.trim() || !(x.image_url || x.image_urls?.length || x.video_url));
+    const bad = (sched.data ?? []).filter((x: any) => !x.caption?.trim() || !(x.image_url || x.image_urls?.length || x.video_url || x.property_id));
     const ok = (p.count ?? 0) > 0 && (a.count ?? 0) > 0 && bad.length === 0;
     return { ok, detail: `${p.count} proprietăți active, ${a.count} articole publicate (sursă locală) · ${sched.data?.length ?? 0} programate${bad.length ? `, ${bad.length} fără text/imagine: ${bad.slice(0, 3).map((b: any) => b.title).join("; ")}` : " valide"}` };
   }));
