@@ -1,5 +1,10 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Buton generator imagini — 1 noiembrie
+- [x] Reprodus autentificat pe mobil: editorul unei postări publicate nu afișa generatorul; eliminată restricția draft/scheduled fără republicare automată
+- [x] Verificat autentificat la 384×709: buton în postare publicată, Story, ciornă proprietate și postare nouă; trei teste galerie trecute, build OK; restricția server editor eliminată și funcția activată, fără generare AI contra cost
+- [ ] Publicare pe realtrust.ro — necesită cererea explicită de publicare
+
 ## Remedieri critice Admin — 31 octombrie, 21:52 UTC
 - [x] Extragere locală activată și verificată autentificat: 159 surse, 59 existente, 100 disponibile; dry-run fără ciorne create, fără Firecrawl
 - [x] Generator și galerie pentru toate tipurile inclusiv proprietăți/Reels; generare editor reală 200 cu imagine finală; exclusiv ilustrații fără fotografii inventate

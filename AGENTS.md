@@ -2,7 +2,7 @@
 
 - Social extraction reads active properties and published blog articles locally, without external scraping — avoids credit consumption for data already stored.
 - Admin sale offers use existing RLS; owner decisions go through a locked ownership-checking RPC that changes only status and enforces the saved minimum — prevents cross-owner edits.
-- Social AI editor supports all post types with editorial illustrations only and explicit gallery selection; sending preserves the selected gallery — prevents invented listing photographs and unselected frames.
+- Social AI editor supports all post types and statuses with editorial illustrations only and explicit gallery selection; editing published posts never republishes them automatically — prevents hidden controls, invented photographs and accidental reposts.
 
 - Social growth reads only published feed previews through a bounded public RPC; campaign redirects resolve admin-created allowlisted destinations with social UTM tags — prevents draft exposure and open redirects.
 - Social WhatsApp P.S. modifies only existing free-text confirmations/follow-ups, never Meta-approved templates or consent/STOP messages — preserves consent and send counts.
