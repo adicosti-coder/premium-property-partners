@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkTranslation } from "../_shared/liteOutputChecks.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -188,6 +189,7 @@ ${content}`;
         title_en: translation.title_en,
         excerpt_en: translation.excerpt_en,
         content_en: translation.content_en,
+        warnings: checkTranslation({ title, excerpt, content }, { title: translation.title_en, excerpt: translation.excerpt_en, content: translation.content_en }),
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

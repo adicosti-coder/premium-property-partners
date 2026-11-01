@@ -1,4 +1,5 @@
 import { requireAdmin } from "../_shared/adminAuth.ts";
+import { checkAgencyClassification } from "../_shared/liteOutputChecks.ts";
 // Lead Auto-Classify Agency
 // Picks up to 25 unscored prospect_listings (created in last 14 days), runs Gemini batch
 // classification, writes agency_suspicion_score (0-100) + reason. If score >= 85, creates a
@@ -80,6 +81,7 @@ Deno.serve(async (req) => {
 
   let classified = 0;
   let approvalsCreated = 0;
+  let flagged = 0;
   const sample: Array<{ id: string; score: number; reason: string; would_blacklist: boolean }> = [];
 
   try {
@@ -163,6 +165,7 @@ Deno.serve(async (req) => {
     classified: dryRun ? 0 : classified,
     would_classify: dryRun ? classified : undefined,
     approvals_created: dryRun ? 0 : approvalsCreated,
+    flagged_suspicious: flagged,
     would_create_approvals: dryRun ? approvalsCreated : undefined,
     batch_size: pending.length,
     sample,
