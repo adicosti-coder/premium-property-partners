@@ -4,6 +4,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireAdmin } from "../_shared/adminAuth.ts";
+import { checkTranslation } from "../_shared/liteOutputChecks.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -129,6 +130,24 @@ serve(async (req: Request) => {
           withContent: needsContent,
         });
 
+        const issues = checkTranslation(
+          { title: row.title ?? "", excerpt: row.excerpt ?? "", ...(needsContent ? { content: row.content ?? "" } : {}) },
+          { title: out.title_en, excerpt: out.excerpt_en, ...(needsContent ? { content: out.content_en ?? "" } : {}) },
+        );
+        if (issues.length) {
+          // Suspicious lite-model translation: do not save, ask for review instead.
+          await supabase.from("automation_approvals").insert({
+            job_key: "blog.translate_articles",
+            action_type: "review_ai_output",
+            entity_type: "blog_article",
+            entity_id: row.id,
+            severity: "warning",
+            proposal: { action: "Verifică traducerea AI (nesalvată, rezultat suspect)", issues, title_en: out.title_en, excerpt_en: out.excerpt_en },
+            evidence: { model: MODEL, issues },
+          });
+          results.push({ id: row.id, ok: false, error: `suspect: ${issues.join("; ")}` });
+          continue;
+        }
         const update: Record<string, string> = {};
         if (!row.title_en && out.title_en) update.title_en = out.title_en;
         if (!row.excerpt_en && out.excerpt_en) update.excerpt_en = out.excerpt_en;
