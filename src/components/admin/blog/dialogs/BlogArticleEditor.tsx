@@ -202,7 +202,16 @@ export const BlogArticleEditor = ({
         content_en: (data as any).content_en,
       }));
       setActiveTab("en");
-      toast({ title: t.translateSuccess });
+      const warnings: string[] = (data as any)?.warnings ?? [];
+      if (warnings.length) {
+        toast({
+          title: "Traducere suspectă — verific-o înainte de salvare",
+          description: warnings.slice(0, 4).join(" · "),
+          variant: "destructive",
+        });
+      } else {
+        toast({ title: t.translateSuccess });
+      }
     } catch (err) {
       toast({
         title: t.translateError,
