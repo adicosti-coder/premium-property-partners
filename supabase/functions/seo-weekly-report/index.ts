@@ -54,6 +54,9 @@ serve(async (req) => {
       fetch(queryEndpoint, { method: "POST", headers, body: JSON.stringify({ startDate, endDate, dimensions: ["query"], rowLimit: 10 }) }),
       fetch(queryEndpoint, { method: "POST", headers, body: JSON.stringify({ startDate, endDate, dimensions: ["page"], rowLimit: 10 }) }),
     ]);
+    for (const response of [totalsRes, queriesRes, pagesRes]) {
+      if (!response.ok) return new Response(JSON.stringify({ error: "Datele Google Search Console nu au putut fi citite", upstream_status: response.status }), { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     const totals = totalsRes.ok ? await totalsRes.json() : { rows: [] };
     const queries = queriesRes.ok ? await queriesRes.json() : { rows: [] };
     const pages = pagesRes.ok ? await pagesRes.json() : { rows: [] };
@@ -95,8 +98,11 @@ serve(async (req) => {
     });
 
     if (sendErr) {
-      console.error("send-transactional-email error:", sendErr);
-      return new Response(JSON.stringify({ error: "email_dispatch_failed", details: String(sendErr) }), {
+      const context = (sendErr as { context?: Response }).context;
+      const details = context ? await context.clone().json().catch(() => null) : null;
+      const reason = typeof details?.error === "string" ? details.error : sendErr.message;
+      console.error("SEO email dispatch failed", { status: context?.status, reason });
+      return new Response(JSON.stringify({ error: reason, code: "email_dispatch_failed", upstream_status: context?.status }), {
         status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
