@@ -89,6 +89,7 @@ serve(async (req) => {
 
     // Send via centralized transactional email pipeline (Lovable Emails)
     const { error: sendErr } = await supabase.functions.invoke("send-transactional-email", {
+      headers: { "x-webhook-secret": SERVICE_KEY },
       body: {
         templateName: "seo-weekly-report",
         recipientEmail: REPORT_EMAIL,

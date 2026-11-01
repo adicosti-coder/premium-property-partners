@@ -45,6 +45,7 @@ function generateToken(): string {
 //     x-webhook-secret OR Authorization: Bearer <SERVICE_ROLE_KEY>.
 //  2. Authenticated admins (via requireAdmin) for any manual/UI-triggered use.
 import { requireAdmin } from '../_shared/adminAuth.ts'
+import { isInternalCall } from '../_shared/cronAuth.ts'
 import { resolveSender } from '../_shared/teamEmail.ts'
 
 Deno.serve(async (req) => {
@@ -53,8 +54,10 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders })
   }
 
-  const auth = await requireAdmin(req, corsHeaders)
-  if (!auth.ok) return auth.response!
+  if (!(await isInternalCall(req))) {
+    const auth = await requireAdmin(req, corsHeaders)
+    if (!auth.ok) return auth.response!
+  }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
