@@ -4,6 +4,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
+import { leadingFailures, shouldAlert, postAlertWebhook } from "../_shared/consecutiveFailures.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -71,6 +72,29 @@ Deno.serve(async (req) => {
     }
   } catch (e) {
     console.error("[anomaly-notifier] consecutive-failure detector error:", e);
+  }
+
+  // ============= STEP 0b: same rule for pg_cron jobs logged in cron_run_log =============
+  try {
+    const { data: recent } = await supabase.from("cron_run_log")
+      .select("job_name, status, started_at, error_message")
+      .gte("started_at", new Date(Date.now() - 7 * 24 * 3600_000).toISOString())
+      .order("started_at", { ascending: false }).limit(3000);
+    const byJob = new Map<string, any[]>();
+    for (const r of recent ?? []) { const l = byJob.get(r.job_name) ?? []; if (l.length < 5) l.push(r); byJob.set(r.job_name, l); }
+    for (const [name, runs] of byJob) {
+      if (!shouldAlert(runs)) continue;
+      const metric = `cron.consecutive_failures:${name}`;
+      const { data: existing } = await supabase.from("automation_anomalies").select("id")
+        .eq("metric", metric).is("acknowledged_at", null).gte("created_at", since).limit(1);
+      if (existing?.length) continue;
+      await supabase.from("automation_anomalies").insert({
+        metric, observed: leadingFailures(runs), baseline: 0, delta_pct: null, severity: "critical", notified: false,
+        context: { job_name: name, last_error: runs[0]?.error_message ?? (runs[0]?.status === "started" ? "Rulare blocată (nu s-a terminat în 2 ore)" : null), last_failed_at: runs[0]?.started_at },
+      });
+    }
+  } catch (e) {
+    console.error("[anomaly-notifier] cron_run_log detector error:", e);
   }
 
   const { data: anomalies, error } = await supabase
@@ -156,6 +180,10 @@ Deno.serve(async (req) => {
         },
       });
       if (sendErr) throw sendErr;
+      await postAlertWebhook(supabase, {
+        event: "automation_anomalies", count: anomalies.length, critical: critical.length,
+        items: anomalies.slice(0, 20).map((a) => ({ metric: a.metric, severity: a.severity, observed: a.observed, context: a.context, created_at: a.created_at })),
+      });
       sent = recipients.length;
       // mark as notified
       const ids = anomalies.map((a) => a.id);
