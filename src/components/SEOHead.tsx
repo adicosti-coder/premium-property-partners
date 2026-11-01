@@ -138,6 +138,13 @@ const SEOHead = ({
   canonicalQuery,
 }: SEOHeadProps) => {
   const { language } = useLanguage();
+
+  // The static shell / prerender keeps its own robots tag; crawlers read the
+  // first one, so keep every robots tag aligned with this page's decision.
+  useEffect(() => {
+    const value = noIndex ? "noindex, nofollow" : "index, follow";
+    document.querySelectorAll('meta[name="robots"]').forEach((m) => m.setAttribute("content", value));
+  }, [noIndex]);
   const [override, setOverride] = useState<import("@/hooks/useSeoOverride").SeoOverride | null>(null);
   
   const defaultTitles = {
