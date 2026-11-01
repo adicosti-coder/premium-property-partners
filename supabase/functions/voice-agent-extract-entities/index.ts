@@ -33,7 +33,7 @@ async function extractWithGemini(apiKey: string, transcriptTail: string) {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-3.8-flash",
+      model: "google/gemini-3.1-flash-lite",
       messages: [
         { role: "system", content: EXTRACT_PROMPT },
         { role: "user", content: transcriptTail },

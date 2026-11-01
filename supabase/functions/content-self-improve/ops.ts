@@ -118,7 +118,7 @@ export async function analyzeOps(db: any, aiKey?: string | null): Promise<number
     if (hero && (cta?.length ?? 0) >= 20) {
       const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST", headers: { Authorization: `Bearer ${aiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "google/gemini-3-flash-preview", messages: [
+        body: JSON.stringify({ model: "google/gemini-3.1-flash-lite", messages: [
           { role: "system", content: "Ești specialist în conversii pentru RealTrust (administrare și închiriere apartamente, Timișoara). Propui UN text nou pentru butonul principal al paginii de start: max 32 caractere, română, fără promisiuni false, fără cifre inventate, fără București. Răspunde DOAR JSON: {\"field\":\"hero_cta_primary_ro\"|\"hero_cta_secondary_ro\",\"text\":\"...\",\"reason\":\"...\"}" },
           { role: "user", content: JSON.stringify({ clicks_30d_by_type: byType, current: { hero_cta_primary_ro: hero.hero_cta_primary_ro, hero_cta_secondary_ro: hero.hero_cta_secondary_ro } }) },
         ] }),
