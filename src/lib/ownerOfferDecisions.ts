@@ -1,0 +1,1 @@
+export const canAcceptOwnerOffer = (status: string, amount: number, minimum: number | null) => status === 'primita' && Number.isFinite(amount) && amount > 0 && (minimum === null || amount >= minimum);

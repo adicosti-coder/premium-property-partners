@@ -1,11 +1,15 @@
 # Roadmap — optimizări sistem analiză și administrare
 
 ## Remedieri critice Admin — 31 octombrie, 21:52 UTC
-- [ ] Extragere Social Engine exclusiv din proprietăți active și articole publicate, fără Firecrawl
-- [ ] Generator și galerie AI pentru toate tipurile de postări, păstrând imaginile ilustrative distincte de fotografiile reale
-- [ ] Formular Admin creare/editare oferte și decizie securizată în portalul proprietarului
-- [ ] Diagnosticare programări/carusele/Stories și raport SEO; Make rămâne verificabil numai cu acces la scenariu
-- [ ] Teste, verificare autentificată și activarea funcțiilor modificate
+- [x] Extragere locală activată și verificată autentificat: 159 surse, 59 existente, 100 disponibile; dry-run fără ciorne create, fără Firecrawl
+- [x] Generator și galerie pentru toate tipurile inclusiv proprietăți/Reels; generare editor reală 200 cu imagine finală; exclusiv ilustrații fără fotografii inventate
+- [x] Formular Admin creare/editare oferte și acceptare/respingere prin RPC securizat, verificat aplicat în DB; datele cumpărătorilor nu sunt adăugate
+- [x] Programări diagnosticate: singura postare scheduled este pentru 2 noiembrie 07:00 UTC, deci nu era scadentă; payload cu status, approved, post_id și idempotency_key, fără adăugarea pozelor neselectate
+- [x] Raportul real este seo-weekly-report: afișează acum eroarea exactă downstream și nu trimite rapoarte cu zerouri după erori GSC. Istoric email: Resend 403 domeniu neverificat + Lovable Emails dezactivat, din august; configurația actuală Lovable Emails este verificată și coada sănătoasă. Cauza exactă a rulării 26 octombrie nu este disponibilă în loguri
+- [x] Funcțiile modificate activate; teste locale și generare/extragere autentificate verificate
+- [ ] Verificarea UI salvare/editare și acceptarea ca proprietar: blocată de verificarea Admin prin cod email și lipsa proprietăților asociate contului curent; nu s-au creat oferte de test
+- [ ] Make Iterate/idempotency/sticker și livrare externă: scenariu inaccesibil; nu s-a trimis webhook real
+- [ ] Publicarea interfeței Admin și test email SEO real: necesită acțiune/confirmare specifică
 
 ## Audit lucrări nefinalizate — 31 octombrie, 21:44 UTC
 - [x] Confruntate sarcinile deschise cu implementarea, testele și interfața publicată; audit fără modificări de produs, mesaje externe sau publicare
@@ -14,10 +18,10 @@
 - [x] Site public: CTA nou și tab Social Growth confirmate; 0 ciorne blog, 2 mementouri sent; baza sănătoasă (48% memorie, 11% disc, 23/90 conexiuni, fără alerte recente)
 - [x] 27 teste selectate trecute: calculator Lead unic, galerie, imagini articole, Social Growth și prag minim proprietar; build curent OK
 - [x] Restanțele comunicate în chat; următoarele sunt inventar, nu remedieri efectuate
-- [ ] Extragere Social Engine: înlocuirea dependenței primare Firecrawl cu datele publicate ale site-ului; necesită implementare separată
-- [ ] Oferte proprietari: formular Admin de creare/gestionare property_sale_offers absent; panourile WhatsApp nu sunt acest flux
-- [ ] Postări automate: diagnosticare lipsă cron_job/cron_story în ultimele 48h; programări active și ultime statusuri success nu dovedesc publicare externă
-- [ ] Raport SEO săptămânal: diagnosticare email_dispatch_failed (3 eșecuri consecutive, ultima rulare 26 octombrie)
+- [x] Extragere Social Engine locală implementată și activată; vezi verificarea de mai sus
+- [x] Formular Admin oferte implementat, decizia proprietarului securizată; verificarea UI rămâne blocată separat
+- [x] Postări automate: nu există postare scheduled scadentă; livrarea externă rămâne neverificată
+- [x] Raport SEO: diagnostic istoric și mesaje exacte implementate; eroarea exactă din octombrie rămâne necunoscută, fără retrimitere
 - [ ] Verificări finale fără dovadă curentă: save/publish anunț cu listing_type/minimum_price și imagini mari, Reel din 3–5 poze, Lead Meta după salvare reală, WhatsApp widget/P.S., DA→publicare→RETRAG; trimiterile/apelurile externe necesită acord specific
 - [ ] Stories multiple și Sticker Link: blocaj extern, nu există conexiune Make accesibilă în conexiunile disponibile
 
