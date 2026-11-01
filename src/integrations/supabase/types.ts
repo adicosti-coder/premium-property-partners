@@ -13625,6 +13625,7 @@ export type Database = {
         Args: { p_language?: string; p_url: string }
         Returns: undefined
       }
+      social_content_key: { Args: { value: string }; Returns: string }
       social_property_image_urls: {
         Args: { _property_id: string }
         Returns: string[]
