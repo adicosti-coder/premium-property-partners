@@ -87,12 +87,32 @@ Deno.serve(async (req) => {
     const now = new Date().toISOString();
 
     for (const r of results) {
-      const score = Math.max(0, Math.min(100, Math.round(r.score ?? 0)));
+      const src = pending.find((p) => p.id === r.id) as Listing | undefined;
+      const issues = checkAgencyClassification(src, r, APPROVAL_THRESHOLD);
+      if (!src) continue;
+      const score = Math.max(0, Math.min(100, Math.round(Number(r.score) || 0)));
       const reason = (r.reason ?? "").slice(0, 200);
-      const tag = score >= APPROVAL_THRESHOLD ? "agency-suspect" : null;
-      const wouldBlacklist = score >= APPROVAL_THRESHOLD;
+      const suspicious = issues.length > 0;
+      // Suspicious results are saved for audit but never trigger tags or blacklist proposals.
+      const tag = !suspicious && score >= APPROVAL_THRESHOLD ? "agency-suspect" : null;
+      const wouldBlacklist = !suspicious && score >= APPROVAL_THRESHOLD;
 
       if (sample.length < 10) sample.push({ id: r.id, score, reason, would_blacklist: wouldBlacklist });
+      if (suspicious) {
+        flagged++;
+        if (!dryRun) {
+          await supabase.from("automation_approvals").insert({
+            job_key: "lead.auto_classify_agency",
+            action_type: "review_ai_output",
+            entity_type: "prospect_listing",
+            entity_id: r.id,
+            severity: "warning",
+            proposal: { action: "Verifică manual clasificarea AI (rezultat suspect)", score, reason, issues, listing_url: src.source_url },
+            evidence: { model: MODEL, issues, classified_at: now },
+          });
+        }
+      }
+
 
       if (!dryRun) {
         const update: Record<string, unknown> = {
