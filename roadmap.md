@@ -166,3 +166,12 @@
 ## Mementouri programate
 - [x] Tabela `admin_reminders` + funcția `admin-reminder-check` (cron orar) — mementourile se trimit singure pe email, o singură dată
 - [x] Mementourile sunt sent; verificarea bazei din 31 octombrie confirmă lipsa presiunii și a alertelor recente după trecerea anterior efectuată la Small
+
+## Asistent WhatsApp leaduri — 1 noiembrie
+- [ ] Răspuns 24/7, oferte din prețuri, programare, predare către Adrian — necesită clarificări
+
+## Reparații System Health — 1 noiembrie
+- [x] GA4/concurenți marcate fals neterminate
+- [x] Raport SEO săptămânal
+- [ ] Eșec WhatsApp Make — scenariul Make pentru mesaje primite e oprit; necesită pornire în Make
+- [x] Publicare
