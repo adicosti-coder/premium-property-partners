@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
         const { data: post, error } = await sb.from("social_posts").select(cols).eq("id", input.post_id).maybeSingle();
         if (error) return json({ error: error.message }, 500);
         if (!post) return json({ error: "Postarea nu există." }, 404);
-        if (!["draft", "scheduled"].includes(post.status)) return json({ error: "Generarea este disponibilă pentru postări nepublicate." }, 400);
+        // Editor generation is a preview for every status; only the explicit UI save updates the post.
         const slug = new URL(post.source_url, "https://realtrust.ro").pathname.split("/").filter(Boolean).pop();
         const { data: article } = await sb.from("blog_articles").select("content,excerpt").eq("slug", slug).maybeSingle();
         if (post.type === "blog" && article) reference += `\nARTICLE: ${article.content ?? article.excerpt ?? ""}`;
