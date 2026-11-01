@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { hasAnalyticsConsent } from "@/lib/conversionTracking";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,8 +33,8 @@ const ViewingRequestModal = ({ open, onOpenChange, propertyName, propertyId }: V
     morning: "Dimineață (9:00 – 12:00)",
     afternoon: "După-amiază (12:00 – 17:00)",
     evening: "Seara (17:00 – 20:00)",
-    submit: "Trimite Cererea",
-    success: "Cererea ta a fost trimisă! Te vom contacta în cel mai scurt timp.",
+    submit: "Continuă în WhatsApp",
+    success: "Mesajul este pregătit în WhatsApp. Apasă „Trimite” acolo ca să ajungă la noi.",
     errorName: "Introduceți numele",
     errorPhone: "Introduceți un număr de telefon valid",
     errorSlot: "Selectați un interval orar",
@@ -46,8 +47,8 @@ const ViewingRequestModal = ({ open, onOpenChange, propertyName, propertyId }: V
     morning: "Morning (9:00 – 12:00)",
     afternoon: "Afternoon (12:00 – 17:00)",
     evening: "Evening (17:00 – 20:00)",
-    submit: "Send Request",
-    success: "Your request has been sent! We'll contact you shortly.",
+    submit: "Continue in WhatsApp",
+    success: "Your message is ready in WhatsApp. Tap “Send” there so it reaches us.",
     errorName: "Please enter your name",
     errorPhone: "Please enter a valid phone number",
     errorSlot: "Please select a time slot",
@@ -63,11 +64,10 @@ const ViewingRequestModal = ({ open, onOpenChange, propertyName, propertyId }: V
       const msg = `Vizionare: ${propertyName} (${propertyId})\nNume: ${name}\nTelefon: ${phone}\nInterval: ${timeSlot}`;
       window.open(`https://wa.me/40799069256?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
       // GA4 lead event (consent-gated)
+      // Opening WhatsApp is contact intent, not a confirmed lead.
       try {
-        const consent = localStorage.getItem("cookie_consent_v2");
-        const hasConsent = consent === '"all"' || consent === '"analytics_only"' || consent === 'all' || consent === 'analytics_only';
-        if (hasConsent && typeof window.gtag === "function") {
-          window.gtag("event", "generate_lead", { property_name: propertyName, property_id: propertyId });
+        if (hasAnalyticsConsent() && typeof window.gtag === "function") {
+          window.gtag("event", "property_contact", { property_id: propertyId, method: "whatsapp_viewing" });
         }
       } catch {}
       setIsSuccess(true);

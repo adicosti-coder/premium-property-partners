@@ -230,28 +230,18 @@ const EvaluareGratuita = () => {
       });
     }
 
-    trackConversion({
-      event: "roi_calculator_lead",
-      benefit: benefit ?? undefined,
-      source: "evaluare_gratuita",
-      property_type: form.propertyType,
-      zone: form.zone,
-      name: form.name,
-      phone: form.phone,
-      email: form.email,
-    });
-
+    // Personal data travels in router state (never in the URL, which analytics records);
+    // /multumire fires the single Lead conversion for this submission.
     const params = new URLSearchParams({
-      nume: form.name,
-      telefon: form.phone,
-      email: form.email,
       zona: zoneLabel,
       tip: form.propertyType,
       sursa: "evaluare_gratuita",
     });
     if (form.rooms) params.set("camere", form.rooms);
 
-    navigate(`/multumire?${params.toString()}`);
+    navigate(`/multumire?${params.toString()}`, {
+      state: { nume: form.name, telefon: form.phone, email: form.email },
+    });
   };
 
 

@@ -78,14 +78,6 @@ const ProgramareConfirmata = () => {
       booking_slot: slot,
       ...attribution,
     });
-    trackConversion({
-      event: "purchase",
-      source: "owners_call_15min",
-      value: OWNER_FUNNEL_VALUE_EUR.scheduledCall,
-      currency: "EUR",
-      transaction_id: appointmentId || undefined,
-      ...attribution,
-    });
   }, [valid, appointmentId, date, slot]);
 
   const title = isRo ? "Apel confirmat — 15 minute" : "Call confirmed — 15 minutes";

@@ -31,7 +31,7 @@ export const poiSlug = (name: string): string =>
 
 const hreflang = (path: string) =>
   `    <xhtml:link rel="alternate" hreflang="ro" href="${BASE_URL}${path}" />
-    <xhtml:link rel="alternate" hreflang="en" href="${BASE_URL}${path}" />
+    <xhtml:link rel="alternate" hreflang="en" href="${BASE_URL}${path || "/"}${path.includes("?") ? "&" : "?"}lang=en" />
     <xhtml:link rel="alternate" hreflang="x-default" href="${BASE_URL}${path}" />`;
 
 const URLSET_OPEN = `<?xml version="1.0" encoding="UTF-8"?>
@@ -42,7 +42,7 @@ const URLSET_OPEN = `<?xml version="1.0" encoding="UTF-8"?>
 
 export const STATIC_PAGES: { url: string; priority: string; changefreq: string }[] = [
   { url: "", priority: "1.0", changefreq: "daily" },
-  { url: "/oaspeti", priority: "0.9", changefreq: "daily" },
+  { url: "/cazare", priority: "0.9", changefreq: "daily" },
   { url: "/pentru-proprietari", priority: "0.9", changefreq: "weekly" },
   { url: "/ansambluri-rezidentiale", priority: "0.9", changefreq: "weekly" },
   { url: "/servicii-imobiliare", priority: "0.9", changefreq: "weekly" },

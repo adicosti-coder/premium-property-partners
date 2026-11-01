@@ -16,10 +16,7 @@ const Multumim = () => {
   useEffect(() => {
     // Conversion + funnel tracking. Console log is intentional to make
     // future Pixel / 3rd-party integration trivial.
-    trackConversion({
-      event: "contact_form_submit",
-      source: "thank_you_page_view",
-    });
+    // The submitting form already fired its single conversion; this view only feeds the funnel.
     void trackPdfFunnel("thankyou_view", { source: "multumim_page" });
     // eslint-disable-next-line no-console
     console.info("[conversion] thank_you_view fired", {

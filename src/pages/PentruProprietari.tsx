@@ -696,6 +696,7 @@ const PentruProprietari = () => {
       {/* Top 3 Benefits Strip - concise conversion-oriented block */}
       <section className="py-12 md:py-16 bg-background border-b border-border">
         <div className="container mx-auto px-6">
+          <h2 className="sr-only">{language === "ro" ? "Principalele beneficii" : "Key benefits"}</h2>
           <div className="grid gap-6 md:grid-cols-3 max-w-5xl mx-auto">
             {[
               {

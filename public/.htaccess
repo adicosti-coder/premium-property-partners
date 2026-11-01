@@ -49,7 +49,7 @@
 
 
   # Redirect social media crawlers to dynamic OG edge function for property pages
-  RewriteCond %{HTTP_USER_AGENT} facebookexternalhit|Facebot|WhatsApp|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|Pinterest|Googlebot [NC]
+  RewriteCond %{HTTP_USER_AGENT} facebookexternalhit|Facebot|WhatsApp|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|Pinterest [NC]
   RewriteRule ^proprietate/(.+)$ https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/og-property?slug=$1 [P,L]
 
   RewriteRule ^index\.html$ - [L]

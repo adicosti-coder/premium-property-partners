@@ -1,5 +1,6 @@
 import { marked } from "marked";
 import { useParams, Link, useNavigate, Navigate } from "react-router-dom";
+import { hasAnalyticsConsent } from "@/lib/conversionTracking";
 import { resolveConsolidatedArticle } from "@/data/consolidatedArticleRedirects";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
@@ -296,12 +297,8 @@ const BlogArticlePage = () => {
       recentClicks.set(dedupKey, now);
 
       try {
-        const consent = typeof window !== 'undefined' ? window.localStorage.getItem('cookie_consent_v2') : null;
-        const parsedConsent = consent ? JSON.parse(consent) : null;
-        const hasConsent = parsedConsent === 'all' || parsedConsent === 'analytics_only';
-        if (hasConsent && typeof window !== 'undefined' && typeof window.gtag === 'function') {
+        if (hasAnalyticsConsent() && typeof window !== 'undefined' && typeof window.gtag === 'function') {
           window.gtag('event', 'cta_blog_click', params);
-          window.gtag('event', 'generate_lead', { ...params, lead_source: 'blog_cta' });
         }
       } catch { /* ignore */ }
       supabase.from('cta_analytics').insert({

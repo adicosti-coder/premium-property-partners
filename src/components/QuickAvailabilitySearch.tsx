@@ -203,10 +203,10 @@ const QuickAvailabilitySearch: React.FC<QuickAvailabilitySearchProps> = ({
       <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 px-6 py-4 border-b border-border">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold flex items-center gap-2">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
               <Search className="w-5 h-5 text-primary" />
               {t.title}
-            </h3>
+            </h2>
             <p className="text-sm text-muted-foreground">{t.subtitle}</p>
           </div>
           {nightsCount > 0 && (

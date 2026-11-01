@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useMemo, useRef } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { CheckCircle2, MessageCircle, Phone, Clock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
@@ -25,12 +25,15 @@ const PHONE_DISPLAY = "+40 799 069 256";
  */
 const ThankYou = () => {
   const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const privateState = (location.state ?? {}) as Record<string, unknown>;
   const firedRef = useRef(false);
 
   const summary = useMemo(() => {
     const get = (...keys: string[]) => {
       for (const k of keys) {
-        const v = searchParams.get(k);
+        const fromState = privateState[k];
+        const v = typeof fromState === "string" ? fromState : searchParams.get(k);
         if (v && v.trim()) return v.trim().slice(0, 80);
       }
       return "";
@@ -44,7 +47,7 @@ const ThankYou = () => {
       rooms: get("camere", "rooms"),
       source: get("sursa", "source") || "multumire",
     };
-  }, [searchParams]);
+  }, [searchParams, location.state]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (firedRef.current) return;
