@@ -1,5 +1,6 @@
 import { marked } from "marked";
 import { useParams, Link, useNavigate, Navigate } from "react-router-dom";
+import { hasAnalyticsConsent } from "@/lib/conversionTracking";
 import { resolveConsolidatedArticle } from "@/data/consolidatedArticleRedirects";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";

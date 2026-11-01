@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useMemo, useRef } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { CheckCircle2, MessageCircle, Phone, Clock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
@@ -47,7 +47,7 @@ const ThankYou = () => {
       rooms: get("camere", "rooms"),
       source: get("sursa", "source") || "multumire",
     };
-  }, [searchParams]);
+  }, [searchParams, location.state]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (firedRef.current) return;

@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { hasAnalyticsConsent } from "@/lib/conversionTracking";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
