@@ -48,7 +48,7 @@ async function postFacebook(pageId: string, token: string, text: string, images:
 }
 
 async function waitReady(id: string, token: string) {
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 20; i++) {
     const s = await g(`/${id}`, { fields: "status_code", access_token: token }, "GET");
     if (s.status_code === "FINISHED") return;
     if (s.status_code === "ERROR") throw new Error("Instagram a respins imaginea");
@@ -63,15 +63,29 @@ async function postInstagram(igId: string, token: string, text: string, images: 
   } else {
     const children: string[] = [];
     for (const url of images) children.push((await g(`/${igId}/media`, { image_url: url, is_carousel_item: "true", access_token: token })).id);
+    for (const c of children) await waitReady(c, token);
     creation = (await g(`/${igId}/media`, { media_type: "CAROUSEL", children: children.join(","), caption: text, access_token: token })).id;
   }
   await waitReady(creation, token);
-  return (await g(`/${igId}/media_publish`, { creation_id: creation, access_token: token })).id;
+  // 9007 "Media ID is not available": container still processing — retry briefly.
+  for (let i = 0; ; i++) {
+    try { return (await g(`/${igId}/media_publish`, { creation_id: creation, access_token: token })).id; }
+    catch (e) { if (i >= 4 || !/9007/.test((e as Error).message)) throw e; await new Promise((r) => setTimeout(r, 4000)); }
+  }
 }
 
 /** Publică pe Facebook și Instagram; nu aruncă excepții — returnează rezultatul pe fiecare platformă. */
-export async function publishToMetaSocial(text: string, images: string[]): Promise<SocialResult[]> {
-  const imgs = images.filter(Boolean).slice(0, 3);
+export type PublishOptions = {
+  platforms?: Array<"facebook" | "instagram">;
+  /** Captions already formatted per platform (skips default property formatting). */
+  captions?: { facebook?: string; instagram?: string };
+  maxImages?: number;
+};
+
+export async function publishToMetaSocial(text: string, images: string[], opts: PublishOptions = {}): Promise<SocialResult[]> {
+  const imgs = images.filter(Boolean).slice(0, opts.maxImages ?? 3);
+  const want = opts.platforms ?? ["facebook", "instagram"];
+  const cap = (pl: "facebook" | "instagram") => opts.captions?.[pl] ?? formatSocialCaption(text, { platform: pl, type: "property" });
   let ctx;
   try { ctx = await resolvePage(); }
   catch (e) {
@@ -79,12 +93,15 @@ export async function publishToMetaSocial(text: string, images: string[]): Promi
     return [{ platform: "facebook", ok: false, error }, { platform: "instagram", ok: false, error }];
   }
   const out: SocialResult[] = [];
-  try { out.push({ platform: "facebook", ok: true, id: await postFacebook(ctx.pageId, ctx.pageToken, formatSocialCaption(text, { platform: "facebook", type: "property" }), await prepareInstagramImages(imgs)) }); }
-  catch (e) { out.push({ platform: "facebook", ok: false, error: (e as Error).message }); }
-  if (!ctx.igId) out.push({ platform: "instagram", ok: false, error: "Pagina nu are cont Instagram Business legat" });
+  if (want.includes("facebook")) {
+    try { out.push({ platform: "facebook", ok: true, id: await postFacebook(ctx.pageId, ctx.pageToken, cap("facebook"), await prepareInstagramImages(imgs)) }); }
+    catch (e) { out.push({ platform: "facebook", ok: false, error: (e as Error).message }); }
+  }
+  if (!want.includes("instagram")) { /* skip */ }
+  else if (!ctx.igId) out.push({ platform: "instagram", ok: false, error: "Pagina nu are cont Instagram Business legat" });
   else if (!imgs.length) out.push({ platform: "instagram", ok: false, error: "Instagram cere cel puțin o imagine" });
   else {
-    try { out.push({ platform: "instagram", ok: true, id: await postInstagram(ctx.igId, ctx.pageToken, formatSocialCaption(text, { platform: "instagram", type: "property" }), await prepareInstagramImages(imgs)) }); }
+    try { out.push({ platform: "instagram", ok: true, id: await postInstagram(ctx.igId, ctx.pageToken, cap("instagram"), await prepareInstagramImages(imgs)) }); }
     catch (e) { out.push({ platform: "instagram", ok: false, error: (e as Error).message }); }
   }
   return out;
