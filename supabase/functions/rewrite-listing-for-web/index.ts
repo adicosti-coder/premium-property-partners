@@ -116,15 +116,19 @@ Deno.serve(async (req) => {
   });
 
   let raw = "";
+  let streamErr: any = null;
   try {
     const result = streamText({
+      onError: ({ error }) => { streamErr = error; },
       model: provider.chat(MODEL),
       system: SYSTEM,
       messages: [{ role: "user", content: `Rescrie anunțul pentru realtrust.ro. Răspunde în JSON.\n\n${pre}` }],
       abortSignal: req.signal,
     });
     raw = await result.text;
-  } catch (e: any) {
+    if (streamErr) throw streamErr;
+  } catch (err: any) {
+    const e = streamErr ?? err;
     const status = Number(e?.statusCode ?? e?.status ?? 0);
     console.error("rewrite-listing-for-web AI error", status, e?.message);
     if (status === 429) return json({ error: "Prea multe cereri AI. Reîncearcă puțin mai târziu." }, 429);
