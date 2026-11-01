@@ -97,8 +97,8 @@ const Investitii = () => {
     ro: {
       title: "Investiții imobiliare",
       metaDescription: "Investiții imobiliare în Timișoara cu RealTrust: randament net estimat 6,5–9,4% pe an, pe ipoteze publice, due diligence și administrare inclusă. Analiză gratuită 2026.",
-      heroTitle: "Investment",
-      heroTitleHighlight: "Deal Room",
+      heroTitle: "Investiții imobiliare în",
+      heroTitleHighlight: "Timișoara",
       heroSubtitle: "Oportunități selectate, cu randament țintă calculat transparent. Le identificăm, le administrăm, tu primești venitul net.",
       heroBadge: "Deal Room · RealTrust",
       ctaContact: "Programează o discuție",
@@ -123,8 +123,8 @@ const Investitii = () => {
     en: {
       title: "Real estate investments",
       metaDescription: "Real estate investment opportunities in Timișoara: 6.5–9.4% estimated net yearly yield on public assumptions, full due diligence, professional management included.",
-      heroTitle: "Investment",
-      heroTitleHighlight: "Deal Room",
+      heroTitle: "Real estate investments in",
+      heroTitleHighlight: "Timișoara",
       heroSubtitle: "Curated opportunities with target returns calculated transparently. We source and manage them, you receive the net income.",
       heroBadge: "Deal Room · RealTrust",
       ctaContact: "Schedule a discussion",
