@@ -1,39 +1,35 @@
 import { Helmet } from "react-helmet-async";
 import { useLocation } from "react-router-dom";
 
-const SITE_ORIGIN = "https://realtrust.ro";
+export const SITE_ORIGIN = "https://realtrust.ro";
 
 /**
- * Global canonical + hreflang emitter.
- * - Canonical: ALWAYS points to the Romanian (default) version, without `?lang=en`.
- * - hreflang ro / x-default: same canonical URL.
- * - hreflang en: same path with `?lang=en` appended (preserves other query params).
- *
- * Mounted once near the top of the router so it applies to every route.
+ * Builds canonical + hreflang URLs for a route.
+ * - Each language version self-canonicalizes (required by Google: hreflang
+ *   targets must not canonicalize to another language).
+ * - RO: clean path (all query params stripped). EN: clean path + `?lang=en`.
+ * - x-default = RO.
  */
-const CanonicalHreflang = () => {
-  const { pathname } = useLocation();
-
-  // Normalize trailing slash(es): keep "/" for root, strip ALL trailing
-  // slashes elsewhere ("/foo", "/foo/", "/foo///" => "/foo").
-  // Ensures a single canonical form across the whole site.
+export function buildLangAlternates(pathname: string, search: string) {
   const stripped = pathname.replace(/\/+$/, "");
-  const normalizedPath = stripped === "" ? "/" : stripped;
+  const path = stripped === "" ? "/" : stripped;
+  const ro = SITE_ORIGIN + path;
+  const en = `${ro}?lang=en`;
+  const isEn = new URLSearchParams(search).get("lang")?.toLowerCase() === "en";
+  return { canonical: isEn ? en : ro, languages: { ro, en, "x-default": ro } };
+}
 
-  // Canonical strips ALL query params (utm_*, fbclid, gclid, lang, etc.)
-  // — keeps only the clean path. This prevents duplicate-content from
-  // tracking parameters in Google Search Console.
-  const canonicalUrl = SITE_ORIGIN + normalizedPath;
-
-  // English alternate: clean path + ?lang=en only.
-  const enUrl = `${canonicalUrl}?lang=en`;
+/** Global canonical + hreflang emitter, mounted once for every route. */
+const CanonicalHreflang = () => {
+  const { pathname, search } = useLocation();
+  const { canonical, languages } = buildLangAlternates(pathname, search);
 
   return (
     <Helmet>
-      <link rel="canonical" href={canonicalUrl} />
-      <link rel="alternate" hrefLang="ro" href={canonicalUrl} />
-      <link rel="alternate" hrefLang="en" href={enUrl} />
-      <link rel="alternate" hrefLang="x-default" href={canonicalUrl} />
+      <link rel="canonical" href={canonical} />
+      <link rel="alternate" hrefLang="ro" href={languages.ro} />
+      <link rel="alternate" hrefLang="en" href={languages.en} />
+      <link rel="alternate" hrefLang="x-default" href={languages["x-default"]} />
     </Helmet>
   );
 };
