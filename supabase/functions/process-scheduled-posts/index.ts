@@ -161,7 +161,8 @@ Deno.serve(async (req) => {
       const ok = results.filter((r) => r.ok).map((r) => r.platform);
       const failed = results.filter((r) => !r.ok);
       const errText = failed.map((r) => `${r.platform}: ${r.error}`).join(" · ") || null;
-      const posted_to = [...new Set([...(post.posted_to ?? []), ...ok])];
+      // Requested platforms reflect Meta's real answer; earlier unconfirmed Make sends are dropped.
+      const posted_to = [...new Set([...(post.posted_to ?? []).filter((p: string) => !platforms.includes(p)), ...ok])];
       await sb.from("social_posts").update(ok.length ? { status: "posted", posted_to, last_error: errText } : { last_error: errText }).eq("id", post.id);
       if (!ok.length) return json({ success: false, error: errText ?? "Meta a respins postarea" }, 502);
       return json({ success: true, posted_to, partial_error: errText });
