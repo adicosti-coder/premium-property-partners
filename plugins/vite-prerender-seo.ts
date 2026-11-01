@@ -915,7 +915,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       priceRange: '$$',
       sameAs: [
         'https://www.facebook.com/realtrust.ro',
-        'https://www.instagram.com/realtrust_timisoara',
+        'https://www.instagram.com/ap.art.hotel/',
         'https://www.google.com/maps/place/RealTrust/data=!4m2!3m1!1s0x40918b091135b1b3:0x714fdcd64f129651',
       ],
     },
