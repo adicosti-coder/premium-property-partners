@@ -137,7 +137,7 @@ function build(props: Prop[]): string {
   lines.push(`- Website: ${BASE_URL}`);
   lines.push("- Program: luni–vineri, 10:00–18:00 (Europe/Bucharest)");
   lines.push("- Facebook: https://www.facebook.com/realtrust.ro");
-  lines.push("- Instagram: https://www.instagram.com/realtrust_timisoara");
+  lines.push("- Instagram: https://www.instagram.com/ap.art.hotel/");
   lines.push("");
   lines.push("## Servicii");
   lines.push("");
