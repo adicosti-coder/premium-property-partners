@@ -1312,16 +1312,16 @@ function SocialCard({
         </div>
         
         {/* Action buttons */}
-        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button variant="ghost" size="sm" aria-label={`Previzualizează postarea ${post.title}`} className="h-7 w-7 p-0 bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 hover:text-white" onClick={() => setPreviewOpen(true)}>
+        <div className="absolute top-2 right-2 flex gap-1">
+          <Button variant="outline" size="icon" aria-label={`Previzualizează postarea ${post.title}`} className="h-12 w-12 bg-background text-foreground" onClick={() => setPreviewOpen(true)}>
             <Eye className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="ghost" size="sm" aria-label={`Editează postarea ${post.title}`} className="h-7 w-7 p-0 bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 hover:text-white" onClick={() => setEditOpen(true)}>
+          <Button variant="outline" size="icon" aria-label={`Editează postarea ${post.title}`} className="h-12 w-12 bg-background text-foreground" onClick={() => setEditOpen(true)}>
             <Pencil className="h-3.5 w-3.5" />
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-black/30 backdrop-blur-sm text-white hover:bg-destructive hover:text-white">
+              <Button variant="destructive" size="icon" aria-label={`Șterge postarea ${post.title}`} title="Șterge postarea" className="h-12 w-12">
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </AlertDialogTrigger>

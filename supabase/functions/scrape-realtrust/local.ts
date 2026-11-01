@@ -1,4 +1,7 @@
 export const canonicalSocialUrl = (url: string) => url.replace("://www.", "://").replace(/[?#].*$/, "").replace(/\/$/, "");
+export function isKnownSocialContent(row: { source_url: string; title: string; type: string }, existing: { source_url: string; title: string; type: string; status: string }[]) {
+  return existing.some(post => canonicalSocialUrl(post.source_url) === canonicalSocialUrl(row.source_url) || (post.status === "posted" && post.type === row.type && post.title.trim().toLowerCase() === row.title.trim().toLowerCase()));
+}
 export function localSocialRows(properties: any[], articles: any[], imageUrl: (value: string) => string, keywords: string[] = []) {
   const photo = (value: unknown) => typeof value === "string" && value ? (/^https?:\/\//.test(value) ? value : value.startsWith("/") ? `https://realtrust.ro${value}` : imageUrl(value)) : null;
   const rows = [

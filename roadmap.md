@@ -1,5 +1,11 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Ciorne după publicare — 1 noiembrie
+- [x] Eliminate 16 ciorne duplicate; o ciornă cu dovadă Facebook mutată în Publicate; 17 ciorne rămase, fără duplicate ale conținutului publicat
+- [x] Protecție persistentă prin trigger și extragere locală; fără revenire posted→draft și curățare ciorne-soră la publicare; nouă teste trecute
+- [x] Ștergere vizibilă pe telefon cu confirmare; ciornă temporară creată/ștearsă prin UI și absență confirmată după reîncărcare
+- [ ] Publicarea butoanelor noi pe realtrust.ro — necesită cerere explicită; curățarea și protecția datelor sunt deja active
+
 ## Buton generator imagini — 1 noiembrie
 - [x] Reprodus autentificat pe mobil: editorul unei postări publicate nu afișa generatorul; eliminată restricția draft/scheduled fără republicare automată
 - [x] Verificat autentificat la 384×709: buton în postare publicată, Story, ciornă proprietate și postare nouă; trei teste galerie trecute, build OK; restricția server editor eliminată și funcția activată, fără generare AI contra cost
