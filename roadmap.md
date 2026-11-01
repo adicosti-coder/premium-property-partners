@@ -1,5 +1,8 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Reluare anunțuri blocate AI — 1 noiembrie
+- [ ] Identificare anunțuri blocate, reluare secvențială până la limită și verificare inspecție/acord fără duplicate
+
 ## Ciorne după publicare — 1 noiembrie
 - [x] Eliminate 16 ciorne duplicate; o ciornă cu dovadă Facebook mutată în Publicate; 17 ciorne rămase, fără duplicate ale conținutului publicat
 - [x] Protecție persistentă prin trigger și extragere locală; fără revenire posted→draft și curățare ciorne-soră la publicare; nouă teste trecute
