@@ -23,7 +23,7 @@ async function resolveImages(sb: any, post: any): Promise<string[]> {
   const featured = post.media_type === "STORY" && post.image_url ? usableSocialImage(post.image_url, post.title, post.type) : await resolveSocialFeaturedImage(sb, { title: post.title, type: post.type, sourceUrl: post.source_url, currentImage: post.image_url });
   if (featured) list.push(featured);
   for (const u of post.image_urls ?? []) list.push(u);
-  if (post.property_id) {
+  if (post.property_id && !(post.image_urls?.length)) {
     const { data } = await sb.rpc("social_property_image_urls", { _property_id: post.property_id });
     for (const u of (data as string[] | null) ?? []) list.push(u);
   }
@@ -63,6 +63,7 @@ async function payload(sb: any, post: any, platform: string, trigger: string) {
   }
   return {
     title: post.title,
+    post_id: post.id, status: "scheduled", approved: true, idempotency_key: `${post.id}:${platform}`,
     caption: formatSocialCaption(post.caption || "", { platform: platform === "instagram" ? "instagram" : "facebook", type: post.type === "blog" ? "blog" : "property", sourceUrl: post.source_url }),
     media_type, video_url: videoUrl, story_link_url: storyLink || null,
     imageUrl: imageUrls[0] ?? null, image_url: imageUrls[0] ?? null, media_url: videoUrl ?? imageUrls[0] ?? null, imageUrls, image_urls: imageUrls, isMultiStory: story && imageUrls.length > 1, story_frames: story && !videoUrl ? imageUrls.map((url, index) => ({ image_url: url, sequence: index + 1, story_link_url: storyLink || null })) : [], isCarousel: media_type === "CAROUSEL",
