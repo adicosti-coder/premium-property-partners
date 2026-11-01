@@ -212,6 +212,15 @@ Deno.serve(async (req) => {
     const todo = PLATFORMS.filter((p) => !(post.posted_to ?? []).includes(p));
     const done: string[] = [...(post.posted_to ?? [])];
     try {
+      if (isFeedPhoto(post)) {
+        const results = await publishFeedDirect(sb, post, todo, trigger);
+        for (const r of results) if (r.ok) done.push(r.platform);
+        const errs = results.filter((r) => !r.ok).map((r) => `${r.platform}: ${r.error}`).join(" · ");
+        if (!results.some((r) => r.ok)) throw new Error(errs || "Meta a respins postarea");
+        await sb.from("social_posts").update({ posted_to: done, last_error: errs || null, updated_at: new Date().toISOString() }).eq("id", post.id);
+        processed++;
+        continue;
+      }
       for (const p of todo) { await send(sb, webhook, post, p, trigger); done.push(p); }
       await sb.from("social_posts").update({ posted_to: done, last_error: null, updated_at: new Date().toISOString() }).eq("id", post.id);
       processed++;
