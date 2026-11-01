@@ -177,5 +177,6 @@
 - [ ] Eșec WhatsApp Make — scenariul Make pentru mesaje primite e oprit; necesită pornire în Make
 - [x] Publicare
 
-- [ ] Audit complet SEO/GEO/UX/conversii — Faza 1 (raport, fără modificări), apoi așteaptă aprobarea
+- [x] Audit complet — Faza 1 raport livrat
+- [ ] Audit Faza 3 remedieri — așteaptă aprobarea grupurilor A/B și valorile comerciale (grup C)
 - [ ] Scorare AI leaduri noi vs. client ideal + rezumat + marcaj „merită apel” — așteaptă răspunsuri (client ideal, surse, mod de semnalare)
