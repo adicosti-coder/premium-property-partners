@@ -383,8 +383,8 @@ const App = () => (
                     <Route path="/index" element={<Navigate to="/" replace />} />
                     <Route path="/index-en.html" element={<Navigate to="/" replace />} />
                     <Route path="/index_EN.html" element={<Navigate to="/" replace />} />
-                    <Route path="/imobiliare-realtrust-en.html" element={<Navigate to="/imobiliare" replace />} />
-                    <Route path="/imobiliare-realtrust.html" element={<Navigate to="/imobiliare" replace />} />
+                    <Route path="/imobiliare-realtrust-en.html" element={<Navigate to="/" replace />} />
+                    <Route path="/imobiliare-realtrust.html" element={<Navigate to="/" replace />} />
                     <Route path="/real-estate-en.html" element={<Navigate to="/imobiliare" replace />} />
                     <Route path="/real-estate.html" element={<Navigate to="/imobiliare" replace />} />
                     <Route path="/sitemap.xml" element={<LegacyRedirect to={`https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/generate-sitemap`} />} />

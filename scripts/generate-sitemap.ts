@@ -116,6 +116,10 @@ const canonicalizeBlock = (block: string): string | null => {
     /<xhtml:link\b([^>]*?)href="([^"]+)"([^>]*)\/>/g,
     (_m, before: string, href: string, after: string) => {
       const canonicalHref = canonicalizeUrl(href) ?? canonicalLoc;
+      // English alternate is the same path served with ?lang=en (matches page hreflang).
+      if (/hreflang="en"/.test(before + after)) {
+        return `<xhtml:link${before}href="${canonicalHref}?lang=en"${after}/>`;
+      }
       return `<xhtml:link${before}href="${canonicalHref}"${after}/>`;
     },
   );

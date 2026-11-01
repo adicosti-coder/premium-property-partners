@@ -541,6 +541,7 @@ const hasActiveFilters = searchQuery || checkInParam || checkOutParam || request
         title={seo.title}
         description={seo.description}
         url="https://realtrust.ro/oaspeti"
+        noIndex={true}
         jsonLd={itemListSchema}
         breadcrumbItems={[
           { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },

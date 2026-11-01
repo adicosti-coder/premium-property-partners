@@ -10,8 +10,16 @@ export const SITE_ORIGIN = "https://realtrust.ro";
  * - RO: clean path (all query params stripped). EN: clean path + `?lang=en`.
  * - x-default = RO.
  */
+/** Complexes with a richer landing page under /complexe/:slug (single canonical). */
+export const COMPLEX_LANDING_SLUGS = new Set([
+  "isho", "paltim", "ateneo", "green-forest", "helios", "fructus-plaza",
+  "city-of-mara", "vivalia", "nord-one", "xcity-towers", "denya-forest",
+]);
+
 export function buildLangAlternates(pathname: string, search: string) {
-  const stripped = pathname.replace(/\/+$/, "");
+  let stripped = pathname.replace(/\/+$/, "");
+  const complex = stripped.match(/^\/complex\/([^/]+)$/);
+  if (complex && COMPLEX_LANDING_SLUGS.has(complex[1])) stripped = `/complexe/${complex[1]}`;
   const path = stripped === "" ? "/" : stripped;
   const ro = SITE_ORIGIN + path;
   const en = `${ro}?lang=en`;
