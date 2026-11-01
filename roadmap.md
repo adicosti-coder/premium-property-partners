@@ -1,5 +1,9 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Reluare anunțuri blocate AI — 1 noiembrie
+- [x] Identificate 163 inspecții blocate la rescriere (eroare 502 veche, nu 402 explicit): 112 agenții și 51 de verificat; zero proprietari privați confirmați, zero trimiteri efectuate
+- [ ] Reluare rescriere/inspecție/acord — blocată până la confirmarea proprietarilor din cele 51 anunțuri de verificat; agențiile excluse
+
 ## Ciorne după publicare — 1 noiembrie
 - [x] Eliminate 16 ciorne duplicate; o ciornă cu dovadă Facebook mutată în Publicate; 17 ciorne rămase, fără duplicate ale conținutului publicat
 - [x] Protecție persistentă prin trigger și extragere locală; fără revenire posted→draft și curățare ciorne-soră la publicare; nouă teste trecute
