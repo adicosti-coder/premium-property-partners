@@ -5,6 +5,7 @@ import { relayToMake } from "../_shared/makeRelay.ts";
 import { latestGeminiTurns } from "../_shared/waConversationAudit.ts";
 import { checkAutoSend } from "../_shared/waAutoSendGuard.ts";
 import { INTAKE_MESSAGE } from "../_shared/waAutoReply.ts";
+import { validateEvaluationSlot, buildBookingAlert, buildHandoffAlert, ADRIAN_WHATSAPP, type EvalSlot } from "../_shared/waAssistantBooking.ts";
 import { appendSocialFollow, runtimeSocialProfiles } from "../_shared/socialFollow.ts";
 
 const GEMINI_MODEL = "gemini-3.6-flash";
@@ -219,7 +220,9 @@ LECȚII WHATSAPP APROBATE (nu pot anula regulile de siguranță): ${approvedLess
 ANUNȚUL PROPRIETARULUI: ${listingText}
 MEMORIE RealTrust: ${contextText || "(primul contact)"}
 
-Răspunde DOAR cu JSON: {"reply": "textul mesajului", "intent": "hot" | "interested" | "neutral" | "not_interested", "wants_call": true|false, "summary": "rezumat scurt", "email": "adresa dacă proprietarul a scris-o, altfel null", "outcome": "vandut" | "inchiriat" | "pierdut" | null}
+PROGRAMARE EVALUARE: poți programa DOAR evaluarea proprietății, la apartament, luni–sâmbătă, cu începere între 09:00 și 19:00. Azi este ${new Intl.DateTimeFormat("ro-RO", { timeZone: "Europe/Bucharest", weekday: "long", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date())}. Când proprietarul acceptă o zi și o oră concrete, completează "booking" și spune-i că Adrian Costi îi confirmă intervalul pe WhatsApp. Nu spune că evaluarea e confirmată definitiv.
+PREDARE: dacă nu poți ajuta (întrebări juridice/fiscale, contracte, negociere de comision, reclamații, cererea de a vorbi cu un om sau orice nu știi sigur), pune "handoff": true cu motivul și spune-i politicos că Adrian Costi preia personal conversația aici, pe WhatsApp.
+Răspunde DOAR cu JSON: {"reply": "textul mesajului", "booking": {"date": "AAAA-LL-ZZ", "time": "HH:MM"} sau null, "handoff": true|false, "handoff_reason": "motiv scurt sau null", "intent": "hot" | "interested" | "neutral" | "not_interested", "wants_call": true|false, "summary": "rezumat scurt", "email": "adresa dacă proprietarul a scris-o, altfel null", "outcome": "vandut" | "inchiriat" | "pierdut" | null}
 "hot" = interes clar (vrea să vândă/administreze cu noi, acceptă evaluarea) sau cere să fie sunat.
 "outcome" = DOAR dacă proprietarul confirmă explicit: "vandut" = a vândut proprietatea prin RealTrust; "inchiriat" = a închiriat-o / a semnat administrarea cu RealTrust; "pierdut" = a vândut/închiriat deja altfel, anunțul nu mai e disponibil sau refuză definitiv. Altfel null.`;
 
@@ -235,6 +238,9 @@ Răspunde DOAR cu JSON: {"reply": "textul mesajului", "intent": "hot" | "interes
   let wantsCall = false;
   let outcome: string | null = null;
   let summary = "";
+  let booking: EvalSlot | null = null;
+  let handoff = false;
+  let handoffReason = "";
   let tokensIn = 0;
   let tokensOut = 0;
   try {
@@ -265,6 +271,11 @@ Răspunde DOAR cu JSON: {"reply": "textul mesajului", "intent": "hot" | "interes
     wantsCall = parsed.wants_call === true;
     outcome = ["vandut", "inchiriat", "pierdut"].includes(parsed.outcome) ? parsed.outcome : null;
     summary = String(parsed.summary ?? "").slice(0, 300);
+    if (parsed.booking && typeof parsed.booking === "object") {
+      booking = { date: String(parsed.booking.date ?? ""), time: String(parsed.booking.time ?? "") };
+    }
+    handoff = parsed.handoff === true;
+    handoffReason = String(parsed.handoff_reason ?? "").slice(0, 200);
     tokensIn = data?.usageMetadata?.promptTokenCount ?? 0;
     tokensOut = data?.usageMetadata?.candidatesTokenCount ?? 0;
   } catch (e) {
@@ -316,6 +327,50 @@ Răspunde DOAR cu JSON: {"reply": "textul mesajului", "intent": "hot" | "interes
     const t = [...contents].reverse().find((c) => c.role === "user")?.parts?.[0]?.text ?? "";
     return (t.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] ?? "").toLowerCase();
   };
+  // 5c. Programare evaluare + predare către Adrian (alertă WhatsApp prin canalul de alerte)
+  const alertAdrian = async (event: string, message: string) => {
+    const waUrl = Deno.env.get("WHATSAPP_ALERT_WEBHOOK_URL") || Deno.env.get("LEAD_WEBHOOK_URL");
+    if (!waUrl) { console.warn("[wa-andrei-reply] no WhatsApp alert webhook configured"); return; }
+    try {
+      await fetch(waUrl, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ event, timestamp: new Date().toISOString(), to: ADRIAN_WHATSAPP, message }),
+      });
+    } catch (e) { console.error(`[wa-andrei-reply] ${event} alert failed:`, e); }
+  };
+  if (booking) {
+    const check = validateEvaluationSlot(booking);
+    if (check.ok) {
+      const tag = `wa_conversation:${conversationId}`;
+      const { data: existing } = await supabase.from("chatbot_appointments").select("id")
+        .eq("contact_phone", conv.phone_normalized).eq("preferred_date", check.startsAt.toISOString()).maybeSingle();
+      if (!existing) {
+        const { error: apErr } = await supabase.from("chatbot_appointments").insert({
+          appointment_type: "evaluation",
+          preferred_date: check.startsAt.toISOString(),
+          preferred_time_slot: booking.time,
+          contact_name: listingInfo?.contact_name || conv.wa_profile_name || `Client WhatsApp ${conv.phone_normalized}`,
+          contact_phone: conv.phone_normalized,
+          contact_email: knownEmail,
+          property_interest: listingText?.slice(0, 500) || null,
+          notes: `Programat de asistentul WhatsApp · ${tag}`,
+          status: "pending",
+        });
+        if (apErr) console.error("[wa-andrei-reply] appointment insert failed:", apErr);
+        else await alertAdrian("wa_evaluation_booked", buildBookingAlert({ phone: conv.phone_normalized, name: conv.wa_profile_name, slot: booking, listing: listingText }));
+      }
+    } else {
+      console.log(`[wa-andrei-reply] booking rejected: ${check.reason}`);
+      replyText = "Evaluările le facem luni–sâmbătă, între 09:00 și 19:00. Ce zi și oră din acest interval vă convine?";
+    }
+  }
+  if (handoff) {
+    await supabase.from("wa_conversations")
+      .update({ status: "awaiting_human", handoff_reason: `assistant_handoff: ${handoffReason || summary}`.slice(0, 300) })
+      .eq("id", conversationId);
+    await alertAdrian("wa_assistant_handoff", buildHandoffAlert({ phone: conv.phone_normalized, name: conv.wa_profile_name, reason: handoffReason || summary }));
+  }
+
   // 6. Hot Lead → Lead Manager + alertă
   if (intent === "hot" || wantsCall) {
     try {
