@@ -16,6 +16,7 @@ import {
   LineChart, Line, CartesianGrid, PieChart, Pie, Cell, Legend,
 } from "recharts";
 import { buildE2ECsv, analyzeIncidents, filterE2E, buildRecoveryTrend, type E2ERun } from "./systemHealthHelpers";
+import AutomationHealthPanel from "./AutomationHealthPanel";
 
 type Threshold = {
   voice_latency_ms_threshold: number;
@@ -257,6 +258,8 @@ export default function SystemHealthDashboard() {
         </div>
         <Button variant="outline" size="sm" onClick={load}><RefreshCw className="h-4 w-4 mr-1.5" /> Refresh</Button>
       </div>
+
+      <AutomationHealthPanel />
 
       {/* Top status banner */}
       <Card className={allOk ? "border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/20" : "border-red-500/40 bg-red-50/50 dark:bg-red-950/20"}>
