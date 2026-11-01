@@ -31,7 +31,7 @@ export const poiSlug = (name: string): string =>
 
 const hreflang = (path: string) =>
   `    <xhtml:link rel="alternate" hreflang="ro" href="${BASE_URL}${path}" />
-    <xhtml:link rel="alternate" hreflang="en" href="${BASE_URL}${path}${path.includes("?") ? "&" : "?"}lang=en" />
+    <xhtml:link rel="alternate" hreflang="en" href="${BASE_URL}${path || "/"}${path.includes("?") ? "&" : "?"}lang=en" />
     <xhtml:link rel="alternate" hreflang="x-default" href="${BASE_URL}${path}" />`;
 
 const URLSET_OPEN = `<?xml version="1.0" encoding="UTF-8"?>
