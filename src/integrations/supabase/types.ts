@@ -13654,6 +13654,7 @@ export type Database = {
         }
         Returns: string
       }
+      system_e2e_lead_probe: { Args: never; Returns: Json }
       tm_norm: { Args: { t: string }; Returns: string }
       validate_chat_session: {
         Args: { p_session_id: string }
