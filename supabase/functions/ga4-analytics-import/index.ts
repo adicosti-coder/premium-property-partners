@@ -88,7 +88,8 @@ Deno.serve(async (req) => {
 
   const _t0 = Date.now();
   const _logSb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-  await _logSb.from("cron_run_log").insert({ job_name: "ga4-analytics-import", status: "started" }).then(()=>{}, ()=>{});
+  const { data: _runRow } = await _logSb.from("cron_run_log").insert({ job_name: "ga4-analytics-import", status: "started" }).select("id").single().then((r: any) => r, () => ({ data: null }));
+  const _runId = (_runRow as any)?.id as string | undefined;
 
   try {
     const SA_RAW = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_KEY");
@@ -217,8 +218,8 @@ Deno.serve(async (req) => {
 
     if (error) return json(500, { error: `DB upsert: ${error.message}` });
 
-    await _logSb.from("cron_run_log").insert({
-      job_name: "ga4-analytics-import", status: "success",
+    await (_runId ? _logSb.from("cron_run_log").update({ finished_at: new Date().toISOString(),
+      status: "success",
       duration_ms: Date.now() - _t0, details: { imported: rows.length, period_start: periodStr },
     }).then(()=>{}, ()=>{});
 
@@ -231,8 +232,8 @@ Deno.serve(async (req) => {
     });
   } catch (e: any) {
     console.error("ga4-analytics-import error:", e);
-    await _logSb.from("cron_run_log").insert({
-      job_name: "ga4-analytics-import", status: "failed",
+    await (_runId ? _logSb.from("cron_run_log").update({ finished_at: new Date().toISOString(),
+      status: "failed",
       duration_ms: Date.now() - _t0, error_message: e?.message || String(e),
     }).then(()=>{}, ()=>{});
     return json(500, { error: e?.message || String(e) });

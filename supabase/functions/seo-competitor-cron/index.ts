@@ -27,7 +27,8 @@ serve(async (req) => {
   if (__gate) return __gate;
   const supa = createClient(SUPABASE_URL, SERVICE_KEY);
   const t0 = Date.now();
-  await supa.from("cron_run_log").insert({ job_name: "seo-competitor-cron", status: "started" }).then(()=>{}, ()=>{});
+  const { data: _runRow } = await supa.from("cron_run_log").insert({ job_name: "seo-competitor-cron", status: "started" }).select("id").single().then((r: any) => r, () => ({ data: null }));
+  const _runId = (_runRow as any)?.id as string | undefined;
   try {
     const now = new Date();
 
@@ -79,15 +80,15 @@ serve(async (req) => {
       }
     }
 
-    await supa.from("cron_run_log").insert({
-      job_name: "seo-competitor-cron", status: "success",
+    await (_runId ? supa.from("cron_run_log").update({ finished_at: new Date().toISOString(),
+      status: "success",
       duration_ms: Date.now() - t0, details: { processed: results.length },
     }).then(()=>{}, ()=>{});
     return json({ processed: results.length, results });
   } catch (e: any) {
     console.error("[seo-competitor-cron]", e);
-    await supa.from("cron_run_log").insert({
-      job_name: "seo-competitor-cron", status: "failed",
+    await (_runId ? supa.from("cron_run_log").update({ finished_at: new Date().toISOString(),
+      status: "failed",
       duration_ms: Date.now() - t0, error_message: e?.message ?? String(e),
     }).then(()=>{}, ()=>{});
     return json({ error: e.message }, 500);
