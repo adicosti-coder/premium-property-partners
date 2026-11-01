@@ -83,14 +83,14 @@ serve(async (req) => {
     await (_runId ? supa.from("cron_run_log").update({ finished_at: new Date().toISOString(),
       status: "success",
       duration_ms: Date.now() - t0, details: { processed: results.length },
-    }).then(()=>{}, ()=>{});
+    }).eq("id", _runId).then(()=>{}, ()=>{}) : Promise.resolve());
     return json({ processed: results.length, results });
   } catch (e: any) {
     console.error("[seo-competitor-cron]", e);
     await (_runId ? supa.from("cron_run_log").update({ finished_at: new Date().toISOString(),
       status: "failed",
       duration_ms: Date.now() - t0, error_message: e?.message ?? String(e),
-    }).then(()=>{}, ()=>{});
+    }).eq("id", _runId).then(()=>{}, ()=>{}) : Promise.resolve());
     return json({ error: e.message }, 500);
   }
 });

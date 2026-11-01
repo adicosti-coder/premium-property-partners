@@ -221,7 +221,7 @@ Deno.serve(async (req) => {
     await (_runId ? _logSb.from("cron_run_log").update({ finished_at: new Date().toISOString(),
       status: "success",
       duration_ms: Date.now() - _t0, details: { imported: rows.length, period_start: periodStr },
-    }).then(()=>{}, ()=>{});
+    }).eq("id", _runId).then(()=>{}, ()=>{}) : Promise.resolve());
 
     return json(200, {
       ok: true,
@@ -235,7 +235,7 @@ Deno.serve(async (req) => {
     await (_runId ? _logSb.from("cron_run_log").update({ finished_at: new Date().toISOString(),
       status: "failed",
       duration_ms: Date.now() - _t0, error_message: e?.message || String(e),
-    }).then(()=>{}, ()=>{});
+    }).eq("id", _runId).then(()=>{}, ()=>{}) : Promise.resolve());
     return json(500, { error: e?.message || String(e) });
   }
 });
