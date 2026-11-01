@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { ShieldCheck, Gavel } from "lucide-react";
+import { canAcceptOwnerOffer } from "@/lib/ownerOfferDecisions";
 
 const eur = (n: number | null | undefined) =>
   n == null ? "—" : new Intl.NumberFormat("ro-RO", { maximumFractionDigits: 0 }).format(Number(n)) + " €";
@@ -118,7 +119,7 @@ const OwnerOffers = ({ propertyId }: { propertyId: string }) => {
                       <span className="text-lg font-semibold">{eur(o.amount_eur)}</span>
                       {below && <Badge variant="outline">Sub prețul minim</Badge>}
                       <Badge variant="secondary">{statusLabel[o.status] ?? o.status}</Badge>
-                      {o.status === "primita" && <div className="flex flex-wrap gap-2"><Button className="min-h-12" disabled={below || deciding !== null} onClick={() => decide(o.id, "acceptata")}>Acceptă oferta</Button><Button variant="outline" className="min-h-12" disabled={deciding !== null} onClick={() => decide(o.id, "respinsa")}>Respinge</Button></div>}
+                      {o.status === "primita" && <div className="flex flex-wrap gap-2"><Button className="min-h-12" disabled={!canAcceptOwnerOffer(o.status, Number(o.amount_eur), min) || deciding !== null} onClick={() => decide(o.id, "acceptata")}>Acceptă oferta</Button><Button variant="outline" className="min-h-12" disabled={deciding !== null} onClick={() => decide(o.id, "respinsa")}>Respinge</Button></div>}
                     </div>
                   </li>
                 );
