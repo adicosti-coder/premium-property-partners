@@ -500,7 +500,8 @@ Răspunde DOAR cu JSON: {"reply": "textul mesajului", "booking": {"date": "AAAA-
   const { data: newest } = await supabase.from("wa_messages").select("id")
     .eq("conversation_id", conversationId).eq("direction", "inbound").order("created_at", { ascending: false }).limit(1).maybeSingle();
   const expected = [...chronological].reverse().find(m => m.direction === "inbound");
-  if (newest?.id !== expected?.id || ["awaiting_human", "closed", "escalated_to_call"].includes(convAfter?.status ?? "")) {
+  const blockedStatuses = handoff ? ["closed", "escalated_to_call"] : ["awaiting_human", "closed", "escalated_to_call"];
+  if (newest?.id !== expected?.id || blockedStatuses.includes(convAfter?.status ?? "")) {
     return new Response(JSON.stringify({ ok: true, skipped: "stale_or_handoff" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
