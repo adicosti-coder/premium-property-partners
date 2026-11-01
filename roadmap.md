@@ -176,3 +176,7 @@
 - [x] Raport SEO săptămânal
 - [ ] Eșec WhatsApp Make — scenariul Make pentru mesaje primite e oprit; necesită pornire în Make
 - [x] Publicare
+
+- [x] Audit complet — Faza 1 raport livrat
+- [ ] Audit Faza 3 remedieri — așteaptă aprobarea grupurilor A/B și valorile comerciale (grup C)
+- [ ] Scorare AI leaduri noi vs. client ideal + rezumat + marcaj „merită apel” — așteaptă răspunsuri (client ideal, surse, mod de semnalare)
