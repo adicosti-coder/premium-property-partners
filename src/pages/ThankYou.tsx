@@ -25,12 +25,15 @@ const PHONE_DISPLAY = "+40 799 069 256";
  */
 const ThankYou = () => {
   const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const privateState = (location.state ?? {}) as Record<string, unknown>;
   const firedRef = useRef(false);
 
   const summary = useMemo(() => {
     const get = (...keys: string[]) => {
       for (const k of keys) {
-        const v = searchParams.get(k);
+        const fromState = privateState[k];
+        const v = typeof fromState === "string" ? fromState : searchParams.get(k);
         if (v && v.trim()) return v.trim().slice(0, 80);
       }
       return "";

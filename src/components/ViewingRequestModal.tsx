@@ -63,11 +63,10 @@ const ViewingRequestModal = ({ open, onOpenChange, propertyName, propertyId }: V
       const msg = `Vizionare: ${propertyName} (${propertyId})\nNume: ${name}\nTelefon: ${phone}\nInterval: ${timeSlot}`;
       window.open(`https://wa.me/40799069256?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
       // GA4 lead event (consent-gated)
+      // Opening WhatsApp is contact intent, not a confirmed lead.
       try {
-        const consent = localStorage.getItem("cookie_consent_v2");
-        const hasConsent = consent === '"all"' || consent === '"analytics_only"' || consent === 'all' || consent === 'analytics_only';
-        if (hasConsent && typeof window.gtag === "function") {
-          window.gtag("event", "generate_lead", { property_name: propertyName, property_id: propertyId });
+        if (hasAnalyticsConsent() && typeof window.gtag === "function") {
+          window.gtag("event", "property_contact", { property_id: propertyId, method: "whatsapp_viewing" });
         }
       } catch {}
       setIsSuccess(true);

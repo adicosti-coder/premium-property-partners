@@ -1,21 +1,10 @@
 import { useCallback, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { isBrowser, getSessionStorage, setSessionStorage } from "@/utils/browserStorage";
+import { hasAnalyticsConsent } from "@/lib/conversionTracking";
 
 export type CtaType = "call" | "whatsapp" | "booking" | "airbnb" | "email" | "form_submit";
 
-/** Returns true if the user has accepted analytics cookies */
-const hasAnalyticsConsent = (): boolean => {
-  if (!isBrowser()) return false;
-  try {
-    const raw = localStorage.getItem("cookie_consent_v2");
-    if (!raw) return false;
-    const parsed = JSON.parse(raw);
-    return parsed === "all" || parsed === "analytics_only";
-  } catch {
-    return false;
-  }
-};
 
 /** Fire a GA4 event via gtag – only when consent is granted */
 const fireGtagEvent = (eventName: string, params?: Record<string, string | undefined>) => {
@@ -59,9 +48,9 @@ export const useCtaAnalytics = () => {
       const gtagEventMap: Record<CtaType, string> = {
         whatsapp: "click_whatsapp",
         call: "click_phone",
-        form_submit: "generate_lead",
+        form_submit: "form_cta_click",
         email: "click_email",
-        booking: "click_booking",
+        booking: "booking_cta_click",
         airbnb: "click_airbnb",
       };
       fireGtagEvent(gtagEventMap[ctaType], {
