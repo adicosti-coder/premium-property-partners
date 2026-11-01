@@ -1,5 +1,10 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Ciorne după publicare — 1 noiembrie
+- [ ] Curățare ciorne ale conținutului deja publicat, păstrând istoricul publicării
+- [ ] Protecție persistentă împotriva recreării și revenirii la ciorne după publicare
+- [ ] Ștergere manuală vizibilă pe telefon, cu confirmare și verificare
+
 ## Buton generator imagini — 1 noiembrie
 - [x] Reprodus autentificat pe mobil: editorul unei postări publicate nu afișa generatorul; eliminată restricția draft/scheduled fără republicare automată
 - [x] Verificat autentificat la 384×709: buton în postare publicată, Story, ciornă proprietate și postare nouă; trei teste galerie trecute, build OK; restricția server editor eliminată și funcția activată, fără generare AI contra cost
