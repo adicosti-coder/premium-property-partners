@@ -925,6 +925,13 @@
       "when": 1793601856398,
       "tag": "0131_social_publication_in_progress",
       "breakpoints": true
+    },
+    {
+      "idx": 132,
+      "version": "7",
+      "when": 1793601923958,
+      "tag": "0132_allow_partial_social_retry_claim",
+      "breakpoints": true
     }
   ]
 }
