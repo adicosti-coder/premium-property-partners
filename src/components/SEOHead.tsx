@@ -4,6 +4,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { BRAND, ORG_ID, SITE_ORIGIN, ORGANIZATION_SCHEMA } from "@/lib/orgIdentity";
 import { validateJsonLdConsistency } from "@/lib/schemaConsistency";
 import { buildLangAlternates } from "@/components/seo/CanonicalHreflang";
+import { languageRobots } from "@/i18n/languagePolicy";
 
 // Canonical host: NO www, matches CanonicalHreflang.tsx + prerender + sitemap.
 // Mismatching www/non-www between og:url, canonical and hreflang triggers
@@ -139,13 +140,13 @@ const SEOHead = ({
   canonicalQuery,
 }: SEOHeadProps) => {
   const { language } = useLanguage();
+  const robots = languageRobots(language, noIndex);
 
   // The static shell / prerender keeps its own robots tag; crawlers read the
   // first one, so keep every robots tag aligned with this page's decision.
   useEffect(() => {
-    const value = noIndex ? "noindex, nofollow" : "index, follow";
-    document.querySelectorAll('meta[name="robots"]').forEach((m) => m.setAttribute("content", value));
-  }, [noIndex]);
+    document.querySelectorAll('meta[name="robots"]').forEach((m) => m.setAttribute("content", robots));
+  }, [robots]);
   const [override, setOverride] = useState<import("@/hooks/useSeoOverride").SeoOverride | null>(null);
   
   const defaultTitles = {
@@ -391,7 +392,7 @@ const SEOHead = ({
         emitted as a second <link rel="canonical">; if per-route overrides
         are needed, extend CanonicalHreflang to consume the override.
       */}
-      <meta name="robots" content={noIndex ? "noindex, nofollow" : "index, follow"} />
+      <meta name="robots" content={robots} />
       <html lang={language} />
 
       {/* Open Graph / Facebook */}

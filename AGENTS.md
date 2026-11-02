@@ -1,5 +1,7 @@
 # Project Architecture Rules
 
+- LanguageProvider allows explicit English selection; SEOHead shares the language robots policy and the provider supplies an English fallback tag — prevents partial translations from becoming indexable while preserving Romanian route restrictions.
+
 - Visitor-memory AI summaries require a verified user and session ownership before metered work; automation completion RPC is service-role-only — prevents unauthorized credit consumption and job manipulation.
 - Restaurant-guide JSON-LD escapes HTML tag openers and lead-magnet diagnostics record only fixed messages/status codes — prevents stored script injection and personal data in logs.
 
