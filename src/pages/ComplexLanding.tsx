@@ -308,8 +308,8 @@ const ComplexLanding = () => {
               </h1>
               <p className="text-lg text-muted-foreground mb-8">
                 {isRo
-                  ? `Randament net țintă ${complex.roi}, calculat pe ipoteze publice (ocupare 75%). Venit lunar estimat ${complex.avgIncome}, ocupare observată ${complex.occupancy}. Operațiuni gestionate end-to-end de echipa RealTrust și ApArt Hotel.`
-                  : `Target net ROI ${complex.roi}, calculated on public assumptions (75% occupancy). Estimated monthly income ${complex.avgIncome}, observed occupancy ${complex.occupancy}. Operations handled end-to-end by the RealTrust and ApArt Hotel team.`}
+                  ? `Randament net estimat ${complex.roi}, pe ipoteze publice: ocupare anuală asumată 65–75%, calcul conservator 70%. Venit lunar orientativ ${complex.avgIncome}, de recalculat pentru proprietatea aleasă. Administrare 15–20% din net (brut minus canale și utilități); menaj separat suportat de oaspete sau din brut.`
+                  : `Estimated net yield ${complex.roi}, with assumed annual occupancy 65–75% and conservative calculation at 70%. Indicative monthly income ${complex.avgIncome}, to be recalculated for the selected property. Management 15–20% of net (gross minus channels and utilities); cleaning paid by guests separately or from gross.`}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6">
                 <Link to="/pentru-proprietari">

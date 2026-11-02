@@ -1102,9 +1102,9 @@ export const generatePropertyManagementServiceSchema = () => ({
         "description": "Administrare 100% hands-off: listing, check-in/out, curățenie, mentenanță, rapoarte lunare",
         "priceSpecification": {
           "@type": "PriceSpecification",
-          "price": "20",
-          "priceCurrency": "EUR",
-          "unitText": "% din venitul brut",
+          "minPrice": "15",
+          "maxPrice": "20",
+          "unitText": "% din venitul net (brut minus Booking/Airbnb și utilități)",
         },
       },
     ],
