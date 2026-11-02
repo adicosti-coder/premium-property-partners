@@ -179,8 +179,11 @@
 
 - [x] Audit complet — Faza 1 raport livrat
 - [x] Audit Faza 3 grupurile A/B aprobate și aplicate anterior
-- [ ] Decizii 2 noiembrie: aliniere grilă comercială și calculatoare
-- [ ] Decizii 2 noiembrie: canonical unic, RO temporar, redirect complex, JSON-LD și metadate
-- [ ] Decizii 2 noiembrie: salvare vizionare înainte de WhatsApp, Pixel oficial, whatsapp_click
-- [ ] Teste și verificare finală; publicarea site-ului necesită cerere explicită
+- [x] Decizii 2 noiembrie: grilă oficială integrată în paginile principale și calculatoare, cu helper/teste pentru comision net și menaj separat
+- [x] Canonical unic verificat în 8 rute, RO temporar fără hreflang EN, redirect client complex, JSON-LD și metadate; override SEO vechi eliminat din paginile aprobate
+- [x] Salvare vizionare înainte de WhatsApp, Pixel oficial în browser și CAPI, whatsapp_click; test UI controlat succes/eșec fără salvări/mesaje reale
+- [x] 351 teste trecute; verificare browser fără erori pe rutele principale
+- [ ] Redirect HTTP 301 /complex/:slug — blocat de lipsa accesului la reguli HTTP pentru domeniu; fallback client funcțional, nu este 301
+- [ ] Publicarea site-ului și verificarea live post-publicare — necesită cerere explicită
+- [ ] Verificare livrare reală Meta/CAPI și cerere vizionare reală — exclusă din probele controlate, fără mesaje sau leaduri false
 - [ ] Scorare AI leaduri noi vs. client ideal + rezumat + marcaj „merită apel” — așteaptă răspunsuri (client ideal, surse, mod de semnalare)
