@@ -128,8 +128,15 @@ serve(async (req) => {
 
     /* ── SUMMARIZE: AI-generate chatbot summary + infer prefs ── */
     if (action === "summarize") {
+      // Authentication and ownership must be checked before any paid AI call.
+      if (!userId) {
+        return new Response(JSON.stringify({ error: "Authentication required" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      await ensureRow();
       // Rate-limit AI summarization per IP (3/min) și per sesiune (5/zi)
-      // pentru a preveni consumul abuziv de credite AI de către anonimi.
+      // pentru a limita consumul de credite al utilizatorilor autentificați.
       const rl = checkRateLimit(`vm-sum:${getClientIp(req)}`, { maxRequests: 3, windowMs: 60_000 });
       const rlSession = checkRateLimit(`vm-sum-sess:${sessionId}`, { maxRequests: 5, windowMs: 86_400_000 });
       if (!rl.allowed || !rlSession.allowed) {
@@ -201,7 +208,6 @@ serve(async (req) => {
       if (parsed.preferred_rooms) updates.preferred_rooms = parsed.preferred_rooms;
       if (userId) updates.user_id = userId;
 
-      await ensureRow();
       const { data: updated } = await supabase
         .from("visitor_memory")
         .update(updates)

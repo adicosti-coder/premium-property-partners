@@ -19,7 +19,7 @@ import {
 import { toast } from 'sonner';
 import { trackConversion } from '@/lib/conversionTracking';
 import { applyPoiSocialMeta, resetPoiSocialMeta } from '@/utils/poiSocialMeta';
-import { buildPoiItemListSchema } from '@/utils/poiStructuredData';
+import { buildPoiItemListSchema, serializePoiStructuredData } from '@/utils/poiStructuredData';
 
 const escHtml = (v: unknown) => String(v ?? "").replace(/[&<>"'`]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;", "`": "&#96;" }[c] as string));
 import {
@@ -534,7 +534,7 @@ const RestaurantGuideMap: React.FC = () => {
         <script
           type="application/ld+json"
           // Schema.org payload built from trusted DB fields only.
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+          dangerouslySetInnerHTML={{ __html: serializePoiStructuredData(structuredData) }}
         />
       )}
       <header className="mb-4">

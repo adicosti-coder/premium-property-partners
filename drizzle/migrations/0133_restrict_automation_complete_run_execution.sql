@@ -1,0 +1,3 @@
+REVOKE EXECUTE ON FUNCTION public.automation_complete_run(text, boolean, text, jsonb, integer, text, text) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.automation_complete_run(text, boolean, text, jsonb, integer, text, text) TO service_role;
+COMMENT ON FUNCTION public.automation_complete_run(text, boolean, text, jsonb, integer, text, text) IS 'Internal automation completion: callable only by trusted service workers, not Data API users.';

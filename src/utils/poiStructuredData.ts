@@ -26,6 +26,11 @@ export interface PoiStructuredInput {
 const schemaType = (category: string) =>
   category === "cafe" ? "CafeOrCoffeeShop" : "Restaurant";
 
+/** JSON embedded in raw script HTML must never contain an HTML tag opener. */
+export function serializePoiStructuredData(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}
+
 export function buildPoiSchema(poi: PoiStructuredInput): Record<string, unknown> {
   const address: Record<string, unknown> = {
     "@type": "PostalAddress",
