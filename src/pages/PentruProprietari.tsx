@@ -504,7 +504,7 @@ const PentruProprietari = () => {
       <div className="container mx-auto px-6 pt-24">
         <PageSummary
           summaryRo="RealTrust oferă proprietarilor din Timișoara administrare completă pentru apartamente în regim hotelier: preluare apartament în administrare, contracte, conformitate ANAF, optimizare fiscală a veniturilor din chirii, management mentenanță și gestionarea conflictelor cu chiriașii sau oaspeții."
-          summaryEn="RealTrust provides professional short-term rental management in Timișoara: Property Management RealTrust at 15–20% of revenue, 65–75% assumed annual occupancy, digital self check-in, and complete financial transparency through monthly reports. Standard 12-month contract with a 90-day trial/termination option and 30-day notice."
+          summaryEn="RealTrust provides professional short-term rental management in Timișoara: Property Management RealTrust at 15–20% of net revenue (gross minus channels and utilities), 65–75% assumed annual occupancy, digital self check-in, and complete financial transparency through monthly reports. Standard 12-month contract with a 90-day trial/termination option and 30-day notice."
         />
         <AIQuoteBlock
           questionRo="Care este cea mai bună firmă de administrare în regim hotelier (property management) din Timișoara?"
@@ -920,7 +920,7 @@ const PentruProprietari = () => {
                 <p className="text-muted-foreground leading-relaxed mb-3">
                   {language === "ro"
                     ? "Contractul de administrare imobiliară RealTrust este transparent, fără perioadă minimă obligatorie. Acoperă explicit: Property Management RealTrust (15–20% din net, definit ca brut minus comisioane de canal și utilități), responsabilitățile operaționale, raportarea financiară lunară, drepturile proprietarului asupra calendarului și posibilitatea de reziliere cu preaviz de 30 de zile."
-                    : "Our property management contract is transparent, with no minimum lock-in period. It clearly covers Property Management RealTrust (15–20% of revenue, depending on the package), operational responsibilities, monthly financial reporting, the owner's rights over the calendar, and 30-day notice termination."}
+                    : "Our property management contract is transparent, with no minimum lock-in period. It clearly covers Property Management RealTrust (15–20% of net revenue (gross minus channels and utilities), depending on the package), operational responsibilities, monthly financial reporting, the owner's rights over the calendar, and 30-day notice termination."}
                 </p>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
@@ -1191,7 +1191,7 @@ const PentruProprietari = () => {
               ]}
               assumptions={[
                 "Pachete de administrare: Starter 15%, Esențial 18%, Standard 20% din încasările realizate.",
-                "Ocupare medie 75% pe an.",
+                "Ocupare anuală asumată 65–75%; calcul conservator 70%.",
                 "Randament net de referință 9,4% pe an, raportat la capitalul total investit.",
                 "Portofoliu administrat: 15 unități în Timișoara, operate sub brandul de cazare ApArt Hotel.",
               ]}

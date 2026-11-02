@@ -156,7 +156,7 @@ const AboutUs = () => {
         title: "În Cifre",
         items: [
           { value: "13", label: "Cazări active administrate" },
-          { value: "75%", label: "Ocupare medie anuală" },
+          { value: "65–75%", label: "Ocupare anuală asumată" },
           { value: "9,7/10", label: "Rating consolidat oaspeți" },
           { value: "6,5–9,4%", label: "Randament net estimat / an" }
         ]
@@ -298,7 +298,7 @@ const AboutUs = () => {
         title: "In Numbers",
         items: [
           { value: "13", label: "Active accommodation properties" },
-          { value: "75%", label: "Average annual occupancy" },
+          { value: "65–75%", label: "Assumed annual occupancy" },
           { value: "9.7/10", label: "Consolidated guest rating" },
           { value: "6.5–9.4%", label: "Estimated net yield / yr" }
         ]
