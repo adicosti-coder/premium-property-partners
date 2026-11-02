@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getNightlyRate, getPropertyTypeOptions, getCapacityRange, type PropertyType } from "@/utils/nightlyRatePricing";
+import { calculateManagedIncome } from "@/lib/managementPolicy";
 
 interface Props {
   propertyName?: string;
@@ -55,7 +56,7 @@ const InvestmentEngineV34 = ({
   const [budgetStr, setBudgetStr] = useState(defaultPrice?.toString() ?? "95000");
   const [chirieStr, setChirieStr] = useState(defaultRent?.toString() ?? "450");
   const [nightlyRateStr, setNightlyRateStr] = useState(defaultNightlyRate?.toString() ?? "50");
-  const [occupancyPctStr, setOccupancyPctStr] = useState("75");
+  const [occupancyPctStr, setOccupancyPctStr] = useState("70");
   const [advanceStr, setAdvanceStr] = useState("25");
   const [interestStr, setInterestStr] = useState("6.5");
   const [occupancy, setOccupancy] = useState("12");
@@ -71,7 +72,7 @@ const InvestmentEngineV34 = ({
   const budget = budgetStr === "" ? NaN : parseFloat(budgetStr);
   const chirie = chirieStr === "" ? NaN : parseFloat(chirieStr);
   const nightlyRate = nightlyRateStr === "" ? NaN : parseFloat(nightlyRateStr);
-  const occupancyPct = occupancyPctStr === "" ? 75 : parseFloat(occupancyPctStr);
+  const occupancyPct = occupancyPctStr === "" ? 70 : parseFloat(occupancyPctStr);
   const advance = advanceStr === "" ? 0 : parseFloat(advanceStr);
   const interest = interestStr === "" ? 0 : parseFloat(interestStr);
 
@@ -113,7 +114,9 @@ const InvestmentEngineV34 = ({
       venitBrutAnual = chirieEfectiva * occMonths;
     }
 
-    const venitDupaManagement = venitBrutAnual * (1 - managementFactor);
+    const venitDupaManagement = strategy === "hotel"
+      ? calculateManagedIncome({ gross: venitBrutAnual, channelFees: venitBrutAnual * .15, utilities: 120 * 12, commissionRate: managementFactor }).ownerIncome
+      : venitBrutAnual * (1 - managementFactor);
     const venitNetAnual = venitDupaManagement * (1 - tax);
 
     // Credit
@@ -198,7 +201,7 @@ const InvestmentEngineV34 = ({
           return { name: p.name, price, yieldVal: yv, netMonthly: netM };
         }
         const brut = monthlyGross * 12;
-        const net = brut * (1 - mgmtFactor) * (1 - tax);
+        const net = calculateManagedIncome({ gross: brut, channelFees: brut * .15, utilities: 120 * 12, commissionRate: mgmtFactor }).ownerIncome * (1 - tax);
         const creditP = price * (1 - advance / 100);
         const pmt = creditP > 0
           ? (r > 0 ? creditP * (r * Math.pow(1 + r, 300)) / (Math.pow(1 + r, 300) - 1) : creditP / 300)

@@ -11,12 +11,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getNightlyRate, getPropertyTypeOptions, getCapacityRange, type PropertyType } from "@/utils/nightlyRatePricing";
+import { calculateManagedIncome } from "@/lib/managementPolicy";
 
 const InvestmentQuickCalculator = () => {
   const { language } = useLanguage();
   const presets = {
     clasic: { pret: 95000, chirie: 450, expenses: 30 },
-    hotel: { pret: 95000, nightlyRate: 45, occupancyPct: 75, expenses: 0 },
+    hotel: { pret: 95000, nightlyRate: 45, occupancyPct: 70, expenses: 0 },
   };
 
   const [strategy, setStrategy] = useState<"clasic" | "hotel">("hotel");
@@ -51,7 +52,7 @@ const InvestmentQuickCalculator = () => {
     if (strategy === "hotel") {
       if (!nightlyRate) return null;
       cBruta = nightlyRate * 30 * (occupancyPct / 100);
-      factorNet = 0.80 * 0.93; // 20% management, 7% tax
+      factorNet = cBruta > 0 ? calculateManagedIncome({ gross: cBruta, channelFees: cBruta * .15, utilities: 120 }).ownerIncome / cBruta * .93 : 0;
     } else {
       if (!chirie) return null;
       cBruta = chirie;

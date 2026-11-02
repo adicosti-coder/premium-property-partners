@@ -290,7 +290,7 @@ const ROICalculatorWidget = () => {
           )}
           <ul className="grid gap-1 text-sm text-muted-foreground">
             <li className="flex gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />Tarif mediu estimat: ~{r.nightlyRate} €/noapte, ocupare {Math.round(r.occupancy * 100)}% în zonă</li>
-            <li className="flex gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />Deja scăzute: administrare, curățenie, comisioane platforme și taxe (~27%)</li>
+            <li className="flex gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />Ipoteze: canale 15%, utilități estimate 120 €/lună, administrare 20% din net (brut minus canale și utilități). Menaj separat suportat de oaspete; impozitele și reparațiile nu sunt incluse.</li>
             <li className="flex gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />Randament 6,5–9,4% net estimat; cifrele finale depind de apartament</li>
           </ul>
           <div className="flex flex-col-reverse sm:flex-row gap-3">

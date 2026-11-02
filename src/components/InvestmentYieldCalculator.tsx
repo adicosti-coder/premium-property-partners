@@ -5,17 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TrendingUp, MessageCircle, Download } from "lucide-react";
+import { calculateManagedIncome, MANAGEMENT_POLICY } from "@/lib/managementPolicy";
 
 const InvestmentYieldCalculator = () => {
   const { language } = useLanguage();
   const [pret, setPret] = useState(95000);
   const [renovare, setRenovare] = useState(5000);
   const [nightlyRate, setNightlyRate] = useState(50);
-  const [occupancyPct, setOccupancyPct] = useState(75);
+  const [occupancyPct, setOccupancyPct] = useState<number>(MANAGEMENT_POLICY.occupancyDefault * 100);
 
   const investitieTotala = pret + renovare;
   const monthlyGross = nightlyRate * 30 * (occupancyPct / 100);
-  const venitAnual = monthlyGross * 12 * 0.80 * 0.93; // after 20% mgmt + 7% tax
+  const venitAnual = calculateManagedIncome({ gross: monthlyGross, channelFees: monthlyGross * .15, utilities: 120 }).ownerIncome * 12 * .93;
   const yieldAnual = investitieTotala > 0 ? (venitAnual / investitieTotala) * 100 : 0;
   const aniAmortizare = venitAnual > 0 ? investitieTotala / venitAnual : 0;
 
@@ -123,6 +124,7 @@ const InvestmentYieldCalculator = () => {
             </div>
 
             {/* Results */}
+            <p className="mt-4 text-xs text-muted-foreground">Ipoteze: canale 15%, utilități estimate 120 €/lună, administrare 20% din net, impozit ilustrativ 7% după administrare. Menaj separat suportat de oaspete. Ajustarea fiscală depinde de situația proprietarului.</p>
             <div className="mt-8 p-5 bg-muted/50 rounded-xl border-l-4 border-primary">
               <div className="flex flex-col sm:flex-row justify-between gap-4">
                 <div>
