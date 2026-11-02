@@ -70,9 +70,7 @@ const MobileCTABar = () => {
 
   const handleWhatsApp = () => {
     lightTap();
-    trackWhatsApp();
-    fireContactClick("whatsapp");
-    trackCriticalConversion("WhatsApp_Click", { source: "mobile_cta_bar" });
+    trackCriticalConversion("whatsapp_click", { source: "mobile_cta_bar" });
     const message = encodeURIComponent(
       language === "ro"
         ? "Bună ziua, aș dori o estimare de randament pentru apartamentul meu."

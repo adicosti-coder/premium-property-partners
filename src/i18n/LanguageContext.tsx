@@ -16,10 +16,6 @@ let englishDict: Translations | null = null;
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguageState] = useState<Language>(() => {
     // Check localStorage first
-    const saved = safeLocalStorage.getItem('language') as Language | null;
-    if (saved && (saved === 'ro' || saved === 'en')) {
-      return saved;
-    }
     // Default to Romanian — primary audience is Romanian
     return 'ro';
   });
@@ -31,10 +27,11 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
-    safeLocalStorage.setItem('language', lang);
+    const activeLanguage: Language = 'ro'; // English temporarily disabled until complete translations.
+    setLanguageState(activeLanguage);
+    safeLocalStorage.setItem('language', activeLanguage);
     if (isBrowser() && typeof document !== 'undefined') {
-      document.documentElement.lang = lang;
+      document.documentElement.lang = activeLanguage;
     }
   };
 

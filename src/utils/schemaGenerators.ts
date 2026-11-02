@@ -848,11 +848,11 @@ export const generateHomepageSchemas = (reviews?: DatabaseReview[]) => {
   }
 
   const schemas: Record<string, unknown>[] = [
+    generateHomepageRealEstateAgentSchema(),
     lodgingBusiness,
     generateOrganizationSchema(),
     generateWebSiteSchema(),
     generatePropertyManagementServiceSchema(),
-    generateHomepageRealEstateAgentSchema(),
   ];
 
   return schemas;
@@ -864,7 +864,10 @@ export const generateHomepageRealEstateAgentSchema = () => ({
   "@context": "https://schema.org",
   "@type": "RealEstateAgent",
   "@id": REAL_ESTATE_AGENT_ID,
-  "name": "RealTrust / Trust Estate",
+  "name": BRAND.name,
+  "legalName": BRAND.legalName,
+  "taxID": BRAND.taxID,
+  "parentOrganization": { "@id": ORG_ID },
   "alternateName": ["RealTrust Imobiliare Timișoara", "Agenție imobiliară Timișoara RealTrust", "RealTrust Real Estate"],
   "description": "Firmă de property management și investiții imobiliare în Timișoara. Operăm ApArt Hotel și oferim consultanță pentru ansambluri rezidențiale premium. Servicii complete de vânzări, închirieri, administrare regim hotelier și evaluare proprietăți în Timișoara.",
   "url": BASE_URL,
@@ -1099,9 +1102,9 @@ export const generatePropertyManagementServiceSchema = () => ({
         "description": "Administrare 100% hands-off: listing, check-in/out, curățenie, mentenanță, rapoarte lunare",
         "priceSpecification": {
           "@type": "PriceSpecification",
-          "price": "20",
-          "priceCurrency": "EUR",
-          "unitText": "% din venitul brut",
+          "minPrice": "15",
+          "maxPrice": "20",
+          "unitText": "% din venitul net (brut minus Booking/Airbnb și utilități)",
         },
       },
     ],

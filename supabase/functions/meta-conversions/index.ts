@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
-  const pixelId = Deno.env.get("META_PIXEL_ID");
+  const pixelId = "2347400952761475"; // Public official identifier shared with the browser pixel.
   const accessToken = Deno.env.get("META_CAPI_ACCESS_TOKEN");
   const envTestEventCode = Deno.env.get("META_TEST_EVENT_CODE");
 

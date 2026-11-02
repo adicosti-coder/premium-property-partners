@@ -289,17 +289,17 @@ export const exportInvestorGuidePdf = async ({ language = "ro" }: ExportOptions 
   drawComparisonTable([
     { label: isRo ? "Preț mediu/noapte" : "Avg price/night", hotelier: "€65", clasic: "-" },
     { label: isRo ? "Chirie lunară" : "Monthly rent", hotelier: "-", clasic: "€450" },
-    { label: isRo ? "Ocupare medie" : "Avg occupancy", hotelier: "75%", clasic: "100%" },
-    { label: isRo ? "Venit brut/lună" : "Gross income/month", hotelier: "€1,460", clasic: "€450" },
-    { label: isRo ? "Cheltuieli operaționale" : "Operating costs", hotelier: "-€365", clasic: "-€50" },
-    { label: isRo ? "Venit net/lună" : "Net income/month", hotelier: "€1,095", clasic: "€400" },
-    { label: isRo ? "Venit net/an" : "Net income/year", hotelier: "€13,140", clasic: "€4,800" },
+    { label: isRo ? "Ocupare medie" : "Avg occupancy", hotelier: "70%", clasic: "100%" },
+    { label: isRo ? "Venit brut/lună" : "Gross income/month", hotelier: "€1,365", clasic: "€450" },
+    { label: isRo ? "Cheltuieli operaționale" : "Operating costs", hotelier: "-€533", clasic: "-€50" },
+    { label: isRo ? "Venit net/lună" : "Net income/month", hotelier: "€832", clasic: "€400" },
+    { label: isRo ? "Venit net/an" : "Net income/year", hotelier: "€9,986", clasic: "€4,800" },
     { label: isRo ? "ROI (valoare €140k)" : "ROI (€140k value)", hotelier: "6,5–9,4%", clasic: "3.4%" }
   ]);
   
   drawHighlightBox(
     isRo ? "DIFERENȚĂ ANUALĂ" : "ANNUAL DIFFERENCE",
-    "+€8,340",
+    "+€5,186",
     isRo ? "în favoarea regimului hotelier" : "in favor of hotel-style"
   );
   

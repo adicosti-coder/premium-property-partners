@@ -153,7 +153,7 @@ const ThankYou = () => {
                 aria-label="Discută acum pe WhatsApp cu un consultant RealTrust"
                 onClick={() =>
                   trackConversion({
-                    event: "WhatsApp_Click",
+                    event: "whatsapp_click",
                     source: "multumire_whatsapp",
                     page_path: "/multumire",
                   })

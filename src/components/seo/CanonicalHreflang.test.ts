@@ -7,7 +7,7 @@ describe("buildLangAlternates", () => {
   it("RO page canonicalizes to clean path", () => {
     const r = buildLangAlternates("/avenue-of-mara-apart-hotel/", "?utm_source=fb");
     expect(r.canonical).toBe(base);
-    expect(r.languages).toEqual({ ro: base, en: `${base}?lang=en`, "x-default": base });
+    expect(r.languages).toEqual({ ro: base, "x-default": base });
   });
   it("EN page self-canonicalizes with ?lang=en", () => {
     const r = buildLangAlternates("/avenue-of-mara-apart-hotel", "?lang=en&fbclid=x");
@@ -21,7 +21,7 @@ d2("complex canonical", () => {
   i2("points /complex/:slug with a landing page at /complexe/:slug", () => {
     e2(build2("/complex/isho", "").canonical).toBe("https://realtrust.ro/complexe/isho");
   });
-  i2("keeps /complex/:slug without a landing page", () => {
-    e2(build2("/complex/alt-complex", "").canonical).toBe("https://realtrust.ro/complex/alt-complex");
+  i2("all singular complex addresses use the plural destination", () => {
+    e2(build2("/complex/alt-complex", "").canonical).toBe("https://realtrust.ro/complexe/alt-complex");
   });
 });

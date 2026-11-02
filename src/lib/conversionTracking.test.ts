@@ -6,6 +6,7 @@ import {
   trackConversion,
   isValidWhatsAppNumber,
   OWNER_FUNNEL_VALUE_EUR,
+  META_PIXEL_ID,
 } from "@/lib/conversionTracking";
 
 const setConsent = (choice: string, ts = Date.now()) =>
@@ -83,6 +84,7 @@ describe("attributionParams", () => {
 });
 
 describe("trackConversion", () => {
+  it("uses the officially approved Meta Pixel", () => expect(META_PIXEL_ID).toBe("2347400952761475"));
   let gtag: ReturnType<typeof vi.fn>;
   let fbq: ReturnType<typeof vi.fn>;
   /* eslint-disable @typescript-eslint/no-explicit-any */

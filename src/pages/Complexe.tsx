@@ -69,9 +69,9 @@ const Complexe = () => {
       avgRoi: "ROI Mediu",
       avgRoiValue: "6,5–9,4%",
       occupancy: "Ocupare Medie",
-      occupancyValue: "95%",
+      occupancyValue: "65–75%",
       totalProperties: "Proprietăți",
-      totalPropertiesValue: "15",
+      totalPropertiesValue: "13",
       localSeoTitle: "Management Regim Hotelier Timișoara",
       localSeoText: "RealTrust & ApArt Hotel oferă servicii complete de administrare în regim hotelier pentru proprietățile din cele mai căutate zone ale Timișoarei: Fructus Plaza, City of Mara, Ateneo, Ring, Vivalia, Nord-One, Monarch, Paltim, Denya Forest, Campeador, XCity Towers, Iris și multe altele, acoperind cartiere precum Centru, Iosefin, Fabric, Mehala, Braytim, Soarelui, Girocului și zonele metropolitane Dumbrăvița și Ghiroda. Lista se completează continuu cu noi ansambluri și complexe rezidențiale.",
       tocTitle: "Cuprins",
@@ -108,9 +108,9 @@ const Complexe = () => {
       avgRoi: "Average ROI",
       avgRoiValue: "6.5–9.4%",
       occupancy: "Avg Occupancy",
-      occupancyValue: "95%",
+      occupancyValue: "65–75%",
       totalProperties: "Properties",
-      totalPropertiesValue: "15",
+      totalPropertiesValue: "13",
       localSeoTitle: "Short-Term Rental Management Timișoara",
       localSeoText: "RealTrust & ApArt Hotel offers complete short-term rental management services for properties in Timișoara's most sought-after residential complexes: Fructus Plaza, City of Mara, Ateneo, Ring, Vivalia, Nord-One, Monarch, Paltim, Denya Forest, Campeador, XCity Towers, Iris and many more, covering neighborhoods such as Centru, Iosefin, Fabric, Mehala, Braytim, Soarelui, Girocului and the metropolitan areas Dumbrăvița and Ghiroda. The list is continuously expanding with new residential ensembles and complexes.",
       tocTitle: "Table of Contents",
@@ -200,7 +200,7 @@ const Complexe = () => {
             "itemOffered": {
               "@type": "ApartmentComplex",
               "name": complex.name,
-              "url": `https://realtrust.ro/complex/${complex.slug}`,
+              "url": `https://realtrust.ro/complexe/${complex.slug}`,
               "address": {
                 "@type": "PostalAddress",
                 "addressLocality": "Timișoara",
@@ -221,7 +221,7 @@ const Complexe = () => {
           "item": {
             "@type": "ApartmentComplex",
             "name": complex.name,
-            "url": `https://realtrust.ro/complex/${complex.slug}`,
+            "url": `https://realtrust.ro/complexe/${complex.slug}`,
             "address": {
               "@type": "PostalAddress",
               "addressLocality": "Timișoara",
@@ -344,7 +344,7 @@ const Complexe = () => {
                   return (
                     <Link
                       key={complex.id}
-                      to={`/complex/${complex.slug}`}
+                      to={`/complexe/${complex.slug}`}
                       className="group bg-card rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-300 hover:shadow-elegant"
                     >
                       {/* Image */}
@@ -434,7 +434,7 @@ const Complexe = () => {
                 {complexes.slice(0, 6).map((complex) => (
                   <Link
                     key={complex.id}
-                    to={`/complex/${complex.slug}`}
+                    to={`/complexe/${complex.slug}`}
                     className="flex items-center gap-3 p-4 bg-card rounded-lg border border-border hover:border-primary/30 transition-colors"
                   >
                     <Building2 className="w-5 h-5 text-primary" />

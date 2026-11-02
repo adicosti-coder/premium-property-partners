@@ -203,8 +203,7 @@ const Imobiliare = () => {
             </span>
             
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-foreground mb-6 leading-tight">
-              {realEstate.hero.title}{" "}
-              <span className="text-primary">{realEstate.hero.titleHighlight}</span>
+              {language === "ro" ? "Tranzacții și servicii imobiliare în Timișoara" : `${realEstate.hero.title} ${realEstate.hero.titleHighlight}`}
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">

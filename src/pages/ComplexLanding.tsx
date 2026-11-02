@@ -20,6 +20,7 @@ import {
   MapPin,
 } from "lucide-react";
 import ContextualLinks from "@/components/seo/ContextualLinks";
+import ComplexDetail from "./ComplexDetail";
 import { buildComplexLinks } from "@/lib/internalLinking";
 
 const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
@@ -47,9 +48,9 @@ const complexesData: Record<string, ComplexData> = {
   isho: {
     name: "ISHO",
     slug: "isho",
-    roi: "9.2%",
+    roi: "6,5–9,4%",
     avgIncome: "€1,200",
-    occupancy: "92%",
+    occupancy: "65–75%",
     rating: "9.6",
     avgPrice: 95000,
     avgADR: 55,
@@ -63,9 +64,9 @@ const complexesData: Record<string, ComplexData> = {
   paltim: {
     name: "Paltim",
     slug: "paltim",
-    roi: "9.5%",
+    roi: "6,5–9,4%",
     avgIncome: "€1,320",
-    occupancy: "93%",
+    occupancy: "65–75%",
     rating: "9.7",
     avgPrice: 92000,
     avgADR: 56,
@@ -80,9 +81,9 @@ const complexesData: Record<string, ComplexData> = {
   ateneo: {
     name: "ATENEO",
     slug: "ateneo",
-    roi: "9.5%",
+    roi: "6,5–9,4%",
     avgIncome: "€1,350",
-    occupancy: "94%",
+    occupancy: "65–75%",
     rating: "9.7",
     avgPrice: 85000,
     avgADR: 55,
@@ -96,9 +97,9 @@ const complexesData: Record<string, ComplexData> = {
   "green-forest": {
     name: "GREEN FOREST",
     slug: "green-forest",
-    roi: "9.4%",
+    roi: "6,5–9,4%",
     avgIncome: "€1,280",
-    occupancy: "93%",
+    occupancy: "65–75%",
     rating: "9.7",
     avgPrice: 88000,
     avgADR: 52,
@@ -112,9 +113,9 @@ const complexesData: Record<string, ComplexData> = {
   helios: {
     name: "HELIOS",
     slug: "helios",
-    roi: "9.3%",
+    roi: "6,5–9,4%",
     avgIncome: "€1,200",
-    occupancy: "91%",
+    occupancy: "65–75%",
     rating: "9.5",
     avgPrice: 82000,
     avgADR: 50,
@@ -128,9 +129,9 @@ const complexesData: Record<string, ComplexData> = {
   "fructus-plaza": {
     name: "Fructus Plaza",
     slug: "fructus-plaza",
-    roi: "9.6%",
+    roi: "6,5–9,4%",
     avgIncome: "€1,400",
-    occupancy: "95%",
+    occupancy: "65–75%",
     rating: "9.8",
     avgPrice: 90000,
     avgADR: 58,
@@ -145,9 +146,9 @@ const complexesData: Record<string, ComplexData> = {
   "city-of-mara": {
     name: "City of Mara",
     slug: "city-of-mara",
-    roi: "9.1%",
+    roi: "6,5–9,4%",
     avgIncome: "€1,150",
-    occupancy: "90%",
+    occupancy: "65–75%",
     rating: "9.5",
     avgPrice: 80000,
     avgADR: 48,
@@ -162,9 +163,9 @@ const complexesData: Record<string, ComplexData> = {
   vivalia: {
     name: "Vivalia",
     slug: "vivalia",
-    roi: "9.0%",
+    roi: "6,5–9,4%",
     avgIncome: "€1,100",
-    occupancy: "89%",
+    occupancy: "65–75%",
     rating: "9.4",
     avgPrice: 78000,
     avgADR: 47,
@@ -178,9 +179,9 @@ const complexesData: Record<string, ComplexData> = {
   "nord-one": {
     name: "Nord One",
     slug: "nord-one",
-    roi: "8.9%",
+    roi: "6,5–9,4%",
     avgIncome: "€1,050",
-    occupancy: "88%",
+    occupancy: "65–75%",
     rating: "9.3",
     avgPrice: 75000,
     avgADR: 45,
@@ -194,9 +195,9 @@ const complexesData: Record<string, ComplexData> = {
   "xcity-towers": {
     name: "XCity Towers",
     slug: "xcity-towers",
-    roi: "9.2%",
+    roi: "6,5–9,4%",
     avgIncome: "€1,250",
-    occupancy: "92%",
+    occupancy: "65–75%",
     rating: "9.5",
     avgPrice: 87000,
     avgADR: 53,
@@ -210,9 +211,9 @@ const complexesData: Record<string, ComplexData> = {
   "denya-forest": {
     name: "Denya Forest",
     slug: "denya-forest",
-    roi: "9.1%",
+    roi: "6,5–9,4%",
     avgIncome: "€1,180",
-    occupancy: "90%",
+    occupancy: "65–75%",
     rating: "9.4",
     avgPrice: 83000,
     avgADR: 50,
@@ -232,7 +233,7 @@ const ComplexLanding = () => {
   const complex = slug ? complexesData[slug] : null;
 
   if (!complex) {
-    return <Navigate to="/ansambluri-rezidentiale" replace />;
+    return <ComplexDetail />;
   }
 
   const isRo = language === "ro";
@@ -307,8 +308,8 @@ const ComplexLanding = () => {
               </h1>
               <p className="text-lg text-muted-foreground mb-8">
                 {isRo
-                  ? `Randament net țintă ${complex.roi}, calculat pe ipoteze publice (ocupare 75%). Venit lunar estimat ${complex.avgIncome}, ocupare observată ${complex.occupancy}. Operațiuni gestionate end-to-end de echipa RealTrust și ApArt Hotel.`
-                  : `Target net ROI ${complex.roi}, calculated on public assumptions (75% occupancy). Estimated monthly income ${complex.avgIncome}, observed occupancy ${complex.occupancy}. Operations handled end-to-end by the RealTrust and ApArt Hotel team.`}
+                  ? `Randament net estimat ${complex.roi}, pe ipoteze publice: ocupare anuală asumată 65–75%, calcul conservator 70%. Venit lunar orientativ ${complex.avgIncome}, de recalculat pentru proprietatea aleasă. Administrare 15–20% din net (brut minus canale și utilități); menaj separat suportat de oaspete sau din brut.`
+                  : `Estimated net yield ${complex.roi}, with assumed annual occupancy 65–75% and conservative calculation at 70%. Indicative monthly income ${complex.avgIncome}, to be recalculated for the selected property. Management 15–20% of net (gross minus channels and utilities); cleaning paid by guests separately or from gross.`}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6">
                 <Link to="/pentru-proprietari">

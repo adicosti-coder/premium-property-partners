@@ -34,7 +34,7 @@ const CalculatorROI = () => {
   const faqItems = [
     {
       question: "Ce randament (ROI) este considerat bun pentru o investiție imobiliară în Timișoara?",
-      answer: "Pentru chirie clasică în Timișoara, un randament net de 6-8% este considerat solid. În regim hotelier administrat de RealTrust, randamentul net estimat este între 6,5% și 9,4% pe an, calculat pe ipoteze publice (ocupare 75%, costuri și taxe).",
+      answer: "Pentru chirie clasică în Timișoara, un randament net de 6-8% este considerat solid. În regim hotelier administrat de RealTrust, randamentul net estimat este între 6,5% și 9,4% pe an, calculat pe ipoteze publice (ocupare 70%, costuri și taxe).",
     },
     {
       question: "Cum afectează impozitul pe proprietate randamentul?",
@@ -50,7 +50,7 @@ const CalculatorROI = () => {
     },
     {
       question: "Ce costuri operaționale sunt incluse în calcul?",
-      answer: "Calculatorul deduce automat din venitul brut Property Management RealTrust (15-20% din încasări), curățenia, consumabilele, mentenanța, utilitățile parțial neacoperite și taxele locale. Rezultatul afișat este randament net, după aceste costuri.",
+      answer: "Calculatorul instant folosește canale estimate 15%, utilități estimate 120 €/lună și administrare 20% din net (brut minus canale și utilități). Menajul separat este suportat de oaspete; impozitele personale și reparațiile nu sunt incluse. Comisionul contractual este 15–20%.",
     },
     {
       question: "Chirie vs hotelier în Timișoara: ce aduce mai mult?",
@@ -84,7 +84,7 @@ const CalculatorROI = () => {
             ...REAL_ESTATE_AGENT_REF,
             areaServed: ["Timișoara", "Dumbrăvița", "Ghiroda", "Moșnița Nouă", "Giroc"],
           },
-          feesAndCommissionsSpecification: "Comision de administrare 15–20% din venit brut",
+          feesAndCommissionsSpecification: "Comision de administrare 15–20% din venit net (brut minus comisioane de canal și utilități)",
         }, {
           "@context": "https://schema.org",
           "@type": "WebApplication",
@@ -182,7 +182,7 @@ const CalculatorROI = () => {
                 <strong>Chirie clasică:</strong> 350-700 €/lună pentru 1-2 camere în Timișoara, cu chiriaș pe termen lung. Venit predictibil, cu randament limitat (4-6% brut).
               </p>
               <p className="text-muted-foreground">
-                <strong>Regim hotelier:</strong> tarif mediu 50-90 €/noapte × 75% ocupare = 1.125-2.025 €/lună brut. Diferența față de chiria clasică se situează tipic între 1,6× și 2,5×, în funcție de locație și sezon.
+                <strong>Regim hotelier:</strong> tarif mediu ilustrativ 50-90 €/noapte × 70% ocupare × 30 nopți = 1.050-1.890 €/lună brut. Diferența față de chiria clasică se situează tipic între 1,6× și 2,5×, în funcție de locație și sezon.
               </p>
             </div>
 
@@ -192,7 +192,7 @@ const CalculatorROI = () => {
                 <h2 className="text-2xl font-serif font-semibold text-foreground">Costuri operaționale (mentenanță, utilități)</h2>
               </div>
               <p className="text-muted-foreground">
-                Pentru regim hotelier intră în calcul: curățenie (~15 €/check-out), consumabile (săpun, hârtie, cafea), utilități incluse (curent, gaz, apă, internet — 100-180 €/lună), mentenanță preventivă și fond de reparații. Toate sunt deduse automat în calculator.
+                Pentru regim hotelier intră în calcul: curățenie (~15 €/check-out), consumabile (săpun, hârtie, cafea), utilități incluse (curent, gaz, apă, internet — 100-180 €/lună), mentenanță preventivă și fond de reparații. Calculatorul instant include canale estimate 15%, utilități estimate 120 €/lună și administrare 20% din net. Menajul este suportat de oaspete separat sau din brut. Impozitele personale și reparațiile necesită calcul separat.
               </p>
             </div>
 
@@ -212,7 +212,7 @@ const CalculatorROI = () => {
                 <h2 className="text-2xl font-serif font-semibold text-foreground">Rata de ocupare</h2>
               </div>
               <p className="text-muted-foreground">
-                Calculatorul folosește o ocupare medie de <strong>75%</strong>, observată în portofoliul nostru din Timișoara (față de aproximativ 50% în auto-administrare). Distribuția este influențată de evenimente locale (UVT, Iulius Town, festivaluri), business travel (Continental, Hella) și turism cultural în Centru.
+                Calculatorul folosește conservator <strong>70%</strong>, în intervalul anual asumat 65–75% (aproximativ 20–23 nopți/lună). Distribuția este influențată de evenimente locale (UVT, Iulius Town, festivaluri), business travel (Continental, Hella) și turism cultural în Centru.
               </p>
             </div>
 

@@ -16,11 +16,12 @@ import { useSimulations } from "@/hooks/useSimulations";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { calculateManagedIncome, MANAGEMENT_POLICY } from "@/lib/managementPolicy";
 
 const ProfitCalculator = () => {
   const { t, language } = useLanguage();
   const [adr, setAdr] = useState(80);
-  const [occupancy, setOccupancy] = useState(75);
+  const [occupancy, setOccupancy] = useState<number>(MANAGEMENT_POLICY.occupancyDefault * 100);
   const [cleaningCost, setCleaningCost] = useState(25);
   const [managementFee, setManagementFee] = useState(20);
   const [platformFee, setPlatformFee] = useState(15);
@@ -51,8 +52,8 @@ const ProfitCalculator = () => {
     const grossRevenue = adr * occupiedDays;
     
     const totalCleaningCosts = cleaningCost * numberOfStays;
-    const totalManagementFee = (managementFee / 100) * grossRevenue;
     const totalPlatformFee = (platformFee / 100) * grossRevenue;
+    const totalManagementFee = calculateManagedIncome({ gross: grossRevenue, channelFees: totalPlatformFee, utilities: 0, commissionRate: managementFee / 100, cleaningFromGross: totalCleaningCosts }).managementFee;
     const totalCosts = totalCleaningCosts + totalManagementFee + totalPlatformFee;
     
     const netProfit = grossRevenue - totalCosts;
@@ -317,12 +318,13 @@ const ProfitCalculator = () => {
                     setManagementFee(value[0]);
                     handleSliderInteraction();
                   }}
-                  min={10}
-                  max={30}
+                  min={15}
+                  max={20}
                   step={1}
                   className="w-full"
                   aria-label={language === 'ro' ? 'Comision administrare' : 'Management fee'}
                 />
+                <p className="text-sm text-muted-foreground">15–20% din net: brut minus canale și utilități. Utilități: 0 € în această simulare; menajul se scade din brut, nu din comision.</p>
               </div>
 
               {/* Platform Fee */}

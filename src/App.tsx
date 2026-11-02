@@ -7,6 +7,7 @@ import { AnimationPreferenceProvider } from "@/hooks/useAnimationPreference";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { FAQSchemaProvider } from "@/hooks/useFAQSchema";
 import CanonicalHreflang from "@/components/seo/CanonicalHreflang";
+import ComplexRedirect from "@/components/seo/ComplexRedirect";
 import TrailingSlashRedirect from "@/components/seo/TrailingSlashRedirect";
 import { captureCampaignAttribution } from "@/lib/campaignAttribution";
 import { isChunkLoadError, reserveChunkReload } from "@/lib/chunkRecovery";
@@ -307,7 +308,7 @@ const App = () => (
                     {/* Canonical: /ansambluri-rezidentiale (hub). Detail pages keep /complexe/:slug. */}
                     <Route path="/ansambluri-rezidentiale" element={<Complexe />} />
                     <Route path="/complexe" element={<Navigate to="/ansambluri-rezidentiale" replace />} />
-                    <Route path="/complex/:slug" element={<ComplexDetail />} />
+                    <Route path="/complex/:slug" element={<ComplexRedirect />} />
                     <Route path="/complexe/city-of-mara" element={<CityOfMaraTimisoara />} />
                     <Route path="/complexe/:slug" element={<ComplexLanding />} />
                     <Route path="/cartier/:slug" element={<NeighborhoodCluster />} />

@@ -80,7 +80,7 @@ const HOMEPAGE_AUTHORITY_BODY = `
   <p>Intermediem vânzări și închirieri pe termen lung în Timișoara și zona metropolitană: evaluare, pregătirea proprietății, promovare, negociere și asistență până la semnarea actelor. Comisioanele sunt comunicate înainte de începerea colaborării.</p>
 
   <h2>Administrare proprietăți în regim hotelier</h2>
-  <p>Administrăm apartamente în regim hotelier sub brandul ApArt Hotel: listare pe Booking și Airbnb, comunicarea cu oaspeții, check-in, curățenie, mentenanță și raport financiar lunar. În prezent gestionăm 15 proprietăți, cu un scor consolidat de reputație de 9,7/10 raportat pe Booking.</p>
+  <p>Administrăm apartamente în regim hotelier sub brandul ApArt Hotel: listare pe Booking și Airbnb, comunicarea cu oaspeții, check-in, curățenie, mentenanță și raport financiar lunar. În prezent gestionăm 13 cazări active, cu un scor consolidat de reputație de 9,7/10 raportat pe Booking.</p>
 
   <h2>Contact</h2>
   <p>RealTrust Timișoara, județul Timiș, România. Telefon +40 799 069 256, e-mail info@realtrust.ro.</p>
@@ -88,7 +88,7 @@ const HOMEPAGE_AUTHORITY_BODY = `
 
 const HOMEPAGE_SEO_BODY = `
   <h2>Servicii imobiliare și regim hotelier în toate cartierele Timișoarei</h2>
-  <p>RealTrust &amp; ApArt Hotel Timișoara este partenerul tău pentru <strong>investiții imobiliare profitabile</strong>, <strong>vânzări apartamente Timișoara</strong>, <strong>închirieri pe termen lung</strong> și <strong>administrare apartamente regim hotelier</strong> cu un randament net mediu raportat de 9,4% anual. Acoperim toate cartierele importante ale orașului și zonele metropolitane: Complex Studențesc (lângă UVT — Universitatea de Vest, UPT — Politehnica Timișoara și UMF Medicină), Iosefin, Elisabetin (lângă Parcul Rozelor și Parcul Botanic), Fabric, ISHO, Cetate și Centrul Vechi (Piața Unirii, Piața Victoriei, Catedrala Mitropolitană), Take Ionescu, Soarelui, Dâmbovița, Calea Aradului, Calea Girocului, Calea Șagului, Circumvalațiunii, Calea Lipovei, precum și zonele metropolitane <strong>imobiliare Dumbrăvița</strong>, <strong>apartamente Ghiroda</strong> (acces rapid la Aeroport și zona industrială) și <strong>case Moșnița Nouă</strong> pentru investitorii interesați de vile și case noi.</p>
+  <p>RealTrust &amp; ApArt Hotel Timișoara este partenerul tău pentru <strong>investiții imobiliare profitabile</strong>, <strong>vânzări apartamente Timișoara</strong>, <strong>închirieri pe termen lung</strong> și <strong>administrare apartamente regim hotelier</strong> cu un randament net estimat 6,5–9,4% anual. Acoperim toate cartierele importante ale orașului și zonele metropolitane: Complex Studențesc (lângă UVT — Universitatea de Vest, UPT — Politehnica Timișoara și UMF Medicină), Iosefin, Elisabetin (lângă Parcul Rozelor și Parcul Botanic), Fabric, ISHO, Cetate și Centrul Vechi (Piața Unirii, Piața Victoriei, Catedrala Mitropolitană), Take Ionescu, Soarelui, Dâmbovița, Calea Aradului, Calea Girocului, Calea Șagului, Circumvalațiunii, Calea Lipovei, precum și zonele metropolitane <strong>imobiliare Dumbrăvița</strong>, <strong>apartamente Ghiroda</strong> (acces rapid la Aeroport și zona industrială) și <strong>case Moșnița Nouă</strong> pentru investitorii interesați de vile și case noi.</p>
 
   <h2>Ansambluri rezidențiale Timișoara — colaborări cu dezvoltatori</h2>
   <p>Lucrăm cu cele mai importante <strong>ansambluri rezidențiale Timișoara</strong>: ISHO, ATENEO, City of Mara, Fructus Plaza, XCity Towers, Openville Residential, Vox Park și complexele noi din Dumbrăvița și Ghiroda. Selecție premium de <strong>apartamente noi Timișoara</strong> — eficiență energetică clasa A, finisaje moderne, smart-home și apreciere a capitalului peste media pieței.</p>
@@ -118,7 +118,7 @@ const HOMEPAGE_SEO_BODY = `
   <p>Pentru chiriași și proprietari oferim <strong>apartamente de închiriat Timișoara</strong> și <strong>închirieri apartamente Timișoara pe termen lung</strong> (contracte 12 luni sau mai mult) — apartamente mobilate și utilate în Centru, Iosefin, Elisabetin, Complex Studențesc, Iulius Town, Calea Aradului și zona universitară (UVT, UPT, UMF). Verificare chiriași, contracte standardizate și gestionare profesională pe toată durata închirierii.</p>
 
   <h3>Administrare proprietăți Timișoara — servicii complete pentru proprietari</h3>
-  <p><strong>Administrare proprietăți Timișoara</strong> oferită de RealTrust acoperă tot ciclul: marketing pe Booking, Airbnb și directe, check-in / check-out 24/7, curățenie hotelieră, mentenanță, raportare lunară financiară transparentă și optimizare yield management. <strong>Administrare apartamente regim hotelier Timișoara</strong> cu randament net mediu raportat de 9,4% anual — partener de încredere pentru proprietari și investitori.</p>
+  <p><strong>Administrare proprietăți Timișoara</strong> oferită de RealTrust acoperă tot ciclul: marketing pe Booking, Airbnb și directe, check-in / check-out 24/7, curățenie hotelieră, mentenanță, raportare lunară financiară transparentă și optimizare yield management. <strong>Administrare apartamente regim hotelier Timișoara</strong> cu randament net estimat 6,5–9,4% anual — partener de încredere pentru proprietari și investitori.</p>
 
   <h3>Servicii oferite</h3>
   <p>Investiții imobiliare Timișoara cu randament verificat, vânzări apartamente Timișoara, închirieri pe termen lung Timișoara, evaluare gratuită proprietate, calculator randament imobiliar (ROI) online, consultanță investiții imobiliare și administrare profesională pentru proprietari, investitori și oaspeți.</p>
@@ -133,7 +133,7 @@ const HOMEPAGE_SEO_BODY = `
   <p><strong>Închirieri apartamente studenți Timișoara</strong> în Complexul Studențesc, la 5 minute pe jos de UVT, UPT (Politehnica) și UMF Medicină „Victor Babeș" — garsoniere și apartamente cu 2 camere mobilate, contracte 9–12 luni, utilități incluse, internet de mare viteză și verificare proprietar pentru siguranță.</p>
 
   <h3>Administrare proprietăți Timișoara — prețuri transparente</h3>
-  <p><strong>Administrare proprietăți Timișoara prețuri</strong> transparente: comision 15–20% management + 15–23% comision platforme (Booking, Airbnb). Pachet complet care include marketing pe toate platformele, check-in / check-out 24/7, curățenie hotelieră, mentenanță, raportare lunară financiară și optimizare yield management. randament net mediu raportat de 9,4% anual.</p>
+  <p><strong>Administrare proprietăți Timișoara prețuri</strong> transparente: comision 15–20% management + 15–23% comision platforme (Booking, Airbnb). Pachet complet care include marketing pe toate platformele, check-in / check-out 24/7, curățenie hotelieră, mentenanță, raportare lunară financiară și optimizare yield management. randament net estimat 6,5–9,4% anual.</p>
 
   <h3>Cazare temporară Timișoara Centru și apartamente lângă Iulius Town</h3>
   <p><strong>Cazare temporară Timișoara Centru</strong>, <strong>închirieri apartamente Timișoara termen scurt</strong> și <strong>apartamente de închiriat lângă Iulius Town</strong> — soluții flexibile pentru sejururi de 1 noapte până la 1 lună, ideale pentru turism business, conferințe, vizite medicale și relocare temporară. Proprietăți premium la 5–15 minute de Iulius Mall, Openville, Piața Unirii și Piața Victoriei.</p>
@@ -849,7 +849,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
   routes.push({
     path: '/servicii-imobiliare',
     title: 'Vânzări Apartamente Timișoara și Închirieri Timișoara | RealTrust',
-    description: 'RealTrust intermediază vânzări apartamente Timișoara și închirieri Timișoara: evaluare gratuită, promovare, contracte și administrare în regim hotelier pentru proprietari și investitori.',
+    description: 'Servicii imobiliare în Timișoara: vânzări, închirieri, evaluare gratuită și administrare de proprietăți cu RealTrust.',
     h1: 'Servicii imobiliare în Timișoara — vânzări, închirieri și administrare',
     canonical: `${BASE_URL}/servicii-imobiliare`,
     seoBody: `
@@ -898,8 +898,11 @@ function buildStaticRoutes(): PrerenderRoute[] {
     seoBody: HOMEPAGE_AUTHORITY_BODY,
     jsonLd: {
       '@context': 'https://schema.org',
-      '@type': 'LocalBusiness',
-      name: 'RealTrust Timișoara',
+      '@type': 'RealEstateAgent',
+      '@id': `${BASE_URL}/#realestateagent`,
+      name: 'RealTrust',
+      legalName: 'SC Imo Business Centrum SRL',
+      taxID: 'RO14380627',
       description: 'Servicii imobiliare, investiții și administrare de proprietăți în regim hotelier în Timișoara.',
       url: `${BASE_URL}/`,
       telephone: '+40799069256',
@@ -1017,7 +1020,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
     canonical: `${BASE_URL}/analiza-roi-apartament`,
     seoBody: `
       <h2>Randament investiții imobiliare și analiză profit apartament România</h2>
-      <p>Pagina Analiză Randament Apartament oferă un calculator interactiv pentru investitori care vor să compare chiria clasică, administrarea în regim hotelier și aprecierea capitalului. Modelul folosește ocupare de 75%, deducere operațională de 27% și scenarii de randament pentru apartamente standard, RealTrust standard și complex premium.</p>
+      <p>Pagina Analiză Randament Apartament oferă un calculator interactiv pentru investitori care vor să compare chiria clasică, administrarea în regim hotelier și aprecierea capitalului. Modelul folosește ocupare de 70%, administrare 15–20% din net (brut minus canale și utilități) și scenarii de randament pentru apartamente standard, RealTrust standard și complex premium.</p>
       <h2>Complexe rezidențiale recomandate pentru randament</h2>
       <p>Analiza conectează direct investitorii cu <a href="${BASE_URL}/complexe" tabindex="-1">secțiunea Complexe</a>, inclusiv ISHO, City of Mara, Ateneo și Fructus Plaza — zone unde randamentul depinde de poziționare, cerere corporate, lichiditate și calitatea administrării.</p>
     `,
@@ -1098,7 +1101,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
   routes.push({
     path: '/despre-noi',
     title: 'Despre RealTrust: Imobiliare & Regim Hotelier Timișoara',
-    description: 'Echipa RealTrust: experți în imobiliare și regim hotelier Timișoara. 15 proprietăți administrate cu randament net estimat 6,5–9,4%. Contactează-ne acum!',
+    description: 'Echipa RealTrust: experți în imobiliare și regim hotelier Timișoara. 13 cazări active administrate cu randament net estimat 6,5–9,4%. Contactează-ne acum!',
     h1: 'Echipa din spatele RealTrust Timișoara',
     canonical: `${BASE_URL}/despre-noi`,
     seoBody: `
@@ -1106,7 +1109,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       <h2>Despre echipa RealTrust Timișoara</h2>
       <p>RealTrust este o echipă locală din Timișoara, coordonată de Adrian Costi (Fondator & CEO), specializată în <strong>consultanță imobiliară Timișoara</strong>, administrare proprietăți și regim hotelier.</p>
       <h3>Misiune, transparență și rezultate măsurabile</h3>
-      <p>Oferim <strong>evaluare apartament Timișoara</strong> gratuită, analiză de <strong>randament chirie Timișoara</strong> versus regim hotelier, și comunicare transparentă pentru fiecare colaborare — randament net estimat 6,5–9,4% pe cele 15 proprietăți administrate.</p>
+      <p>Oferim <strong>evaluare apartament Timișoara</strong> gratuită, analiză de <strong>randament chirie Timișoara</strong> versus regim hotelier, și comunicare transparentă pentru fiecare colaborare — randament net estimat 6,5–9,4% pe cele 13 cazări active administrate.</p>
       <h3>Cuprins pagină</h3>
       <ul>
         <li>Misiunea noastră</li>
@@ -1192,7 +1195,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
     seoBody: `
       <h2>Comparație între zonele din Timișoara</h2>
       <p>Analiză pe zone — Centru/Cetate, Iosefin, ISHO, Fabric, Circumvalațiunii, Calea Aradului, Calea Lipovei, Complex Studențesc, Girocului, Calea Șagului, Dumbrăvița și Giroc — după preț de achiziție, chirie realizabilă, potențial de <strong>regim hotelier</strong>, intensitatea cererii, lichiditate la revânzare și riscuri specifice.</p>
-      <p>Indicii de preț sunt estimări interne RealTrust, nu date oficiale de tranzacționare. Ipotezele de randament folosite sunt ocupare 75%, deducere operațională 27% și randament net de referință 9,4% pe an.</p>
+      <p>Indicii de preț sunt estimări interne RealTrust, nu date oficiale de tranzacționare. Ipotezele de randament folosite sunt ocupare 70%, administrare 15–20% din net (brut minus canale și utilități) și randament net de referință 9,4% pe an.</p>
     `,
     jsonLd: {
       '@context': 'https://schema.org',
@@ -1215,7 +1218,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       <h2>Factorii care determină valoarea unui apartament</h2>
       <p>Suprafața utilă din cartea funciară, etajul, anul construcției și structura, poziționarea exactă, compartimentarea, parcarea, balconul sau terasa, orientarea, finisajele, eficiența energetică și costurile de întreținere.</p>
       <h3>De la valoare la randament</h3>
-      <p>Comparabilele din același perimetru se corectează cu marja de negociere, iar pentru un apartament de investiție se estimează separat chiria clasică și venitul din <strong>regim hotelier</strong> (ocupare 75%, deducere operațională 27%), pentru a obține randamentul net raportat la capitalul total investit.</p>
+      <p>Comparabilele din același perimetru se corectează cu marja de negociere, iar pentru un apartament de investiție se estimează separat chiria clasică și venitul din <strong>regim hotelier</strong> (ocupare 70%, administrare 15–20% din net (brut minus canale și utilități)), pentru a obține randamentul net raportat la capitalul total investit.</p>
     `,
     jsonLd: {
       '@context': 'https://schema.org',
@@ -1236,7 +1239,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
     canonical: `${BASE_URL}/autor/adrian-costi`,
     seoBody: `
       <h2>Fondator &amp; CEO RealTrust</h2>
-      <p>Adrian Costi este fondatorul și CEO-ul RealTrust (Imo Business Centrum SRL), companie imobiliară din Timișoara, cu peste 25 de ani în tranzacții și administrare de proprietăți în Timișoara și vestul României. Coordonează direct administrarea celor 15 apartamente din portofoliu, operate în regim hotelier sub brandul ApArt Hotel.</p>
+      <p>Adrian Costi este fondatorul și CEO-ul RealTrust (Imo Business Centrum SRL), companie imobiliară din Timișoara, cu peste 25 de ani în tranzacții și administrare de proprietăți în Timișoara și vestul României. Coordonează direct administrarea celor 13 cazări active din portofoliu, operate în regim hotelier sub brandul ApArt Hotel.</p>
     `,
     jsonLd: {
       '@context': 'https://schema.org',
@@ -1273,7 +1276,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       <h3>Teme acoperite</h3>
       <ul>
         <li>Regim hotelier vs. chirie clasică</li>
-        <li>Randament (ROI) realist și deducerea de 27%</li>
+        <li>Randament (ROI) realist și comisionul de administrare 15–20% din net</li>
         <li>Autorizații și legislație</li>
         <li>Taxe locale în Timișoara</li>
         <li>Contract, preaviz și daune</li>
@@ -1297,7 +1300,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
           name: 'Ce randament pot obține în Timișoara?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Randamentul mediu net este de aproximativ 9,4% pe an, calculat la o ocupare de 75% și după deducerea de 27% pentru management, taxe și costuri operaționale.',
+            text: 'Randamentul net estimat este 6,5–9,4% pe an, calculat la o ocupare de 70% și după comisionul de administrare 15–20% din net pentru management, taxe și costuri operaționale.',
           },
         },
         {
@@ -1350,7 +1353,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
     canonical: `${BASE_URL}/investitii`,
     seoBody: `
       <h2>Tipuri de investiții imobiliare în Timișoara</h2>
-      <p>Ca <strong>consultant imobiliar Timișoara</strong>, RealTrust structurează portofoliul de oportunități pentru investitori pe trei direcții clare: <strong>investiții în regim hotelier</strong> (randament net mediu raportat de 9,4% anual), <strong>investiții buy-to-let</strong> pentru chirii pe termen lung (randament 6–7% brut) și <strong>flip imobiliar</strong> cu renovare strategică pentru revânzare (marjă 15–20% în 8–14 luni). Fiecare oportunitate include due diligence complet, proiecții randament conservative și administrare profesională inclusă.</p>
+      <p>Ca <strong>consultant imobiliar Timișoara</strong>, RealTrust structurează portofoliul de oportunități pentru investitori pe trei direcții clare: <strong>investiții în regim hotelier</strong> (randament net estimat 6,5–9,4% anual), <strong>investiții buy-to-let</strong> pentru chirii pe termen lung (randament 6–7% brut) și <strong>flip imobiliar</strong> cu renovare strategică pentru revânzare (marjă 15–20% în 8–14 luni). Fiecare oportunitate include due diligence complet, proiecții randament conservative și administrare profesională inclusă.</p>
 
       <h2>Evoluție prețuri imobiliare Timișoara 2020–2026</h2>
       <p><strong>Evoluție prețuri imobiliare Timișoara</strong>: media €/mp a crescut de la 1.250 € (2020) la 1.890 € (Q1 2026), cu un CAGR de aproximativ 7,1%. Cele mai puternice creșteri s-au înregistrat în ISHO (+62%), Circumvalațiunii / City of Mara (+48%) și Complex Studențesc (+41%). Prognoză 2026–2028: apreciere medie 5–8% anual, susținută de cererea din partea companiilor mari (Continental, Nokia, Hella, Flex, Atos) și de fluxul universitar (UVT, UPT, UMF — peste 40.000 studenți activi).</p>
@@ -1359,7 +1362,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       <p>Cele mai performante micro-piețe pentru investitori în 2026: <strong>ISHO</strong> (2.150 €/mp, ocupare 85–90% regim hotelier), <strong>Centru / Cetate</strong> (apreciere capital + venit dual din business travel și turism), <strong>Complex Studențesc</strong> (cerere garantată 9 luni/an, randament 8–10% net), <strong>Calea Aradului</strong> (proximitate Aeroport + Continental Automotive — chiriași business cu venituri mari) și <strong>Dumbrăvița / Ghiroda</strong> (case noi, profil familial, apreciere capital peste media orașului).</p>
 
       <h3>Investiții în regim hotelier — randament verificat</h3>
-      <p>Modelul nostru de <strong>regim hotelier Timișoara</strong> generează randament net estimat 6,5–9,4% pe portofoliul activ (15 apartamente). Include marketing pe Booking, Airbnb și platforme directe, check-in / check-out 24/7, curățenie hotelieră, mentenanță, raportare lunară și yield management dinamic. Comision 15–20% management + 15–23% comision platforme. Capital necesar de la 75.000 € pentru o garsonieră în Centru sau Complex Studențesc.</p>
+      <p>Modelul nostru de <strong>regim hotelier Timișoara</strong> generează randament net estimat 6,5–9,4% pe portofoliul activ (13 cazări active). Include marketing pe Booking, Airbnb și platforme directe, check-in / check-out 24/7, curățenie hotelieră, mentenanță, raportare lunară și yield management dinamic. Comision 15–20% management + 15–23% comision platforme. Capital necesar de la 75.000 € pentru o garsonieră în Centru sau Complex Studențesc.</p>
 
       <h3>Calculator taxe notariale și costuri tranzacție</h3>
       <p>Costurile complete pentru cumpărarea unui apartament în Timișoara includ: <strong>onorariu notarial</strong> (~1% din valoarea tranzacției, conform grilei Camerei Notarilor Timiș), <strong>impozit pe tranzacție</strong> (3% peste 450.000 RON pentru proprietăți deținute sub 3 ani de vânzător; 1% peste 3 ani — suportat de vânzător), <strong>taxe ANCPI</strong> (intabulare ~0,15% + tarife fixe), <strong>comision agenție</strong> (2% RealTrust). Exemplu: pentru un apartament de 100.000 €, costurile suplimentare ale cumpărătorului sunt aproximativ 3.500–4.500 €. Folosește <a href="${BASE_URL}/calculator-randament" tabindex="-1">calculatorul randament imobiliar (ROI)</a> pentru proiecția completă a investiției.</p>
@@ -1368,7 +1371,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       <p>Consultanță gratuită <strong>credit ipotecar Timișoara</strong> prin parteneriatele cu BCR, BRD, Raiffeisen, ING și Banca Transilvania. Pentru investiții optime: avans 25–35%, perioadă 25–30 ani, DAE competitiv 6,5–7,5% (aprilie 2026). Te ajutăm să compari ofertele și să optimizezi structura financiară pentru maximizarea cash-flow-ului lunar.</p>
 
       <h3>Consultant imobiliar Timișoara — due diligence complet</h3>
-      <p>Ca <strong>consultant imobiliar Timișoara</strong> de top, RealTrust verifică pentru fiecare oportunitate: situația juridică (extras CF actualizat, sarcini, litigii), starea tehnică (expertiză structurală, instalații), eficiența energetică, istoricul tranzacțiilor și potențialul real de venit (analiză comparabilă cu portofoliul nostru de 15 proprietăți administrate). Raportul complet de due diligence este livrat în 5–7 zile.</p>
+      <p>Ca <strong>consultant imobiliar Timișoara</strong> de top, RealTrust verifică pentru fiecare oportunitate: situația juridică (extras CF actualizat, sarcini, litigii), starea tehnică (expertiză structurală, instalații), eficiența energetică, istoricul tranzacțiilor și potențialul real de venit (analiză comparabilă cu portofoliul nostru de 13 cazări active administrate). Raportul complet de due diligence este livrat în 5–7 zile.</p>
 
       <h3>Ghid investitor 2026 — descarcă gratuit</h3>
       <p>Ghidul investitorului 2026 (PDF, 40 pagini) include: analiză detaliată pe cartiere, calculator randament imobiliar (ROI) cu scenarii multiple, structură fiscală optimă (PFA vs SRL), checklist due diligence, top 5 ansambluri rezidențiale recomandate și studii de caz reale din portofoliul RealTrust.</p>
@@ -1409,12 +1412,12 @@ function buildStaticRoutes(): PrerenderRoute[] {
           {
             '@type': 'Question',
             name: 'Care este randamentul mediu al investițiilor imobiliare în Timișoara?',
-            acceptedAnswer: { '@type': 'Answer', text: 'Pentru regim hotelier administrat de RealTrust, randament mediu este 9.4% net anual, verificat pe portofoliul de 15 apartamente. Pentru chirii pe termen lung, randamentul brut este 6–7%.' },
+            acceptedAnswer: { '@type': 'Answer', text: 'Pentru regim hotelier administrat de RealTrust, randament estimat este 6,5–9,4% net anual pe portofoliul de 13 cazări active. Pentru chirii pe termen lung, randamentul brut este 6–7%.' },
           },
           {
             '@type': 'Question',
             name: 'Ce capital minim este necesar pentru o investiție imobiliară în Timișoara?',
-            acceptedAnswer: { '@type': 'Answer', text: 'De la 75.000 € pentru o garsonieră în Centru sau Complex Studențesc, cu finanțare bancară până la 75% din valoare prin credit ipotecar.' },
+            acceptedAnswer: { '@type': 'Answer', text: 'De la 75.000 € pentru o garsonieră în Centru sau Complex Studențesc, cu finanțare bancară până la 70% din valoare prin credit ipotecar.' },
           },
           {
             '@type': 'Question',
@@ -1457,7 +1460,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       <p>Filtrăm rezervările pentru a proteja apartamentul tău: blocare rezervări locale (Timișoara) pentru evitarea petrecerilor, verificare ID la check-in, garanție prin pre-autorizare card 200–500 €, contract de cazare semnat digital, monitorizare nivel decibeli prin senzor smart NoiseAware (nu camere — respectăm intimitatea). Asigurare suplimentară Booking AirCover și Airbnb Host Protection activate implicit.</p>
 
       <h3>Pachete de management — Lite, Standard, Premium</h3>
-      <p>Trei pachete adaptate nevoilor proprietarilor: <strong>Lite</strong> (15% comision, doar marketing și rezervări — proprietarul gestionează curățenia și check-in-urile), <strong>Standard</strong> (20% comision, full-service operațional), <strong>Premium</strong> (25% comision, full-service + reportaj foto trimestrial actualizat + consultanță upgrade-uri și mobilier). Toate pachetele includ acces dashboard, raport lunar și suport telefonic.</p>
+      <p>Trei pachete adaptate nevoilor proprietarilor: <strong>Lite</strong> (15% comision, doar marketing și rezervări — proprietarul gestionează curățenia și check-in-urile), <strong>Standard</strong> (20% comision, full-service operațional), <strong>Premium</strong> (20% din venitul net, full-service + reportaj foto trimestrial actualizat + consultanță upgrade-uri și mobilier). Toate pachetele includ acces dashboard, raport lunar și suport telefonic.</p>
 
       <h3>Contract de mandat — model standard pentru proprietari</h3>
       <p>Contractul de mandat RealTrust pentru administrare are durată minimă 12 luni, exclusivitate pe canalele Booking/Airbnb (proprietarul își păstrează dreptul de utilizare personală cu rezervare prealabilă), comision flat din încasări (fără surprize), obligația noastră de raportare și plată lunară, posibilitate de reziliere amiabilă cu preaviz 30 zile. Modelul este redactat conform Codului Civil român (mandat cu reprezentare) și poate fi consultat înainte de semnare.</p>
@@ -1730,21 +1733,12 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
     `<meta name="description" content="${escapeHtml(route.description)}">`
   );
 
-  // Self-referencing canonical. The static shell ships without one, so fall
-  // back to injecting before </head> instead of silently dropping the tag.
-  const canonicalTag = `<link rel="canonical" href="${route.canonical}" />`;
-  const canonicalRe = /<link rel="canonical" href="[^"]*"\s*\/?>/;
-  html = canonicalRe.test(html)
-    ? html.replace(canonicalRe, canonicalTag)
-    : html.replace('</head>', `  ${canonicalTag}\n</head>`);
-
-  // hreflang alternates for crawlers that read the static HTML (RO default,
-  // EN via ?lang=en, x-default = RO). Must match CanonicalHreflang.tsx.
+  // Canonical is owned solely by the route-level Helmet emitter.
+  html = html.replace(/<link\b[^>]*rel=["']canonical["'][^>]*>\s*/gi, '');
   html = html.replace(/<link rel="alternate" hreflang="[^"]*" href="[^"]*"\s*\/?>\s*/g, '');
   const roHref = route.canonical.split('?')[0];
   const hreflangTags = [
     `<link rel="alternate" hreflang="ro" href="${roHref}" />`,
-    `<link rel="alternate" hreflang="en" href="${roHref}?lang=en" />`,
     `<link rel="alternate" hreflang="x-default" href="${roHref}" />`,
   ].join('\n  ');
   html = html.replace('</head>', `  ${hreflangTags}\n</head>`);

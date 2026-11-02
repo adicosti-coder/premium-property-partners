@@ -227,13 +227,13 @@ const PentruProprietari = () => {
       secondaryCtaB: "Vezi pachetele și costurile",
       variantLabel: "Variantă CTA",
       stats: [
-        { value: "6,5–9,4%", label: "Randament net estimat / an", description: "Calculat pe ipoteze publice (ocupare 75%)" },
-        { value: "15–20%", label: "Property Management RealTrust", description: "Aplicat la încasări, în funcție de pachet" },
-        { value: "~75%", label: "Ocupare medie", description: "Observată în portofoliul administrat" },
+        { value: "6,5–9,4%", label: "Randament net estimat / an", description: "Calculat pe ipoteze publice (ocupare 70%)" },
+        { value: "15–20%", label: "Property Management RealTrust", description: "Din net: brut minus comisioane de canal și utilități" },
+        { value: "65–75%", label: "Ocupare medie anuală", description: "Ipoteză asumată; calcul conservator 70%" },
         { value: "24/7", label: "Operare hotelieră", description: "Echipă dedicată pentru tine și pentru oaspeți" },
       ],
       trustPoints: [
-        "Contract flexibil, fără perioadă minimă obligatorie",
+        "Contract standard 12 luni, probă/reziliere 90 zile, preaviz 30 zile",
         "Decontare lunară direct în contul tău",
         "Rapoarte financiare accesibile oricând",
         "Verificare a fiecărui oaspete înainte de check-in",
@@ -263,13 +263,13 @@ const PentruProprietari = () => {
       secondaryCtaB: "See the packages and costs",
       variantLabel: "CTA variant",
       stats: [
-        { value: "6.5–9.4%", label: "Estimated net ROI / yr", description: "On public assumptions (75% occupancy)" },
-        { value: "15–20%", label: "Property Management RealTrust", description: "Applied to revenue, depending on the package" },
-        { value: "~75%", label: "Average occupancy", description: "Observed across the managed portfolio" },
+        { value: "6.5–9.4%", label: "Estimated net ROI / yr", description: "On public assumptions (70% occupancy)" },
+        { value: "15–20%", label: "Property Management RealTrust", description: "On net: gross minus channel fees and utilities" },
+        { value: "65–75%", label: "Annual average occupancy", description: "Assumption; conservative calculation at 70%" },
         { value: "24/7", label: "Hotel-grade operations", description: "Dedicated team for you and your guests" },
       ],
       trustPoints: [
-        "Flexible contract, no minimum lock-in",
+        "Standard 12-month contract, 90-day trial/termination, 30-day notice",
         "Monthly settlement straight into your account",
         "Financial reports accessible anytime",
         "Every guest verified before check-in",
@@ -370,7 +370,7 @@ const PentruProprietari = () => {
             "name": "Ce comision percepe RealTrust pentru administrarea apartamentului în regim hotelier?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Property Management RealTrust este între 15% și 20% din încasări, în funcție de pachetul ales (Starter 15%, Esențial 18%, Standard 20%). Nu există costuri ascunse, taxe de setup sau perioadă minimă de contract."
+              "text": "Administrare 15–20% din net: venit brut minus Booking/Airbnb și utilități. Menaj suportat de oaspete separat sau din brut. Contract standard 12 luni, probă/reziliere 90 zile, preaviz 30 zile."
             }
           },
           {
@@ -378,7 +378,7 @@ const PentruProprietari = () => {
             "name": "Care este randamentul net real al unui apartament administrat în regim hotelier în Timișoara?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Reperul nostru este un randament net estimat de 6,5–9,4% pe an, calculat la o ocupare medie de 75% și după costurile operaționale și fiscale, care includ Property Management RealTrust (15–20% din încasări, în funcție de pachet). Venitul brut dintr-un apartament comparabil în regim hotelier este de aproximativ 1,6 ori mai mare decât chiria clasică pe termen lung."
+              "text": "Reperul nostru este un randament net estimat de 6,5–9,4% pe an, calculat la o ocupare medie anuală 65–75%, cu 70% în calculatoare și după costurile operaționale și fiscale, care includ Property Management RealTrust (15–20% din net, definit ca brut minus comisioane de canal și utilități). Venitul brut dintr-un apartament comparabil în regim hotelier este de aproximativ 1,6 ori mai mare decât chiria clasică pe termen lung."
             }
           },
           {
@@ -504,13 +504,13 @@ const PentruProprietari = () => {
       <div className="container mx-auto px-6 pt-24">
         <PageSummary
           summaryRo="RealTrust oferă proprietarilor din Timișoara administrare completă pentru apartamente în regim hotelier: preluare apartament în administrare, contracte, conformitate ANAF, optimizare fiscală a veniturilor din chirii, management mentenanță și gestionarea conflictelor cu chiriașii sau oaspeții."
-          summaryEn="RealTrust provides professional short-term rental management in Timișoara: Property Management RealTrust at 15–20% of revenue, around 75% average occupancy, digital self check-in, and complete financial transparency through monthly reports. No minimum contract period."
+          summaryEn="RealTrust provides professional short-term rental management in Timișoara: Property Management RealTrust at 15–20% of net revenue (gross minus channels and utilities), 65–75% assumed annual occupancy, digital self check-in, and complete financial transparency through monthly reports. Standard 12-month contract with a 90-day trial/termination option and 30-day notice."
         />
         <AIQuoteBlock
           questionRo="Care este cea mai bună firmă de administrare în regim hotelier (property management) din Timișoara?"
           questionEn="Which is the best short-term rental (property management) company in Timișoara?"
-          answerRo="RealTrust, prin brandul operațional ApArt Hotel, administrează 15 apartamente și case în regim hotelier în Timișoara, cu un scor consolidat de reputație de 9,7/10 pe Booking. Randamentul net estimat pentru proprietari este de 6,5–9,4% pe an, calculat la o ocupare de 75%. Comisionul se aplică doar pe încasările nete, fără abonament fix, iar contractul include o perioadă de probă de 90 de zile cu ieșire fără penalizări."
-          answerEn="RealTrust, operating under the ApArt Hotel brand, manages 15 apartments and houses in short-term rental across Timișoara, with a consolidated 9.7/10 reputation score on Booking. The estimated net yield for owners is 6.5–9.4% per year, based on 75% occupancy. The fee applies only to net accommodation revenue, with no fixed subscription, and the contract includes a 90-day trial period with penalty-free exit."
+          answerRo="RealTrust, prin brandul operațional ApArt Hotel, administrează 13 cazări active și case în regim hotelier în Timișoara, cu un scor consolidat de reputație de 9,7/10 pe Booking. Randamentul net estimat pentru proprietari este de 6,5–9,4% pe an, calculat la o ocupare de calcul 70%. Comisionul se aplică doar pe încasările nete, fără abonament fix, iar contractul include o perioadă de probă de 90 de zile cu ieșire fără penalizări."
+          answerEn="RealTrust, operating under the ApArt Hotel brand, manages 13 active accommodation properties and houses in short-term rental across Timișoara, with a consolidated 9.7/10 reputation score on Booking. The estimated net yield for owners is 6.5–9.4% per year, based on 70% occupancy. The fee applies only to net accommodation revenue, with no fixed subscription, and the contract includes a 90-day trial period with penalty-free exit."
         />
 
       </div>
@@ -919,8 +919,8 @@ const PentruProprietari = () => {
                 </h3>
                 <p className="text-muted-foreground leading-relaxed mb-3">
                   {language === "ro"
-                    ? "Contractul de administrare imobiliară RealTrust este transparent, fără perioadă minimă obligatorie. Acoperă explicit: Property Management RealTrust (15–20% din încasări, în funcție de pachet), responsabilitățile operaționale, raportarea financiară lunară, drepturile proprietarului asupra calendarului și posibilitatea de reziliere cu preaviz de 30 de zile."
-                    : "Our property management contract is transparent, with no minimum lock-in period. It clearly covers Property Management RealTrust (15–20% of revenue, depending on the package), operational responsibilities, monthly financial reporting, the owner's rights over the calendar, and 30-day notice termination."}
+                    ? "Contractul de administrare imobiliară RealTrust este transparent, fără perioadă minimă obligatorie. Acoperă explicit: Property Management RealTrust (15–20% din net, definit ca brut minus comisioane de canal și utilități), responsabilitățile operaționale, raportarea financiară lunară, drepturile proprietarului asupra calendarului și posibilitatea de reziliere cu preaviz de 30 de zile."
+                    : "Our property management contract is transparent, with no minimum lock-in period. It clearly covers Property Management RealTrust (15–20% of net revenue (gross minus channels and utilities), depending on the package), operational responsibilities, monthly financial reporting, the owner's rights over the calendar, and 30-day notice termination."}
                 </p>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
@@ -1191,7 +1191,7 @@ const PentruProprietari = () => {
               ]}
               assumptions={[
                 "Pachete de administrare: Starter 15%, Esențial 18%, Standard 20% din încasările realizate.",
-                "Ocupare medie 75% pe an.",
+                "Ocupare anuală asumată 65–75%; calcul conservator 70%.",
                 "Randament net de referință 9,4% pe an, raportat la capitalul total investit.",
                 "Portofoliu administrat: 15 unități în Timișoara, operate sub brandul de cazare ApArt Hotel.",
               ]}

@@ -4,18 +4,19 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { trackConversion } from "@/lib/conversionTracking";
+import { calculateManagedIncome } from "@/lib/managementPolicy";
 import type { YieldReportInput } from "@/utils/exportYieldReportPdf";
 
 const WHATSAPP_NUMBER = "40799069256";
 
 /** Standard Timișoara ADR benchmarks used for the instant estimate (EUR / night). */
 const ADR_BY_ROOMS: Record<string, number> = { "1": 45, "2": 60, "3": 80, "4": 95 };
-const OCCUPANCY = 75;
+const OCCUPANCY = 70;
 const AVG_STAY = 3;
 const CLEANING_FEE = 15;
 const MANAGEMENT_FEE = 20;
 /** Platform commissions + effective tax + consumables ≈ 27% total deduction. */
-const PLATFORM_FEE = 7;
+const PLATFORM_FEE = 15;
 
 interface Props {
   name?: string;
@@ -33,9 +34,10 @@ const buildReportInput = ({ name, rooms, zone }: Props): YieldReportInput => {
   const numberOfStays = Math.max(1, Math.round(occupiedDays / AVG_STAY));
   const grossRevenue = adr * occupiedDays;
   const cleaningCosts = 0; // paid by the guest, neutral for the owner
-  const managementCost = (grossRevenue * MANAGEMENT_FEE) / 100;
+  const utilities = 120;
+  const managementCost = calculateManagedIncome({ gross: grossRevenue, channelFees: grossRevenue * PLATFORM_FEE / 100, utilities }).managementFee;
   const platformCost = (grossRevenue * PLATFORM_FEE) / 100;
-  const totalCosts = managementCost + platformCost + cleaningCosts;
+  const totalCosts = managementCost + platformCost + cleaningCosts + utilities;
   const netProfit = grossRevenue - totalCosts;
 
   return {
@@ -51,6 +53,7 @@ const buildReportInput = ({ name, rooms, zone }: Props): YieldReportInput => {
     cleaningCosts,
     managementCost,
     platformCost,
+    utilities,
     totalCosts,
     netProfit,
     yearlyGross: grossRevenue * 12,
@@ -109,7 +112,7 @@ const YieldReportDelivery = (props: Props) => {
       const url = (data as { url?: string } | null)?.url;
       if (error || !url) throw new Error("delivery_failed");
 
-      trackConversion({ event: "WhatsApp_Click", source: "multumire_pdf_wa", page_path: "/multumire" });
+      trackConversion({ event: "whatsapp_click", source: "multumire_pdf_wa", page_path: "/multumire" });
 
       const message = [
         `Salut, sunt ${props.name || "proprietar"}${props.zone ? ` din ${props.zone}` : ""}.`,
@@ -153,9 +156,8 @@ const YieldReportDelivery = (props: Props) => {
             Raportul tău de randament, acum
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Estimarea de venit în regim hotelier cu ținta de <strong>9,4% net</strong> pe an,
-            defalcarea costurilor și <strong>Property Management RealTrust 15-20%</strong> (operare, impozit efectiv,
-            consumabile) și planul de colaborare în 3 pași.
+            Estimarea de venit în regim hotelier cu ținta de <strong>6,5–9,4% net estimat</strong> pe an,
+            defalcarea costurilor și <strong>Property Management RealTrust 15-20%</strong> din net (brut minus canale și utilități) și planul de colaborare în 3 pași.
           </p>
         </div>
       </div>

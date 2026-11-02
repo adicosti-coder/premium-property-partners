@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { BRAND, ORG_ID, SITE_ORIGIN, ORGANIZATION_SCHEMA } from "@/lib/orgIdentity";
 import { validateJsonLdConsistency } from "@/lib/schemaConsistency";
+import { buildLangAlternates } from "@/components/seo/CanonicalHreflang";
 
 // Canonical host: NO www, matches CanonicalHreflang.tsx + prerender + sitemap.
 // Mismatching www/non-www between og:url, canonical and hreflang triggers
@@ -149,7 +150,7 @@ const SEOHead = ({
   
   const defaultTitles = {
     ro: "RealTrust Timișoara | Regim Hotelier & Servicii Imobiliare",
-    en: "RealTrust | Trust Estate - Real Estate Investment & Property Management Timișoara"
+    en: "RealTrust — Real Estate Investment & Property Management Timișoara"
   };
   
   const defaultDescriptions = {
@@ -231,7 +232,9 @@ const SEOHead = ({
   // so og:url can never disagree with the canonical / hreflang tags.
   const forceNonWww = (url: string): string =>
     url.replace(/^https?:\/\/(www\.)?realtrust\.ro/i, BASE_URL);
-  const finalUrl = forceNonWww(override?.canonical_url || buildCanonical());
+  const finalUrl = typeof window !== "undefined"
+    ? buildLangAlternates(window.location.pathname, window.location.search).canonical
+    : forceNonWww(buildCanonical());
 
 
   // og:image / twitter:image MUST be absolute URLs — Facebook, LinkedIn,
@@ -401,7 +404,6 @@ const SEOHead = ({
       <meta property="og:image:height" content="630" />
       <meta property="og:image:alt" content={imageAlt || finalTitle} />
       <meta property="og:locale" content={language === "ro" ? "ro_RO" : "en_US"} />
-      <meta property="og:locale:alternate" content={language === "ro" ? "en_US" : "ro_RO"} />
       <meta property="og:site_name" content="RealTrust & ApArt Hotel" />
       
       {/* Twitter */}

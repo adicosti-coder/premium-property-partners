@@ -17,8 +17,8 @@ const FREE = [
 
 const FEES = [
   { t: "Vânzare", d: "2–4% din prețul de vânzare, plătit doar dacă apartamentul se vinde." },
-  { t: "Închiriere", d: "50–100% din prima chirie, plătit doar după semnarea cu chiriașul. Opțional, administrare 15–20%." },
-  { t: "Regim hotelier / Property Management", d: "15–20% doar din încasările realizate." },
+  { t: "Închiriere", d: "50–100% din prima chirie, plătit doar după semnarea cu chiriașul. Opțional, administrare 15–20% din venitul net." },
+  { t: "Regim hotelier / Property Management", d: "15–20% din venitul net: brut minus comisioanele Booking/Airbnb și utilități. Menaj suportat de oaspete separat sau din brut, nu din comision." },
 ];
 
 const SAFETY = [
@@ -61,7 +61,7 @@ export default function ConditiiProprietari() {
           <Card>
             <CardHeader><CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5 text-primary" />Contract</CardTitle></CardHeader>
             <CardContent className="text-muted-foreground">
-              Pentru publicare nu semnați nimic. Contractul apare doar când alegeți un serviciu (vânzare, închiriere sau administrare) și îl primiți înainte, ca să-l citiți în liniște.
+              Pentru publicare nu semnați nimic. Contractul apare doar când alegeți un serviciu și îl primiți înainte. Administrare: contract standard 12 luni, cu probă/reziliere de 90 de zile și preaviz de 30 de zile.
             </CardContent>
           </Card>
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">

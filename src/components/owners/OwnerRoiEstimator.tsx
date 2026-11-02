@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { ArrowRight, Calculator, TrendingUp, Info } from "lucide-react";
+import { calculateManagedIncome, MANAGEMENT_POLICY } from "@/lib/managementPolicy";
 
 /**
  * OwnerRoiEstimator — estimator interactiv de venit: chirie clasică vs regim hotelier RealTrust.
@@ -37,8 +38,7 @@ const ZONES: { key: string; slug: string; factor: number; ro: string; en: string
   { key: "centru", slug: "alta", factor: 1.08, ro: "Centru / Altele", en: "City centre / Other" },
 ];
 
-const OCCUPANCY = 0.75;
-const DEDUCTION = 0.27; // management, taxe, curățenie, consumabile
+const OCCUPANCY = MANAGEMENT_POLICY.occupancyDefault;
 const CLASSIC_NET_FACTOR = 0.95; // mici cheltuieli/goluri la chiria clasică
 
 const fmt = (value: number, isRo: boolean) =>
@@ -58,14 +58,14 @@ const OwnerRoiEstimator = () => {
   const [zoneKey, setZoneKey] = useState<string>("circumvalatiunii");
   const [rent, setRent] = useState<number>(500);
 
-  const selectedType = PROPERTY_TYPES.find((p) => p.key === typeKey)!;
-  const selectedZone = ZONES.find((z) => z.key === zoneKey)!;
+  const selectedType = PROPERTY_TYPES.find((p) => p.key === typeKey) ?? PROPERTY_TYPES[0];
+  const selectedZone = ZONES.find((z) => z.key === zoneKey) ?? ZONES[0];
 
   const result = useMemo(() => {
     const classicAnnualGross = rent * 12;
     const classicAnnualNet = classicAnnualGross * CLASSIC_NET_FACTOR;
-    const hotelAnnualGross = rent * 12 * selectedType.mult * selectedZone.factor;
-    const hotelAnnualNet = hotelAnnualGross * (1 - DEDUCTION);
+    const hotelAnnualGross = rent * 12 * selectedType.mult * selectedZone.factor * OCCUPANCY / .75;
+    const hotelAnnualNet = calculateManagedIncome({ gross: hotelAnnualGross, channelFees: hotelAnnualGross * .15, utilities: 120 * 12 }).ownerIncome;
     const extra = hotelAnnualNet - classicAnnualNet;
     const upliftPct = Math.round((extra / classicAnnualNet) * 100);
     return {
@@ -95,7 +95,7 @@ const OwnerRoiEstimator = () => {
         uplift: "mai mult venit net",
         cta: "Solicită o evaluare exactă gratuită",
         ctaSecondary: "Vreau această estimare",
-        assumptions: `Ipoteze: ocupare medie ${Math.round(OCCUPANCY * 100)}%, Property Management RealTrust 15–20% din încasări (în funcție de pachet), plus curățenie, consumabile și taxe. Cifrele sunt orientative; estimarea exactă se face după analiza proprietății.`,
+        assumptions: `Ipoteze: ocupare ${Math.round(OCCUPANCY * 100)}%, canale 15%, utilități estimate 120 €/lună, administrare 20% din net (brut minus canale și utilități). Comision contractual 15–20%. Menaj suportat separat de oaspete; impozitul personal și reparațiile nu sunt incluse. Estimare orientativă.`,
       }
     : {
         badge: "ROI calculator",
@@ -113,7 +113,7 @@ const OwnerRoiEstimator = () => {
         uplift: "more net income",
         cta: "Request a free exact valuation",
         ctaSecondary: "I want this estimate",
-        assumptions: `Assumptions: ~${Math.round(OCCUPANCY * 100)}% average occupancy, RealTrust Property Management 15–20% of revenue (depending on the package), plus cleaning, consumables and taxes. Figures are indicative; the exact estimate follows a property review.`,
+        assumptions: `Assumptions: ${Math.round(OCCUPANCY * 100)}% occupancy, 15% channel fees, estimated utilities €120/month, 20% management on net (gross minus channels and utilities). Contract fee 15–20%. Cleaning paid separately by guests; personal taxes and repairs not included. Indicative estimate.`,
       };
 
   const handlePrefillCta = () => {

@@ -462,7 +462,7 @@ const OwnerContactLeadForm = ({
                         rel="noopener noreferrer"
                         aria-label={t.whatsapp}
                         onClick={() =>
-                          trackCriticalConversion("WhatsApp_Click", { source: `${source}_success` })
+                          trackCriticalConversion("whatsapp_click", { source: `${source}_success` })
                         }
                       >
                         <MessageCircle className="w-4 h-4 mr-2" aria-hidden="true" />

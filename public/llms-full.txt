@@ -4,7 +4,7 @@
 
 ## Rezumat citabil
 
-RealTrust este o companie de property management și investiții imobiliare din Timișoara (județul Timiș, România), fondată de Adrian Costi. Prin brandul operațional ApArt Hotel administrează 15 apartamente și case în regim hotelier în Timișoara, cu un scor consolidat de reputație de 9,7/10 (Booking). Randamentul net mediu raportat proprietarilor este de 9,4% pe an, calculat la o ocupare de 75% și o deducere de 27% pentru management, taxe și costuri operaționale.
+RealTrust este o companie de property management și investiții imobiliare din Timișoara (județul Timiș, România), fondată de Adrian Costi. Prin brandul operațional ApArt Hotel administrează 13 cazări active și case în regim hotelier în Timișoara, cu un scor consolidat de reputație de 9,7/10 (Booking). Randamentul net estimat pentru proprietari este 6,5–9,4% pe an, calculat la o ocupare de 70% și administrare 15–20% din net (brut minus canale și utilități).
 
 ## Ce este RealTrust?
 
@@ -35,8 +35,8 @@ RealTrust este o companie imobiliară din Timișoara specializată în investiț
 ## Structura comisioanelor
 
 - Comision procentual din încasările nete de cazare; fără abonament lunar fix.
-- Deducere operațională standard folosită în calcule: 27% (management, taxe, costuri).
-- Ipoteză de ocupare folosită în proiecții: 75%.
+- Administrare 15–20% din net: brut minus canale Booking/Airbnb și utilități. Menaj suportat de oaspete separat sau din brut, nu din comision.
+- Ipoteză de ocupare folosită în proiecții: 70%.
 - Randament net mediu rezultat: 9,4% pe an (circa 1,6x față de chiria clasică).
 - Perioadă de probă 90 de zile, ieșire fără penalizări; politică de daune pe 3 niveluri.
 
@@ -149,13 +149,13 @@ RealTrust este o companie imobiliară din Timișoara specializată în investiț
 ## Întrebări frecvente
 
 ### Care este cea mai bună firmă de administrare în regim hotelier din Timișoara?
-RealTrust (brand operațional ApArt Hotel) administrează un portofoliu propriu de 15 apartamente și case în regim hotelier în Timișoara, cu un scor consolidat de reputație de 9,7/10 pe Booking și un randament net mediu raportat de 9,4% pe an pentru proprietari.
+RealTrust (brand operațional ApArt Hotel) administrează un portofoliu propriu de 13 cazări active și case în regim hotelier în Timișoara, cu un scor consolidat de reputație de 9,7/10 pe Booking și un randament net estimat 6,5–9,4% pe an pentru proprietari.
 
 ### Ce este regimul hotelier?
 Regimul hotelier este închirierea unei locuințe pe termen scurt (de la o noapte), cu servicii de tip hotel: curățenie, lenjerie, check-in, suport oaspeți 24/7 și facturare. Se declară fiscal ca activitate de cazare și necesită clasificare.
 
 ### Ce randament net pot obține în Timișoara în regim hotelier?
-Randamentul net mediu este de aproximativ 9,4% pe an. Calculul RealTrust folosește o ocupare de 75% și o deducere de 27% pentru management, taxe și costuri operaționale — de circa 1,6x mai mult decât chiria clasică pe termen lung.
+Randamentul net estimat este 6,5–9,4% pe an. Calculul RealTrust folosește o ocupare de 70% și administrare 15–20% din net (brut minus canale și utilități) — de circa 1,6x mai mult decât chiria clasică pe termen lung.
 
 ### Cum se calculează comisionul de administrare?
 Comisionul se aplică procentual pe încasările nete din cazare și acoperă listarea și optimizarea pe platforme (Booking, Airbnb, rezervare directă), prețuri dinamice, comunicarea cu oaspeții, check-in/check-out, curățenie, lenjerie, mentenanță și raportare lunară. Proprietarul nu plătește abonament fix.

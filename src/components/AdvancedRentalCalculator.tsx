@@ -42,6 +42,7 @@ import { ro, enUS } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
 import SimulationCompareModal from './SimulationCompareModal';
 import { cn } from '@/lib/utils';
+import { calculateManagedIncome } from '@/lib/managementPolicy';
 
 type Scenario = 'conservator' | 'piata' | 'optimist';
 
@@ -62,7 +63,7 @@ interface CalculatorInputs {
 
 const scenarioPresets: Record<Scenario, Partial<CalculatorInputs>> = {
   conservator: {
-    occupancyWithoutSystem: 50,
+    occupancyWithoutSystem: 57,
     rateUpliftWithSystem: 10,
     occupancyUpliftWithSystem: 8,
   },
@@ -72,7 +73,7 @@ const scenarioPresets: Record<Scenario, Partial<CalculatorInputs>> = {
     occupancyUpliftWithSystem: 12,
   },
   optimist: {
-    occupancyWithoutSystem: 65,
+    occupancyWithoutSystem: 60,
     rateUpliftWithSystem: 25,
     occupancyUpliftWithSystem: 15,
   },
@@ -96,8 +97,8 @@ const translations = {
     cleaningCostPerStay: 'Cost curățenie / sejur',
     averageStayDuration: 'Ședere medie',
     monthlyFixedCosts: 'Costuri fixe lunare (utilități, consumabile)',
-    managementFee: 'Fee administrare RealTrust (din venit)',
-    managementFeeNote: 'Se aplică doar la "Cu sistemul RealTrust"',
+    managementFee: 'Comision administrare RealTrust (din net)',
+    managementFeeNote: '15–20% din brut minus canale și utilități. Menajul se scade din brut, nu din comision.',
     scenario: 'SCENARIU',
     conservator: 'Conservator',
     piata: 'Piață',
@@ -334,7 +335,7 @@ const AdvancedRentalCalculator = () => {
     const platformCostWithSystem = grossRevenueWithSystem * (platformCommission / 100);
     const paymentCostWithSystem = grossRevenueWithSystem * (paymentProcessingFee / 100);
     const cleaningCostWithSystem = staysWithSystem * cleaningCostPerStay;
-    const managementCost = grossRevenueWithSystem * (managementFee / 100);
+    const managementCost = calculateManagedIncome({ gross: grossRevenueWithSystem, channelFees: platformCostWithSystem, utilities: monthlyFixedCosts, commissionRate: managementFee / 100, cleaningFromGross: cleaningCostWithSystem }).managementFee;
     const netWithSystem = Math.round(
       grossRevenueWithSystem - 
       platformCostWithSystem - 
@@ -611,7 +612,8 @@ const AdvancedRentalCalculator = () => {
                         onChange={(v) => handleInputChange('managementFee', v)}
                         suffix="%"
                         helpText={t.managementFeeNote}
-                        max={50}
+                        min={15}
+                        max={20}
                       />
                     </div>
                     <Button

@@ -70,7 +70,7 @@ export const ro = {
     items: [
       {
         title: "Venit net pe care îl poți verifica",
-        description: "• 6,5–9,4% net, cu ipotezele afișate public\n• Ocupare 75%",
+        description: "• 6,5–9,4% net, cu ipotezele afișate public\n• Ocupare anuală 65–75%; calcul 70%",
       },
       {
         title: "Tu nu faci nimic. Chiar nimic.",
@@ -93,7 +93,7 @@ export const ro = {
     commissionValue: "15–20%",
     commissionSuffix: "din încasările nete — fără taxe ascunse, fără costuri surpriză",
     items: [
-      { title: "6,5–9,4% net, cu ipotezele pe masă", description: "• Ocupare 75%" },
+      { title: "6,5–9,4% net, cu ipotezele pe masă", description: "• Ocupare anuală 65–75%; calcul 70%" },
       { title: "Zero muncă operațională pentru tine", description: "• Comunicarea cu oaspeții — la noi\n• Coordonarea echipelor — la noi\n• Tu primești doar raportul" },
       { title: "Transparență totală pe bani", description: "• Dashboard deschis oricând\n• RevPAR, ADR, ocupare\n• P&L lunar, linie cu linie" },
       { title: "Standard hotelier, nu improvizație", description: "• Echipă proprie, dedicată\n• Curățenie verificată după fiecare plecare\n• Mentenanță preventivă inclusă" },
@@ -265,7 +265,7 @@ export const ro = {
       // Transparență calcul randament
       {
         question: "Cum se calculează concret randamentul net estimat între 6,5% și 9,4%?",
-        answer: "Pornim de la venitul brut din cazare (tarif pe noapte × nopți ocupate). Din acesta se scad costurile de operare (consumabile, lenjerie) și Property Management RealTrust, 15-20% din încasări. Taxa de curățenie nu te costă: este achitată separat de oaspeți la momentul rezervării. Abia după aceea se scad cheltuielile fixe (utilități, internet, întreținere) — de aceea randamentul rezultat este venit curat (net), nu brut. Intervalul de 6,5%-9,4% pe an depinde de gradul de ocupare, locație și amenajare, iar cifra finală pentru apartamentul tău se stabilește după evaluarea gratuită."
+        answer: "Pornim de la venitul brut din cazare (tarif pe noapte × nopți ocupate). Din acesta se scad costurile de operare (consumabile, lenjerie) și Property Management RealTrust, 15–20% din net (brut minus canale și utilități). Taxa de curățenie nu te costă: este achitată separat de oaspeți la momentul rezervării. Abia după aceea se scad cheltuielile fixe (utilități, internet, întreținere) — de aceea randamentul rezultat este venit curat (net), nu brut. Intervalul de 6,5%-9,4% pe an depinde de gradul de ocupare, locație și amenajare, iar cifra finală pentru apartamentul tău se stabilește după evaluarea gratuită."
       },
       // Servicii incluse
       { 

@@ -7,8 +7,8 @@ export const OWNERS_FAQ_DATA = {
       subtitle: "Răspunsuri la cele mai importante întrebări despre administrarea în regim hotelier",
       items: [
         {
-          q: "Cum se ajunge la un randament net de circa 9,4%?",
-          a: "Pornim de la venitul brut încasat (ocupare medie estimată 75%) și scădem costurile de operare (consumabile, utilități, lenjerie), impozitul aferent structurii tale și Property Management RealTrust, 15-20% din încasări. Ce rămâne este venitul net în cont. Raportat la valoarea de achiziție a apartamentului, acest venit net reprezintă un randament de 9,4% pe an — deci 9,4% este cifra finală, după toate deducerile, nu una brută.",
+          q: "Cum se estimează randamentul net de 6,5–9,4%?",
+          a: "Randamentul estimat este 6,5–9,4% net/an, în funcție de achiziție, amenajare și costuri. Ocupare medie anuală asumată 65–75%; calculele pornesc conservator de la 70%. Comisionul de administrare este 15–20% din net: brut minus canale Booking/Airbnb și utilități. Menajul este suportat de oaspete separat sau din brut. Impozitul se verifică pentru situația proprietarului; rezultatul nu este garantat.",
         },
         {
           q: "Ce autorizație de regim hotelier este necesară în Timișoara?",
@@ -20,7 +20,7 @@ export const OWNERS_FAQ_DATA = {
         },
         {
           q: "Care este durata minimă a contractului de property management?",
-          a: "Contractul standard RealTrust este flexibil, fără perioadă minimă obligatorie. Poți renunța oricând cu un preaviz de 30 de zile. Această flexibilitate ne diferențiază de competiție și reflectă încrederea în calitatea serviciilor noastre — proprietarii noștri obțin un randament net estimat de 6,5–9,4%/an. Calculează venitul tău în 60 sec mai jos.",
+          a: "Contractul standard de administrare este pe 12 luni, cu posibilitate de perioadă de probă/reziliere de 90 de zile și preaviz de 30 de zile.",
         },
         {
           q: "Cum se gestionează daunele provocate de oaspeți?",
@@ -28,7 +28,7 @@ export const OWNERS_FAQ_DATA = {
         },
         {
           q: "Ce servicii de property management Timișoara oferă RealTrust?",
-          a: "Pachet complet: listare multi-channel (Airbnb, Booking, Expedia), pricing dinamic AI, check-in/check-out automatizat (smart locks), curățenie profesională, schimbare lenjerie, mentenanță 24/7, suport oaspeți multilingv, rapoarte financiare lunare detaliate, fotografii profesionale și optimizare SEO listări. Proprietarii noștri ating constant 9%+ randament net cu zero implicare zilnică.",
+          a: "Pachet complet: listare multi-channel (Airbnb, Booking, Expedia), pricing dinamic AI, check-in/check-out automatizat (smart locks), curățenie profesională, schimbare lenjerie, mentenanță 24/7, suport oaspeți multilingv, rapoarte financiare lunare detaliate, fotografii profesionale și optimizare SEO listări. Randamentul net estimat este 6,5–9,4%/an cu zero implicare zilnică.",
         },
         {
           q: "Ce taxe locale plătesc pentru regim hotelier în Timișoara?",
@@ -40,15 +40,15 @@ export const OWNERS_FAQ_DATA = {
         },
         {
           q: "Este regimul hotelier o sursă reală de venit pasiv?",
-          a: "Da. RealTrust preia integral operarea — listare și prețuri dinamice, comunicarea cu oaspeții, check-in/check-out, curățenie, lenjerie, mentenanță și declarațiile lunare. Proprietarul primește încasările nete și un raport lunar transparent, fără implicare zilnică. Randamentul net mediu este de 9,4% pe an, la o ocupare estimată de 75%.",
+          a: "Da. RealTrust preia integral operarea — listare și prețuri dinamice, comunicarea cu oaspeții, check-in/check-out, curățenie, lenjerie, mentenanță și declarațiile lunare. Proprietarul primește încasările nete și un raport lunar transparent, fără implicare zilnică. Randamentul net estimat este 6,5–9,4% pe an; ocuparea medie anuală asumată este 65–75%, cu 70% în calculatoare.",
         },
         {
           q: "Cum se calculează comisionul de administrare RealTrust?",
-          a: "Comisionul este procentual, aplicat exclusiv pe încasările nete din cazare — nu există abonament lunar fix și nici costuri ascunse. Comisionul acoperă listarea multi-channel, pricing dinamic, suportul oaspeților, curățenia și lenjeria, mentenanța, raportarea lunară și gestionarea declarațiilor locale. Dacă apartamentul nu generează încasări, nu plătești comision.",
+          a: "Comisionul este 15–20% din venitul net, definit ca venit brut minus comisioanele Booking/Airbnb și utilități. Include operarea și coordonarea menajului, nu costul acestuia. Menajul este suportat de oaspete ca taxă separată sau din brut; nu se scade din comisionul de administrare. Nu există abonament lunar fix.",
         },
         {
           q: "Care este cea mai bună firmă de administrare în regim hotelier din Timișoara?",
-          a: "RealTrust, prin brandul operațional ApArt Hotel, administrează 15 apartamente și case în regim hotelier în Timișoara (Cetate, Iosefin, Fabric, Dumbrăvița, Circumvalațiunii, ISHO), cu un scor consolidat de reputație de 9,7/10 pe Booking și un randament net mediu raportat de 9,4% pe an. Contract cu perioadă de probă de 90 de zile și ieșire fără penalizări.",
+          a: "RealTrust, prin brandul operațional ApArt Hotel, administrează 13 cazări active și case în regim hotelier în Timișoara (Cetate, Iosefin, Fabric, Dumbrăvița, Circumvalațiunii, ISHO), cu un scor consolidat de reputație de 9,7/10 pe Booking și randament net estimat 6,5–9,4%/an. Contract standard 12 luni, probă/reziliere 90 zile, preaviz 30 zile.",
         },
       ],
 
@@ -59,7 +59,7 @@ export const OWNERS_FAQ_DATA = {
       items: [
         {
           q: "How do we get to a net yield of around 9.4%?",
-          a: "We start from gross collected revenue (75% estimated average occupancy) and deduct operating costs (consumables, utilities, linen), the tax applicable to your structure and RealTrust Property Management, 15-20% of revenue. What remains is the net income paid to you. Measured against the apartment's purchase value, that net income equals a 9.4% annual yield — so 9.4% is the final figure after all deductions, not a gross number.",
+          a: "Estimated net yield is 6.5–9.4% annually, not guaranteed. Annual occupancy assumption 65–75%, conservative calculator default 70%. Management is 15–20% of net: gross minus channel fees and utilities. Cleaning is guest-paid separately or deducted from gross, never from management commission.",
         },
         {
           q: "What short-term rental license is required in Timișoara?",
@@ -71,7 +71,7 @@ export const OWNERS_FAQ_DATA = {
         },
         {
           q: "What is the minimum property management contract duration?",
-          a: "RealTrust's standard contract is flexible with no mandatory minimum period. You can opt out anytime with 30 days' notice. This flexibility reflects our confidence — our owners earn a verified 9.4% net ROI per year. Calculate yours in 60 seconds below.",
+          a: "Standard 12-month management contract, with a 90-day trial/termination option and 30-day notice.",
         },
         {
           q: "How are guest-caused damages handled?",
@@ -91,7 +91,7 @@ export const OWNERS_FAQ_DATA = {
         },
         {
           q: "Is short-term rental management really passive income?",
-          a: "Yes. RealTrust handles the entire operation — listings and dynamic pricing, guest communication, check-in/check-out, cleaning, linens, maintenance and monthly tax filings. Owners receive net payouts and a transparent monthly report with no daily involvement. The average net yield is 9.4% per year, at an estimated 75% occupancy.",
+          a: "Yes. RealTrust handles the entire operation — listings and dynamic pricing, guest communication, check-in/check-out, cleaning, linens, maintenance and monthly tax filings. Owners receive net payouts and a transparent monthly report with no daily involvement. Estimated net yield is 6.5–9.4% annually; assumed occupancy 65–75%, calculator default 70%.",
         },
         {
           q: "How is the RealTrust management fee calculated?",
@@ -99,7 +99,7 @@ export const OWNERS_FAQ_DATA = {
         },
         {
           q: "Which is the best short-term rental management company in Timișoara?",
-          a: "RealTrust, operating under the ApArt Hotel brand, manages 15 apartments and houses in short-term rental across Timișoara (Cetate, Iosefin, Fabric, Dumbrăvița, Circumvalațiunii, ISHO), with a consolidated 9.7/10 reputation score on Booking and a reported average net yield of 9.4% per year. Contracts include a 90-day trial period with penalty-free exit.",
+          a: "RealTrust, operating under the ApArt Hotel brand, manages 13 active accommodation properties and houses in short-term rental across Timișoara (Cetate, Iosefin, Fabric, Dumbrăvița, Circumvalațiunii, ISHO), with a consolidated 9.7/10 reputation score on Booking and a reported average net yield of 9.4% per year. Contracts include a 90-day trial period with penalty-free exit.",
         },
       ],
 

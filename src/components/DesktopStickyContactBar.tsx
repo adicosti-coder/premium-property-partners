@@ -22,9 +22,7 @@ const DesktopStickyContactBar = () => {
   };
 
   const handleWhatsApp = () => {
-    trackWhatsApp();
-    fireContactClick("whatsapp");
-    trackCriticalConversion("WhatsApp_Click", { source: "desktop_sticky_bar" });
+    trackCriticalConversion("whatsapp_click", { source: "desktop_sticky_bar" });
     const message = encodeURIComponent(t.floatingWhatsapp.message);
     window.open(`https://wa.me/40799069256?text=${message}`, '_blank', 'noopener,noreferrer');
   };

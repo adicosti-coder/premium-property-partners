@@ -97,7 +97,7 @@ const canonicalizeUrl = (raw: string): string | null => {
     if (host !== "www.realtrust.ro" && host !== "mvzssjyzbwccioqvhjpo.supabase.co") return null;
   }
   const path = url.pathname.replace(/\/+$/, "") || "/";
-  return `${BASE_URL}${path}`;
+  return `${BASE_URL}${path.replace(/^\/complex\//, "/complexe/")}`;
 };
 
 /** Rewrite every <loc>/<xhtml:link href> in a block to its canonical form. */
@@ -117,8 +117,8 @@ const canonicalizeBlock = (block: string): string | null => {
     (_m, before: string, href: string, after: string) => {
       const canonicalHref = canonicalizeUrl(href) ?? canonicalLoc;
       // English alternate is the same path served with ?lang=en (matches page hreflang).
-      if (/hreflang="en"/.test(before + after)) {
-        return `<xhtml:link${before}href="${canonicalHref}?lang=en"${after}/>`;
+      if (/hreflang="en(?:-[^"]+)?"/.test(before + after)) {
+        return "";
       }
       return `<xhtml:link${before}href="${canonicalHref}"${after}/>`;
     },

@@ -153,7 +153,7 @@ const Investitii = () => {
   const faqItems = language === "ro" ? [
     {
       question: "Care este randamentul mediu pentru o investiție imobiliară în Timișoara?",
-      answer: "Pentru regim hotelier administrat de noi, randamentul net estimat este de 6,5–9,4% pe an, calculat pe ipoteze publice (ocupare 75%, costuri și taxe). În chirie clasică pe termen lung, randamentul tipic în Timișoara este 4-5% net.",
+      answer: "Pentru regim hotelier administrat de noi, randamentul net estimat este de 6,5–9,4% pe an, calculat pe ipoteze publice (ocupare 70%, costuri și taxe). În chirie clasică pe termen lung, randamentul tipic în Timișoara este 4-5% net.",
     },
     {
       question: "Care sunt zonele cu cel mai bun potențial pentru investiții?",
@@ -178,7 +178,7 @@ const Investitii = () => {
   ] : [
     {
       question: "What is the average yield for a real estate investment in Timișoara?",
-      answer: "For hotel-style management by our team, the estimated net yield is 6.5–9.4% per year, calculated on public assumptions (75% occupancy, costs and taxes). Classic long-term rentals in Timișoara typically yield 4-5% net.",
+      answer: "For hotel-style management by our team, the estimated net yield is 6.5–9.4% per year, calculated on public assumptions (70% occupancy, costs and taxes). Classic long-term rentals in Timișoara typically yield 4-5% net.",
     },
     {
       question: "What are the best areas for real estate investment in Timișoara?",
@@ -225,7 +225,7 @@ const Investitii = () => {
   return (
     <div className="dark min-h-screen bg-background">
       <SEOHead 
-        title={language === "ro" ? "Investiții imobiliare în Timișoara | Randament net estimat 6,5–9,4% | RealTrust" : "Real estate investments in Timișoara | 6.5–9.4% estimated net yield | RealTrust"}
+        title={language === "ro" ? "Investiții imobiliare Timișoara | RealTrust" : "Real estate investments Timișoara | RealTrust"}
         description={t.metaDescription}
         url="https://realtrust.ro/investitii"
         jsonLd={[speakableSchema, FINANCIAL_SERVICE_SCHEMA as unknown as Record<string, unknown>]}
@@ -239,8 +239,8 @@ const Investitii = () => {
       <main id="main-content" role="main" aria-label={language === "ro" ? "Conținut principal" : "Main content"}>
       <div className="container mx-auto px-6 pt-24">
         <PageSummary
-          summaryRo="Oportunități de investiție imobiliară în Timișoara cu randament net estimat de 6,5–9,4% pe an, calculat pe ipoteze publice (ocupare 75%). Due diligence complet, administrare profesională inclusă, raportare lunară."
-          summaryEn="Real estate investment opportunities in Timișoara with a 6.5–9.4% estimated net yield calculated on public assumptions (75% occupancy). Full due diligence, professional management included, monthly reporting."
+          summaryRo="Oportunități de investiție imobiliară în Timișoara cu randament net estimat de 6,5–9,4% pe an, calculat pe ipoteze publice (ocupare 70%). Due diligence complet, administrare profesională inclusă, raportare lunară."
+          summaryEn="Real estate investment opportunities in Timișoara with a 6.5–9.4% estimated net yield calculated on public assumptions (70% occupancy). Full due diligence, professional management included, monthly reporting."
         />
       </div>
       
@@ -272,7 +272,7 @@ const Investitii = () => {
             <div className="flex flex-wrap justify-center gap-6 mb-10">
               {[
                 { value: "6,5–9,4%", label: language === "ro" ? "Randament net estimat / an" : "Estimated net ROI / yr" },
-                { value: "~75%", label: language === "ro" ? "Ocupare medie" : "Average occupancy" },
+                { value: "65–75%", label: language === "ro" ? "Ocupare medie" : "Average occupancy" },
                 { value: "10k+", label: language === "ro" ? "Sejururi în portofoliu" : "Stays in portfolio" },
                 { value: "9,7/10", label: language === "ro" ? "Scor recenzii" : "Reviews score" },
               ].map((stat, i) => (
@@ -711,8 +711,8 @@ const Investitii = () => {
                 "Taxele notariale, de intabulare și impozitele se verifică la sursă (ANAF, notar public) înainte de fiecare tranzacție.",
               ]}
               assumptions={[
-                "Ocupare medie 75% pe an pentru regim hotelier.",
-                "Property Management RealTrust: 15-20% din încasări, plus costurile de operare și impozitul aferent.",
+                "Ocupare anuală asumată 65–75%, cu 70% în calcule.",
+                "Property Management RealTrust: 15–20% din net (brut minus canale și utilități), plus costurile de operare și impozitul aferent.",
                 "Randament net de referință 6,5–9,4% pe an, raportat la capitalul total investit.",
                 "Venit brut în regim hotelier de aproximativ 1,6× chiria clasică, pentru apartamente comparabile bine poziționate.",
               ]}

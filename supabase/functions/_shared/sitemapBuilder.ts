@@ -31,7 +31,7 @@ export const poiSlug = (name: string): string =>
 
 const hreflang = (path: string) =>
   `    <xhtml:link rel="alternate" hreflang="ro" href="${BASE_URL}${path}" />
-    <xhtml:link rel="alternate" hreflang="en" href="${BASE_URL}${path || "/"}${path.includes("?") ? "&" : "?"}lang=en" />
+
     <xhtml:link rel="alternate" hreflang="x-default" href="${BASE_URL}${path}" />`;
 
 const URLSET_OPEN = `<?xml version="1.0" encoding="UTF-8"?>
@@ -240,7 +240,7 @@ ${hreflang(`/proprietate/${g.slug}`)}
   for (const c of complexes.data ?? []) {
     if (!c.slug || LANDING_SLUGS.has(c.slug)) continue;
     xml += `  <url>
-    <loc>${BASE_URL}/complex/${c.slug}</loc>
+    <loc>${BASE_URL}/complexe/${c.slug}</loc>
     <lastmod>${day(c.updated_at, c.created_at)}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

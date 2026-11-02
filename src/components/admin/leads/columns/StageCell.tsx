@@ -45,7 +45,7 @@ export const StageCell = ({ lead }: { lead: LeadRow }) => {
       onChange={(e) => change(e.target.value)}
       className="h-9 rounded-md border border-input bg-background px-2 text-xs"
     >
-      {STAGES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+      {STAGES.map((o) => <option key={o.value} value={o.value}>{o.value === "nou_necontactat" && lead.source === "whatsapp_viewing" ? "🆕 Nou - WhatsApp" : o.label}</option>)}
     </select>
   );
 };

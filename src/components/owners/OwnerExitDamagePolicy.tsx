@@ -44,7 +44,7 @@ const OwnerExitDamagePolicy = () => {
             icon: BadgeCheck,
             label: "Perioadă de probă 90 de zile",
             value:
-              "În primele 3 luni poți renunța cu preaviz de 15 zile, fără nicio penalizare și fără justificare.",
+              "În primele 3 luni poți renunța cu preaviz de 30 zile, fără nicio penalizare și fără justificare.",
           },
           {
             icon: CalendarClock,
@@ -117,7 +117,7 @@ const OwnerExitDamagePolicy = () => {
             icon: BadgeCheck,
             label: "90-day trial period",
             value:
-              "In the first 3 months you can walk away with 15 days' notice — no penalty, no explanation needed.",
+              "In the first 3 months you can walk away with 30 days' notice — no penalty, no explanation needed.",
           },
           {
             icon: CalendarClock,

@@ -26,8 +26,7 @@ declare global {
 const CONSENT_KEY = "cookie_consent_v2";
 
 /** Meta Pixel ID is a publishable value — safe in client code / env. */
-export const META_PIXEL_ID: string | undefined =
-  (import.meta.env.VITE_META_PIXEL_ID as string | undefined) || "2347400952761475";
+export const META_PIXEL_ID = "2347400952761475";
 
 type ConsentChoice = "all" | "analytics_only" | "declined";
 
@@ -120,7 +119,7 @@ export const trackMetaPageView = (): void => {
  * ------------------------------------------------------------------ */
 
 /** Critical funnel events — canonical names shared by GA4, GTM and Meta. */
-export type CriticalConversionEvent = "Lead_Submit" | "PreCalc_Completed" | "WhatsApp_Click";
+export type CriticalConversionEvent = "Lead_Submit" | "PreCalc_Completed" | "whatsapp_click";
 
 export type ConversionEvent =
   | CriticalConversionEvent
@@ -154,7 +153,6 @@ export type ConversionEvent =
 const META_EVENT_MAP: Record<string, { name: string; custom: boolean }> = {
   Lead_Submit: { name: "Lead", custom: false },
   PreCalc_Completed: { name: "PreCalc_Completed", custom: true },
-  WhatsApp_Click: { name: "Contact", custom: false },
   contact_form_submit: { name: "Lead", custom: false },
   generate_lead: { name: "Lead", custom: false },
   generate_lead_roi_calculator: { name: "Lead", custom: false },
