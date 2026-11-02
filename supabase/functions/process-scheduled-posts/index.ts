@@ -201,6 +201,13 @@ Deno.serve(async (req) => {
   // → cel mult O story per rulare, la minimum N minute după ultima trimisă, 09–21 ora României.
   const storyMode = body?.media_type === "STORY";
   const trigger = storyMode ? "cron_story" : "cron_job";
+  // Interrupted workers are not retried automatically: outcome may be unknown.
+  const { data: interrupted } = await sb.from("social_posts").select("id,posted_to")
+    .eq("status", "posting").lt("updated_at", new Date(Date.now() - 15 * 60_000).toISOString());
+  for (const row of interrupted ?? []) {
+    await savePublication(sb, row.id, row.posted_to ?? [], [{ platform: "Publicare", ok: false,
+      error: "Publicarea a fost întreruptă; verifică rețelele înainte de reprogramare pentru a evita o dublură." }]);
+  }
   // Atât Stories, cât și postările din feed pleacă eșalonat: max 1 per rulare,
   // la minimum N minute după ultima trimisă de același tip, 09–21 ora României.
   {

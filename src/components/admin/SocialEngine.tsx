@@ -245,13 +245,15 @@ export default function SocialEngine() {
   const schedulePost = async (id: string, date: Date | null) => {
     const scheduled_at = date ? date.toISOString() : null;
     const status = date ? "scheduled" : "draft";
-    setPosts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, scheduled_at, status } : p))
-    );
-    await supabase
+    const { error } = await supabase
       .from("social_posts")
       .update({ scheduled_at, status } as any)
       .eq("id", id);
+    if (error) {
+      toast({ title: "Programarea nu a fost salvată", description: error.message, variant: "destructive" });
+      return;
+    }
+    await fetchPosts();
     toast({
       title: date ? "Postare programată" : "Programare eliminată",
       description: date ? `Programat pentru ${format(date, "PPP 'la' HH:mm")}` : "Postarea a fost mutată înapoi la ciorne.",
@@ -1425,7 +1427,7 @@ function SocialCard({
 
         {/* Bottom controls: pinned to the card bottom, clear space from the description */}
         <div className="mt-auto pt-3 border-t border-border/60 space-y-2.5">
-          {post.status !== "posting" && (post.status !== "posted" || !!post.last_error) && (
+          {post.status !== "posting" && post.status !== "posted" && (
             <SchedulePicker
               scheduledAt={post.scheduled_at}
               onSchedule={(date) => onSchedule(post.id, date)}

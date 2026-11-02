@@ -7,7 +7,7 @@
 - Training Lab `auto_loop` runs in the background (daily cron), saves runs to `voice_call_analyses` (source `training_lab_auto`) and keeps at most 5 active playbook lessons — bounds AI cost and prompt size.
 # Edge function rules
 
-- Social Engine sends `social_posts` to Make.com only server-side via `process-scheduled-posts` (orchestrator */5, atomic claim, failure → draft, no retry); admin-only RLS — avoids silent no-cors failures and duplicates.
+- Social Engine publishes server-side via `process-scheduled-posts`, using an atomic `posting` claim; confirmed IDs finalize `posted`, total failures and interrupted claims return to draft with errors, partial delivery preserves confirmed platforms, and Make acceptance alone is not delivery — avoids false publication and duplicate retries.
 - AI image/text features run through shared handlers (_shared/aiClient, aiVision, aiText) exposed as `ai-vision` and `ai-text-generation`; legacy function URLs stay as thin entry points and text results are cached by sha256 in `ai_text_cache` — one auth/error/model path without breaking callers, crons or webhooks.
 - Listing/contact pages ship a static #route-shell heading (prerender plugin) removed on first React H1 (max 3s) so real-user FCP/LCP don't wait for the JS bundle.
 - WhatsApp first-contact templates always use the Meta-approved resolver (v6 → v5 → v3), never an environment override; outbound stops for DNC/STOP or any prior inbound interaction.
