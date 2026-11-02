@@ -932,6 +932,13 @@
       "when": 1793601923958,
       "tag": "0132_allow_partial_social_retry_claim",
       "breakpoints": true
+    },
+    {
+      "idx": 133,
+      "version": "7",
+      "when": 1793602603747,
+      "tag": "0133_restrict_automation_complete_run_execution",
+      "breakpoints": true
     }
   ]
 }
