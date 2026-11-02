@@ -19,7 +19,7 @@ const caseStudies: CaseStudy[] = [
     zone: "Centru / Piața Victoriei",
     classicRent: 350,
     realtrustIncome: 900,
-    occupancy: 75,
+    occupancy: 70,
     roi: "6,5–9,4%",
   },
   {
@@ -28,7 +28,7 @@ const caseStudies: CaseStudy[] = [
     zone: "Iulius Town / Dâmbovița",
     classicRent: 450,
     realtrustIncome: 1200,
-    occupancy: 75,
+    occupancy: 70,
     roi: "6,5–9,4%",
   },
   {
@@ -37,7 +37,7 @@ const caseStudies: CaseStudy[] = [
     zone: "Fabric / Aradului",
     classicRent: 550,
     realtrustIncome: 1600,
-    occupancy: 75,
+    occupancy: 70,
     roi: "6,5–9,4%",
   },
 ];

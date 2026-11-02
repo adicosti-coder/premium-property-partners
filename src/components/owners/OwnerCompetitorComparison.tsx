@@ -64,14 +64,14 @@ const OwnerCompetitorComparison = () => {
           },
           {
             label: "Venit net estimat (2 camere, Cetate)",
-            hint: "Estimare orientativă, pe baza mediei anuale de 75% ocupare.",
+            hint: "Estimare orientativă, pe baza mediei anuale de 70% ocupare.",
             realtrust: { text: "~1.100–1.400 €/lună net", mark: "yes" },
             diy: { text: "~900–1.200 €/lună, dar variază cu experiența", mark: "partial" },
             agency: { text: "~550–750 €/lună (chirie clasică)", mark: "no" },
           },
           {
-            label: "Ocupare medie realizată",
-            realtrust: { text: "~75% pe an, tarife ajustate zilnic", mark: "yes" },
+            label: "Ocupare anuală asumată",
+            realtrust: { text: "65–75% pe an; calcul 70%, tarife ajustate zilnic", mark: "yes" },
             diy: { text: "45–65% tipic în primul an, fără pricing dinamic", mark: "partial" },
             agency: { text: "100% ocupat, dar la tarif fix mult mai mic", mark: "partial" },
           },
@@ -133,7 +133,7 @@ const OwnerCompetitorComparison = () => {
         ctaPrimary: "Vreau varianta administrată",
         ctaSecondary: "Vezi comisionul exact",
         disclaimer:
-          "Cifrele sunt estimări orientative pentru un apartament de 2 camere în Timișoara, zona Cetate, la 75% ocupare medie anuală. Rezultatul real depinde de zonă, dotări, capacitate și recenzii.",
+          "Cifrele sunt estimări orientative pentru un apartament de 2 camere în Timișoara, zona Cetate, la 70% ocupare medie anuală. Rezultatul real depinde de zonă, dotări, capacitate și recenzii.",
       }
     : {
         badge: "Honest comparison",
@@ -162,14 +162,14 @@ const OwnerCompetitorComparison = () => {
           },
           {
             label: "Estimated net income (2 rooms, Cetate)",
-            hint: "Indicative estimate based on a 75% annual average occupancy.",
+            hint: "Indicative estimate based on a 70% annual average occupancy.",
             realtrust: { text: "~€1,100–1,400/month net", mark: "yes" },
             diy: { text: "~€900–1,200/month, varies with experience", mark: "partial" },
             agency: { text: "~€550–750/month (classic rent)", mark: "no" },
           },
           {
-            label: "Achieved average occupancy",
-            realtrust: { text: "~75% per year, rates adjusted daily", mark: "yes" },
+            label: "Assumed annual occupancy",
+            realtrust: { text: "65–75% annually; calculation 70%, rates adjusted daily", mark: "yes" },
             diy: { text: "45–65% typical in year one, no dynamic pricing", mark: "partial" },
             agency: { text: "100% occupied, but at a much lower fixed rate", mark: "partial" },
           },
@@ -231,7 +231,7 @@ const OwnerCompetitorComparison = () => {
         ctaPrimary: "I want the managed option",
         ctaSecondary: "See the exact commission",
         disclaimer:
-          "Figures are indicative estimates for a 2-room apartment in Timișoara, Cetate area, at 75% average annual occupancy. Real results depend on area, amenities, capacity and reviews.",
+          "Figures are indicative estimates for a 2-room apartment in Timișoara, Cetate area, at 70% average annual occupancy. Real results depend on area, amenities, capacity and reviews.",
       };
 
   const handleCta = () => {

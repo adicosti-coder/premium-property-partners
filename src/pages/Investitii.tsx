@@ -272,7 +272,7 @@ const Investitii = () => {
             <div className="flex flex-wrap justify-center gap-6 mb-10">
               {[
                 { value: "6,5–9,4%", label: language === "ro" ? "Randament net estimat / an" : "Estimated net ROI / yr" },
-                { value: "~75%", label: language === "ro" ? "Ocupare medie" : "Average occupancy" },
+                { value: "65–75%", label: language === "ro" ? "Ocupare medie" : "Average occupancy" },
                 { value: "10k+", label: language === "ro" ? "Sejururi în portofoliu" : "Stays in portfolio" },
                 { value: "9,7/10", label: language === "ro" ? "Scor recenzii" : "Reviews score" },
               ].map((stat, i) => (
@@ -711,7 +711,7 @@ const Investitii = () => {
                 "Taxele notariale, de intabulare și impozitele se verifică la sursă (ANAF, notar public) înainte de fiecare tranzacție.",
               ]}
               assumptions={[
-                "Ocupare medie 75% pe an pentru regim hotelier.",
+                "Ocupare anuală asumată 65–75%, cu 70% în calcule.",
                 "Property Management RealTrust: 15–20% din net (brut minus canale și utilități), plus costurile de operare și impozitul aferent.",
                 "Randament net de referință 6,5–9,4% pe an, raportat la capitalul total investit.",
                 "Venit brut în regim hotelier de aproximativ 1,6× chiria clasică, pentru apartamente comparabile bine poziționate.",

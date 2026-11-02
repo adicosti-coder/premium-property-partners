@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
+import { calculateManagedIncome } from "@/lib/managementPolicy";
 import { REAL_ESTATE_AGENT_REF } from "@/lib/orgIdentity";
 
 const Footer = lazy(() => import("@/components/Footer"));
@@ -41,23 +42,25 @@ const marketEvolution = [
 ];
 
 const complexLinks = [
-  { name: "ISHO", href: "/complexe/isho", profile: "premium urban", yield: "8.8–10.2%" },
-  { name: "City of Mara", href: "/complexe/city-of-mara", profile: "central business", yield: "8.4–9.8%" },
-  { name: "Ateneo", href: "/complexe/ateneo", profile: "nou, lichiditate bună", yield: "8.0–9.6%" },
-  { name: "Fructus Plaza", href: "/complexe/fructus-plaza", profile: "ultracentral", yield: "9.0–10.5%" },
+  { name: "ISHO", href: "/complexe/isho", profile: "premium urban", yield: "6,5–9,4%" },
+  { name: "City of Mara", href: "/complexe/city-of-mara", profile: "central business", yield: "6,5–9,4%" },
+  { name: "Ateneo", href: "/complexe/ateneo", profile: "nou, lichiditate bună", yield: "6,5–9,4%" },
+  { name: "Fructus Plaza", href: "/complexe/fructus-plaza", profile: "ultracentral", yield: "6,5–9,4%" },
 ];
 
 const scenarioCards = [
-  { title: "Conservator", occupancy: "62%", adr: "55–65€", roi: "6.8–8.0%", note: "potrivit pentru apartamente standard, fără poziționare premium" },
-  { title: "RealTrust standard", occupancy: "75%", adr: "68–82€", roi: "9.0–9.8%", note: "modelul de lucru recomandat pentru randament stabil" },
-  { title: "Premium complex", occupancy: "80%+", adr: "85–110€", roi: "10%+", note: "unități în complexe noi, aproape de business și servicii" },
+  { title: "Conservator", occupancy: "65%", adr: "55–65€", roi: "6.8–8.0%", note: "potrivit pentru apartamente standard, fără poziționare premium" },
+  { title: "RealTrust standard", occupancy: "70%", adr: "68–82€", roi: "6,5–9,4%", note: "modelul de lucru recomandat pentru randament stabil" },
+  { title: "Premium complex", occupancy: "75%", adr: "85–110€", roi: "10%+", note: "unități în complexe noi, aproape de business și servicii" },
 ];
 
-const sensitivityMatrix = [
-  { occupancy: "60%", adr60: "7.6%", adr75: "9.6%", adr90: "11.5%" },
-  { occupancy: "70%", adr60: "8.8%", adr75: "11.2%", adr90: "13.4%" },
-  { occupancy: "80%", adr60: "10.2%", adr75: "12.8%", adr90: "15.4%" },
-];
+const sensitivityMatrix = [65, 70, 75].map(occupancy => {
+  const yieldFor = (rate: number) => {
+    const gross = rate * 365 * occupancy / 100;
+    return `${(calculateManagedIncome({ gross, channelFees: gross * .15, utilities: 1440 }).ownerIncome / 125000 * 100).toFixed(1)}%`;
+  };
+  return { occupancy: `${occupancy}%`, adr60: yieldFor(60), adr75: yieldFor(75), adr90: yieldFor(90) };
+});
 
 const investmentLevers = [
   { icon: Target, title: "Poziționare în piață", text: "Fotografii, dotări și descriere calibrate pentru oaspeți business, city-break și relocări." },
@@ -110,7 +113,7 @@ const AnalizaROIApartament = () => {
   const [purchasePrice, setPurchasePrice] = useState(125000);
   const [monthlyRent, setMonthlyRent] = useState(620);
   const [nightlyRate, setNightlyRate] = useState(72);
-  const [occupancy, setOccupancy] = useState(75);
+  const [occupancy, setOccupancy] = useState(70);
   const [annualGrowth, setAnnualGrowth] = useState(6);
 
   useRegisterFAQs("analiza-roi-apartament", faqItems);
@@ -118,14 +121,14 @@ const AnalizaROIApartament = () => {
   const calculations = useMemo(() => {
     const classicAnnual = monthlyRent * 12;
     const hotelGross = nightlyRate * 365 * (occupancy / 100);
-    const hotelNet = hotelGross * 0.73;
+    const hotelNet = calculateManagedIncome({ gross: hotelGross, channelFees: hotelGross * .15, utilities: 120 * 12 }).ownerIncome;
     const classicRoi = (classicAnnual / purchasePrice) * 100;
     const hotelRoi = (hotelNet / purchasePrice) * 100;
     const appreciation = (purchasePrice * annualGrowth) / 100;
     const totalReturn = hotelNet + appreciation;
     const monthlyHotelNet = hotelNet / 12;
     const paybackYears = purchasePrice / Math.max(totalReturn, 1);
-    const breakevenOccupancy = (classicAnnual / (nightlyRate * 365 * 0.73)) * 100;
+    const breakevenOccupancy = ((classicAnnual / .8 + 120 * 12) / (nightlyRate * 365 * .85)) * 100;
     const investmentScore = Math.min(98, Math.max(45, Math.round(hotelRoi * 6 + annualGrowth * 4 + (occupancy - 55) * 0.8)));
     const scoreLabel = investmentScore >= 82 ? "foarte atractiv" : investmentScore >= 68 ? "solid" : "necesită verificări";
 

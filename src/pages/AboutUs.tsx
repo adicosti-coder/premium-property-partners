@@ -61,8 +61,8 @@ const AboutUs = () => {
       },
       story: {
         title: "Povestea Noastră",
-        subtitle: "De la prima tranzacție la 15 proprietăți administrate",
-        intro: "Am început în Timișoara ca o agenție imobiliară locală, axată pe tranzacții corecte și pe relații pe termen lung. Cu peste 15 ani de experiență directă pe piața imobiliară Timișoara, urmărim zilnic evoluția prețurilor apartamente Timișoara pe fiecare cartier — de la Centru și Iosefin la ISHO, Dumbrăvița și Complex Studențesc — și oferim consultanță credit ipotecar prin parteneriate cu brokeri și bănci (BCR, BT, ING, Raiffeisen, BRD). Pe măsură ce piața s-a maturizat, am observat că tot mai mulți proprietari căutau venituri pasive fără bătăi de cap — așa s-a născut ApArt Hotel, divizia noastră de regim hotelier. Astăzi gestionăm 15 apartamente cu un randament net estimat de 6,5–9,4% pe an și un rating consolidat de 9,7/10.",
+        subtitle: "De la prima tranzacție la 13 cazări active administrate",
+        intro: "Am început în Timișoara ca o agenție imobiliară locală, axată pe tranzacții corecte și pe relații pe termen lung. Cu peste 15 ani de experiență directă pe piața imobiliară Timișoara, urmărim zilnic evoluția prețurilor apartamente Timișoara pe fiecare cartier — de la Centru și Iosefin la ISHO, Dumbrăvița și Complex Studențesc — și oferim consultanță credit ipotecar prin parteneriate cu brokeri și bănci (BCR, BT, ING, Raiffeisen, BRD). Pe măsură ce piața s-a maturizat, am observat că tot mai mulți proprietari căutau venituri pasive fără bătăi de cap — așa s-a născut ApArt Hotel, divizia noastră de regim hotelier. Astăzi gestionăm 13 cazări active cu un randament net estimat de 6,5–9,4% pe an și un rating consolidat de 9,7/10.",
         realEstate: {
           title: "Servicii Imobiliare Complete",
           description: "Sub brandul RealTrust, oferim un spectru complet de servicii imobiliare care acoperă toate nevoile proprietarilor și investitorilor:",
@@ -155,7 +155,7 @@ const AboutUs = () => {
       stats: {
         title: "În Cifre",
         items: [
-          { value: "15", label: "Proprietăți administrate" },
+          { value: "13", label: "Cazări active administrate" },
           { value: "75%", label: "Ocupare medie anuală" },
           { value: "9,7/10", label: "Rating consolidat oaspeți" },
           { value: "6,5–9,4%", label: "Randament net estimat / an" }
@@ -174,7 +174,7 @@ const AboutUs = () => {
         title: "Întrebări Frecvente despre RealTrust",
         items: [
           { q: "Cine este fondatorul RealTrust Timișoara?", a: "Compania este fondată și condusă de Adrian Costi, antreprenor local cu peste 25 de ani de experiență în piața imobiliară din Timișoara și vestul României. Adrian este implicat direct în fiecare colaborare cu proprietarii." },
-          { q: "Ce comision are agenția imobiliară RealTrust Timișoara?", a: "Pentru vânzări aplicăm un comision standard de 2% + TVA din partea vânzătorului, iar pentru închirieri pe termen lung un comision egal cu o chirie lunară. Pentru administrare în regim hotelier, Property Management RealTrust este 15–20% din încasări, în funcție de pachetul ales, fără taxe ascunse. Toate condițiile sunt agreate înainte de semnarea contractului." },
+          { q: "Ce comision are agenția imobiliară RealTrust Timișoara?", a: "Pentru vânzări aplicăm un comision standard de 2% + TVA din partea vânzătorului, iar pentru închirieri pe termen lung un comision egal cu o chirie lunară. Pentru administrare în regim hotelier, Property Management RealTrust este 15–20% din net (brut minus comisioane de canal și utilități), în funcție de pachetul ales, fără taxe ascunse. Toate condițiile sunt agreate înainte de semnarea contractului." },
           { q: "Oferiți consultanță pentru credit imobiliar Timișoara?", a: "Da, colaborăm cu brokeri independenți de credite și cu băncile partenere (BCR, BT, ING, Raiffeisen, BRD) pentru pre-aprobare, comparare oferte (dobândă fixă vs. variabilă), Prima Casă/Noua Casă și evaluare ANEVAR. Consultanța inițială este gratuită pentru clienții noștri." },
           { q: "Vindeți și case de vânzare Timișoara, nu doar apartamente?", a: "Da. Portofoliul nostru include case de vânzare Timișoara — case individuale, duplexuri și vile cu teren intravilan în zonele Dumbrăvița, Giroc, Moșnița Nouă, Ghiroda, Săcălaz, Chișoda și Freidorf — pe lângă apartamente (1–4 camere) în tot orașul." },
           { q: "Lucrați cu ansambluri rezidențiale Timișoara?", a: "Da, avem parteneriate active și listări în principalele ansambluri rezidențiale Timișoara: ISHO, Ateneo Residence, Vox Park, Openville, Take Residence, City Business Centre, Coresi, Modern Residence și complexele noi din zona Aradului și Dumbrăvița. Oferim acces la prețuri de dezvoltator și consultanță pentru achiziții off-plan." },
@@ -203,8 +203,8 @@ const AboutUs = () => {
       },
       story: {
         title: "Our Story",
-        subtitle: "From the first transaction to 15 properties managed",
-        intro: "We started in Timișoara as a local real estate agency, focused on fair transactions and long-term relationships. As the market matured, we noticed more owners sought passive income without hassle — that's how ApArt Hotel was born, our short-term rental division. Today we manage 15 apartments with an estimated 6.5–9.4% net yearly randament and a consolidated 9.7/10 rating.",
+        subtitle: "From the first transaction to 13 active accommodation properties",
+        intro: "We started in Timișoara as a local real estate agency, focused on fair transactions and long-term relationships. As the market matured, we noticed more owners sought passive income without hassle — that's how ApArt Hotel was born, our short-term rental division. Today we manage 13 active accommodation properties with an estimated 6.5–9.4% net yearly randament and a consolidated 9.7/10 rating.",
         realEstate: {
           title: "Complete Real Estate Services",
           description: "Under the RealTrust brand, we offer a complete spectrum of real estate services covering all needs of owners and investors:",
@@ -297,7 +297,7 @@ const AboutUs = () => {
       stats: {
         title: "In Numbers",
         items: [
-          { value: "15", label: "Properties under management" },
+          { value: "13", label: "Active accommodation properties" },
           { value: "75%", label: "Average annual occupancy" },
           { value: "9.7/10", label: "Consolidated guest rating" },
           { value: "6.5–9.4%", label: "Estimated net yield / yr" }
@@ -316,7 +316,7 @@ const AboutUs = () => {
         title: "Frequently Asked Questions about RealTrust",
         items: [
           { q: "Who is the founder of RealTrust Timișoara?", a: "The company is founded and led by Adrian Costi, a local entrepreneur with over 25 years of experience in the Timișoara real estate market. Adrian is directly involved in every owner collaboration." },
-          { q: "What commission does RealTrust real estate agency charge?", a: "For sales we apply a standard 2% + VAT commission from the seller; for long-term rentals one monthly rent. For short-term rental management, Property Management RealTrust is 15–20% of revenue depending on the package, with no hidden costs. All terms are agreed upfront." },
+          { q: "What commission does RealTrust real estate agency charge?", a: "For sales we apply a standard 2% + VAT commission from the seller; for long-term rentals one monthly rent. For short-term rental management, Property Management RealTrust is 15–20% of net (gross minus channels and utilities) depending on the package, with no hidden costs. All terms are agreed upfront." },
           { q: "Do you offer mortgage consulting in Timișoara?", a: "Yes, we partner with independent mortgage brokers and partner banks (BCR, BT, ING, Raiffeisen, BRD) for pre-approval, offer comparison (fixed vs. variable rate), Prima Casă/Noua Casă programs and ANEVAR appraisal. Initial consulting is free for our clients." },
           { q: "Do you sell houses in Timișoara, not just apartments?", a: "Yes. Our portfolio includes both apartments (1–4 rooms) and houses for sale in Timișoara and the metropolitan area (Dumbrăvița, Giroc, Moșnița Nouă, Ghiroda, Săcălaz) — single-family houses, duplexes and villas with land." },
           { q: "Which areas of Timișoara do you cover?", a: "We cover the entire city of Timișoara — Centru, ISHO, Iulius Town, Complex Studențesc, Cetate, Iosefin, Elisabetin, Fabric, Mehala, Freidorf, Lipovei, Aradului — plus metropolitan areas Dumbrăvița, Giroc, Moșnița Nouă and Ghiroda." },
@@ -336,11 +336,11 @@ const AboutUs = () => {
   const seoContent = {
     ro: {
       title: "Despre RealTrust: Imobiliare & Regim Hotelier Timișoara",
-      description: "Echipa RealTrust: experți în imobiliare și regim hotelier Timișoara. 15 proprietăți administrate cu randament net estimat 6,5–9,4% pe an. Contactează-ne acum!"
+      description: "Echipa RealTrust: experți în imobiliare și regim hotelier Timișoara. 13 cazări active administrate cu randament net estimat 6,5–9,4% pe an. Contactează-ne acum!"
     },
     en: {
       title: "About RealTrust: Real Estate & Short-Term Rentals Timișoara",
-      description: "RealTrust team: real estate and short-term rental experts in Timișoara. 15 properties managed with an estimated 6.5–9.4% net yearly randament. Contact us today!"
+      description: "RealTrust team: real estate and short-term rental experts in Timișoara. 13 active accommodation properties with an estimated 6.5–9.4% net yearly randament. Contact us today!"
     }
   };
 
@@ -723,7 +723,7 @@ const AboutUs = () => {
                       <li className="flex justify-between border-b border-border py-2"><span className="text-muted-foreground">{language === "ro" ? "Zonă" : "Area"}</span><span className="font-medium">Iosefin / Centru</span></li>
                       <li className="flex justify-between border-b border-border py-2"><span className="text-muted-foreground">{language === "ro" ? "Investiție" : "Investment"}</span><span className="font-medium">€95.000</span></li>
                       <li className="flex justify-between border-b border-border py-2"><span className="text-muted-foreground">{language === "ro" ? "Mobilare + setup" : "Furnishing + setup"}</span><span className="font-medium">€8.500</span></li>
-                      <li className="flex justify-between py-2"><span className="text-muted-foreground">{language === "ro" ? "Ocupare medie" : "Avg. occupancy"}</span><span className="font-medium">82%</span></li>
+                      <li className="flex justify-between py-2"><span className="text-muted-foreground">{language === "ro" ? "Ocupare medie" : "Avg. occupancy"}</span><span className="font-medium">70%</span></li>
                     </ul>
                   </div>
                   <div>
@@ -731,8 +731,8 @@ const AboutUs = () => {
                     <ul className="space-y-2 text-sm">
                       <li className="flex justify-between border-b border-border py-2"><span className="text-muted-foreground">{language === "ro" ? "Venit brut" : "Gross income"}</span><span className="font-medium">€16.800</span></li>
                       <li className="flex justify-between border-b border-border py-2"><span className="text-muted-foreground">{language === "ro" ? "Comision platforme" : "Platform fees"}</span><span className="font-medium">−€2.520</span></li>
-                      <li className="flex justify-between border-b border-border py-2"><span className="text-muted-foreground">{language === "ro" ? "Curățenie + utilități" : "Cleaning + utilities"}</span><span className="font-medium">−€2.400</span></li>
-                      <li className="flex justify-between border-b border-border py-2"><span className="text-muted-foreground">{language === "ro" ? "Management 20%" : "Management 20%"}</span><span className="font-medium">−€2.156</span></li>
+                      <li className="flex justify-between border-b border-border py-2"><span className="text-muted-foreground">{language === "ro" ? "Utilități (menaj separat suportat de oaspete)" : "Utilities (guest-paid cleaning separate)"}</span><span className="font-medium">−€2.400</span></li>
+                      <li className="flex justify-between border-b border-border py-2"><span className="text-muted-foreground">{language === "ro" ? "Management 20% din net" : "Management 20% din net"}</span><span className="font-medium">−€2.376</span></li>
                       <li className="flex justify-between py-2 text-base"><span className="font-semibold">{language === "ro" ? "Profit net" : "Net profit"}</span><span className="font-bold text-primary">€6.700–9.700 · 6,5–9,4%</span></li>
                     </ul>
                   </div>
