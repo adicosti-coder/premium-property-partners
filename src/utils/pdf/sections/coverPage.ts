@@ -58,8 +58,8 @@ export const drawCoverPage = (ctx: PdfContext, saleProps: PropertyRow[], rentalP
   doc.setTextColor(...COLORS.gray);
   doc.text(
     isRo
-      ? "Proprietăți cu Randament Garantat în Capitala Culturală Europeană"
-      : "Properties with Guaranteed Returns in the European Cultural Capital",
+      ? "Proprietăți cu Randament Net Estimat în Capitala Culturală Europeană"
+      : "Properties with Estimated Net Returns in the European Cultural Capital",
     pageWidth / 2, 130, { align: "center" }
   );
 
@@ -75,12 +75,12 @@ export const drawCoverPage = (ctx: PdfContext, saleProps: PropertyRow[], rentalP
     ? [
         { value: String(totalProps), label: "Proprietăți\nAdministrate", icon: "🏠" },
         { value: "6,5–9,4%", label: "Randament net estimat\nAnual", icon: "📈" },
-        { value: "85%", label: "Rată de\nOcupare", icon: "📊" },
+        { value: "65–75%", label: "Rată de\nOcupare", icon: "📊" },
       ]
     : [
         { value: String(totalProps), label: "Managed\nProperties", icon: "🏠" },
         { value: "6.5–9.4%", label: "Estimated\nAnnual Net ROI", icon: "📈" },
-        { value: "85%", label: "Occupancy\nRate", icon: "📊" },
+        { value: "65–75%", label: "Occupancy\nRate", icon: "📊" },
       ];
 
   stats.forEach((s, i) => {

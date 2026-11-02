@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { calculateManagedIncome } from "@/lib/managementPolicy";
 import { Label } from "@/components/ui/label";
 
 interface Props {
@@ -22,11 +23,11 @@ const PropertyInvestmentCalculator = ({ propertyName, propertyCode, defaultPrice
   const calc = useMemo(() => {
     if (!pret || !chirie) return null;
 
-    const cBruta = strategy === "hotel" ? chirie * 1.65 : chirie;
-    const factorNet = strategy === "hotel" ? 0.72 : 0.95;
+    const cBruta = strategy === "hotel" ? chirie * 1.65 * .70 / .75 : chirie;
+    const monthlyNet = strategy === "hotel" ? calculateManagedIncome({ gross: cBruta, channelFees: cBruta * .15, utilities: expenses }).ownerIncome : cBruta * .95;
     const invTotal = pret * 1.02;
 
-    const vNetAnual = (cBruta * 12) * factorNet;
+    const vNetAnual = monthlyNet * 12;
     const yieldVal = (vNetAnual / invTotal) * 100;
     const ani = vNetAnual > 0 ? invTotal / vNetAnual : 0;
     const cash = cBruta - (pret * 0.75 * 0.00632) - expenses;
@@ -39,12 +40,12 @@ const PropertyInvestmentCalculator = ({ propertyName, propertyCode, defaultPrice
     let verdict = "";
     if (yieldVal >= 7.5) {
       verdict = language === "ro"
-        ? "<strong>Verdict: Oportunitate Majoră.</strong> Randamentul net este net superior mediei pieței. Recomandăm acest activ pentru un portofoliu performant."
+        ? "<strong>Verdict: Oportunitate Majoră.</strong> Scenariu pe valorile introduse, nu ofertă de randament garantat. Reperul estimat este 6,5–9,4% net/an. Ipoteze: 70% ocupare, canale 15%, administrare 20% din net după canale și utilitățile introduse; menaj separat suportat de oaspete."
         : "<strong>Verdict: Major Opportunity.</strong> The net yield is well above the market average. We recommend this asset for a high-performance portfolio.";
     } else if (yieldVal >= 5.5) {
       verdict = language === "ro"
-        ? "<strong>Verdict: Randament Stabil.</strong> Această proprietate se încadrează în profilul de risc scăzut, oferind o capitalizare sigură în Timișoara."
-        : "<strong>Verdict: Stable Yield.</strong> This property fits a low-risk profile, offering safe capitalization in Timișoara.";
+        ? "<strong>Verdict: Randament Stabil.</strong> Această proprietate se încadrează în profilul de risc scăzut, cu rezultate care depind de ocupare, costuri și achiziție."
+        : "<strong>Verdict: Stable Yield.</strong> This property fits a low-risk profile, with results depending on occupancy, costs and acquisition.";
     } else {
       verdict = language === "ro"
         ? "<strong>Verdict: Achiziție Rezidențială.</strong> Cifrele sugerează un beneficiu mai mare prin locuire proprie sau o strategie de revânzare după apreciere."

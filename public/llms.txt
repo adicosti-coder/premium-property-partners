@@ -1,6 +1,6 @@
 # RealTrust & ApArt Hotel Timișoara
 
-> Platformă imobiliară integrată în Timișoara: intermediere vânzări și cumpărări, închirieri pe termen lung, consultanță pentru investiții imobiliare și administrare apartamente în regim hotelier (ApArt Hotel), cu randament net 9,4% calculat transparent.
+> Platformă imobiliară integrată în Timișoara: intermediere vânzări și cumpărări, închirieri pe termen lung, consultanță pentru investiții imobiliare și administrare apartamente în regim hotelier (ApArt Hotel), cu randament net estimat 6,5–9,4% calculat transparent.
 
 RealTrust este o agenție imobiliară din Timișoara (jud. Timiș) specializată în apartamente premium, regim hotelier și consultanță pentru investitori. Brandul ApArt Hotel operează apartamentele în regim hotelier cu un scor consolidat de reputație 9,7/10 (Booking).
 
@@ -25,10 +25,10 @@ RealTrust este o companie imobiliară din Timișoara specializată în investiț
 ## Servicii de administrare în regim hotelier
 
 - Administrare completă: clasificare/autorizare, listare pe Booking și Airbnb, rezervare directă, prețuri dinamice, comunicare cu oaspeții, check-in/check-out, curățenie și lenjerie, mentenanță, raportare lunară.
-- Randament net mediu 9,4%/an (ocupare 75%) — circa 1,6x față de chiria clasică.
+- Randament net estimat 6,5–9,4%/an (ocupare 70%) — circa 1,6x față de chiria clasică.
 - Consultanță investiții: analiză ROI, due diligence, structurare portofoliu.
 
-## Portofoliu (14 unități în Timișoara)
+## Portofoliu (13 unități în Timișoara)
 
 NordOne, GREEN FOREST (Denya Forest 5), Fructus Plaza ULTRACENTRAL, Cross Square House, AVENUE of MARA, HELIOS, Apicultorilor House, Sunset Da-Ra, ATENEO, MODERN Studio, Moonlight Emerald Suite, XCity 3, Ring Residence. Zone reprezentative: ISHO, Ring, Paltim, Fructus, centru istoric.
 
@@ -37,7 +37,7 @@ Lista completă cu specificații, facilități și linkuri de rezervare: [/llms-
 ## Structură comisioane
 
 - Comision procentual din încasările nete de cazare; fără abonament lunar fix.
-- Property Management RealTrust: 15-20% din încasări. Ocupare estimată folosită în calcule: 75%.
+- Property Management RealTrust: 15–20% din net (brut minus canale și utilități). Ocupare estimată folosită în calcule: 70%.
 - Perioadă de probă 90 de zile cu ieșire fără penalizări; politică de daune pe 3 niveluri.
 
 ## Contact

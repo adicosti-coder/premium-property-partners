@@ -8,7 +8,7 @@ export interface YieldReportInput {
   occupancy: number;
   /** Cleaning fee per stay (EUR) — paid by the guest */
   cleaningCost: number;
-  /** Management commission in percent of gross revenue */
+  /** Management commission in percent of net (gross minus channels and utilities) */
   managementFee: number;
   /** Platform commission in percent of gross revenue */
   platformFee: number;
@@ -21,6 +21,7 @@ export interface YieldReportInput {
   cleaningCosts: number;
   managementCost: number;
   platformCost: number;
+  utilities?: number;
   totalCosts: number;
   netProfit: number;
   yearlyGross: number;
@@ -41,7 +42,7 @@ const NET_YIELD_MIN = 6.5;
 const NET_YIELD_MAX = 9.4;
 const NET_YIELD_RANGE = `${NET_YIELD_MIN}–${NET_YIELD_MAX}`;
 /** Operational deduction (platform commissions + effective income tax + consumables). */
-const OPERATIONAL_DEDUCTION = 27;
+
 
 const eur = (value: number) =>
   `${Math.round(value).toLocaleString("ro-RO", { maximumFractionDigits: 0 })} EUR`;
@@ -72,7 +73,7 @@ const copy = {
     avgMonth: "Medie netă lunară",
     marginLabel: "Marja netă din venitul brut",
     transparencyBody: [
-      `Deduceri operaționale — ${OPERATIONAL_DEDUCTION}%: comisioanele platformelor (Booking, Airbnb, Expedia), impozitul efectiv pe venit și consumabilele (produse de igienă, cafea, sare, ulei, lenjerie).`,
+      "Administrare 15–20% din net: venit brut minus comisioanele Booking/Airbnb și utilități. Impozitele personale și reparațiile nu sunt incluse în simularea instant.",
       "Taxa de curățenie este achitată separat de oaspeți la momentul rezervării, deci nu se scade din venitul tău.",
       `Utilitățile, întreținerea și comisionul de administrare se scad ulterior — de aceea randamentul-țintă de ${NET_YIELD_RANGE}% este venit curat (net), nu brut.`,
       "Cifrele din acest raport sunt estimări pe ipotezele alese de tine în calculator. Valoarea finală pentru apartamentul tău se stabilește după evaluarea gratuită.",
@@ -106,7 +107,7 @@ const copy = {
     avgMonth: "Average net per month",
     marginLabel: "Net margin of gross revenue",
     transparencyBody: [
-      `Operational deduction — ${OPERATIONAL_DEDUCTION}%: platform commissions (Booking, Airbnb, Expedia), effective income tax and consumables (toiletries, coffee, salt, oil, linen).`,
+      "Management 15–20% of net: gross minus Booking/Airbnb fees and utilities. Personal taxes and repairs are not included in the instant estimate.",
       "The cleaning fee is paid separately by guests at booking time, so it is not deducted from your income.",
       `Utilities, maintenance and the management commission are subtracted afterwards — which is why the ${NET_YIELD_RANGE}% target yield is net income, not gross.`,
       "Figures are estimates based on the assumptions you selected in the calculator. Your final number is set after the free valuation.",
@@ -223,6 +224,7 @@ export const generateYieldReportPdf = async (input: YieldReportInput): Promise<j
   sectionTitle(t.deductions);
   row(t.platFee, `- ${eur(input.platformCost)}`);
   row(t.mgmtFee, `- ${eur(input.managementCost)}`);
+  if (input.utilities !== undefined) row(language === "ro" ? "Utilități estimate" : "Estimated utilities", `- ${eur(input.utilities)}`);
   row(
     language === "ro"
       ? "Curățenie (recuperată din taxa plătită de oaspeți)"

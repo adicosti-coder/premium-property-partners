@@ -539,7 +539,7 @@ export function buildRemainingStaticRoutes(): ExtraRoute[] {
         <li><strong>Esențial — 18%</strong> din venitul încasat</li>
         <li><strong>Standard — 20%</strong> din venitul încasat</li>
       </ul>
-      <p>Comisionul se aplică la venitul efectiv încasat, fără costuri ascunse. Ipotezele folosite în proiecțiile noastre: randament net țintă 9,4%, ocupare medie 75% și 27% deduceri pentru management și taxe.</p>
+      <p>Comisionul se aplică la venitul efectiv încasat, fără costuri ascunse. Ipotezele folosite în proiecțiile noastre: randament net țintă 9,4%, ocupare medie 70% și administrare 15–20% din net (brut minus canale și utilități).</p>
       <p>Vezi <a href="${BASE_URL}/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara">cât costă administrarea unui apartament în regim hotelier</a>, <a href="${BASE_URL}/pentru-proprietari">serviciul complet pentru proprietari</a> și <a href="${BASE_URL}/calculator-randament">calculatorul de randament</a>.</p>
       `,
       'WebPage',
@@ -564,7 +564,7 @@ export function buildRemainingStaticRoutes(): ExtraRoute[] {
       'Catalog investiții imobiliare Timișoara',
       `
       <p>${ENTITY_SHORT}</p>
-      <p>Fiecare oportunitate din catalog include zona, tipul de apartament, capitalul necesar și randamentul estimat. Proiecțiile pornesc de la ipotezele publicate: 9,4% randament net țintă, 75% ocupare medie și 27% deduceri pentru management și taxe.</p>
+      <p>Fiecare oportunitate din catalog include zona, tipul de apartament, capitalul necesar și randamentul estimat. Proiecțiile pornesc de la ipotezele publicate: 9,4% randament net țintă, 70% ocupare medie și administrare 15–20% din net (brut minus canale și utilități).</p>
       <p>Vezi <a href="${BASE_URL}/investitii">pagina de investiții</a>, <a href="${BASE_URL}/zone-investitii-timisoara">zonele recomandate pentru investiții</a> și <a href="${BASE_URL}/calculator-randament">calculatorul de randament</a>.</p>
       `,
       'CollectionPage',
