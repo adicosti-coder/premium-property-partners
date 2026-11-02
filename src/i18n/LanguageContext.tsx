@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { ro, loadEnglish, Language, Translations } from './translations';
 import { isBrowser, safeLocalStorage } from '@/utils/browserStorage';
+import { Helmet } from 'react-helmet-async';
+import { initialLanguage } from './languagePolicy';
 
 interface LanguageContextType {
   language: Language;
@@ -15,9 +17,8 @@ let englishDict: Translations | null = null;
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguageState] = useState<Language>(() => {
-    // Check localStorage first
-    // Default to Romanian — primary audience is Romanian
-    return 'ro';
+    // Romanian is the default; only an explicit language URL selects English.
+    return initialLanguage(isBrowser() ? window.location.search : '');
   });
 
   // Romanian ships in the initial bundle; English is fetched on demand so the
@@ -27,7 +28,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const setLanguage = (lang: Language) => {
-    const activeLanguage: Language = 'ro'; // English temporarily disabled until complete translations.
+    const activeLanguage = lang;
     setLanguageState(activeLanguage);
     safeLocalStorage.setItem('language', activeLanguage);
     if (isBrowser() && typeof document !== 'undefined') {
@@ -66,6 +67,9 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t: dict }}>
+      {language === 'en' && (
+        <Helmet><meta name="robots" content="noindex, follow" /></Helmet>
+      )}
       {children}
     </LanguageContext.Provider>
   );
