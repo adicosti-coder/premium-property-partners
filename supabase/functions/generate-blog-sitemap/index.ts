@@ -125,7 +125,7 @@ serve(async (req: Request) => {
       // indexes both language variants against the shared canonical.
       const hreflangTags = `
     <xhtml:link rel="alternate" hreflang="ro-RO" href="${articleLoc}"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="${articleLoc}"/>
+
     <xhtml:link rel="alternate" hreflang="x-default" href="${articleLoc}"/>`;
       xml += `  <url>
     <loc>${articleLoc}</loc>${lastmod ? `

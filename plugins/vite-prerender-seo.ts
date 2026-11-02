@@ -849,7 +849,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
   routes.push({
     path: '/servicii-imobiliare',
     title: 'Vânzări Apartamente Timișoara și Închirieri Timișoara | RealTrust',
-    description: 'RealTrust intermediază vânzări apartamente Timișoara și închirieri Timișoara: evaluare gratuită, promovare, contracte și administrare în regim hotelier pentru proprietari și investitori.',
+    description: 'Servicii imobiliare în Timișoara: vânzări, închirieri, evaluare gratuită și administrare de proprietăți cu RealTrust.',
     h1: 'Servicii imobiliare în Timișoara — vânzări, închirieri și administrare',
     canonical: `${BASE_URL}/servicii-imobiliare`,
     seoBody: `
@@ -898,8 +898,11 @@ function buildStaticRoutes(): PrerenderRoute[] {
     seoBody: HOMEPAGE_AUTHORITY_BODY,
     jsonLd: {
       '@context': 'https://schema.org',
-      '@type': 'LocalBusiness',
-      name: 'RealTrust Timișoara',
+      '@type': 'RealEstateAgent',
+      '@id': `${BASE_URL}/#realestateagent`,
+      name: 'RealTrust',
+      legalName: 'SC Imo Business Centrum SRL',
+      taxID: 'RO14380627',
       description: 'Servicii imobiliare, investiții și administrare de proprietăți în regim hotelier în Timișoara.',
       url: `${BASE_URL}/`,
       telephone: '+40799069256',
@@ -1457,7 +1460,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       <p>Filtrăm rezervările pentru a proteja apartamentul tău: blocare rezervări locale (Timișoara) pentru evitarea petrecerilor, verificare ID la check-in, garanție prin pre-autorizare card 200–500 €, contract de cazare semnat digital, monitorizare nivel decibeli prin senzor smart NoiseAware (nu camere — respectăm intimitatea). Asigurare suplimentară Booking AirCover și Airbnb Host Protection activate implicit.</p>
 
       <h3>Pachete de management — Lite, Standard, Premium</h3>
-      <p>Trei pachete adaptate nevoilor proprietarilor: <strong>Lite</strong> (15% comision, doar marketing și rezervări — proprietarul gestionează curățenia și check-in-urile), <strong>Standard</strong> (20% comision, full-service operațional), <strong>Premium</strong> (25% comision, full-service + reportaj foto trimestrial actualizat + consultanță upgrade-uri și mobilier). Toate pachetele includ acces dashboard, raport lunar și suport telefonic.</p>
+      <p>Trei pachete adaptate nevoilor proprietarilor: <strong>Lite</strong> (15% comision, doar marketing și rezervări — proprietarul gestionează curățenia și check-in-urile), <strong>Standard</strong> (20% comision, full-service operațional), <strong>Premium</strong> (20% din venitul net, full-service + reportaj foto trimestrial actualizat + consultanță upgrade-uri și mobilier). Toate pachetele includ acces dashboard, raport lunar și suport telefonic.</p>
 
       <h3>Contract de mandat — model standard pentru proprietari</h3>
       <p>Contractul de mandat RealTrust pentru administrare are durată minimă 12 luni, exclusivitate pe canalele Booking/Airbnb (proprietarul își păstrează dreptul de utilizare personală cu rezervare prealabilă), comision flat din încasări (fără surprize), obligația noastră de raportare și plată lunară, posibilitate de reziliere amiabilă cu preaviz 30 zile. Modelul este redactat conform Codului Civil român (mandat cu reprezentare) și poate fi consultat înainte de semnare.</p>
@@ -1730,21 +1733,12 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
     `<meta name="description" content="${escapeHtml(route.description)}">`
   );
 
-  // Self-referencing canonical. The static shell ships without one, so fall
-  // back to injecting before </head> instead of silently dropping the tag.
-  const canonicalTag = `<link rel="canonical" href="${route.canonical}" />`;
-  const canonicalRe = /<link rel="canonical" href="[^"]*"\s*\/?>/;
-  html = canonicalRe.test(html)
-    ? html.replace(canonicalRe, canonicalTag)
-    : html.replace('</head>', `  ${canonicalTag}\n</head>`);
-
-  // hreflang alternates for crawlers that read the static HTML (RO default,
-  // EN via ?lang=en, x-default = RO). Must match CanonicalHreflang.tsx.
+  // Canonical is owned solely by the route-level Helmet emitter.
+  html = html.replace(/<link\b[^>]*rel=["']canonical["'][^>]*>\s*/gi, '');
   html = html.replace(/<link rel="alternate" hreflang="[^"]*" href="[^"]*"\s*\/?>\s*/g, '');
   const roHref = route.canonical.split('?')[0];
   const hreflangTags = [
     `<link rel="alternate" hreflang="ro" href="${roHref}" />`,
-    `<link rel="alternate" hreflang="en" href="${roHref}?lang=en" />`,
     `<link rel="alternate" hreflang="x-default" href="${roHref}" />`,
   ].join('\n  ');
   html = html.replace('</head>', `  ${hreflangTags}\n</head>`);

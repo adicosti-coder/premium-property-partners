@@ -170,7 +170,7 @@ serve(async (req: Request) => {
     // (language is a client-side state, not a URL segment). This prevents GSC from reporting
     // duplicate "alternative page with canonical tag" pages for ?lang=en variants.
     const hreflang = (path: string) => `    <xhtml:link rel="alternate" hreflang="ro" href="${BASE_URL}${path}" />
-    <xhtml:link rel="alternate" hreflang="en" href="${BASE_URL}${path}" />
+
     <xhtml:link rel="alternate" hreflang="x-default" href="${BASE_URL}${path}" />`;
 
     // Add static pages — no <lastmod>: these pages have no per-page timestamp,
@@ -283,7 +283,7 @@ ${hreflang(`/proprietate/${property.slug}`)}
           : new Date(complex.created_at).toISOString().split("T")[0];
 
         xml += `  <url>
-    <loc>${BASE_URL}/complex/${complex.slug}</loc>
+    <loc>${BASE_URL}/complexe/${complex.slug}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

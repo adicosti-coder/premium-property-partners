@@ -109,7 +109,7 @@ const YieldReportDelivery = (props: Props) => {
       const url = (data as { url?: string } | null)?.url;
       if (error || !url) throw new Error("delivery_failed");
 
-      trackConversion({ event: "WhatsApp_Click", source: "multumire_pdf_wa", page_path: "/multumire" });
+      trackConversion({ event: "whatsapp_click", source: "multumire_pdf_wa", page_path: "/multumire" });
 
       const message = [
         `Salut, sunt ${props.name || "proprietar"}${props.zone ? ` din ${props.zone}` : ""}.`,

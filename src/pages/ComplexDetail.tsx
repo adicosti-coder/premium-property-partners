@@ -73,9 +73,9 @@ const ComplexDetail = () => {
       features: "Facilități & Avantaje",
       whyInvest: "De Ce Să Investești Aici?",
       roi: "ROI Estimat",
-      roiValue: "8.5% - 9.5%",
+      roiValue: "6,5–9,4%",
       occupancy: "Rată Ocupare",
-      occupancyValue: "95%+",
+      occupancyValue: "65–75%",
       management: "Management Complet",
       managementValue: "24/7",
       ctaTitle: "Ai o Proprietate în",
@@ -103,9 +103,9 @@ const ComplexDetail = () => {
       features: "Facilities & Benefits",
       whyInvest: "Why Invest Here?",
       roi: "Estimated ROI",
-      roiValue: "8.5% - 9.5%",
+      roiValue: "6,5–9,4%",
       occupancy: "Occupancy Rate",
-      occupancyValue: "95%+",
+      occupancyValue: "65–75%",
       management: "Complete Management",
       managementValue: "24/7",
       ctaTitle: "Have a Property in",
@@ -183,6 +183,7 @@ const ComplexDetail = () => {
   if (notFound || !complex) {
     return (
       <>
+        <SEOHead title="Complex negăsit | RealTrust" noIndex />
         <Header />
         <main className="min-h-screen flex items-center justify-center bg-background">
           <div className="text-center px-6">
@@ -211,9 +212,7 @@ const ComplexDetail = () => {
     "isho", "paltim", "ateneo", "green-forest", "helios", "fructus-plaza",
     "city-of-mara", "vivalia", "nord-one", "xcity-towers", "denya-forest",
   ]);
-  const pageUrl = LANDING_SLUGS.has(complex.slug)
-    ? `https://realtrust.ro/complexe/${complex.slug}`
-    : `https://realtrust.ro/complex/${complex.slug}`;
+  const pageUrl = `https://realtrust.ro/complexe/${complex.slug}`;
 
   // A residential complex is an ApartmentComplex / Place — not a business of
   // its own, and it carries no review content, so no LocalBusiness + no rating.

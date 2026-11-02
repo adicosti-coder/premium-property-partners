@@ -441,7 +441,7 @@ export function buildComplexRoutes(
     if (seen.has(c.slug)) continue;
     seen.add(c.slug);
     const zone = (c.neighborhood || c.location || 'Timișoara').replace(/^Timișoara,\s*/, '').trim();
-    const detailPath = landingSlugs.has(c.slug) ? `/complexe/${c.slug}` : `/complex/${c.slug}`;
+    const detailPath = `/complexe/${c.slug}`;
     if (takenPaths.has(detailPath)) continue;
     const canonical = `${BASE_URL}${detailPath}`;
     const description = clampText(

@@ -236,7 +236,7 @@ const PreCalcMiniForm = ({ source = "pre_calc_owner", eyebrow, variant = "full",
     // Deschidem wa.me sincron (gest utilizator) ca să nu fie blocat pe mobil;
     // salvarea + Make rulează în fundal și nu pot bloca butonul.
     const msg = buildMessage(form);
-    trackCriticalConversion("WhatsApp_Click", { source: `${source}_whatsapp`, cta_variant: getCtaVariant() });
+    trackCriticalConversion("whatsapp_click", { source: `${source}_whatsapp`, cta_variant: getCtaVariant() });
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank", "noopener,noreferrer");
     setSaved(true);
     toast.success(L("Mesajul e gata în WhatsApp — apasă Trimite acolo.", "Your message is ready in WhatsApp — tap Send there."));
