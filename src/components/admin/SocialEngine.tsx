@@ -101,6 +101,7 @@ type SocialPost = {
   created_at: string;
   updated_at: string;
   scheduled_at: string | null;
+  last_error?: string | null;
 };
 
 const INSTAGRAM_CAPTION_LIMIT = 2200;
@@ -244,13 +245,15 @@ export default function SocialEngine() {
   const schedulePost = async (id: string, date: Date | null) => {
     const scheduled_at = date ? date.toISOString() : null;
     const status = date ? "scheduled" : "draft";
-    setPosts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, scheduled_at, status } : p))
-    );
-    await supabase
+    const { error } = await supabase
       .from("social_posts")
       .update({ scheduled_at, status } as any)
       .eq("id", id);
+    if (error) {
+      toast({ title: "Programarea nu a fost salvată", description: error.message, variant: "destructive" });
+      return;
+    }
+    await fetchPosts();
     toast({
       title: date ? "Postare programată" : "Programare eliminată",
       description: date ? `Programat pentru ${format(date, "PPP 'la' HH:mm")}` : "Postarea a fost mutată înapoi la ciorne.",
@@ -412,10 +415,11 @@ export default function SocialEngine() {
         let msg = data?.error || error?.message || "Webhook-ul Make.com nu a răspuns.";
         try { const ctx = (error as any)?.context; if (ctx?.json) msg = (await ctx.json())?.error || msg; } catch { /* ignore */ }
         toast({ title: "Trimitere Make.com eșuată", description: msg, variant: "destructive" });
+        await fetchPosts();
         return;
       }
-      setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, status: "posted", posted_to: data.posted_to } : p)));
-      toast({ title: `Trimis către Make.com — ${label}`, description: "Webhook-ul Make.com a primit postarea. Verifică scenariul Make.com." });
+      await fetchPosts();
+      toast({ title: data.partial_error ? "Publicare parțială" : `Publicat — ${label}`, description: data.partial_error || "Publicarea a fost confirmată de rețea.", variant: data.partial_error ? "destructive" : "default" });
     } finally {
       setPostingId(null);
       setPostingPlatform(null);
@@ -466,7 +470,7 @@ export default function SocialEngine() {
   };
 
   const allDrafts = posts.filter((p) => p.status === "draft");
-  const allScheduled = posts.filter((p) => p.status === "scheduled");
+  const allScheduled = posts.filter((p) => p.status === "scheduled" || p.status === "posting");
   const allPosted = posts.filter((p) => p.status === "posted");
 
   const drafts = filterPosts(allDrafts);
@@ -1350,7 +1354,7 @@ function SocialCard({
             post.status === "scheduled" ? "bg-accent/90 text-accent-foreground" :
             "bg-success/90 text-success-foreground"
           )}>
-            {post.status === "draft" ? "Ciornă" : post.status === "scheduled" ? "Programat" : "Publicat"}
+            {post.status === "posting" ? "În curs de publicare" : post.last_error ? (post.posted_to.length ? "Publicare parțială" : "Publicare eșuată") : post.status === "draft" ? "Ciornă" : post.status === "scheduled" ? "Programat" : "Publicat"}
           </Badge>
           {post.posted_to.length > 0 && (
             <div className="flex gap-1 mt-1">
@@ -1378,6 +1382,7 @@ function SocialCard({
       </CardHeader>
 
       <CardContent className="pt-0 pb-4 flex flex-col flex-1 gap-3">
+        {post.last_error && <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive break-words"><strong>Publicarea nu a fost finalizată</strong><p className="mt-1 whitespace-pre-wrap">{post.last_error}</p></div>}
         {/* Caption */}
         <div className="relative">
           <div className="flex items-center justify-between mb-1">
@@ -1422,7 +1427,7 @@ function SocialCard({
 
         {/* Bottom controls: pinned to the card bottom, clear space from the description */}
         <div className="mt-auto pt-3 border-t border-border/60 space-y-2.5">
-          {post.status !== "posted" && (
+          {post.status !== "posting" && post.status !== "posted" && (
             <SchedulePicker
               scheduledAt={post.scheduled_at}
               onSchedule={(date) => onSchedule(post.id, date)}
@@ -1436,7 +1441,7 @@ function SocialCard({
             <Button
               size="sm"
               className="w-full bg-gradient-to-r from-pink-500 via-purple-500 to-blue-600 text-white hover:opacity-90 text-xs"
-              disabled={isPosting || !post.caption}
+              disabled={isPosting || post.status === "posting" || !post.caption}
               onClick={() => onPostBoth(post.id)}
             >
               {isPosting && postingPlatform === "both" ? (
@@ -1448,11 +1453,11 @@ function SocialCard({
             </Button>
           )}
           <div className="flex gap-2">
-            <Button size="sm" className="flex-1 bg-gradient-to-r from-pink-500 to-orange-400 text-white hover:opacity-90 text-xs" disabled={isPosting || alreadyOnIG || !post.caption} onClick={() => onPost(post.id, "instagram")}>
+            <Button size="sm" className="flex-1 bg-gradient-to-r from-pink-500 to-orange-400 text-white hover:opacity-90 text-xs" disabled={isPosting || post.status === "posting" || alreadyOnIG || !post.caption} onClick={() => onPost(post.id, "instagram")}>
               {isPosting && postingPlatform === "instagram" ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Instagram className="h-3.5 w-3.5 mr-1" />}
               {alreadyOnIG ? "✓ IG" : "Instagram"}
             </Button>
-            <Button size="sm" className="flex-1 bg-info text-info-foreground hover:bg-info/90 text-xs" disabled={isPosting || alreadyOnFB || !post.caption} onClick={() => onPost(post.id, "facebook")}>
+            <Button size="sm" className="flex-1 bg-info text-info-foreground hover:bg-info/90 text-xs" disabled={isPosting || post.status === "posting" || alreadyOnFB || !post.caption} onClick={() => onPost(post.id, "facebook")}>
               {isPosting && postingPlatform === "facebook" ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Facebook className="h-3.5 w-3.5 mr-1" />}
               {alreadyOnFB ? "✓ FB" : "Facebook"}
             </Button>
