@@ -23,7 +23,7 @@ serve(async (req) => {
   try {
     const { name, email, source, language, budget, phone } = await req.json() as LeadMagnetRequest & { budget?: string; phone?: string };
 
-    console.log("Lead magnet request received:", { name, email, source, language });
+    console.log("Lead magnet request received");
 
     // Validate required fields + email format/length to prevent flooding
     // the newsletter_subscribers table with unverified/malformed addresses.
@@ -70,10 +70,10 @@ serve(async (req) => {
         if (leadResponse.ok) {
           console.log("Lead saved to database successfully");
         } else {
-          console.error("Lead insert error:", await leadResponse.text());
+          console.error("Lead insert failed:", leadResponse.status);
         }
       } catch (dbError) {
-        console.error("Database error:", dbError);
+        console.error("Lead database request failed");
       }
 
       // 2. Also save to newsletter subscribers
@@ -90,10 +90,10 @@ serve(async (req) => {
         });
 
         if (!newsletterResponse.ok) {
-          console.error("Newsletter subscriber error:", await newsletterResponse.text());
+          console.error("Newsletter subscriber insert failed:", newsletterResponse.status);
         }
       } catch (nlError) {
-        console.error("Newsletter error:", nlError);
+        console.error("Newsletter request failed");
       }
     }
 
@@ -118,7 +118,7 @@ serve(async (req) => {
 
         console.log("Make.com webhook response:", makeResponse.status);
       } catch (makeError) {
-        console.error("Make.com webhook error:", makeError);
+        console.error("Make.com webhook request failed");
       }
     } else {
       console.warn("MAKE_WEBHOOK_URL not configured");
@@ -154,7 +154,7 @@ serve(async (req) => {
 
         console.log("Admin notification email response:", adminEmailResponse.status);
       } catch (emailError) {
-        console.error("Admin email error:", emailError);
+        console.error("Admin email request failed");
       }
     }
 
@@ -170,7 +170,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error("Lead magnet error:", error);
+    console.error("Lead magnet processing failed");
     return new Response(
       JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

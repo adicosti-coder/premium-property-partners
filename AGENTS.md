@@ -1,5 +1,8 @@
 # Project Architecture Rules
 
+- Visitor-memory AI summaries require a verified user and session ownership before metered work; automation completion RPC is service-role-only — prevents unauthorized credit consumption and job manipulation.
+- Restaurant-guide JSON-LD escapes HTML tag openers and lead-magnet diagnostics record only fixed messages/status codes — prevents stored script injection and personal data in logs.
+
 - Social extraction reads active properties and published blog articles locally, without external scraping — avoids credit consumption for data already stored.
 - Database triggers block new draft/scheduled copies of published social content and clean sibling drafts on publication; source identity ignores format fragments and matches exact normalized titles — prevents repeated content across feed and Stories, including separate property imports.
 - Admin sale offers use existing RLS; owner decisions go through a locked ownership-checking RPC that changes only status and enforces the saved minimum — prevents cross-owner edits.

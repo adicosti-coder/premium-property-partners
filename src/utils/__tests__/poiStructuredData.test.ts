@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildPoiSchema, buildPoiItemListSchema } from "@/utils/poiStructuredData";
+import { buildPoiSchema, buildPoiItemListSchema, serializePoiStructuredData } from "@/utils/poiStructuredData";
 
 const base = {
   id: "1",
@@ -24,6 +24,18 @@ const assertNoEmptyValues = (value: unknown) => {
 };
 
 describe("poi structured data", () => {
+  it("escapes stored HTML script terminators without changing the structured data", () => {
+    const payload = '</ScRiPt><script>alert("xss")</script><!--';
+    const list = buildPoiItemListSchema([{ ...base, name: payload, description: payload, address: payload, website: payload }], payload);
+    const serialized = serializePoiStructuredData(list);
+    expect(serialized).not.toContain("<");
+    expect(serialized).toContain("\\u003c");
+    expect(JSON.parse(serialized)).toEqual(list);
+    const host = document.createElement("div");
+    host.innerHTML = `<script type="application/ld+json">${serialized}</script>`;
+    expect(host.querySelectorAll("script")).toHaveLength(1);
+    expect(JSON.parse(host.querySelector("script")!.textContent!)).toEqual(list);
+  });
   it("emits a valid Restaurant node without empty properties", () => {
     const node = buildPoiSchema({ ...base, address: null, ratingValue: null, ratingCount: 0 });
     expect(node["@type"]).toBe("Restaurant");
