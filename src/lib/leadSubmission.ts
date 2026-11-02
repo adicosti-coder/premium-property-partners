@@ -38,6 +38,7 @@ export const leadInputSchema = z.object({
   allowSentinelPhone: z.boolean().optional(),
   /** Save via the submit-lead function, which returns leadId + yield-report token. */
   viaServer: z.boolean().optional(),
+  captcha_token: z.string().max(2048).optional(),
 });
 
 export type LeadInput = z.infer<typeof leadInputSchema>;
@@ -56,7 +57,7 @@ export const submitLead = async (raw: LeadInput): Promise<LeadSubmissionResult> 
     const flat = parsed.error.flatten().fieldErrors;
     const errors: Record<string, string> = {};
     for (const [k, v] of Object.entries(flat)) {
-      if (v && v.length) errors[k] = v[0]!;
+      if (v?.[0]) errors[k] = v[0];
     }
     return { ok: false, reason: "validation", errors };
   }
@@ -83,13 +84,15 @@ export const submitLead = async (raw: LeadInput): Promise<LeadSubmissionResult> 
           property_area: data.property_area ?? 0,
           source: data.source,
           simulation_data: data.simulation_data ?? null,
+          ...(data.captcha_token ? { captcha_token: data.captcha_token } : {}),
         },
       });
       if (error) {
         reportError(error, { scope: `form:lead:${data.source}` });
         return { ok: false, reason: "network", message: error.message };
       }
-      const r = (res ?? {}) as { leadId?: string; reportToken?: string };
+      const r = (res ?? {}) as { success?: boolean; leadId?: string; reportToken?: string };
+      if (r.success === false || !r.leadId) return { ok: false, reason: "network", message: "Lead save was not confirmed" };
       return { ok: true, duplicate: false, leadId: r.leadId, reportToken: r.reportToken };
     } catch (err) {
       reportError(err, { scope: `form:lead:${data.source}` });

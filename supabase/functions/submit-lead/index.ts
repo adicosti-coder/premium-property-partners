@@ -41,6 +41,7 @@ const VALID_SOURCES = [
   "calculator", "quick_form", "lead_capture_form",
   "rental-calculator", "advanced-rental-calculator", "city_of_mara_landing",
   "pagina_contact", "apel_2_minute", "evaluare_gratuita", "analiza_anunt",
+  "whatsapp_viewing",
 ];
 
 const handler = async (req: Request): Promise<Response> => {
@@ -58,7 +59,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   // Anti-spam: max 5 lead submissions / minute / IP.
-  const limited = applyRateLimit(req, corsHeaders, { maxRequests: 5, windowMs: 60_000 });
+  const limited = applyRateLimit(req, corsHeaders, { maxRequests: 3, windowMs: 60_000 });
   if (limited) return limited;
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -105,6 +106,12 @@ const handler = async (req: Request): Promise<Response> => {
 
     // --- Optional fields with validation ---
     const source = VALID_SOURCES.includes(body.source) ? body.source : "calculator";
+    if (source === "whatsapp_viewing") {
+      const phone = whatsappNumber.replace(/[\s().-]/g, "");
+      if (!/^\+407\d{8}$/.test(phone) || name.length < 2 || !body.captcha_token) {
+        return new Response(JSON.stringify({ error: "Invalid viewing request" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    }
 
     let calculatedNetProfit = 0;
     if (typeof body.calculated_net_profit === "number" && isFinite(body.calculated_net_profit)) {
@@ -136,6 +143,9 @@ const handler = async (req: Request): Promise<Response> => {
     // --- Turnstile CAPTCHA verification (if token provided) ---
     if (body.captcha_token) {
       const turnstileSecret = Deno.env.get("TURNSTILE_SECRET_KEY");
+      if (source === "whatsapp_viewing" && !turnstileSecret) {
+        return new Response(JSON.stringify({ error: "Security verification unavailable" }), { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
       if (turnstileSecret) {
         const formData = new FormData();
         formData.append("secret", turnstileSecret);
@@ -170,6 +180,7 @@ const handler = async (req: Request): Promise<Response> => {
         simulation_data: simulationData,
         email,
         message,
+        ...(source === "whatsapp_viewing" ? { crm_status: "nou_necontactat", engagement_status: "new", simulation_data: { ...simulationData, status_label: "Nou - WhatsApp" } } : {}),
       })
       .select("id");
     // No .single(): when leads_dedupe_upsert merges into an existing lead the

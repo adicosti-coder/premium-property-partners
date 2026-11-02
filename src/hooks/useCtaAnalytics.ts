@@ -46,7 +46,7 @@ export const useCtaAnalytics = () => {
 
       // Fire GA4 event (consent-gated)
       const gtagEventMap: Record<CtaType, string> = {
-        whatsapp: "click_whatsapp",
+        whatsapp: "whatsapp_click",
         call: "click_phone",
         form_submit: "form_cta_click",
         email: "click_email",
