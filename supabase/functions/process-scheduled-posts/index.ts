@@ -9,6 +9,7 @@ import { prepareInstagramImages } from "../_shared/instagramImages.ts";
 import { resolveSocialFeaturedImage } from "../_shared/socialImages.ts";
 import { usableSocialImage } from "../_shared/socialImageSelection.ts";
 import { publishToMetaSocial } from "../_shared/metaSocial.ts";
+import { publicationState, makePublicationResult, type PublicationResult } from "../_shared/socialPublicationState.ts";
 
 /** Feed photo posts go directly to Meta Graph API (confirmed post IDs); Make only answers "accepted". */
 async function publishFeedDirect(sb: any, post: any, platforms: string[], trigger: string) {
@@ -104,12 +105,24 @@ async function send(sb: any, url: string, post: any, platform: string, trigger: 
     status = r.status;
     text = (await r.text()).slice(0, 1000);
     if (!r.ok) err = `Make.com ${r.status}: ${text.slice(0, 200)}`;
+    else {
+      const result = makePublicationResult(platform, text);
+      if (!result.ok) err = result.error ?? "Publicare neconfirmată";
+    }
   } catch (e) { err = e instanceof Error ? e.message : String(e); }
   await sb.from("social_engine_logs").insert({
     post_id: post.id, post_title: post.title, platform, trigger, success: !err,
     http_status: status, response_body: text || null, error: err, image_count: imageCount,
   });
   if (err) throw new Error(err);
+  return makePublicationResult(platform, text);
+}
+
+async function savePublication(sb: any, id: string, previous: string[], results: PublicationResult[]) {
+  const state = publicationState(previous, results);
+  const { error, data } = await sb.from("social_posts").update({ ...state, updated_at: new Date().toISOString() }).eq("id", id).select("id");
+  if (error || !data?.length) throw new Error(`Starea publicării nu a putut fi salvată: ${error?.message ?? "actualizare refuzată"}`);
+  return state;
 }
 
 Deno.serve(async (req) => {
@@ -145,6 +158,12 @@ Deno.serve(async (req) => {
     if (!platforms.length) return json({ success: false, error: "Platformă invalidă" }, 400);
     const { data: post } = await sb.from("social_posts").select("*").eq("id", body.post_id).maybeSingle();
     if (!post) return json({ success: false, error: "Postare negăsită" }, 404);
+    if (post.status === "posting") return json({ success: false, error: "Publicarea este deja în curs." }, 409);
+    const { data: claim, error: claimError } = await sb.from("social_posts")
+      .update({ status: "posting", updated_at: new Date().toISOString() })
+      .eq("id", post.id).eq("status", post.status).select("id");
+    if (claimError || !claim?.length) return json({ success: false, error: claimError?.message ?? "Publicarea este deja în curs." }, 409);
+    const todo = platforms.filter((p: string) => !(post.posted_to ?? []).includes(p));
     // Copertă afișată în ciornă: devine imaginea principală dacă postarea nu are una.
     if (typeof body.current_image === "string" && /^https:\/\//.test(body.current_image) && !post.image_url) {
       post.image_url = body.current_image;
@@ -152,31 +171,30 @@ Deno.serve(async (req) => {
     }
     if (isFeedPhoto(post)) {
       let results;
-      try { results = await publishFeedDirect(sb, post, platforms, "admin_manual"); }
+      try { results = await publishFeedDirect(sb, post, todo, "admin_manual"); }
       catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        await sb.from("social_posts").update({ last_error: msg }).eq("id", post.id);
+        await savePublication(sb, post.id, post.posted_to ?? [], [{ platform: todo.join(", "), ok: false, error: msg }]);
         return json({ success: false, error: msg }, 502);
       }
-      const ok = results.filter((r) => r.ok).map((r) => r.platform);
-      const failed = results.filter((r) => !r.ok);
-      const errText = failed.map((r) => `${r.platform}: ${r.error}`).join(" · ") || null;
-      // Requested platforms reflect Meta's real answer; earlier unconfirmed Make sends are dropped.
-      const posted_to = [...new Set([...(post.posted_to ?? []).filter((p: string) => !platforms.includes(p)), ...ok])];
-      await sb.from("social_posts").update(ok.length ? { status: "posted", posted_to, last_error: errText } : { last_error: errText }).eq("id", post.id);
-      if (!ok.length) return json({ success: false, error: errText ?? "Meta a respins postarea" }, 502);
-      return json({ success: true, posted_to, partial_error: errText });
+      const state = await savePublication(sb, post.id, post.posted_to ?? [], results);
+      if (state.last_error && !results.some(r => r.ok && r.id)) return json({ success: false, error: state.last_error }, 502);
+      return json({ success: true, ...state, partial_error: state.last_error });
     }
+    const results: PublicationResult[] = [];
     try {
-      for (const p of platforms) await send(sb, webhook, post, p, "admin_manual");
+      for (const p of todo) {
+        try { results.push(await send(sb, webhook, post, p, "admin_manual")); }
+        catch (e) { results.push({ platform: p, ok: false, error: e instanceof Error ? e.message : String(e) }); }
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      await sb.from("social_posts").update({ last_error: msg }).eq("id", post.id);
+      await savePublication(sb, post.id, post.posted_to ?? [], [...results, { platform: "Make", ok: false, error: msg }]);
       return json({ success: false, error: msg }, 502);
     }
-    const posted_to = [...new Set([...(post.posted_to ?? []), ...platforms])];
-    await sb.from("social_posts").update({ status: "posted", posted_to, last_error: null }).eq("id", post.id);
-    return json({ success: true, posted_to });
+    const state = await savePublication(sb, post.id, post.posted_to ?? [], results);
+    if (state.last_error) return json({ success: false, error: state.last_error }, 502);
+    return json({ success: true, ...state });
   }
 
   // Cron. Mod eșalonat pentru Stories: { media_type: "STORY", min_interval_minutes }
@@ -203,7 +221,7 @@ Deno.serve(async (req) => {
   let processed = 0, failed = 0;
   for (const post of due ?? []) {
     // Revendicare atomică: doar o rulare trimite postarea
-    const { data: claimed } = await sb.from("social_posts").update({ status: "posted" })
+    const { data: claimed } = await sb.from("social_posts").update({ status: "posting", updated_at: new Date().toISOString() })
       .eq("id", post.id).eq("status", "scheduled").select("id");
     if (!claimed?.length) continue;
     // Story fără link explicit: folosim pagina articolului (fără „#story”).
@@ -211,23 +229,24 @@ Deno.serve(async (req) => {
       post.story_link_url = post.source_url.replace(/#story$/, "");
     }
     const todo = PLATFORMS.filter((p) => !(post.posted_to ?? []).includes(p));
-    const done: string[] = [...(post.posted_to ?? [])];
+    const previous: string[] = [...(post.posted_to ?? [])];
+    const results: PublicationResult[] = [];
     try {
       if (isFeedPhoto(post)) {
-        const results = await publishFeedDirect(sb, post, todo, trigger);
-        for (const r of results) if (r.ok) done.push(r.platform);
-        const errs = results.filter((r) => !r.ok).map((r) => `${r.platform}: ${r.error}`).join(" · ");
-        if (!results.some((r) => r.ok)) throw new Error(errs || "Meta a respins postarea");
-        await sb.from("social_posts").update({ posted_to: done, last_error: errs || null, updated_at: new Date().toISOString() }).eq("id", post.id);
-        processed++;
+        results.push(...await publishFeedDirect(sb, post, todo, trigger));
+        const state = await savePublication(sb, post.id, previous, results);
+        if (state.last_error) failed++; else processed++;
         continue;
       }
-      for (const p of todo) { await send(sb, webhook, post, p, trigger); done.push(p); }
-      await sb.from("social_posts").update({ posted_to: done, last_error: null, updated_at: new Date().toISOString() }).eq("id", post.id);
-      processed++;
+      for (const p of todo) {
+        try { results.push(await send(sb, webhook, post, p, trigger)); }
+        catch (e) { results.push({ platform: p, ok: false, error: e instanceof Error ? e.message : String(e) }); }
+      }
+      const state = await savePublication(sb, post.id, previous, results);
+      if (state.last_error) failed++; else processed++;
     } catch (e) {
       // Fără reîncercare automată: revine la draft cu motivul erorii
-      await sb.from("social_posts").update({ status: "draft", posted_to: done, last_error: e instanceof Error ? e.message : String(e), updated_at: new Date().toISOString() }).eq("id", post.id);
+      await savePublication(sb, post.id, previous, [...results, { platform: "Publicare", ok: false, error: e instanceof Error ? e.message : String(e) }]);
       failed++;
     }
   }
