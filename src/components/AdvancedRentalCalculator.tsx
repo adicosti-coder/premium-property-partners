@@ -568,7 +568,7 @@ const AdvancedRentalCalculator = () => {
                         onChange={(v) => handleInputChange('occupancyUpliftWithSystem', v)}
                         suffix="pp"
                         helpText={t.occupancyUpliftHelp}
-                        max={20}
+                        max={50}
                       />
                       <InputField
                         label={t.platformCommission}
@@ -612,7 +612,8 @@ const AdvancedRentalCalculator = () => {
                         onChange={(v) => handleInputChange('managementFee', v)}
                         suffix="%"
                         helpText={t.managementFeeNote}
-                        max={50}
+                        min={15}
+                        max={20}
                       />
                     </div>
                     <Button

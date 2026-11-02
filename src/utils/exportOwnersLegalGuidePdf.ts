@@ -135,9 +135,9 @@ export const exportOwnersLegalGuidePdf = async ({ language = "ro" }: ExportOptio
     [
       { label: isRo ? "Venit brut / lună" : "Gross income / month", a: "1.800 €", b: "550 €" },
       { label: isRo ? "Ocupare de calcul" : "Assumed occupancy", a: "70%", b: "100%" },
-      { label: isRo ? "Property Management RealTrust" : "RealTrust Property Management", a: "− 15-20%", b: "− 5%" },
-      { label: isRo ? "Venit net / lună" : "Net income / month", a: "1.130 €", b: "500 €" },
-      { label: isRo ? "Venit net / an" : "Net income / year", a: "13.560 €", b: "6.000 €" },
+      { label: isRo ? "Property Management RealTrust" : "RealTrust Property Management", a: "20% din net", b: "− 5%" },
+      { label: isRo ? "Venit net / lună" : "Net income / month", a: "1.128 €", b: "500 €" },
+      { label: isRo ? "Venit net / an" : "Net income / year", a: "13.536 €", b: "6.000 €" },
       { label: isRo ? "Randament net (valoare 145.000 €)" : "Net ROI (145,000 € value)", a: "6,5–9,4%", b: "4,1%" },
       { label: isRo ? "Efort lunar proprietar" : "Owner monthly effort", a: isRo ? "0 ore" : "0 hours", b: isRo ? "3–6 ore" : "3–6 hours" },
     ],
@@ -146,7 +146,7 @@ export const exportOwnersLegalGuidePdf = async ({ language = "ro" }: ExportOptio
   );
   para(
     isRo
-      ? "Cifrele sunt un scenariu de lucru, nu o promisiune. Diferența reală depinde de zonă, dotare, sezon și calitatea administrării. Îți facem estimarea pe apartamentul tău în 15 minute."
+      ? "Scenariu ilustrativ: brut 1.800 €, canale 270 €, utilități 120 €, comision 20% din net 1.410 € = 282 €. Menaj separat suportat de oaspete. Impozitele personale nu sunt incluse. Cifrele nu sunt o promisiune. Diferența reală depinde de zonă, dotare, sezon și calitatea administrării. Îți facem estimarea pe apartamentul tău în 15 minute."
       : "These figures are a working scenario, not a promise. The real gap depends on area, furnishing, season and management quality. We estimate yours in a 15-minute call."
   );
 

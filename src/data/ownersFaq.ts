@@ -59,7 +59,7 @@ export const OWNERS_FAQ_DATA = {
       items: [
         {
           q: "How do we get to a net yield of around 9.4%?",
-          a: "We start from gross collected revenue (75% estimated average occupancy) and deduct operating costs (consumables, utilities, linen), the tax applicable to your structure and RealTrust Property Management, 15-20% of revenue. What remains is the net income paid to you. Measured against the apartment's purchase value, that net income equals a 9.4% annual yield — so 9.4% is the final figure after all deductions, not a gross number.",
+          a: "Estimated net yield is 6.5–9.4% annually, not guaranteed. Annual occupancy assumption 65–75%, conservative calculator default 70%. Management is 15–20% of net: gross minus channel fees and utilities. Cleaning is guest-paid separately or deducted from gross, never from management commission.",
         },
         {
           q: "What short-term rental license is required in Timișoara?",
@@ -91,7 +91,7 @@ export const OWNERS_FAQ_DATA = {
         },
         {
           q: "Is short-term rental management really passive income?",
-          a: "Yes. RealTrust handles the entire operation — listings and dynamic pricing, guest communication, check-in/check-out, cleaning, linens, maintenance and monthly tax filings. Owners receive net payouts and a transparent monthly report with no daily involvement. The average net yield is 9.4% per year, at an estimated 75% occupancy.",
+          a: "Yes. RealTrust handles the entire operation — listings and dynamic pricing, guest communication, check-in/check-out, cleaning, linens, maintenance and monthly tax filings. Owners receive net payouts and a transparent monthly report with no daily involvement. Estimated net yield is 6.5–9.4% annually; assumed occupancy 65–75%, calculator default 70%.",
         },
         {
           q: "How is the RealTrust management fee calculated?",

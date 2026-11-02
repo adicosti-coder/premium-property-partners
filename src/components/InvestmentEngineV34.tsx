@@ -275,7 +275,7 @@ const InvestmentEngineV34 = ({
     budgetPlaceholder: "Ex: 120000",
     rentPlaceholder: "Ex: 450",
     nightlyRatePlaceholder: "Ex: 50",
-    occupancyPctPlaceholder: "Ex: 75",
+    occupancyPctPlaceholder: "Ex: 70",
     advancePlaceholder: "25",
     interestPlaceholder: "6.5",
     occ12: "12 Luni (Full)",
@@ -336,7 +336,7 @@ const InvestmentEngineV34 = ({
     budgetPlaceholder: "e.g. 120000",
     rentPlaceholder: "e.g. 450",
     nightlyRatePlaceholder: "e.g. 50",
-    occupancyPctPlaceholder: "e.g. 75",
+    occupancyPctPlaceholder: "e.g. 70",
     advancePlaceholder: "25",
     interestPlaceholder: "6.5",
     occ12: "12 Months (Full)",
@@ -445,7 +445,7 @@ const InvestmentEngineV34 = ({
                 setStrategy("hotel");
                 setBudgetStr(defaultPrice?.toString() ?? "95000");
                 setNightlyRateStr(defaultNightlyRate?.toString() ?? "50");
-                setOccupancyPctStr("75");
+                setOccupancyPctStr("70");
                 setAdvanceStr("25");
                 setInterestStr("6.5");
                 setTaxRate("0.07");
@@ -614,6 +614,7 @@ const InvestmentEngineV34 = ({
           </div>
         </div>
 
+        {strategy === "hotel" && <p className="mb-4 text-sm text-muted-foreground">Canale estimate 15%, utilități estimate 120 €/lună, administrare 20% din net. Menaj separat suportat de oaspete. Impozitul afișat este o ipoteză, de verificat cu contabilul.</p>}
         {/* Results */}
         {calc && (
           <>

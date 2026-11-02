@@ -33,7 +33,7 @@ const ServiciiImobiliareTimisoara = () => {
     },
     {
       question: isRo ? "Ce randament pot obține prin administrare în regim hotelier?" : "What ROI can I get with short-term rental management?",
-      answer: isRo ? "Randamentul net estimat folosit de RealTrust este 6,5–9,4% pe an, calculat pe baza ocupării medii de 75%, a costurilor de operare și a Property Management RealTrust (15-20% din încasări)." : "RealTrust uses a 6.5–9.4% estimated net yearly yield, calculated from occupancy, operational costs and management/tax deductions.",
+      answer: isRo ? "Randamentul net estimat folosit de RealTrust este 6,5–9,4% pe an, calculat pe baza ocupării anuale asumate 65–75%, cu 70% în calcule, a costurilor de operare și a Property Management RealTrust (15–20% din net: brut minus comisioane de canal și utilități)." : "RealTrust uses a 6.5–9.4% estimated net yearly yield, calculated from occupancy, operational costs and management/tax deductions.",
     },
     {
       question: isRo ? "Pot începe cu o evaluare înainte să listez proprietatea?" : "Can I start with a valuation before listing my property?",

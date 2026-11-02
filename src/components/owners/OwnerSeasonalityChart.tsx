@@ -57,7 +57,7 @@ const OwnerSeasonalityChart = () => {
 
   const t = isRo
     ? {
-        badge: "Sezonalitate reală",
+        badge: "Sezonalitate ilustrativă",
         title: "Cum arată anul, lună cu lună — inclusiv lunile slabe",
         subtitle:
           "Nu îți vindem doar media anuală. Vezi și ianuarie, luna cea mai slabă din Timișoara, ca să știi exact la ce te înscrii.",
@@ -74,9 +74,9 @@ const OwnerSeasonalityChart = () => {
         highNote:
           "Sezonul de business și conferințe din Timișoara ridică atât ocuparea, cât și tariful pe noapte.",
         avgTitle: "Media anuală",
-        avgValue: "75% ocupare, ~13.900 € net / an",
+        avgValue: "65–75% ocupare anuală asumată; calcul 70%",
         avgNote:
-          "Media pe care o folosim în calculator este exact media acestor 12 luni — nu doar vârful de sezon.",
+          "Graficul este un exemplu sezonier, nu rezultate măsurate. Calculatorul folosește conservator 70%.",
         disclaimer:
           "Cifre ilustrative pentru un apartament cu 2 camere, mobilat modern, în Cetate. Rezultatele reale depind de zonă, dotări, capacitate și recenzii. Îți facem proiecția pe apartamentul tău, cu cifrele tale.",
         ctaPrimary: "Cere proiecția mea lunară",
@@ -86,7 +86,7 @@ const OwnerSeasonalityChart = () => {
         tooltipAdr: "Tarif mediu",
       }
     : {
-        badge: "Real seasonality",
+        badge: "Illustrative seasonality",
         title: "What the year looks like, month by month — weak months included",
         subtitle:
           "We don't sell you the annual average only. See January too, Timișoara's weakest month, so you know exactly what you're signing up for.",
@@ -103,9 +103,9 @@ const OwnerSeasonalityChart = () => {
         highNote:
           "Timișoara's business and conference season lifts both occupancy and the nightly rate.",
         avgTitle: "Annual average",
-        avgValue: "75% occupancy, ~€13,900 net / year",
+        avgValue: "65–75% assumed annual occupancy; calculation 70%",
         avgNote:
-          "The average we use in the calculator is exactly the average of these 12 months — not just peak season.",
+          "The chart is an illustrative seasonal example, not measured results. The calculator uses a conservative 70%.",
         disclaimer:
           "Illustrative figures for a modern 2-room apartment in Cetate. Actual results depend on area, amenities, capacity and reviews. We build the projection for your apartment, with your numbers.",
         ctaPrimary: "Request my monthly projection",
