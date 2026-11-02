@@ -12,7 +12,7 @@ export function publicationState(previous: string[], results: PublicationResult[
 export function makePublicationResult(platform: string, body: string): PublicationResult {
   try {
     const data = JSON.parse(body);
-    const id = data.external_id || data.post_id;
+    const id = data.external_id;
     if ((data.success === true || data.status === "posted") && typeof id === "string" && id.trim()) {
       return { platform, ok: true, id };
     }

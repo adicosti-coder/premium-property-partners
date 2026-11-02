@@ -1,7 +1,9 @@
 # Roadmap — optimizări sistem analiză și administrare
 
 ## Publicări sociale eșuate — 2 noiembrie
-- [ ] Separare revendicare/publicare, revenire în ciorne cu eroare și afișare Admin; probe fără publicare reală
+- [x] Separare `posting`/`posted`, eroare salvată, revenire în ciorne la eșec total, succes parțial păstrat; funcția activată
+- [x] 12 teste trecute și verificare DB cu postare temporară: revenire draft și succes parțial; proba ștersă, fără mesaje/publicări reale
+- [ ] Verificare vizuală Admin — blocată de codul email; afișarea erorilor pe site necesită publicarea interfeței
 
 ## Reluare anunțuri blocate AI — 1 noiembrie
 - [x] Identificate 163 inspecții blocate la rescriere (eroare 502 veche, nu 402 explicit): 112 agenții și 51 de verificat; zero proprietari privați confirmați, zero trimiteri efectuate
