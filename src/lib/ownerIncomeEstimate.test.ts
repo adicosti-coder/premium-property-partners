@@ -4,9 +4,11 @@ import { estimateOwnerIncome } from "./ownerIncomeEstimate";
 const base = { type: "2-camere", zone: "city-of-mara", surface: 55, parking: false, finish: "standard" } as const;
 
 describe("estimateOwnerIncome", () => {
-  it("deduce 27% din venitul brut regim hotelier", () => {
-    const r = estimateOwnerIncome(base);
-    expect(r.netRealTrust).toBe(Math.round(r.grossHotel * 0.73));
+  it("aplică 20% după comisioanele de canal și utilități", () => {
+    const r = estimateOwnerIncome({ ...base, channelFeeRate: .15, utilities: 120 });
+    expect(r.occupancy).toBe(.70);
+    expect(r.grossHotel).toBe(1475);
+    expect(r.netRealTrust).toBe(907);
   });
   it("chirie clasică 2 camere City of Mara 55 mp standard = 598 € (mediană reală 600 €)", () => {
     expect(estimateOwnerIncome(base).classicRent).toBe(598);

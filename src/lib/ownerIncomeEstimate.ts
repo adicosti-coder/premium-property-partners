@@ -1,8 +1,9 @@
 /**
  * Estimare venit proprietari Timișoara: chirie clasică vs. regim hotelier RealTrust.
  * Coeficienți pe tip, zonă/complex, suprafață, parcare și finisaje.
- * Venitul net RealTrust = brut × (1 − 27% administrare/taxe/costuri), ocupare pe zonă (~75%).
+ * Administrare din net după canale/utilități; ocupare conservatoare 70%.
  */
+import { calculateManagedIncome, MANAGEMENT_POLICY } from "./managementPolicy";
 export const PROPERTY_TYPES = [
   { value: "garsoniera", label: "Garsonieră", refSqm: 32, classicRent: 340, adr: 52 },
   { value: "2-camere", label: "2 camere", refSqm: 55, classicRent: 460, adr: 66 },
@@ -29,7 +30,6 @@ export type PropertyTypeValue = (typeof PROPERTY_TYPES)[number]["value"];
 export type ZoneValue = (typeof ZONES)[number]["value"];
 export type Finish = "standard" | "premium";
 
-export const NET_DEDUCTION = 0.27;
 const DAYS_PER_MONTH = 30.4;
 
 export interface EstimateInput {
@@ -38,6 +38,9 @@ export interface EstimateInput {
   surface: number;
   parking: boolean;
   finish: Finish;
+  channelFeeRate?: number;
+  utilities?: number;
+  commissionRate?: number;
 }
 
 export interface EstimateResult {
@@ -61,13 +64,14 @@ export function estimateOwnerIncome(i: EstimateInput): EstimateResult {
 
   const classic = t.classicRent * z.rent * size * (premium ? 1.15 : 1) + (i.parking ? 40 : 0);
   const nightly = t.adr * z.adr * Math.sqrt(size) * (premium ? 1.2 : 1) * (i.parking ? 1.05 : 1);
-  const gross = nightly * DAYS_PER_MONTH * z.occupancy;
-  const net = gross * (1 - NET_DEDUCTION);
+  const gross = nightly * DAYS_PER_MONTH * MANAGEMENT_POLICY.occupancyDefault;
+  // Existing operating assumptions are exposed to the visitor; not commercial prices.
+  const net = calculateManagedIncome({ gross, channelFees: gross * (i.channelFeeRate ?? .15), utilities: i.utilities ?? 120, commissionRate: i.commissionRate }).ownerIncome;
 
   return {
     classicRent: Math.round(classic),
     nightlyRate: Math.round(nightly),
-    occupancy: z.occupancy,
+    occupancy: MANAGEMENT_POLICY.occupancyDefault,
     grossHotel: Math.round(gross),
     netRealTrust: Math.round(net),
     netMin: Math.round(net * 0.9),

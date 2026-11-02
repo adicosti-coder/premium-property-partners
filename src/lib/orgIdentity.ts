@@ -34,7 +34,8 @@ export const BRAND = {
   // Legal/commercial entity. The accommodation brand (ApArt Hotel) is a
   // separate node — see LODGING_BUSINESS_ID / HOTEL_BRAND_NAME below.
   name: "RealTrust",
-  legalName: "Imo Business Centrum SRL",
+  legalName: "SC Imo Business Centrum SRL",
+  taxID: "RO14380627",
   alternateNames: ["RealTrust Imobiliare", "RealTrust Timișoara"],
   telephone: "+40799069256",
   email: "info@realtrust.ro",
@@ -85,6 +86,7 @@ export const ORGANIZATION_SCHEMA = {
   "@id": ORG_ID,
   name: BRAND.name,
   legalName: BRAND.legalName,
+  taxID: BRAND.taxID,
   alternateName: BRAND.alternateNames,
   // ENTITY SEO: identical wording to the visible "Ce este RealTrust?" block.
   description: ENTITY_ANSWER.ro,
@@ -149,7 +151,9 @@ export const REAL_ESTATE_AGENT_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "RealEstateAgent",
   "@id": REAL_ESTATE_AGENT_ID,
-  name: "RealTrust / Trust Estate",
+  name: BRAND.name,
+  legalName: BRAND.legalName,
+  taxID: BRAND.taxID,
   alternateName: "RealTrust - Servicii Imobiliare Timișoara",
   description: ENTITY_ANSWER.ro,
   url: BRAND.url,
@@ -213,7 +217,7 @@ export const FINANCIAL_SERVICE_SCHEMA = {
   "@id": FINANCIAL_SERVICE_ID,
   name: "RealTrust — Consultanță Investiții Imobiliare Timișoara",
   description:
-    "Analiză de randament, due diligence și structurare de portofoliu pentru apartamente în regim hotelier în Timișoara. Randament net estimat 6,5–9,4% pe an (ocupare 75%).",
+    "Analiză de randament, due diligence și structurare de portofoliu pentru apartamente în regim hotelier în Timișoara. Randament net estimat 6,5–9,4% pe an (ocupare anuală 65–75%, calcul 70%).",
   url: `${SITE_ORIGIN}/investitii`,
   logo: BRAND.logo,
   image: BRAND.image,

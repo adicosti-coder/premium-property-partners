@@ -147,7 +147,7 @@ const ServiciiImobiliareTimisoara = () => {
       <SEOHead
         title={isRo ? "Vânzări Apartamente Timișoara și Închirieri Timișoara | RealTrust" : "Apartment Sales & Rentals in Timișoara | RealTrust"}
         description={isRo
-          ? "RealTrust intermediază vânzări apartamente Timișoara și închirieri Timișoara: evaluare gratuită, promovare, contracte și administrare în regim hotelier. Agent imobiliar dedicat pentru fiecare cartier."
+          ? "Servicii imobiliare în Timișoara: vânzări, închirieri, evaluare gratuită și administrare de proprietăți cu RealTrust."
           : "RealTrust pillar page: apartment and house sales Timișoara, rentals, short-term rental management (6.5–9.4% net ROI). Dedicated Timișoara real estate agents and local market expertise."}
         url={`${BASE_URL}/servicii-imobiliare`}
         jsonLd={jsonLd}
