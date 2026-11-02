@@ -5,7 +5,7 @@ interface ExportOptions {
 /**
  * Ghid Legal & Fiscal pentru Proprietari (lead magnet, /pentru-proprietari).
  * Regim hotelier vs. chirie clasică: randament, fiscalitate, riscuri, autorizări.
- * Cifrele urmează standardul intern: ocupare 75%, ROI net estimat 6,5–9,4% pe an.
+ * Cifrele urmează standardul intern: ocupare 70%, ROI net estimat 6,5–9,4% pe an.
  */
 export const exportOwnersLegalGuidePdf = async ({ language = "ro" }: ExportOptions = {}) => {
   const { jsPDF } = await import("jspdf");
@@ -134,7 +134,7 @@ export const exportOwnersLegalGuidePdf = async ({ language = "ro" }: ExportOptio
   table(
     [
       { label: isRo ? "Venit brut / lună" : "Gross income / month", a: "1.800 €", b: "550 €" },
-      { label: isRo ? "Ocupare de calcul" : "Assumed occupancy", a: "75%", b: "100%" },
+      { label: isRo ? "Ocupare de calcul" : "Assumed occupancy", a: "70%", b: "100%" },
       { label: isRo ? "Property Management RealTrust" : "RealTrust Property Management", a: "− 15-20%", b: "− 5%" },
       { label: isRo ? "Venit net / lună" : "Net income / month", a: "1.130 €", b: "500 €" },
       { label: isRo ? "Venit net / an" : "Net income / year", a: "13.560 €", b: "6.000 €" },

@@ -34,7 +34,7 @@ const CalculatorROI = () => {
   const faqItems = [
     {
       question: "Ce randament (ROI) este considerat bun pentru o investiție imobiliară în Timișoara?",
-      answer: "Pentru chirie clasică în Timișoara, un randament net de 6-8% este considerat solid. În regim hotelier administrat de RealTrust, randamentul net estimat este între 6,5% și 9,4% pe an, calculat pe ipoteze publice (ocupare 75%, costuri și taxe).",
+      answer: "Pentru chirie clasică în Timișoara, un randament net de 6-8% este considerat solid. În regim hotelier administrat de RealTrust, randamentul net estimat este între 6,5% și 9,4% pe an, calculat pe ipoteze publice (ocupare 70%, costuri și taxe).",
     },
     {
       question: "Cum afectează impozitul pe proprietate randamentul?",
@@ -50,7 +50,7 @@ const CalculatorROI = () => {
     },
     {
       question: "Ce costuri operaționale sunt incluse în calcul?",
-      answer: "Calculatorul deduce automat din venitul brut Property Management RealTrust (15-20% din încasări), curățenia, consumabilele, mentenanța, utilitățile parțial neacoperite și taxele locale. Rezultatul afișat este randament net, după aceste costuri.",
+      answer: "Calculatorul deduce automat din venitul brut Property Management RealTrust (15–20% din net (brut minus canale și utilități)), curățenia, consumabilele, mentenanța, utilitățile parțial neacoperite și taxele locale. Rezultatul afișat este randament net, după aceste costuri.",
     },
     {
       question: "Chirie vs hotelier în Timișoara: ce aduce mai mult?",
@@ -84,7 +84,7 @@ const CalculatorROI = () => {
             ...REAL_ESTATE_AGENT_REF,
             areaServed: ["Timișoara", "Dumbrăvița", "Ghiroda", "Moșnița Nouă", "Giroc"],
           },
-          feesAndCommissionsSpecification: "Comision de administrare 15–20% din venit brut",
+          feesAndCommissionsSpecification: "Comision de administrare 15–20% din venit net (brut minus comisioane de canal și utilități)",
         }, {
           "@context": "https://schema.org",
           "@type": "WebApplication",

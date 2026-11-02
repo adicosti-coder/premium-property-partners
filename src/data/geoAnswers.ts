@@ -7,7 +7,7 @@
  *
  *  1. it answers the question in the FIRST sentence (extractable as a snippet);
  *  2. it contains no invented figures — only the published RealTrust
- *     assumptions (75% occupancy, 9.4% net
+ *     assumptions (70% occupancy, 9.4% net
  *     reference yield, management packages 15% / 18% / 20%, 15 managed
  *     units) or facts stated elsewhere on the site;
  *  3. it points to the page that owns the topic, so the answer is linked back
@@ -43,7 +43,7 @@ export const GEO_ANSWERS: GeoAnswer[] = [
     group: "pentru-proprietari",
     question: "Cât costă administrarea unui apartament în regim hotelier în Timișoara?",
     answer:
-      "Administrarea în regim hotelier la RealTrust costă între 15% și 20% din încasările realizate, în funcție de pachet: Starter 15%, Esențial 18%, Standard 20%. Comisionul se aplică doar pe venitul efectiv încasat, fără taxă de setup și fără perioadă minimă obligatorie; în afara comisionului rămân în sarcina proprietarului utilitățile, consumabilele și reparațiile majore.",
+      "Administrarea în regim hotelier la RealTrust costă între 15% și 20% din încasările realizate, în funcție de pachet: Starter 15%, Esențial 18%, Standard 20%. Comisionul se aplică doar pe venitul efectiv încasat, fără taxă de setup și contract standard 12 luni, probă/reziliere 90 zile și preaviz 30 zile; în afara comisionului rămân în sarcina proprietarului utilitățile, consumabilele și reparațiile majore.",
     source: {
       href: "/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara",
       label: "Cât costă administrarea unui apartament în regim hotelier în Timișoara",
@@ -86,7 +86,7 @@ export const GEO_ANSWERS: GeoAnswer[] = [
     group: "pentru-proprietari",
     question: "Ce costuri are un apartament în regim hotelier?",
     answer:
-      "Costurile recurente sunt: comisioanele platformelor de rezervare, curățenia și lenjeria între oaspeți, consumabilele, utilitățile, taxa hotelieră, impozitul pe venit și comisionul de administrare. Property Management RealTrust este 15-20% din încasări — iar randamentul îl calculăm pe venitul net, nu pe cel brut.",
+      "Costurile recurente sunt: comisioanele platformelor de rezervare, curățenia și lenjeria între oaspeți, consumabilele, utilitățile, taxa hotelieră, impozitul pe venit și comisionul de administrare. Property Management RealTrust este 15–20% din net (brut minus canale și utilități) — iar randamentul îl calculăm pe venitul net, nu pe cel brut.",
     source: { href: "/preturi", label: "ce include comisionul de administrare" },
   },
   {
@@ -120,7 +120,7 @@ export const GEO_ANSWERS: GeoAnswer[] = [
     group: "investitii",
     question: "Cât câștigă un apartament în regim hotelier în Timișoara?",
     answer:
-      "Reperul nostru este un randament net de 9,4% pe an din capitalul total investit, calculat la o ocupare medie de 75% și după costurile de operare, impozit și Property Management RealTrust (15-20% din încasări). La un apartament de 120.000 € înseamnă aproximativ 11.280 € net pe an, adică în jur de 940 € pe lună — o estimare, nu un venit garantat: rezultatul depinde de adresă, de standardul amenajării și de sezon.",
+      "Reperul nostru este un randament net de 9,4% pe an din capitalul total investit, calculat la o ocupare de calcul 70% și după costurile de operare, impozit și Property Management RealTrust (15–20% din net (brut minus canale și utilități)). La un apartament de 120.000 € înseamnă aproximativ 11.280 € net pe an, adică în jur de 940 € pe lună — o estimare, nu un venit garantat: rezultatul depinde de adresă, de standardul amenajării și de sezon.",
     source: { href: "/calculator-randament", label: "calculator de randament" },
   },
   {
@@ -128,7 +128,7 @@ export const GEO_ANSWERS: GeoAnswer[] = [
     group: "investitii",
     question: "Cât este randamentul unei investiții imobiliare în Timișoara?",
     answer:
-      "Randamentul depinde de strategie: chiria clasică pe termen lung produce un venit stabil, dar mai mic, în timp ce regimul hotelier bine operat are ca reper 9,4% net pe an în ipotezele noastre publice (ocupare 75%). Orice cifră trebuie recalculată pe adresa concretă, pentru că prețul de achiziție și tariful realizabil pe noapte diferă puternic de la o zonă la alta.",
+      "Randamentul depinde de strategie: chiria clasică pe termen lung produce un venit stabil, dar mai mic, în timp ce regimul hotelier bine operat are ca reper 9,4% net pe an în ipotezele noastre publice (ocupare 70%). Orice cifră trebuie recalculată pe adresa concretă, pentru că prețul de achiziție și tariful realizabil pe noapte diferă puternic de la o zonă la alta.",
     source: { href: "/investitii", label: "investiții imobiliare în Timișoara" },
   },
   {
@@ -136,7 +136,7 @@ export const GEO_ANSWERS: GeoAnswer[] = [
     group: "investitii",
     question: "Cum se calculează randamentul imobiliar (ROI) unei investiții imobiliare?",
     answer:
-      "Randament net = venitul net anual împărțit la capitalul total investit, înmulțit cu 100. Venitul net anual se obține din încasările brute estimate (tarif mediu pe noapte × nopți ocupate, sau chiria lunară × 12) minus costurile operaționale, impozitul și comisionul de administrare; capitalul total investit include prețul de achiziție, taxele notariale și de intabulare, amenajarea și dotarea. Ipoteza noastră implicită este o ocupare de 75%.",
+      "Randament net = venitul net anual împărțit la capitalul total investit, înmulțit cu 100. Venitul net anual se obține din încasările brute estimate (tarif mediu pe noapte × nopți ocupate, sau chiria lunară × 12) minus costurile operaționale, impozitul și comisionul de administrare; capitalul total investit include prețul de achiziție, taxele notariale și de intabulare, amenajarea și dotarea. Ipoteza noastră implicită este o ocupare de 70%.",
     source: { href: "/calculator-randament", label: "calculul pas cu pas al randamentului" },
   },
   {

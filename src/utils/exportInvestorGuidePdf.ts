@@ -289,7 +289,7 @@ export const exportInvestorGuidePdf = async ({ language = "ro" }: ExportOptions 
   drawComparisonTable([
     { label: isRo ? "Preț mediu/noapte" : "Avg price/night", hotelier: "€65", clasic: "-" },
     { label: isRo ? "Chirie lunară" : "Monthly rent", hotelier: "-", clasic: "€450" },
-    { label: isRo ? "Ocupare medie" : "Avg occupancy", hotelier: "75%", clasic: "100%" },
+    { label: isRo ? "Ocupare medie" : "Avg occupancy", hotelier: "70%", clasic: "100%" },
     { label: isRo ? "Venit brut/lună" : "Gross income/month", hotelier: "€1,460", clasic: "€450" },
     { label: isRo ? "Cheltuieli operaționale" : "Operating costs", hotelier: "-€365", clasic: "-€50" },
     { label: isRo ? "Venit net/lună" : "Net income/month", hotelier: "€1,095", clasic: "€400" },

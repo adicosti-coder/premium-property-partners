@@ -22,7 +22,7 @@ const packages = {
       name: "Starter",
       tagline: "Început accesibil",
       commission: "15%",
-      commissionNote: "din venitul brut",
+      commissionNote: "din venitul net",
       highlight: false,
       features: [
         { text: "Listare pe Airbnb & Booking.com", included: true },
@@ -44,7 +44,7 @@ const packages = {
       name: "Esențial",
       tagline: "Start fără stres",
       commission: "18%",
-      commissionNote: "din venitul brut",
+      commissionNote: "din venitul net",
       highlight: false,
       features: [
         { text: "Listare pe Airbnb & Booking.com", included: true },
@@ -66,7 +66,7 @@ const packages = {
       name: "Standard",
       tagline: "Cel mai popular",
       commission: "20%",
-      commissionNote: "din venitul brut",
+      commissionNote: "din venitul net",
       highlight: true,
       features: [
         { text: "Listare pe Airbnb & Booking.com", included: true },
@@ -90,7 +90,7 @@ const packages = {
       name: "Starter",
       tagline: "Affordable start",
       commission: "15%",
-      commissionNote: "of gross revenue",
+      commissionNote: "of net revenue",
       highlight: false,
       features: [
         { text: "Listing on Airbnb & Booking.com", included: true },
@@ -112,7 +112,7 @@ const packages = {
       name: "Essential",
       tagline: "Stress-free start",
       commission: "18%",
-      commissionNote: "of gross revenue",
+      commissionNote: "of net revenue",
       highlight: false,
       features: [
         { text: "Listing on Airbnb & Booking.com", included: true },
@@ -134,7 +134,7 @@ const packages = {
       name: "Standard",
       tagline: "Most popular",
       commission: "20%",
-      commissionNote: "of gross revenue",
+      commissionNote: "of net revenue",
       highlight: true,
       features: [
         { text: "Listing on Airbnb & Booking.com", included: true },
@@ -155,15 +155,15 @@ const packages = {
 
 const guarantees = {
   ro: [
-    { icon: "💰", title: "Fără costuri ascunse", desc: "Comisionul acoperă tot. Nu există taxe de setup, onboarding sau administrare." },
+    { icon: "💰", title: "Fără costuri ascunse", desc: "Comision 15–20% din net: brut minus canale și utilități. Menaj separat suportat de oaspete sau din brut." },
     { icon: "📊", title: "Transparență totală", desc: "Banii intră direct în contul tău. Acces la rapoarte financiare în timp real." },
-    { icon: "📋", title: "Contract flexibil", desc: "Fără perioadă minimă. Poți ieși din parteneriat oricând, fără penalizări." },
+    { icon: "📋", title: "Contract flexibil", desc: "Contract standard 12 luni, probă/reziliere 90 de zile, preaviz 30 de zile." },
     { icon: "🏆", title: "Garantăm performanța", desc: "Dacă nu atingem obiectivele agreate, reducem comisionul automat." },
   ],
   en: [
     { icon: "💰", title: "No hidden costs", desc: "The commission covers everything. No setup, onboarding, or management fees." },
     { icon: "📊", title: "Total transparency", desc: "Money goes directly to your account. Access to real-time financial reports." },
-    { icon: "📋", title: "Flexible contract", desc: "No minimum period. You can exit the partnership anytime, without penalties." },
+    { icon: "📋", title: "Flexible contract", desc: "Standard 12-month contract, 90-day trial/termination option and 30-day notice." },
     { icon: "🏆", title: "We guarantee performance", desc: "If we don't reach agreed goals, we automatically reduce the commission." },
   ],
 };
@@ -202,11 +202,11 @@ const Preturi = () => {
   const pricingFaqItems = [
     {
       question: "Ce costuri implică administrarea unui imobil în Timișoara?",
-      answer: "Costurile de administrare imobil în Timișoara la RealTrust sunt incluse într-un comision unic procentual din venitul brut: Starter 15%, Esențial 18%, Standard 20%. Acest tarif acoperă listarea pe Booking/Airbnb, check-in, curățenie, suport oaspeți, prețuri dinamice și raportare. Nu există taxe ascunse de setup, abonament sau retragere.",
+      answer: "Costurile de administrare imobil în Timișoara la RealTrust sunt incluse într-un comision unic procentual din venitul net: Starter 15%, Esențial 18%, Standard 20%. Netul este brutul minus comisioanele Booking/Airbnb și utilități. Tariful acoperă listarea, check-in, coordonarea menajului, suportul, prețurile și raportarea. Menajul este suportat de oaspete separat sau din brut, nu din comision. Nu există taxe ascunse de setup, abonament sau retragere.",
     },
     {
       question: "Care este tariful de administrare proprietăți în Timișoara?",
-      answer: "Tariful de administrare proprietăți în Timișoara variază între 15% și 20% din venitul brut, în funcție de pachet. Pentru un apartament cu venit brut de 1.800€/lună, comisionul Standard (20%) este 360€/lună. Diferența față de auto-administrare este compensată de creșterea ocupării (75% vs 50%) și a tarifului mediu pe noapte.",
+      answer: "Tariful de administrare proprietăți în Timișoara variază între 15% și 20% din venitul net, în funcție de pachet. Exemplu ilustrativ: brut 1.800 €/lună minus canale 270 € și utilități 120 € = bază netă 1.410 €. Comisionul Standard (20%) este 282 €. Ocuparea medie anuală asumată este 65–75%; calculatoarele pornesc de la 70%.",
     },
     {
       question: "Care sunt pachetele de administrare regim hotelier disponibile?",
@@ -218,7 +218,7 @@ const Preturi = () => {
     },
     {
       question: "Sunt prețurile pachetelor negociabile sau există costuri de setup?",
-      answer: "Comisioanele sunt fixe, transparente și aceleași pentru toți proprietarii — nu negociem cu unii și ascundem la alții. Setup-ul (smart lock, fotografii, listare pe canale) este inclus în comision. Contractul este flexibil, fără penalități de retragere după primele 3 luni.",
+      answer: "Comisioanele sunt fixe, transparente și aceleași pentru toți proprietarii — nu negociem cu unii și ascundem la alții. Setup-ul (smart lock, fotografii, listare pe canale) este inclus în comision. Contract standard 12 luni, probă/reziliere 90 zile cu preaviz 30 zile.",
     },
   ];
 
