@@ -178,5 +178,9 @@
 - [x] Publicare
 
 - [x] Audit complet — Faza 1 raport livrat
-- [ ] Audit Faza 3 remedieri — așteaptă aprobarea grupurilor A/B și valorile comerciale (grup C)
+- [x] Audit Faza 3 grupurile A/B aprobate și aplicate anterior
+- [ ] Decizii 2 noiembrie: aliniere grilă comercială și calculatoare
+- [ ] Decizii 2 noiembrie: canonical unic, RO temporar, redirect complex, JSON-LD și metadate
+- [ ] Decizii 2 noiembrie: salvare vizionare înainte de WhatsApp, Pixel oficial, whatsapp_click
+- [ ] Teste și verificare finală; publicarea site-ului necesită cerere explicită
 - [ ] Scorare AI leaduri noi vs. client ideal + rezumat + marcaj „merită apel” — așteaptă răspunsuri (client ideal, surse, mod de semnalare)
