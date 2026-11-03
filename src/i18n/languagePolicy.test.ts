@@ -17,3 +17,8 @@ describe('visitor language and indexing policy', () => {
     expect(languageRobots('ro', true)).toBe('noindex, nofollow');
   });
 });
+describe('saved language preference', () => {
+  it('keeps saved English after reload', () => { expect(initialLanguage('', 'en')).toBe('en'); });
+  it('URL ro overrides saved English', () => { expect(initialLanguage('?lang=ro', 'en')).toBe('ro'); });
+  it('defaults to Romanian', () => { expect(initialLanguage('', null)).toBe('ro'); });
+});

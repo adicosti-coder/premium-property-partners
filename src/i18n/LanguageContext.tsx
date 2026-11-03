@@ -17,8 +17,8 @@ let englishDict: Translations | null = null;
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguageState] = useState<Language>(() => {
-    // Romanian is the default; only an explicit language URL selects English.
-    return initialLanguage(isBrowser() ? window.location.search : '');
+    // URL ?lang wins; otherwise the visitor's saved choice; Romanian by default.
+    return isBrowser() ? initialLanguage(window.location.search, safeLocalStorage.getItem('language')) : 'ro';
   });
 
   // Romanian ships in the initial bundle; English is fetched on demand so the
