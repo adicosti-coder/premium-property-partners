@@ -2,6 +2,7 @@ import { Suspense, lazy, useState, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigationType } from "react-router-dom";
 import { LanguageProvider } from "@/i18n/LanguageContext";
+import { PhraseTranslator } from "@/i18n/PhraseTranslator";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { AnimationPreferenceProvider } from "@/hooks/useAnimationPreference";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -238,6 +239,7 @@ const App = () => (
     <ThemeProvider>
       <AnimationPreferenceProvider>
         <LanguageProvider>
+          <PhraseTranslator />
           <BrowserRouter>
             <ErrorBoundary>
               <FAQSchemaProvider>
