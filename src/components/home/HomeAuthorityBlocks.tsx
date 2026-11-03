@@ -30,7 +30,7 @@ const HomeAuthorityBlocks = () => {
         { icon: Building2, title: "Portofoliu", text: "15 apartamente și case administrate în prezent sub brandul ApArt Hotel." },
         { icon: ListChecks, title: "Proces documentat", text: "Onboarding în 7-14 zile: evaluare, fotografie, listare pe Booking și Airbnb, configurare check-in." },
         { icon: LineChart, title: "Rezultate raportate", text: "Scor consolidat de reputație 9,7/10 pe Booking; proprietățile din portofoliu atrag un randament net estimat între 6,5% și 9,4% pe an, în funcție de ocupare, locație și amenajare." },
-        { icon: FileText, title: "Transparență", text: "Comisioane comunicate în avans (15-25% administrare plus comisioanele platformelor) și raportare lunară scrisă." },
+        { icon: FileText, title: "Transparență", text: "Comisioane comunicate în avans (comision de administrare 15–20% din venitul net plus comisioanele platformelor) și raportare lunară scrisă." },
       ];
 
   return (
