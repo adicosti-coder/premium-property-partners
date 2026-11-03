@@ -66,7 +66,7 @@ const FounderProfile = () => {
         badge: "Who we are",
         title: "You talk to real people, not a call center",
         subtitle:
-          "A Timișoara-based company with a physical office in Cetate and a team handling apartments like yours every day.",
+          "A Timișoara-based team working digitally and on site at your property, handling apartments like yours every day.",
         founderRole: "Founder & Managing Director",
         founderBio:
           "Adrian Costi is the founder of RealTrust & ApArt Hotel, with a 25+ year career dedicated to the Timișoara real estate market. He has coordinated hundreds of real estate transactions and developed an integrated full-property management model — from long-term rentals to boutique-hotel-standard short-term operations. His vision is straightforward: every property should be managed as a high-performing investment, with full transparency, clear reporting, and optimized owner returns.",
