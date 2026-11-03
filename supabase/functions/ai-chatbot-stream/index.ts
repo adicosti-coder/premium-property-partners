@@ -95,7 +95,7 @@ async function buildSystemPrompt(language: string, pageContext: string = "/"): P
 • ApArt Hotel Timișoara (RealTrust) — Administrare Premium Regim Hotelier
 • WhatsApp: ${whatsapp} | Email: info@realtrust.ro
 • Rating: 4.9/5 ⭐ | Ocupare medie: 98% | Experiență: 25+ ani
-• Pachete administrare: Starter (15%), Essential (18%), Standard (20%), Premium (25%)
+• Pachete administrare: Starter (15%), Essential (18%), Standard (20%) — din venitul net
 
 === ACCOMMODATION PORTFOLIO (ApArt Hotel / managed stays) ===
 ${accommodationLines || "Contactați-ne pentru disponibilitate."}
@@ -120,7 +120,7 @@ ${investmentLines || "Portofoliul investițional se actualizează continuu. Reco
 
 === FOR PROPERTY OWNERS & INVESTORS ===
 • +40% venit net față de chiria clasică
-• Comision: 15-25% (Starter → Premium) cu rapoarte lunare transparente
+• Comision de administrare: 15–20% din venitul net (Starter → Standard) cu rapoarte lunare transparente
 • Fotografie profesională gratuită | Smart locks | Dynamic pricing
 • Asigurare proprietate până la €3.000.000
 • Sistem automatizat de gestionare (calendare sincronizate, curățenie coordonată, pricing dinamic)
@@ -161,7 +161,7 @@ ${investmentLines || "Portofoliul investițional se actualizează continuu. Reco
 10. Never recommend external owner ads or unverified marketplace listings. RealTrust positioning is curated, verified, premium advisory.
 11. Be concise but thorough — every response should feel curated and valuable
 12. When comparing STR vs classic rent, ALWAYS show the advantage percentage
-13. For questions about packages (15-25%), explain what each tier includes specifically
+13. For questions about packages (15–20% of net income), explain what each tier includes specifically
 
 === PAGE CONTEXT ===
 The user is currently on: ${pageContext}
