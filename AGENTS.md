@@ -50,3 +50,4 @@
 - Viewing requests persist through the protected lead endpoint before opening WhatsApp or emitting Lead; failures produce neither chat navigation nor conversion — prevents false conversions.
 - Canonicals are owned by the global route Helmet emitter, not the prerender shell; singular complex routes have a client fallback to plural — prevents duplicate canonicals while server redirects remain hosting-owned.
 - Social publication claims use `posting`, not `posted`; only confirmed external IDs finalize publication, failures return to draft with errors and partial delivery preserves successful platforms — prevents false published states and duplicate retries.
+- English on public pages falls back to `PhraseTranslator` (exact-phrase map in `public/i18n/en-phrases.json`, lazy-loaded, skips admin/owner portal/blog articles); new hardcoded Romanian copy needs a map entry or a dictionary key — avoids rewriting every page while translations are partial.
