@@ -1734,11 +1734,13 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
     `<meta name="description" content="${escapeHtml(route.description)}">`
   );
 
-  // Canonical is owned solely by the route-level Helmet emitter.
+  // One static canonical (Romanian URL, no query) for crawlers that skip JS.
+  // The route Helmet emitter removes it on mount and emits the single owned one.
   html = html.replace(/<link\b[^>]*rel=["']canonical["'][^>]*>\s*/gi, '');
   html = html.replace(/<link rel="alternate" hreflang="[^"]*" href="[^"]*"\s*\/?>\s*/g, '');
   const roHref = route.canonical.split('?')[0];
   const hreflangTags = [
+    `<link rel="canonical" href="${roHref}" />`,
     `<link rel="alternate" hreflang="ro" href="${roHref}" />`,
     `<link rel="alternate" hreflang="x-default" href="${roHref}" />`,
   ].join('\n  ');
