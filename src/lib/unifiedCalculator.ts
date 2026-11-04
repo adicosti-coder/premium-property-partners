@@ -8,7 +8,13 @@ import { estimateOwnerIncome, ZONES, type Finish, type PropertyTypeValue, type Z
 export type UnifiedZoneValue = Exclude<ZoneValue, "isho"> | "monarch";
 
 /** Scoped eligibility list; Monarch uses the explicitly approved NordOne estimates. */
-export const UNIFIED_ZONES = ZONES.flatMap((zone) => {
+export const UNIFIED_ZONES = ZONES.flatMap<{
+  value: UnifiedZoneValue;
+  label: string;
+  rent: number;
+  adr: number;
+  occupancy: number;
+}>((zone) => {
   if (zone.value === "isho") {
     const nordone = ZONES.find((candidate) => candidate.value === "nordone");
     return nordone ? [{ ...nordone, value: "monarch" as const, label: "Monarch" }] : [];
