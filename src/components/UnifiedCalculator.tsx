@@ -16,6 +16,8 @@ import { trackCriticalConversion, formatPhoneInput } from "@/lib/conversionTrack
 import { PROPERTY_TYPES, type Finish, type PropertyTypeValue } from "@/lib/ownerIncomeEstimate";
 import { UNIFIED_ZONES as ZONES, computeUnified, getLocationLeadIdentity, getPropertyLeadIdentity, isValidRegionalLocation, isValidPropertySurface, mapAnalysisToInput, type ListingAnalysisLike, type LocationMode, type UnifiedZoneValue } from "@/lib/unifiedCalculator";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { RegionalLocationInput } from "@/components/RegionalLocationInput";
+import { trackCalculatorEvent } from "@/lib/calculatorAnalytics";
 
 const WHATSAPP_NUMBER = "40799069256";
 const ANALYSIS_URL = `${supabaseConfig.url}/functions/v1/public-listing-analysis`;
@@ -113,6 +115,12 @@ const UnifiedCalculator = () => {
   const finishLabel = finish === "premium" ? "Premium Lux" : "Standard";
   const maxBar = Math.max(r.classicRent, r.netMax, 1);
   const leadSource = `calculator_unificat_${source?.mode ?? "manual"}`;
+  const analyticsContext = { location_mode: locationMode, property_type: type, location_name: zoneLabel, surface_sqm: surfaceNum };
+  const selectLocationMode = (next: LocationMode) => {
+    if (next !== locationMode) trackCalculatorEvent("calculator_location_mode_select", { location_mode: next });
+    setLocationMode(next);
+    setErrors({});
+  };
 
   const goStep2 = () => {
     if (!isValidPropertySurface(surfaceNum)) {
@@ -277,6 +285,7 @@ const UnifiedCalculator = () => {
         .catch(() => {});
 
       if (result.ok) {
+        trackCalculatorEvent("calculator_lead_submit", analyticsContext);
         trackCriticalConversion("Lead_Submit", { source: leadSource, value: 90, currency: "EUR", name: d.name });
       }
       toast.success("Proiecția e salvată. Apasă Trimite în WhatsApp.");
@@ -336,8 +345,8 @@ const UnifiedCalculator = () => {
             <fieldset>
               <legend className="mb-3 text-sm font-semibold text-foreground">{language === "ro" ? "Locație" : "Location"}</legend>
               <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Choice active={!national} onClick={() => { setLocationMode("local"); setErrors({}); }}>{language === "ro" ? "Timișoara & Zona Metropolitană" : "Timișoara & Metropolitan Area"}</Choice>
-                <Choice active={national} onClick={() => { setLocationMode("regional"); setErrors({}); }}>{language === "ro" ? "Altă localitate / Regional" : "Other town / Regional"}</Choice>
+                <Choice active={!national} onClick={() => selectLocationMode("local")}>{language === "ro" ? "Timișoara & Zona Metropolitană" : "Timișoara & Metropolitan Area"}</Choice>
+                <Choice active={national} onClick={() => selectLocationMode("regional")}>{language === "ro" ? "Altă localitate / Regional" : "Other town / Regional"}</Choice>
               </div>
               {!national && <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {ZONES.map((z) => (
@@ -347,7 +356,7 @@ const UnifiedCalculator = () => {
               {national && <div className="space-y-4">
                 <div>
                   <Label htmlFor="uc-location" className="mb-2 block font-semibold">{language === "ro" ? "Oraș / Zonă (ex: Brașov, Sinaia, Mamaia, Cluj, Murani etc.)" : "City / Area (e.g. Brașov, Sinaia, Mamaia, Cluj, Murani)"}</Label>
-                  <Input id="uc-location" maxLength={120} value={regionalLocation} onChange={(e) => { setRegionalLocation(e.target.value); setErrors((p) => ({ ...p, location: undefined })); }} aria-invalid={!!errors.location} aria-describedby={errors.location ? "uc-location-error" : undefined} />
+                  <RegionalLocationInput value={regionalLocation} onChange={(value) => { setRegionalLocation(value); setErrors((p) => ({ ...p, location: undefined })); }} error={errors.location} language={language} />
                   {errors.location && <p id="uc-location-error" className="mt-1 text-sm text-destructive">{errors.location}</p>}
                 </div>
                 <label className="flex min-h-12 items-center gap-3 text-sm font-medium text-foreground">
@@ -442,7 +451,7 @@ const UnifiedCalculator = () => {
           </fieldset>
           <div className="flex gap-3">
             <Button variant="outline" size="lg" onClick={() => setStep(1)}><ArrowLeft className="w-5 h-5 mr-2" />Înapoi</Button>
-            <Button size="lg" onClick={() => setStep(3)}>Vezi rezultatul <ArrowRight className="w-5 h-5 ml-2" /></Button>
+            <Button size="lg" onClick={() => { setStep(3); trackCalculatorEvent("calculator_result_view", analyticsContext); }}>Vezi rezultatul <ArrowRight className="w-5 h-5 ml-2" /></Button>
           </div>
         </div>
       )}
