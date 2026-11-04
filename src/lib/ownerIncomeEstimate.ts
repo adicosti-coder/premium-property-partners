@@ -46,6 +46,8 @@ export interface EstimateInput {
   channelFeeRate?: number;
   utilities?: number;
   commissionRate?: number;
+  /** Explicit neutral regional or approved local profile; existing callers keep their zone. */
+  zoneProfile?: { rent: number; adr: number };
 }
 
 export interface EstimateResult {
@@ -63,7 +65,7 @@ const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n
 
 export function estimateOwnerIncome(i: EstimateInput): EstimateResult {
   const t = PROPERTY_TYPES.find((x) => x.value === i.type) ?? PROPERTY_TYPES[1];
-  const z = ZONES.find((x) => x.value === i.zone) ?? ZONES[ZONES.length - 1];
+  const z = i.zoneProfile ?? ZONES.find((x) => x.value === i.zone) ?? ZONES[ZONES.length - 1];
   const size = clamp((i.surface || t.refSqm) / t.refSqm, 0.8, 1.4);
   const premium = i.finish === "premium";
 
