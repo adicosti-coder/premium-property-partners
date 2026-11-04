@@ -295,7 +295,7 @@ const forwardToConversionsApi = (
  * Safe to call from any form or handler; silently no-ops without consent.
  */
 export const trackConversion = (payload: ConversionPayload): void => {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || !hasAnalyticsConsent()) return;
 
   const eventId = newEventId();
   const { email: _e, phone: _p, name: _n, ...safeForDataLayer } = payload;
@@ -307,15 +307,13 @@ export const trackConversion = (payload: ConversionPayload): void => {
     timestamp: new Date().toISOString(),
   };
 
-  // 1. GTM dataLayer — always safe (no PII pushed).
+  // 1. GTM dataLayer — consent-gated, no PII pushed.
   try {
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push(enriched);
   } catch {
     // ignore
   }
-
-  if (!hasAnalyticsConsent()) return;
 
   // 2. GA4
   try {

@@ -11,11 +11,12 @@ export const REGIONAL_DESTINATIONS = [
   "Sovata", "Băile Felix", "Băile Herculane", "Călimănești", "Căciulata", "Băile Tușnad", "Murani",
 ] as const;
 
-const normalize = (value: string) => value.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("ro");
+const normalize = (value: string) => value.normalize("NFKD").replace(/\p{M}/gu, "").replace(/[\s\u200B-\u200D\uFEFF]+/g, " ").trim().toLocaleLowerCase("ro");
 
 export function getRegionalSuggestions(query: string): string[] {
   const key = normalize(query);
-  return REGIONAL_DESTINATIONS.filter((name) => normalize(name).includes(key)).slice(0, 8);
+  const words = key.split(" ");
+  return REGIONAL_DESTINATIONS.filter((name) => words.every((word) => normalize(name).includes(word))).slice(0, 8);
 }
 
 type CalculatorEvent = "calculator_location_mode_select" | "calculator_result_view" | "calculator_lead_submit";

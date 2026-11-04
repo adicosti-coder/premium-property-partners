@@ -106,9 +106,18 @@ describe("trackConversion", () => {
     delete (window as any).fbq;
   });
 
-  it("pushes to dataLayer but skips GA4/Meta without consent", () => {
+  it("skips dataLayer, GA4 and Meta without consent", () => {
     trackConversion({ event: "Lead_Submit", source: "owners_form" });
-    expect(window.dataLayer?.length).toBe(1);
+    expect(window.dataLayer?.length).toBe(0);
+    expect(gtag).not.toHaveBeenCalled();
+    expect(fbq).not.toHaveBeenCalled();
+  });
+
+  it("does not emit a completion after consent is withdrawn", () => {
+    setConsent("analytics_only");
+    setConsent("declined");
+    trackConversion({ event: "Lead_Submit", source: "calculator_unificat_manual" });
+    expect(window.dataLayer).toEqual([]);
     expect(gtag).not.toHaveBeenCalled();
     expect(fbq).not.toHaveBeenCalled();
   });
