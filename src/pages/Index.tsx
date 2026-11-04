@@ -71,9 +71,6 @@ const NearFoldSection = ({ forceCalc = false }: { forceCalc?: boolean }) => {
 
   const showCalc = calcVisible || forceCalc;
 
-  return () => window.removeEventListener("force-show-calculator", handler);
-  }, []);
-
   return (
     <div id="home-owner-tools" className="cv-auto">
       <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
