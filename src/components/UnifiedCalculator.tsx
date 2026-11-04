@@ -15,6 +15,7 @@ import { withCampaignTracking } from "@/lib/campaignAttribution";
 import { trackCriticalConversion, formatPhoneInput } from "@/lib/conversionTracking";
 import { PROPERTY_TYPES, type Finish, type PropertyTypeValue } from "@/lib/ownerIncomeEstimate";
 import { UNIFIED_ZONES as ZONES, computeUnified, mapAnalysisToInput, type ListingAnalysisLike, type UnifiedZoneValue } from "@/lib/unifiedCalculator";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const WHATSAPP_NUMBER = "40799069256";
 const ANALYSIS_URL = `${supabaseConfig.url}/functions/v1/public-listing-analysis`;
@@ -70,6 +71,7 @@ const Choice = ({ active, onClick, children }: { active: boolean; onClick: () =>
 );
 
 const UnifiedCalculator = () => {
+  const { language } = useLanguage();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [mode, setMode] = useState<InputMode>("manual");
   const [national, setNational] = useState(false);
@@ -292,10 +294,13 @@ const UnifiedCalculator = () => {
 
       {step === 1 && (
         <Tabs value={mode} onValueChange={(v) => setMode(v as InputMode)} className="animate-fade-in">
-          <TabsList className="grid w-full grid-cols-3 h-auto mb-6">
-            <TabsTrigger value="manual" className="min-h-12 gap-1.5 text-xs sm:text-sm"><PenLine className="w-4 h-4" />Manual / Ansamblu</TabsTrigger>
-            <TabsTrigger value="link" className="min-h-12 gap-1.5 text-xs sm:text-sm"><Link2 className="w-4 h-4" />Import link</TabsTrigger>
-            <TabsTrigger value="foto" className="min-h-12 gap-1.5 text-xs sm:text-sm"><Camera className="w-4 h-4" />Analiză foto</TabsTrigger>
+          <h3 id="uc-input-question" className="mb-4 text-base font-semibold text-foreground">
+            {language === "ro" ? "Cum vrei să introduci datele apartamentului?" : "How would you like to enter your apartment details?"}
+          </h3>
+          <TabsList aria-labelledby="uc-input-question" className="mb-8 grid h-auto w-full grid-cols-1 gap-3 rounded-none bg-transparent p-0 sm:grid-cols-3">
+            <TabsTrigger value="manual" className="min-h-14 min-w-0 justify-start gap-3 whitespace-normal rounded-lg border border-border bg-background px-4 py-3 text-left text-sm text-foreground hover:border-primary/50 data-[state=active]:border-primary data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none"><PenLine className="h-5 w-5 shrink-0" aria-hidden="true" />{language === "ro" ? "Manual / Ansamblu" : "Manual / Complex"}</TabsTrigger>
+            <TabsTrigger value="link" className="min-h-14 min-w-0 justify-start gap-3 whitespace-normal rounded-lg border border-border bg-background px-4 py-3 text-left text-sm text-foreground hover:border-primary/50 data-[state=active]:border-primary data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none"><Link2 className="h-5 w-5 shrink-0" aria-hidden="true" />{language === "ro" ? "Import link" : "Import link"}</TabsTrigger>
+            <TabsTrigger value="foto" className="min-h-14 min-w-0 justify-start gap-3 whitespace-normal rounded-lg border border-border bg-background px-4 py-3 text-left text-sm text-foreground hover:border-primary/50 data-[state=active]:border-primary data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none"><Camera className="h-5 w-5 shrink-0" aria-hidden="true" />{language === "ro" ? "Analiză foto" : "Photo analysis"}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="manual" className="space-y-6 mt-0">
