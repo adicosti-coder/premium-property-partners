@@ -34,7 +34,7 @@ import Hero from "@/components/Hero";
 const Header = lazy(() => import("@/components/Header"));
 const QuickLeadForm = lazy(() => import("@/components/QuickLeadForm"));
 const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
-const OwnerIncomeQuickCalc = lazy(() => import("@/components/OwnerIncomeQuickCalc"));
+const ROICalculatorWidget = lazy(() => import("@/components/ROICalculatorWidget"));
 const Testimonials = lazy(() => import("@/components/Testimonials"));
 const FAQ = lazy(() => import("@/components/FAQ"));
 const OwnerFearsFAQ = lazy(() => import("@/components/OwnerFearsFAQ"));
@@ -82,7 +82,7 @@ const NearFoldSection = ({ forceCalc = false }: { forceCalc?: boolean }) => {
       <div ref={calcRef} style={{ minHeight: showCalc ? undefined : '200px' }}>
         {showCalc && (
           <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
-            <div id="home-income-calculator" className="scroll-mt-24"><OwnerIncomeQuickCalc /></div>
+            <section id="home-income-calculator" className="scroll-mt-24 px-4 py-12 md:py-16"><div className="mx-auto max-w-4xl"><ROICalculatorWidget /></div></section>
             <ProfitCalculator />
             <QuickLeadForm />
           </Suspense>
