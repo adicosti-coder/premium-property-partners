@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { initialLanguage, languageRobots } from './languagePolicy';
+import { initialLanguage, languageRobots, searchForLanguage } from './languagePolicy';
+
+describe('language address', () => {
+  it('removes the English parameter when switching to Romanian', () => expect(searchForLanguage('?lang=en&page=2', 'ro')).toBe('?page=2'));
+  it('adds the English parameter when switching to English', () => expect(searchForLanguage('?page=2', 'en')).toBe('?page=2&lang=en'));
+});
 
 describe('visitor language and indexing policy', () => {
   it('defaults to Romanian', () => {
