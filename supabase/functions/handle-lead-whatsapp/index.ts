@@ -3,6 +3,7 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3";
 import { sendToMake } from "./sendToMake.ts";
+import { getLeadPropertyDetails } from "./propertyDetails.ts";
 import { appendSocialFollow, runtimeSocialProfiles } from "../_shared/socialFollow.ts";
 
 const json = (body: unknown, status = 200) =>
@@ -20,11 +21,14 @@ const BodySchema = z.object({
     z.string().trim().regex(/^(\+?4?0)?7\d{8}$/),
   ),
   zona: z.string().trim().min(2).max(60),
-  numar_camere: z.string().trim().min(1).max(30),
+  numar_camere: z.preprocess((v) => typeof v === "number" ? String(v) : v, z.string().trim().min(1).max(30).optional()),
+  property_type: z.string().trim().min(1).max(50).optional(),
+  property_type_label: z.string().trim().min(1).max(60).optional(),
+  tip_proprietate: z.string().trim().min(1).max(60).optional(),
   venit_estimat_min: z.number().int().min(0).max(100000),
   venit_estimat_max: z.number().int().min(0).max(100000),
   // Detalii opționale din etapele 2-3 ale formularului.
-  suprafata_mp: z.number().int().min(10).max(1000).optional(),
+  suprafata_mp: z.number().int().min(10).max(5000).optional(),
   stare: z.string().trim().max(40).optional(),
   mobilat: z.string().trim().max(40).optional(),
   disponibilitate: z.string().trim().max(40).optional(),
@@ -72,7 +76,8 @@ Deno.serve(async (req) => {
     ``,
     `Pentru a vă calcula venitul net estimat (chirie clasică vs. regim hotelier), scrieți-ne scurt:`,
     ``,
-    `• În ce zonă / complex se află apartamentul? (ex: ISHO, Torontalului, Complex, Centru)`,
+    ...(d.property_type_label || d.tip_proprietate ? [`• Tip proprietate: ${d.property_type_label ?? d.tip_proprietate}`] : []),
+    `• În ce zonă / complex se află proprietatea? (ex: Torontalului, Complex, Centru)`,
     `• Câte camere are și ce stare/dotări are?`,
     ``,
     `Analizăm datele pe zonă și revenim direct aici pe WhatsApp cu simularea detaliată!`,
@@ -86,12 +91,11 @@ Deno.serve(async (req) => {
     phone: toIntl(d.telefon),
     email: d.email ?? null,
     location: d.zona,
-    rooms: d.numar_camere,
+    ...getLeadPropertyDetails(d),
     surface: d.suprafata_mp ?? null,
     // Cheile istorice rămân în payload pentru compatibilitatea hărții Make.
     nume: d.nume,
     zona: d.zona,
-    numar_camere: d.numar_camere,
     venit_estimat_min: d.venit_estimat_min,
     venit_estimat_max: d.venit_estimat_max,
     suprafata_mp: d.suprafata_mp ?? null,

@@ -91,7 +91,7 @@ async function fetchListingText(url: string): Promise<string> {
   return htmlToText(await res.text());
 }
 
-const SYSTEM_PROMPT = `Ești consultant senior RealTrust Timișoara, specializat în administrare de apartamente în REGIM HOTELIER (short-stay) în Timișoara, județul Timiș.
+const SYSTEM_PROMPT = `Ești consultant senior RealTrust Timișoara, specializat în administrare de proprietăți în REGIM HOTELIER (short-stay) în Timișoara, județul Timiș.
 
 Reguli de calcul (obligatorii):
 - Ocupare medie folosită: 75%.
@@ -104,7 +104,7 @@ Răspunde EXCLUSIV cu JSON valid, în limba română, cu această structură exa
 {
   "titlu": "titlu scurt al proprietății",
   "zona": "zona identificată",
-  "tip_proprietate": "apartament|casa|studio|comercial",
+  "tip_proprietate": "apartament|casa-vila|vila-vacanta|pensiune-boutique|hotel-motel|penthouse|studio|comercial",
   "camere": 2,
   "suprafata": 55,
   "pret_listare": 95000,
@@ -124,6 +124,7 @@ Răspunde EXCLUSIV cu JSON valid, în limba română, cu această structură exa
   "verdict": "2-4 propoziții, ton profesionist, fără promisiuni exagerate"
 
 }
+Păstrează categoria reală a clădirii: o casă, vilă de vacanță, pensiune sau hotel nu devine apartament după numărul de camere. Suprafața utilă poate ajunge la 5.000 mp; nu inventa suprafețe sau capacități.
 Valorile numerice sunt în RON pentru tarif/venit și în moneda listării pentru preț. Dacă un câmp nu poate fi determinat, folosește null.`;
 
 function parseJsonLoose(raw: string) {
