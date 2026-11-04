@@ -1,10 +1,11 @@
 import { Helmet } from "react-helmet-async";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { BRAND, ORG_ID, SITE_ORIGIN, ORGANIZATION_SCHEMA } from "@/lib/orgIdentity";
 import { validateJsonLdConsistency } from "@/lib/schemaConsistency";
 import { buildLangAlternates } from "@/components/seo/CanonicalHreflang";
 import { languageRobots } from "@/i18n/languagePolicy";
+import { getPublicRouteSeo } from "@/lib/publicRouteSeo";
 
 // Canonical host: NO www, matches CanonicalHreflang.tsx + prerender + sitemap.
 // Mismatching www/non-www between og:url, canonical and hreflang triggers
@@ -141,6 +142,10 @@ const SEOHead = ({
 }: SEOHeadProps) => {
   const { language } = useLanguage();
   const robots = languageRobots(language, noIndex);
+  const approvedSeo = typeof window !== 'undefined' ? getPublicRouteSeo(window.location.pathname, language) : undefined;
+  useLayoutEffect(() => {
+    document.head.querySelectorAll('meta[name="description"]:not([data-rh]), meta[name="robots"]:not([data-rh])').forEach((node) => node.remove());
+  }, []);
 
   // The static shell / prerender keeps its own robots tag; crawlers read the
   // first one, so keep every robots tag aligned with this page's decision.
@@ -193,10 +198,11 @@ const SEOHead = ({
   // SEO override (from admin SEO AI Optimizer) takes precedence over all runtime defaults,
   // including explicit per-page props. Otherwise "Implementează automat" cannot affect pages
   // that already pass title/description into SEOHead.
-  const finalTitle = override?.title || baseTitle;
-  const finalDescription = override?.meta_description || baseDescription;
+  const finalTitle = approvedSeo?.title || (language === 'ro' ? override?.title : null) || baseTitle;
+  const finalDescription = approvedSeo?.description || (language === 'ro' ? override?.meta_description : null) || baseDescription;
   const finalSocialDescription =
-    override?.meta_description ||
+    approvedSeo?.description ||
+    (language === 'ro' ? override?.meta_description : null) ||
     socialDescription ||
     description ||
     defaultSocialDescriptions[language as keyof typeof defaultSocialDescriptions] ||
@@ -336,7 +342,8 @@ const SEOHead = ({
   // stale homepage description first and the SEO audit appears "stuck".
   useEffect(() => {
     if (typeof document === "undefined") return;
-
+    // Helmet commits asynchronously; synchronize only after its managed tags exist.
+    const timer = window.setTimeout(() => {
     const syncMeta = (selector: string, attrs: Record<string, string>, content: string) => {
       const nodes = Array.from(document.head.querySelectorAll<HTMLMetaElement>(selector));
       const targets = nodes.length ? nodes : [document.createElement("meta")];
@@ -371,6 +378,8 @@ const SEOHead = ({
     syncMeta('meta[name="twitter:url"]', { name: "twitter:url" }, finalUrl);
     syncMeta('meta[property="og:image"]', { property: "og:image" }, absoluteImage);
     syncMeta('meta[name="twitter:image"]', { name: "twitter:image" }, absoluteImage);
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [finalTitle, finalDescription, finalSocialDescription, finalUrl, absoluteImage]);
 
   return (

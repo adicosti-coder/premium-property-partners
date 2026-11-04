@@ -269,9 +269,9 @@ const Hero = () => {
 // Static title — renders instantly for fast LCP
 const StaticTitle = ({ title, titleMid, highlight }: { title: string; titleMid: string; highlight: string }) => (
   <span className="block">
-    <span className="block">{title}</span>
+    <span className="block">{title}{" "}</span>
     <span className="block text-2xl md:text-3xl lg:text-4xl font-normal italic text-on-hero/90 md:text-foreground/90 hero-text-shadow my-2">
-      {titleMid}
+      {titleMid}{" "}
     </span>
     <span className="block hero-text-shadow">
       <span className="text-gradient-gold hero-title-highlight">{highlight}</span>

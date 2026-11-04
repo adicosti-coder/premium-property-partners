@@ -52,3 +52,4 @@
 - Social publication claims use `posting`, not `posted`; only confirmed external IDs finalize publication, failures return to draft with errors and partial delivery preserves successful platforms — prevents false published states and duplicate retries.
 - English on public pages falls back to `PhraseTranslator` (exact-phrase map in `public/i18n/en-phrases.json`, lazy-loaded, skips admin/owner portal/blog articles); new hardcoded Romanian copy needs a map entry or a dictionary key — avoids rewriting every page while translations are partial.
 - PhraseTranslator restores its text and attribute mutations on cleanup only while they still match its translated values — prevents mixed-language round trips without overwriting newer React content.
+- Audited public routes use shared publicRouteSeo metadata in SEOHead and prerender; Romanian-only SEO overrides never replace English metadata — prevents delayed stale or mixed-language head tags.
