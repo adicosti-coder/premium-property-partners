@@ -14,7 +14,7 @@ import { supabase, supabaseConfig, getSupabasePublishableKey } from "@/lib/supab
 import { withCampaignTracking } from "@/lib/campaignAttribution";
 import { trackCriticalConversion, formatPhoneInput } from "@/lib/conversionTracking";
 import { PROPERTY_TYPES, type Finish, type PropertyTypeValue } from "@/lib/ownerIncomeEstimate";
-import { UNIFIED_ZONES as ZONES, computeUnified, getPropertyLeadIdentity, isValidPropertySurface, mapAnalysisToInput, type ListingAnalysisLike, type UnifiedZoneValue } from "@/lib/unifiedCalculator";
+import { UNIFIED_ZONES as ZONES, computeUnified, getLocationLeadIdentity, getPropertyLeadIdentity, isValidRegionalLocation, isValidPropertySurface, mapAnalysisToInput, type ListingAnalysisLike, type LocationMode, type UnifiedZoneValue } from "@/lib/unifiedCalculator";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const WHATSAPP_NUMBER = "40799069256";
@@ -75,7 +75,10 @@ const UnifiedCalculator = () => {
   const { language } = useLanguage();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [mode, setMode] = useState<InputMode>("manual");
-  const [national, setNational] = useState(false);
+  const [locationMode, setLocationMode] = useState<LocationMode>("local");
+  const [regionalLocation, setRegionalLocation] = useState("");
+  const [customRates, setCustomRates] = useState(false);
+  const national = locationMode === "regional";
   const [type, setType] = useState<PropertyTypeValue>("2-camere");
   const [zone, setZone] = useState<UnifiedZoneValue>("central");
   const [surface, setSurface] = useState("");
@@ -90,21 +93,23 @@ const UnifiedCalculator = () => {
   const [source, setSource] = useState<{ mode: InputMode; note: string } | null>(null);
   const [open, setOpen] = useState(false);
   const [lead, setLead] = useState({ name: "", phone: "", email: "" });
-  const [errors, setErrors] = useState<Partial<Record<"name" | "phone" | "email" | "surface" | "manual", string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<"name" | "phone" | "email" | "surface" | "manual" | "location", string>>>({});
   const [submitting, setSubmitting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const surfaceNum = Number(surface);
-  const manual = national ? { classicRent: Number(manualRent), nightlyRate: Number(manualNightly) } : null;
+  const manual = national && customRates ? { classicRent: manualRent ? Number(manualRent) : undefined, nightlyRate: manualNightly ? Number(manualNightly) : undefined } : null;
   const r = useMemo(
-    () => computeUnified({ type, zone, surface: surfaceNum, parking, finish, manual }),
+    () => computeUnified({ type, zone, surface: surfaceNum, parking, finish, manual, locationMode }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [type, zone, surfaceNum, parking, finish, national, manualRent, manualNightly],
+    [type, zone, surfaceNum, parking, finish, locationMode, customRates, manualRent, manualNightly],
   );
   const propertyIdentity = getPropertyLeadIdentity(type);
   const typeLabel = propertyIdentity.property_type_label;
   const indicativeType = ["casa-vila", "vila-vacanta", "pensiune-boutique", "hotel-motel"].includes(type);
-  const zoneLabel = national ? "Național / introdus manual" : ZONES.find((z) => z.value === zone)?.label ?? "Altă zonă";
+  const locationIdentity = getLocationLeadIdentity(locationMode, zone, regionalLocation);
+  const zoneLabel = locationIdentity.location;
+  const locationSummary = `${locationIdentity.service_tag} Locație: ${zoneLabel} | Tip: ${typeLabel}`;
   const finishLabel = finish === "premium" ? "Premium Lux" : "Standard";
   const maxBar = Math.max(r.classicRent, r.netMax, 1);
   const leadSource = `calculator_unificat_${source?.mode ?? "manual"}`;
@@ -114,8 +119,12 @@ const UnifiedCalculator = () => {
       setErrors({ surface: language === "ro" ? "Introdu suprafața utilă (între 15 și 5.000 mp)" : "Enter the usable area (between 15 and 5,000 sqm)" });
       return;
     }
-    if (national && (!(Number(manualRent) >= 100) || !(Number(manualNightly) >= 15))) {
-      setErrors({ manual: "Introdu chiria lunară (min. 100 €) și tariful pe noapte (min. 15 €)" });
+    if (national && !isValidRegionalLocation(regionalLocation)) {
+      setErrors({ location: language === "ro" ? "Introdu orașul / zona (2–120 caractere)." : "Enter the city / area (2–120 characters)." });
+      return;
+    }
+    if (national && customRates && ((manualRent && Number(manualRent) < 100) || (manualNightly && Number(manualNightly) < 15))) {
+      setErrors({ manual: language === "ro" ? "Tarifele personalizate: minimum 100 €/lună și 15 €/noapte; câmpurile goale folosesc estimarea standard." : "Custom rates: at least €100/month and €15/night; empty fields use the standard estimate." });
       return;
     }
     setErrors({});
@@ -129,7 +138,6 @@ const UnifiedCalculator = () => {
     if (m.surface) setSurface(String(m.surface));
     else if (m.type) setSurface(String(PROPERTY_TYPES.find((t) => t.value === m.type)?.refSqm ?? 55));
     if (m.finish) setFinish(m.finish);
-    setNational(false);
     const parts = [
       m.type && PROPERTY_TYPES.find((t) => t.value === m.type)?.label,
       m.zone && ZONES.find((z) => z.value === m.zone)?.label,
@@ -186,7 +194,8 @@ const UnifiedCalculator = () => {
     [
       `Salut, sunt ${name}. Am folosit calculatorul RealTrust:`,
       ``,
-      `🏠 ${typeLabel} · ${zoneLabel} · ${surfaceNum} mp`,
+      locationSummary,
+      `🏠 Suprafață: ${surfaceNum} mp`,
       `• Parcare: ${parking ? "Da" : "Nu"} · Finisaje: ${finishLabel}`,
       source ? `• Date din: ${source.mode === "link" ? "link anunț" : source.mode === "foto" ? "analiză foto" : "introducere manuală"}` : null,
       ``,
@@ -214,7 +223,9 @@ const UnifiedCalculator = () => {
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
     const specs = {
       input_mode: source?.mode ?? "manual",
-      national_manual: national,
+      national_manual: national && customRates,
+      ...locationIdentity,
+      custom_rates: national && customRates,
       source_url: source?.mode === "link" ? url.trim() : undefined,
       property_type: type,
       property_type_label: typeLabel,
@@ -236,7 +247,7 @@ const UnifiedCalculator = () => {
         email: d.email || undefined,
         property_type: type,
         property_area: surfaceNum,
-        message: `[calculator_unificat] ${typeLabel} · ${zoneLabel} · ${surfaceNum} mp · Parcare: ${parking ? "Da" : "Nu"} · Finisaje: ${finishLabel}`,
+        message: `[calculator_unificat] ${locationSummary} · ${surfaceNum} mp · Parcare: ${parking ? "Da" : "Nu"} · Finisaje: ${finishLabel}`,
         source: leadSource,
         simulation_data: withCampaignTracking({ ...specs, generated_message: message }) as never,
       });
@@ -250,6 +261,7 @@ const UnifiedCalculator = () => {
             telefon: d.phone,
             ...(d.email ? { email: d.email } : {}),
             zona: zoneLabel,
+            location_mode: locationMode,
             ...propertyIdentity,
             suprafata_mp: surfaceNum,
             parcare: parking,
@@ -282,7 +294,7 @@ const UnifiedCalculator = () => {
         <Sparkles className="w-4 h-4 text-primary" />
         <span className="text-xs font-semibold uppercase tracking-widest text-primary">Calculator venit · 3 pași</span>
       </div>
-      <h2 className="text-2xl md:text-3xl font-serif font-semibold text-foreground mb-6">{language === "ro" ? "Cât produce proprietatea ta în Timișoara?" : "How much can your property earn in Timișoara?"}</h2>
+      <h2 className="text-2xl md:text-3xl font-serif font-semibold text-foreground mb-6">{language === "ro" ? "Cât poate produce proprietatea ta?" : "How much can your property earn?"}</h2>
 
       <ol className="flex gap-2 mb-8" aria-label="Etapele calculatorului">
         {steps.map((s, i) => {
@@ -322,22 +334,36 @@ const UnifiedCalculator = () => {
               </div>
             </fieldset>
             <fieldset>
-              <legend className="mb-3 text-sm font-semibold text-foreground">Zonă / Complex</legend>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {ZONES.map((z) => (
-                  <Choice key={z.value} active={!national && zone === z.value} onClick={() => { setZone(z.value); setNational(false); }}>{z.label}</Choice>
-                ))}
-                <Choice active={national} onClick={() => setNational(true)}>Național / Manual</Choice>
+              <legend className="mb-3 text-sm font-semibold text-foreground">{language === "ro" ? "Locație" : "Location"}</legend>
+              <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Choice active={!national} onClick={() => { setLocationMode("local"); setErrors({}); }}>{language === "ro" ? "Timișoara & Zona Metropolitană" : "Timișoara & Metropolitan Area"}</Choice>
+                <Choice active={national} onClick={() => { setLocationMode("regional"); setErrors({}); }}>{language === "ro" ? "Altă localitate / Regional" : "Other town / Regional"}</Choice>
               </div>
+              {!national && <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {ZONES.map((z) => (
+                  <Choice key={z.value} active={zone === z.value} onClick={() => setZone(z.value)}>{language === "en" && z.value === "alta-zona" ? "Other area Timișoara / Giroc / Dumbrăvița" : z.label}</Choice>
+                ))}
+              </div>}
+              {national && <div className="space-y-4">
+                <div>
+                  <Label htmlFor="uc-location" className="mb-2 block font-semibold">{language === "ro" ? "Oraș / Zonă (ex: Brașov, Sinaia, Mamaia, Cluj, Murani etc.)" : "City / Area (e.g. Brașov, Sinaia, Mamaia, Cluj, Murani)"}</Label>
+                  <Input id="uc-location" maxLength={120} value={regionalLocation} onChange={(e) => { setRegionalLocation(e.target.value); setErrors((p) => ({ ...p, location: undefined })); }} aria-invalid={!!errors.location} aria-describedby={errors.location ? "uc-location-error" : undefined} />
+                  {errors.location && <p id="uc-location-error" className="mt-1 text-sm text-destructive">{errors.location}</p>}
+                </div>
+                <label className="flex min-h-12 items-center gap-3 text-sm font-medium text-foreground">
+                  <input type="checkbox" className="h-5 w-5 accent-primary" checked={customRates} onChange={(e) => setCustomRates(e.target.checked)} />
+                  {language === "ro" ? "Personalizează tarifele (opțional)" : "Customize rates (optional)"}
+                </label>
+              </div>}
             </fieldset>
-            {national && (
+            {national && customRates && (
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <Label htmlFor="uc-rent" className="mb-2 block font-semibold">Chirie clasică actuală (€/lună) *</Label>
+                  <Label htmlFor="uc-rent" className="mb-2 block font-semibold">{language === "ro" ? "Chirie clasică (€/lună, opțional)" : "Classic rent (€/month, optional)"}</Label>
                   <Input id="uc-rent" inputMode="numeric" maxLength={5} value={manualRent} onChange={(e) => setManualRent(e.target.value.replace(/\D/g, ""))} />
                 </div>
                 <div>
-                  <Label htmlFor="uc-nightly" className="mb-2 block font-semibold">Tarif estimat pe noapte (€) *</Label>
+                  <Label htmlFor="uc-nightly" className="mb-2 block font-semibold">{language === "ro" ? "Tarif pe noapte (€, opțional)" : "Nightly rate (€, optional)"}</Label>
                   <Input id="uc-nightly" inputMode="numeric" maxLength={4} value={manualNightly} onChange={(e) => setManualNightly(e.target.value.replace(/\D/g, ""))} />
                 </div>
                 {errors.manual && <p className="sm:col-span-2 text-sm text-destructive">{errors.manual}</p>}
@@ -426,7 +452,7 @@ const UnifiedCalculator = () => {
           <p className="text-sm text-muted-foreground">{typeLabel} · {zoneLabel} · {surfaceNum} mp · Parcare: {parking ? "Da" : "Nu"} · Finisaje: {finishLabel}</p>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-border bg-muted/40 p-5">
-              <p className="text-sm text-muted-foreground">Chirie clasică{national ? " (introdusă de tine)" : indicativeType ? " (referință orientativă)" : " (mediană reală în zonă)"}</p>
+              <p className="text-sm text-muted-foreground">Chirie clasică{national && customRates && manualRent ? " (introdusă de tine)" : national || indicativeType || ZONES.find((z) => z.value === zone)?.indicative ? " (referință orientativă)" : " (mediană reală în zonă)"}</p>
               <p className="mt-1 text-3xl font-semibold text-foreground">~{fmt(r.classicRent)} €<span className="text-base font-normal text-muted-foreground">/lună</span></p>
               <div className="mt-4 h-2 rounded-full bg-border overflow-hidden"><div className="h-full bg-muted-foreground" style={{ width: `${(r.classicRent / maxBar) * 100}%` }} /></div>
             </div>
