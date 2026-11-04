@@ -2,7 +2,7 @@
 
 ## Teste sugestii și publicare aprobată
 - [x] Teste dedicate selecției prin touch și tastatură, inclusiv Băile Felix fără diacritice
-- [ ] Rulare teste, verificare securitate și solicitare publicare pe realtrust.ro
+- [x] 90 teste trecute, scanare securitate fără constatări critice noi; publicare solicitată pe realtrust.ro, finalizarea și recepția GA4 rămân neverificate
 
 ## Corecturi acord și Băile Felix
 - [x] Blocare conversii inclusiv dataLayer înainte de acord; calculatorul nu transmite numele către tracking
