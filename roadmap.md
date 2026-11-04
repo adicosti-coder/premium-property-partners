@@ -1,5 +1,10 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Locații locale și regionale în calculator — 4 noiembrie, 23:12 UTC
+- [ ] Selector local/metropolitan cu ansamblurile cerute și localitate regională liberă
+- [ ] Estimări regionale automate pe tip, personalizare opțională și etichete în cerere/WhatsApp
+- [ ] Teste și verificare telefon/desktop RO/EN fără publicare sau notificări externe
+
 ## Tipuri generale în calculator — 4 noiembrie, 22:53 UTC
 - [x] Texte RO/EN generale, patru tipuri noi cu referințe orientative și limită comună 5.000 mp
 - [x] Tip păstrat în maparea importului și cererea/mesajul WhatsApp; 36 teste trecute și probe controlate telefon/desktop RO/EN; funcțiile activate, interfața nepublicată, livrarea externă și analiza AI reală neverificate
