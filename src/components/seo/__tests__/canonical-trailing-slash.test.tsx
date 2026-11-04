@@ -40,6 +40,20 @@ const getCanonical = () =>
   document.head.querySelector('link[rel="canonical"]')?.getAttribute("href");
 
 describe("Trailing slash → redirect + canonical", () => {
+  it("replaces unmanaged prerender language links with one route-owned pair", async () => {
+    for (const language of ['ro', 'x-default', 'en']) {
+      const link = document.createElement('link');
+      link.rel = 'alternate';
+      link.hreflang = language;
+      link.href = `${SITE}/old`;
+      document.head.appendChild(link);
+    }
+    renderAt('/preturi');
+    await waitFor(() => expect(document.head.querySelectorAll('link[rel="alternate"][hreflang="ro"]')).toHaveLength(1));
+    expect(document.head.querySelectorAll('link[rel="alternate"][hreflang="x-default"]')).toHaveLength(1);
+    expect(document.head.querySelectorAll('link[rel="alternate"][hreflang="en"]')).toHaveLength(0);
+    expect(document.head.querySelector('link[hreflang="ro"]')?.getAttribute('href')).toBe(`${SITE}/preturi`);
+  });
   it("redirects /pentru-proprietari/ to /pentru-proprietari and emits clean canonical", async () => {
     const { getLocation } = renderAt("/pentru-proprietari/");
     await waitFor(() => expect(getLocation().pathname).toBe("/pentru-proprietari"));

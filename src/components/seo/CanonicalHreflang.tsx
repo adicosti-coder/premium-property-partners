@@ -35,7 +35,7 @@ const CanonicalHreflang = () => {
   // Hosting may still serve an older prerendered shell until the next publish.
   // Remove unmanaged links before Helmet adds its single route-owned canonical.
   useLayoutEffect(() => {
-    document.head.querySelectorAll('link[rel="canonical"]:not([data-rh]), link[rel="alternate"][hreflang="en"]').forEach((node) => node.remove());
+    document.head.querySelectorAll('link[rel="canonical"]:not([data-rh]), link[rel="alternate"][hreflang]:not([data-rh]), link[rel="alternate"][hreflang="en"]').forEach((node) => node.remove());
   }, [canonical]);
 
   return (
