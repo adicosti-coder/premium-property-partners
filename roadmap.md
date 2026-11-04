@@ -1,5 +1,9 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Teste sugestii și publicare aprobată
+- [x] Teste dedicate selecției prin touch și tastatură, inclusiv Băile Felix fără diacritice
+- [ ] Rulare teste, verificare securitate și solicitare publicare pe realtrust.ro
+
 ## Corecturi acord și Băile Felix
 - [x] Blocare conversii inclusiv dataLayer înainte de acord; calculatorul nu transmite numele către tracking
 - [x] Căutare fără diacritice cu spații normalizate și selecție compatibilă touch
