@@ -48,6 +48,7 @@
 
 - Management calculators use the shared commercial-policy helper with channel fees and utilities explicit and cleaning separate — prevents gross/net commission drift.
 - UnifiedCalculator owns its eligible complex list and resolves approved complex aliases through shared estimate profiles for manual and imported inputs — prevents restricted choices reappearing without changing other calculators.
+- UnifiedCalculator shares surface validation and property identity helpers for manual/import inputs and lead handover; building types take precedence over room counts and use explicitly indicative whole-property benchmarks — prevents hotels becoming apartments or misleading per-room projections.
 - Homepage calculator anchors stay outside lazy boundaries; both hash aliases and CTAs force loading and wait for the tool before scrolling — prevents jumps to statistics or unloaded placeholders.
 - Viewing requests persist through the protected lead endpoint before opening WhatsApp or emitting Lead; failures produce neither chat navigation nor conversion — prevents false conversions.
 - Prerendered HTML ships one static Romanian canonical that the global route Helmet emitter replaces on mount; singular complex routes have a client fallback to plural — prevents duplicate canonicals while server redirects remain hosting-owned.

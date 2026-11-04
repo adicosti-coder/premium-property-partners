@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { UNIFIED_ZONES, computeUnified, mapAnalysisToInput } from "./unifiedCalculator";
+import { UNIFIED_ZONES, computeUnified, getPropertyLeadIdentity, isValidPropertySurface, mapAnalysisToInput } from "./unifiedCalculator";
 
 describe("unified complex eligibility", () => {
   it("replaces restricted ISHO with Monarch", () => {
@@ -35,6 +35,17 @@ describe("computeUnified", () => {
 });
 
 describe("mapAnalysisToInput", () => {
+  it.each([
+    ["Casă / Vilă", "casa-vila"],
+    ["Vilă de vacanță", "vila-vacanta"],
+    ["Pensiune / Boutique", "pensiune-boutique"],
+    ["Hotel / Motel", "hotel-motel"],
+  ])("preserves %s rather than inferring an apartment from rooms", (label, type) => {
+    expect(mapAnalysisToInput({ tip_proprietate: label, camere: 3, suprafata: 5000 })).toEqual({ type, surface: 5000 });
+  });
+  it("rejects imported surfaces above 5,000 sqm", () => {
+    expect(mapAnalysisToInput({ suprafata: 5001 }).surface).toBeUndefined();
+  });
   it("maps rooms, surface, complex and finish from an analysis", () => {
     expect(mapAnalysisToInput({ camere: 2, suprafata: 58, zona: "Monarch", scor: 85, max_scor: 100 }))
       .toEqual({ type: "2-camere", surface: 58, zone: "monarch", finish: "premium" });
@@ -44,5 +55,32 @@ describe("mapAnalysisToInput", () => {
   });
   it("falls back to 'alta-zona' for unknown areas", () => {
     expect(mapAnalysisToInput({ zona: "Giroc" }).zone).toBe("alta-zona");
+  });
+});
+
+describe("property surface validation", () => {
+  it("accepts 5,000 sqm", () => expect(isValidPropertySurface(5000)).toBe(true));
+  it("rejects 5,001 sqm", () => expect(isValidPropertySurface(5001)).toBe(false));
+  it("keeps the 15 sqm lower bound", () => {
+    expect(isValidPropertySurface(15)).toBe(true);
+    expect(isValidPropertySurface(14)).toBe(false);
+  });
+  it("rejects nonnumeric and fractional inputs", () => {
+    expect(isValidPropertySurface(NaN)).toBe(false);
+    expect(isValidPropertySurface(50.5)).toBe(false);
+  });
+});
+
+describe("property lead identity", () => {
+  it.each([
+    ["casa-vila", "Casă / Vilă"],
+    ["vila-vacanta", "Vilă de vacanță"],
+    ["pensiune-boutique", "Pensiune / Boutique"],
+    ["hotel-motel", "Hotel / Motel"],
+  ] as const)("hands over %s as a property type, not a room count", (type, label) => {
+    expect(getPropertyLeadIdentity(type)).toEqual({ property_type: type, property_type_label: label, tip_proprietate: label, numar_camere: undefined });
+  });
+  it("retains apartment room counts", () => {
+    expect(getPropertyLeadIdentity("2-camere").numar_camere).toBe(2);
   });
 });

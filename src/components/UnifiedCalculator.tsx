@@ -14,7 +14,7 @@ import { supabase, supabaseConfig, getSupabasePublishableKey } from "@/lib/supab
 import { withCampaignTracking } from "@/lib/campaignAttribution";
 import { trackCriticalConversion, formatPhoneInput } from "@/lib/conversionTracking";
 import { PROPERTY_TYPES, type Finish, type PropertyTypeValue } from "@/lib/ownerIncomeEstimate";
-import { UNIFIED_ZONES as ZONES, computeUnified, mapAnalysisToInput, type ListingAnalysisLike, type UnifiedZoneValue } from "@/lib/unifiedCalculator";
+import { UNIFIED_ZONES as ZONES, computeUnified, getPropertyLeadIdentity, isValidPropertySurface, mapAnalysisToInput, type ListingAnalysisLike, type UnifiedZoneValue } from "@/lib/unifiedCalculator";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const WHATSAPP_NUMBER = "40799069256";
@@ -58,16 +58,17 @@ const readFile = (f: File) =>
   });
 
 const Choice = ({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) => (
-  <button
+  <Button
+    variant="outline"
     type="button"
     onClick={onClick}
     aria-pressed={active}
-    className={`min-h-12 rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors text-left ${
+    className={`h-auto min-h-12 whitespace-normal justify-start rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors text-left ${
       active ? "border-primary bg-primary/10 text-primary ring-1 ring-primary" : "border-border bg-background text-foreground hover:border-primary/40"
     }`}
   >
     {children}
-  </button>
+  </Button>
 );
 
 const UnifiedCalculator = () => {
@@ -100,15 +101,17 @@ const UnifiedCalculator = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [type, zone, surfaceNum, parking, finish, national, manualRent, manualNightly],
   );
-  const typeLabel = PROPERTY_TYPES.find((t) => t.value === type)!.label;
-  const zoneLabel = national ? "Național / introdus manual" : ZONES.find((z) => z.value === zone)!.label;
+  const propertyIdentity = getPropertyLeadIdentity(type);
+  const typeLabel = propertyIdentity.property_type_label;
+  const indicativeType = ["casa-vila", "vila-vacanta", "pensiune-boutique", "hotel-motel"].includes(type);
+  const zoneLabel = national ? "Național / introdus manual" : ZONES.find((z) => z.value === zone)?.label ?? "Altă zonă";
   const finishLabel = finish === "premium" ? "Premium Lux" : "Standard";
   const maxBar = Math.max(r.classicRent, r.netMax, 1);
   const leadSource = `calculator_unificat_${source?.mode ?? "manual"}`;
 
   const goStep2 = () => {
-    if (!/^\d{2,4}$/.test(surface) || surfaceNum < 15 || surfaceNum > 400) {
-      setErrors({ surface: "Introdu suprafața utilă (între 15 și 400 mp)" });
+    if (!isValidPropertySurface(surfaceNum)) {
+      setErrors({ surface: language === "ro" ? "Introdu suprafața utilă (între 15 și 5.000 mp)" : "Enter the usable area (between 15 and 5,000 sqm)" });
       return;
     }
     if (national && (!(Number(manualRent) >= 100) || !(Number(manualNightly) >= 15))) {
@@ -124,12 +127,12 @@ const UnifiedCalculator = () => {
     if (m.type) setType(m.type);
     if (m.zone) setZone(m.zone);
     if (m.surface) setSurface(String(m.surface));
-    else if (m.type) setSurface(String(PROPERTY_TYPES.find((t) => t.value === m.type)!.refSqm));
+    else if (m.type) setSurface(String(PROPERTY_TYPES.find((t) => t.value === m.type)?.refSqm ?? 55));
     if (m.finish) setFinish(m.finish);
     setNational(false);
     const parts = [
-      m.type && PROPERTY_TYPES.find((t) => t.value === m.type)!.label,
-      m.zone && ZONES.find((z) => z.value === m.zone)!.label,
+      m.type && PROPERTY_TYPES.find((t) => t.value === m.type)?.label,
+      m.zone && ZONES.find((z) => z.value === m.zone)?.label,
       m.surface && `${m.surface} mp`,
       m.finish && `finisaje ${m.finish === "premium" ? "Premium" : "Standard"}`,
     ].filter(Boolean);
@@ -214,6 +217,7 @@ const UnifiedCalculator = () => {
       national_manual: national,
       source_url: source?.mode === "link" ? url.trim() : undefined,
       property_type: type,
+      property_type_label: typeLabel,
       zone: zoneLabel,
       surface_sqm: surfaceNum,
       parking,
@@ -246,7 +250,7 @@ const UnifiedCalculator = () => {
             telefon: d.phone,
             ...(d.email ? { email: d.email } : {}),
             zona: zoneLabel,
-            numar_camere: type,
+            ...propertyIdentity,
             suprafata_mp: surfaceNum,
             parcare: parking,
             finisaje: finish,
@@ -278,7 +282,7 @@ const UnifiedCalculator = () => {
         <Sparkles className="w-4 h-4 text-primary" />
         <span className="text-xs font-semibold uppercase tracking-widest text-primary">Calculator venit · 3 pași</span>
       </div>
-      <h2 className="text-2xl md:text-3xl font-serif font-semibold text-foreground mb-6">Cât produce apartamentul tău în Timișoara?</h2>
+      <h2 className="text-2xl md:text-3xl font-serif font-semibold text-foreground mb-6">{language === "ro" ? "Cât produce proprietatea ta în Timișoara?" : "How much can your property earn in Timișoara?"}</h2>
 
       <ol className="flex gap-2 mb-8" aria-label="Etapele calculatorului">
         {steps.map((s, i) => {
@@ -295,7 +299,7 @@ const UnifiedCalculator = () => {
       {step === 1 && (
         <Tabs value={mode} onValueChange={(v) => setMode(v as InputMode)} className="animate-fade-in">
           <h3 id="uc-input-question" className="mb-4 text-base font-semibold text-foreground">
-            {language === "ro" ? "Cum vrei să introduci datele apartamentului?" : "How would you like to enter your apartment details?"}
+            {language === "ro" ? "Cum vrei să introduci datele proprietății?" : "How would you like to enter your property details?"}
           </h3>
           <TabsList aria-labelledby="uc-input-question" className="mb-8 grid h-auto w-full grid-cols-1 gap-3 rounded-none bg-transparent p-0 sm:grid-cols-3">
             <TabsTrigger value="manual" className="min-h-14 min-w-0 justify-start gap-3 whitespace-normal rounded-lg border border-border bg-background px-4 py-3 text-left text-sm text-foreground hover:border-primary/50 data-[state=active]:border-primary data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none"><PenLine className="h-5 w-5 shrink-0" aria-hidden="true" />{language === "ro" ? "Manual / Ansamblu" : "Manual / Complex"}</TabsTrigger>
@@ -310,7 +314,7 @@ const UnifiedCalculator = () => {
               </p>
             )}
             <fieldset>
-              <legend className="mb-3 text-sm font-semibold text-foreground">Tip proprietate (camere) *</legend>
+              <legend className="mb-3 text-sm font-semibold text-foreground">{language === "ro" ? "Tip proprietate *" : "Property type *"}</legend>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {PROPERTY_TYPES.map((t) => (
                   <Choice key={t.value} active={type === t.value} onClick={() => { setType(t.value); setSurface(String(t.refSqm)); }}>{t.label}</Choice>
@@ -422,7 +426,7 @@ const UnifiedCalculator = () => {
           <p className="text-sm text-muted-foreground">{typeLabel} · {zoneLabel} · {surfaceNum} mp · Parcare: {parking ? "Da" : "Nu"} · Finisaje: {finishLabel}</p>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-border bg-muted/40 p-5">
-              <p className="text-sm text-muted-foreground">Chirie clasică{national ? " (introdusă de tine)" : " (mediană reală în zonă)"}</p>
+              <p className="text-sm text-muted-foreground">Chirie clasică{national ? " (introdusă de tine)" : indicativeType ? " (referință orientativă)" : " (mediană reală în zonă)"}</p>
               <p className="mt-1 text-3xl font-semibold text-foreground">~{fmt(r.classicRent)} €<span className="text-base font-normal text-muted-foreground">/lună</span></p>
               <div className="mt-4 h-2 rounded-full bg-border overflow-hidden"><div className="h-full bg-muted-foreground" style={{ width: `${(r.classicRent / maxBar) * 100}%` }} /></div>
             </div>
@@ -441,7 +445,8 @@ const UnifiedCalculator = () => {
           <ul className="grid gap-1 text-sm text-muted-foreground">
             <li className="flex gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />Tarif mediu estimat: ~{r.nightlyRate} €/noapte, ocupare {Math.round(r.occupancy * 100)}%; venit brut ~{fmt(r.grossHotel)} €/lună</li>
             <li className="flex gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />Ipoteze: canale 15%, utilități estimate 120 €/lună, administrare 15–20% din venitul net (brut minus canale și utilități). Menaj separat suportat de oaspete; impozitele și reparațiile nu sunt incluse.</li>
-            <li className="flex gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />Randament 6,5–9,4% net estimat; cifrele finale depind de apartament</li>
+            {indicativeType && <li>{language === "ro" ? "Referințe orientative pentru întreaga proprietate, nu tarife pe cameră. Capacitatea, sezonalitatea și costurile reale necesită o evaluare individuală." : "Indicative whole-property benchmarks, not per-room rates. Capacity, seasonality and actual costs require an individual assessment."}</li>}
+            <li className="flex gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />{language === "ro" ? "Randament 6,5–9,4% net estimat; cifrele finale depind de proprietate" : "Estimated net yield of 6.5–9.4%; final figures depend on the property"}</li>
           </ul>
           <div className="flex flex-col-reverse sm:flex-row gap-3">
             <Button variant="outline" size="lg" onClick={() => setStep(2)}><ArrowLeft className="w-5 h-5 mr-2" />Modifică</Button>

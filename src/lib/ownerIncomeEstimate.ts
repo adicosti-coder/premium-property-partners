@@ -9,6 +9,11 @@ export const PROPERTY_TYPES = [
   { value: "2-camere", label: "2 camere", refSqm: 55, classicRent: 460, adr: 66 },
   { value: "3-camere", label: "3 camere", refSqm: 75, classicRent: 600, adr: 85 },
   { value: "penthouse", label: "Penthouse", refSqm: 110, classicRent: 1000, adr: 130 },
+  // Orientative whole-property benchmarks, not verified local market medians.
+  { value: "casa-vila", label: "Casă / Vilă", refSqm: 150, classicRent: 1100, adr: 150 },
+  { value: "vila-vacanta", label: "Vilă de vacanță", refSqm: 200, classicRent: 1400, adr: 180 },
+  { value: "pensiune-boutique", label: "Pensiune / Boutique", refSqm: 500, classicRent: 3000, adr: 500 },
+  { value: "hotel-motel", label: "Hotel / Motel", refSqm: 1500, classicRent: 8000, adr: 1400 },
 ] as const;
 
 // rent = chiria mediană reală pe zonă / mediana Timișoara (~460 €, 2 camere),
