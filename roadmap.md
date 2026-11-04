@@ -3,7 +3,7 @@
 ## Sugestii regionale și analytics calculator
 - [x] Sugestii locale accesibile, căutare fără diacritice și introducere liberă
 - [x] Evenimente mod locație, rezultat și cerere salvată, fără date personale; consimțământ obligatoriu
-- [ ] Teste și verificare telefon/desktop, fără publicare
+- [x] 55 teste trecute; telefon/desktop: selectare tap/tastatură, text liber, rezultat și cerere cu salvare interceptată; evenimente fără date personale confirmate, fără publicare sau notificări reale; recepția în GA4 nu a fost verificată
 
 ## Locații locale și regionale în calculator — 4 noiembrie, 23:12 UTC
 - [x] Selector local/metropolitan implicit cu toate ansamblurile cerute și localitate regională liberă; ansamblurile fără tarife confirmate folosesc profilul general orientativ
