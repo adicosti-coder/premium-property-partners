@@ -1,5 +1,11 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Audit prioritar — 4 noiembrie, 06:11 UTC
+- [ ] Inventar actual: portofoliu, identitate, comisioane/pachete, formule, promisiuni, EN și SEO/conversii
+- [ ] Remedieri tehnice confirmate și configurație comercială pregătită fără activarea unor valori noi
+- [ ] Probe browser RO/EN, SEO mobil/desktop, teste și raport cu dovezi separate pentru producție
+- [ ] Confirmări comerciale/documente — valorile contradictorii nu se schimbă înainte de răspunsul administratorului
+
 ## Verificare SEO după publicare — 4 noiembrie
 - [x] Publicare și verificare live canonical, robots, title, description și H1 pentru cele șapte rute solicitate, în RO și EN
 - [x] Metadate comune React/prerender, override-uri RO excluse din EN, duplicate description/robots eliminate, H1 condiții/servicii și spațiere homepage; 17 teste și 14 verificări live trecute, fără schimbarea valorilor comerciale
