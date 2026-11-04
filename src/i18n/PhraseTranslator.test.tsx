@@ -15,6 +15,13 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
 describe('phrase translation ownership', () => {
+  it('translates attributes added to an existing element after initial render', async () => {
+    const view = render(<><PhraseTranslator /><input /></>);
+    await waitFor(() => expect(fetch).toBeDefined());
+    await new Promise(resolve => setTimeout(resolve, 0));
+    view.rerender(<><PhraseTranslator /><input placeholder="Text original" /></>);
+    await waitFor(() => expect(view.container.querySelector('input')?.getAttribute('placeholder')).toBe('Translated text'));
+  });
   it('restores text and all translated attributes on EN → RO without reload', async () => {
     const view = render(<><PhraseTranslator /><span>Text original</span><input placeholder="Text original" aria-label="Text original" title="Text original" /><img alt="Text original" /></>);
     const span = view.container.querySelector('span');

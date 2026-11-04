@@ -58,6 +58,7 @@ export const PhraseTranslator = () => {
     const observer = new MutationObserver((records) => {
       for (const r of records) {
         if (r.type === 'characterData') apply(r.target);
+        if (r.type === 'attributes') apply(r.target);
         r.addedNodes.forEach((node) => apply(node));
       }
     });
@@ -66,7 +67,7 @@ export const PhraseTranslator = () => {
       if (cancelled) return;
       map = m;
       apply(document.body);
-      observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+      observer.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTRS });
     });
 
     return () => {
