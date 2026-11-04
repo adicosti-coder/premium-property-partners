@@ -9,6 +9,7 @@
 import type { Plugin } from 'vite';
 import fs from 'fs';
 import path from 'path';
+import { PUBLIC_ROUTE_SEO } from '../src/lib/publicRouteSeo';
 import {
   fetchPublicArticles,
   fetchComplexes,
@@ -2008,6 +2009,13 @@ export default function vitePrerenderSeo(): Plugin {
           ...guestRoutes,
           ...contentRoutes,
         ];
+
+        // Audited public metadata has one source for both the shell and React.
+        for (const [routePath, languages] of Object.entries(PUBLIC_ROUTE_SEO)) {
+          const route = allRoutes.find((item) => item.path === routePath);
+          if (route) Object.assign(route, languages.ro);
+          else allRoutes.push({ path: routePath, ...languages.ro, canonical: `${BASE_URL}${routePath}`, jsonLd: { '@context': 'https://schema.org', '@type': 'WebPage', name: languages.ro.title } });
+        }
 
         // One title per page, at most 60 characters, no duplicates.
         const retitled = dedupeTitles(allRoutes);

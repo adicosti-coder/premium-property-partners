@@ -4,6 +4,8 @@ import { CheckCircle2, ShieldCheck, FileText, Percent } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { getPublicRouteSeo } from "@/lib/publicRouteSeo";
 
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
@@ -29,6 +31,7 @@ const SAFETY = [
 ];
 
 export default function ConditiiProprietari() {
+  const { language } = useLanguage();
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
@@ -39,7 +42,7 @@ export default function ConditiiProprietari() {
       <Suspense fallback={null}><Header /></Suspense>
       <main className="px-4 pt-28 pb-16">
         <section className="mx-auto max-w-2xl text-center">
-          <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground">Condițiile, pe scurt</h1>
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground">{getPublicRouteSeo('/conditii-proprietari', language)?.h1}</h1>
           <p className="mt-4 text-muted-foreground">Ce e gratuit, cât costă și cum vă protejăm. Fără litere mici.</p>
         </section>
 
