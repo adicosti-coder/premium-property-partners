@@ -28,6 +28,14 @@ const normUrl = (raw: string) => {
 };
 const str = (v: unknown, n: number) => (typeof v === "string" && v.trim() ? v.trim().slice(0, n) : null);
 const num = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v) : null);
+// Only public listing-derived fields are ever stored or returned — never phones or arbitrary client data.
+const PUBLIC_KEYS = ["titlu","zona","tip_proprietate","camere","suprafata","pret_listare","moneda","scor","max_scor","tarif_noapte","venit_lunar_brut","venit_lunar_net","roi_estimat","puncte_forte","riscuri","recomandari","verdict","comparabile_zona","imagini"];
+const pickPublic = (o: unknown) => {
+  const src = (o && typeof o === "object") ? o as Record<string, unknown> : {};
+  const out: Record<string, unknown> = {};
+  for (const k of PUBLIC_KEYS) if (k in src) out[k] = src[k];
+  return out;
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
@@ -47,10 +55,10 @@ Deno.serve(async (req) => {
     const since = new Date(Date.now() - CACHE_HOURS * 3600_000).toISOString();
     const { data } = await sb.from("analyzed_listings")
       .select("extracted_data, market_result, created_at")
-      .eq("url", url).gte("created_at", since)
+      .eq("url", url).eq("channel", "web").gte("created_at", since)
       .order("created_at", { ascending: false }).limit(1).maybeSingle();
     if (!data) return json({ ok: true, hit: false });
-    return json({ ok: true, hit: true, analysis: data.extracted_data, market: data.market_result, created_at: data.created_at });
+    return json({ ok: true, hit: true, analysis: pickPublic(data.extracted_data), market: data.market_result, created_at: data.created_at });
   }
 
   if (body?.action === "pdf") {
@@ -69,7 +77,7 @@ Deno.serve(async (req) => {
   const a = (body?.analysis && typeof body.analysis === "object") ? body.analysis as Record<string, unknown> : {};
   const m = (body?.market && typeof body.market === "object") ? body.market as Record<string, unknown> : null;
   const images = Array.isArray(a.imagini) ? (a.imagini as unknown[]).filter((x) => typeof x === "string").slice(0, 20) : [];
-  const extracted = { ...a, titlu: str(a.titlu, 200), pret_listare: num(a.pret_listare), suprafata: num(a.suprafata), zona: str(a.zona, 120), camere: num(a.camere), imagini: images };
+  const extracted = { ...pickPublic(a), titlu: str(a.titlu, 200), pret_listare: num(a.pret_listare), suprafata: num(a.suprafata), zona: str(a.zona, 120), camere: num(a.camere), imagini: images };
   const score = m?.ok ? Math.max(0, Math.min(100, Math.round(Number(m.total_score) || 0))) : null;
   const negotiation = m?.ok ? { target_low: num(m.target_low), target_high: num(m.target_high), negotiation_eur: num(m.negotiation_eur) } : {};
   const phone = str(body?.phone, 30);

@@ -9,6 +9,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const escapeHtml = (v: string) => v.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   const __auth = await requireAdmin(req, corsHeaders);
@@ -92,7 +94,7 @@ Deno.serve(async (req) => {
       .split(/[,;]/).map((s) => s.trim()).filter((s) => s.includes("@"));
 
     const top = rows.slice(0, 10).map((r) =>
-      `<tr><td style="padding:6px 10px;">${r.location}</td><td style="text-align:right;padding:6px 10px;">${r.impressions}</td><td style="text-align:right;padding:6px 10px;">${r.inline}</td><td style="text-align:right;padding:6px 10px;">${r.card}</td><td style="text-align:right;padding:6px 10px;">${r.unique}</td><td style="text-align:right;padding:6px 10px;">${r.ctr.toFixed(2)}%</td></tr>`
+      `<tr><td style="padding:6px 10px;">${escapeHtml(String(r.location ?? "").slice(0, 200))}</td><td style="text-align:right;padding:6px 10px;">${r.impressions}</td><td style="text-align:right;padding:6px 10px;">${r.inline}</td><td style="text-align:right;padding:6px 10px;">${r.card}</td><td style="text-align:right;padding:6px 10px;">${r.unique}</td><td style="text-align:right;padding:6px 10px;">${r.ctr.toFixed(2)}%</td></tr>`
     ).join("");
 
     const html = `<div style="font-family:system-ui,sans-serif;max-width:680px;margin:0 auto;">
