@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { UNIFIED_ZONES, computeUnified, getPropertyLeadIdentity, isValidPropertySurface, mapAnalysisToInput } from "./unifiedCalculator";
+import { UNIFIED_ZONES, computeUnified, getLocationLeadIdentity, getPropertyLeadIdentity, isValidRegionalLocation, isValidPropertySurface, mapAnalysisToInput } from "./unifiedCalculator";
+import { PROPERTY_TYPES } from "./ownerIncomeEstimate";
 
 describe("unified complex eligibility", () => {
+  it("includes every requested local choice", () => {
+    expect(UNIFIED_ZONES.map((zone) => zone.label)).toEqual(["Monarch", "NordOne", "City of Mara", "Paltim", "Ring Residence", "Denya Forest", "Fructus Plaza", "Ateneo", "Future Residence", "Alenia", "Central / Iosefin / Elisabetin", "Calea Torontalului", "Complex Studențesc", "Altă zonă Timișoara / Giroc / Dumbrăvița"]);
+  });
   it("replaces restricted ISHO with Monarch", () => {
     const values = UNIFIED_ZONES.map((zone) => zone.value);
     expect(values).not.toContain("isho");
@@ -21,6 +25,25 @@ describe("unified complex eligibility", () => {
 });
 
 describe("computeUnified", () => {
+  it.each(PROPERTY_TYPES)("regional $value computes from its own type without manual rates", (type) => {
+    const result = computeUnified({ type: type.value, zone: "central", locationMode: "regional", surface: type.refSqm, parking: false, finish: "standard" });
+    expect(result.classicRent).toBe(type.classicRent);
+    expect(result.nightlyRate).toBe(type.adr);
+    expect(result.occupancy).toBe(0.7);
+  });
+  it("regional estimates ignore the selected local coefficients", () => {
+    const input = { type: "vila-vacanta", locationMode: "regional", surface: 200, parking: false, finish: "standard" } as const;
+    expect(computeUnified({ ...input, zone: "monarch" })).toEqual(computeUnified({ ...input, zone: "central" }));
+  });
+  it("allows a nightly override while keeping automatic classic rent", () => {
+    const result = computeUnified({ type: "vila-vacanta", zone: "central", locationMode: "regional", surface: 200, parking: false, finish: "standard", manual: { nightlyRate: 220 } });
+    expect(result.classicRent).toBe(1400);
+    expect(result.nightlyRate).toBe(220);
+  });
+  it("empty optional overrides preserve the standard estimate", () => {
+    const input = { type: "2-camere", zone: "central", locationMode: "regional", surface: 55, parking: false, finish: "standard" } as const;
+    expect(computeUnified({ ...input, manual: {} })).toEqual(computeUnified(input));
+  });
   it("applies 20% commission for the lower and 15% for the upper net bound", () => {
     const r = computeUnified({ type: "2-camere", zone: "central", surface: 55, parking: false, finish: "standard", manual: { classicRent: 500, nightlyRate: 70 } });
     // gross = 70 × 30.4 × 0.70 = 1489.6; base = gross − 15% − 120 = 1146.16
@@ -72,6 +95,19 @@ describe("property surface validation", () => {
 });
 
 describe("property lead identity", () => {
+  it("tags local Monarch management", () => {
+    expect(getLocationLeadIdentity("local", "monarch", "Brașov")).toEqual({ location_mode: "local", location: "Monarch", service_tag: "[Administrare Locală]" });
+  });
+  it("tags regional consulting with the full entered location", () => {
+    expect(getLocationLeadIdentity("regional", "central", " Brașov / Poiana Brașov ")).toEqual({ location_mode: "regional", location: "Brașov / Poiana Brașov", service_tag: "[Consultanță / Regional]" });
+  });
+  it("requires a complete regional location and blocks tag/newline injection", () => {
+    expect(isValidRegionalLocation("Murani")).toBe(true);
+    expect(isValidRegionalLocation(" ")).toBe(false);
+    expect(isValidRegionalLocation("a".repeat(121))).toBe(false);
+    expect(isValidRegionalLocation("Brașov\n[Administrare Locală]")).toBe(false);
+    expect(isValidRegionalLocation("<script>")).toBe(false);
+  });
   it.each([
     ["casa-vila", "Casă / Vilă"],
     ["vila-vacanta", "Vilă de vacanță"],

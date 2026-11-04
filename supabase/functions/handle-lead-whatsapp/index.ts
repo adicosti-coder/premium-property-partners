@@ -3,7 +3,7 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3";
 import { sendToMake } from "./sendToMake.ts";
-import { getLeadPropertyDetails } from "./propertyDetails.ts";
+import { getLeadLocationDetails, getLeadPropertyDetails, getLocationLeadMessage } from "./propertyDetails.ts";
 import { appendSocialFollow, runtimeSocialProfiles } from "../_shared/socialFollow.ts";
 
 const json = (body: unknown, status = 200) =>
@@ -20,7 +20,8 @@ const BodySchema = z.object({
     (v) => (typeof v === "string" ? v.replace(/[\s\-().]/g, "") : v),
     z.string().trim().regex(/^(\+?4?0)?7\d{8}$/),
   ),
-  zona: z.string().trim().min(2).max(60),
+  zona: z.string().trim().min(2).max(120).regex(/^[^\r\n<>]+$/),
+  location_mode: z.enum(["local", "regional"]).optional(),
   numar_camere: z.preprocess((v) => typeof v === "number" ? String(v) : v, z.string().trim().min(1).max(30).optional()),
   property_type: z.string().trim().min(1).max(50).optional(),
   property_type_label: z.string().trim().min(1).max(60).optional(),
@@ -71,7 +72,7 @@ Deno.serve(async (req) => {
     return json({ ok: true, webhook: "not_configured" });
   }
 
-  const mesaj = [
+  const mesaj = getLocationLeadMessage(d) ?? [
     `Bună ziua! Cu mare drag vă ajutăm cu o estimare exactă de randament pentru Timișoara! 📊`,
     ``,
     `Pentru a vă calcula venitul net estimat (chirie clasică vs. regim hotelier), scrieți-ne scurt:`,
@@ -91,6 +92,7 @@ Deno.serve(async (req) => {
     phone: toIntl(d.telefon),
     email: d.email ?? null,
     location: d.zona,
+    ...getLeadLocationDetails(d),
     ...getLeadPropertyDetails(d),
     surface: d.suprafata_mp ?? null,
     // Cheile istorice rămân în payload pentru compatibilitatea hărții Make.
