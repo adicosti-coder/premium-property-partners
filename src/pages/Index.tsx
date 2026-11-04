@@ -69,28 +69,40 @@ const HomeAuthorityBlocks = lazy(() => import("@/components/home/HomeAuthorityBl
 const NearFoldSection = () => {
   const [calcRef, calcVisible] = useLazyVisible("300px");
 
+  const [forceCalc, setForceCalc] = useState(false);
+  const showCalc = calcVisible || forceCalc;
+
   useEffect(() => {
     const handler = () => {
-      requestAnimationFrame(() => {
-        document.getElementById("calculator")?.scrollIntoView({ behavior: "smooth" });
-      });
+      setForceCalc(true);
+      // The real calculator is lazy-loaded; wait until it is mounted, then scroll to it.
+      let tries = 0;
+      const scrollWhenReady = () => {
+        const target = document.getElementById("home-income-calculator") ?? document.getElementById("calculator");
+        if (target && target.id !== "home-owner-tools") {
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+          return;
+        }
+        if (tries++ < 50) setTimeout(scrollWhenReady, 100);
+      };
+      requestAnimationFrame(scrollWhenReady);
     };
     window.addEventListener("force-show-calculator", handler);
     return () => window.removeEventListener("force-show-calculator", handler);
   }, []);
 
   return (
-    <div id="calculator" className="cv-auto">
+    <div id="home-owner-tools" className="cv-auto">
       <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
         <StatsCounters />
         <MainNavigationCards />
         <BrandPillarsHub />
       </Suspense>
       {/* ProfitCalculator (recharts ~170KiB) deferred until near-scroll */}
-      <div ref={calcRef} style={{ minHeight: calcVisible ? undefined : '200px' }}>
-        {calcVisible && (
+      <div ref={calcRef} style={{ minHeight: showCalc ? undefined : '200px' }}>
+        {showCalc && (
           <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
-            <OwnerIncomeQuickCalc />
+            <div id="home-income-calculator" className="scroll-mt-24"><OwnerIncomeQuickCalc /></div>
             <ProfitCalculator />
             <QuickLeadForm />
           </Suspense>

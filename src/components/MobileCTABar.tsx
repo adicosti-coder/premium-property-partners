@@ -84,9 +84,12 @@ const MobileCTABar = () => {
     if (typeof window.gtag === "function") {
       window.gtag("event", "calculator_open", { source: "mobile_cta_bar" });
     }
+    if (location.pathname === "/" || location.pathname === "/index") {
+      window.dispatchEvent(new Event("force-show-calculator"));
+      return;
+    }
     const calculator = document.getElementById("calculator");
     if (calculator) {
-      window.dispatchEvent(new Event("force-show-calculator"));
       calculator.scrollIntoView({ behavior: "smooth" });
       return;
     }
