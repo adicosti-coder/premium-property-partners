@@ -342,7 +342,8 @@ const SEOHead = ({
   // stale homepage description first and the SEO audit appears "stuck".
   useEffect(() => {
     if (typeof document === "undefined") return;
-
+    // Helmet commits asynchronously; synchronize only after its managed tags exist.
+    const timer = window.setTimeout(() => {
     const syncMeta = (selector: string, attrs: Record<string, string>, content: string) => {
       const nodes = Array.from(document.head.querySelectorAll<HTMLMetaElement>(selector));
       const targets = nodes.length ? nodes : [document.createElement("meta")];
@@ -377,6 +378,8 @@ const SEOHead = ({
     syncMeta('meta[name="twitter:url"]', { name: "twitter:url" }, finalUrl);
     syncMeta('meta[property="og:image"]', { property: "og:image" }, absoluteImage);
     syncMeta('meta[name="twitter:image"]', { name: "twitter:image" }, absoluteImage);
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [finalTitle, finalDescription, finalSocialDescription, finalUrl, absoluteImage]);
 
   return (
