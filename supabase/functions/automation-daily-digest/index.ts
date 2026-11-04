@@ -140,7 +140,7 @@ Deno.serve(async (req) => {
         }
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error("[automation-daily-digest] send exception", { to, error: msg });
+        console.error("[automation-daily-digest] send exception", { recipient_index: recipients.indexOf(to), error: msg });
         emailResults.push({ to, ok: false, status: 0, error: msg });
       }
     }
