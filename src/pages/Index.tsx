@@ -1,4 +1,5 @@
 import React, { useEffect, lazy, Suspense, useState } from "react";
+import { useLocation } from "react-router-dom";
 import SEOHead from "@/components/SEOHead";
 import { useLazyVisible } from "@/hooks/useLazyVisible";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -71,21 +72,23 @@ const NearFoldSection = ({ forceCalc = false }: { forceCalc?: boolean }) => {
   const showCalc = calcVisible || forceCalc;
 
   return (
-    <div id="home-owner-tools" className="cv-auto">
+    <div id="home-owner-tools">
       <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
         <StatsCounters />
         <MainNavigationCards />
         <BrandPillarsHub />
       </Suspense>
-      {/* ProfitCalculator (recharts ~170KiB) deferred until near-scroll */}
-      <div ref={calcRef} style={{ minHeight: showCalc ? undefined : '200px' }}>
-        {showCalc && (
-          <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
-            <section id="home-income-calculator" className="scroll-mt-24 px-4 py-12 md:py-16"><div className="mx-auto max-w-4xl"><UnifiedCalculator /></div></section>
-            <QuickLeadForm />
-          </Suspense>
-        )}
-      </div>
+      {/* Keep both anchors mounted; load the tool only near-scroll or on request. */}
+      <section id="calculator" ref={calcRef} className="scroll-mt-24 px-4 py-12 md:py-16">
+        <div id="home-income-calculator" className="scroll-mt-24 mx-auto max-w-4xl">
+          {showCalc ? (
+            <Suspense fallback={<div className="min-h-[400px]" aria-busy="true" />}>
+              <UnifiedCalculator />
+            </Suspense>
+          ) : <div className="min-h-[200px]" />}
+        </div>
+      </section>
+      {showCalc && <Suspense fallback={<div className="min-h-[200px]" />}><QuickLeadForm /></Suspense>}
     </div>
   );
 };
@@ -215,6 +218,7 @@ const DeferredHomeSEO = lazy(() => import("@/components/DeferredHomeSEO"));
 
 const Index = () => {
   const { language } = useLanguage();
+  const location = useLocation();
   const homepageSeo = HOMEPAGE_SEO[language as keyof typeof HOMEPAGE_SEO] || HOMEPAGE_SEO.ro;
 
   // Phase 1: above-fold renders immediately
@@ -235,9 +239,9 @@ const Index = () => {
       setCalcRequested(true);
       let tries = 0;
       const scrollWhenReady = () => {
-        const target = document.getElementById("home-income-calculator");
-        if (target) {
-          target.scrollIntoView({ behavior: "smooth", block: "start" });
+        const target = document.getElementById("calculator");
+        if (target?.querySelector('[role="tablist"]')) {
+          target.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
           return;
         }
         if (tries++ < 60) timer = setTimeout(scrollWhenReady, 100);
@@ -245,12 +249,24 @@ const Index = () => {
       if (timer) clearTimeout(timer);
       requestAnimationFrame(scrollWhenReady);
     };
+    const onAnchorClick = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const link = event.target instanceof Element ? event.target.closest("a[href]") : null;
+      if (!(link instanceof HTMLAnchorElement) || link.target || link.hasAttribute("download")) return;
+      const url = new URL(link.href);
+      if (url.origin === window.location.origin && url.pathname === window.location.pathname && url.search === window.location.search && ["#calculator", "#home-income-calculator"].includes(url.hash)) {
+        handler();
+      }
+    };
     window.addEventListener("force-show-calculator", handler);
+    document.addEventListener("click", onAnchorClick);
+    if (["#calculator", "#home-income-calculator"].includes(location.hash)) handler();
     return () => {
       window.removeEventListener("force-show-calculator", handler);
+      document.removeEventListener("click", onAnchorClick);
       if (timer) clearTimeout(timer);
     };
-  }, []);
+  }, [location.hash]);
 
   // Defer SEO schemas to first user interaction (frees main thread for LCP)
   const [mounted, setMounted] = useState(false);

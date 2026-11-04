@@ -1,5 +1,9 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Acces calculator unificat — 4 noiembrie
+- [ ] Ancore homepage `calculator` și `home-income-calculator`, inclusiv încărcare directă și revenire
+- [ ] Butoane Hero și bară mobilă: încărcare la cerere și derulare la calculator, verificate pe mobil/desktop
+
 ## Audit prioritar — 4 noiembrie, 06:11 UTC
 - [x] Inventar surse principale și date actuale: 13 cazări active distincte de portofoliul contractual; contradicții pachete și promisiuni documentate în audit-realtrust-2026-11-04.md
 - [x] Remedieri limbă/URL, atribute traduse tardiv, Lead după salvare unic și GA4 fără emitent automat; configurație comercială neactivată, aritmetică prerandată brut-brut și explicație calculator aliniată fără schimbarea formulei

@@ -246,8 +246,7 @@ const Hero = () => {
         <button 
           className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 cursor-pointer bg-transparent border-0 min-w-[48px] min-h-[48px] p-2"
           onClick={() => {
-            const nextSection = document.getElementById('calculator') || document.getElementById('benefits');
-            nextSection?.scrollIntoView({ behavior: 'smooth' });
+            window.dispatchEvent(new Event("force-show-calculator"));
           }}
           aria-label={language === 'ro' ? 'Vezi cât poate produce apartamentul tău — derulează la calculator' : 'See your apartment’s monthly potential — scroll to calculator'}
         >
