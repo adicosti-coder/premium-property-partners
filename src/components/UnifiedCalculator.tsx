@@ -286,7 +286,7 @@ const UnifiedCalculator = () => {
 
       if (result.ok) {
         trackCalculatorEvent("calculator_lead_submit", analyticsContext);
-        trackCriticalConversion("Lead_Submit", { source: leadSource, value: 90, currency: "EUR", name: d.name });
+        trackCriticalConversion("Lead_Submit", { source: leadSource, value: 90, currency: "EUR" });
       }
       toast.success("Proiecția e salvată. Apasă Trimite în WhatsApp.");
       setOpen(false);

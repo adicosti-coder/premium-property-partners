@@ -17,7 +17,10 @@ export function RegionalLocationInput({ value, onChange, error, language }: {
         aria-autocomplete="list" aria-expanded={expanded} aria-controls="uc-location-suggestions"
         aria-activedescendant={expanded && active >= 0 ? `uc-location-option-${active}` : undefined}
         aria-invalid={!!error} aria-describedby={error ? "uc-location-error" : undefined}
-        onFocus={() => setOpen(true)} onBlur={() => { setOpen(false); setActive(-1); }}
+        onFocus={() => setOpen(true)} onBlur={(event) => {
+          if (event.relatedTarget instanceof Node && event.currentTarget.parentElement?.contains(event.relatedTarget)) return;
+          setOpen(false); setActive(-1);
+        }}
         onChange={(event) => { onChange(event.target.value); setOpen(true); setActive(-1); }}
         onKeyDown={(event) => {
           if (event.key === "Escape") { setOpen(false); setActive(-1); }
@@ -33,7 +36,7 @@ export function RegionalLocationInput({ value, onChange, error, language }: {
       {expanded && <div id="uc-location-suggestions" role="listbox" aria-label={language === "ro" ? "Sugestii de localități" : "Location suggestions"}
         className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-lg border border-border bg-popover p-1 shadow-md">
         {suggestions.map((name, index) => <Button key={name} id={`uc-location-option-${index}`} role="option" aria-selected={active === index}
-          type="button" variant="ghost" tabIndex={-1} onPointerDown={(event) => event.preventDefault()} onClick={() => choose(name)}
+          type="button" variant="ghost" tabIndex={-1} onMouseDown={(event) => event.preventDefault()} onClick={() => choose(name)}
           className={`min-h-12 w-full justify-start whitespace-normal text-left ${active === index ? "bg-accent text-accent-foreground" : "text-popover-foreground"}`}>{name}</Button>)}
       </div>}
     </div>

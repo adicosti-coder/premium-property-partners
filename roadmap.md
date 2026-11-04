@@ -1,5 +1,10 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Corecturi acord și Băile Felix
+- [x] Blocare conversii inclusiv dataLayer înainte de acord; calculatorul nu transmite numele către tracking
+- [x] Căutare fără diacritice cu spații normalizate și selecție compatibilă touch
+- [ ] Teste și verificare browser fără acord / după acord; fără publicare
+
 ## Sugestii regionale și analytics calculator
 - [x] Sugestii locale accesibile, căutare fără diacritice și introducere liberă
 - [x] Evenimente mod locație, rezultat și cerere salvată, fără date personale; consimțământ obligatoriu
