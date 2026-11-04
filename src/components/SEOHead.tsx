@@ -378,9 +378,11 @@ const SEOHead = ({
     syncMeta('meta[name="twitter:url"]', { name: "twitter:url" }, finalUrl);
     syncMeta('meta[property="og:image"]', { property: "og:image" }, absoluteImage);
     syncMeta('meta[name="twitter:image"]', { name: "twitter:image" }, absoluteImage);
+    // Single og:locale for the active language (static shell ships ro_RO).
+    syncMeta('meta[property="og:locale"]', { property: "og:locale" }, language === "ro" ? "ro_RO" : "en_US");
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [finalTitle, finalDescription, finalSocialDescription, finalUrl, absoluteImage]);
+  }, [finalTitle, finalDescription, finalSocialDescription, finalUrl, absoluteImage, language]);
 
   return (
     <Helmet>
