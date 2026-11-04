@@ -452,7 +452,7 @@ const UnifiedCalculator = () => {
           <p className="text-sm text-muted-foreground">{typeLabel} · {zoneLabel} · {surfaceNum} mp · Parcare: {parking ? "Da" : "Nu"} · Finisaje: {finishLabel}</p>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-border bg-muted/40 p-5">
-              <p className="text-sm text-muted-foreground">Chirie clasică{national && customRates && manualRent ? " (introdusă de tine)" : national || indicativeType || ZONES.find((z) => z.value === zone)?.indicative ? " (referință orientativă)" : " (mediană reală în zonă)"}</p>
+              <p className="text-sm text-muted-foreground">{language === "ro" ? "Chirie clasică" : "Traditional rent"}{national && customRates && manualRent ? (language === "ro" ? " (introdusă de tine)" : " (your custom rate)") : national || indicativeType || ZONES.find((z) => z.value === zone)?.indicative ? (language === "ro" ? " (referință orientativă)" : " (indicative benchmark)") : (language === "ro" ? " (mediană reală în zonă)" : " (local market median)")}</p>
               <p className="mt-1 text-3xl font-semibold text-foreground">~{fmt(r.classicRent)} €<span className="text-base font-normal text-muted-foreground">/lună</span></p>
               <div className="mt-4 h-2 rounded-full bg-border overflow-hidden"><div className="h-full bg-muted-foreground" style={{ width: `${(r.classicRent / maxBar) * 100}%` }} /></div>
             </div>
