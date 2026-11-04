@@ -66,31 +66,23 @@ const HomeAuthorityBlocks = lazy(() => import("@/components/home/HomeAuthorityBl
 
 // Near-fold section: stats + calculator — ALWAYS rendered (no lazy gate)
 // to prevent mobile deadlock where Hero fills 100vh and observer never fires
-const NearFoldSection = () => {
+const NearFoldSection = ({ forceCalc = false }: { forceCalc?: boolean }) => {
   const [calcRef, calcVisible] = useLazyVisible("300px");
 
-  useEffect(() => {
-    const handler = () => {
-      requestAnimationFrame(() => {
-        document.getElementById("calculator")?.scrollIntoView({ behavior: "smooth" });
-      });
-    };
-    window.addEventListener("force-show-calculator", handler);
-    return () => window.removeEventListener("force-show-calculator", handler);
-  }, []);
+  const showCalc = calcVisible || forceCalc;
 
   return (
-    <div id="calculator" className="cv-auto">
+    <div id="home-owner-tools" className="cv-auto">
       <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
         <StatsCounters />
         <MainNavigationCards />
         <BrandPillarsHub />
       </Suspense>
       {/* ProfitCalculator (recharts ~170KiB) deferred until near-scroll */}
-      <div ref={calcRef} style={{ minHeight: calcVisible ? undefined : '200px' }}>
-        {calcVisible && (
+      <div ref={calcRef} style={{ minHeight: showCalc ? undefined : '200px' }}>
+        {showCalc && (
           <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
-            <OwnerIncomeQuickCalc />
+            <div id="home-income-calculator" className="scroll-mt-24"><OwnerIncomeQuickCalc /></div>
             <ProfitCalculator />
             <QuickLeadForm />
           </Suspense>
@@ -235,6 +227,33 @@ const Index = () => {
   const [belowFoldRef, belowFoldReady] = useLazyVisible("0px", null);
   const [deepFoldRef, deepFoldReady] = useLazyVisible("200px", null);
 
+  // Calculator CTAs (hero button, mobile bar) dispatch this event. The real
+  // calculator is lazy-mounted below the fold, so mount it on demand and
+  // scroll once it exists — otherwise the click lands on nothing or on stats.
+  const [calcRequested, setCalcRequested] = useState(false);
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const handler = () => {
+      setCalcRequested(true);
+      let tries = 0;
+      const scrollWhenReady = () => {
+        const target = document.getElementById("home-income-calculator");
+        if (target) {
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+          return;
+        }
+        if (tries++ < 60) timer = setTimeout(scrollWhenReady, 100);
+      };
+      if (timer) clearTimeout(timer);
+      requestAnimationFrame(scrollWhenReady);
+    };
+    window.addEventListener("force-show-calculator", handler);
+    return () => {
+      window.removeEventListener("force-show-calculator", handler);
+      if (timer) clearTimeout(timer);
+    };
+  }, []);
+
   // Defer SEO schemas to first user interaction (frees main thread for LCP)
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -316,7 +335,7 @@ const Index = () => {
             none of these are visible at first paint anyway. */}
         <div ref={belowFoldRef} aria-hidden="true" style={{ height: 1 }} />
 
-        {belowFoldReady && (
+        {(belowFoldReady || calcRequested) && (
           <>
             {/* Brand authority: "Ce este RealTrust?" (GEO) + "De ce RealTrust?" */}
             <Suspense fallback={<div style={{ minHeight: '200px' }} />}>
@@ -347,7 +366,7 @@ const Index = () => {
 
 
             {/* Near-fold: stats + calculator */}
-            <NearFoldSection />
+            <NearFoldSection forceCalc={calcRequested} />
 
             {/* Mid-fold: trust + service sections */}
             <MidFoldSection />

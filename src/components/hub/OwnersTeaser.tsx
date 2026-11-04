@@ -146,7 +146,7 @@ const OwnersTeaser = () => {
             size="lg"
             className="group font-semibold"
             onClick={() => {
-              document.getElementById("calculator")?.scrollIntoView({ behavior: "smooth" });
+              window.dispatchEvent(new Event("force-show-calculator"));
             }}
           >
             {language === "ro" ? "Estimare gratuită în 24 de ore" : "Free estimate within 24h"}
