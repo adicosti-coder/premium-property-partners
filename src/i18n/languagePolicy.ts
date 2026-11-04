@@ -6,6 +6,15 @@ export function initialLanguage(search: string, stored?: string | null): Languag
   return stored === 'en' ? 'en' : 'ro';
 }
 
+/** Keeps an explicit language address aligned with the visitor's switcher choice. */
+export function searchForLanguage(search: string, language: Language): string {
+  const params = new URLSearchParams(search);
+  if (language === 'en') params.set('lang', 'en');
+  else params.delete('lang');
+  const next = params.toString();
+  return next ? `?${next}` : '';
+}
+
 export function languageRobots(language: Language, noIndex = false): string {
   if (language === 'en') return 'noindex, follow';
   return noIndex ? 'noindex, nofollow' : 'index, follow';

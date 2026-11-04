@@ -1,10 +1,9 @@
-import { Suspense, lazy, useEffect, useMemo, useRef } from "react";
+import { Suspense, lazy, useMemo } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { CheckCircle2, MessageCircle, Phone, Clock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
 import { trackConversion } from "@/lib/conversionTracking";
-import { getCampaignAttribution } from "@/lib/campaignAttribution";
 
 const Header = lazy(() => import("@/components/Header"));
 const YieldReportDelivery = lazy(() => import("@/components/thankyou/YieldReportDelivery"));
@@ -19,15 +18,12 @@ const PHONE_DISPLAY = "+40 799 069 256";
  * Query params (all optional):
  *   nume, telefon, oras|zona, tip, camere, sursa, email
  *
- * Fires exactly ONE `generate_lead` conversion (GA4 + Meta pixel + CAPI,
- * consent-gated inside trackConversion) per page view. The guard survives
- * React strict-mode double effects and re-renders.
+ * Lead conversion belongs to the form's successful save, not this page visit.
  */
 const ThankYou = () => {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const privateState = (location.state ?? {}) as Record<string, unknown>;
-  const firedRef = useRef(false);
 
   const summary = useMemo(() => {
     const get = (...keys: string[]) => {
@@ -48,27 +44,6 @@ const ThankYou = () => {
       source: get("sursa", "source") || "multumire",
     };
   }, [searchParams, location.state]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (firedRef.current) return;
-    firedRef.current = true;
-    const attribution = getCampaignAttribution();
-    trackConversion({
-      event: "generate_lead",
-      source: summary.source,
-      currency: "EUR",
-      page_path: "/multumire",
-      lead_zone: summary.zone || undefined,
-      lead_type: summary.type || undefined,
-      utm_source: attribution?.utm_source,
-      utm_medium: attribution?.utm_medium,
-      utm_campaign: attribution?.utm_campaign,
-      // Advanced matching — hashed server-side, never stored client-side.
-      name: summary.name || undefined,
-      phone: summary.phone || undefined,
-      email: summary.email || undefined,
-    });
-  }, [summary]);
 
   const firstName = summary.name ? summary.name.split(" ")[0] : "";
 

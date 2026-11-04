@@ -1,10 +1,13 @@
 # Roadmap — optimizări sistem analiză și administrare
 
 ## Audit prioritar — 4 noiembrie, 06:11 UTC
-- [ ] Inventar actual: portofoliu, identitate, comisioane/pachete, formule, promisiuni, EN și SEO/conversii
-- [ ] Remedieri tehnice confirmate și configurație comercială pregătită fără activarea unor valori noi
-- [ ] Probe browser RO/EN, SEO mobil/desktop, teste și raport cu dovezi separate pentru producție
+- [x] Inventar surse principale și date actuale: 13 cazări active distincte de portofoliul contractual; contradicții pachete și promisiuni documentate în audit-realtrust-2026-11-04.md
+- [x] Remedieri limbă/URL, atribute traduse tardiv, Lead după salvare unic și GA4 fără emitent automat; configurație comercială neactivată, aritmetică prerandată brut-brut și explicație calculator aliniată fără schimbarea formulei
+- [x] 378 teste, build OK, 28 probe SEO/RO/EN preview + producție, sitemap verificat, schimbare limbă cu reload și zero Lead la vizitarea /multumire
 - [ ] Confirmări comerciale/documente — valorile contradictorii nu se schimbă înainte de răspunsul administratorului
+- [ ] Publicare remedieri și validare live după publicare — necesită aprobarea publicării
+- [ ] Salvare/recitire cerere reală și recepție Meta/GA4 — necesită contact test autorizat și acceptarea notificărilor externe
+- [ ] Audit exhaustiv rute dinamice și exemple financiare, plus proba vizuală calculator — raportul actual nu certifică acoperire integrală; exemplele net cer ipoteze și surse confirmate
 
 ## Verificare SEO după publicare — 4 noiembrie
 - [x] Publicare și verificare live canonical, robots, title, description și H1 pentru cele șapte rute solicitate, în RO și EN

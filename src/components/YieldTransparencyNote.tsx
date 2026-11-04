@@ -1,77 +1,31 @@
 import { Info } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 
-/**
- * Transparency note for the yield calculator.
- *
- * Spells out the full equation behind the estimated 9.4% net ROI so an owner
- * can reconcile the number with their own math. Each cost is listed exactly
- * once (no double counting):
- *  - Property Management RealTrust: 15–20% of revenue, depending on the package
- *    (same range as the pricing page);
- *  - platform commissions, income tax and consumables are separate costs;
- *  - cleaning fee is paid separately by the guest (not deducted from the owner);
- *  - fixed utilities are subtracted afterwards, so 9.4% is genuinely net.
- */
+/** Describes the income simulation; no invested-capital denominator is supplied. */
 const YieldTransparencyNote = ({ className = "" }: { className?: string }) => {
   const { language } = useLanguage();
   const ro = language !== "en";
-
-  const rows = ro
-    ? [
-        {
-          title: "Property Management RealTrust — 15–20% din încasări, în funcție de pachet",
-          body:
-            "Acoperă administrarea completă: listarea și optimizarea prețurilor, comunicarea cu oaspeții, check-in digital, coordonarea curățeniei și raportarea lunară.",
-        },
-        {
-          title: "Comisioanele platformelor, impozitul și consumabilele — costuri separate",
-          body:
-            "Booking, Airbnb și Expedia își rețin propriul comision din încasări, la care se adaugă impozitul pe venit și consumabilele (produse de igienă, cafea, sare, ulei, lenjerie).",
-        },
-        {
-          title: "Taxa de curățenie — achitată separat de oaspeți",
-          body:
-            "Curățenia dintre rezervări este facturată oaspetelui la momentul rezervării, deci nu se scade din venitul tău.",
-        },
-        {
-          title: "Utilități & cheltuieli fixe — scăzute ulterior",
-          body:
-            "Cheltuielile fixe (utilități, internet, întreținere) se scad la final, astfel încât 9,4% rămâne venit curat (net), nu brut.",
-        },
-      ]
-    : [
-        {
-          title: "RealTrust Property Management — 15–20% of revenue, depending on the package",
-          body:
-            "Covers full management: listing and price optimisation, guest communication, digital check-in, cleaning coordination and monthly reporting.",
-        },
-        {
-          title: "Platform commissions, income tax and consumables — separate costs",
-          body:
-            "Booking, Airbnb and Expedia keep their own commission from revenue, on top of effective income tax and consumables (toiletries, coffee, salt, oil, linen).",
-        },
-        {
-          title: "Cleaning fee — paid separately by guests",
-          body:
-            "Turnover cleaning is charged to the guest at booking time, so it is not deducted from your revenue.",
-        },
-        {
-          title: "Utilities & fixed costs — subtracted afterwards",
-          body:
-            "Fixed costs (utilities, internet, maintenance) are subtracted at the end, so 9.4% is genuinely net income, not gross.",
-        },
-      ];
+  const rows = ro ? [
+    { title: "Venit brut", body: "Tariful mediu pe noapte înmulțit cu nopțile ocupate din luna simulată." },
+    { title: "Costuri incluse", body: "Se scad comisionul platformei introdus, comisionul de administrare din baza netă și curățenia introdusă pentru fiecare sejur." },
+    { title: "Costuri neincluse", body: "Utilitățile sunt 0 € în această simulare; impozitele, consumabilele, reparațiile și alte costuri nu sunt scăzute." },
+    { title: "Randament", body: "Nu este introdusă valoarea proprietății sau capitalul investit, deci nu se calculează un procent de randament." },
+  ] : [
+    { title: "Gross revenue", body: "Average nightly rate multiplied by occupied nights in the simulated month." },
+    { title: "Included costs", body: "The entered platform fee, management fee on the net base and entered cleaning cost per stay are deducted." },
+    { title: "Excluded costs", body: "Utilities are €0 in this simulation; taxes, consumables, repairs and other costs are not deducted." },
+    { title: "Yield", body: "No property value or invested capital is supplied, so no yield percentage is calculated." },
+  ];
 
   return (
     <aside
       className={`rounded-xl border border-border bg-secondary/40 p-5 ${className}`}
-      aria-label={ro ? "Cum se calculează randamentul net" : "How the net yield is calculated"}
+      aria-label={ro ? "Ce include simularea" : "What the simulation includes"}
     >
       <div className="flex items-center gap-2 mb-3">
         <Info className="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
         <h3 className="text-sm font-bold text-foreground">
-          {ro ? "Cum ajungem la 9,4% net — ecuația completă" : "How we reach 9.4% net — the full equation"}
+          {ro ? "Ce include această simulare" : "What this simulation includes"}
         </h3>
       </div>
       <ul className="space-y-2.5">
@@ -84,8 +38,8 @@ const YieldTransparencyNote = ({ className = "" }: { className?: string }) => {
       </ul>
       <p className="mt-3 text-[11px] text-muted-foreground">
         {ro
-          ? "Ipoteze publice folosite în simulare: ocupare 75%. Cifra finală pentru apartamentul tău se stabilește după evaluare."
-          : "Public assumptions used in the simulation: 75% occupancy. Your final figure is set after the valuation."}
+          ? "Ocuparea pornește de la 70% și poate fi modificată. Rezultatul este o estimare individuală, nu un rezultat istoric."
+          : "Occupancy starts at 70% and can be changed. The result is an individual estimate, not a historical result."}
       </p>
     </aside>
   );

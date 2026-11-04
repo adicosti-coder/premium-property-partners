@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { neighborhoods } from "@/data/neighborhoods";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { trackConversion, formatPhoneInput } from "@/lib/conversionTracking";
+import { trackSavedOwnerLead } from "@/lib/ownerLeadConversion";
 const OwnerIncomeQuickCalc = lazy(() => import("@/components/OwnerIncomeQuickCalc"));
 
 const EVAL_FAQS = [
@@ -230,8 +231,8 @@ const EvaluareGratuita = () => {
       });
     }
 
-    // Personal data travels in router state (never in the URL, which analytics records);
-    // /multumire fires the single Lead conversion for this submission.
+    trackSavedOwnerLead({ source: 'evaluare_gratuita', name: form.name, phone: form.phone, email: form.email });
+    // Personal data travels in router state; confirmation-page visits never emit leads.
     const params = new URLSearchParams({
       zona: zoneLabel,
       tip: form.propertyType,

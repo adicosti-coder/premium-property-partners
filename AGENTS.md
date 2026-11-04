@@ -53,3 +53,6 @@
 - English on public pages falls back to `PhraseTranslator` (exact-phrase map in `public/i18n/en-phrases.json`, lazy-loaded, skips admin/owner portal/blog articles); new hardcoded Romanian copy needs a map entry or a dictionary key — avoids rewriting every page while translations are partial.
 - PhraseTranslator restores its text and attribute mutations on cleanup only while they still match its translated values — prevents mixed-language round trips without overwriting newer React content.
 - Audited public routes use shared publicRouteSeo metadata in SEOHead and prerender; Romanian-only SEO overrides never replace English metadata — prevents delayed stale or mixed-language head tags.
+- Commercial review configuration remains disconnected from public copy until administrator approval; managed, accommodation and promoted inventory are separate metrics — prevents resolving disputed figures by assumption.
+- Owner lead forms emit one conversion after persistence; confirmation-page visits emit none, and GA4 automatic page views are disabled in favor of the existing SPA emitter — prevents duplicate or unverified conversions.
+- Language switching updates the existing language query through the router while preserving other parameters, hash and state — prevents reload from undoing the visitor's choice.

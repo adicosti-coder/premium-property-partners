@@ -1,15 +1,21 @@
 import { useLanguage } from "@/i18n/LanguageContext";
 import { forwardRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { searchForLanguage } from "@/i18n/languagePolicy";
 
 const LanguageSwitcher = forwardRef<HTMLButtonElement>((_props, ref) => {
   const { language, setLanguage } = useLanguage();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [isAnimating, setIsAnimating] = useState(false);
 
   const toggleLanguage = () => {
     setIsAnimating(true);
     setTimeout(() => {
-      setLanguage(language === 'ro' ? 'en' : 'ro');
+      const nextLanguage = language === 'ro' ? 'en' : 'ro';
+      setLanguage(nextLanguage);
+      navigate({ pathname: location.pathname, search: searchForLanguage(location.search, nextLanguage), hash: location.hash }, { replace: true, state: location.state });
       setTimeout(() => setIsAnimating(false), 200);
     }, 150);
   };

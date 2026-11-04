@@ -31,7 +31,8 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { submitLead } from "@/lib/leadSubmission";
 import { roMobileField } from "@/lib/phoneField";
 import { withCampaignTracking } from "@/lib/campaignAttribution";
-import { trackConversion, trackCriticalConversion, OWNER_FUNNEL_VALUE_EUR } from "@/lib/conversionTracking";
+import { trackConversion, trackCriticalConversion } from "@/lib/conversionTracking";
+import { trackSavedOwnerLead } from "@/lib/ownerLeadConversion";
 import { BRAND } from "@/lib/orgIdentity";
 
 /** Versiunea textului de consimțământ GDPR salvată împreună cu lead-ul (audit). */
@@ -381,37 +382,15 @@ const OwnerContactLeadForm = ({
       return;
     }
 
-    // GA4 + Meta conversion events
-    trackCriticalConversion("Lead_Submit", {
+    // One confirmed lead; analysis choices are attributes, not extra conversions.
+    trackSavedOwnerLead({
       source,
-      value: wantsYieldAnalysis ? OWNER_FUNNEL_VALUE_EUR.managementRequest : OWNER_FUNNEL_VALUE_EUR.intent,
-      currency: "EUR",
       email: data.email,
       phone: data.phone,
       name: data.name,
+      wantsYieldAnalysis,
+      roiPrefill: Boolean(roiPrefill),
     });
-    trackConversion({
-      event: "generate_lead",
-      source,
-      value: OWNER_FUNNEL_VALUE_EUR.intent,
-      currency: "EUR",
-    });
-    if (roiPrefill) {
-      trackConversion({
-        event: "generate_lead_roi_calculator",
-        source: `${source}_roi_calculator`,
-        value: OWNER_FUNNEL_VALUE_EUR.managementRequest,
-        currency: "EUR",
-      });
-    }
-    if (wantsYieldAnalysis) {
-      trackConversion({
-        event: "owner_valuation_submit",
-        source: `${source}_yield_analysis`,
-        value: OWNER_FUNNEL_VALUE_EUR.managementRequest,
-        currency: "EUR",
-      });
-    }
 
     setSuccess(true);
   };
