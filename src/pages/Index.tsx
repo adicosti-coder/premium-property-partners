@@ -235,6 +235,7 @@ const Index = () => {
   const [calcRequested, setCalcRequested] = useState(false);
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let frame: number | undefined;
     const handler = () => {
       setCalcRequested(true);
       let tries = 0;
@@ -247,7 +248,8 @@ const Index = () => {
         if (tries++ < 60) timer = setTimeout(scrollWhenReady, 100);
       };
       if (timer) clearTimeout(timer);
-      requestAnimationFrame(scrollWhenReady);
+      if (frame !== undefined) cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(scrollWhenReady);
     };
     const onAnchorClick = (event: MouseEvent) => {
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -265,6 +267,7 @@ const Index = () => {
       window.removeEventListener("force-show-calculator", handler);
       document.removeEventListener("click", onAnchorClick);
       if (timer) clearTimeout(timer);
+      if (frame !== undefined) cancelAnimationFrame(frame);
     };
   }, [location.hash]);
 
@@ -403,7 +406,7 @@ const Index = () => {
       </main>
       <Suspense fallback={null}>
         {belowFoldReady && <Footer />}
-        {belowFoldReady && <GlobalConversionWidgets />}
+        {(belowFoldReady || calcRequested) && <GlobalConversionWidgets />}
       </Suspense>
     </div>
   );
