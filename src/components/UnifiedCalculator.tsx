@@ -13,8 +13,8 @@ import { SocialFollow } from "@/components/social/SocialFollow";
 import { supabase, supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
 import { withCampaignTracking } from "@/lib/campaignAttribution";
 import { trackCriticalConversion, formatPhoneInput } from "@/lib/conversionTracking";
-import { PROPERTY_TYPES, ZONES, type Finish, type PropertyTypeValue, type ZoneValue } from "@/lib/ownerIncomeEstimate";
-import { computeUnified, mapAnalysisToInput, type ListingAnalysisLike } from "@/lib/unifiedCalculator";
+import { PROPERTY_TYPES, type Finish, type PropertyTypeValue } from "@/lib/ownerIncomeEstimate";
+import { UNIFIED_ZONES as ZONES, computeUnified, mapAnalysisToInput, type ListingAnalysisLike, type UnifiedZoneValue } from "@/lib/unifiedCalculator";
 
 const WHATSAPP_NUMBER = "40799069256";
 const ANALYSIS_URL = `${supabaseConfig.url}/functions/v1/public-listing-analysis`;
@@ -74,7 +74,7 @@ const UnifiedCalculator = () => {
   const [mode, setMode] = useState<InputMode>("manual");
   const [national, setNational] = useState(false);
   const [type, setType] = useState<PropertyTypeValue>("2-camere");
-  const [zone, setZone] = useState<ZoneValue>("central");
+  const [zone, setZone] = useState<UnifiedZoneValue>("central");
   const [surface, setSurface] = useState("");
   const [manualRent, setManualRent] = useState("");
   const [manualNightly, setManualNightly] = useState("");
