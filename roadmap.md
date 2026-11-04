@@ -3,7 +3,7 @@
 ## Corecturi acord și Băile Felix
 - [x] Blocare conversii inclusiv dataLayer înainte de acord; calculatorul nu transmite numele către tracking
 - [x] Căutare fără diacritice cu spații normalizate și selecție compatibilă touch
-- [ ] Teste și verificare browser fără acord / după acord; fără publicare
+- [x] 79 teste trecute; browser: finalizare fără acord nu emite conversii, după acord emite context fără date personale; Băile Felix selectabil fără diacritice/spații multiple pe telefon și desktop; salvări interceptate, fără notificări reale/publicare; recepția GA4 neverificată
 
 ## Sugestii regionale și analytics calculator
 - [x] Sugestii locale accesibile, căutare fără diacritice și introducere liberă
