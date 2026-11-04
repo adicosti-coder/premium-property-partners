@@ -1,9 +1,9 @@
 # Roadmap — optimizări sistem analiză și administrare
 
 ## Locații locale și regionale în calculator — 4 noiembrie, 23:12 UTC
-- [ ] Selector local/metropolitan cu ansamblurile cerute și localitate regională liberă
-- [ ] Estimări regionale automate pe tip, personalizare opțională și etichete în cerere/WhatsApp
-- [ ] Teste și verificare telefon/desktop RO/EN fără publicare sau notificări externe
+- [x] Selector local/metropolitan implicit cu toate ansamblurile cerute și localitate regională liberă; ansamblurile fără tarife confirmate folosesc profilul general orientativ
+- [x] Estimări regionale automate pe tip, personalizare opțională per tarif și etichete în cerere/WhatsApp; funcția de notificare activată
+- [x] 54 teste și patru probe telefon/desktop RO/EN; cerere regională cu payload-uri interceptate verificată, fără salvări/notificări reale; interfața nepublicată
 
 ## Tipuri generale în calculator — 4 noiembrie, 22:53 UTC
 - [x] Texte RO/EN generale, patru tipuri noi cu referințe orientative și limită comună 5.000 mp
