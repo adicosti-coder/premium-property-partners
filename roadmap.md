@@ -1,8 +1,8 @@
 # Roadmap — optimizări sistem analiză și administrare
 
 ## Verificare SEO după publicare — 4 noiembrie
-- [ ] Publicare și verificare live canonical, robots, title, description și H1 pentru cele șapte rute solicitate, în RO și EN
-- [ ] Corectarea nealinierilor confirmate, teste și reverificare după publicare; fără schimbarea valorilor comerciale
+- [x] Publicare și verificare live canonical, robots, title, description și H1 pentru cele șapte rute solicitate, în RO și EN
+- [x] Metadate comune React/prerender, override-uri RO excluse din EN, duplicate description/robots eliminate, H1 condiții/servicii și spațiere homepage; 17 teste și 14 verificări live trecute, fără schimbarea valorilor comerciale
 
 ## Publicări sociale eșuate — 2 noiembrie
 - [x] Separare `posting`/`posted`, eroare salvată, revenire în ciorne la eșec total, succes parțial păstrat; funcția activată
