@@ -1,5 +1,10 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Sugestii regionale și analytics calculator
+- [x] Sugestii locale accesibile, căutare fără diacritice și introducere liberă
+- [x] Evenimente mod locație, rezultat și cerere salvată, fără date personale; consimțământ obligatoriu
+- [x] 55 teste trecute; telefon/desktop: selectare tap/tastatură, text liber, rezultat și cerere cu salvare interceptată; evenimente fără date personale confirmate, fără publicare sau notificări reale; recepția în GA4 nu a fost verificată
+
 ## Locații locale și regionale în calculator — 4 noiembrie, 23:12 UTC
 - [x] Selector local/metropolitan implicit cu toate ansamblurile cerute și localitate regională liberă; ansamblurile fără tarife confirmate folosesc profilul general orientativ
 - [x] Estimări regionale automate pe tip, personalizare opțională per tarif și etichete în cerere/WhatsApp; funcția de notificare activată
