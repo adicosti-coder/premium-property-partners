@@ -48,6 +48,7 @@
 
 - Management calculators use the shared commercial-policy helper with channel fees and utilities explicit and cleaning separate — prevents gross/net commission drift.
 - UnifiedCalculator owns its eligible complex list and resolves approved complex aliases through shared estimate profiles for manual and imported inputs — prevents restricted choices reappearing without changing other calculators.
+- Homepage calculator anchors stay outside lazy boundaries; both hash aliases and CTAs force loading and wait for the tool before scrolling — prevents jumps to statistics or unloaded placeholders.
 - Viewing requests persist through the protected lead endpoint before opening WhatsApp or emitting Lead; failures produce neither chat navigation nor conversion — prevents false conversions.
 - Prerendered HTML ships one static Romanian canonical that the global route Helmet emitter replaces on mount; singular complex routes have a client fallback to plural — prevents duplicate canonicals while server redirects remain hosting-owned.
 - Social publication claims use `posting`, not `posted`; only confirmed external IDs finalize publication, failures return to draft with errors and partial delivery preserves successful platforms — prevents false published states and duplicate retries.
