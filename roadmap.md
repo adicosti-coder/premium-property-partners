@@ -1,5 +1,9 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Tipuri generale în calculator — 4 noiembrie, 22:53 UTC
+- [ ] Texte RO/EN generale, patru tipuri noi cu referințe orientative și limită comună 5.000 mp
+- [ ] Păstrarea tipului la import și în cererea/mesajul WhatsApp; teste și verificare telefon/desktop fără trimiteri externe
+
 ## Acces calculator unificat — 4 noiembrie
 - [x] Ancore homepage `calculator` și `home-income-calculator`, inclusiv încărcare directă, reîncărcare și revenire
 - [x] Butoane Hero și bară mobilă: încărcare la cerere și derulare la calculator; 11 probe browser pe mobil/desktop trecute, fără publicare
