@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import type { User } from "@supabase/supabase-js";
@@ -80,6 +80,8 @@ const CereriRandament = () => {
   const [user, setUser] = useState<User | null>(null);
   const { isAdmin, isLoading: roleLoading } = useAdminRole(user);
   const [desc, setDesc] = useState(true);
+  const [params] = useSearchParams();
+  const selectedId = params.get("lead");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
@@ -105,6 +107,8 @@ const CereriRandament = () => {
     return desc ? list : list.reverse();
   }, [q.data, desc]);
 
+  const selected = selectedId ? (q.data ?? []).find((r) => r.id === selectedId) : undefined;
+
   if (roleLoading) return <div className="container py-16"><Skeleton className="h-40 w-full" /></div>;
   if (!isAdmin) {
     return (
@@ -118,6 +122,30 @@ const CereriRandament = () => {
   return (
     <div className="container py-10 max-w-6xl">
       <Helmet><title>Cereri de randament | Admin RealTrust</title><meta name="robots" content="noindex" /></Helmet>
+      {selectedId && !q.isLoading && (
+        <Card className="mb-6 border-primary/40" id="cerere-selectata">
+          <CardHeader>
+            <CardTitle>Cererea trimisă din calculator</CardTitle>
+            <CardDescription>{selected ? `${selected.name || "—"} · ${fmtDate(selected.created_at)}` : "Cererea nu a fost găsită."}</CardDescription>
+          </CardHeader>
+          {selected && (
+            <CardContent>
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                <div><dt className="text-muted-foreground">Telefon</dt><dd><PhoneCell phone={selected.whatsapp_number} name={selected.name} /></dd></div>
+                <div><dt className="text-muted-foreground">Venit estimat</dt><dd className="font-medium">{income(selected.simulation_data)}</dd></div>
+                {Object.entries(selected.simulation_data ?? {})
+                  .filter(([k, v]) => v !== null && v !== undefined && v !== "" && typeof v !== "object" && k !== "generated_message")
+                  .map(([k, v]) => (
+                    <div key={k}><dt className="text-muted-foreground">{k.replace(/_/g, " ")}</dt><dd className="break-words">{String(v)}</dd></div>
+                  ))}
+              </dl>
+              {typeof selected.simulation_data?.generated_message === "string" && (
+                <p className="mt-4 whitespace-pre-wrap rounded-lg bg-muted p-3 text-sm">{selected.simulation_data.generated_message as string}</p>
+              )}
+            </CardContent>
+          )}
+        </Card>
+      )}
       <Card>
         <CardHeader className="flex flex-row items-start justify-between gap-4">
           <div>
@@ -152,7 +180,7 @@ const CereriRandament = () => {
                     const zone = (sd?.zone as string) || "—";
                     const type = (sd?.apartment_type as string) || (sd?.property_type as string) || r.property_type || "—";
                     return (
-                      <tr key={r.id} className="border-b border-border/60">
+                      <tr key={r.id} className={`border-b border-border/60 ${r.id === selectedId ? "bg-primary/10" : ""}`}>
                         <td className="py-2 pr-3 whitespace-nowrap">{fmtDate(r.created_at)}</td>
                         <td className="py-2 pr-3">{r.name || "—"}</td>
                         <td className="py-2 pr-3 whitespace-nowrap"><PhoneCell phone={r.whatsapp_number} name={r.name} /></td>

@@ -2,7 +2,10 @@
 // WhatsApp message to Make.com via MAKE_WHATSAPP_WEBHOOK_URL.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendToMake } from "./sendToMake.ts";
+import { notifyCalculatorLead } from "./metaNotify.ts";
+import { calcLeadAdminUrl } from "../_shared/calculatorLeadTemplates.ts";
 import { getLeadLocationDetails, getLeadPropertyDetails, getLocationLeadMessage } from "./propertyDetails.ts";
 import { appendSocialFollow, runtimeSocialProfiles } from "../_shared/socialFollow.ts";
 
@@ -43,6 +46,7 @@ const BodySchema = z.object({
   chirie_clasica: z.number().int().min(0).max(100000).optional(),
   venit_net_realtrust: z.number().int().min(0).max(100000).optional(),
   sursa: z.string().trim().max(40).optional(),
+  lead_id: z.string().uuid().optional(),
 });
 
 
@@ -66,10 +70,37 @@ Deno.serve(async (req) => {
   const d = parsed.data;
   if (d.venit_estimat_max < d.venit_estimat_min) return json({ error: "Interval venit invalid" }, 400);
 
+  // Trimitere directă prin Meta doar pentru o cerere salvată recent, cu același telefon —
+  // altfel oricine ar putea folosi funcția ca să trimită mesaje.
+  let direct: Awaited<ReturnType<typeof notifyCalculatorLead>> | null = null;
+  if (d.lead_id) {
+    try {
+      const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const { data: lead } = await supabase.from("leads").select("id, whatsapp_number, created_at")
+        .eq("id", d.lead_id).maybeSingle();
+      const last9 = (s: string) => s.replace(/\D/g, "").slice(-9);
+      const fresh = lead && Date.now() - new Date(lead.created_at).getTime() < 15 * 60_000;
+      if (lead && fresh && last9(lead.whatsapp_number ?? "") === last9(d.telefon)) {
+        const loc = getLeadLocationDetails(d);
+        const label = d.property_type_label ?? d.tip_proprietate ?? "Proprietate";
+        direct = await notifyCalculatorLead(supabase, {
+          leadId: lead.id, name: d.nume, phone: toIntl(d.telefon), location: loc.location,
+          serviceTag: loc.service_tag, property: `${label}${d.suprafata_mp ? ` · ${d.suprafata_mp} mp` : ""}`,
+          incomeRange: `${d.venit_estimat_min} – ${d.venit_estimat_max} €/lună`,
+        });
+        console.log(`handle-lead-whatsapp direct lead=${lead.id} admin=${JSON.stringify(direct.admin)} visitor=${JSON.stringify(direct.visitor)}`);
+      } else {
+        console.warn(`handle-lead-whatsapp: lead ${d.lead_id} not eligible for direct send`);
+      }
+    } catch (e) {
+      console.error("handle-lead-whatsapp direct send failed", e);
+    }
+  }
+
   const webhookUrl = Deno.env.get("MAKE_WHATSAPP_WEBHOOK_URL");
   if (!webhookUrl) {
     console.warn("MAKE_WHATSAPP_WEBHOOK_URL not configured");
-    return json({ ok: true, webhook: "not_configured" });
+    return json({ ok: true, webhook: "not_configured", delivery: direct });
   }
 
   const mesaj = getLocationLeadMessage(d) ?? [
@@ -112,6 +143,10 @@ Deno.serve(async (req) => {
     chirie_clasica: d.chirie_clasica ?? null,
     venit_net_realtrust: d.venit_net_realtrust ?? null,
     sursa: d.sursa ?? "calcul_venit",
+    lead_id: d.lead_id ?? null,
+    lead_url: d.lead_id ? calcLeadAdminUrl(d.lead_id) : null,
+    // Confirmarea către vizitator a plecat deja prin șablonul Meta aprobat.
+    whatsapp_template_sent: direct?.visitor.status === "sent",
     message: appendSocialFollow(mesaj, runtimeSocialProfiles()),
   };
 
@@ -125,5 +160,5 @@ Deno.serve(async (req) => {
       `handle-lead-whatsapp: Make webhook ${sent.status} after ${sent.elapsedMs}ms: ${sent.detail}`,
     );
   }
-  return json({ ok: true, webhook: sent.status });
+  return json({ ok: true, webhook: sent.status, delivery: direct });
 });
