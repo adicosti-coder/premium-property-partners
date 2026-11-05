@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { RegionalLocationInput } from "./RegionalLocationInput";
 import { trackCalculatorEvent } from "@/lib/calculatorAnalytics";
+import * as calculatorAnalytics from "@/lib/calculatorAnalytics";
 
 function setup(language: "ro" | "en" = "ro") {
   function Field() {
@@ -18,6 +19,42 @@ function setup(language: "ro" | "en" = "ro") {
 afterEach(cleanup);
 
 describe("autocomplete loading and empty states", () => {
+  it("exposes the latest suggestions and live status without waiting for timers", () => {
+    vi.useFakeTimers();
+    try {
+      const input = setup();
+      fireEvent.change(input, { target: { value: "mamaia" } });
+      expect(screen.getByRole("option", { name: "Mamaia" })).toBeInTheDocument();
+      fireEvent.change(input, { target: { value: "baile felix" } });
+      expect(screen.getByRole("option", { name: "Băile Felix" })).toBeInTheDocument();
+      expect(screen.queryByRole("option", { name: "Mamaia" })).toBeNull();
+      expect(screen.getByRole("status")).toHaveAttribute("aria-live", "polite");
+      expect(screen.getByRole("status")).toHaveTextContent("1 sugestie disponibilă.");
+      fireEvent.keyDown(input, { key: "ArrowDown" });
+      const activeId = input.getAttribute("aria-activedescendant");
+      expect(activeId).toBeTruthy();
+      expect(document.getElementById(activeId ?? "")).toHaveTextContent("Băile Felix");
+      expect(input).not.toHaveAttribute("aria-busy", "true");
+    } finally { vi.useRealTimers(); }
+  });
+
+  it("reuses search results during focus and arrow navigation, recalculating only for new text", () => {
+    const search = vi.spyOn(calculatorAnalytics, "getRegionalSuggestions");
+    try {
+      const input = setup();
+      fireEvent.change(input, { target: { value: "brasov" } });
+      search.mockClear();
+      fireEvent.keyDown(input, { key: "ArrowDown" });
+      fireEvent.keyDown(input, { key: "ArrowDown" });
+      fireEvent.blur(input);
+      fireEvent.focus(input);
+      expect(search).not.toHaveBeenCalled();
+      fireEvent.change(input, { target: { value: "sibiu" } });
+      expect(search).toHaveBeenCalledExactlyOnceWith("sibiu");
+      expect(screen.getByRole("option", { name: "Sibiu" })).toBeInTheDocument();
+    } finally { search.mockRestore(); }
+  });
+
   it("never shows a loading state because suggestions are computed instantly", () => {
     const input = setup();
     fireEvent.change(input, { target: { value: "sin" } });

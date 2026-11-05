@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getRegionalSuggestions } from "@/lib/calculatorAnalytics";
@@ -8,7 +8,8 @@ export function RegionalLocationInput({ value, onChange, error, language }: {
 }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
-  const suggestions = getRegionalSuggestions(value);
+  // Keep results synchronous; focus and active-option changes reuse the same search.
+  const suggestions = useMemo(() => getRegionalSuggestions(value), [value]);
   const expanded = open && suggestions.length > 0;
   const query = value.trim();
   const noMatches = open && query.length >= 2 && suggestions.length === 0;

@@ -13,10 +13,18 @@ export const REGIONAL_DESTINATIONS = [
 
 const normalize = (value: string) => value.normalize("NFKD").replace(/\p{M}/gu, "").replace(/[\s\u200B-\u200D\uFEFF]+/g, " ").trim().toLocaleLowerCase("ro");
 
+// Prepare the fixed catalog once, not for every keystroke or keyboard navigation.
+const regionalSearchIndex = REGIONAL_DESTINATIONS.map((name) => ({ name, key: normalize(name) }));
+
 export function getRegionalSuggestions(query: string): string[] {
   const key = normalize(query);
   const words = key.split(" ");
-  return REGIONAL_DESTINATIONS.filter((name) => words.every((word) => normalize(name).includes(word))).slice(0, 8);
+  const matches: string[] = [];
+  for (const destination of regionalSearchIndex) {
+    if (words.every((word) => destination.key.includes(word))) matches.push(destination.name);
+    if (matches.length === 8) break;
+  }
+  return matches;
 }
 
 type CalculatorEvent = "calculator_location_mode_select" | "calculator_result_view" | "calculator_lead_submit";
