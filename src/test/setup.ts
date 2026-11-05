@@ -13,3 +13,8 @@ Object.defineProperty(window, "matchMedia", {
     dispatchEvent: () => {},
   }),
 });
+
+// jsdom nu are ResizeObserver (folosit de grafice și glisoare).
+if (typeof globalThis.ResizeObserver === "undefined") {
+  globalThis.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} } as unknown as typeof ResizeObserver;
+}

@@ -13,7 +13,7 @@ import UnifiedCalculator from "./UnifiedCalculator";
 afterEach(() => { cleanup(); track.mockReset(); });
 
 describe("UnifiedCalculator regional location end-to-end", () => {
-  it("uses the selected suggestion in the result and analytics", () => {
+  it("uses the selected suggestion in the result and analytics", async () => {
     render(<UnifiedCalculator />);
     fireEvent.click(screen.getByRole("button", { name: /Altă localitate \/ Regional/ }));
     const input = screen.getByRole("combobox");
@@ -22,9 +22,8 @@ describe("UnifiedCalculator regional location end-to-end", () => {
     fireEvent.click(screen.getByRole("option", { name: "Băile Felix" }));
     expect(input).toHaveValue("Băile Felix");
     fireEvent.change(screen.getByLabelText(/Suprafață utilă/), { target: { value: "60" } });
-    fireEvent.click(screen.getByRole("button", { name: /Continuă/ }));
-    fireEvent.click(screen.getByRole("button", { name: /Vezi rezultatul/ }));
     expect(screen.getByText(/· Băile Felix · 60 mp ·/)).toBeInTheDocument();
+    await vi.waitFor(() => expect(track.mock.calls.some(([name]) => name === "calculator_result_view")).toBe(true), { timeout: 3000 });
     const view = track.mock.calls.find(([name]) => name === "calculator_result_view");
     expect(view?.[1]).toMatchObject({ location_mode: "regional", location_name: "Băile Felix", surface_sqm: 60 });
   });
@@ -47,8 +46,6 @@ describe("UnifiedCalculator lead request integration", () => {
     fireEvent.change(input, { target: { value: "sinaia" } });
     fireEvent.click(screen.getByRole("option", { name: "Sinaia" }));
     fireEvent.change(screen.getByLabelText(/Suprafață utilă/), { target: { value: "60" } });
-    fireEvent.click(screen.getByRole("button", { name: /Continuă/ }));
-    fireEvent.click(screen.getByRole("button", { name: /Vezi rezultatul/ }));
     fireEvent.click(screen.getByRole("button", { name: /Trimite proiecția pe WhatsApp/ }));
     fireEvent.change(screen.getByLabelText("Nume"), { target: { value: "Test" } });
     fireEvent.change(screen.getByLabelText("Telefon"), { target: { value: "0722 123 456" } });

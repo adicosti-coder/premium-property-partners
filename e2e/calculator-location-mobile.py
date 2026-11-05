@@ -37,8 +37,6 @@ async def run(p, device, engine):
     await tap(calc.get_by_label("Suprafață utilă"))
     await expect(box).to_have_value("Murani, Timiș")
     await calc.get_by_label("Suprafață utilă").fill("60")
-    await tap(calc.get_by_role("button", name="Continuă"))
-    await tap(calc.get_by_role("button", name="Vezi rezultatul"))
     await expect(calc.get_by_text("· Murani, Timiș · 60 mp ·")).to_be_visible()
     await page.screenshot(path=f"/tmp/browser/loc-{engine}.png")
     await browser.close()
