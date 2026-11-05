@@ -2,7 +2,7 @@
 
 ## Revenire la calculator după primul pas — 5 noiembrie
 - [x] Reprodus blocajul din pasul 2; condiția de derulare folosește un indicator permanent, independent de pas
-- [ ] Teste și verificare mobil/desktop a butoanelor și ambelor ancore în pașii 2 și 3, fără publicare
+- [x] 38 teste trecute; mobil/desktop: butoane și ambele ancore funcționale în pașii 2 și 3, inclusiv după închiderea dialogului; suprafața păstrată, fără publicare
 
 ## Teste sugestii și publicare aprobată
 - [x] Teste dedicate selecției prin touch și tastatură, inclusiv Băile Felix fără diacritice
