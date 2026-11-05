@@ -240,6 +240,19 @@ Deno.serve(async (req) => {
         ["Camere", crmPayload.lead.rooms || "—"],
         ...(str(sim.transaction) ? [["Tip tranzacție", s(sim.transaction)] as [string, string]] : []),
         ...(str(sim.budget) ? [["Buget", s(sim.budget)] as [string, string]] : []),
+        // Câmpurile din calculatorul unificat (apar doar dacă există în cerere).
+        ...(str(sim.service_tag) ? [["Etichetă", s(sim.service_tag)] as [string, string]] : []),
+        ...(str(sim.location) && !crmPayload.lead.neighbourhood ? [["Locație", s(sim.location)] as [string, string]] : []),
+        ...(str(sim.property_type_label) ? [["Tip proprietate", s(sim.property_type_label)] as [string, string]] : []),
+        ...(str(sim.surface_sqm) || record.property_area
+          ? [["Suprafață", `${s(sim.surface_sqm) || String(record.property_area)} mp`] as [string, string]] : []),
+        ...(str(sim.finish) ? [["Finisaje", s(sim.finish)] as [string, string]] : []),
+        ...(typeof sim.parking === "boolean" ? [["Parcare", sim.parking ? "Da" : "Nu"] as [string, string]] : []),
+        ...(str(sim.classic_rent) ? [["Chirie clasică estimată", `~${s(sim.classic_rent)} €/lună`] as [string, string]] : []),
+        ...(str(sim.realtrust_net_min) && str(sim.realtrust_net_max)
+          ? [["Venit net regim hotelier", `${s(sim.realtrust_net_min)} – ${s(sim.realtrust_net_max)} €/lună`] as [string, string]] : []),
+        ...(str(sim.nightly_rate) ? [["Tarif / noapte", `${s(sim.nightly_rate)} €`] as [string, string]] : []),
+        ...(typeof sim.occupancy === "number" ? [["Ocupare", `${Math.round(sim.occupancy * 100)}%`] as [string, string]] : []),
         ["Sursă", crmPayload.lead.source || "—"],
         ["Scor", record.lead_score != null ? `${record.lead_score} (${record.lead_grade ?? "-"})` : "—"],
         ["Campanie", utm.utm_campaign || "—"],
@@ -258,6 +271,8 @@ Deno.serve(async (req) => {
           ${waLink
             ? `<p style="margin:20px 0"><a href="${waLink}" style="background:#25D366;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block">Deschide chat WhatsApp</a></p>`
             : `<p style="margin:20px 0;color:#b45309">Lead fără telefon valid — contactează pe email.</p>`}
+          ${str(sim.service_tag) || str(sim.realtrust_net)
+            ? `<p style="margin:0 0 16px"><a href="https://realtrust.ro/admin/cereri-randament?lead=${encodeURIComponent(record.id)}" style="color:#1a365d;font-weight:600">Vezi cererea completă din calculator</a></p>` : ""}
           <p style="color:#6e7480;font-size:12px">RealTrust Timișoara · lead ${escapeHtml(record.id)}</p>
         </div>`;
 
