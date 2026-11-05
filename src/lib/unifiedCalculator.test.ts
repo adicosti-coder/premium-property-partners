@@ -120,3 +120,27 @@ describe("property lead identity", () => {
     expect(getPropertyLeadIdentity("2-camere").numar_camere).toBe(2);
   });
 });
+
+import { applyScenario, monthlyProjection, clampOccupancy } from "./unifiedCalculator";
+describe("calculator scenario (single-page)", () => {
+  const base = computeUnified({ type: "2-camere", zone: "central", surface: 55, parking: true, finish: "premium" } as never);
+  it("default scenario matches the base estimate", () => {
+    const s = applyScenario(base);
+    expect(s.netMin).toBe(base.netMin);
+    expect(s.netMax).toBe(base.netMax);
+  });
+  it("occupancy slider is limited to 65–75%", () => {
+    expect(clampOccupancy(0.9)).toBe(0.75);
+    expect(clampOccupancy(0.5)).toBe(0.65);
+  });
+  it("management fee stays between 15% and 20% of net base", () => {
+    const s = applyScenario(base, { nightlyRate: 120, occupancy: 0.75 });
+    expect(s.feeMin).toBe(Math.round(s.commissionBase * 0.15));
+    expect(s.feeMax).toBe(Math.round(s.commissionBase * 0.2));
+  });
+  it("12-month projection keeps the annual total", () => {
+    const s = applyScenario(base);
+    const total = monthlyProjection(s).reduce((a, m) => a + m.hotel, 0);
+    expect(Math.abs(total - s.netMid * 12)).toBeLessThanOrEqual(12);
+  });
+});

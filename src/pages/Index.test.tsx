@@ -50,14 +50,11 @@ vi.mock('@/components/owners/PreCalcMiniForm', () => ({ default: () => null, Pre
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 describe("homepage calculator return navigation", () => {
-  it.each([2, 3])("scrolls to the loaded calculator at step %i without resetting its input", async step => {
+  it("scrolls to the single-page calculator without resetting its input", async () => {
     const scroll = vi.fn();
     Object.defineProperty(Element.prototype, "scrollIntoView", { configurable: true, value: scroll });
     render(<MemoryRouter><Index /></MemoryRouter>);
     fireEvent.change(await screen.findByLabelText("Suprafață utilă (mp) *"), { target: { value: "55" } });
-    fireEvent.click(screen.getByRole("button", { name: "Continuă" }));
-    if (step === 3) fireEvent.click(screen.getByRole("button", { name: "Vezi rezultatul" }));
-    expect(screen.queryByRole("tablist")).toBeNull();
     fireEvent(window, new Event("force-show-calculator"));
     await waitFor(() => expect(scroll).toHaveBeenCalledTimes(1));
     for (const hash of ["#calculator", "#home-income-calculator"]) {
@@ -69,8 +66,6 @@ describe("homepage calculator return navigation", () => {
       link.remove();
     }
     expect(scroll.mock.contexts.every(target => target instanceof Element && target.id === "calculator")).toBe(true);
-    if (step === 3) fireEvent.click(screen.getByRole("button", { name: "Modifică" }));
-    fireEvent.click(screen.getByRole("button", { name: "Înapoi" }));
     expect(screen.getByLabelText("Suprafață utilă (mp) *")).toHaveValue("55");
   });
 });
