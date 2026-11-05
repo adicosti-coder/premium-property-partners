@@ -143,6 +143,10 @@ Deno.serve(async (req) => {
     chirie_clasica: d.chirie_clasica ?? null,
     venit_net_realtrust: d.venit_net_realtrust ?? null,
     sursa: d.sursa ?? "calcul_venit",
+    lead_id: d.lead_id ?? null,
+    lead_url: d.lead_id ? calcLeadAdminUrl(d.lead_id) : null,
+    // Confirmarea către vizitator a plecat deja prin șablonul Meta aprobat.
+    whatsapp_template_sent: direct?.visitor.status === "sent",
     message: appendSocialFollow(mesaj, runtimeSocialProfiles()),
   };
 

@@ -279,6 +279,7 @@ const UnifiedCalculator = () => {
             venit_estimat_min: r.netMin,
             venit_estimat_max: r.netMax,
             sursa: leadSource,
+            ...(result.ok && result.leadId ? { lead_id: result.leadId } : {}),
           },
         })
         .then(({ error }) => { if (error) console.warn("[UnifiedCalculator] handle-lead-whatsapp failed", error); })
@@ -288,7 +289,12 @@ const UnifiedCalculator = () => {
         trackCalculatorEvent("calculator_lead_submit", analyticsContext);
         trackCriticalConversion("Lead_Submit", { source: leadSource, value: 90, currency: "EUR" });
       }
-      toast.success("Proiecția e salvată. Apasă Trimite în WhatsApp.");
+      if (result.ok) {
+        setLeadSent(true);
+        toast.success("Cererea a fost trimisă. Andrei a primit-o și îți scrie pe WhatsApp.");
+      } else {
+        toast.error("Nu am putut salva cererea. Încearcă din nou sau scrie-ne pe WhatsApp.");
+      }
       setOpen(false);
     } finally {
       setSubmitting(false);
