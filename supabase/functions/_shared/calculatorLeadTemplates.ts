@@ -33,7 +33,7 @@ export const CALC_VISITOR_TEMPLATE = {
     "",
     "Dacă doriți să adăugați detalii despre proprietate, răspundeți la acest mesaj.",
   ].join("\n"),
-  example: ["Ion", "Sinaia", "Apartament · 60 mp", "între 650 și 860 €/lună"],
+  example: ["Ion", "Sinaia", "Apartament · 60 mp", "650 – 860 €/lună"],
 };
 
 export const calcLeadAdminUrl = (leadId: string) =>
