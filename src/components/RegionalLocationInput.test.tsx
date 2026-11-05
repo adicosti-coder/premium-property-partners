@@ -106,4 +106,21 @@ describe("regional location selection regressions", () => {
     expect(onChange).toHaveBeenLastCalledWith("baile felix");
     expect(input).toHaveValue("baile felix");
   });
+
+  it.each(["Murani, Timiș", "Brasov Sud"])("keeps custom location %s after mobile Done/Enter and tapping outside", (custom) => {
+    const { input, onChange } = setup();
+    fireEvent.change(input, { target: { value: custom } });
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+    expect(input).toHaveValue(custom);
+    expect(onChange).toHaveBeenLastCalledWith(custom);
+    const outside = document.createElement("button");
+    document.body.appendChild(outside);
+    fireEvent.pointerDown(outside, { pointerType: "touch", isPrimary: true });
+    outside.focus();
+    fireEvent.blur(input, { relatedTarget: outside });
+    expect(input).toHaveValue(custom);
+    expect(onChange).toHaveBeenLastCalledWith(custom);
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    outside.remove();
+  });
 });
