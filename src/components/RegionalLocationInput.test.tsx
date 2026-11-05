@@ -180,4 +180,50 @@ describe("regional location selection regressions", () => {
     expect(input).toHaveValue(custom);
     expect(onChange).toHaveBeenLastCalledWith(custom);
   });
+
+  it.each([
+    ["Sânmartin", "Sanmartin"],
+    ["Sat Vechi", "Sat  Vechi"],
+    ["Ținutul Pădurenilor", "Tinutul Padurenilor"],
+  ])("keeps %j and %j as distinct custom values when editing", (first, second) => {
+    const { input, onChange } = setup();
+    fireEvent.change(input, { target: { value: first } });
+    fireEvent.blur(input, { relatedTarget: null });
+    expect(input).toHaveValue(first);
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: second } });
+    fireEvent.keyDown(input, { key: "Enter" });
+    fireEvent.blur(input, { relatedTarget: null });
+    expect(input).toHaveValue(second);
+    expect(onChange).toHaveBeenLastCalledWith(second);
+  });
+
+  it("announces the active suggestion through ARIA while navigating with the keyboard", () => {
+    const { input } = setup();
+    expect(input).toHaveAttribute("aria-autocomplete", "list");
+    expect(input).toHaveAttribute("aria-controls", "uc-location-suggestions");
+    expect(input).not.toHaveAttribute("aria-activedescendant");
+    fireEvent.change(input, { target: { value: "brasov" } });
+    expect(input).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("listbox", { name: "Sugestii de localități" })).toHaveAttribute("id", "uc-location-suggestions");
+    expect(input).not.toHaveAttribute("aria-activedescendant");
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    expect(input).toHaveAttribute("aria-activedescendant", "uc-location-option-0");
+    expect(document.getElementById("uc-location-option-0")).toHaveAttribute("aria-selected", "true");
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    expect(input).toHaveAttribute("aria-activedescendant", "uc-location-option-1");
+    expect(document.getElementById("uc-location-option-0")).toHaveAttribute("aria-selected", "false");
+    expect(document.getElementById("uc-location-option-1")).toHaveAttribute("aria-selected", "true");
+    fireEvent.keyDown(input, { key: "ArrowUp" });
+    expect(input).toHaveAttribute("aria-activedescendant", "uc-location-option-0");
+    fireEvent.keyDown(input, { key: "Escape" });
+    expect(input).toHaveAttribute("aria-expanded", "false");
+    expect(input).not.toHaveAttribute("aria-activedescendant");
+  });
+
+  it("uses an English listbox label for English visitors", () => {
+    render(<RegionalLocationInput value="sibiu" language="en" onChange={() => {}} />);
+    fireEvent.focus(screen.getByRole("combobox"));
+    expect(screen.getByRole("listbox", { name: "Location suggestions" })).toBeInTheDocument();
+  });
 });
