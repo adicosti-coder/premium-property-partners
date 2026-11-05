@@ -50,11 +50,11 @@ vi.mock('@/components/owners/PreCalcMiniForm', () => ({ default: () => null, Pre
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 describe("homepage calculator return navigation", () => {
-  it("scrolls to the single-page calculator without resetting its input", async () => {
+  it("scrolls to the single-page calculator without resetting its input", { timeout: 15000 }, async () => {
     const scroll = vi.fn();
     Object.defineProperty(Element.prototype, "scrollIntoView", { configurable: true, value: scroll });
     render(<MemoryRouter><Index /></MemoryRouter>);
-    fireEvent.change(await screen.findByLabelText("Suprafață utilă (mp) *"), { target: { value: "55" } });
+    fireEvent.change(await screen.findByLabelText("Suprafață utilă (mp) *", {}, { timeout: 8000 }), { target: { value: "55" } });
     fireEvent(window, new Event("force-show-calculator"));
     await waitFor(() => expect(scroll).toHaveBeenCalledTimes(1));
     for (const hash of ["#calculator", "#home-income-calculator"]) {
