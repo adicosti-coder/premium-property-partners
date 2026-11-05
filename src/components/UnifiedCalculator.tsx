@@ -353,14 +353,14 @@ const UnifiedCalculator = () => {
   );
 
   return (
-    <div data-calculator-ready="true" className="overflow-hidden rounded-3xl border border-border bg-card shadow-elegant">
+    <div data-calculator-ready="true" className="overflow-clip rounded-3xl border border-border bg-card shadow-elegant">
       <div className="border-b border-border px-5 py-6 md:px-10 md:py-8">
         <div className="mb-2 flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
           <span className="text-xs font-semibold uppercase tracking-widest text-primary">{ro ? "Calculator venit · rezultat pe loc" : "Income calculator · instant result"}</span>
         </div>
         <h2 className="font-serif text-2xl font-semibold text-foreground md:text-3xl">{ro ? "Cât poate produce proprietatea ta?" : "How much can your property earn?"}</h2>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{ro ? "Completează în stânga, iar cifrele din dreapta se actualizează imediat. Fără butoane de continuare, fără date personale până nu vrei tu raportul." : "Fill in the left side and the figures update instantly. No extra steps, no personal details until you want the report."}</p>
+        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{ro ? "Completează datele, iar cifrele se actualizează imediat. Fără pași de continuare și fără date personale până nu ceri tu raportul." : "Fill in the details and the figures update instantly. No extra steps, no personal details until you ask for the report."}</p>
       </div>
 
       <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)]">
@@ -479,8 +479,8 @@ const UnifiedCalculator = () => {
 
           <fieldset>
             <legend className="contents">{sectionTitle(4, ro ? "Suprafață și dotări" : "Area and features")}</legend>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="sm:col-span-2 sm:max-w-[200px]">
                 <Label htmlFor="uc-surface" className="mb-2 block text-sm font-medium">Suprafață utilă (mp) *</Label>
                 <Input id="uc-surface" inputMode="numeric" maxLength={4} value={surface} onChange={(e) => { setSurface(e.target.value.replace(/\D/g, "")); setErrors((p) => ({ ...p, surface: undefined })); }} aria-invalid={!!errors.surface || (surface !== "" && !surfaceValid)} aria-describedby="uc-surface-hint" className="min-h-12" />
                 <p id="uc-surface-hint" className={`mt-1 text-xs ${errors.surface || (surface !== "" && !surfaceValid) ? "text-destructive" : "text-muted-foreground"}`}>{errors.surface ?? (ro ? "Între 15 și 5.000 mp" : "Between 15 and 5,000 sqm")}</p>
