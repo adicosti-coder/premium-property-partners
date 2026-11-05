@@ -55,6 +55,48 @@ describe("regional location selection regressions", () => {
     expect(onChange).toHaveBeenLastCalledWith("Poiana Brașov");
   });
 
+  it("selects a suggestion with a single touch tap after typing a partial name", () => {
+    const { input, onChange } = setup();
+    fireEvent.change(input, { target: { value: "mama" } });
+    const suggestion = screen.getByRole("option", { name: "Mamaia" });
+    fireEvent.pointerDown(suggestion, { pointerType: "touch", isPrimary: true });
+    fireEvent.pointerUp(suggestion, { pointerType: "touch", isPrimary: true });
+    fireEvent.click(suggestion);
+    expect(onChange).toHaveBeenLastCalledWith("Mamaia");
+    expect(input).toHaveValue("Mamaia");
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+  });
+
+  it("keeps every suggestion at the 48px minimum touch target on mobile", () => {
+    setup();
+    const { input } = { input: screen.getByRole("combobox") };
+    fireEvent.change(input, { target: { value: "a" } });
+    const options = screen.getAllByRole("option");
+    expect(options.length).toBeGreaterThan(3);
+    for (const option of options) expect(option.className).toContain("min-h-12");
+  });
+
+  it("renders the suggestion list as a scrollable container so it fits small screens", () => {
+    setup();
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "a" } });
+    const listbox = screen.getByRole("listbox");
+    expect(listbox.className).toContain("max-h-64");
+    expect(listbox.className).toContain("overflow-y-auto");
+  });
+
+  it("reopens suggestions on focus after a touch selection closed them", () => {
+    const { input } = setup();
+    fireEvent.change(input, { target: { value: "sinaia" } });
+    const suggestion = screen.getByRole("option", { name: "Sinaia" });
+    fireEvent.pointerDown(suggestion, { pointerType: "touch", isPrimary: true });
+    fireEvent.pointerUp(suggestion, { pointerType: "touch", isPrimary: true });
+    fireEvent.click(suggestion);
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    fireEvent.blur(input);
+    fireEvent.focus(input);
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
+  });
+
   it("Escape cancels keyboard selection without replacing free text", () => {
     const { input, onChange } = setup();
     fireEvent.change(input, { target: { value: "baile felix" } });
