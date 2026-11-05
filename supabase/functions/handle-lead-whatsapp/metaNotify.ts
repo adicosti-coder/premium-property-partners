@@ -3,7 +3,8 @@
 // Rezervă fiecare trimitere în `request_idempotency` înainte de Meta; nu reîncearcă.
 import { WA_API_VERSION, WA_BUSINESS_ACCOUNT_ID, WA_PHONE_NUMBER_ID, waToken } from "../_shared/waConfig.ts";
 import {
-  CALC_ALERT_TEMPLATE, CALC_LANG, CALC_VISITOR_TEMPLATE, calcLeadAdminUrl, cleanParam, renderTemplate,
+  CALC_ALERT_TEMPLATE, CALC_ALERT_TEMPLATE_V2, CALC_LANG, CALC_VISITOR_TEMPLATE, CALC_VISITOR_TEMPLATE_V2,
+  type CalcLeadSummary, calcAlertParamsV2, calcLeadAdminUrl, calcVisitorParamsV2, cleanParam, renderTemplate,
 } from "../_shared/calculatorLeadTemplates.ts";
 
 export const ADMIN_ALERT_NUMBER = "40723154520";
@@ -47,41 +48,43 @@ async function sendMeta(token: string, body: Record<string, unknown>): Promise<D
   }
 }
 
-export async function notifyCalculatorLead(supabase: Client, input: {
-  leadId: string; name: string; phone: string; location: string; serviceTag: string | null;
-  property: string; incomeRange: string;
-}): Promise<{ admin: DeliveryResult; visitor: DeliveryResult }> {
+export async function notifyCalculatorLead(supabase: Client, input: CalcLeadSummary): Promise<{ admin: DeliveryResult; visitor: DeliveryResult }> {
   const token = waToken();
   if (!token) return { admin: { status: "skipped", detail: "missing_token" }, visitor: { status: "skipped", detail: "missing_token" } };
   const approved = await approvedTemplates(token);
 
-  const adminParams = [
+  // v2 (format unic) când e aprobat; altfel v1, ca alertele să nu se oprească.
+  const alertV2 = approved.has(CALC_ALERT_TEMPLATE_V2.name);
+  const alertTpl = alertV2 ? CALC_ALERT_TEMPLATE_V2 : CALC_ALERT_TEMPLATE;
+  const adminParams = alertV2 ? calcAlertParamsV2(input) : [
     cleanParam(input.name, 80), cleanParam(input.phone, 20),
     cleanParam(`${input.location}${input.serviceTag ? ` ${input.serviceTag}` : ""}`, 160),
     cleanParam(input.property, 120), cleanParam(input.incomeRange, 60), calcLeadAdminUrl(input.leadId),
   ];
   let admin: DeliveryResult = { status: "skipped", detail: "already_sent" };
   if (await reserve(supabase, `${input.leadId}:admin`)) {
-    admin = approved.has(CALC_ALERT_TEMPLATE.name)
+    admin = (alertV2 || approved.has(CALC_ALERT_TEMPLATE.name))
       ? { ...(await sendMeta(token, { to: ADMIN_ALERT_NUMBER, type: "template", template: {
-          name: CALC_ALERT_TEMPLATE.name, language: { code: CALC_LANG },
+          name: alertTpl.name, language: { code: CALC_LANG },
           components: [{ type: "body", parameters: adminParams.map((text) => ({ type: "text", text })) }],
         } })), mode: "template" }
       // Până la aprobare: text liber (ajunge doar dacă numărul de administrare a scris în ultimele 24h).
       : { ...(await sendMeta(token, { to: ADMIN_ALERT_NUMBER, type: "text", text: {
-          preview_url: false, body: renderTemplate(CALC_ALERT_TEMPLATE.body, adminParams) } })), mode: "text" };
+          preview_url: false, body: renderTemplate(CALC_ALERT_TEMPLATE_V2.body, calcAlertParamsV2(input)) } })), mode: "text" };
   }
 
   let visitor: DeliveryResult = { status: "skipped", detail: "template_not_approved" };
-  if (approved.has(CALC_VISITOR_TEMPLATE.name)) {
+  const visitorV2 = approved.has(CALC_VISITOR_TEMPLATE_V2.name);
+  const visitorTpl = visitorV2 ? CALC_VISITOR_TEMPLATE_V2 : CALC_VISITOR_TEMPLATE;
+  if (visitorV2 || approved.has(CALC_VISITOR_TEMPLATE.name)) {
     visitor = { status: "skipped", detail: "already_sent" };
     if (await reserve(supabase, `${input.leadId}:visitor`)) {
-      const params = [cleanParam(input.name.split(/\s+/)[0], 40), cleanParam(input.location, 100),
+      const params = visitorV2 ? calcVisitorParamsV2(input) : [cleanParam(input.name.split(/\s+/)[0], 40), cleanParam(input.location, 100),
         cleanParam(input.property, 100), cleanParam(input.incomeRange, 60)];
       visitor = { ...(await sendMeta(token, { to: input.phone, type: "template", template: {
-        name: CALC_VISITOR_TEMPLATE.name, language: { code: CALC_LANG },
+        name: visitorTpl.name, language: { code: CALC_LANG },
         components: [{ type: "body", parameters: params.map((text) => ({ type: "text", text })) }],
-      } })), mode: "template" };
+      } })), mode: "template", detail: visitorTpl.name };
     }
   }
   return { admin, visitor };

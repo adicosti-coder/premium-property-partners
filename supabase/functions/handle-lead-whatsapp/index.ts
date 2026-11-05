@@ -45,6 +45,10 @@ const BodySchema = z.object({
   finisaje: z.enum(["standard", "premium"]).optional(),
   chirie_clasica: z.number().int().min(0).max(100000).optional(),
   venit_net_realtrust: z.number().int().min(0).max(100000).optional(),
+  // Scenariul calculatorului unificat (glisoare tarif/ocupare).
+  tarif_noapte: z.number().int().min(1).max(5000).optional(),
+  grad_ocupare: z.number().min(0).max(1).optional(),
+  scenariu_ajustat: z.boolean().optional(),
   sursa: z.string().trim().max(40).optional(),
   lead_id: z.string().uuid().optional(),
 });
@@ -95,6 +99,10 @@ Deno.serve(async (req) => {
           leadId: lead.id, name: d.nume, phone: toIntl(d.telefon), location: loc.location,
           serviceTag: [lead.simulation_data?.repeat_submission ? "[Calcul nou / Actualizat]" : null, loc.service_tag].filter(Boolean).join(" ") || null, property: `${label}${d.suprafata_mp ? ` · ${d.suprafata_mp} mp` : ""}`,
           incomeRange: `${d.venit_estimat_min} – ${d.venit_estimat_max} €/lună`,
+          nightlyRate: d.tarif_noapte ?? null, occupancy: d.grad_ocupare ?? null,
+          classicRent: d.chirie_clasica ?? null,
+          netMid: d.venit_net_realtrust ?? Math.round((d.venit_estimat_min + d.venit_estimat_max) / 2),
+          adjusted: d.scenariu_ajustat ?? null,
         });
         console.log(`handle-lead-whatsapp direct lead=${lead.id} admin=${JSON.stringify(direct.admin)} visitor=${JSON.stringify(direct.visitor)}`);
       } else {
@@ -150,6 +158,9 @@ Deno.serve(async (req) => {
     finisaje: d.finisaje ?? null,
     chirie_clasica: d.chirie_clasica ?? null,
     venit_net_realtrust: d.venit_net_realtrust ?? null,
+    tarif_noapte: d.tarif_noapte ?? null,
+    grad_ocupare: d.grad_ocupare ?? null,
+    scenariu_ajustat: d.scenariu_ajustat ?? null,
     sursa: d.sursa ?? "calcul_venit",
     lead_id: d.lead_id ?? null,
     lead_url: d.lead_id ? calcLeadAdminUrl(d.lead_id) : null,
