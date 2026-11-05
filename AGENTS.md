@@ -49,6 +49,7 @@
 - Management calculators use the shared commercial-policy helper with channel fees and utilities explicit and cleaning separate — prevents gross/net commission drift.
 - UnifiedCalculator owns its eligible complex list and resolves approved complex aliases through shared estimate profiles for manual and imported inputs — prevents restricted choices reappearing without changing other calculators.
 - UnifiedCalculator uses neutral property-type profiles for regional estimates with optional per-rate overrides; location identity and service category accompany stored leads and WhatsApp payloads — prevents local coefficients and local-management promises leaking into regional enquiries.
+- UnifiedCalculator is single-page; sliders use `applyScenario` and leads send its values — keeps shown and sent figures identical.
 - UnifiedCalculator shares surface validation and property identity helpers for manual/import inputs and lead handover; building types take precedence over room counts and use explicitly indicative whole-property benchmarks — prevents hotels becoming apartments or misleading per-room projections.
 - Homepage calculator anchors stay outside lazy boundaries; both hash aliases and CTAs force loading and wait for the tool's step-independent readiness marker before scrolling — prevents jumps to placeholders and broken navigation after step 1.
 - Viewing requests persist through the protected lead endpoint before opening WhatsApp or emitting Lead; failures produce neither chat navigation nor conversion — prevents false conversions.
@@ -60,4 +61,3 @@
 - Commercial review configuration remains disconnected from public copy until administrator approval; managed, accommodation and promoted inventory are separate metrics — prevents resolving disputed figures by assumption.
 - Owner lead forms emit one conversion after persistence; confirmation-page visits emit none, and GA4 automatic page views are disabled in favor of the existing SPA emitter — prevents duplicate or unverified conversions.
 - Language switching updates the existing language query through the router while preserving other parameters, hash and state — prevents reload from undoing the visitor's choice.
-- UnifiedCalculator is a single page with a live result panel; slider scenarios go through `applyScenario` (occupancy clamped to the policy range, unchanged scenario returns base figures) and lead payloads send the scenario values — keeps displayed, stored and WhatsApp figures identical.
