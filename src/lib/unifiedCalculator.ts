@@ -174,3 +174,64 @@ export function mapAnalysisToInput(a: ListingAnalysisLike): Partial<Pick<Unified
   if (Number.isFinite(score) && score > 0) out.finish = score / max >= 0.8 ? "premium" : "standard";
   return out;
 }
+
+/** Scenariu ajustat de vizitator: tarif pe noapte și ocupare (limitată la grila 65–75%). */
+export const NIGHTLY_SLIDER_MIN_FACTOR = 0.6;
+export const NIGHTLY_SLIDER_MAX_FACTOR = 1.5;
+
+export function clampOccupancy(o: number): number {
+  if (!Number.isFinite(o)) return MANAGEMENT_POLICY.occupancyDefault;
+  return Math.min(MANAGEMENT_POLICY.occupancyMax, Math.max(MANAGEMENT_POLICY.occupancyMin, o));
+}
+
+export interface ScenarioBreakdown {
+  nightlyRate: number;
+  occupancy: number;
+  gross: number;
+  channelFees: number;
+  utilities: number;
+  commissionBase: number;
+  feeMin: number;
+  feeMax: number;
+  netMin: number;
+  netMax: number;
+  netMid: number;
+  classicRent: number;
+  monthlyDelta: number;
+}
+
+/** Recalculează venitul pentru tariful/ocuparea aleasă, pornind de la brutul estimat al rezultatului de bază. */
+export function applyScenario(base: UnifiedResult, scenario?: { nightlyRate?: number; occupancy?: number }): ScenarioBreakdown {
+  const nightlyRate = Math.round(Math.max(1, scenario?.nightlyRate ?? base.nightlyRate));
+  const occupancy = clampOccupancy(scenario?.occupancy ?? base.occupancy);
+  const factor = base.nightlyRate > 0 && base.occupancy > 0 ? (nightlyRate * occupancy) / (base.nightlyRate * base.occupancy) : 1;
+  const gross = base.grossHotel * factor;
+  const hi = calculateManagedIncome({ gross, channelFees: gross * CHANNEL_FEE_RATE, utilities: UTILITIES, commissionRate: MANAGEMENT_POLICY.commissionMax });
+  const lo = calculateManagedIncome({ gross, channelFees: gross * CHANNEL_FEE_RATE, utilities: UTILITIES, commissionRate: MANAGEMENT_POLICY.commissionMin });
+  const netMin = Math.round(hi.ownerIncome);
+  const netMax = Math.round(lo.ownerIncome);
+  const netMid = Math.round((netMin + netMax) / 2);
+  return {
+    nightlyRate, occupancy,
+    gross: Math.round(gross),
+    channelFees: Math.round(hi.channelFees),
+    utilities: Math.round(hi.utilities),
+    commissionBase: Math.round(hi.commissionBase),
+    feeMin: Math.round(lo.managementFee),
+    feeMax: Math.round(hi.managementFee),
+    netMin, netMax, netMid,
+    classicRent: base.classicRent,
+    monthlyDelta: netMid - base.classicRent,
+  };
+}
+
+/** Profil sezonier ilustrativ Timișoara (aceeași formă ca graficul din pagina proprietarilor); media = 1. */
+const SEASON_PATTERN = [700, 790, 950, 1080, 1260, 1250, 1100, 1130, 1380, 1270, 960, 1050];
+const SEASON_MEAN = SEASON_PATTERN.reduce((a, b) => a + b, 0) / SEASON_PATTERN.length;
+export const SEASONALITY = SEASON_PATTERN.map((v) => v / SEASON_MEAN);
+export const MONTH_LABELS = { ro: ["Ian", "Feb", "Mar", "Apr", "Mai", "Iun", "Iul", "Aug", "Sep", "Oct", "Noi", "Dec"], en: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] };
+
+/** Venit lunar pe 12 luni; totalul anual rămâne egal cu 12 × media. */
+export function monthlyProjection(s: ScenarioBreakdown) {
+  return SEASONALITY.map((f, i) => ({ month: i, hotel: Math.round(s.netMid * f), classic: s.classicRent }));
+}
