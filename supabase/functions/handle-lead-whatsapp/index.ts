@@ -73,12 +73,20 @@ Deno.serve(async (req) => {
   // Trimitere directă prin Meta doar pentru o cerere salvată recent, cu același telefon —
   // altfel oricine ar putea folosi funcția ca să trimită mesaje.
   let direct: Awaited<ReturnType<typeof notifyCalculatorLead>> | null = null;
-  if (d.lead_id) {
+  {
     try {
       const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-      const { data: lead } = await supabase.from("leads").select("id, whatsapp_number, created_at")
-        .eq("id", d.lead_id).maybeSingle();
       const last9 = (s: string) => s.replace(/\D/g, "").slice(-9);
+      // Formularul salvează direct (fără id întors), deci găsim cererea după telefon.
+      let query = supabase.from("leads").select("id, whatsapp_number, created_at");
+      query = d.lead_id
+        ? query.eq("id", d.lead_id)
+        : query.ilike("whatsapp_number", `%${last9(d.telefon)}`)
+          .gte("created_at", new Date(Date.now() - 15 * 60_000).toISOString())
+          .order("created_at", { ascending: false }).limit(1);
+      const { data: rows } = await query;
+      const lead = rows?.[0];
+      if (lead) d.lead_id = lead.id;
       const fresh = lead && Date.now() - new Date(lead.created_at).getTime() < 15 * 60_000;
       if (lead && fresh && last9(lead.whatsapp_number ?? "") === last9(d.telefon)) {
         const loc = getLeadLocationDetails(d);
