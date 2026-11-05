@@ -29,3 +29,42 @@ describe("UnifiedCalculator regional location end-to-end", () => {
     expect(view?.[1]).toMatchObject({ location_mode: "regional", location_name: "Băile Felix", surface_sqm: 60 });
   });
 });
+
+describe("UnifiedCalculator lead request integration", () => {
+  it("sends the selected location to both lead endpoints with results computed for it", async () => {
+    const { submitLead } = await import("@/lib/leadSubmission");
+    const { supabase } = await import("@/lib/supabaseClient");
+    const { computeUnified } = await import("@/lib/unifiedCalculator");
+    const invoke = vi.fn().mockResolvedValue({ error: null });
+    (supabase as { functions?: unknown }).functions = { invoke };
+    vi.mocked(submitLead).mockResolvedValue({ ok: true } as never);
+    vi.spyOn(window, "open").mockReturnValue(null);
+
+    render(<UnifiedCalculator />);
+    fireEvent.click(screen.getByRole("button", { name: /Altă localitate \/ Regional/ }));
+    const input = screen.getByRole("combobox");
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "sinaia" } });
+    fireEvent.click(screen.getByRole("option", { name: "Sinaia" }));
+    fireEvent.change(screen.getByLabelText(/Suprafață utilă/), { target: { value: "60" } });
+    fireEvent.click(screen.getByRole("button", { name: /Continuă/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Vezi rezultatul/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Trimite proiecția pe WhatsApp/ }));
+    fireEvent.change(screen.getByLabelText("Nume"), { target: { value: "Test" } });
+    fireEvent.change(screen.getByLabelText("Telefon"), { target: { value: "0722 123 456" } });
+    fireEvent.submit(screen.getByLabelText("Nume").closest("form")!);
+
+    await vi.waitFor(() => expect(invoke).toHaveBeenCalled());
+    const lead = vi.mocked(submitLead).mock.calls[0][0] as { message: string; simulation_data: Record<string, unknown> };
+    expect(lead.message).toContain("Locație: Sinaia");
+    expect(lead.simulation_data).toMatchObject({ zone: "Sinaia", surface_sqm: 60 });
+    const [fn, { body }] = invoke.mock.calls[0];
+    expect(fn).toBe("handle-lead-whatsapp");
+    expect(body).toMatchObject({ zona: "Sinaia", location_mode: "regional", suprafata_mp: 60 });
+    const expected = computeUnified({ type: body.property_type ?? lead.simulation_data.property_type, zone: "centru", surface: 60, parking: body.parcare, finish: body.finisaje, manual: undefined, locationMode: "regional" } as never);
+    expect(body.venit_estimat_min).toBe(expected.netMin);
+    expect(body.venit_estimat_max).toBe(expected.netMax);
+    expect(lead.simulation_data.realtrust_net).toBe(expected.netMid);
+    expect(screen.queryByText(/Locație: Timișoara/)).toBeNull();
+  });
+});
