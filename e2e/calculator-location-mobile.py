@@ -6,6 +6,11 @@ from playwright.async_api import async_playwright, expect
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8080"
 DEVICES = [("iPhone 13", "webkit"), ("Pixel 7", "chromium")]
 
+async def tap(loc):
+    # Fixed header covers elements Playwright scrolls to the very top; center them first.
+    await loc.evaluate("el => el.scrollIntoView({block: 'center'})")
+    await loc.tap()
+
 async def run(p, device, engine):
     browser = await getattr(p, engine).launch(headless=True)
     ctx = await browser.new_context(**p.devices[device])
@@ -13,22 +18,22 @@ async def run(p, device, engine):
     await page.goto(f"{BASE}/#calculator", wait_until="domcontentloaded")
     calc = page.locator('[data-calculator-ready="true"]')
     await calc.wait_for(timeout=30000)
-    await calc.get_by_role("button", name="Altă localitate / Regional").tap()
+    await tap(calc.get_by_role("button", name="Altă localitate / Regional"))
     box = calc.get_by_role("combobox")
-    await box.tap()
+    await tap(box)
     await box.press_sequentially("baile felix", delay=30)
-    await calc.get_by_role("option", name="Băile Felix").tap()
+    await tap(calc.get_by_role("option", name="Băile Felix"))
     await expect(box).to_have_value("Băile Felix")
     await expect(calc.get_by_role("listbox")).to_have_count(0)
     await box.fill("")
     await box.press_sequentially("Murani, Timiș", delay=20)
     await expect(calc.get_by_role("status")).to_contain_text("Nicio sugestie")
     await box.press("Enter")
-    await page.mouse.click(5, 5)
+    await tap(calc.get_by_label("Suprafață utilă"))
     await expect(box).to_have_value("Murani, Timiș")
     await calc.get_by_label("Suprafață utilă").fill("60")
-    await calc.get_by_role("button", name="Continuă").tap()
-    await calc.get_by_role("button", name="Vezi rezultatul").tap()
+    await tap(calc.get_by_role("button", name="Continuă"))
+    await tap(calc.get_by_role("button", name="Vezi rezultatul"))
     await expect(calc.get_by_text("· Murani, Timiș · 60 mp ·")).to_be_visible()
     await page.screenshot(path=f"/tmp/browser/loc-{engine}.png")
     await browser.close()
