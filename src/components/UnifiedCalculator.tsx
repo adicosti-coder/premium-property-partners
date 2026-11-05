@@ -97,6 +97,7 @@ const UnifiedCalculator = () => {
   const [lead, setLead] = useState({ name: "", phone: "", email: "" });
   const [errors, setErrors] = useState<Partial<Record<"name" | "phone" | "email" | "surface" | "manual" | "location", string>>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [leadSent, setLeadSent] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const surfaceNum = Number(surface);
@@ -489,6 +490,15 @@ const UnifiedCalculator = () => {
             {indicativeType && <li>{language === "ro" ? "Referințe orientative pentru întreaga proprietate, nu tarife pe cameră. Capacitatea, sezonalitatea și costurile reale necesită o evaluare individuală." : "Indicative whole-property benchmarks, not per-room rates. Capacity, seasonality and actual costs require an individual assessment."}</li>}
             <li className="flex gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />{language === "ro" ? "Randament 6,5–9,4% net estimat; cifrele finale depind de proprietate" : "Estimated net yield of 6.5–9.4%; final figures depend on the property"}</li>
           </ul>
+          {leadSent && (
+            <div role="status" aria-live="polite" className="flex gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4">
+              <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
+              <div>
+                <p className="font-semibold text-foreground">{language === "ro" ? "Cererea ta a fost trimisă" : "Your request has been sent"}</p>
+                <p className="text-sm text-muted-foreground">{language === "ro" ? "Andrei a primit datele din calculator și îți scrie pe WhatsApp cu simularea detaliată." : "Andrei has received your calculator details and will message you on WhatsApp with the detailed simulation."}</p>
+              </div>
+            </div>
+          )}
           <div className="flex flex-col-reverse sm:flex-row gap-3">
             <Button variant="outline" size="lg" onClick={() => setStep(2)}><ArrowLeft className="w-5 h-5 mr-2" />Modifică</Button>
             <Button size="lg" className="flex-1 bg-gold text-gold-foreground hover:bg-gold-dark" onClick={() => setOpen(true)}>
