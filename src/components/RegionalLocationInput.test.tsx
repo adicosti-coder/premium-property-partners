@@ -123,4 +123,61 @@ describe("regional location selection regressions", () => {
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
     outside.remove();
   });
+
+  it("keeps a custom location when the mobile keyboard closes and reopens", () => {
+    const { input, onChange } = setup();
+    fireEvent.change(input, { target: { value: "Murani, Timiș" } });
+    fireEvent.blur(input, { relatedTarget: null });
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    fireEvent.focus(input);
+    expect(input).toHaveValue("Murani, Timiș");
+    fireEvent.blur(input, { relatedTarget: null });
+    expect(input).toHaveValue("Murani, Timiș");
+    expect(onChange).toHaveBeenLastCalledWith("Murani, Timiș");
+  });
+
+  it("updates suggestions after editing an already entered custom location", () => {
+    const { input } = setup();
+    fireEvent.change(input, { target: { value: "Murani" } });
+    fireEvent.blur(input, { relatedTarget: null });
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "mamaia" } });
+    expect(screen.getByRole("option", { name: "Mamaia" })).toBeInTheDocument();
+    fireEvent.change(input, { target: { value: "sinaia" } });
+    expect(screen.getByRole("option", { name: "Sinaia" })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "Mamaia" })).not.toBeInTheDocument();
+  });
+
+  it("moves the active suggestion with arrows, selects with Enter and closes with Escape", () => {
+    const { input, onChange } = setup();
+    fireEvent.change(input, { target: { value: "brasov" } });
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    expect(screen.getByRole("option", { name: "Brașov" })).toHaveAttribute("aria-selected", "true");
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    expect(screen.getByRole("option", { name: "Poiana Brașov" })).toHaveAttribute("aria-selected", "true");
+    fireEvent.keyDown(input, { key: "ArrowUp" });
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(onChange).toHaveBeenLastCalledWith("Brașov");
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    fireEvent.change(input, { target: { value: "brasov" } });
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
+    fireEvent.keyDown(input, { key: "Escape" });
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    expect(input).toHaveValue("brasov");
+    expect(input).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it.each([
+    "Șofronea, Țărmure, Încă o stație",
+    "  Sat   Vechi  ",
+    "Comuna cu un nume foarte lung pentru testarea câmpului de localitate regională din România",
+  ])("preserves custom location %j through Enter, outside tap and refocus", (custom) => {
+    const { input, onChange } = setup();
+    fireEvent.change(input, { target: { value: custom } });
+    fireEvent.keyDown(input, { key: "Enter" });
+    fireEvent.blur(input, { relatedTarget: null });
+    fireEvent.focus(input);
+    expect(input).toHaveValue(custom);
+    expect(onChange).toHaveBeenLastCalledWith(custom);
+  });
 });
