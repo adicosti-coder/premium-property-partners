@@ -68,7 +68,7 @@ describe("homepage calculator return navigation", () => {
       await waitFor(() => expect(scroll).toHaveBeenCalledTimes(hash === "#calculator" ? 2 : 3));
       link.remove();
     }
-    expect(scroll.mock.contexts.every(target => target.id === "calculator")).toBe(true);
+    expect(scroll.mock.contexts.every(target => target instanceof Element && target.id === "calculator")).toBe(true);
     if (step === 3) fireEvent.click(screen.getByRole("button", { name: "Modifică" }));
     fireEvent.click(screen.getByRole("button", { name: "Înapoi" }));
     expect(screen.getByLabelText("Suprafață utilă (mp) *")).toHaveValue("55");
