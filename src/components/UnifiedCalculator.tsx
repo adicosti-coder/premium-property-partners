@@ -516,7 +516,7 @@ const UnifiedCalculator = () => {
           </fieldset>
 
           {/* Bară rezultat pe telefon */}
-          <div className={`fixed inset-x-3 bottom-[76px] z-40 transition-all duration-300 lg:hidden ${showBar ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`} aria-hidden={!showBar}>
+          <div className={`fixed left-3 right-[84px] bottom-[76px] z-40 transition-all duration-300 lg:hidden ${showBar ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`} aria-hidden={!showBar}>
             <button type="button" tabIndex={showBar ? 0 : -1} onClick={() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })} className="flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-background px-4 py-2 text-left shadow-elegant">
               <span>
                 <span className="block text-xs text-muted-foreground">{ro ? "Venit net estimat" : "Estimated net income"}</span>
