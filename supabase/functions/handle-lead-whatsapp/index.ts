@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
       const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
       const last9 = (s: string) => s.replace(/\D/g, "").slice(-9);
       // Formularul salvează direct (fără id întors), deci găsim cererea după telefon.
-      let query = supabase.from("leads").select("id, whatsapp_number, created_at");
+      let query = supabase.from("leads").select("id, whatsapp_number, created_at, simulation_data");
       query = d.lead_id
         ? query.eq("id", d.lead_id)
         : query.ilike("whatsapp_number", `%${last9(d.telefon)}`)
@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
         const label = d.property_type_label ?? d.tip_proprietate ?? "Proprietate";
         direct = await notifyCalculatorLead(supabase, {
           leadId: lead.id, name: d.nume, phone: toIntl(d.telefon), location: loc.location,
-          serviceTag: loc.service_tag, property: `${label}${d.suprafata_mp ? ` · ${d.suprafata_mp} mp` : ""}`,
+          serviceTag: [lead.simulation_data?.repeat_submission ? "[Calcul nou / Actualizat]" : null, loc.service_tag].filter(Boolean).join(" ") || null, property: `${label}${d.suprafata_mp ? ` · ${d.suprafata_mp} mp` : ""}`,
           incomeRange: `${d.venit_estimat_min} – ${d.venit_estimat_max} €/lună`,
         });
         console.log(`handle-lead-whatsapp direct lead=${lead.id} admin=${JSON.stringify(direct.admin)} visitor=${JSON.stringify(direct.visitor)}`);
