@@ -1,5 +1,9 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Revenire la calculator după primul pas — 5 noiembrie
+- [x] Reprodus blocajul din pasul 2; condiția de derulare folosește un indicator permanent, independent de pas
+- [x] 38 teste trecute; mobil/desktop: butoane și ambele ancore funcționale în pașii 2 și 3, inclusiv după închiderea dialogului; suprafața păstrată, fără publicare
+
 ## Teste sugestii și publicare aprobată
 - [x] Teste dedicate selecției prin touch și tastatură, inclusiv Băile Felix fără diacritice
 - [x] 90 teste trecute, scanare securitate fără constatări critice noi; publicare solicitată pe realtrust.ro, finalizarea și recepția GA4 rămân neverificate

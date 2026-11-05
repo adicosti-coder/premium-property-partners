@@ -298,7 +298,7 @@ const UnifiedCalculator = () => {
   const steps = ["Proprietate", "Dotări", "Rezultat"];
 
   return (
-    <div className="bg-card border border-border rounded-3xl p-6 md:p-10 shadow-elegant">
+    <div data-calculator-ready="true" className="bg-card border border-border rounded-3xl p-6 md:p-10 shadow-elegant">
       <div className="flex items-center gap-2 mb-2">
         <Sparkles className="w-4 h-4 text-primary" />
         <span className="text-xs font-semibold uppercase tracking-widest text-primary">Calculator venit · 3 pași</span>

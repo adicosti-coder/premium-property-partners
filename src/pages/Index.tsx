@@ -241,7 +241,7 @@ const Index = () => {
       let tries = 0;
       const scrollWhenReady = () => {
         const target = document.getElementById("calculator");
-        if (target?.querySelector('[role="tablist"]')) {
+        if (target?.querySelector('[data-calculator-ready="true"]')) {
           target.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
           return;
         }
