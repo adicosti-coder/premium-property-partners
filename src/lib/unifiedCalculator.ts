@@ -208,9 +208,11 @@ export function applyScenario(base: UnifiedResult, scenario?: { nightlyRate?: nu
   const gross = base.grossHotel * factor;
   const hi = calculateManagedIncome({ gross, channelFees: gross * CHANNEL_FEE_RATE, utilities: UTILITIES, commissionRate: MANAGEMENT_POLICY.commissionMax });
   const lo = calculateManagedIncome({ gross, channelFees: gross * CHANNEL_FEE_RATE, utilities: UTILITIES, commissionRate: MANAGEMENT_POLICY.commissionMin });
-  const netMin = Math.round(hi.ownerIncome);
-  const netMax = Math.round(lo.ownerIncome);
-  const netMid = Math.round((netMin + netMax) / 2);
+  // Fără ajustare păstrăm exact cifrele estimării de bază (evită diferențe de rotunjire).
+  const unchanged = nightlyRate === base.nightlyRate && occupancy === base.occupancy;
+  const netMin = unchanged ? base.netMin : Math.round(hi.ownerIncome);
+  const netMax = unchanged ? base.netMax : Math.round(lo.ownerIncome);
+  const netMid = unchanged ? base.netMid : Math.round((netMin + netMax) / 2);
   return {
     nightlyRate, occupancy,
     gross: Math.round(gross),
