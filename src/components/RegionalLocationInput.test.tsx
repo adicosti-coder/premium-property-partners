@@ -226,4 +226,22 @@ describe("regional location selection regressions", () => {
     fireEvent.focus(screen.getByRole("combobox"));
     expect(screen.getByRole("listbox", { name: "Location suggestions" })).toBeInTheDocument();
   });
+
+  it("announces clearly when a typed location has no suggestions", () => {
+    const { input } = setup();
+    fireEvent.change(input, { target: { value: "Murani, Timiș" } });
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Nicio sugestie pentru „Murani, Timiș”. Poți păstra localitatea scrisă.");
+    expect(input.getAttribute("aria-describedby")).toContain("uc-location-status");
+    fireEvent.change(input, { target: { value: "sibiu" } });
+    expect(screen.getByRole("status")).toHaveTextContent("1 sugestie disponibilă.");
+    fireEvent.blur(input, { relatedTarget: null });
+    expect(screen.getByRole("status")).toHaveTextContent("");
+  });
+
+  it("does not announce missing suggestions for a single character", () => {
+    const { input } = setup();
+    fireEvent.change(input, { target: { value: "q" } });
+    expect(screen.getByRole("status")).toHaveTextContent("");
+  });
 });
