@@ -1,6 +1,10 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
-import { ArrowLeft, ArrowRight, Building2, Camera, Car, Check, Link2, Loader2, MessageCircle, PenLine, Sparkles, TrendingUp, Upload, X } from "lucide-react";
+import { ArrowDown, ArrowRight, Camera, Check, Info, Link2, Loader2, MessageCircle, PenLine, RotateCcw, Sparkles, TrendingUp, Upload, X } from "lucide-react";
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
+import { Slider } from "@/components/ui/slider";
+import { MANAGEMENT_POLICY } from "@/lib/managementPolicy";
+import { applyScenario, monthlyProjection, MONTH_LABELS, NIGHTLY_SLIDER_MAX_FACTOR, NIGHTLY_SLIDER_MIN_FACTOR } from "@/lib/unifiedCalculator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -75,7 +79,10 @@ const Choice = ({ active, onClick, children }: { active: boolean; onClick: () =>
 
 const UnifiedCalculator = () => {
   const { language } = useLanguage();
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [nightlyOverride, setNightlyOverride] = useState<number | null>(null);
+  const [occOverride, setOccOverride] = useState<number | null>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
+  const viewTracked = useRef(false);
   const [mode, setMode] = useState<InputMode>("manual");
   const [locationMode, setLocationMode] = useState<LocationMode>("local");
   const [regionalLocation, setRegionalLocation] = useState("");
@@ -83,7 +90,7 @@ const UnifiedCalculator = () => {
   const national = locationMode === "regional";
   const [type, setType] = useState<PropertyTypeValue>("2-camere");
   const [zone, setZone] = useState<UnifiedZoneValue>("central");
-  const [surface, setSurface] = useState("");
+  const [surface, setSurface] = useState("55");
   const [manualRent, setManualRent] = useState("");
   const [manualNightly, setManualNightly] = useState("");
   const [parking, setParking] = useState(false);
@@ -107,6 +114,14 @@ const UnifiedCalculator = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [type, zone, surfaceNum, parking, finish, locationMode, customRates, manualRent, manualNightly],
   );
+  const surfaceValid = isValidPropertySurface(surfaceNum);
+  // Glisoarele revin la estimare când se schimbă proprietatea.
+  useEffect(() => { setNightlyOverride(null); setOccOverride(null); }, [type, zone, surfaceNum, parking, finish, locationMode, customRates, manualRent, manualNightly]);
+  const s = useMemo(() => applyScenario(r, { nightlyRate: nightlyOverride ?? undefined, occupancy: occOverride ?? undefined }), [r, nightlyOverride, occOverride]);
+  const months = useMemo(() => monthlyProjection(s), [s]);
+  const scenarioChanged = nightlyOverride !== null || occOverride !== null;
+  const nightlyMin = Math.max(15, Math.round(r.nightlyRate * NIGHTLY_SLIDER_MIN_FACTOR));
+  const nightlyMax = Math.max(nightlyMin + 5, Math.round(r.nightlyRate * NIGHTLY_SLIDER_MAX_FACTOR));
   const propertyIdentity = getPropertyLeadIdentity(type);
   const typeLabel = propertyIdentity.property_type_label;
   const indicativeType = ["casa-vila", "vila-vacanta", "pensiune-boutique", "hotel-motel"].includes(type);
@@ -114,7 +129,7 @@ const UnifiedCalculator = () => {
   const zoneLabel = locationIdentity.location;
   const locationSummary = `${locationIdentity.service_tag} Locație: ${zoneLabel} | Tip: ${typeLabel}`;
   const finishLabel = finish === "premium" ? "Premium Lux" : "Standard";
-  const maxBar = Math.max(r.classicRent, r.netMax, 1);
+  const maxBar = Math.max(s.classicRent, s.netMax, 1);
   const leadSource = `calculator_unificat_${source?.mode ?? "manual"}`;
   const analyticsContext = { location_mode: locationMode, property_type: type, location_name: zoneLabel, surface_sqm: surfaceNum };
   const selectLocationMode = (next: LocationMode) => {
@@ -123,22 +138,36 @@ const UnifiedCalculator = () => {
     setErrors({});
   };
 
-  const goStep2 = () => {
+  const validateInputs = () => {
     if (!isValidPropertySurface(surfaceNum)) {
       setErrors({ surface: language === "ro" ? "Introdu suprafața utilă (între 15 și 5.000 mp)" : "Enter the usable area (between 15 and 5,000 sqm)" });
-      return;
+      return false;
     }
     if (national && !isValidRegionalLocation(regionalLocation)) {
       setErrors({ location: language === "ro" ? "Introdu orașul / zona (2–120 caractere)." : "Enter the city / area (2–120 characters)." });
-      return;
+      return false;
     }
     if (national && customRates && ((manualRent && Number(manualRent) < 100) || (manualNightly && Number(manualNightly) < 15))) {
       setErrors({ manual: language === "ro" ? "Tarifele personalizate: minimum 100 €/lună și 15 €/noapte; câmpurile goale folosesc estimarea standard." : "Custom rates: at least €100/month and €15/night; empty fields use the standard estimate." });
-      return;
+      return false;
     }
     setErrors({});
-    setStep(2);
+    return true;
   };
+
+  const openLead = () => { if (validateInputs()) setOpen(true); };
+
+  // Un singur eveniment de vizualizare, după ce vizitatorul a completat o proprietate validă.
+  const locationReady = !national || isValidRegionalLocation(regionalLocation);
+  useEffect(() => {
+    if (viewTracked.current || !surfaceValid || !locationReady) return;
+    const t = window.setTimeout(() => {
+      viewTracked.current = true;
+      trackCalculatorEvent("calculator_result_view", analyticsContext);
+    }, 1200);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [surfaceValid, locationReady, type, zone, surfaceNum, regionalLocation, locationMode]);
 
   const applyAnalysis = (a: ListingAnalysisLike, from: InputMode) => {
     const m = mapAnalysisToInput(a);
@@ -209,8 +238,9 @@ const UnifiedCalculator = () => {
       source ? `• Date din: ${source.mode === "link" ? "link anunț" : source.mode === "foto" ? "analiză foto" : "introducere manuală"}` : null,
       ``,
       `📊 Proiecție lunară:`,
-      `• Chirie clasică: ~${fmt(r.classicRent)} €`,
-      `• Venit net regim hotelier: ${fmt(r.netMin)} – ${fmt(r.netMax)} € (după administrare 15–20% din venitul net)`,
+      `• Chirie clasică: ~${fmt(s.classicRent)} €`,
+      `• Venit net regim hotelier: ${fmt(s.netMin)} – ${fmt(s.netMax)} € (după administrare 15–20% din venitul net)`,
+      `• Scenariu: ~${s.nightlyRate} €/noapte, ocupare ${Math.round(s.occupancy * 100)}%${scenarioChanged ? " (ajustat de mine)" : ""}`,
       ``,
       `Aș vrea o discuție scurtă ca să rafinăm cifrele.`,
     ].filter((l) => l !== null).join("\n");
@@ -242,12 +272,13 @@ const UnifiedCalculator = () => {
       surface_sqm: surfaceNum,
       parking,
       finish,
-      classic_rent: r.classicRent,
-      nightly_rate: r.nightlyRate,
-      occupancy: r.occupancy,
-      realtrust_net: r.netMid,
-      realtrust_net_min: r.netMin,
-      realtrust_net_max: r.netMax,
+      classic_rent: s.classicRent,
+      nightly_rate: s.nightlyRate,
+      occupancy: s.occupancy,
+      scenario_adjusted: scenarioChanged,
+      realtrust_net: s.netMid,
+      realtrust_net_min: s.netMin,
+      realtrust_net_max: s.netMax,
     };
     try {
       const result = await submitLead({
@@ -275,10 +306,10 @@ const UnifiedCalculator = () => {
             suprafata_mp: surfaceNum,
             parcare: parking,
             finisaje: finish,
-            chirie_clasica: r.classicRent,
-            venit_net_realtrust: r.netMid,
-            venit_estimat_min: r.netMin,
-            venit_estimat_max: r.netMax,
+            chirie_clasica: s.classicRent,
+            venit_net_realtrust: s.netMid,
+            venit_estimat_min: s.netMin,
+            venit_estimat_max: s.netMax,
             sursa: leadSource,
             ...(result.ok && result.leadId ? { lead_id: result.leadId } : {}),
           },
