@@ -47,10 +47,6 @@
 - Lite-model translations and agency classifications pass deterministic checks in `_shared/liteOutputChecks.ts`; suspicious results are not applied and go to `automation_approvals` as `review_ai_output` — cheap models never silently publish wrong text or blacklist owners.
 
 - Management calculators use the shared commercial-policy helper with channel fees and utilities explicit and cleaning separate — prevents gross/net commission drift.
-- UnifiedCalculator owns its eligible complex list and resolves approved complex aliases through shared estimate profiles for manual and imported inputs — prevents restricted choices reappearing without changing other calculators.
-- UnifiedCalculator uses neutral property-type profiles for regional estimates with optional per-rate overrides; location identity and service category accompany stored leads and WhatsApp payloads — prevents local coefficients and local-management promises leaking into regional enquiries.
-- UnifiedCalculator is single-page; sliders use `applyScenario` and leads send its values — keeps shown and sent figures identical.
-- UnifiedCalculator shares surface validation and property identity helpers for manual/import inputs and lead handover; building types take precedence over room counts and use explicitly indicative whole-property benchmarks — prevents hotels becoming apartments or misleading per-room projections.
 - Homepage calculator anchors stay outside lazy boundaries; both hash aliases and CTAs force loading and wait for the tool's step-independent readiness marker before scrolling — prevents jumps to placeholders and broken navigation after step 1.
 - Viewing requests persist through the protected lead endpoint before opening WhatsApp or emitting Lead; failures produce neither chat navigation nor conversion — prevents false conversions.
 - Prerendered HTML ships one static Romanian canonical that the global route Helmet emitter replaces on mount; singular complex routes have a client fallback to plural — prevents duplicate canonicals while server redirects remain hosting-owned.
