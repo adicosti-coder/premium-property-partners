@@ -83,6 +83,18 @@ const UnifiedCalculator = () => {
   const [occOverride, setOccOverride] = useState<number | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const viewTracked = useRef(false);
+  const inputsRef = useRef<HTMLDivElement>(null);
+  const [showBar, setShowBar] = useState(false);
+  useEffect(() => {
+    if (typeof IntersectionObserver === "undefined" || !inputsRef.current || !resultRef.current) return;
+    const seen = { inputs: false, result: false };
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.target === inputsRef.current) seen.inputs = e.isIntersecting; else seen.result = e.isIntersecting; });
+      setShowBar(seen.inputs && !seen.result);
+    }, { rootMargin: "0px 0px -120px 0px" });
+    io.observe(inputsRef.current); io.observe(resultRef.current);
+    return () => io.disconnect();
+  }, []);
   const [mode, setMode] = useState<InputMode>("manual");
   const [locationMode, setLocationMode] = useState<LocationMode>("local");
   const [regionalLocation, setRegionalLocation] = useState("");
@@ -365,7 +377,7 @@ const UnifiedCalculator = () => {
 
       <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)]">
         {/* ── Date ── */}
-        <div className="space-y-8 px-5 py-6 md:px-10 md:py-8">
+        <div ref={inputsRef} className="space-y-8 px-5 py-6 md:px-10 md:py-8">
           <section>
             {sectionTitle(1, ro ? "Cum vrei să introduci datele proprietății?" : "How would you like to enter your property details?")}
             <Tabs value={mode} onValueChange={(v) => setMode(v as InputMode)}>
@@ -504,8 +516,8 @@ const UnifiedCalculator = () => {
           </fieldset>
 
           {/* Bară rezultat pe telefon */}
-          <div className="sticky bottom-20 z-10 lg:hidden">
-            <button type="button" onClick={() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })} className="flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-background px-4 py-2 text-left shadow-elegant">
+          <div className={`fixed inset-x-3 bottom-[76px] z-40 transition-all duration-300 lg:hidden ${showBar ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`} aria-hidden={!showBar}>
+            <button type="button" tabIndex={showBar ? 0 : -1} onClick={() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })} className="flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-background px-4 py-2 text-left shadow-elegant">
               <span>
                 <span className="block text-xs text-muted-foreground">{ro ? "Venit net estimat" : "Estimated net income"}</span>
                 <span className="block text-lg font-semibold text-foreground">{surfaceValid ? `${fmt(s.netMin)}–${fmt(s.netMax)} €/${ro ? "lună" : "mo"}` : "—"}</span>
