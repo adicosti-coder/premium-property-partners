@@ -16,6 +16,11 @@ async def run(p, device, engine):
     ctx = await browser.new_context(**p.devices[device])
     page = await ctx.new_page()
     await page.goto(f"{BASE}/#calculator", wait_until="domcontentloaded")
+    cookie = page.get_by_role("dialog", name="Cookie")
+    try:
+        await cookie.get_by_role("button").filter(has_text="Refuz").first.tap(timeout=8000)
+    except Exception:
+        await page.evaluate("document.querySelector('[aria-labelledby=cookie-consent-title]')?.remove()")
     calc = page.locator('[data-calculator-ready="true"]')
     await calc.wait_for(timeout=30000)
     await tap(calc.get_by_role("button", name="Altă localitate / Regional"))
