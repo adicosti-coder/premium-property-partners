@@ -1,0 +1,76 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import Index from "./Index";
+vi.mock("@/i18n/LanguageContext", () => ({ useLanguage: () => ({ language: "ro" }) }));
+vi.mock("@/hooks/useLazyVisible", () => ({ useLazyVisible: () => [null, true] }));
+vi.mock("@/lib/supabaseClient", () => ({ supabase: { functions: { invoke: vi.fn() } }, supabaseConfig: { url: "https://example.test" }, getSupabasePublishableKey: () => "test" }));
+vi.mock("@/components/social/SocialFollow", () => ({ SocialFollow: () => null }));
+vi.mock('@/components/AIQuoteBlock', () => ({ default: () => null, AIQuoteBlock: () => null }));
+vi.mock('@/components/BlogPreview', () => ({ default: () => null, BlogPreview: () => null }));
+vi.mock('@/components/CTA', () => ({ default: () => null, CTA: () => null }));
+vi.mock('@/components/ChannelLogos', () => ({ default: () => null, ChannelLogos: () => null }));
+vi.mock('@/components/ContactSection', () => ({ default: () => null, ContactSection: () => null }));
+vi.mock('@/components/DIYvsProfessional', () => ({ default: () => null, DIYvsProfessional: () => null }));
+vi.mock('@/components/DeferredHomeSEO', () => ({ default: () => null, DeferredHomeSEO: () => null }));
+vi.mock('@/components/DualServicePaths', () => ({ default: () => null, DualServicePaths: () => null }));
+vi.mock('@/components/FAQ', () => ({ default: () => null, FAQ: () => null }));
+vi.mock('@/components/Footer', () => ({ default: () => null, Footer: () => null }));
+vi.mock('@/components/GlobalConversionWidgets', () => ({ default: () => null, GlobalConversionWidgets: () => null }));
+vi.mock('@/components/Header', () => ({ default: () => null, Header: () => null }));
+vi.mock('@/components/Hero', () => ({ default: () => null, Hero: () => null }));
+vi.mock('@/components/InteractiveMapWithPOI', () => ({ default: () => null, InteractiveMapWithPOI: () => null }));
+vi.mock('@/components/LocalLandmarksStrip', () => ({ default: () => null, LocalLandmarksStrip: () => null }));
+vi.mock('@/components/MarketPulse', () => ({ default: () => null, MarketPulse: () => null }));
+vi.mock('@/components/NeighborhoodsGrid', () => ({ default: () => null, NeighborhoodsGrid: () => null }));
+vi.mock('@/components/OwnerFearsFAQ', () => ({ default: () => null, OwnerFearsFAQ: () => null }));
+vi.mock('@/components/PageSummary', () => ({ default: () => null, PageSummary: () => null }));
+vi.mock('@/components/ProcessStepsTimeline', () => ({ default: () => null, ProcessStepsTimeline: () => null }));
+vi.mock('@/components/PropertyGallery', () => ({ default: () => null, PropertyGallery: () => null }));
+vi.mock('@/components/QuickLeadForm', () => ({ default: () => null, QuickLeadForm: () => null }));
+vi.mock('@/components/ROICaseStudySection', () => ({ default: () => null, ROICaseStudySection: () => null }));
+vi.mock('@/components/SEOConsultingStrip', () => ({ default: () => null, SEOConsultingStrip: () => null }));
+vi.mock('@/components/SEODualCTASection', () => ({ default: () => null, SEODualCTASection: () => null }));
+vi.mock('@/components/SEOHead', () => ({ default: () => null, SEOHead: () => null }));
+vi.mock('@/components/SEOLocalEntitiesBlock', () => ({ default: () => null, SEOLocalEntitiesBlock: () => null }));
+vi.mock('@/components/ServicesH2Strip', () => ({ default: () => null, ServicesH2Strip: () => null }));
+vi.mock('@/components/StatsCounters', () => ({ default: () => null, StatsCounters: () => null }));
+vi.mock('@/components/Testimonials', () => ({ default: () => null, Testimonials: () => null }));
+vi.mock('@/components/VerifiedReviewsBadges', () => ({ default: () => null, VerifiedReviewsBadges: () => null }));
+vi.mock('@/components/WhatsappQuickContact', () => ({ default: () => null, WhatsappQuickContact: () => null }));
+vi.mock('@/components/home/BrandPillarsHub', () => ({ default: () => null, BrandPillarsHub: () => null }));
+vi.mock('@/components/home/HomeAuthorityBlocks', () => ({ default: () => null, HomeAuthorityBlocks: () => null }));
+vi.mock('@/components/home/HomeIntro', () => ({ default: () => null, HomeIntro: () => null }));
+vi.mock('@/components/home/HomeRecommendedLinks', () => ({ default: () => null, HomeRecommendedLinks: () => null }));
+vi.mock('@/components/hub/GuestsTeaser', () => ({ default: () => null, GuestsTeaser: () => null }));
+vi.mock('@/components/hub/MainNavigationCards', () => ({ default: () => null, MainNavigationCards: () => null }));
+vi.mock('@/components/hub/OwnersTeaser', () => ({ default: () => null, OwnersTeaser: () => null }));
+vi.mock('@/components/owners/PreCalcMiniForm', () => ({ default: () => null, PreCalcMiniForm: () => null }));
+
+afterEach(() => { cleanup(); vi.restoreAllMocks(); });
+
+describe("homepage calculator return navigation", () => {
+  it.each([2, 3])("scrolls to the loaded calculator at step %i without resetting its input", async step => {
+    const scroll = vi.fn();
+    Object.defineProperty(Element.prototype, "scrollIntoView", { configurable: true, value: scroll });
+    render(<MemoryRouter><Index /></MemoryRouter>);
+    fireEvent.change(await screen.findByLabelText("Suprafață utilă (mp) *"), { target: { value: "55" } });
+    fireEvent.click(screen.getByRole("button", { name: "Continuă" }));
+    if (step === 3) fireEvent.click(screen.getByRole("button", { name: "Vezi rezultatul" }));
+    expect(screen.queryByRole("tablist")).toBeNull();
+    fireEvent(window, new Event("force-show-calculator"));
+    await waitFor(() => expect(scroll).toHaveBeenCalledTimes(1));
+    for (const hash of ["#calculator", "#home-income-calculator"]) {
+      const link = document.createElement("a");
+      link.href = hash;
+      document.body.append(link);
+      fireEvent.click(link);
+      await waitFor(() => expect(scroll).toHaveBeenCalledTimes(hash === "#calculator" ? 2 : 3));
+      link.remove();
+    }
+    expect(scroll.mock.contexts.every(target => target.id === "calculator")).toBe(true);
+    if (step === 3) fireEvent.click(screen.getByRole("button", { name: "Modifică" }));
+    fireEvent.click(screen.getByRole("button", { name: "Înapoi" }));
+    expect(screen.getByLabelText("Suprafață utilă (mp) *")).toHaveValue("55");
+  });
+});
