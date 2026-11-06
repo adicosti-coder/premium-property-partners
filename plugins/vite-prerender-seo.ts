@@ -1767,7 +1767,7 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
     `<link rel="alternate" hreflang="ro" href="${roHref}" />`,
     `<link rel="alternate" hreflang="x-default" href="${roHref}" />`,
   ].join('\n  ');
-  const englishHead = `<script>(function(){if(new URLSearchParams(location.search).get('lang')==='en'){var c=document.querySelector('link[rel="canonical"]');if(c)c.href=${JSON.stringify(`${roHref}?lang=en`)};var r=document.querySelector('meta[name="robots"]');if(r)r.content='noindex, follow';document.documentElement.lang='en';}})();</script>`;
+  const englishHead = `<script>(function(){if((new URLSearchParams(location.search).get('lang')||'').toLowerCase()==='en'){var c=document.querySelector('link[rel="canonical"]');if(c)c.href=${JSON.stringify(`${roHref}?lang=en`)};var r=document.querySelector('meta[name="robots"]');if(r)r.content='noindex, follow';document.documentElement.lang='en';}})();</script>`;
   html = html.replace('</head>', `  ${hreflangTags}\n  ${englishHead}\n</head>`);
 
   // Per-route Open Graph / Twitter tags. The static shell ships sitewide
