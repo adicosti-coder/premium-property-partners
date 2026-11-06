@@ -75,26 +75,7 @@ const DeferredHomeSEO = ({ language }: { language: string }) => {
   const speakableSchema = generateSpeakableSchema("RealTrust", "https://realtrust.ro", [".page-summary", "h1", "h2", ".faq-section"]);
   const homepageSchemas = [...generateHomepageSchemas(reviews), speakableSchema];
 
-  const lodgingSchema = homepageSchemas.find((schema) => schema["@id"] === "https://realtrust.ro/#lodgingbusiness") as Record<string, unknown> | undefined;
-
-  // Inject real AggregateRating only into ApArt Hotel, never by array position.
-  if (ratingData && lodgingSchema) {
-    lodgingSchema.aggregateRating = {
-      "@type": "AggregateRating",
-      "ratingValue": ratingData.ratingValue,
-      "reviewCount": ratingData.reviewCount,
-      "bestRating": "5",
-      "worstRating": "1",
-    };
-  }
-
-  // Enrich only the lodging entity; RealEstateAgent keeps its own identity.
-  if (lodgingSchema) {
-    lodgingSchema.sameAs = [...BRAND.sameAs];
-    lodgingSchema.openingHours = "Mo-Su 00:00-24:00";
-    lodgingSchema.currenciesAccepted = "EUR";
-    lodgingSchema.priceRange = "€€";
-  }
+  enrichLodgingBusinessSchema(homepageSchemas, ratingData, BRAND.sameAs);
 
   // RealEstateAgent & Organization schemas are now injected globally by
   // SEOHead.tsx on every page. DeferredHomeSEO only injects homepage-specific
