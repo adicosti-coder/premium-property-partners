@@ -4,7 +4,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendToMake } from "./sendToMake.ts";
-import { notifyCalculatorLead } from "./metaNotify.ts";
+import { notifyAdditionalCalculatorLead, notifyCalculatorLead } from "./metaNotify.ts";
 import { calcLeadAdminUrl } from "../_shared/calculatorLeadTemplates.ts";
 import { getLeadLocationDetails, getLeadPropertyDetails, getLocationLeadMessage } from "./propertyDetails.ts";
 import { appendSocialFollow, runtimeSocialProfiles } from "../_shared/socialFollow.ts";
