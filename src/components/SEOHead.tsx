@@ -358,7 +358,7 @@ const SEOHead = ({
       if (targets.length > 1) {
         const keep = targets.find((n) => n.hasAttribute("data-rh")) ?? targets[0];
         targets.forEach((node) => {
-          if (node !== keep && !node.hasAttribute("data-rh")) node.remove();
+          if (node !== keep) node.remove();
         });
       }
     };
