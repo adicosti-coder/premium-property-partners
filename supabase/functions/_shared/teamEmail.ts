@@ -44,6 +44,7 @@ export interface TeamEmailInput {
   leadId?: string | null;
   contractId?: string | null;
   source?: string;
+  idempotencyKey?: string;
 }
 
 export interface TeamEmailResult {
@@ -53,6 +54,7 @@ export interface TeamEmailResult {
   error?: string;
   /** true when the notification was stored for the admin dashboard instead. */
   storedFallback?: boolean;
+  messageId?: string;
 }
 
 const isUnverifiedDomain = (status: number, body: string) =>
@@ -96,7 +98,7 @@ export async function sendTeamEmail(
       "https://api.resend.com/emails",
       {
         method: "POST",
-        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", ...(input.idempotencyKey ? { "Idempotency-Key": input.idempotencyKey } : {}) },
         body: JSON.stringify({ from, to: [input.to], subject: input.subject, html: input.html }),
       },
       { label: `team-email(${input.source ?? "generic"})`, maxAttempts: 2 },
@@ -112,7 +114,10 @@ export async function sendTeamEmail(
     usedFrom = RESEND_TEST_FROM;
   }
 
-  if (res.ok) return { sent: true, from: usedFrom, status: res.status };
+  if (res.ok) {
+    const parsed = JSON.parse(res.body || "{}");
+    return { sent: true, from: usedFrom, status: res.status, messageId: parsed.id };
+  }
 
   const error = `Resend ${res.status || "network"}: ${(res.body || res.error || "").slice(0, 300)}`;
   const storedFallback = await store(error, res.status, usedFrom);
