@@ -3,8 +3,9 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { z } from "npm:zod@3";
 import { verifyLeadReportToken } from "../_shared/leadReportToken.ts";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
+import { failedNotificationChannels } from "../_shared/calculatorEmailDelivery.ts";
 
-const schema = z.object({ lead_id: z.string().uuid(), report_token: z.string().length(64).optional(), action: z.enum(["status", "retry"]).default("status") });
+const schema = z.object({ lead_id: z.string().uuid(), report_token: z.string().length(64).optional(), action: z.enum(["status", "retry"]).default("status"), channel: z.enum(["email", "whatsapp"]).optional() });
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 Deno.serve(async req => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });

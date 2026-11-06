@@ -1747,17 +1747,19 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
     `<meta name="description" content="${escapeHtml(route.description)}">`
   );
 
-  // No static canonical: static hosting serves the same file for ?lang=en, so a
-  // prerendered canonical would declare the Romanian URL on English pages.
-  // The route Helmet emitter owns the language-specific canonical.
+  // Romanian crawlers receive a canonical in the static document. The same
+  // file can be served for ?lang=en, so an inline head-only switch applies the
+  // approved English self-canonical and noindex policy before React mounts.
   html = html.replace(/<link\b[^>]*rel=["']canonical["'][^>]*>\s*/gi, '');
   html = html.replace(/<link rel="alternate" hreflang="[^"]*" href="[^"]*"\s*\/?>\s*/g, '');
   const roHref = route.canonical.split('?')[0];
   const hreflangTags = [
+    `<link rel="canonical" href="${escapeHtml(roHref)}" />`,
     `<link rel="alternate" hreflang="ro" href="${roHref}" />`,
     `<link rel="alternate" hreflang="x-default" href="${roHref}" />`,
   ].join('\n  ');
-  html = html.replace('</head>', `  ${hreflangTags}\n</head>`);
+  const englishHead = `<script>(function(){if(new URLSearchParams(location.search).get('lang')==='en'){var c=document.querySelector('link[rel="canonical"]');if(c)c.href=${JSON.stringify(`${roHref}?lang=en`)};var r=document.querySelector('meta[name="robots"]');if(r)r.content='noindex, follow';document.documentElement.lang='en';}})();</script>`;
+  html = html.replace('</head>', `  ${hreflangTags}\n  ${englishHead}\n</head>`);
 
   // Per-route Open Graph / Twitter tags. The static shell ships sitewide
   // values; without this, every prerendered page shares the homepage preview.

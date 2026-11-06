@@ -88,6 +88,7 @@ const CereriRandament = () => {
   const [params] = useSearchParams();
   const selectedId = params.get("lead");
   const [retrying, setRetrying] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));

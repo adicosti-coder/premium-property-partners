@@ -74,10 +74,11 @@ const DeferredHomeSEO = ({ language }: { language: string }) => {
   const speakableSchema = generateSpeakableSchema("RealTrust", "https://realtrust.ro", [".page-summary", "h1", "h2", ".faq-section"]);
   const homepageSchemas = [...generateHomepageSchemas(reviews), speakableSchema];
 
-  // Inject real AggregateRating into the first schema (LocalBusiness/LodgingBusiness)
-  if (ratingData && homepageSchemas.length > 0) {
-    const mainSchema = homepageSchemas[0] as Record<string, unknown>;
-    mainSchema.aggregateRating = {
+  const lodgingSchema = homepageSchemas.find((schema) => schema["@id"] === "https://realtrust.ro/#lodgingbusiness") as Record<string, unknown> | undefined;
+
+  // Inject real AggregateRating only into ApArt Hotel, never by array position.
+  if (ratingData && lodgingSchema) {
+    lodgingSchema.aggregateRating = {
       "@type": "AggregateRating",
       "ratingValue": ratingData.ratingValue,
       "reviewCount": ratingData.reviewCount,
