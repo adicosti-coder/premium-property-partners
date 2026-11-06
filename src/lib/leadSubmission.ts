@@ -39,6 +39,7 @@ export const leadInputSchema = z.object({
   /** Save via the submit-lead function, which returns leadId + yield-report token. */
   viaServer: z.boolean().optional(),
   captcha_token: z.string().max(2048).optional(),
+  submission_id: z.string().uuid().optional(),
 });
 
 export type LeadInput = z.infer<typeof leadInputSchema>;
@@ -84,6 +85,7 @@ export const submitLead = async (raw: LeadInput): Promise<LeadSubmissionResult> 
           property_area: data.property_area ?? 0,
           source: data.source,
           simulation_data: data.simulation_data ?? null,
+          ...(data.submission_id ? { submission_id: data.submission_id } : {}),
           ...(data.captcha_token ? { captcha_token: data.captcha_token } : {}),
         },
       });

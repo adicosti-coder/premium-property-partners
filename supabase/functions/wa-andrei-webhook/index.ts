@@ -876,6 +876,11 @@ Deno.serve(async (req) => {
         const waId = st?.id;
         const state = String(st?.status || "");
         if (!waId || !state) continue;
+        // Persist even an early callback arriving before the send response is saved.
+        await supabase.rpc("record_calculator_wa_receipt", {
+          p_message_id: waId, p_status: state,
+          p_error: state === "failed" ? JSON.stringify(st?.errors ?? []).slice(0, 500) : null,
+        });
         const tsIso = st?.timestamp
           ? new Date(Number(st.timestamp) * 1000).toISOString()
           : new Date().toISOString();

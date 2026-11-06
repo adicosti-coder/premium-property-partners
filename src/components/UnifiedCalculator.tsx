@@ -22,6 +22,7 @@ import { UNIFIED_ZONES as ZONES, computeUnified, getLocationLeadIdentity, getPro
 import { useLanguage } from "@/i18n/LanguageContext";
 import { RegionalLocationInput } from "@/components/RegionalLocationInput";
 import { trackCalculatorEvent } from "@/lib/calculatorAnalytics";
+import { useCalculatorDelivery } from "@/hooks/useCalculatorDelivery";
 
 const WHATSAPP_NUMBER = "40799069256";
 const ANALYSIS_URL = `${supabaseConfig.url}/functions/v1/public-listing-analysis`;
@@ -117,6 +118,10 @@ const UnifiedCalculator = () => {
   const [errors, setErrors] = useState<Partial<Record<"name" | "phone" | "email" | "surface" | "manual" | "location", string>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [leadSent, setLeadSent] = useState(false);
+  const locked = useRef(false);
+  const submission = useRef<{ fingerprint: string; id: string } | null>(null);
+  const [receipt, setReceipt] = useState<{ leadId: string; reportToken?: string } | null>(null);
+  const adminReceived = useCalculatorDelivery(receipt);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const surfaceNum = Number(surface);
@@ -259,7 +264,7 @@ const UnifiedCalculator = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (submitting) return;
+    if (locked.current) return;
     const parsed = leadSchema.safeParse(lead);
     if (!parsed.success) {
       const fe = parsed.error.flatten().fieldErrors;
@@ -267,11 +272,10 @@ const UnifiedCalculator = () => {
       return;
     }
     setErrors({});
+    locked.current = true;
     setSubmitting(true);
     const d = parsed.data;
     const message = buildMessage(d.name);
-    // Deschidem WhatsApp în gestul utilizatorului — după un await telefonul blochează fereastra.
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
     const specs = {
       input_mode: source?.mode ?? "manual",
       national_manual: national && customRates,
@@ -292,6 +296,8 @@ const UnifiedCalculator = () => {
       realtrust_net_min: s.netMin,
       realtrust_net_max: s.netMax,
     };
+    const fingerprint = JSON.stringify({ d, specs });
+    if (submission.current?.fingerprint !== fingerprint) submission.current = { fingerprint, id: crypto.randomUUID() };
     try {
       const result = await submitLead({
         name: d.name,
@@ -302,8 +308,18 @@ const UnifiedCalculator = () => {
         message: `[calculator_unificat] ${locationSummary} · ${surfaceNum} mp · Parcare: ${parking ? "Da" : "Nu"} · Finisaje: ${finishLabel}`,
         source: leadSource,
         simulation_data: withCampaignTracking({ ...specs, generated_message: message }) as never,
+        viaServer: true,
+        submission_id: submission.current.id,
       });
       if (result.ok !== true) console.warn("[UnifiedCalculator] submitLead failed", result);
+      if (!result.ok || !result.leadId) {
+        toast.error("Nu am putut salva cererea. Încearcă din nou.");
+        return;
+      }
+      setLeadSent(true);
+      setReceipt({ leadId: result.leadId, reportToken: result.reportToken });
+      submission.current = null;
+      setOpen(false);
 
       // Pornește fluxul asistentului Andrei (WhatsApp).
       void supabase.functions
@@ -327,6 +343,7 @@ const UnifiedCalculator = () => {
             scenariu_ajustat: scenarioChanged,
             sursa: leadSource,
             ...(result.ok && result.leadId ? { lead_id: result.leadId } : {}),
+            report_token: result.reportToken,
           },
         })
         .then(({ error }) => { if (error) console.warn("[UnifiedCalculator] handle-lead-whatsapp failed", error); })
@@ -338,13 +355,14 @@ const UnifiedCalculator = () => {
       }
       if (result.ok) {
         setLeadSent(true);
-        toast.success("Cererea a fost trimisă. Andrei a primit-o și îți scrie pe WhatsApp.");
+        toast.success("Cererea a fost înregistrată");
       } else {
         toast.error("Nu am putut salva cererea. Încearcă din nou sau scrie-ne pe WhatsApp.");
       }
       setOpen(false);
     } finally {
       setSubmitting(false);
+      locked.current = false;
     }
   };
 
@@ -627,8 +645,9 @@ const UnifiedCalculator = () => {
               <div role="status" aria-live="polite" className="flex gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4">
                 <Check className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
                 <div>
-                  <p className="font-semibold text-foreground">{ro ? "Cererea ta a fost trimisă" : "Your request has been sent"}</p>
-                  <p className="text-sm text-muted-foreground">{ro ? "Andrei a primit datele din calculator și îți scrie pe WhatsApp cu simularea detaliată." : "Andrei has received your calculator details and will message you on WhatsApp with the detailed simulation."}</p>
+                  <p className="font-semibold text-foreground">{adminReceived ? (ro ? "Andrei a primit cererea ta" : "Andrei has received your request") : (ro ? "Cererea a fost înregistrată" : "Your request has been registered")}</p>
+                  <p className="text-sm text-muted-foreground">{adminReceived ? (ro ? "Livrarea notificării către Andrei este confirmată." : "Notification delivery to Andrei is confirmed.") : (ro ? "Datele sunt salvate. Așteptăm confirmarea livrării notificării către Andrei." : "Your details are saved. Awaiting confirmation of notification delivery to Andrei.")}</p>
+                  <Button type="button" variant="outline" className="mt-3 min-h-12" onClick={() => { setLeadSent(false); setReceipt(null); }}>Calcul nou / Actualizat</Button>
                 </div>
               </div>
             ) : (

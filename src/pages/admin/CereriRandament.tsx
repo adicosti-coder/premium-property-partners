@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { waLeadLink } from "@/lib/waLeadLink";
+import { toast } from "sonner";
+import { canRetryNotification } from "../../../supabase/functions/_shared/calculatorNotificationPolicy";
 
 type Row = {
   id: string;
@@ -20,6 +22,9 @@ type Row = {
   property_type: string | null;
   source: string | null;
   simulation_data: Record<string, unknown> | null;
+  email_status: string; email_error: string | null;
+  wa_admin_status: string; wa_admin_error: string | null;
+  wa_client_status: string; wa_client_error: string | null;
 };
 
 const SOURCE_LABEL: Record<string, string> = {
@@ -82,6 +87,7 @@ const CereriRandament = () => {
   const [desc, setDesc] = useState(true);
   const [params] = useSearchParams();
   const selectedId = params.get("lead");
+  const [retrying, setRetrying] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
@@ -93,14 +99,28 @@ const CereriRandament = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("leads")
-        .select("id, created_at, name, whatsapp_number, property_type, source, simulation_data")
+        .select("id, created_at, name, whatsapp_number, property_type, source, simulation_data,email_status,email_error,wa_admin_status,wa_admin_error,wa_client_status,wa_client_error")
         .or("source.ilike.%calc%,source.eq.calculator_roi_widget")
         .order("created_at", { ascending: false })
         .limit(500);
       if (error) throw error;
       return (data ?? []) as unknown as Row[];
     },
+    refetchInterval: 10000,
   });
+  const retry = async (id: string) => {
+    if (retrying) return;
+    setRetrying(id);
+    try {
+      const { error } = await supabase.functions.invoke("calculator-notifications", { body: { lead_id: id, action: "retry" } });
+      if (error) throw error;
+      await q.refetch();
+      toast.success("Stările notificărilor au fost actualizate.");
+    } catch { toast.error("Nu am putut retrimite notificarea. Reîncarcă stările înainte de o nouă încercare."); }
+    finally { setRetrying(null); }
+  };
+  const labels: Record<string, string> = { pending: "În așteptare", sending: "În procesare", accepted: "Acceptat de serviciu", delivered: "Livrat", read: "Citit", failed: "Eșuat", unknown: "Livrare necunoscută" };
+  const statusCell = (state: string, error: string | null) => <td className="py-2 pr-3 min-w-36"><Badge variant={state === "failed" ? "destructive" : "outline"}>{labels[state] ?? state}</Badge>{error && <p className="mt-1 max-w-56 break-words text-xs text-destructive">{error}</p>}</td>;
 
   const rows = useMemo(() => {
     const list = [...(q.data ?? [])];
@@ -172,6 +192,7 @@ const CereriRandament = () => {
                     <th className="py-2 pr-3">Data</th><th className="py-2 pr-3">Nume</th><th className="py-2 pr-3">Telefon</th>
                     <th className="py-2 pr-3">Zona</th><th className="py-2 pr-3">Tip apartament</th>
                     <th className="py-2 pr-3">Venit estimat</th><th className="py-2">Sursa</th>
+                    <th className="py-2 pr-3">E-mail</th><th className="py-2 pr-3">WhatsApp Andrei</th><th className="py-2 pr-3">WhatsApp client</th><th className="py-2">Notificări</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -188,6 +209,10 @@ const CereriRandament = () => {
                         <td className="py-2 pr-3">{type}</td>
                         <td className="py-2 pr-3 whitespace-nowrap font-medium">{income(sd)}</td>
                         <td className="py-2"><Badge variant="secondary">{SOURCE_LABEL[r.source ?? ""] ?? r.source}</Badge></td>
+                        {statusCell(r.email_status, r.email_error)}
+                        {statusCell(r.wa_admin_status, r.wa_admin_error)}
+                        {statusCell(r.wa_client_status, r.wa_client_error)}
+                        <td className="py-2"><Button variant="outline" size="icon" className="min-h-12 min-w-12" aria-label={`Retrimite notificările eșuate pentru ${r.name ?? "cerere"}`} title="Retrimite doar notificările eșuate" disabled={!!retrying || ![r.email_status,r.wa_admin_status,r.wa_client_status].some(canRetryNotification)} onClick={() => retry(r.id)}><RefreshCw className={`h-4 w-4 ${retrying === r.id ? "animate-spin" : ""}`} /></Button></td>
                       </tr>
                     );
                   })}

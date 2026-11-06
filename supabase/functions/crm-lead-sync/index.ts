@@ -16,6 +16,7 @@ import { fetchWithRetry } from "../_shared/fetchRetry.ts";
 import { logLeadEvent } from "../_shared/leadEvents.ts";
 import { sendTeamEmail } from "../_shared/teamEmail.ts";
 import { isCalculatorLeadSource } from "../_shared/calculatorLeadFlow.ts";
+import { notificationOutcome } from "../_shared/calculatorNotificationPolicy.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -143,7 +144,7 @@ Deno.serve(async (req) => {
     const isRetry = !!payload?.is_retry;
     const attemptNo = Number((record as { crm_sync_attempts?: number }).crm_sync_attempts ?? 0) + (isRetry ? 1 : 1);
 
-    if (crmUrl) {
+    if (crmUrl && !payload.retry_email) {
       const t0 = Date.now();
       const res = await fetchWithRetry(
         crmUrl,
@@ -182,7 +183,7 @@ Deno.serve(async (req) => {
         actor: "crm-lead-sync",
         metadata: { http_status: res.status || null, is_retry: isRetry, manual: isManual },
       }, admin);
-    } else {
+    } else if (!payload.retry_email) {
       crmError = "CRM_WEBHOOK_URL not configured";
       await logLeadEvent({
         leadId: record.id,
@@ -224,7 +225,13 @@ Deno.serve(async (req) => {
         .limit(1);
       if (recent?.length) skipEmailReason = "cooldown_7d_same_phone";
     }
-    if (isManual && !skipEmailReason) skipEmailReason = "manual_resync";
+    if (isManual && !payload.retry_email && !skipEmailReason) skipEmailReason = "manual_resync";
+    let emailAttempt = 0;
+    if (isCalculatorLead && !skipEmailReason) {
+      const claim = await admin.rpc("claim_calculator_notification", { p_lead_id: record.id, p_channel: "email", p_retry: payload.retry_email === true });
+      emailAttempt = Number(claim.data ?? 0);
+      if (claim.error || !emailAttempt) skipEmailReason = "channel_already_claimed";
+    }
     if (skipEmailReason) {
       emailStored = true; // nu e eșec — nu declanșa retry din cauza e-mailului
       await logLeadEvent({
@@ -240,6 +247,7 @@ Deno.serve(async (req) => {
         ["Nume", record.name],
         ["Telefon", phoneValid ? phoneRaw : "—"],
         ["Email", record.email || "—"],
+        ...(sim.repeat_submission ? [["Cerere", "Calcul nou / Actualizat"] as [string, string]] : []),
         ...(leadTag ? [["Etichetă", leadTag] as [string, string]] : []),
         ["Cartier", crmPayload.lead.neighbourhood || "—"],
         ["Camere", crmPayload.lead.rooms || "—"],
@@ -303,7 +311,13 @@ Deno.serve(async (req) => {
         html,
         leadId: record.id,
         source: "crm-lead-sync",
+        ...(isCalculatorLead ? { idempotencyKey: `calculator-${record.id}-email-${emailAttempt}` } : {}),
       }, admin);
+      if (emailAttempt) await admin.rpc("finish_calculator_notification", {
+        p_lead_id: record.id, p_channel: "email", p_attempt: emailAttempt,
+        p_status: notificationOutcome(mail.status ?? 0, mail.messageId),
+        p_error: mail.sent ? null : mail.error ?? "Unknown result", p_message_id: mail.messageId ?? null,
+      });
       emailSent = mail.sent;
       emailStored = !!mail.storedFallback;
       if (mail.sent) {

@@ -44,6 +44,7 @@ const VALID_SOURCES = [
   "pagina_contact", "apel_2_minute", "evaluare_gratuita", "analiza_anunt",
   "whatsapp_viewing", "calculator_unificat_investitii", "calculator_unificat_oaspeti",
   "calculator_unificat_rapid_investitii",
+  "calculator_unificat_manual", "calculator_unificat_link", "calculator_unificat_foto",
 ];
 
 const handler = async (req: Request): Promise<Response> => {
@@ -61,8 +62,6 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   // Anti-spam: max 5 lead submissions / minute / IP.
-  const limited = applyRateLimit(req, corsHeaders, { maxRequests: 3, windowMs: 60_000 });
-  if (limited) return limited;
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -75,6 +74,24 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const body = await req.json();
+    const calculator = typeof body.source === "string" && body.source.startsWith("calculator_unificat");
+    // Saved calculations are independent requests; no phone/time cooldown.
+    if (!calculator) {
+      const limited = applyRateLimit(req, corsHeaders, { maxRequests: 3, windowMs: 60_000 });
+      if (limited) return limited;
+    }
+    const submissionId = calculator && typeof body.submission_id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.submission_id) ? body.submission_id : null;
+    if (calculator && body.submission_id && !submissionId) return new Response(JSON.stringify({ error: "Invalid submission id" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // Bind a submission ID to its exact data: knowing a UUID never grants a visitor token.
+    const digestBytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(body)));
+    const submissionDigest = Array.from(new Uint8Array(digestBytes), b => b.toString(16).padStart(2, "0")).join("");
+    const replay = async () => {
+      const { data: previous } = await supabase.from("leads").select("id,submission_digest").eq("submission_id", submissionId).maybeSingle();
+      if (!previous) return null;
+      if (previous.submission_digest !== submissionDigest) return new Response(JSON.stringify({ error: "Submission mismatch" }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ success: true, leadId: previous.id, reportToken: await createLeadReportToken(previous.id) }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    };
+    if (submissionId) { const cached = await replay(); if (cached) return cached; }
 
 
 
@@ -182,6 +199,7 @@ const handler = async (req: Request): Promise<Response> => {
         simulation_data: simulationData,
         email,
         message,
+        ...(submissionId ? { submission_id: submissionId, submission_digest: submissionDigest } : {}),
         ...(source === "whatsapp_viewing" ? { crm_status: "nou_necontactat", engagement_status: "new", simulation_data: { ...simulationData, status_label: "Nou - WhatsApp" } } : {}),
       })
       .select("id");
@@ -191,6 +209,7 @@ const handler = async (req: Request): Promise<Response> => {
     let leadId: string | null = insertedLead?.[0]?.id ?? null;
 
     if (error || !leadId) {
+      if (submissionId && error?.code === "23505") { const cached = await replay(); if (cached) return cached; }
       // PGRST116 = 0 rows: the leads_dedupe_upsert trigger found an existing
       // lead (same phone/email), updated it and skipped the insert. That is a
       // SUCCESS for the visitor — recover the existing lead id and continue.
@@ -321,6 +340,16 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    // Start on the server too: closing the browser after save must not lose WhatsApp.
+    if (calculator && leadId) {
+      const work = supabase.functions.invoke("handle-lead-whatsapp", {
+        headers: { "x-webhook-secret": supabaseServiceKey },
+        body: { nume: name, telefon: whatsappNumber, zona: simulationData?.location ?? simulationData?.zone ?? "Timișoara", venit_estimat_min: 0, venit_estimat_max: 0, calculator_kind: simulationData?.calculator_kind ?? "unified", lead_id: leadId },
+      });
+      // @ts-ignore Edge runtime keeps notification work alive after the response.
+      if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(work);
+      else await work;
+    }
     const payload = { success: true, leadId, reportToken: await createLeadReportToken(leadId) };
     await idem.finish(payload);
 

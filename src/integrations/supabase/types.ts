@@ -1482,6 +1482,27 @@ export type Database = {
           },
         ]
       }
+      calculator_wa_receipts: {
+        Row: {
+          error: string | null
+          message_id: string
+          received_at: string
+          status: string
+        }
+        Insert: {
+          error?: string | null
+          message_id: string
+          received_at?: string
+          status: string
+        }
+        Update: {
+          error?: string | null
+          message_id?: string
+          received_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       capi_delivery_log: {
         Row: {
           created_at: string
@@ -3508,9 +3529,13 @@ export type Database = {
           crm_sync_status: string | null
           crm_synced_at: string | null
           email: string | null
+          email_attempts: number
+          email_error: string | null
+          email_message_id: string | null
           email_notification_grade: string | null
           email_notification_sent: boolean
           email_notification_sent_at: string | null
+          email_status: string
           engagement_status: string
           follow_up_date: string | null
           id: string
@@ -3530,9 +3555,19 @@ export type Database = {
           simulation_data: Json | null
           source: string | null
           status_token: string
+          submission_digest: string | null
+          submission_id: string | null
           touch_count: number
           uncontacted_reminder_sent_at: string | null
           updated_at: string
+          wa_admin_attempts: number
+          wa_admin_error: string | null
+          wa_admin_message_id: string | null
+          wa_admin_status: string
+          wa_client_attempts: number
+          wa_client_error: string | null
+          wa_client_message_id: string | null
+          wa_client_status: string
           whatsapp_number: string
         }
         Insert: {
@@ -3553,9 +3588,13 @@ export type Database = {
           crm_sync_status?: string | null
           crm_synced_at?: string | null
           email?: string | null
+          email_attempts?: number
+          email_error?: string | null
+          email_message_id?: string | null
           email_notification_grade?: string | null
           email_notification_sent?: boolean
           email_notification_sent_at?: string | null
+          email_status?: string
           engagement_status?: string
           follow_up_date?: string | null
           id?: string
@@ -3575,9 +3614,19 @@ export type Database = {
           simulation_data?: Json | null
           source?: string | null
           status_token?: string
+          submission_digest?: string | null
+          submission_id?: string | null
           touch_count?: number
           uncontacted_reminder_sent_at?: string | null
           updated_at?: string
+          wa_admin_attempts?: number
+          wa_admin_error?: string | null
+          wa_admin_message_id?: string | null
+          wa_admin_status?: string
+          wa_client_attempts?: number
+          wa_client_error?: string | null
+          wa_client_message_id?: string | null
+          wa_client_status?: string
           whatsapp_number: string
         }
         Update: {
@@ -3598,9 +3647,13 @@ export type Database = {
           crm_sync_status?: string | null
           crm_synced_at?: string | null
           email?: string | null
+          email_attempts?: number
+          email_error?: string | null
+          email_message_id?: string | null
           email_notification_grade?: string | null
           email_notification_sent?: boolean
           email_notification_sent_at?: string | null
+          email_status?: string
           engagement_status?: string
           follow_up_date?: string | null
           id?: string
@@ -3620,9 +3673,19 @@ export type Database = {
           simulation_data?: Json | null
           source?: string | null
           status_token?: string
+          submission_digest?: string | null
+          submission_id?: string | null
           touch_count?: number
           uncontacted_reminder_sent_at?: string | null
           updated_at?: string
+          wa_admin_attempts?: number
+          wa_admin_error?: string | null
+          wa_admin_message_id?: string | null
+          wa_admin_status?: string
+          wa_client_attempts?: number
+          wa_client_error?: string | null
+          wa_client_message_id?: string | null
+          wa_client_status?: string
           whatsapp_number?: string
         }
         Relationships: []
@@ -12774,6 +12837,10 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: boolean
       }
+      claim_calculator_notification: {
+        Args: { p_channel: string; p_lead_id: string; p_retry?: boolean }
+        Returns: number
+      }
       cleanup_capi_delivery_log: { Args: never; Returns: undefined }
       cleanup_old_e2e_runs: { Args: never; Returns: number }
       cleanup_old_tracking_data: { Args: never; Returns: Json }
@@ -12817,6 +12884,17 @@ export type Database = {
       extract_ro_phone_from_text: { Args: { p_text: string }; Returns: string }
       extract_surface_sqm: { Args: { p_text: string }; Returns: number }
       extract_url_domain: { Args: { p_url: string }; Returns: string }
+      finish_calculator_notification: {
+        Args: {
+          p_attempt: number
+          p_channel: string
+          p_error?: string
+          p_lead_id: string
+          p_message_id?: string
+          p_status: string
+        }
+        Returns: undefined
+      }
       firecrawl_adjust_credits: {
         Args: { _delta: number; _exhausted?: boolean }
         Returns: undefined
@@ -13553,6 +13631,10 @@ export type Database = {
       reconcile_import_pipeline: {
         Args: { _since_hours?: number }
         Returns: Json
+      }
+      record_calculator_wa_receipt: {
+        Args: { p_error?: string; p_message_id: string; p_status: string }
+        Returns: undefined
       }
       record_keyword_outcome: {
         Args: { _found: number; _keyword: string; _platform: string }

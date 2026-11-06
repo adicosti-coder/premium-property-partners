@@ -9,6 +9,8 @@ import { calcLeadAdminUrl } from "../_shared/calculatorLeadTemplates.ts";
 import { getLeadLocationDetails, getLeadPropertyDetails, getLocationLeadMessage } from "./propertyDetails.ts";
 import { appendSocialFollow, runtimeSocialProfiles } from "../_shared/socialFollow.ts";
 import { shouldUseMakeWhatsApp } from "../_shared/calculatorLeadFlow.ts";
+import { verifyLeadReportToken } from "../_shared/leadReportToken.ts";
+import { isInternalCall } from "../_shared/cronAuth.ts";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -54,6 +56,8 @@ const BodySchema = z.object({
   calculator_kind: z.enum(["unified", "investment", "guest", "quick_investment"]).default("unified"),
   lead_tag: z.string().trim().max(40).optional(),
   lead_id: z.string().uuid().optional(),
+  report_token: z.string().length(64).optional(),
+  retry: z.boolean().optional(),
 });
 
 
@@ -75,6 +79,9 @@ Deno.serve(async (req) => {
   const parsed = BodySchema.safeParse(raw);
   if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400);
   const d = parsed.data;
+  const internal = await isInternalCall(req);
+  if (d.retry && !internal) return json({ error: "Forbidden" }, 403);
+  const capability = d.lead_id && d.report_token && await verifyLeadReportToken(d.lead_id, d.report_token);
   if (d.venit_estimat_max < d.venit_estimat_min) return json({ error: "Interval venit invalid" }, 400);
 
   // Trimitere directă prin Meta doar pentru o cerere salvată recent, cu același telefon —
@@ -86,7 +93,7 @@ Deno.serve(async (req) => {
       const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
       const last9 = (s: string) => s.replace(/\D/g, "").slice(-9);
       // Formularul salvează direct (fără id întors), deci găsim cererea după telefon.
-      let query = supabase.from("leads").select("id, name, whatsapp_number, created_at, source, simulation_data");
+      let query = supabase.from("leads").select("id, name, whatsapp_number, created_at, source, simulation_data,submission_id");
       query = d.lead_id
         ? query.eq("id", d.lead_id)
         : query.ilike("whatsapp_number", `%${last9(d.telefon)}`)
@@ -99,7 +106,23 @@ Deno.serve(async (req) => {
         storedCalculatorData = (lead.simulation_data ?? {}) as Record<string, unknown>;
       }
       const fresh = lead && Date.now() - new Date(lead.created_at).getTime() < 15 * 60_000;
-      if (lead && fresh && last9(lead.whatsapp_number ?? "") === last9(d.telefon)) {
+      if (lead && (internal || capability || fresh) && last9(lead.whatsapp_number ?? "") === last9(d.telefon)) {
+        // Calculator dispatch uses only stored values, never retry payload figures.
+        if (String(lead.source ?? "").startsWith("calculator_unificat")) {
+          if (lead.submission_id && !internal && !capability) return json({ error: "Visitor token required" }, 403);
+          d.nume = lead.name;
+          d.zona = String(storedCalculatorData.location ?? storedCalculatorData.zone ?? d.zona);
+          d.location_mode = storedCalculatorData.location_mode === "regional" ? "regional" : "local";
+          d.property_type_label = String(storedCalculatorData.property_type_label ?? "Proprietate");
+          d.suprafata_mp = typeof storedCalculatorData.surface_sqm === "number" ? storedCalculatorData.surface_sqm : undefined;
+          d.venit_estimat_min = Number(storedCalculatorData.realtrust_net_min ?? 0);
+          d.venit_estimat_max = Number(storedCalculatorData.realtrust_net_max ?? 0);
+          d.tarif_noapte = Number(storedCalculatorData.nightly_rate ?? 0) || undefined;
+          d.grad_ocupare = typeof storedCalculatorData.occupancy === "number" ? storedCalculatorData.occupancy : undefined;
+          d.chirie_clasica = typeof storedCalculatorData.classic_rent === "number" ? storedCalculatorData.classic_rent : undefined;
+          d.venit_net_realtrust = typeof storedCalculatorData.realtrust_net === "number" ? storedCalculatorData.realtrust_net : undefined;
+          d.scenariu_ajustat = storedCalculatorData.scenario_adjusted === true;
+        }
         if (d.calculator_kind === "unified") {
           const loc = getLeadLocationDetails(d);
           const label = d.property_type_label ?? d.tip_proprietate ?? "Proprietate";
@@ -111,7 +134,7 @@ Deno.serve(async (req) => {
             classicRent: d.chirie_clasica ?? null,
             netMid: d.venit_net_realtrust ?? Math.round((d.venit_estimat_min + d.venit_estimat_max) / 2),
             adjusted: d.scenariu_ajustat ?? null,
-          });
+          }, d.retry === true);
         } else {
           const expected = {
             investment: { source: "calculator_unificat_investitii", tag: "[Lead Investitor]" },
@@ -130,9 +153,9 @@ Deno.serve(async (req) => {
               tag: expected.tag,
               name: String(lead.name ?? d.nume),
               phone: toIntl(d.telefon),
-              summary: String(storedCalculatorData.admin_summary),
+              summary: `${storedCalculatorData.repeat_submission ? "Calcul nou / Actualizat · " : ""}${String(storedCalculatorData.admin_summary)}`,
               visitorNextStep: String(storedCalculatorData.visitor_next_step ?? "Andrei revine cu detaliile cererii."),
-            });
+            }, d.retry === true);
           } else {
             console.warn(`handle-lead-whatsapp: stored calculator mismatch for lead ${lead.id}`);
           }
@@ -146,7 +169,7 @@ Deno.serve(async (req) => {
     }
   }
 
-  if (!shouldUseMakeWhatsApp(d.calculator_kind)) {
+  if (!shouldUseMakeWhatsApp(d.calculator_kind) || String(d.sursa ?? "").startsWith("calculator_unificat") || Object.keys(storedCalculatorData).length > 0) {
     return json({ ok: true, webhook: "skipped_direct_meta", delivery: direct });
   }
 

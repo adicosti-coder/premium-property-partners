@@ -48,6 +48,7 @@
 
 - Management calculators use the shared commercial-policy helper with channel fees and utilities explicit and cleaning separate — prevents gross/net commission drift.
 - Additional calculator leads share `CalculatorLeadForm`, the `calculator_unificat*` source prefix and direct Meta/CRM delivery, bypassing legacy alerts and Make WhatsApp — prevents duplicate notifications while preserving each new calculation.
+- Calculator submissions use a payload-bound stable submission UUID; channel sends atomically claim per-lead state and only definitive failures permit admin retry, while capability-scoped polling confirms admin delivery from signed callbacks — prevents duplicate saves, uncertain resends and false receipt promises.
 - Homepage calculator anchors stay outside lazy boundaries; both hash aliases and CTAs force loading and wait for the tool's step-independent readiness marker before scrolling — prevents jumps to placeholders and broken navigation after step 1.
 - Viewing requests persist through the protected lead endpoint before opening WhatsApp or emitting Lead; failures produce neither chat navigation nor conversion — prevents false conversions.
 - Prerendered HTML ships one static Romanian canonical that the global route Helmet emitter replaces on mount; singular complex routes have a client fallback to plural — prevents duplicate canonicals while server redirects remain hosting-owned.
