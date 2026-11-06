@@ -14,7 +14,7 @@ interface StayCalculatorProps {
 }
 
 const DISCOUNT_PERCENT = 5;
-const MIN_NIGHTS = 1;
+export const MIN_NIGHTS = 2;
 const MAX_NIGHTS = 30;
 
 const Stepper = ({ label, value, min, max, onChange, icon: Icon, unit }: { label: string; value: number; min: number; max: number; onChange: (n: number) => void; icon: typeof Moon; unit: string }) => (
