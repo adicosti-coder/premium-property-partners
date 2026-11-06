@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { isCalculatorLeadSource, shouldSendLegacyLeadAlert } from "./calculatorLeadFlow.ts";
+import { isCalculatorLeadSource, shouldSendLegacyLeadAlert, shouldUseMakeWhatsApp } from "./calculatorLeadFlow.ts";
 
 test("all calculator sources bypass legacy duplicate alerts", () => {
   for (const source of ["calculator_unificat_manual", "calculator_unificat_investitii", "calculator_unificat_oaspeti", "calculator_unificat_rapid_investitii"]) {
