@@ -109,16 +109,27 @@ const CereriRandament = () => {
     },
     refetchInterval: 10000,
   });
-  const retry = async (id: string) => {
+  const retry = async (id: string, channel: "email" | "whatsapp") => {
     if (retrying) return;
-    setRetrying(id);
+    setRetrying(`${id}:${channel}`);
     try {
-      const { error } = await supabase.functions.invoke("calculator-notifications", { body: { lead_id: id, action: "retry" } });
+      const { error } = await supabase.functions.invoke("calculator-notifications", { body: { lead_id: id, action: "retry", channel } });
       if (error) throw error;
       await q.refetch();
-      toast.success("Stările notificărilor au fost actualizate.");
+      toast.success(channel === "email" ? "Retrimiterea e-mailului a fost procesată." : "Stările WhatsApp au fost actualizate.");
     } catch { toast.error("Nu am putut retrimite notificarea. Reîncarcă stările înainte de o nouă încercare."); }
     finally { setRetrying(null); }
+  };
+  const reload = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    try {
+      const { error } = await supabase.functions.invoke("calculator-email-reconcile", { body: {} });
+      if (error) throw error;
+      await q.refetch();
+      toast.success("Stările de livrare au fost actualizate.");
+    } catch { toast.error("Nu am putut verifica acum stările e-mailurilor."); }
+    finally { setRefreshing(false); }
   };
   const labels: Record<string, string> = { pending: "În așteptare", sending: "În procesare", accepted: "Acceptat de serviciu", delivered: "Livrat", read: "Citit", failed: "Eșuat", unknown: "Livrare necunoscută" };
   const statusCell = (state: string, error: string | null) => <td className="py-2 pr-3 min-w-36"><Badge variant={state === "failed" ? "destructive" : "outline"}>{labels[state] ?? state}</Badge>{error && <p className="mt-1 max-w-56 break-words text-xs text-destructive">{error}</p>}</td>;

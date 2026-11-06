@@ -87,14 +87,12 @@ const DeferredHomeSEO = ({ language }: { language: string }) => {
     };
   }
 
-  // LodgingBusiness data is already in homepageSchemas[0] via generateHomepageSchemas
-  // Add sameAs and openingHours to the main schema instead of duplicating
-  if (homepageSchemas.length > 0) {
-    const mainSchema = homepageSchemas[0] as Record<string, unknown>;
-    mainSchema.sameAs = [...BRAND.sameAs];
-    mainSchema.openingHours = "Mo-Su 00:00-24:00";
-    mainSchema.currenciesAccepted = "EUR";
-    mainSchema.priceRange = "€€";
+  // Enrich only the lodging entity; RealEstateAgent keeps its own identity.
+  if (lodgingSchema) {
+    lodgingSchema.sameAs = [...BRAND.sameAs];
+    lodgingSchema.openingHours = "Mo-Su 00:00-24:00";
+    lodgingSchema.currenciesAccepted = "EUR";
+    lodgingSchema.priceRange = "€€";
   }
 
   // RealEstateAgent & Organization schemas are now injected globally by

@@ -21,13 +21,14 @@ Deno.serve(async req => {
   const { data: l, error } = await sb.from("leads").select("*").eq("id", b.lead_id).like("source", "calculator_unificat%").maybeSingle();
   if (error || !l) return json({ error: "Not found" }, 404);
   if (b.action === "retry") {
-    // Both endpoints re-read stored data and atomically claim only definitively failed channels.
+    // Re-read stored data and claim only the requested, definitively failed channel.
     const sd = l.simulation_data ?? {};
-    if (l.email_status === "failed") {
+    const channels = failedNotificationChannels(l, b.channel);
+    if (channels.email) {
       const result = await sb.functions.invoke("crm-lead-sync", { headers: { "x-webhook-secret": key }, body: { lead_id: l.id, manual: true, retry_email: true } });
       if (result.error) return json({ error: "Email retry failed" }, 502);
     }
-    if (l.wa_admin_status === "failed" || l.wa_client_status === "failed") {
+    if (channels.whatsapp) {
       const result = await sb.functions.invoke("handle-lead-whatsapp", {
         headers: { "x-webhook-secret": key },
         body: { nume: l.name, telefon: l.whatsapp_number, zona: sd.location ?? sd.zone ?? "Timișoara", venit_estimat_min: sd.realtrust_net_min ?? 0, venit_estimat_max: sd.realtrust_net_max ?? 0, calculator_kind: sd.calculator_kind ?? "unified", lead_id: l.id, retry: true },
