@@ -1,8 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
+import { X, MessageCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 /**
- * Inline calculator popup – migrated from index.html to reduce initial HTML parse time.
- * Shows after 30s or on exit-intent (desktop mouse leaves viewport).
+ * Inline investor calculator popup, opened from the FAB menu.
+ * Dedicated formula kept: chirie × (12 − luni libere) × 0.95.
  */
 const InlineCalculatorPopup = () => {
   const [visible, setVisible] = useState(false);
@@ -16,72 +20,82 @@ const InlineCalculatorPopup = () => {
   const yieldAnual = investitieTotala > 0 ? (venitNetAnual / investitieTotala) * 100 : 0;
   const aniAmortizare = venitNetAnual > 0 ? investitieTotala / venitNetAnual : 0;
 
-  const show = useCallback(() => {
-    if (localStorage.getItem("rt_popup_shown_v2")) return;
-    setVisible(true);
-  }, []);
-
   const close = useCallback(() => {
     setVisible(false);
     localStorage.setItem("rt_popup_shown_v2", "true");
   }, []);
 
-  // Listen for FAB menu trigger instead of auto-showing
   useEffect(() => {
     const handleOpen = () => {
-      if (!localStorage.getItem("rt_popup_shown_v2")) {
-        setVisible(true);
-      }
+      if (!localStorage.getItem("rt_popup_shown_v2")) setVisible(true);
     };
-    window.addEventListener('open-inline-calculator', handleOpen);
-    return () => window.removeEventListener('open-inline-calculator', handleOpen);
+    window.addEventListener("open-inline-calculator", handleOpen);
+    return () => window.removeEventListener("open-inline-calculator", handleOpen);
   }, []);
 
+  useEffect(() => {
+    if (!visible) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [visible, close]);
+
   const contactExpert = () => {
-    const msg = `Bună ziua! Am folosit calculatorul de investiții de pe site.%0A%0ARezultate estimate:%0A- Randament: ${yieldAnual.toFixed(2)}%%0A- Amortizare: ${aniAmortizare.toFixed(1)} ani.%0A%0ADoresc mai multe informații!`;
-    window.open(`https://wa.me/40799069256?text=${msg}`, '_blank', 'noopener,noreferrer');
+    const msg = `Bună ziua! Am folosit calculatorul de investiții de pe site.\n\nRezultate estimate:\n- Randament: ${yieldAnual.toFixed(2)}%\n- Amortizare: ${aniAmortizare.toFixed(1)} ani.\n\nDoresc mai multe informații!`;
+    window.open(`https://wa.me/40799069256?text=${encodeURIComponent(msg)}`, "_blank", "noopener,noreferrer");
   };
 
   if (!visible) return null;
 
+  const num = (id: string, label: string, value: number, set: (n: number) => void) => (
+    <div className="space-y-1.5">
+      <Label htmlFor={id} className="text-xs text-muted-foreground">{label}</Label>
+      <Input id={id} type="number" inputMode="decimal" value={value} onChange={(e) => set(Number(e.target.value) || 0)} className="h-11 bg-background font-semibold tabular-nums text-foreground" />
+    </div>
+  );
+
   return (
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center"
-      style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(5px)" }}
-    >
-      <div className="relative w-[90%] max-w-[550px] rounded-2xl p-8"
-        style={{ background: "#1a1a2e", border: "2px solid #f39c12", boxShadow: "0 20px 50px rgba(0,0,0,0.8)", color: "white" }}>
-        <span className="absolute top-4 right-5 text-3xl font-bold cursor-pointer text-white hover:text-[#f39c12]" onClick={close}>&times;</span>
-        <div className="text-center mb-5">
-          <h2 className="text-[#f39c12] text-[22px] font-bold m-0">Analiză Investiție Imobiliară</h2>
-          <p className="text-[#ccc] text-sm">Vezi randamentul pentru această proprietate:</p>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs text-[#aaa] mb-1">Preț Achiziție (€)</label>
-            <input type="number" value={pret} onChange={e => setPret(+e.target.value)} className="w-full p-2.5 rounded bg-[#0f0f1f] text-white border border-[#333] mb-3" />
-            <label className="block text-xs text-[#aaa] mb-1">Chirie Lunară (€)</label>
-            <input type="number" value={chirie} onChange={e => setChirie(+e.target.value)} className="w-full p-2.5 rounded bg-[#0f0f1f] text-white border border-[#333] mb-3" />
-          </div>
-          <div>
-            <label className="block text-xs text-[#aaa] mb-1">Mobilare/Renovare (€)</label>
-            <input type="number" value={renovare} onChange={e => setRenovare(+e.target.value)} className="w-full p-2.5 rounded bg-[#0f0f1f] text-white border border-[#333] mb-3" />
-            <label className="block text-xs text-[#aaa] mb-1">Grad Ocupare</label>
-            <select value={vacanta} onChange={e => setVacanta(+e.target.value)} className="w-full p-2.5 rounded bg-[#0f0f1f] text-white border border-[#333] mb-3">
-              <option value={1}>11 luni / an</option>
-              <option value={2}>10 luni / an</option>
-              <option value={0}>12 luni / an</option>
-            </select>
-          </div>
-        </div>
-        <div className="mt-4 p-5 rounded-lg text-center" style={{ background: "#252545", borderLeft: "5px solid #f39c12" }}>
-          <span className="text-[13px] text-[#ccc] tracking-wider">RANDAMENT ANUAL (YIELD)</span>
-          <h2 className="text-[42px] text-[#f39c12] font-bold my-1">{yieldAnual.toFixed(2)}%</h2>
-          <p className="text-sm text-[#2ecc71] font-bold m-0">Amortizare în {aniAmortizare.toFixed(1)} ani</p>
-        </div>
-        <button onClick={contactExpert} className="w-full mt-6 py-4 rounded-lg font-bold text-base cursor-pointer transition-colors" style={{ background: "#f39c12", color: "#1a1a2e", border: "none" }}>
-          SOLICITĂ DETALII PRIN WHATSAPP
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-foreground/70 p-4" onClick={close}>
+      <div role="dialog" aria-modal="true" aria-labelledby="inline-calc-title" className="relative w-full max-w-[560px] overflow-hidden rounded-3xl border border-border bg-card shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <button type="button" onClick={close} aria-label="Închide calculatorul" className="absolute right-3 top-3 flex h-12 w-12 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground">
+          <X className="h-5 w-5" aria-hidden="true" />
         </button>
+        <div className="border-b border-border px-6 py-5 pr-16">
+          <p className="text-xs font-semibold uppercase tracking-widest text-primary">Calculator randament · rezultat pe loc</p>
+          <h2 id="inline-calc-title" className="mt-1 font-serif text-xl font-semibold text-foreground">Analiză investiție imobiliară</h2>
+        </div>
+        <div className="grid grid-cols-2 gap-4 px-6 py-5">
+          {num("ic-pret", "Preț achiziție (€)", pret, setPret)}
+          {num("ic-renovare", "Mobilare / renovare (€)", renovare, setRenovare)}
+          {num("ic-chirie", "Chirie lunară (€)", chirie, setChirie)}
+          <div className="space-y-1.5">
+            <span className="text-xs text-muted-foreground" id="ic-luni">Luni închiriate / an</span>
+            <div role="radiogroup" aria-labelledby="ic-luni" className="grid grid-cols-3 gap-1 rounded-xl bg-muted p-1">
+              {[2, 1, 0].map((v) => (
+                <button key={v} type="button" role="radio" aria-checked={vacanta === v} onClick={() => setVacanta(v)} className={`min-h-11 rounded-lg text-sm font-semibold ${vacanta === v ? "bg-background text-primary shadow-sm" : "text-muted-foreground"}`}>
+                  {12 - v}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div aria-live="polite" className="border-t border-border bg-muted/40 px-6 py-5">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Randament anual</p>
+              <p className="font-serif text-4xl font-semibold tabular-nums text-primary">{yieldAnual.toFixed(2)}%</p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground">Amortizare</p>
+              <p className="text-xl font-semibold tabular-nums text-foreground">{aniAmortizare.toFixed(1)} ani</p>
+            </div>
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">Venit net anual estimat: {Math.round(venitNetAnual).toLocaleString("ro-RO")} €</p>
+          <Button onClick={contactExpert} size="lg" className="mt-4 min-h-12 w-full">
+            <MessageCircle className="mr-2 h-4 w-4" aria-hidden="true" />
+            Solicită detalii pe WhatsApp
+          </Button>
+        </div>
       </div>
     </div>
   );
