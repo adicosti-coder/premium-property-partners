@@ -50,7 +50,7 @@ const InlineCalculatorPopup = () => {
   const num = (id: string, label: string, value: number, set: (n: number) => void) => (
     <div className="space-y-1.5">
       <Label htmlFor={id} className="text-xs text-muted-foreground">{label}</Label>
-      <Input id={id} type="number" inputMode="decimal" value={value} onChange={(e) => set(Number(e.target.value) || 0)} className="h-11 font-semibold tabular-nums" />
+      <Input id={id} type="number" inputMode="decimal" value={value} onChange={(e) => set(Number(e.target.value) || 0)} className="h-11 bg-background font-semibold tabular-nums text-foreground" />
     </div>
   );
 

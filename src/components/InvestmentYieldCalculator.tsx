@@ -14,7 +14,7 @@ const Field = ({ id, label, value, onChange, min, max, step, suffix }: { id: str
     <div className="flex items-center justify-between gap-3">
       <Label htmlFor={id} className="text-sm font-medium text-foreground">{label}</Label>
       <div className="flex items-center gap-1">
-        <Input id={id} type="number" inputMode="decimal" value={value} min={min} onChange={(e) => onChange(Number(e.target.value) || 0)} className="h-10 w-28 text-right font-semibold tabular-nums" />
+        <Input id={id} type="number" inputMode="decimal" value={value} min={min} onChange={(e) => onChange(Number(e.target.value) || 0)} className="h-10 w-28 bg-background text-right font-semibold tabular-nums text-foreground" />
         <span className="w-6 text-sm text-muted-foreground">{suffix}</span>
       </div>
     </div>
@@ -135,7 +135,7 @@ const InvestmentYieldCalculator = () => {
                   </div>
                 ))}
                 <div className="flex justify-between gap-3 border-t border-border pt-2 font-semibold">
-                  <dt>{ro ? "Profit net anual" : "Net annual profit"}</dt>
+                  <dt className="text-foreground">{ro ? "Profit net anual" : "Net annual profit"}</dt>
                   <dd className="tabular-nums text-primary">{fmt(venitAnual)} €</dd>
                 </div>
               </dl>
