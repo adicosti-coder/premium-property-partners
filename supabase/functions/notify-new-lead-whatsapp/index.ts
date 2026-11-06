@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
 
     // Calculatoarele au un singur canal WhatsApp: handle-lead-whatsapp trimite
     // alerta Meta după salvare. Alerta generică ar dubla mesajul către Andrei.
-    if (record.source?.startsWith("calculator_unificat")) {
+    if (!shouldSendLegacyLeadAlert(record.source)) {
       return new Response(JSON.stringify({ skipped: true, reason: "calculator_direct_flow" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

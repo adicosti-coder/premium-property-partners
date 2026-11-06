@@ -54,6 +54,7 @@ export function CalculatorLeadForm({ request, triggerLabel, title, description, 
     setErrors({});
     setSubmitting(true);
     setDelivery("pending");
+    let savedLeadId: string | null = null;
     try {
       const values = parsed.data;
       const simulationData = withCampaignTracking({
@@ -81,6 +82,7 @@ export function CalculatorLeadForm({ request, triggerLabel, title, description, 
         toast.error("Nu am putut salva cererea. Verifică datele și încearcă din nou.");
         return;
       }
+      savedLeadId = saved.leadId;
 
       const { data, error } = await supabase.functions.invoke("handle-lead-whatsapp", {
         body: {
@@ -99,7 +101,9 @@ export function CalculatorLeadForm({ request, triggerLabel, title, description, 
       const visitorStatus = !error && (data as { delivery?: { visitor?: { status?: string } } } | null)?.delivery?.visitor?.status;
       setDelivery(visitorStatus === "sent" ? "sent" : "unconfirmed");
     } catch {
-      toast.error("Conexiunea a eșuat. Cererea nu a fost confirmată; încearcă din nou.");
+      // După salvare nu invităm vizitatorul să retrimită: ar crea un calcul nou.
+      if (savedLeadId) setDelivery("unconfirmed");
+      else toast.error("Conexiunea a eșuat. Cererea nu a fost confirmată; încearcă din nou.");
     } finally {
       setSubmitting(false);
     }

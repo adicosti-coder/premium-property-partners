@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
       : record.simulation_data ?? {}) as Record<string, unknown>;
 
     const leadTag = typeof sim.lead_tag === "string" ? sim.lead_tag.trim().slice(0, 40) : "";
-    const isCalculatorLead = record.source?.startsWith("calculator_unificat") ?? false;
+    const isCalculatorLead = isCalculatorLeadSource(record.source);
 
     const str = (v: unknown) =>
       typeof v === "string" && v.trim() ? v.trim().slice(0, 200)
