@@ -28,6 +28,20 @@ test("alert carries nightly rate, occupancy, difference and adjusted mark", () =
   expect(calcAlertParamsV2({ ...s, netMid: 400 })[7]).toBe("−100 €/lună");
 });
 
+test("generic templates carry the calculator tag and complete summary", () => {
+  const generic = {
+    leadId: s.leadId, calculatorName: "Calculator Investiții", tag: "[Lead Investitor]",
+    name: s.name, phone: s.phone, summary: "Preț achiziție: 120.000 € • Randament net: 5,52%",
+    visitorNextStep: "Andrei verifică ipotezele.",
+  };
+  expect(calcAlertParamsGeneric(generic)).toHaveLength(count(CALC_ALERT_TEMPLATE_GENERIC.body));
+  expect(CALC_ALERT_TEMPLATE_GENERIC.example).toHaveLength(6);
+  expect(calcVisitorParamsGeneric(generic)).toHaveLength(count(CALC_VISITOR_TEMPLATE_GENERIC.body));
+  expect(CALC_VISITOR_TEMPLATE_GENERIC.example).toHaveLength(4);
+  expect(calcAlertParamsGeneric(generic)[1]).toBe("[Lead Investitor]");
+  expect(calcAlertParamsGeneric(generic)[4]).toContain("120.000 €");
+});
+
 test("no param is empty or contains newlines (Meta validation)", () => {
   for (const p of [...calcAlertParamsV2({ ...s, nightlyRate: null, occupancy: null, classicRent: null, name: "A\nB" }), ...calcVisitorParamsV2(s)]) {
     expect(p.length).toBeGreaterThan(0);

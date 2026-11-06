@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
   const base = `https://graph.facebook.com/${WA_API_VERSION}/${WA_BUSINESS_ACCOUNT_ID}/message_templates`;
   const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
   const results: unknown[] = [];
-  for (const t of [CALC_ALERT_TEMPLATE, CALC_VISITOR_TEMPLATE, CALC_ALERT_TEMPLATE_V2, CALC_VISITOR_TEMPLATE_V2]) {
+  for (const t of [CALC_ALERT_TEMPLATE, CALC_VISITOR_TEMPLATE, CALC_ALERT_TEMPLATE_V2, CALC_VISITOR_TEMPLATE_V2, CALC_ALERT_TEMPLATE_GENERIC, CALC_VISITOR_TEMPLATE_GENERIC]) {
     const check = await fetch(`${base}?fields=name,status,language,category,rejected_reason&name=${t.name}&limit=50`, { headers });
     if (!check.ok) { const d = await check.text(); return json({ error: "Meta request failed", status: check.status, details: d }, check.status); }
     const existing = (await check.json()).data?.find((x: any) => x.name === t.name && x.language === CALC_LANG);
