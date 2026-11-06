@@ -1,10 +1,11 @@
 # Roadmap — optimizări sistem analiză și administrare
 
 ## Lead-uri automate pentru toate calculatoarele — 6 noiembrie
-- [ ] Formular comun pentru Investiții, Oaspeți și widgetul rapid, după rezultat, cu nume, telefon și e-mail opțional
-- [ ] Aceeași salvare server, e-mail Andrei/Admin și WhatsApp Meta; etichetele și toate cifrele cerute păstrate exact
-- [ ] O singură notificare per canal și cerere; calculele noi nu sunt blocate de deduplicarea veche
-- [ ] Teste de payload și flux, verificare browser, funcții activate și probă reală controlată cu ștergerea rândului de test
+- [x] Formular comun pentru Investiții, Oaspeți și widgetul rapid, după rezultat, cu nume, telefon și e-mail opțional
+- [x] Aceeași salvare server, e-mail Andrei/Admin și WhatsApp Meta; etichetele și toate cifrele cerute păstrate exact
+- [x] O singură notificare per canal și cerere; calculele noi nu sunt blocate de deduplicarea veche
+- [x] 486 teste, verificare browser pentru toate cele trei fluxuri, funcții activate și probă reală Investiții cu alertă Admin Meta trimisă și rând de test șters
+- [ ] Confirmarea WhatsApp a vizitatorului pentru cele trei formulare noi — așteaptă aprobarea Meta a șablonului `confirmare_lead_calculator_realtrust` (în prezent PENDING)
 
 ## Revenire la calculator după primul pas — 5 noiembrie
 - [x] Reprodus blocajul din pasul 2; condiția de derulare folosește un indicator permanent, independent de pas
