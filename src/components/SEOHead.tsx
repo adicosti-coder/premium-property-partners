@@ -337,51 +337,46 @@ const SEOHead = ({
     validateJsonLdConsistency(finalJsonLd, `SEOHead(${finalUrl})`);
   }
 
-  // Keep static shell meta tags in sync after hydration. The original index.html
-  // meta tags remain in <head>; if we only add Helmet tags, crawlers can read the
-  // stale homepage description first and the SEO audit appears "stuck".
+  // Keep static shell meta tags in sync after hydration. Helmet commits
+  // asynchronously: wait for its owned nodes instead of creating unmanaged
+  // duplicates during the same frame.
   useEffect(() => {
     if (typeof document === "undefined") return;
-    // Helmet commits asynchronously; synchronize only after its managed tags exist.
-    const timer = window.setTimeout(() => {
-    const syncMeta = (selector: string, attrs: Record<string, string>, content: string) => {
-      const nodes = Array.from(document.head.querySelectorAll<HTMLMetaElement>(selector));
-      const targets = nodes.length ? nodes : [document.createElement("meta")];
-      targets.forEach((node) => {
-        Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
-        node.setAttribute("content", content);
-        if (!node.parentElement) document.head.appendChild(node);
-      });
-      // Deduplicate: keep the react-helmet-managed tag when present (it owns
-      // re-renders), otherwise the first one, and drop the leftovers so audits
-      // never see two tags for the same meta name/property.
-      if (targets.length > 1) {
-        const keep = targets.find((n) => n.hasAttribute("data-rh")) ?? targets[0];
-        targets.forEach((node) => {
-          if (node !== keep) node.remove();
-        });
+    let cancelled = false;
+    let timer: number | undefined;
+    const syncManagedMeta = (attempts = 0) => {
+      if (cancelled) return;
+      const managedDescription = document.head.querySelector('meta[name="description"][data-rh]');
+      if (!managedDescription && attempts < 20) {
+        timer = window.setTimeout(() => syncManagedMeta(attempts + 1), 10);
+        return;
       }
+      const syncMeta = (selector: string, content: string) => {
+        const nodes = Array.from(document.head.querySelectorAll<HTMLMetaElement>(selector));
+        const managed = nodes.find((node) => node.hasAttribute("data-rh"));
+        if (!managed) return;
+        managed.setAttribute("content", content);
+        nodes.forEach((node) => { if (node !== managed) node.remove(); });
+      };
+
+      document.title = finalTitle;
+      syncMeta('meta[name="title"]', finalTitle);
+      syncMeta('meta[name="description"]', finalDescription);
+      syncMeta('meta[property="og:title"]', finalTitle);
+      syncMeta('meta[property="og:description"]', finalSocialDescription);
+      syncMeta('meta[name="twitter:title"]', finalTitle);
+      syncMeta('meta[name="twitter:description"]', finalSocialDescription);
+      syncMeta('meta[property="og:url"]', finalUrl);
+      syncMeta('meta[name="twitter:url"]', finalUrl);
+      syncMeta('meta[property="og:image"]', absoluteImage);
+      syncMeta('meta[name="twitter:image"]', absoluteImage);
+      syncMeta('meta[property="og:locale"]', language === "ro" ? "ro_RO" : "en_US");
     };
-
-
-    document.title = finalTitle;
-    syncMeta('meta[name="title"]', { name: "title" }, finalTitle);
-    syncMeta('meta[name="description"]', { name: "description" }, finalDescription);
-    syncMeta('meta[property="og:title"]', { property: "og:title" }, finalTitle);
-    syncMeta('meta[property="og:description"]', { property: "og:description" }, finalSocialDescription);
-    syncMeta('meta[name="twitter:title"]', { name: "twitter:title" }, finalTitle);
-    syncMeta('meta[name="twitter:description"]', { name: "twitter:description" }, finalSocialDescription);
-    // og:url / og:image must self-reference the current route — the static
-    // shell keeps the homepage values, so crawlers reading the first tag would
-    // attribute this page's preview to "/".
-    syncMeta('meta[property="og:url"]', { property: "og:url" }, finalUrl);
-    syncMeta('meta[name="twitter:url"]', { name: "twitter:url" }, finalUrl);
-    syncMeta('meta[property="og:image"]', { property: "og:image" }, absoluteImage);
-    syncMeta('meta[name="twitter:image"]', { name: "twitter:image" }, absoluteImage);
-    // Single og:locale for the active language (static shell ships ro_RO).
-    syncMeta('meta[property="og:locale"]', { property: "og:locale" }, language === "ro" ? "ro_RO" : "en_US");
-    }, 0);
-    return () => window.clearTimeout(timer);
+    syncManagedMeta();
+    return () => {
+      cancelled = true;
+      if (timer !== undefined) window.clearTimeout(timer);
+    };
   }, [finalTitle, finalDescription, finalSocialDescription, finalUrl, absoluteImage, language]);
 
   return (
