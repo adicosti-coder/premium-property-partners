@@ -50,6 +50,14 @@ Deno.serve(async (req) => {
       ? JSON.parse(record.simulation_data)
       : (record.simulation_data || {});
 
+    // Calculatoarele au un singur canal WhatsApp: handle-lead-whatsapp trimite
+    // alerta Meta după salvare. Alerta generică ar dubla mesajul către Andrei.
+    if (record.source?.startsWith("calculator_unificat")) {
+      return new Response(JSON.stringify({ skipped: true, reason: "calculator_direct_flow" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const phoneClean = fmtPhone(record.whatsapp_number || "");
     const phoneValid = phoneClean.length >= 8 && record.whatsapp_number !== "pending";
 

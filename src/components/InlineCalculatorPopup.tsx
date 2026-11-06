@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { X, MessageCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CalculatorLeadForm } from "@/components/CalculatorLeadForm";
+import { buildQuickInvestmentLeadRequest } from "@/lib/calculatorLeads";
 
 /**
  * Inline investor calculator popup, opened from the FAB menu.

@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { TrendingUp, MessageCircle, Download } from "lucide-react";
+import { TrendingUp, Download } from "lucide-react";
 import { calculateManagedIncome, MANAGEMENT_POLICY } from "@/lib/managementPolicy";
+import { CalculatorLeadForm } from "@/components/CalculatorLeadForm";
+import { buildInvestmentLeadRequest } from "@/lib/calculatorLeads";
 
 const fmt = (n: number) => Math.round(n).toLocaleString("ro-RO");
 

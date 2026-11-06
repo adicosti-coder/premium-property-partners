@@ -5,6 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Property } from "@/data/properties";
+import { CalculatorLeadForm } from "@/components/CalculatorLeadForm";
+import { buildGuestLeadRequest } from "@/lib/calculatorLeads";
 
 interface StayCalculatorProps {
   property: Property;
