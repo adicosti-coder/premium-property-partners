@@ -1,11 +1,13 @@
 # Roadmap — optimizări sistem analiză și administrare
 
 ## Consolidare cap-la-cap — 6 noiembrie, 21:35 UTC
-- [ ] Stări independente e-mail, WhatsApp admin/client și retrimitere sigură pe același ID
-- [ ] Confirmare vizitator imediat după salvare, apoi doar la livrare admin verificată
-- [ ] ID stabil pentru reluări întrerupte; calcule noi consecutive fără deduplicare temporală
-- [ ] Stabilizare test intermitent și rulări complete repetate
-- [ ] Activare funcții și verificare flux real autentificat; interfața rămâne în preview până la publicare
+- [x] Stări independente e-mail, WhatsApp admin/client și retrimitere pe același ID; succes/rezultat necunoscut nu sunt retrimise
+- [x] Confirmare vizitator imediat după salvare, apoi doar la livrare admin verificată în browser
+- [x] ID stabil verificat prin două reluări paralele; calcul nou consecutiv salvat distinct și livrat fără apel suplimentar din browser
+- [x] Timere controlate în testele de așteptare; 500 teste trecute în două rulări complete consecutive
+- [x] Funcții activate și două cereri reale păstrate; WhatsApp admin/client livrate, câte o trimitere per canal; e-mail acceptat, primirea în inbox neverificată
+- [ ] Publicarea interfeței și verificare pe realtrust.ro — necesită aprobarea publicării
+- [ ] Probă externă de retrimitere după eșec real — nu există cerere nouă eșuată disponibilă; nu s-a provocat artificial un eșec extern
 
 ## 6 noiembrie seara
 - [x] Verificare browser: Manual / Import link / Analiză foto

@@ -153,7 +153,7 @@ Deno.serve(async (req) => {
               tag: expected.tag,
               name: String(lead.name ?? d.nume),
               phone: toIntl(d.telefon),
-              summary: String(storedCalculatorData.admin_summary),
+              summary: `${storedCalculatorData.repeat_submission ? "Calcul nou / Actualizat · " : ""}${String(storedCalculatorData.admin_summary)}`,
               visitorNextStep: String(storedCalculatorData.visitor_next_step ?? "Andrei revine cu detaliile cererii."),
             }, d.retry === true);
           } else {
