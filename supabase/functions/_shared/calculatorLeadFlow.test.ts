@@ -13,3 +13,11 @@ test("ordinary forms keep their existing notifications", () => {
   expect(shouldSendLegacyLeadAlert("pagina_contact")).toBe(true);
   expect(shouldSendLegacyLeadAlert(null)).toBe(true);
 });
+
+test("additional calculators never relay a second WhatsApp through Make", () => {
+  expect(shouldUseMakeWhatsApp("investment")).toBe(false);
+  expect(shouldUseMakeWhatsApp("guest")).toBe(false);
+  expect(shouldUseMakeWhatsApp("quick_investment")).toBe(false);
+  expect(shouldUseMakeWhatsApp("unified")).toBe(true);
+  expect(shouldUseMakeWhatsApp(null)).toBe(true);
+});

@@ -8,6 +8,7 @@ import { notifyAdditionalCalculatorLead, notifyCalculatorLead } from "./metaNoti
 import { calcLeadAdminUrl } from "../_shared/calculatorLeadTemplates.ts";
 import { getLeadLocationDetails, getLeadPropertyDetails, getLocationLeadMessage } from "./propertyDetails.ts";
 import { appendSocialFollow, runtimeSocialProfiles } from "../_shared/socialFollow.ts";
+import { shouldUseMakeWhatsApp } from "../_shared/calculatorLeadFlow.ts";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -143,6 +144,10 @@ Deno.serve(async (req) => {
     } catch (e) {
       console.error("handle-lead-whatsapp direct send failed", e);
     }
+  }
+
+  if (!shouldUseMakeWhatsApp(d.calculator_kind)) {
+    return json({ ok: true, webhook: "skipped_direct_meta", delivery: direct });
   }
 
   const webhookUrl = Deno.env.get("MAKE_WHATSAPP_WEBHOOK_URL");
