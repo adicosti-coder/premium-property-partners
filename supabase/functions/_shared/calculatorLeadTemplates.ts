@@ -132,3 +132,63 @@ export function calcVisitorParamsV2(s: CalcLeadSummary): string[] {
     cleanParam(fmtOccupancy(s.occupancy), 10), cleanParam(fmtDiff(s.netMid, s.classicRent), 30),
   ];
 }
+
+// ── Format comun pentru Investiții, Oaspeți și widgetul rapid ──────────────
+export const CALC_ALERT_TEMPLATE_GENERIC = {
+  name: "alerta_lead_calculator_realtrust",
+  body: [
+    "Cerere nouă din {{1}}.",
+    "Etichetă: {{2}}",
+    "Client: {{3}}",
+    "Telefon: {{4}}",
+    "",
+    "Rezumat: {{5}}",
+    "",
+    "Vezi cererea completă: {{6}}",
+  ].join("\n"),
+  example: [
+    "Calculator Investiții — Randament la Cumpărare", "[Lead Investitor]", "Ion Popescu", "40722123456",
+    "Preț achiziție: 120.000 € • Mobilare/renovare: 8.000 € • Randament net: 5,52% • Profit la 10 ani: 70.656 € • Chirie estimată: 633 €/lună",
+    "https://realtrust.ro/admin/cereri-randament?lead=00000000-0000-0000-0000-000000000000",
+  ],
+};
+
+export const CALC_VISITOR_TEMPLATE_GENERIC = {
+  name: "confirmare_lead_calculator_realtrust",
+  body: [
+    "Bună ziua, {{1}}! Am primit cererea dumneavoastră din {{2}}.",
+    "",
+    "Rezumat: {{3}}",
+    "",
+    "{{4}}",
+  ].join("\n"),
+  example: [
+    "Ion", "Calculator Oaspeți — Preț Cazare",
+    "Apartament: NordOne • Sejur: 4 nopți • Oaspeți: 2 • Total direct (DIRECT5): 324 € • Booking.com: 340 €",
+    "Andrei verifică disponibilitatea și confirmă oferta aici pe WhatsApp. Rezervarea nu este finalizată automat.",
+  ],
+};
+
+export type GenericCalcLeadSummary = {
+  leadId: string;
+  calculatorName: string;
+  tag: string;
+  name: string;
+  phone: string;
+  summary: string;
+  visitorNextStep: string;
+};
+
+export function calcAlertParamsGeneric(s: GenericCalcLeadSummary): string[] {
+  return [
+    cleanParam(s.calculatorName, 100), cleanParam(s.tag, 40), cleanParam(s.name, 80),
+    cleanParam(s.phone, 20), cleanParam(s.summary, 700), calcLeadAdminUrl(s.leadId),
+  ];
+}
+
+export function calcVisitorParamsGeneric(s: GenericCalcLeadSummary): string[] {
+  return [
+    cleanParam(s.name.split(/\s+/)[0], 40), cleanParam(s.calculatorName, 100),
+    cleanParam(s.summary, 700), cleanParam(s.visitorNextStep, 300),
+  ];
+}
