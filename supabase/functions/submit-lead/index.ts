@@ -62,8 +62,6 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   // Anti-spam: max 5 lead submissions / minute / IP.
-  const limited = applyRateLimit(req, corsHeaders, { maxRequests: 3, windowMs: 60_000 });
-  if (limited) return limited;
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -77,6 +75,11 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const body = await req.json();
     const calculator = typeof body.source === "string" && body.source.startsWith("calculator_unificat");
+    // Saved calculations are independent requests; no phone/time cooldown.
+    if (!calculator) {
+      const limited = applyRateLimit(req, corsHeaders, { maxRequests: 3, windowMs: 60_000 });
+      if (limited) return limited;
+    }
     const submissionId = calculator && typeof body.submission_id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.submission_id) ? body.submission_id : null;
     if (calculator && body.submission_id && !submissionId) return new Response(JSON.stringify({ error: "Invalid submission id" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     // Bind a submission ID to its exact data: knowing a UUID never grants a visitor token.
