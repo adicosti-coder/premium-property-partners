@@ -30,13 +30,18 @@ async function approvedTemplates(token: string): Promise<Set<string>> {
 
 async function reserve(supabase: Client, key: string, retry = false) {
   const [leadId, kind] = key.split(":");
+  const { data: lead } = await supabase.from("leads").select("source").eq("id", leadId).maybeSingle();
+  if (!String(lead?.source ?? "").startsWith("calculator_unificat")) {
+    const { error } = await supabase.from("request_idempotency").insert({ key, scope: "calc-lead-wa", expires_at: new Date(Date.now() + 7 * 864e5).toISOString() });
+    return error ? 0 : -1;
+  }
   const channel = kind === "admin" ? "wa_admin" : "wa_client";
   const { data, error } = await supabase.rpc("claim_calculator_notification", { p_lead_id: leadId, p_channel: channel, p_retry: retry });
   return !error ? Number(data ?? 0) : 0;
 }
 
 async function persist(supabase: Client, leadId: string, channel: string, attempt: number, result: DeliveryResult) {
-  if (!attempt) return;
+  if (attempt <= 0) return;
   await supabase.rpc("finish_calculator_notification", {
     p_lead_id: leadId, p_channel: channel, p_attempt: attempt,
     p_status: result.status === "sent" ? "accepted" : result.status === "failed" || result.status === "skipped" ? "failed" : "unknown",

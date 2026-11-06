@@ -8,7 +8,7 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
-    include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    include: ["src/**/*.{test,spec}.{ts,tsx}", "supabase/functions/handle-lead-whatsapp/sendToMake.test.ts", "supabase/functions/_shared/calculatorNotificationPolicy.test.ts"],
   },
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") },
