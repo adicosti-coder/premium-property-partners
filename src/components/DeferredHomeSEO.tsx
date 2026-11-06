@@ -5,6 +5,7 @@ import { generateHomepageSchemas, generateSpeakableSchema, DatabaseReview } from
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
+import { enrichLodgingBusinessSchema } from "@/utils/lodgingSchema";
 
 const DeferredHomeSEO = ({ language }: { language: string }) => {
   const { data: reviews } = useQuery({
