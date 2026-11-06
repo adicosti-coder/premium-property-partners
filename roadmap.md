@@ -1,5 +1,11 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Lead-uri automate pentru toate calculatoarele — 6 noiembrie
+- [ ] Formular comun pentru Investiții, Oaspeți și widgetul rapid, după rezultat, cu nume, telefon și e-mail opțional
+- [ ] Aceeași salvare server, e-mail Andrei/Admin și WhatsApp Meta; etichetele și toate cifrele cerute păstrate exact
+- [ ] O singură notificare per canal și cerere; calculele noi nu sunt blocate de deduplicarea veche
+- [ ] Teste de payload și flux, verificare browser, funcții activate și probă reală controlată cu ștergerea rândului de test
+
 ## Revenire la calculator după primul pas — 5 noiembrie
 - [x] Reprodus blocajul din pasul 2; condiția de derulare folosește un indicator permanent, independent de pas
 - [x] 38 teste trecute; mobil/desktop: butoane și ambele ancore funcționale în pașii 2 și 3, inclusiv după închiderea dialogului; suprafața păstrată, fără publicare
