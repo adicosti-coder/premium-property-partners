@@ -337,6 +337,16 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    // Start on the server too: closing the browser after save must not lose WhatsApp.
+    if (calculator && leadId) {
+      const work = supabase.functions.invoke("handle-lead-whatsapp", {
+        headers: { "x-webhook-secret": supabaseServiceKey },
+        body: { nume: name, telefon: whatsappNumber, zona: simulationData?.location ?? simulationData?.zone ?? "Timișoara", venit_estimat_min: 0, venit_estimat_max: 0, calculator_kind: simulationData?.calculator_kind ?? "unified", lead_id: leadId },
+      });
+      // @ts-ignore Edge runtime keeps notification work alive after the response.
+      if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(work);
+      else await work;
+    }
     const payload = { success: true, leadId, reportToken: await createLeadReportToken(leadId) };
     await idem.finish(payload);
 

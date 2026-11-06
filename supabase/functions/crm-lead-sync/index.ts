@@ -144,7 +144,7 @@ Deno.serve(async (req) => {
     const isRetry = !!payload?.is_retry;
     const attemptNo = Number((record as { crm_sync_attempts?: number }).crm_sync_attempts ?? 0) + (isRetry ? 1 : 1);
 
-    if (crmUrl) {
+    if (crmUrl && !payload.retry_email) {
       const t0 = Date.now();
       const res = await fetchWithRetry(
         crmUrl,
@@ -183,7 +183,7 @@ Deno.serve(async (req) => {
         actor: "crm-lead-sync",
         metadata: { http_status: res.status || null, is_retry: isRetry, manual: isManual },
       }, admin);
-    } else {
+    } else if (!payload.retry_email) {
       crmError = "CRM_WEBHOOK_URL not configured";
       await logLeadEvent({
         leadId: record.id,
