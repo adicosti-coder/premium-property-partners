@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
       const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
       const last9 = (s: string) => s.replace(/\D/g, "").slice(-9);
       // Formularul salvează direct (fără id întors), deci găsim cererea după telefon.
-      let query = supabase.from("leads").select("id, name, whatsapp_number, created_at, source, simulation_data");
+      let query = supabase.from("leads").select("id, name, whatsapp_number, created_at, source, simulation_data,submission_id");
       query = d.lead_id
         ? query.eq("id", d.lead_id)
         : query.ilike("whatsapp_number", `%${last9(d.telefon)}`)
@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
       if (lead && (internal || capability || fresh) && last9(lead.whatsapp_number ?? "") === last9(d.telefon)) {
         // Calculator dispatch uses only stored values, never retry payload figures.
         if (String(lead.source ?? "").startsWith("calculator_unificat")) {
-          if (!internal && !capability) return json({ error: "Visitor token required" }, 403);
+          if (lead.submission_id && !internal && !capability) return json({ error: "Visitor token required" }, 403);
           d.nume = lead.name;
           d.zona = String(storedCalculatorData.location ?? storedCalculatorData.zone ?? d.zona);
           d.location_mode = storedCalculatorData.location_mode === "regional" ? "regional" : "local";

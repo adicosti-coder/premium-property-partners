@@ -78,7 +78,7 @@ const handler = async (req: Request): Promise<Response> => {
     const body = await req.json();
     const calculator = typeof body.source === "string" && body.source.startsWith("calculator_unificat");
     const submissionId = calculator && typeof body.submission_id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.submission_id) ? body.submission_id : null;
-    if (calculator && !submissionId) return new Response(JSON.stringify({ error: "Missing submission id" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (calculator && body.submission_id && !submissionId) return new Response(JSON.stringify({ error: "Invalid submission id" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     // Bind a submission ID to its exact data: knowing a UUID never grants a visitor token.
     const digestBytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(body)));
     const submissionDigest = Array.from(new Uint8Array(digestBytes), b => b.toString(16).padStart(2, "0")).join("");
