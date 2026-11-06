@@ -145,11 +145,14 @@ const InvestmentYieldCalculator = () => {
                 </div>
               </dl>
 
-              <div className="mt-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
-                <Button onClick={handleWhatsApp} size="lg" className="min-h-12">
-                  <MessageCircle className="mr-2 h-4 w-4" aria-hidden="true" />
-                  {ro ? "Trimite pe WhatsApp" : "Send via WhatsApp"}
-                </Button>
+              <div className="mt-6 grid gap-2">
+                <CalculatorLeadForm
+                  request={leadRequest}
+                  triggerLabel={ro ? "Primește analiza financiară completă pe WhatsApp / E-mail" : "Get the full financial analysis via WhatsApp / Email"}
+                  title={ro ? "Analiza financiară completă" : "Full financial analysis"}
+                  description={ro ? "Lasă datele de contact, iar cifrele calculate ajung la Andrei împreună cu eticheta [Lead Investitor]." : "Leave your contact details and Andrei receives the calculated figures tagged [Lead Investitor]."}
+                  className="min-h-12 w-full whitespace-normal"
+                />
                 <Button onClick={handleDownload} variant="outline" size="lg" className="min-h-12">
                   <Download className="mr-2 h-4 w-4" aria-hidden="true" />
                   {ro ? "Descarcă rezumat" : "Download summary"}

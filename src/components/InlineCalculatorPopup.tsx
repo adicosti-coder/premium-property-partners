@@ -96,10 +96,13 @@ const InlineCalculatorPopup = () => {
             </div>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">Venit net anual estimat: {Math.round(venitNetAnual).toLocaleString("ro-RO")} €</p>
-          <Button onClick={contactExpert} size="lg" className="mt-4 min-h-12 w-full">
-            <MessageCircle className="mr-2 h-4 w-4" aria-hidden="true" />
-            Solicită detalii pe WhatsApp
-          </Button>
+          <CalculatorLeadForm
+            request={leadRequest}
+            triggerLabel="Primește analiza pe WhatsApp / E-mail"
+            title="Analiza investiției tale"
+            description="Trimitem către Andrei exact cifrele introduse, cu eticheta [Lead Rapid Investiții]."
+            className="mt-4 min-h-12 w-full"
+          />
         </div>
       </div>
     </div>

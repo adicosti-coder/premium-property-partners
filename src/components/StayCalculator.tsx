@@ -122,6 +122,14 @@ const StayCalculator = ({ property, onBook }: StayCalculatorProps) => {
           <Calendar className="mr-2 h-4 w-4" aria-hidden="true" />
           {ro ? "Rezervă acum" : "Book now"}
         </Button>
+        <CalculatorLeadForm
+          request={leadRequest}
+          triggerLabel={ro ? "Trimite-mi oferta pe WhatsApp" : "Send me the offer on WhatsApp"}
+          title={ro ? "Oferta ta directă cu −5%" : "Your direct offer with −5%"}
+          description={ro ? "Primești rezumatul pentru apartament, nopți, oaspeți și prețul direct vs. Booking.com. Andrei confirmă disponibilitatea înainte de rezervare." : "Get the apartment, nights, guests and direct vs. Booking.com price summary. Andrei confirms availability before booking."}
+          variant="outline"
+          className="min-h-12 w-full"
+        />
         <p className="text-center text-xs text-muted-foreground">
           {ro ? "Prețurile pot varia în funcție de sezon" : "Prices may vary depending on the season"}
         </p>
