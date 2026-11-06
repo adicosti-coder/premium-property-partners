@@ -1,5 +1,12 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Consolidare livrare și SEO — 6 noiembrie, 22:10 UTC
+- [x] E-mail: webhook Resend semnat, reconciliere orară, pending/delivered/failed și erori; două cereri confirmate `delivered` din Resend
+- [x] Retrimitere e-mail separată de WhatsApp pe același ID; deduplicarea veche nu mai blochează retry-ul, iar semnăturile false sunt respinse
+- [x] SEO: canonical static RO, EN `?lang=en` cu `noindex, follow`, entități JSON-LD distincte și program de hotel doar pe ApArt Hotel
+- [x] 512 teste trecute în două rulari complete; testul SEO stabilizat și verificat în 10 rulari izolate; build OK și browser admin/EN fără erori
+- [ ] Probă de retrimitere după un eșec Resend real — nu există o cerere eșuată disponibilă; nu s-a provocat artificial un eșec extern
+
 ## Consolidare cap-la-cap — 6 noiembrie, 21:35 UTC
 - [x] Stări independente e-mail, WhatsApp admin/client și retrimitere pe același ID; succes/rezultat necunoscut nu sunt retrimise
 - [x] Confirmare vizitator imediat după salvare, apoi doar la livrare admin verificată în browser

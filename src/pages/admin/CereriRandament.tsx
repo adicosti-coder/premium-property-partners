@@ -88,6 +88,7 @@ const CereriRandament = () => {
   const [params] = useSearchParams();
   const selectedId = params.get("lead");
   const [retrying, setRetrying] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
@@ -108,16 +109,27 @@ const CereriRandament = () => {
     },
     refetchInterval: 10000,
   });
-  const retry = async (id: string) => {
+  const retry = async (id: string, channel: "email" | "whatsapp") => {
     if (retrying) return;
-    setRetrying(id);
+    setRetrying(`${id}:${channel}`);
     try {
-      const { error } = await supabase.functions.invoke("calculator-notifications", { body: { lead_id: id, action: "retry" } });
+      const { error } = await supabase.functions.invoke("calculator-notifications", { body: { lead_id: id, action: "retry", channel } });
       if (error) throw error;
       await q.refetch();
-      toast.success("Stările notificărilor au fost actualizate.");
+      toast.success(channel === "email" ? "Retrimiterea e-mailului a fost procesată." : "Stările WhatsApp au fost actualizate.");
     } catch { toast.error("Nu am putut retrimite notificarea. Reîncarcă stările înainte de o nouă încercare."); }
     finally { setRetrying(null); }
+  };
+  const reload = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    try {
+      const { error } = await supabase.functions.invoke("calculator-email-reconcile", { body: {} });
+      if (error) throw error;
+      await q.refetch();
+      toast.success("Stările de livrare au fost actualizate.");
+    } catch { toast.error("Nu am putut verifica acum stările e-mailurilor."); }
+    finally { setRefreshing(false); }
   };
   const labels: Record<string, string> = { pending: "În așteptare", sending: "În procesare", accepted: "Acceptat de serviciu", delivered: "Livrat", read: "Citit", failed: "Eșuat", unknown: "Livrare necunoscută" };
   const statusCell = (state: string, error: string | null) => <td className="py-2 pr-3 min-w-36"><Badge variant={state === "failed" ? "destructive" : "outline"}>{labels[state] ?? state}</Badge>{error && <p className="mt-1 max-w-56 break-words text-xs text-destructive">{error}</p>}</td>;
@@ -176,8 +188,8 @@ const CereriRandament = () => {
             <Button variant="outline" size="sm" onClick={() => setDesc((v) => !v)}>
               <ArrowDownUp className="h-4 w-4 mr-1" />{desc ? "Cele mai noi" : "Cele mai vechi"}
             </Button>
-            <Button variant="outline" size="sm" onClick={() => q.refetch()} aria-label="Reîncarcă">
-              <RefreshCw className={`h-4 w-4 ${q.isFetching ? "animate-spin" : ""}`} />
+            <Button variant="outline" size="sm" onClick={reload} aria-label="Reîncarcă" disabled={refreshing}>
+              <RefreshCw className={`h-4 w-4 ${q.isFetching || refreshing ? "animate-spin" : ""}`} />
             </Button>
           </div>
         </CardHeader>
@@ -209,10 +221,14 @@ const CereriRandament = () => {
                         <td className="py-2 pr-3">{type}</td>
                         <td className="py-2 pr-3 whitespace-nowrap font-medium">{income(sd)}</td>
                         <td className="py-2"><Badge variant="secondary">{SOURCE_LABEL[r.source ?? ""] ?? r.source}</Badge></td>
-                        {statusCell(r.email_status, r.email_error)}
+                        <td className="py-2 pr-3 min-w-36">
+                          <Badge variant={r.email_status === "failed" ? "destructive" : "outline"}>{labels[r.email_status] ?? r.email_status}</Badge>
+                          {r.email_error && <p className="mt-1 max-w-56 break-words text-xs text-destructive">{r.email_error}</p>}
+                          {canRetryNotification(r.email_status) && <Button variant="outline" size="sm" className="mt-2 min-h-12" aria-label={`Retrimite e-mail pentru ${r.name ?? "cerere"}`} disabled={!!retrying} onClick={() => retry(r.id, "email")}><RefreshCw className={`h-4 w-4 ${retrying === `${r.id}:email` ? "animate-spin" : ""}`} />Retrimite e-mail</Button>}
+                        </td>
                         {statusCell(r.wa_admin_status, r.wa_admin_error)}
                         {statusCell(r.wa_client_status, r.wa_client_error)}
-                        <td className="py-2"><Button variant="outline" size="icon" className="min-h-12 min-w-12" aria-label={`Retrimite notificările eșuate pentru ${r.name ?? "cerere"}`} title="Retrimite doar notificările eșuate" disabled={!!retrying || ![r.email_status,r.wa_admin_status,r.wa_client_status].some(canRetryNotification)} onClick={() => retry(r.id)}><RefreshCw className={`h-4 w-4 ${retrying === r.id ? "animate-spin" : ""}`} /></Button></td>
+                        <td className="py-2"><Button variant="outline" size="icon" className="min-h-12 min-w-12" aria-label={`Retrimite WhatsApp eșuat pentru ${r.name ?? "cerere"}`} title="Retrimite doar alertele WhatsApp eșuate" disabled={!!retrying || ![r.wa_admin_status,r.wa_client_status].some(canRetryNotification)} onClick={() => retry(r.id, "whatsapp")}><RefreshCw className={`h-4 w-4 ${retrying === `${r.id}:whatsapp` ? "animate-spin" : ""}`} /></Button></td>
                       </tr>
                     );
                   })}

@@ -5,6 +5,7 @@ import { generateHomepageSchemas, generateSpeakableSchema, DatabaseReview } from
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
+import { enrichLodgingBusinessSchema } from "@/utils/lodgingSchema";
 
 const DeferredHomeSEO = ({ language }: { language: string }) => {
   const { data: reviews } = useQuery({
@@ -74,27 +75,7 @@ const DeferredHomeSEO = ({ language }: { language: string }) => {
   const speakableSchema = generateSpeakableSchema("RealTrust", "https://realtrust.ro", [".page-summary", "h1", "h2", ".faq-section"]);
   const homepageSchemas = [...generateHomepageSchemas(reviews), speakableSchema];
 
-  // Inject real AggregateRating into the first schema (LocalBusiness/LodgingBusiness)
-  if (ratingData && homepageSchemas.length > 0) {
-    const mainSchema = homepageSchemas[0] as Record<string, unknown>;
-    mainSchema.aggregateRating = {
-      "@type": "AggregateRating",
-      "ratingValue": ratingData.ratingValue,
-      "reviewCount": ratingData.reviewCount,
-      "bestRating": "5",
-      "worstRating": "1",
-    };
-  }
-
-  // LodgingBusiness data is already in homepageSchemas[0] via generateHomepageSchemas
-  // Add sameAs and openingHours to the main schema instead of duplicating
-  if (homepageSchemas.length > 0) {
-    const mainSchema = homepageSchemas[0] as Record<string, unknown>;
-    mainSchema.sameAs = [...BRAND.sameAs];
-    mainSchema.openingHours = "Mo-Su 00:00-24:00";
-    mainSchema.currenciesAccepted = "EUR";
-    mainSchema.priceRange = "€€";
-  }
+  enrichLodgingBusinessSchema(homepageSchemas, ratingData, BRAND.sameAs);
 
   // RealEstateAgent & Organization schemas are now injected globally by
   // SEOHead.tsx on every page. DeferredHomeSEO only injects homepage-specific

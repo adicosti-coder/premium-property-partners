@@ -211,7 +211,7 @@ Deno.serve(async (req) => {
       .eq("id", record.id).maybeSingle();
     let skipEmailReason: string | null = null;
     const becameCritical = notifState?.lead_grade === "hot" && notifState?.email_notification_grade !== "hot";
-    if (notifState?.email_notification_sent && !becameCritical) {
+    if (notifState?.email_notification_sent && !becameCritical && !(isCalculatorLead && payload.retry_email)) {
       skipEmailReason = "already_sent_for_lead";
     } else if (phoneValid && !becameCritical && !isCalculatorLead) {
       const since = new Date(Date.now() - COOLDOWN_MS).toISOString();

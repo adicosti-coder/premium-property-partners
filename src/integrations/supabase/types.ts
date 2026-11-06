@@ -1482,6 +1482,45 @@ export type Database = {
           },
         ]
       }
+      calculator_email_receipts: {
+        Row: {
+          error: string | null
+          message_id: string
+          received_at: string
+          status: string
+        }
+        Insert: {
+          error?: string | null
+          message_id: string
+          received_at?: string
+          status: string
+        }
+        Update: {
+          error?: string | null
+          message_id?: string
+          received_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      calculator_email_webhook_config: {
+        Row: {
+          secret_ciphertext: string
+          singleton: boolean
+          updated_at: string
+        }
+        Insert: {
+          secret_ciphertext: string
+          singleton?: boolean
+          updated_at?: string
+        }
+        Update: {
+          secret_ciphertext?: string
+          singleton?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       calculator_wa_receipts: {
         Row: {
           error: string | null
@@ -3536,6 +3575,7 @@ export type Database = {
           email_notification_sent: boolean
           email_notification_sent_at: string | null
           email_status: string
+          email_status_checked_at: string | null
           engagement_status: string
           follow_up_date: string | null
           id: string
@@ -3595,6 +3635,7 @@ export type Database = {
           email_notification_sent?: boolean
           email_notification_sent_at?: string | null
           email_status?: string
+          email_status_checked_at?: string | null
           engagement_status?: string
           follow_up_date?: string | null
           id?: string
@@ -3654,6 +3695,7 @@ export type Database = {
           email_notification_sent?: boolean
           email_notification_sent_at?: string | null
           email_status?: string
+          email_status_checked_at?: string | null
           engagement_status?: string
           follow_up_date?: string | null
           id?: string
@@ -12932,6 +12974,7 @@ export type Database = {
           impressions: number
         }[]
       }
+      get_calculator_email_webhook_secret: { Args: never; Returns: string }
       get_collection_listings_report: {
         Args: { p_collection?: string; p_days?: number }
         Returns: {
@@ -13632,6 +13675,10 @@ export type Database = {
         Args: { _since_hours?: number }
         Returns: Json
       }
+      record_calculator_email_receipt: {
+        Args: { p_error?: string; p_message_id: string; p_status: string }
+        Returns: undefined
+      }
       record_calculator_wa_receipt: {
         Args: { p_error?: string; p_message_id: string; p_status: string }
         Returns: undefined
@@ -13711,6 +13758,10 @@ export type Database = {
       social_property_image_urls: {
         Args: { _property_id: string }
         Returns: string[]
+      }
+      store_calculator_email_webhook_secret: {
+        Args: { p_secret: string }
+        Returns: undefined
       }
       submit_analysis_lead: {
         Args: {

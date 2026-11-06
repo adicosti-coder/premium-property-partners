@@ -843,7 +843,7 @@ function neighborhoodTransactionBlock(zone: string): string {
   `;
 }
 
-function buildStaticRoutes(): PrerenderRoute[] {
+export function buildStaticRoutes(): PrerenderRoute[] {
   const routes: PrerenderRoute[] = [];
 
   // /servicii-imobiliare — pagina pilon pentru intențiile tranzacționale
@@ -899,6 +899,15 @@ function buildStaticRoutes(): PrerenderRoute[] {
     seoBody: HOMEPAGE_AUTHORITY_BODY,
     jsonLd: [{
       '@context': 'https://schema.org',
+      '@type': 'Organization',
+      '@id': `${BASE_URL}/#organization`,
+      name: 'RealTrust',
+      legalName: 'SC Imo Business Centrum SRL',
+      taxID: 'RO14380627',
+      url: `${BASE_URL}/`,
+      department: [{ '@id': `${BASE_URL}/#realestateagent` }, { '@id': `${BASE_URL}/#lodgingbusiness` }],
+    }, {
+      '@context': 'https://schema.org',
       '@type': 'LodgingBusiness',
       '@id': `${BASE_URL}/#lodgingbusiness`,
       name: 'ApArt Hotel Timișoara',
@@ -907,12 +916,13 @@ function buildStaticRoutes(): PrerenderRoute[] {
       telephone: '+40799069256',
       address: { '@type': 'PostalAddress', addressLocality: 'Timișoara', addressRegion: 'Timiș', postalCode: '300125', addressCountry: 'RO' },
       geo: { '@type': 'GeoCoordinates', latitude: 45.7489, longitude: 21.2087 },
-      parentOrganization: { '@id': `${BASE_URL}/#realestateagent` },
+      parentOrganization: { '@id': `${BASE_URL}/#organization` },
       sameAs: ['https://www.instagram.com/ap.art.hotel/'],
     }, {
       '@context': 'https://schema.org',
       '@type': 'RealEstateAgent',
       '@id': `${BASE_URL}/#realestateagent`,
+      parentOrganization: { '@id': `${BASE_URL}/#organization` },
       subOrganization: { '@id': `${BASE_URL}/#lodgingbusiness` },
       name: 'RealTrust',
       legalName: 'SC Imo Business Centrum SRL',
@@ -932,7 +942,6 @@ function buildStaticRoutes(): PrerenderRoute[] {
       priceRange: '$$',
       sameAs: [
         'https://www.facebook.com/realtrust.ro',
-        'https://www.instagram.com/ap.art.hotel/',
         'https://www.google.com/maps/place/RealTrust/data=!4m2!3m1!1s0x40918b091135b1b3:0x714fdcd64f129651',
       ],
     }],
@@ -1735,7 +1744,7 @@ function hasBreadcrumb(jsonLd: PrerenderRoute['jsonLd']): boolean {
   });
 }
 
-function generateHtml(template: string, route: PrerenderRoute, protectedHeadNodes: string[]): string {
+export function generateHtml(template: string, route: PrerenderRoute, protectedHeadNodes: string[]): string {
 
   let html = template.replace(
     /<title>[^<]*<\/title>/,
@@ -1747,17 +1756,19 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
     `<meta name="description" content="${escapeHtml(route.description)}">`
   );
 
-  // No static canonical: static hosting serves the same file for ?lang=en, so a
-  // prerendered canonical would declare the Romanian URL on English pages.
-  // The route Helmet emitter owns the language-specific canonical.
+  // Romanian crawlers receive a canonical in the static document. The same
+  // file can be served for ?lang=en, so an inline head-only switch applies the
+  // approved English self-canonical and noindex policy before React mounts.
   html = html.replace(/<link\b[^>]*rel=["']canonical["'][^>]*>\s*/gi, '');
   html = html.replace(/<link rel="alternate" hreflang="[^"]*" href="[^"]*"\s*\/?>\s*/g, '');
   const roHref = route.canonical.split('?')[0];
   const hreflangTags = [
+    `<link rel="canonical" href="${escapeHtml(roHref)}" />`,
     `<link rel="alternate" hreflang="ro" href="${roHref}" />`,
     `<link rel="alternate" hreflang="x-default" href="${roHref}" />`,
   ].join('\n  ');
-  html = html.replace('</head>', `  ${hreflangTags}\n</head>`);
+  const englishHead = `<script>(function(){if((new URLSearchParams(location.search).get('lang')||'').toLowerCase()==='en'){var c=document.querySelector('link[rel="canonical"]');if(c)c.href=${JSON.stringify(`${roHref}?lang=en`)};var r=document.querySelector('meta[name="robots"]');if(r)r.content='noindex, follow';document.documentElement.lang='en';}})();</script>`;
+  html = html.replace('</head>', `  ${hreflangTags}\n  ${englishHead}\n</head>`);
 
   // Per-route Open Graph / Twitter tags. The static shell ships sitewide
   // values; without this, every prerendered page shares the homepage preview.
