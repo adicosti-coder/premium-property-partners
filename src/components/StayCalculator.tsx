@@ -52,6 +52,13 @@ const StayCalculator = ({ property, onBook }: StayCalculatorProps) => {
   const guestsUnit = ro ? (guests === 1 ? "oaspete" : "oaspeți") : (guests === 1 ? "guest" : "guests");
   const perGuest = Math.round(calculation.directTotal / Math.max(1, guests));
   const directShare = calculation.bookingTotal > 0 ? (calculation.directTotal / calculation.bookingTotal) * 100 : 100;
+  const leadRequest = buildGuestLeadRequest({
+    propertyName: property.name,
+    nights,
+    guests,
+    directTotal: calculation.directTotal,
+    bookingTotal: calculation.bookingTotal,
+  });
 
   return (
     <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-elegant">

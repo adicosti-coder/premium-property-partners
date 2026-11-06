@@ -269,7 +269,9 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // --- Send notification (best-effort, don't block response) ---
-    if (body.send_notification !== false) {
+    // Pentru calculatoare, crm-lead-sync trimite e-mailul complet o singură dată.
+    // Alerta generică ar omite cifrele și ar dubla notificarea.
+    if (body.send_notification !== false && !source.startsWith("calculator_unificat")) {
       try {
         await supabase.functions.invoke("send-lead-notification", {
           body: {

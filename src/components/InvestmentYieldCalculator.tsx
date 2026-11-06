@@ -51,10 +51,13 @@ const InvestmentYieldCalculator = () => {
   const years = useMemo(() => Array.from({ length: 10 }, (_, i) => venitAnual * (i + 1)), [venitAnual]);
   const maxBar = Math.max(investitieTotala, years[9] || 0, 1);
 
-  const handleWhatsApp = useCallback(() => {
-    const msg = `Bună ziua! Am simulat un randament imobiliar pe RealTrust.ro:\n- Randament: ${yieldAnual.toFixed(2)}%\n- Amortizare: ${aniAmortizare.toFixed(1)} ani\n- Pagina: ${window.location.origin}${window.location.pathname}`;
-    window.open(`https://wa.me/40799069256?text=${encodeURIComponent(msg)}`, "_blank", "noopener,noreferrer");
-  }, [yieldAnual, aniAmortizare]);
+  const leadRequest = buildInvestmentLeadRequest({
+    purchasePrice: pret,
+    renovation: renovare,
+    netYieldPct: yieldAnual,
+    annualNet: venitAnual,
+    estimatedRent: managed.ownerIncome,
+  });
 
   const handleDownload = useCallback(() => {
     const text = [

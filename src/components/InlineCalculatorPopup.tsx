@@ -41,10 +41,14 @@ const InlineCalculatorPopup = () => {
     return () => window.removeEventListener("keydown", onKey);
   }, [visible, close]);
 
-  const contactExpert = () => {
-    const msg = `Bună ziua! Am folosit calculatorul de investiții de pe site.\n\nRezultate estimate:\n- Randament: ${yieldAnual.toFixed(2)}%\n- Amortizare: ${aniAmortizare.toFixed(1)} ani.\n\nDoresc mai multe informații!`;
-    window.open(`https://wa.me/40799069256?text=${encodeURIComponent(msg)}`, "_blank", "noopener,noreferrer");
-  };
+  const leadRequest = buildQuickInvestmentLeadRequest({
+    purchasePrice: pret,
+    renovation: renovare,
+    monthlyRent: chirie,
+    monthsRented: 12 - vacanta,
+    annualNet: venitNetAnual,
+    netYieldPct: yieldAnual,
+  });
 
   if (!visible) return null;
 
