@@ -843,7 +843,7 @@ function neighborhoodTransactionBlock(zone: string): string {
   `;
 }
 
-function buildStaticRoutes(): PrerenderRoute[] {
+export function buildStaticRoutes(): PrerenderRoute[] {
   const routes: PrerenderRoute[] = [];
 
   // /servicii-imobiliare — pagina pilon pentru intențiile tranzacționale
@@ -1744,7 +1744,7 @@ function hasBreadcrumb(jsonLd: PrerenderRoute['jsonLd']): boolean {
   });
 }
 
-function generateHtml(template: string, route: PrerenderRoute, protectedHeadNodes: string[]): string {
+export function generateHtml(template: string, route: PrerenderRoute, protectedHeadNodes: string[]): string {
 
   let html = template.replace(
     /<title>[^<]*<\/title>/,
