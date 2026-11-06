@@ -4,7 +4,7 @@ import { enrichLodgingBusinessSchema } from "./lodgingSchema";
 describe("homepage lodging schema", () => {
   it("enriches ApArt Hotel without assigning hotel details to RealEstateAgent", () => {
     const agent = { "@type": "RealEstateAgent", "@id": "https://realtrust.ro/#realestateagent", legalName: "SC Imo Business Centrum SRL" };
-    const hotel = { "@type": "LodgingBusiness", "@id": "https://realtrust.ro/#lodgingbusiness" };
+    const hotel: Record<string, unknown> = { "@type": "LodgingBusiness", "@id": "https://realtrust.ro/#lodgingbusiness" };
 
     enrichLodgingBusinessSchema([agent, hotel], { ratingValue: "4.9", reviewCount: "12" }, ["https://www.instagram.com/ap.art.hotel/"]);
 
