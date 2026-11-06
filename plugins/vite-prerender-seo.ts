@@ -897,10 +897,23 @@ function buildStaticRoutes(): PrerenderRoute[] {
     h1: 'RealTrust Timișoara — Imobiliare, Investiții și Property Management',
     canonical: `${BASE_URL}/`,
     seoBody: HOMEPAGE_AUTHORITY_BODY,
-    jsonLd: {
+    jsonLd: [{
+      '@context': 'https://schema.org',
+      '@type': 'LodgingBusiness',
+      '@id': `${BASE_URL}/#lodgingbusiness`,
+      name: 'ApArt Hotel Timișoara',
+      description: 'Apartamente în regim hotelier în Timișoara, administrate de RealTrust.',
+      url: `${BASE_URL}/cazare`,
+      telephone: '+40799069256',
+      address: { '@type': 'PostalAddress', addressLocality: 'Timișoara', addressRegion: 'Timiș', postalCode: '300125', addressCountry: 'RO' },
+      geo: { '@type': 'GeoCoordinates', latitude: 45.7489, longitude: 21.2087 },
+      parentOrganization: { '@id': `${BASE_URL}/#realestateagent` },
+      sameAs: ['https://www.instagram.com/ap.art.hotel/'],
+    }, {
       '@context': 'https://schema.org',
       '@type': 'RealEstateAgent',
       '@id': `${BASE_URL}/#realestateagent`,
+      subOrganization: { '@id': `${BASE_URL}/#lodgingbusiness` },
       name: 'RealTrust',
       legalName: 'SC Imo Business Centrum SRL',
       taxID: 'RO14380627',
@@ -922,7 +935,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
         'https://www.instagram.com/ap.art.hotel/',
         'https://www.google.com/maps/place/RealTrust/data=!4m2!3m1!1s0x40918b091135b1b3:0x714fdcd64f129651',
       ],
-    },
+    }],
   });
 
   // /cartiere
