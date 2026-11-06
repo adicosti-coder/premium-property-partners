@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 
 const QuickLeadForm = lazy(() => import("@/components/QuickLeadForm"));
-const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
+const UnifiedCalculator = lazy(() => import("@/components/UnifiedCalculator"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 
 interface NeighborhoodFAQ {
@@ -443,9 +443,9 @@ const NeighborhoodCluster = () => {
 
         {/* ROI Calculator */}
         <section className="py-16">
-          <div className="container mx-auto px-6">
+          <div id="calculator" className="container mx-auto max-w-4xl scroll-mt-24 px-4">
             <Suspense fallback={<div className="min-h-[400px]" />}>
-              <ProfitCalculator />
+              <UnifiedCalculator />
             </Suspense>
           </div>
         </section>

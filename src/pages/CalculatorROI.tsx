@@ -3,7 +3,7 @@ import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
-import ROICalculatorWidget from "@/components/ROICalculatorWidget";
+import UnifiedCalculator from "@/components/UnifiedCalculator";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { REAL_ESTATE_AGENT_REF, FINANCIAL_SERVICE_SCHEMA } from "@/lib/orgIdentity";
@@ -128,7 +128,7 @@ const CalculatorROI = () => {
           </div>
 
           <div id="calculator" className="scroll-mt-24">
-            <ROICalculatorWidget />
+            <UnifiedCalculator />
           </div>
 
           <nav aria-label="Cuprins pagină" className="mt-10 rounded-2xl border border-border bg-card/60 p-5">

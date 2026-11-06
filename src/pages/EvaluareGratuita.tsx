@@ -16,7 +16,7 @@ import { neighborhoods } from "@/data/neighborhoods";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { trackConversion, formatPhoneInput } from "@/lib/conversionTracking";
 import { trackSavedOwnerLead } from "@/lib/ownerLeadConversion";
-const OwnerIncomeQuickCalc = lazy(() => import("@/components/OwnerIncomeQuickCalc"));
+const UnifiedCalculator = lazy(() => import("@/components/UnifiedCalculator"));
 
 const EVAL_FAQS = [
   {
@@ -548,7 +548,7 @@ const EvaluareGratuita = () => {
             </Accordion>
           </section>
         </div>
-        <Suspense fallback={null}><OwnerIncomeQuickCalc /></Suspense>
+        <section id="calculator" className="scroll-mt-24 px-4 py-12"><div className="mx-auto max-w-4xl"><Suspense fallback={<div className="min-h-[400px]" />}><UnifiedCalculator /></Suspense></div></section>
       </main>
       <Footer />
     </Suspense>

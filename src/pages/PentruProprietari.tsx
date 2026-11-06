@@ -36,9 +36,7 @@ const OnboardingVideoExplainer = lazy(() => import("@/components/OnboardingVideo
 const TrustBadges = lazy(() => import("@/components/TrustBadges"));
 const FinancialTransparency = lazy(() => import("@/components/FinancialTransparency"));
 const PartnershipTimeline = lazy(() => import("@/components/PartnershipTimeline"));
-const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
-const RentalIncomeCalculator = lazy(() => import("@/components/RentalIncomeCalculator"));
-const AdvancedRentalCalculator = lazy(() => import("@/components/AdvancedRentalCalculator"));
+const UnifiedCalculator = lazy(() => import("@/components/UnifiedCalculator"));
 const HowItWorks = lazy(() => import("@/components/HowItWorks"));
 const WhyUs = lazy(() => import("@/components/WhyUs"));
 const Testimonials = lazy(() => import("@/components/Testimonials"));
@@ -982,15 +980,11 @@ const PentruProprietari = () => {
 
       {/* STEP 2: Calculator - deferred via IntersectionObserver */}
       <div ref={calcSentinel} />
-      <section id="calculator" className="scroll-mt-24">
-        {calcReady && <ProfitCalculator />}
+      <section id="calculator" className="scroll-mt-24 px-4 py-12 md:py-16">
+        <div className="mx-auto max-w-4xl min-h-[400px]">
+          {calcReady && <Suspense fallback={<div className="min-h-[400px]" aria-busy="true" />}><UnifiedCalculator /></Suspense>}
+        </div>
       </section>
-
-      {/* Advanced Rental Calculator (Estimator AI) */}
-      <AdvancedRentalCalculator />
-
-      {/* Rental Income Calculator (Calculator Pro) */}
-      <RentalIncomeCalculator />
 
       {/* STEP 3: Pachete de prețuri — acum că știe potențialul, vede costul */}
       <section className="py-16 bg-gradient-to-br from-primary/5 via-background to-primary/10">
