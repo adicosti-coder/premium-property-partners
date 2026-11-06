@@ -2,6 +2,7 @@
 // every time a new lead is inserted. Triggered from the DB.
 import { isInternalCall } from "../_shared/cronAuth.ts";
 import { fetchWithRetry } from "../_shared/fetchRetry.ts";
+import { shouldSendLegacyLeadAlert } from "../_shared/calculatorLeadFlow.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

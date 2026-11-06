@@ -4,6 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/securityHeaders.ts";
 import { beginIdempotent } from "../_shared/idempotency.ts";
 import { applyRateLimit } from "../_shared/rateLimiter.ts";
+import { shouldSendLegacyLeadAlert } from "../_shared/calculatorLeadFlow.ts";
 
 
 function validateString(value: unknown, maxLength: number): string {

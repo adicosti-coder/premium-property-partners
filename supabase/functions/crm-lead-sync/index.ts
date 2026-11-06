@@ -15,6 +15,7 @@ import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { fetchWithRetry } from "../_shared/fetchRetry.ts";
 import { logLeadEvent } from "../_shared/leadEvents.ts";
 import { sendTeamEmail } from "../_shared/teamEmail.ts";
+import { isCalculatorLeadSource } from "../_shared/calculatorLeadFlow.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
