@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CalculatorLeadForm } from "@/components/CalculatorLeadForm";
 import { buildQuickInvestmentLeadRequest } from "@/lib/calculatorLeads";
+import { consumePendingInlineCalculator, tenYearSeries } from "@/lib/inlineCalculatorTrigger";
 
 /**
  * Inline investor calculator popup, opened from the FAB menu.
@@ -27,9 +28,12 @@ const InlineCalculatorPopup = () => {
   }, []);
 
   useEffect(() => {
-    const handleOpen = () => {
-      if (!localStorage.getItem("rt_popup_shown_v2")) setVisible(true);
+    const handleOpen = (e: Event) => {
+      consumePendingInlineCalculator();
+      const force = (e as CustomEvent<{ force?: boolean }>).detail?.force;
+      if (force || !localStorage.getItem("rt_popup_shown_v2")) setVisible(true);
     };
+    if (consumePendingInlineCalculator()) setVisible(true);
     window.addEventListener("open-inline-calculator", handleOpen);
     return () => window.removeEventListener("open-inline-calculator", handleOpen);
   }, []);
@@ -95,6 +99,26 @@ const InlineCalculatorPopup = () => {
               <p className="text-xl font-semibold tabular-nums text-foreground">{aniAmortizare.toFixed(1)} ani</p>
             </div>
           </div>
+          {(() => {
+            const series = tenYearSeries(venitNetAnual);
+            const max = Math.max(investitieTotala, series[9], 1);
+            const pct = (v: number) => `${Math.max(2, (v / max) * 100)}%`;
+            return (
+              <figure className="mt-4" aria-label={`Venit net cumulat în 10 ani: ${series[9].toLocaleString("ro-RO")} € față de investiția de ${investitieTotala.toLocaleString("ro-RO")} €`}>
+                <div className="relative flex h-20 items-end gap-1" aria-hidden="true">
+                  <div className="pointer-events-none absolute inset-x-0 border-t border-dashed border-foreground/40" style={{ bottom: pct(investitieTotala) }} />
+                  {series.map((v, i) => (
+                    <div key={i} className={`flex-1 rounded-t ${v >= investitieTotala ? "bg-gold" : "bg-primary/70"}`} style={{ height: pct(v) }} title={`Anul ${i + 1}: ${v.toLocaleString("ro-RO")} €`} />
+                  ))}
+                </div>
+                <figcaption className="mt-1.5 flex justify-between text-[11px] text-muted-foreground">
+                  <span>An 1</span>
+                  <span>Linie: investiție {investitieTotala.toLocaleString("ro-RO")} € · 10 ani: {series[9].toLocaleString("ro-RO")} €</span>
+                  <span>An 10</span>
+                </figcaption>
+              </figure>
+            );
+          })()}
           <p className="mt-2 text-xs text-muted-foreground">Venit net anual estimat: {Math.round(venitNetAnual).toLocaleString("ro-RO")} €</p>
           <CalculatorLeadForm
             request={leadRequest}
