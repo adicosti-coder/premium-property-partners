@@ -5,6 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Property } from "@/data/properties";
+import { CalculatorLeadForm } from "@/components/CalculatorLeadForm";
+import { buildGuestLeadRequest } from "@/lib/calculatorLeads";
 
 interface StayCalculatorProps {
   property: Property;
@@ -50,6 +52,13 @@ const StayCalculator = ({ property, onBook }: StayCalculatorProps) => {
   const guestsUnit = ro ? (guests === 1 ? "oaspete" : "oaspeți") : (guests === 1 ? "guest" : "guests");
   const perGuest = Math.round(calculation.directTotal / Math.max(1, guests));
   const directShare = calculation.bookingTotal > 0 ? (calculation.directTotal / calculation.bookingTotal) * 100 : 100;
+  const leadRequest = buildGuestLeadRequest({
+    propertyName: property.name,
+    nights,
+    guests,
+    directTotal: calculation.directTotal,
+    bookingTotal: calculation.bookingTotal,
+  });
 
   return (
     <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-elegant">
@@ -113,6 +122,14 @@ const StayCalculator = ({ property, onBook }: StayCalculatorProps) => {
           <Calendar className="mr-2 h-4 w-4" aria-hidden="true" />
           {ro ? "Rezervă acum" : "Book now"}
         </Button>
+        <CalculatorLeadForm
+          request={leadRequest}
+          triggerLabel={ro ? "Trimite-mi oferta pe WhatsApp" : "Send me the offer on WhatsApp"}
+          title={ro ? "Oferta ta directă cu −5%" : "Your direct offer with −5%"}
+          description={ro ? "Primești rezumatul pentru apartament, nopți, oaspeți și prețul direct vs. Booking.com. Andrei confirmă disponibilitatea înainte de rezervare." : "Get the apartment, nights, guests and direct vs. Booking.com price summary. Andrei confirms availability before booking."}
+          variant="outline"
+          className="min-h-12 w-full"
+        />
         <p className="text-center text-xs text-muted-foreground">
           {ro ? "Prețurile pot varia în funcție de sezon" : "Prices may vary depending on the season"}
         </p>

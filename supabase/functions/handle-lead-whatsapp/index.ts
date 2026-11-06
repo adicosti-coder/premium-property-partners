@@ -4,10 +4,11 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendToMake } from "./sendToMake.ts";
-import { notifyCalculatorLead } from "./metaNotify.ts";
+import { notifyAdditionalCalculatorLead, notifyCalculatorLead } from "./metaNotify.ts";
 import { calcLeadAdminUrl } from "../_shared/calculatorLeadTemplates.ts";
 import { getLeadLocationDetails, getLeadPropertyDetails, getLocationLeadMessage } from "./propertyDetails.ts";
 import { appendSocialFollow, runtimeSocialProfiles } from "../_shared/socialFollow.ts";
+import { shouldUseMakeWhatsApp } from "../_shared/calculatorLeadFlow.ts";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -49,7 +50,9 @@ const BodySchema = z.object({
   tarif_noapte: z.number().int().min(1).max(5000).optional(),
   grad_ocupare: z.number().min(0).max(1).optional(),
   scenariu_ajustat: z.boolean().optional(),
-  sursa: z.string().trim().max(40).optional(),
+  sursa: z.string().trim().max(80).optional(),
+  calculator_kind: z.enum(["unified", "investment", "guest", "quick_investment"]).default("unified"),
+  lead_tag: z.string().trim().max(40).optional(),
   lead_id: z.string().uuid().optional(),
 });
 
@@ -77,12 +80,13 @@ Deno.serve(async (req) => {
   // Trimitere directă prin Meta doar pentru o cerere salvată recent, cu același telefon —
   // altfel oricine ar putea folosi funcția ca să trimită mesaje.
   let direct: Awaited<ReturnType<typeof notifyCalculatorLead>> | null = null;
+  let storedCalculatorData: Record<string, unknown> = {};
   {
     try {
       const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
       const last9 = (s: string) => s.replace(/\D/g, "").slice(-9);
       // Formularul salvează direct (fără id întors), deci găsim cererea după telefon.
-      let query = supabase.from("leads").select("id, whatsapp_number, created_at, simulation_data");
+      let query = supabase.from("leads").select("id, name, whatsapp_number, created_at, source, simulation_data");
       query = d.lead_id
         ? query.eq("id", d.lead_id)
         : query.ilike("whatsapp_number", `%${last9(d.telefon)}`)
@@ -90,27 +94,60 @@ Deno.serve(async (req) => {
           .order("created_at", { ascending: false }).limit(1);
       const { data: rows } = await query;
       const lead = rows?.[0];
-      if (lead) d.lead_id = lead.id;
+      if (lead) {
+        d.lead_id = lead.id;
+        storedCalculatorData = (lead.simulation_data ?? {}) as Record<string, unknown>;
+      }
       const fresh = lead && Date.now() - new Date(lead.created_at).getTime() < 15 * 60_000;
       if (lead && fresh && last9(lead.whatsapp_number ?? "") === last9(d.telefon)) {
-        const loc = getLeadLocationDetails(d);
-        const label = d.property_type_label ?? d.tip_proprietate ?? "Proprietate";
-        direct = await notifyCalculatorLead(supabase, {
-          leadId: lead.id, name: d.nume, phone: toIntl(d.telefon), location: loc.location,
-          serviceTag: [lead.simulation_data?.repeat_submission ? "[Calcul nou / Actualizat]" : null, loc.service_tag].filter(Boolean).join(" ") || null, property: `${label}${d.suprafata_mp ? ` · ${d.suprafata_mp} mp` : ""}`,
-          incomeRange: `${d.venit_estimat_min} – ${d.venit_estimat_max} €/lună`,
-          nightlyRate: d.tarif_noapte ?? null, occupancy: d.grad_ocupare ?? null,
-          classicRent: d.chirie_clasica ?? null,
-          netMid: d.venit_net_realtrust ?? Math.round((d.venit_estimat_min + d.venit_estimat_max) / 2),
-          adjusted: d.scenariu_ajustat ?? null,
-        });
-        console.log(`handle-lead-whatsapp direct lead=${lead.id} admin=${JSON.stringify(direct.admin)} visitor=${JSON.stringify(direct.visitor)}`);
+        if (d.calculator_kind === "unified") {
+          const loc = getLeadLocationDetails(d);
+          const label = d.property_type_label ?? d.tip_proprietate ?? "Proprietate";
+          direct = await notifyCalculatorLead(supabase, {
+            leadId: lead.id, name: d.nume, phone: toIntl(d.telefon), location: loc.location,
+            serviceTag: [storedCalculatorData.repeat_submission ? "[Calcul nou / Actualizat]" : null, loc.service_tag].filter(Boolean).join(" ") || null, property: `${label}${d.suprafata_mp ? ` · ${d.suprafata_mp} mp` : ""}`,
+            incomeRange: `${d.venit_estimat_min} – ${d.venit_estimat_max} €/lună`,
+            nightlyRate: d.tarif_noapte ?? null, occupancy: d.grad_ocupare ?? null,
+            classicRent: d.chirie_clasica ?? null,
+            netMid: d.venit_net_realtrust ?? Math.round((d.venit_estimat_min + d.venit_estimat_max) / 2),
+            adjusted: d.scenariu_ajustat ?? null,
+          });
+        } else {
+          const expected = {
+            investment: { source: "calculator_unificat_investitii", tag: "[Lead Investitor]" },
+            guest: { source: "calculator_unificat_oaspeti", tag: "[Lead Oaspete]" },
+            quick_investment: { source: "calculator_unificat_rapid_investitii", tag: "[Lead Rapid Investiții]" },
+          }[d.calculator_kind];
+          const validStoredRequest = lead.source === expected.source
+            && storedCalculatorData.calculator_kind === d.calculator_kind
+            && storedCalculatorData.lead_tag === expected.tag
+            && typeof storedCalculatorData.admin_summary === "string"
+            && typeof storedCalculatorData.visitor_summary === "string";
+          if (validStoredRequest) {
+            direct = await notifyAdditionalCalculatorLead(supabase, {
+              leadId: lead.id,
+              calculatorName: String(storedCalculatorData.calculator_name ?? "Calculator RealTrust"),
+              tag: expected.tag,
+              name: String(lead.name ?? d.nume),
+              phone: toIntl(d.telefon),
+              summary: String(storedCalculatorData.admin_summary),
+              visitorNextStep: String(storedCalculatorData.visitor_next_step ?? "Andrei revine cu detaliile cererii."),
+            });
+          } else {
+            console.warn(`handle-lead-whatsapp: stored calculator mismatch for lead ${lead.id}`);
+          }
+        }
+        if (direct) console.log(`handle-lead-whatsapp direct lead=${lead.id} admin=${JSON.stringify(direct.admin)} visitor=${JSON.stringify(direct.visitor)}`);
       } else {
         console.warn(`handle-lead-whatsapp: lead ${d.lead_id} not eligible for direct send`);
       }
     } catch (e) {
       console.error("handle-lead-whatsapp direct send failed", e);
     }
+  }
+
+  if (!shouldUseMakeWhatsApp(d.calculator_kind)) {
+    return json({ ok: true, webhook: "skipped_direct_meta", delivery: direct });
   }
 
   const webhookUrl = Deno.env.get("MAKE_WHATSAPP_WEBHOOK_URL");
@@ -162,6 +199,9 @@ Deno.serve(async (req) => {
     grad_ocupare: d.grad_ocupare ?? null,
     scenariu_ajustat: d.scenariu_ajustat ?? null,
     sursa: d.sursa ?? "calcul_venit",
+    calculator_kind: d.calculator_kind,
+    lead_tag: d.lead_tag ?? null,
+    calculator_data: storedCalculatorData,
     lead_id: d.lead_id ?? null,
     lead_url: d.lead_id ? calcLeadAdminUrl(d.lead_id) : null,
     // Confirmarea către vizitator a plecat deja prin șablonul Meta aprobat.

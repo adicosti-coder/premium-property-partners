@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { TrendingUp, MessageCircle, Download } from "lucide-react";
+import { TrendingUp, Download } from "lucide-react";
 import { calculateManagedIncome, MANAGEMENT_POLICY } from "@/lib/managementPolicy";
+import { CalculatorLeadForm } from "@/components/CalculatorLeadForm";
+import { buildInvestmentLeadRequest } from "@/lib/calculatorLeads";
 
 const fmt = (n: number) => Math.round(n).toLocaleString("ro-RO");
 
@@ -49,10 +51,13 @@ const InvestmentYieldCalculator = () => {
   const years = useMemo(() => Array.from({ length: 10 }, (_, i) => venitAnual * (i + 1)), [venitAnual]);
   const maxBar = Math.max(investitieTotala, years[9] || 0, 1);
 
-  const handleWhatsApp = useCallback(() => {
-    const msg = `Bună ziua! Am simulat un randament imobiliar pe RealTrust.ro:\n- Randament: ${yieldAnual.toFixed(2)}%\n- Amortizare: ${aniAmortizare.toFixed(1)} ani\n- Pagina: ${window.location.origin}${window.location.pathname}`;
-    window.open(`https://wa.me/40799069256?text=${encodeURIComponent(msg)}`, "_blank", "noopener,noreferrer");
-  }, [yieldAnual, aniAmortizare]);
+  const leadRequest = buildInvestmentLeadRequest({
+    purchasePrice: pret,
+    renovation: renovare,
+    netYieldPct: yieldAnual,
+    annualNet: venitAnual,
+    estimatedRent: managed.ownerIncome,
+  });
 
   const handleDownload = useCallback(() => {
     const text = [
@@ -140,11 +145,14 @@ const InvestmentYieldCalculator = () => {
                 </div>
               </dl>
 
-              <div className="mt-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
-                <Button onClick={handleWhatsApp} size="lg" className="min-h-12">
-                  <MessageCircle className="mr-2 h-4 w-4" aria-hidden="true" />
-                  {ro ? "Trimite pe WhatsApp" : "Send via WhatsApp"}
-                </Button>
+              <div className="mt-6 grid gap-2">
+                <CalculatorLeadForm
+                  request={leadRequest}
+                  triggerLabel={ro ? "Primește analiza financiară completă pe WhatsApp / E-mail" : "Get the full financial analysis via WhatsApp / Email"}
+                  title={ro ? "Analiza financiară completă" : "Full financial analysis"}
+                  description={ro ? "Lasă datele de contact, iar cifrele calculate ajung la Andrei împreună cu eticheta [Lead Investitor]." : "Leave your contact details and Andrei receives the calculated figures tagged [Lead Investitor]."}
+                  className="min-h-12 w-full whitespace-normal"
+                />
                 <Button onClick={handleDownload} variant="outline" size="lg" className="min-h-12">
                   <Download className="mr-2 h-4 w-4" aria-hidden="true" />
                   {ro ? "Descarcă rezumat" : "Download summary"}

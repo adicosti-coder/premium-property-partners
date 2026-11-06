@@ -15,6 +15,7 @@ import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { fetchWithRetry } from "../_shared/fetchRetry.ts";
 import { logLeadEvent } from "../_shared/leadEvents.ts";
 import { sendTeamEmail } from "../_shared/teamEmail.ts";
+import { isCalculatorLeadSource } from "../_shared/calculatorLeadFlow.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -77,6 +78,9 @@ Deno.serve(async (req) => {
     const sim = (typeof record.simulation_data === "string"
       ? JSON.parse(record.simulation_data || "{}")
       : record.simulation_data ?? {}) as Record<string, unknown>;
+
+    const leadTag = typeof sim.lead_tag === "string" ? sim.lead_tag.trim().slice(0, 40) : "";
+    const isCalculatorLead = isCalculatorLeadSource(record.source);
 
     const str = (v: unknown) =>
       typeof v === "string" && v.trim() ? v.trim().slice(0, 200)
@@ -208,7 +212,7 @@ Deno.serve(async (req) => {
     const becameCritical = notifState?.lead_grade === "hot" && notifState?.email_notification_grade !== "hot";
     if (notifState?.email_notification_sent && !becameCritical) {
       skipEmailReason = "already_sent_for_lead";
-    } else if (phoneValid && !becameCritical) {
+    } else if (phoneValid && !becameCritical && !isCalculatorLead) {
       const since = new Date(Date.now() - COOLDOWN_MS).toISOString();
       const tail = digits(phoneRaw).slice(-9);
       const { data: recent } = await admin.from("leads")
@@ -236,6 +240,7 @@ Deno.serve(async (req) => {
         ["Nume", record.name],
         ["Telefon", phoneValid ? phoneRaw : "—"],
         ["Email", record.email || "—"],
+        ...(leadTag ? [["Etichetă", leadTag] as [string, string]] : []),
         ["Cartier", crmPayload.lead.neighbourhood || "—"],
         ["Camere", crmPayload.lead.rooms || "—"],
         ...(str(sim.transaction) ? [["Tip tranzacție", s(sim.transaction)] as [string, string]] : []),
@@ -253,6 +258,21 @@ Deno.serve(async (req) => {
           ? [["Venit net regim hotelier", `${s(sim.realtrust_net_min)} – ${s(sim.realtrust_net_max)} €/lună`] as [string, string]] : []),
         ...(str(sim.nightly_rate) ? [["Tarif / noapte", `${s(sim.nightly_rate)} €`] as [string, string]] : []),
         ...(typeof sim.occupancy === "number" ? [["Ocupare", `${Math.round(sim.occupancy * 100)}%`] as [string, string]] : []),
+        // Investiții și widget rapid: cifrele exacte din cererea salvată.
+        ...(str(sim.purchase_price) ? [["Preț achiziție", `${s(sim.purchase_price)} €`] as [string, string]] : []),
+        ...(str(sim.renovation_cost) ? [["Mobilare / renovare", `${s(sim.renovation_cost)} €`] as [string, string]] : []),
+        ...(str(sim.net_yield_pct) ? [["Randament net", `${s(sim.net_yield_pct)}%`] as [string, string]] : []),
+        ...(str(sim.profit_10y) ? [["Profit la 10 ani", `${s(sim.profit_10y)} €`] as [string, string]] : []),
+        ...(str(sim.estimated_rent) ? [["Chirie estimată", `${s(sim.estimated_rent)} €/lună`] as [string, string]] : []),
+        ...(str(sim.monthly_rent) ? [["Chirie lunară introdusă", `${s(sim.monthly_rent)} €`] as [string, string]] : []),
+        ...(str(sim.months_rented) ? [["Luni închiriate / an", s(sim.months_rented)] as [string, string]] : []),
+        ...(str(sim.annual_net) ? [["Venit net anual", `${s(sim.annual_net)} €`] as [string, string]] : []),
+        // Oaspeți: apartament, sejur și comparația direct / Booking.
+        ...(str(sim.property_name) ? [["Apartament", s(sim.property_name)] as [string, string]] : []),
+        ...(str(sim.nights) ? [["Nopți", s(sim.nights)] as [string, string]] : []),
+        ...(str(sim.guests) ? [["Oaspeți", s(sim.guests)] as [string, string]] : []),
+        ...(str(sim.direct_total) ? [["Total direct (DIRECT5)", `${s(sim.direct_total)} €`] as [string, string]] : []),
+        ...(str(sim.booking_total) ? [["Total Booking.com", `${s(sim.booking_total)} €`] as [string, string]] : []),
         ["Sursă", crmPayload.lead.source || "—"],
         ["Scor", record.lead_score != null ? `${record.lead_score} (${record.lead_grade ?? "-"})` : "—"],
         ["Campanie", utm.utm_campaign || "—"],
@@ -271,7 +291,7 @@ Deno.serve(async (req) => {
           ${waLink
             ? `<p style="margin:20px 0"><a href="${waLink}" style="background:#25D366;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block">Deschide chat WhatsApp</a></p>`
             : `<p style="margin:20px 0;color:#b45309">Lead fără telefon valid — contactează pe email.</p>`}
-          ${str(sim.service_tag) || str(sim.realtrust_net)
+          ${str(sim.service_tag) || str(sim.realtrust_net) || leadTag
             ? `<p style="margin:0 0 16px"><a href="https://realtrust.ro/admin/cereri-randament?lead=${encodeURIComponent(record.id)}" style="color:#1a365d;font-weight:600">Vezi cererea completă din calculator</a></p>` : ""}
           <p style="color:#6e7480;font-size:12px">RealTrust Timișoara · lead ${escapeHtml(record.id)}</p>
         </div>`;
@@ -279,7 +299,7 @@ Deno.serve(async (req) => {
       const tEmail = Date.now();
       const mail = await sendTeamEmail({
         to: teamEmail,
-        subject: `🚨 Lead nou: ${record.name} — ${crmPayload.lead.neighbourhood || crmPayload.lead.source || "website"}`,
+        subject: `🚨 ${leadTag ? `${leadTag}: ` : "Lead nou: "}${record.name} — ${crmPayload.lead.neighbourhood || crmPayload.lead.source || "website"}`,
         html,
         leadId: record.id,
         source: "crm-lead-sync",

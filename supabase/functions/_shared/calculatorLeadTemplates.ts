@@ -132,3 +132,63 @@ export function calcVisitorParamsV2(s: CalcLeadSummary): string[] {
     cleanParam(fmtOccupancy(s.occupancy), 10), cleanParam(fmtDiff(s.netMid, s.classicRent), 30),
   ];
 }
+
+// ── Format comun pentru Investiții, Oaspeți și widgetul rapid ──────────────
+export const CALC_ALERT_TEMPLATE_GENERIC = {
+  name: "alerta_lead_calculator_realtrust",
+  body: [
+    "Cerere nouă: {{1}}.",
+    "Date de contact: {{2}}",
+    "",
+    "Rezumatul complet al calculului: {{3}}",
+    "",
+    "Deschide cererea în administrare: {{4}}",
+    "Verifică valorile calculate și ipotezele înainte de contactarea persoanei.",
+  ].join("\n"),
+  example: [
+    "[Lead Investitor] Calculator Investiții — Randament la Cumpărare", "Ion Popescu • 40722123456",
+    "Preț achiziție: 120.000 € • Mobilare/renovare: 8.000 € • Randament net: 5,52% • Profit la 10 ani: 70.656 € • Chirie estimată: 633 €/lună",
+    "https://realtrust.ro/admin/cereri-randament?lead=00000000-0000-0000-0000-000000000000",
+  ],
+};
+
+export const CALC_VISITOR_TEMPLATE_GENERIC = {
+  name: "confirmare_lead_calculator_realtrust",
+  body: [
+    "Bună ziua, {{1}}! Am înregistrat cererea pentru analiza solicitată.",
+    "",
+    "Rezumatul calculului dumneavoastră: {{2}}",
+    "",
+    "{{3}}",
+    "Mulțumim pentru încredere. Echipa RealTrust verifică datele înainte de următorul pas.",
+  ].join("\n"),
+  example: [
+    "Ion",
+    "Apartament: NordOne • Sejur: 4 nopți • Oaspeți: 2 • Total direct (DIRECT5): 324 € • Booking.com: 340 €",
+    "Andrei verifică disponibilitatea și confirmă oferta aici pe WhatsApp. Rezervarea nu este finalizată automat.",
+  ],
+};
+
+export type GenericCalcLeadSummary = {
+  leadId: string;
+  calculatorName: string;
+  tag: string;
+  name: string;
+  phone: string;
+  summary: string;
+  visitorNextStep: string;
+};
+
+export function calcAlertParamsGeneric(s: GenericCalcLeadSummary): string[] {
+  return [
+    cleanParam(`${s.tag} ${s.calculatorName}`, 140), cleanParam(`${s.name} • ${s.phone}`, 110),
+    cleanParam(s.summary, 700), calcLeadAdminUrl(s.leadId),
+  ];
+}
+
+export function calcVisitorParamsGeneric(s: GenericCalcLeadSummary): string[] {
+  return [
+    cleanParam(s.name.split(/\s+/)[0], 40),
+    cleanParam(s.summary, 700), cleanParam(s.visitorNextStep, 300),
+  ];
+}

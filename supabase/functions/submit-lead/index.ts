@@ -4,6 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/securityHeaders.ts";
 import { beginIdempotent } from "../_shared/idempotency.ts";
 import { applyRateLimit } from "../_shared/rateLimiter.ts";
+import { shouldSendLegacyLeadAlert } from "../_shared/calculatorLeadFlow.ts";
 
 
 function validateString(value: unknown, maxLength: number): string {
@@ -41,7 +42,8 @@ const VALID_SOURCES = [
   "calculator", "quick_form", "lead_capture_form",
   "rental-calculator", "advanced-rental-calculator", "city_of_mara_landing",
   "pagina_contact", "apel_2_minute", "evaluare_gratuita", "analiza_anunt",
-  "whatsapp_viewing",
+  "whatsapp_viewing", "calculator_unificat_investitii", "calculator_unificat_oaspeti",
+  "calculator_unificat_rapid_investitii",
 ];
 
 const handler = async (req: Request): Promise<Response> => {
@@ -268,7 +270,9 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // --- Send notification (best-effort, don't block response) ---
-    if (body.send_notification !== false) {
+    // Pentru calculatoare, crm-lead-sync trimite e-mailul complet o singură dată.
+    // Alerta generică ar omite cifrele și ar dubla notificarea.
+    if (body.send_notification !== false && shouldSendLegacyLeadAlert(source)) {
       try {
         await supabase.functions.invoke("send-lead-notification", {
           body: {

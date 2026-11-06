@@ -2,6 +2,7 @@
 // every time a new lead is inserted. Triggered from the DB.
 import { isInternalCall } from "../_shared/cronAuth.ts";
 import { fetchWithRetry } from "../_shared/fetchRetry.ts";
+import { shouldSendLegacyLeadAlert } from "../_shared/calculatorLeadFlow.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -49,6 +50,14 @@ Deno.serve(async (req) => {
     const sim = typeof record.simulation_data === "string"
       ? JSON.parse(record.simulation_data)
       : (record.simulation_data || {});
+
+    // Calculatoarele au un singur canal WhatsApp: handle-lead-whatsapp trimite
+    // alerta Meta după salvare. Alerta generică ar dubla mesajul către Andrei.
+    if (!shouldSendLegacyLeadAlert(record.source)) {
+      return new Response(JSON.stringify({ skipped: true, reason: "calculator_direct_flow" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const phoneClean = fmtPhone(record.whatsapp_number || "");
     const phoneValid = phoneClean.length >= 8 && record.whatsapp_number !== "pending";
