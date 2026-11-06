@@ -1,5 +1,12 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## 6 noiembrie seara
+- [x] Verificare browser: Manual / Import link / Analiză foto
+- [x] Publicare + verificare telefon pe realtrust.ro (unificat, investiții, oaspeți, widget)
+- [x] Probă reală calculator unificat (Meta a acceptat alerta + confirmarea)
+- [ ] Probă reală Investiții/Oaspeți/widget cu confirmare vizitator (blocat: șablonul de alertă nou e încă în așteptare la Meta)
+- [ ] Minim nopți per apartament (blocat: valori de la proprietar)
+
 ## Lead-uri automate pentru toate calculatoarele — 6 noiembrie
 - [x] Formular comun pentru Investiții, Oaspeți și widgetul rapid, după rezultat, cu nume, telefon și e-mail opțional
 - [x] Aceeași salvare server, e-mail Andrei/Admin și WhatsApp Meta; etichetele și toate cifrele cerute păstrate exact
