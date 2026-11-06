@@ -1,5 +1,12 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Consolidare cap-la-cap — 6 noiembrie, 21:35 UTC
+- [ ] Stări independente e-mail, WhatsApp admin/client și retrimitere sigură pe același ID
+- [ ] Confirmare vizitator imediat după salvare, apoi doar la livrare admin verificată
+- [ ] ID stabil pentru reluări întrerupte; calcule noi consecutive fără deduplicare temporală
+- [ ] Stabilizare test intermitent și rulări complete repetate
+- [ ] Activare funcții și verificare flux real autentificat; interfața rămâne în preview până la publicare
+
 ## 6 noiembrie seara
 - [x] Verificare browser: Manual / Import link / Analiză foto
 - [x] Publicare + verificare telefon pe realtrust.ro (unificat, investiții, oaspeți, widget)
