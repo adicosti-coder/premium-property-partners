@@ -35,11 +35,12 @@ test("generic templates carry the calculator tag and complete summary", () => {
     visitorNextStep: "Andrei verifică ipotezele.",
   };
   expect(calcAlertParamsGeneric(generic)).toHaveLength(count(CALC_ALERT_TEMPLATE_GENERIC.body));
-  expect(CALC_ALERT_TEMPLATE_GENERIC.example).toHaveLength(6);
+  expect(CALC_ALERT_TEMPLATE_GENERIC.example).toHaveLength(4);
   expect(calcVisitorParamsGeneric(generic)).toHaveLength(count(CALC_VISITOR_TEMPLATE_GENERIC.body));
-  expect(CALC_VISITOR_TEMPLATE_GENERIC.example).toHaveLength(4);
-  expect(calcAlertParamsGeneric(generic)[1]).toBe("[Lead Investitor]");
-  expect(calcAlertParamsGeneric(generic)[4]).toContain("120.000 €");
+  expect(CALC_VISITOR_TEMPLATE_GENERIC.example).toHaveLength(3);
+  expect(calcAlertParamsGeneric(generic)[0]).toContain("[Lead Investitor]");
+  expect(calcAlertParamsGeneric(generic)[1]).toContain("40722123456");
+  expect(calcAlertParamsGeneric(generic)[2]).toContain("120.000 €");
 });
 
 test("no param is empty or contains newlines (Meta validation)", () => {
