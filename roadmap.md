@@ -1,5 +1,10 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Consolidare livrare și SEO — 6 noiembrie, 22:10 UTC
+- [ ] E-mail: stări reale pending/delivered/failed, erori și retrimitere izolată pe același ID
+- [ ] SEO: canonical static RO, EN `?lang=en` cu `noindex, follow`, entități JSON-LD distincte
+- [ ] Suită completă de teste și verificarea buildului înainte de publicare
+
 ## Consolidare cap-la-cap — 6 noiembrie, 21:35 UTC
 - [x] Stări independente e-mail, WhatsApp admin/client și retrimitere pe același ID; succes/rezultat necunoscut nu sunt retrimise
 - [x] Confirmare vizitator imediat după salvare, apoi doar la livrare admin verificată în browser
