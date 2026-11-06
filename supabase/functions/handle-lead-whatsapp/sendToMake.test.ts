@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test, vi } from "vitest";
 import { createServer, type Server } from "node:http";
 import { DEFAULT_TIMEOUT_MS, sendToMake } from "./sendToMake.ts";
 
@@ -25,15 +25,19 @@ test("Make.com gets at most 3 seconds before the form is answered", () => {
 });
 
 test("webhook that answers slowly is abandoned at the timeout, not awaited", async () => {
-  await withServer(
-    (_req, res) => setTimeout(() => res.end("late"), 5000),
-    async (url) => {
-      const started = Date.now();
-      const result = await sendToMake(url, payload, 300);
-      expect(result.status).toBe("timeout");
-      expect(Date.now() - started).toBeLessThan(1500);
-    },
-  );
+  vi.useFakeTimers();
+  const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((_url, options) => new Promise((_resolve, reject) => {
+    options?.signal?.addEventListener("abort", () => reject(new Error("aborted")), { once: true });
+  }));
+  try {
+    let completed = false;
+    const pending = sendToMake("https://example.test", payload, 300).then(result => { completed = true; return result; });
+    await vi.advanceTimersByTimeAsync(299);
+    expect(completed).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
+    expect((await pending).status).toBe("timeout");
+    expect(completed).toBe(true);
+  } finally { fetchMock.mockRestore(); vi.useRealTimers(); }
 });
 
 test("webhook error is reported as failed and never thrown", async () => {
