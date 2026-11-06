@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { CheckCircle2, Loader2, MessageCircle } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import { roMobileField } from "@/lib/phoneField";
 import { withCampaignTracking } from "@/lib/campaignAttribution";
 import { formatPhoneInput } from "@/lib/conversionTracking";
 import type { CalculatorLeadRequest } from "@/lib/calculatorLeads";
+import { useCalculatorDelivery } from "@/hooks/useCalculatorDelivery";
 
 const schema = z.object({
   name: z.string().trim().min(2, "Introdu numele (minim 2 caractere)").max(80),
@@ -37,10 +38,14 @@ export function CalculatorLeadForm({ request, triggerLabel, title, description, 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [delivery, setDelivery] = useState<DeliveryState>("pending");
+  const locked = useRef(false);
+  const submission = useRef<{ fingerprint: string; id: string } | null>(null);
+  const [receipt, setReceipt] = useState<{ leadId: string; reportToken?: string } | null>(null);
+  const adminReceived = useCalculatorDelivery(receipt);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (submitting) return;
+    if (locked.current) return;
     const parsed = schema.safeParse(fields);
     if (!parsed.success) {
       const next: Record<string, string> = {};
@@ -52,11 +57,14 @@ export function CalculatorLeadForm({ request, triggerLabel, title, description, 
     }
 
     setErrors({});
+    locked.current = true;
     setSubmitting(true);
     setDelivery("pending");
     let savedLeadId: string | null = null;
     try {
       const values = parsed.data;
+      const fingerprint = JSON.stringify({ values, request });
+      if (submission.current?.fingerprint !== fingerprint) submission.current = { fingerprint, id: crypto.randomUUID() };
       const simulationData = withCampaignTracking({
         calculator_kind: request.kind,
         lead_tag: request.tag,
@@ -77,12 +85,16 @@ export function CalculatorLeadForm({ request, triggerLabel, title, description, 
         source: request.source,
         simulation_data: simulationData,
         viaServer: true,
+        submission_id: submission.current.id,
       });
       if (!saved.ok || !saved.leadId) {
         toast.error("Nu am putut salva cererea. Verifică datele și încearcă din nou.");
         return;
       }
       savedLeadId = saved.leadId;
+      setReceipt({ leadId: saved.leadId, reportToken: saved.reportToken });
+      setDelivery("unconfirmed");
+      submission.current = null;
 
       const { data, error } = await supabase.functions.invoke("handle-lead-whatsapp", {
         body: {
@@ -96,6 +108,7 @@ export function CalculatorLeadForm({ request, triggerLabel, title, description, 
           lead_tag: request.tag,
           sursa: request.source,
           lead_id: saved.leadId,
+          report_token: saved.reportToken,
         },
       });
       const visitorStatus = !error && (data as { delivery?: { visitor?: { status?: string } } } | null)?.delivery?.visitor?.status;
@@ -106,12 +119,13 @@ export function CalculatorLeadForm({ request, triggerLabel, title, description, 
       else toast.error("Conexiunea a eșuat. Cererea nu a fost confirmată; încearcă din nou.");
     } finally {
       setSubmitting(false);
+      locked.current = false;
     }
   };
 
   return (
     <>
-      <Button type="button" size="lg" variant={variant} className={className} onClick={() => { setDelivery("pending"); setOpen(true); }}>
+      <Button type="button" size="lg" variant={variant} className={className} onClick={() => { if (!locked.current) { setDelivery("pending"); setReceipt(null); setOpen(true); } }}>
         <MessageCircle className="mr-2 h-4 w-4" aria-hidden="true" />
         {triggerLabel}
       </Button>
@@ -148,11 +162,11 @@ export function CalculatorLeadForm({ request, triggerLabel, title, description, 
           ) : (
             <div role="status" aria-live="polite" className="space-y-4 rounded-2xl border border-primary/20 bg-primary/5 p-5 text-center">
               <CheckCircle2 className="mx-auto h-10 w-10 text-primary" aria-hidden="true" />
-              <h3 className="font-semibold text-foreground">Cererea a fost salvată</h3>
+              <h3 className="font-semibold text-foreground">{adminReceived ? "Andrei a primit cererea ta" : "Cererea a fost înregistrată"}</h3>
               <p className="text-sm text-muted-foreground">
                 {delivery === "sent"
-                  ? "Confirmarea WhatsApp a fost trimisă. Andrei poate vedea acum toate cifrele cererii."
-                  : "Andrei poate vedea toate cifrele în lista de cereri. Trimiterea WhatsApp nu este încă confirmată."}
+                  ? "Confirmarea WhatsApp a fost trimisă către serviciul de notificări. Livrarea este verificată separat."
+                  : "Datele sunt salvate. Așteptăm confirmarea livrării notificării către Andrei."}
               </p>
               <Button type="button" variant="outline" className="min-h-12 w-full" onClick={() => setOpen(false)}>Închide</Button>
             </div>
