@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import {
-  CALC_ALERT_TEMPLATE_V2, CALC_VISITOR_TEMPLATE_V2, calcAlertParamsV2, calcVisitorParamsV2,
+  CALC_ALERT_TEMPLATE_GENERIC, CALC_ALERT_TEMPLATE_V2, CALC_VISITOR_TEMPLATE_GENERIC, CALC_VISITOR_TEMPLATE_V2,
+  calcAlertParamsGeneric, calcAlertParamsV2, calcVisitorParamsGeneric, calcVisitorParamsV2,
 } from "./calculatorLeadTemplates.ts";
 
 const s = {

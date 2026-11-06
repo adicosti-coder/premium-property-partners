@@ -3,7 +3,7 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { WA_BUSINESS_ACCOUNT_ID, WA_API_VERSION, waToken } from "../_shared/waConfig.ts";
-import { CALC_ALERT_TEMPLATE, CALC_ALERT_TEMPLATE_V2, CALC_LANG, CALC_VISITOR_TEMPLATE, CALC_VISITOR_TEMPLATE_V2 } from "../_shared/calculatorLeadTemplates.ts";
+import { CALC_ALERT_TEMPLATE, CALC_ALERT_TEMPLATE_GENERIC, CALC_ALERT_TEMPLATE_V2, CALC_LANG, CALC_VISITOR_TEMPLATE, CALC_VISITOR_TEMPLATE_GENERIC, CALC_VISITOR_TEMPLATE_V2 } from "../_shared/calculatorLeadTemplates.ts";
 
 const json = (d: unknown, s = 200) => new Response(JSON.stringify(d), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 

@@ -3,8 +3,10 @@
 // Rezervă fiecare trimitere în `request_idempotency` înainte de Meta; nu reîncearcă.
 import { WA_API_VERSION, WA_BUSINESS_ACCOUNT_ID, WA_PHONE_NUMBER_ID, waToken } from "../_shared/waConfig.ts";
 import {
-  CALC_ALERT_TEMPLATE, CALC_ALERT_TEMPLATE_V2, CALC_LANG, CALC_VISITOR_TEMPLATE, CALC_VISITOR_TEMPLATE_V2,
-  type CalcLeadSummary, calcAlertParamsV2, calcLeadAdminUrl, calcVisitorParamsV2, cleanParam, renderTemplate,
+  CALC_ALERT_TEMPLATE, CALC_ALERT_TEMPLATE_GENERIC, CALC_ALERT_TEMPLATE_V2, CALC_LANG,
+  CALC_VISITOR_TEMPLATE, CALC_VISITOR_TEMPLATE_GENERIC, CALC_VISITOR_TEMPLATE_V2,
+  type CalcLeadSummary, type GenericCalcLeadSummary, calcAlertParamsGeneric, calcAlertParamsV2,
+  calcLeadAdminUrl, calcVisitorParamsGeneric, calcVisitorParamsV2, cleanParam, renderTemplate,
 } from "../_shared/calculatorLeadTemplates.ts";
 
 export const ADMIN_ALERT_NUMBER = "40723154520";
