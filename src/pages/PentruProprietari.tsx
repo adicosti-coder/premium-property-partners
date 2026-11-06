@@ -133,7 +133,7 @@ const PentruProprietari = () => {
   const { ref: statsRef, isVisible: statsVisible } = useScrollAnimation({ threshold: 0.1 });
 
   // Deferred loading for heavy components - only loads after user scrolls ~500px
-  const [calcSentinel, calcReady] = useDeferredLoad("500px");
+  const [calcSentinel] = useDeferredLoad("500px");
   const [faqSentinel, faqReady] = useDeferredLoad("500px");
 
   // CTA A/B variant — assigned 50/50 on first visit, then persisted so the
@@ -982,7 +982,7 @@ const PentruProprietari = () => {
       <div ref={calcSentinel} />
       <section id="calculator" className="scroll-mt-24 px-4 py-12 md:py-16">
         <div className="mx-auto max-w-4xl min-h-[400px]">
-          {calcReady && <Suspense fallback={<div className="min-h-[400px]" aria-busy="true" />}><UnifiedCalculator /></Suspense>}
+          {<Suspense fallback={<div className="min-h-[400px]" aria-busy="true" />}><UnifiedCalculator /></Suspense>}
         </div>
       </section>
 
