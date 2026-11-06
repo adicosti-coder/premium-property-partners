@@ -38,6 +38,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import InvestorGuideButton from "@/components/InvestorGuideButton";
+import InvestorQuickCalcButton from "@/components/InvestorQuickCalcButton";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { Download, HelpCircle } from "lucide-react";
@@ -751,6 +752,7 @@ const Investitii = () => {
         propertyName={analysisModal.propertyName}
       />
 
+      <InvestorQuickCalcButton />
       <GlobalConversionWidgets />
       <BackToTop />
       <SEOFooterText pageType="catalog" city="Timișoara" />
