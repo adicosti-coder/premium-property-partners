@@ -42,8 +42,9 @@ const InlineCalculatorPopup = () => {
     if (!visible) return;
     // Escape închide întâi formularul de cerere deschis peste fereastră, nu ambele.
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && !document.querySelector('[data-calculator-lead-dialog][data-state="open"]') && close();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    // Capture: verificăm formularul înainte ca Escape să-l închidă.
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
   }, [visible, close]);
 
   const leadRequest = buildQuickInvestmentLeadRequest({
