@@ -3,6 +3,7 @@ import { CheckCircle2, Loader2, MessageCircle } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,9 +30,11 @@ interface CalculatorLeadFormProps {
   description: string;
   variant?: "default" | "outline" | "secondary";
   className?: string;
+  /** Ridică formularul peste ferestre proprii cu z-index mare (ex. fereastra rapidă investitori). */
+  layerClassName?: string;
 }
 
-export function CalculatorLeadForm({ request, triggerLabel, title, description, variant = "default", className }: CalculatorLeadFormProps) {
+export function CalculatorLeadForm({ request, triggerLabel, title, description, variant = "default", className, layerClassName }: CalculatorLeadFormProps) {
   const id = useId();
   const [open, setOpen] = useState(false);
   const [fields, setFields] = useState({ name: "", phone: "", email: "" });
@@ -130,7 +133,7 @@ export function CalculatorLeadForm({ request, triggerLabel, title, description, 
         {triggerLabel}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent data-calculator-lead-dialog="" className={cn("max-w-md", layerClassName)} overlayClassName={layerClassName}>
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>

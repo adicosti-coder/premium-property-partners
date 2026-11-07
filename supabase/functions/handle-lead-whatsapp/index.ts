@@ -8,7 +8,7 @@ import { notifyAdditionalCalculatorLead, notifyCalculatorLead } from "./metaNoti
 import { calcLeadAdminUrl } from "../_shared/calculatorLeadTemplates.ts";
 import { getLeadLocationDetails, getLeadPropertyDetails, getLocationLeadMessage } from "./propertyDetails.ts";
 import { appendSocialFollow, runtimeSocialProfiles } from "../_shared/socialFollow.ts";
-import { shouldUseMakeWhatsApp } from "../_shared/calculatorLeadFlow.ts";
+import { shouldSkipMakeWebhook } from "../_shared/calculatorLeadFlow.ts";
 import { verifyLeadReportToken } from "../_shared/leadReportToken.ts";
 import { isInternalCall } from "../_shared/cronAuth.ts";
 
@@ -88,6 +88,7 @@ Deno.serve(async (req) => {
   // altfel oricine ar putea folosi funcția ca să trimită mesaje.
   let direct: Awaited<ReturnType<typeof notifyCalculatorLead>> | null = null;
   let storedCalculatorData: Record<string, unknown> = {};
+  let storedLeadSource: string | null = null;
   {
     try {
       const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -104,6 +105,7 @@ Deno.serve(async (req) => {
       if (lead) {
         d.lead_id = lead.id;
         storedCalculatorData = (lead.simulation_data ?? {}) as Record<string, unknown>;
+        storedLeadSource = lead.source ?? null;
       }
       const fresh = lead && Date.now() - new Date(lead.created_at).getTime() < 15 * 60_000;
       if (lead && (internal || capability || fresh) && last9(lead.whatsapp_number ?? "") === last9(d.telefon)) {
@@ -169,7 +171,7 @@ Deno.serve(async (req) => {
     }
   }
 
-  if (!shouldUseMakeWhatsApp(d.calculator_kind) || String(d.sursa ?? "").startsWith("calculator_unificat") || Object.keys(storedCalculatorData).length > 0) {
+  if (shouldSkipMakeWebhook({ calculatorKind: d.calculator_kind, requestSource: d.sursa, storedLeadSource })) {
     return json({ ok: true, webhook: "skipped_direct_meta", delivery: direct });
   }
 

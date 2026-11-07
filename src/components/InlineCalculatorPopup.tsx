@@ -40,7 +40,8 @@ const InlineCalculatorPopup = () => {
 
   useEffect(() => {
     if (!visible) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
+    // Escape închide întâi formularul de cerere deschis peste fereastră, nu ambele.
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && !document.querySelector('[data-calculator-lead-dialog][data-state="open"]') && close();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [visible, close]);
@@ -126,6 +127,7 @@ const InlineCalculatorPopup = () => {
             title="Analiza investiției tale"
             description="Trimitem către Andrei exact cifrele introduse, cu eticheta [Lead Rapid Investiții]."
             className="mt-4 min-h-12 w-full"
+            layerClassName="z-[10000]"
           />
         </div>
       </div>
