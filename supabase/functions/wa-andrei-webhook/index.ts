@@ -4,7 +4,10 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { relayToMake } from "../_shared/makeRelay.ts";
 import { extractWaLeadDetails, waEngagementBonus, gradeForScore, waSimulationFields } from "../_shared/waLeadExtract.ts";
 import { canonicalWaPhone, phoneVariants, reservePhoneSend, markPhoneSent } from "../_shared/waPhone.ts";
-import { isHotelCalcRequest, looksLikeOwnerQuestion } from "../_shared/waOwnerOutreachTemplate.ts";
+import {
+  isHotelCalcRequest, looksLikeOwnerQuestion, ownerOutreachConsentCheck, OWNER_CONSENT_UNVERIFIED_ACK, WA_OWNER_OUTREACH_TEMPLATE,
+} from "../_shared/waOwnerOutreachTemplate.ts";
+import { recordOwnerConsent } from "../_shared/ownerConsentApproval.ts";
 import {
   ACK_MESSAGE,
   buildIntakeMessage,
@@ -23,7 +26,7 @@ import {
   PUBLISH_CONSENT_RECONFIRM_TEXT,
 } from "../_shared/waAutoReply.ts";
 import { notifyClientChatLink } from "../_shared/waClientEmail.ts";
-import { notifyAgentInbound, notifyOwnerHandover, notifyClientCallRequest } from "../_shared/waAgentNotify.ts";
+import { notifyAgentInbound, notifyOwnerHandover, notifyClientCallRequest, ADMIN_WA_ALERT_NUMBERS, type OwnerHandoverResult } from "../_shared/waAgentNotify.ts";
 import { notifyConsentReply } from "../_shared/waPublishConsentNotify.ts";
 import { ADMIN_INSPECTION_PHONE, OWNER_WAITING_ADMIN_TEXT, parseInspectionReply, handleInspectionDecision } from "../_shared/listingInspection.ts";
 
@@ -54,21 +57,27 @@ async function handlePublishIntent(
     message: string;
     supabaseUrl: string;
     serviceKey: string;
+    /** Cererea de acord validată (ex. mesajul cu butoane confirmat de Make). */
+    consentId?: string | null;
+    trigger?: string;
+    requestTemplate?: string | null;
   },
-): Promise<{ waitingAdmin: boolean }> {
+): Promise<{ waitingAdmin: boolean; removedListing?: boolean }> {
   const { phone, intent, message, supabaseUrl, serviceKey } = args;
   const nowIso = new Date().toISOString();
 
   // Potrivim numărul în toate formele salvate (+407…, 407…, 07…).
   const variants = phoneVariants(phone);
   // 1) Anunțul pentru care s-a cerut acordul (cea mai recentă cerere deschisă).
-  const { data: pendingConsent } = await supabase
+  let pendingQuery = supabase
     .from("wa_publish_consents")
-    .select("prospect_listing_id")
+    .select("id, prospect_listing_id")
     .in("phone_normalized", variants)
     .not("prospect_listing_id", "is", null)
     .is("revoked_at", null)
-    .in("status", ["requested", "granted"])
+    .in("status", ["requested", "pending_approval", "granted"]);
+  if (args.consentId) pendingQuery = pendingQuery.eq("id", args.consentId);
+  const { data: pendingConsent } = await pendingQuery
     .order("requested_at", { ascending: false, nullsFirst: false })
     .limit(1)
     .maybeSingle();
@@ -119,43 +128,72 @@ async function handlePublishIntent(
     return { waitingAdmin: false, removedListing };
   }
 
-  // Acord: salvăm dovada (idempotent pe telefon + anunț).
-  const { data: consent, error: cErr } = await supabase
-    .from("wa_publish_consents")
-    .upsert({
-      phone_normalized: phone,
-      prospect_listing_id: prospect?.id ?? null,
-      status: "granted",
-      consent_text: message.slice(0, 1000),
-      consented_at: nowIso,
-      revoked_at: null,
-      source: "whatsapp",
-    }, { onConflict: "phone_normalized,prospect_listing_id" })
-    .select("id")
-    .maybeSingle();
-  if (cErr) console.error("[wa-webhook] consent upsert failed:", cErr);
+  // Acord: salvăm dovada. Anunțul rămâne `pending_approval` până la răspunsul
+  // adminului 1/2; publicarea pornește direct doar dacă adminul aprobase deja.
+  const res = await recordOwnerConsent(supabase, {
+    phone,
+    prospectId: prospect?.id ?? null,
+    consentId: pendingConsent?.prospect_listing_id === prospect?.id ? pendingConsent?.id ?? null : null,
+    message,
+    trigger: args.trigger ?? "text",
+    requestTemplate: args.requestTemplate ?? null,
+    supabaseUrl,
+    serviceKey,
+  });
+  return { waitingAdmin: res.waitingAdmin };
+}
 
-  if (!prospect?.id) return { waitingAdmin: false };
-
-  const { data: insp } = await supabase.from("listing_inspections")
-    .select("status").eq("prospect_listing_id", prospect.id).maybeSingle();
-  const waitingAdmin = !!insp && !["approved", "approved_waiting_consent", "published", "rejected"].includes(String(insp.status));
-
-  // Pornim preluarea pe site prin fluxul existent (curățare text, imagini, calitate).
-  fetch(`${supabaseUrl}/functions/v1/auto-publish-listing-worker`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${serviceKey}`,
-      "x-cron-secret": serviceKey,
+/**
+ * Hand-off către om: cererea de analiză de venit (butonul „Calcul Regim Hotelier”)
+ * sau o întrebare scrisă. Rămâne în jurnalul Admin și pe conversație, fără a opri Andrei.
+ */
+async function recordOwnerHandoff(
+  supabase: any,
+  args: {
+    kind: string;
+    phone: string;
+    conversationId: string;
+    waMessageId: string;
+    message: string;
+    alert: OwnerHandoverResult | null;
+    alertSkipped?: string;
+  },
+) {
+  const event = args.kind === "owner_hotel_calc"
+    ? "owner_income_analysis_request"
+    : args.kind === "owner_consent_unverified" ? "owner_consent_unverified" : "owner_question_handoff";
+  let prospectId: string | null = null;
+  try {
+    const variants = phoneVariants(args.phone);
+    const { data } = await supabase.from("prospect_listings").select("id")
+      .or(variants.flatMap((v) => [`phone_normalized.eq.${v}`, `contact_phone.eq.${v}`]).join(","))
+      .order("created_at", { ascending: false }).limit(1).maybeSingle();
+    prospectId = data?.id ?? null;
+  } catch { /* best-effort */ }
+  const alertOk = !!args.alert && (args.alert.email_sent || args.alert.wa_sent.length > 0);
+  const { error } = await supabase.from("make_lead_events").insert({
+    direction: "inbound",
+    event,
+    conversation_id: args.conversationId,
+    prospect_listing_id: prospectId,
+    phone_normalized: args.phone,
+    message: args.message.slice(0, 1000),
+    wa_message_id: args.waMessageId,
+    status: args.alert ? (alertOk ? "alert_sent" : "alert_failed") : (args.alertSkipped ?? "alert_skipped"),
+    error: args.alert && !alertOk ? "email și WhatsApp admin nelivrate" : null,
+    payload: {
+      kind: args.kind,
+      admin_numbers: ADMIN_WA_ALERT_NUMBERS,
+      email_sent: args.alert?.email_sent ?? false,
+      wa_sent: args.alert?.wa_sent ?? [],
+      wa_failed: args.alert?.wa_failed ?? [],
     },
-    body: JSON.stringify({
-      prospect_id: prospect.id,
-      triggered_by: "wa_owner_consent",
-      consent_id: consent?.id ?? null,
-    }),
-  }).catch((e) => console.error("[wa-webhook] publish trigger failed:", e));
-  return { waitingAdmin };
+  });
+  if (error) console.error("[wa-webhook] handoff event insert failed:", error);
+  // Marcăm conversația pentru intervenția umană; starea rămâne, ca Andrei să răspundă în continuare.
+  await supabase.from("wa_conversations")
+    .update({ handoff_reason: `${event}: ${args.message}`.slice(0, 300) })
+    .eq("id", args.conversationId);
 }
 
 async function verifySignature(rawBody: string, sigHeader: string, appSecret: string): Promise<boolean> {
@@ -411,20 +449,23 @@ Deno.serve(async (req) => {
         // Răspunsurile pozitive simple („DA”, „De acord”, „ok”, 👍) contează ca
         // acord de publicare doar pentru numerele cărora li s-a cerut acordul
         // (au o linie în wa_publish_consents).
+        // Cererea din mesajul cu butoane (Make a confirmat șablonul) contează și
+        // când trimiterea Make nu apare în mesajele salvate aici.
         let pendingConsent = false;
-        if (outboundCount) {
-          try {
-            const { data: consentRow } = await supabase
-              .from("wa_publish_consents")
-              .select("id")
-              .eq("phone_normalized", from)
-              .neq("status", "revoked")
-              .limit(1)
-              .maybeSingle();
-            pendingConsent = !!consentRow;
-          } catch (e) {
-            console.error("[wa-webhook] pending consent check failed:", e);
-          }
+        let consentRow: { id: string; status: string; request_template: string | null } | null = null;
+        try {
+          const { data } = await supabase
+            .from("wa_publish_consents")
+            .select("id, status, request_template")
+            .in("phone_normalized", phoneVariants(from))
+            .neq("status", "revoked")
+            .order("requested_at", { ascending: false, nullsFirst: false })
+            .limit(1)
+            .maybeSingle();
+          consentRow = data ?? null;
+          pendingConsent = !!consentRow && (!!outboundCount || consentRow.request_template === WA_OWNER_OUTREACH_TEMPLATE);
+        } catch (e) {
+          console.error("[wa-webhook] pending consent check failed:", e);
         }
         // Prima interacțiune → trimitem DIRECT textul fix de calificare (fără AI),
         // ca răspunsul să fie mereu exact cel aprobat.
@@ -451,8 +492,7 @@ Deno.serve(async (req) => {
               .select("id", { count: "exact", head: true })
               .eq("conversation_id", convId)
               .contains("tool_call", { auto_reply: quick.kind });
-            if (!alreadyNotified) {
-              await notifyOwnerHandover(supabase, {
+            const alert = alreadyNotified ? null : await notifyOwnerHandover(supabase, {
               phone: from,
               profile_name: profileName,
               message: text,
@@ -460,7 +500,15 @@ Deno.serve(async (req) => {
               conversation_id: convId,
               prospect: ownerCtx ?? await loadProspectContext(supabase, from),
             });
+            if (!alreadyNotified) {
               await supabase.from("prospect_listings").update({ lifecycle_status: "interested" }).eq("phone_normalized", from);
+            }
+            // Cererea de analiză de venit se înregistrează la fiecare apăsare (alerta pleacă o dată).
+            if (quick.kind === "owner_hotel_calc") {
+              await recordOwnerHandoff(supabase, {
+                kind: quick.kind, phone: from, conversationId: convId, waMessageId: waId,
+                message: text, alert, alertSkipped: "alert_already_sent",
+              });
             }
           } catch (e) {
             console.error("[wa-webhook] owner handover failed:", e);
@@ -518,7 +566,32 @@ Deno.serve(async (req) => {
         // Acordul proprietarului pentru preluarea anunțului pe realtrust.ro
         // („CONFIRM” sau vechiul „DA PUBLIC”) sau retragerea acordului („RETRAG”) — are prioritate
         // față de orice alt răspuns automat și declanșează publicarea/retragerea.
-        const publishIntent = detectPublishIntent(text, { pendingConsent });
+        // Fluxul cu butoane: acord valid DOAR cu șablonul outreach_proprietar_butoane_v1
+        // confirmat de Make + butonul „DA, activează gratuit” / DA / Puteți publica / E în regulă.
+        const outreachConsent = ownerOutreachConsentCheck(text, consentRow?.request_template);
+        let publishIntent = detectPublishIntent(text, { pendingConsent });
+        if (outreachConsent.status === "valid") publishIntent = "consent";
+        if (outreachConsent.status === "missing_template") {
+          publishIntent = null;
+          quick = { kind: "owner_consent_unverified", text: OWNER_CONSENT_UNVERIFIED_ACK };
+          try {
+            const reserved = await reservePhoneSend(supabase, from, "owner_consent_unverified_alert", 24 * 3600 * 1000);
+            const alert = reserved
+              ? await notifyOwnerHandover(supabase, {
+                phone: from, profile_name: profileName, message: text,
+                kind: "owner_consent_unverified", conversation_id: convId,
+                prospect: ownerCtx ?? await loadProspectContext(supabase, from),
+              })
+              : null;
+            if (reserved) await markPhoneSent(supabase, from, "owner_consent_unverified_alert");
+            await recordOwnerHandoff(supabase, {
+              kind: "owner_consent_unverified", phone: from, conversationId: convId, waMessageId: waId,
+              message: text, alert, alertSkipped: "alert_already_sent",
+            });
+          } catch (e) {
+            console.error("[wa-webhook] unverified consent alert failed:", e);
+          }
+        }
         if (publishIntent) {
           const wasStop = quick?.kind === "quick_stop";
           quick = publishIntent === "consent"
@@ -532,6 +605,9 @@ Deno.serve(async (req) => {
               message: text,
               supabaseUrl,
               serviceKey,
+              ...(outreachConsent.status === "valid" && publishIntent === "consent"
+                ? { consentId: consentRow?.id ?? null, trigger: outreachConsent.trigger, requestTemplate: WA_OWNER_OUTREACH_TEMPLATE }
+                : {}),
             });
             if (publishIntent === "revoke") {
               // Un „Nu” simplu este refuz: intră în DNC (quick_no) ca orice refuz expres.
@@ -573,13 +649,18 @@ Deno.serve(async (req) => {
           !(quick && (OWNER_HANDOVER_KINDS.has(quick.kind) || /^(publish_|quick_no|quick_stop)/.test(quick.kind)))
         ) {
           try {
-            if (await reservePhoneSend(supabase, from, "owner_question_alert", 24 * 3600 * 1000)) {
-              await notifyOwnerHandover(supabase, {
+            const reserved = await reservePhoneSend(supabase, from, "owner_question_alert", 24 * 3600 * 1000);
+            const alert = reserved
+              ? await notifyOwnerHandover(supabase, {
                 phone: from, profile_name: profileName, message: text,
                 kind: "owner_question", conversation_id: convId, prospect: ownerCtx,
-              });
-              await markPhoneSent(supabase, from, "owner_question_alert");
-            }
+              })
+              : null;
+            if (reserved) await markPhoneSent(supabase, from, "owner_question_alert");
+            await recordOwnerHandoff(supabase, {
+              kind: "owner_question", phone: from, conversationId: convId, waMessageId: waId,
+              message: text, alert, alertSkipped: "alert_sent_last_24h",
+            });
           } catch (e) {
             console.error("[wa-webhook] owner question alert failed:", e);
           }
