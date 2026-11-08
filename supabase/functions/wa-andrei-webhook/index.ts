@@ -3,7 +3,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { relayToMake } from "../_shared/makeRelay.ts";
 import { extractWaLeadDetails, waEngagementBonus, gradeForScore, waSimulationFields } from "../_shared/waLeadExtract.ts";
-import { canonicalWaPhone, phoneVariants } from "../_shared/waPhone.ts";
+import { canonicalWaPhone, phoneVariants, reservePhoneSend, markPhoneSent } from "../_shared/waPhone.ts";
+import { isHotelCalcRequest, looksLikeOwnerQuestion } from "../_shared/waOwnerOutreachTemplate.ts";
 import {
   ACK_MESSAGE,
   buildIntakeMessage,
@@ -12,6 +13,7 @@ import {
   loadProspectContext,
   autoReplyText,
   OWNER_HANDOVER_KINDS,
+  OWNER_HOTEL_CALC_ACK,
   detectPublishIntent,
   PUBLISH_CONSENT_ACK,
   PUBLISH_REVOKE_ACK,
@@ -434,6 +436,11 @@ Deno.serve(async (req) => {
         let quick = outboundCount
           ? (isSafetyReply ? standardQuick : (preferClient ? clientPreparedQuick : standardQuick))
           : { kind: "intake", text: buildIntakeMessage() };
+        // Butonul „Calcul Regim Hotelier” din primul mesaj (trimis de Make) →
+        // predare către om chiar dacă trimiterea Make nu a fost salvată aici.
+        if (isHotelCalcRequest(text) && quick?.kind !== "owner_hotel_calc") {
+          quick = { kind: "owner_hotel_calc", text: OWNER_HOTEL_CALC_ACK };
+        }
 
         // Predare către om: proprietarul vrea vizionare / colaborare / apel.
         // Alerta se trimite O SINGURĂ DATĂ per conversație (nu la fiecare mesaj repetat).
@@ -451,7 +458,7 @@ Deno.serve(async (req) => {
               message: text,
               kind: quick.kind,
               conversation_id: convId,
-              prospect: ownerCtx,
+              prospect: ownerCtx ?? await loadProspectContext(supabase, from),
             });
               await supabase.from("prospect_listings").update({ lifecycle_status: "interested" }).eq("phone_normalized", from);
             }
@@ -557,6 +564,25 @@ Deno.serve(async (req) => {
           });
         } catch (e) {
           console.error("[wa-webhook] consent reply email failed:", e);
+        }
+
+        // Întrebare scrisă de proprietar → alertă pe numerele de administrare
+        // (cel mult una la 24h pe număr); Andrei răspunde în continuare automat.
+        if (
+          ownerCtx && looksLikeOwnerQuestion(text) &&
+          !(quick && (OWNER_HANDOVER_KINDS.has(quick.kind) || /^(publish_|quick_no|quick_stop)/.test(quick.kind)))
+        ) {
+          try {
+            if (await reservePhoneSend(supabase, from, "owner_question_alert", 24 * 3600 * 1000)) {
+              await notifyOwnerHandover(supabase, {
+                phone: from, profile_name: profileName, message: text,
+                kind: "owner_question", conversation_id: convId, prospect: ownerCtx,
+              });
+              await markPhoneSent(supabase, from, "owner_question_alert");
+            }
+          } catch (e) {
+            console.error("[wa-webhook] owner question alert failed:", e);
+          }
         }
 
         // Cererea de acord a fost pregătită din Admin, dar fereastra de 24h era

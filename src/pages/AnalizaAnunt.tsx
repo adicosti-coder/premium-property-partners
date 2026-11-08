@@ -12,6 +12,7 @@ import { supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient"
 import { submitLead } from "@/lib/leadSubmission";
 import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { ListingAnalysis } from "@/components/analiza/AiListingAnalyzer";
+import { parseOwnerOutreachParams } from "@/lib/ownerOutreachLink";
 
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
@@ -66,6 +67,9 @@ const AnalizaAnunt = () => {
     if (typeof window === "undefined") return "";
     return new URLSearchParams(window.location.search).get("url")?.slice(0, 500) ?? "";
   });
+  // Linkurile din primul mesaj WhatsApp către proprietari vin și cu ?zona=…&tip=….
+  const [outreach] = useState(() =>
+    typeof window === "undefined" ? { zone: null, type: null } : parseOwnerOutreachParams(window.location.search));
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState<ListingAnalysis | null>(null);
@@ -202,6 +206,12 @@ const AnalizaAnunt = () => {
             Lipește linkul de pe Storia, OLX, Publi24 sau Imobiliare.ro și primești instant o evaluare obiectivă,
             scorul proprietății și marja de negociere.
           </p>
+          {outreach.zone && (
+            <p className="mt-3 text-base font-medium text-foreground">
+              Analiză de piață pentru zona {outreach.zone}
+              {outreach.type ? ` · ${outreach.type === "vanzare" ? "vânzare" : "închiriere"}` : ""}
+            </p>
+          )}
           <form onSubmit={analyze} className="mt-8 space-y-3 text-left">
             <Label htmlFor="listing-url" className="sr-only">Link anunț</Label>
             <Input

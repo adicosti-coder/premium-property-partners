@@ -6,6 +6,7 @@ import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { toOutreachPhone } from "../_shared/waPhone.ts";
 import { isTestPhone } from "../_shared/testPhoneAllowlist.ts";
 import { rentalFirstMessage } from "../_shared/rentalIntroMessage.ts";
+import { WA_OWNER_OUTREACH_TEMPLATE, WA_OWNER_OUTREACH_LANGUAGE, ownerOutreachPreviewUrl, ownerOutreachZone } from "../_shared/waOwnerOutreachTemplate.ts";
 
 
 const corsHeaders = {
@@ -55,6 +56,12 @@ Deno.serve(async (req) => {
     rooms: p.rooms != null ? String(p.rooms) : "",
     // Textul primului mesaj pentru închiriere; Make îl poate mapa direct din `message`.
     message: p.category === "vanzare" ? "" : rentalFirstMessage(p.rooms, p.zone),
+    // Șablonul Meta cu 3 butoane: {{1}} = template_zone, {{2}} = preview_url.
+    // Make raportează înapoi `template` în outreach-status, ca răspunsul „DA” scris să conteze ca acord.
+    template_name: WA_OWNER_OUTREACH_TEMPLATE,
+    template_language: WA_OWNER_OUTREACH_LANGUAGE,
+    template_zone: ownerOutreachZone(p),
+    preview_url: ownerOutreachPreviewUrl(p),
   };
 
   if (body.dry_run) return json({ ok: true, dry_run: true, payload });
