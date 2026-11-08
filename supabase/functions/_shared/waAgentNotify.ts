@@ -288,7 +288,7 @@ export async function notifyClientCallRequest(
       const resp = await fetch(`https://graph.facebook.com/v20.0/${WA_PHONE_NUMBER_ID}/messages`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ messaging_product: "whatsapp", to: ADMIN_WA_ALERT_NUMBER, type: "text", text: { preview_url: false, body: lines.join("\n") } }),
+        body: JSON.stringify({ messaging_product: "whatsapp", to: ADMIN_WA_ALERT_NUMBERS[0], type: "text", text: { preview_url: false, body: lines.join("\n") } }),
       });
       if (!resp.ok) console.error("[wa-client-call] admin WA failed:", resp.status, (await resp.text()).slice(0, 300));
     }
