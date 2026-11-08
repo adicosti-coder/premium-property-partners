@@ -1,6 +1,7 @@
 // Inspecția anunțurilor noi pe WhatsApp-ul de administrare: „1/Aprob” publică, „2/Respinge” arhivează.
 // Publicarea respectă în continuare acordul proprietarului („CONFIRM”).
 import { WA_PHONE_NUMBER_ID, waToken } from "./waConfig.ts";
+import { applyAdminDecisionToConsents } from "./ownerConsentApproval.ts";
 
 export const ADMIN_INSPECTION_NUMBER = "40723154520";
 export const ADMIN_INSPECTION_PHONE = `+${ADMIN_INSPECTION_NUMBER}`;
@@ -185,11 +186,14 @@ export async function handleInspectionDecision(
   if (decision.action === "reject") {
     await supabase.from("prospect_listings").update({ status: "archived" }).eq("id", insp.prospect_listing_id);
     await supabase.from("listing_inspections").update({ status: "rejected", decided_at: now }).eq("id", insp.id);
+    await applyAdminDecisionToConsents(supabase, insp.prospect_listing_id, "reject");
     await sendAdminText(`🗄️ Arhivat: ${insp.clean_title}`);
     return;
   }
 
   await supabase.from("listing_inspections").update({ status: "approved", decided_at: now }).eq("id", insp.id);
+  // Acordul „DA” aștepta această aprobare (pending_approval) → abia acum devine valabil pentru publicare.
+  await applyAdminDecisionToConsents(supabase, insp.prospect_listing_id, "approve");
   const resp = await fetch(`${env.supabaseUrl}/functions/v1/auto-publish-listing-worker`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.serviceKey}`, "x-cron-secret": env.serviceKey },
