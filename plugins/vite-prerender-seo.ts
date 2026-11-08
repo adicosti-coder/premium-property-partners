@@ -1704,12 +1704,12 @@ export function generateHtml(template: string, route: PrerenderRoute, protectedH
 
   let html = template.replace(
     /<title>[^<]*<\/title>/,
-    `<title>${escapeHtml(route.title)}</title>`
+    () => `<title>${escapeHtml(route.title)}</title>`
   );
 
   html = html.replace(
     /<meta name="description" content="[^"]*">/,
-    `<meta name="description" content="${escapeHtml(route.description)}">`
+    () => `<meta name="description" content="${escapeHtml(route.description)}">`
   );
 
   // Romanian crawlers receive a canonical in the static document. The same
@@ -1724,7 +1724,7 @@ export function generateHtml(template: string, route: PrerenderRoute, protectedH
     `<link rel="alternate" hreflang="x-default" href="${roHref}" />`,
   ].join('\n  ');
   const englishHead = `<script>(function(){if((new URLSearchParams(location.search).get('lang')||'').toLowerCase()==='en'){var c=document.querySelector('link[rel="canonical"]');if(c)c.href=${JSON.stringify(`${roHref}?lang=en`)};var r=document.querySelector('meta[name="robots"]');if(r)r.content='noindex, follow';document.documentElement.lang='en';}})();</script>`;
-  html = html.replace('</head>', `  ${hreflangTags}\n  ${englishHead}\n</head>`);
+  html = html.replace('</head>', () => `  ${hreflangTags}\n  ${englishHead}\n</head>`);
 
   // Per-route Open Graph / Twitter tags. The static shell ships sitewide
   // values; without this, every prerendered page shares the homepage preview.
