@@ -8,6 +8,9 @@ import {
   detectPublishIntent, isConditionalConsent, isClearRefusal,
   PUBLISH_CONSENT_ACK, PUBLISH_CONSENT_RECONFIRM_TEXT,
 } from "../_shared/waAutoReply.ts";
+import { ownerOutreachConsentCheck } from "../_shared/waOwnerOutreachTemplate.ts";
+import { recordOwnerConsent } from "../_shared/ownerConsentApproval.ts";
+import { OWNER_WAITING_ADMIN_TEXT } from "../_shared/listingInspection.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -31,7 +34,7 @@ Deno.serve(async (req) => {
   const since = new Date(Date.now() - days * 864e5).toISOString();
 
   const { data: rows } = await sb.from("wa_publish_consents")
-    .select("id, phone_normalized, prospect_listing_id, created_at, requested_at")
+    .select("id, phone_normalized, prospect_listing_id, created_at, requested_at, request_template")
     .eq("status", "requested").is("revoked_at", null).gte("created_at", since).limit(200);
 
   const results: Record<string, unknown>[] = [];
@@ -51,26 +54,32 @@ Deno.serve(async (req) => {
     if (texts.some((t) => isClearRefusal(t) || detectPublishIntent(t, { pendingConsent: true }) === "revoke")) {
       results.push({ phone: r.phone_normalized, action: "skip_refusal" }); continue;
     }
-    const consentText = [...texts].reverse().find((t) => detectPublishIntent(t, { pendingConsent: true }) === "consent");
+    // Butonul „DA, activează gratuit” contează doar cu șablonul confirmat de Make.
+    const isConsent = (t: string) => {
+      const c = ownerOutreachConsentCheck(t, r.request_template);
+      if (c.status === "valid") return true;
+      if (c.status === "missing_template") return false;
+      return detectPublishIntent(t, { pendingConsent: true }) === "consent";
+    };
+    const consentText = [...texts].reverse().find(isConsent);
     const condText = consentText ? null : [...texts].reverse().find((t) => isConditionalConsent(t, { pendingConsent: true }));
     if (!consentText && !condText) { results.push({ phone: r.phone_normalized, action: "no_match" }); continue; }
 
     const windowOpen = !!conv.window_expires_at && new Date(conv.window_expires_at).getTime() > Date.now();
     const action = consentText ? "consent" : "reconfirm";
     let sent: unknown = null;
+    let waitingAdmin = false;
     if (!dry) {
       if (consentText) {
-        await sb.from("wa_publish_consents").update({
-          status: "granted", consent_text: consentText.slice(0, 1000),
-          consented_at: new Date().toISOString(), notes: "recheck: filtru extins",
-        }).eq("id", r.id);
-        if (r.prospect_listing_id) {
-          await fetch(`${url}/functions/v1/auto-publish-listing-worker`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, "x-cron-secret": key },
-            body: JSON.stringify({ prospect_id: r.prospect_listing_id, triggered_by: "wa_consent_recheck", consent_id: r.id }),
-          }).catch((e) => console.error("[recheck] publish trigger", e));
-        }
+        // Acordul așteaptă aprobarea adminului (1/2), exact ca în webhook.
+        const outreach = ownerOutreachConsentCheck(consentText, r.request_template);
+        const res = await recordOwnerConsent(sb, {
+          phone: r.phone_normalized, prospectId: r.prospect_listing_id, consentId: r.id,
+          message: consentText, trigger: outreach.status === "valid" ? outreach.trigger : "text",
+          requestTemplate: r.request_template, supabaseUrl: url, serviceKey: key, triggeredBy: "wa_consent_recheck",
+        });
+        waitingAdmin = res.waitingAdmin;
+        await sb.from("wa_publish_consents").update({ notes: "recheck: filtru extins" }).eq("id", r.id);
       }
       // Text liber doar în fereastra de 24h (regulă Meta); altfel rămâne pentru echipă.
       if (windowOpen) {
@@ -79,7 +88,7 @@ Deno.serve(async (req) => {
           headers: { "Content-Type": "application/json", "x-internal-secret": Deno.env.get("WA_ANDREI_INTERNAL_SECRET") || "" },
           body: JSON.stringify({
             conversation_id: conv.id,
-            text: consentText ? PUBLISH_CONSENT_ACK : PUBLISH_CONSENT_RECONFIRM_TEXT,
+            text: consentText ? (waitingAdmin ? OWNER_WAITING_ADMIN_TEXT : PUBLISH_CONSENT_ACK) : PUBLISH_CONSENT_RECONFIRM_TEXT,
             auto_kind: consentText ? "publish_consent" : "publish_consent_reconfirm",
           }),
         });

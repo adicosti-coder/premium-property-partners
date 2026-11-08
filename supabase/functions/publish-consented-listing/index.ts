@@ -30,8 +30,12 @@ Deno.serve(async (req) => {
 
   const { data: consent } = await sb.from("wa_publish_consents")
     .select("id, status, property_id").eq("prospect_listing_id", prospectId)
-    .in("status", ["granted", "published"]).limit(1).maybeSingle();
+    .in("status", ["granted", "published", "pending_approval"]).is("revoked_at", null).limit(1).maybeSingle();
   if (!consent) return json({ success: false, error: "Nu există acord „DA” pentru acest anunț" }, 409);
+  // „Publică acum” apăsat de admin = aprobarea manuală a unui acord aflat în așteptare.
+  if (consent.status === "pending_approval") {
+    await sb.from("wa_publish_consents").update({ status: "granted" }).eq("id", consent.id).eq("status", "pending_approval");
+  }
 
   // Already published? Return the existing page instead of publishing twice.
   const { data: existing } = consent.property_id

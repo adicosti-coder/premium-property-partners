@@ -960,6 +960,13 @@
       "when": 1794003382299,
       "tag": "0136_calculator_email_delivery_receipts",
       "breakpoints": true
+    },
+    {
+      "idx": 137,
+      "version": "7",
+      "when": 1794143531434,
+      "tag": "0137_wa_publish_consents_outreach_template",
+      "breakpoints": true
     }
   ]
 }

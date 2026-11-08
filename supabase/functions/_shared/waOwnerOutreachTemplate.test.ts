@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import {
-  OWNER_OUTREACH_BUTTONS, WA_OWNER_OUTREACH_FOOTER, isHotelCalcRequest, looksLikeOwnerQuestion, ownerOutreachPreviewUrl,
+  OWNER_OUTREACH_BUTTONS, WA_OWNER_OUTREACH_FOOTER, WA_OWNER_OUTREACH_TEMPLATE, isHotelCalcRequest, looksLikeOwnerQuestion,
+  ownerOutreachConsentCheck, ownerOutreachPreviewUrl,
 } from "./waOwnerOutreachTemplate.ts";
 import { detectPublishIntent, isClearRefusal, quickReplyText, OWNER_HANDOVER_KINDS } from "./waAutoReply.ts";
 
@@ -21,8 +22,22 @@ describe("primul mesaj către proprietari", () => {
 });
 
 describe("răspunsurile proprietarului", () => {
-  it("butonul „DA, activează gratuit” este acord oricând", () => {
-    expect(detectPublishIntent(OWNER_OUTREACH_BUTTONS.consent)).toBe("consent");
+  it("butonul „DA, activează gratuit” e acord doar cu șablonul outreach_proprietar_butoane_v1 confirmat", () => {
+    expect(WA_OWNER_OUTREACH_TEMPLATE).toBe("outreach_proprietar_butoane_v1");
+    expect(ownerOutreachConsentCheck(OWNER_OUTREACH_BUTTONS.consent, "outreach_proprietar_butoane_v1"))
+      .toEqual({ status: "valid", trigger: "outreach_button" });
+    expect(ownerOutreachConsentCheck(OWNER_OUTREACH_BUTTONS.consent, null).status).toBe("missing_template");
+    expect(ownerOutreachConsentCheck(OWNER_OUTREACH_BUTTONS.consent, "alt_sablon").status).toBe("missing_template");
+    expect(detectPublishIntent(OWNER_OUTREACH_BUTTONS.consent, { pendingConsent: true })).toBeNull();
+  });
+
+  it("DA, Puteți publica și E în regulă sunt acord valid cu șablonul confirmat", () => {
+    for (const t of ["DA", "Da!", "Puteți publica", "E în regulă", "Da, puteți publica"]) {
+      expect(ownerOutreachConsentCheck(t, "outreach_proprietar_butoane_v1"))
+        .toEqual({ status: "valid", trigger: "outreach_text" });
+    }
+    expect(ownerOutreachConsentCheck("Nu doresc", "outreach_proprietar_butoane_v1").status).toBe("not_applicable");
+    expect(ownerOutreachConsentCheck("Da, dar cât costă?", "outreach_proprietar_butoane_v1").status).toBe("not_applicable");
   });
 
   it("„E în regulă” și „Puteți publica” sunt acord după cererea noastră", () => {

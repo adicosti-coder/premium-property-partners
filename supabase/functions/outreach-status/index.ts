@@ -43,16 +43,29 @@ Deno.serve(async (req) => {
   if (!data) return json({ error: "not_found" }, 404);
   // Mesajul cu butoane cere explicit acordul („Răspundeți DA pentru publicare sau NU”):
   // notăm cererea, ca un „DA” / „E în regulă” scris să fie citit drept acord.
+  // `request_template` este dovada din confirmarea Make: doar cu ea butonul
+  // „DA, activează gratuit” sau un „DA” scris devin acord valid în wa-andrei-webhook.
   let consent_requested = false;
   if (status === "whatsapp_sent" && String(b.template || "") === WA_OWNER_OUTREACH_TEMPLATE && data.phone_normalized) {
-    const { count } = await sb.from("wa_publish_consents").select("id", { count: "exact", head: true }).eq("prospect_listing_id", id);
-    if (!count) {
+    const nowIso = new Date().toISOString();
+    const { data: existing } = await sb.from("wa_publish_consents")
+      .select("id, status").eq("prospect_listing_id", id)
+      .order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (!existing) {
       const { error: cErr } = await sb.from("wa_publish_consents").insert({
         phone_normalized: data.phone_normalized, prospect_listing_id: id, status: "requested",
-        requested_at: new Date().toISOString(), source: "whatsapp", notes: "outreach_buttons",
+        requested_at: nowIso, source: "whatsapp", notes: "outreach_buttons",
+        request_template: WA_OWNER_OUTREACH_TEMPLATE,
       });
       if (cErr) console.error("[outreach-status] consent request insert failed:", cErr.message);
       consent_requested = !cErr;
+    } else if (existing.status === "requested") {
+      // Cerere deschisă din alt flux → o legăm de mesajul cu butoane abia confirmat.
+      const { error: uErr } = await sb.from("wa_publish_consents")
+        .update({ request_template: WA_OWNER_OUTREACH_TEMPLATE, requested_at: nowIso })
+        .eq("id", existing.id).eq("status", "requested");
+      if (uErr) console.error("[outreach-status] consent template update failed:", uErr.message);
+      consent_requested = !uErr;
     }
   }
   // WhatsApp nelivrat (număr fără cont, eroare Meta) → Andrei sună o dată, ca fallback.
