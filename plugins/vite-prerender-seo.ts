@@ -1815,9 +1815,11 @@ export function generateHtml(template: string, route: PrerenderRoute, protectedH
     </div>`
     : '';
 
+  // Function replacement: JSON-LD values such as priceRange "$$$" must not be
+  // read as String.replace patterns ("$$" → "$").
   html = html.replace(
     '<div id="root">',
-    `${seoBlock}${routeShell}\n    <div id="root">`
+    () => `${seoBlock}${routeShell}\n    <div id="root">`
   );
 
   // Deduplicate CSS links: if a preload-swap tag already exists for the same
