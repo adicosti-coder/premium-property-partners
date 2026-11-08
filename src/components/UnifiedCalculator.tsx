@@ -86,6 +86,16 @@ const UnifiedCalculator = () => {
   const viewTracked = useRef(false);
   const inputsRef = useRef<HTMLDivElement>(null);
   const [showBar, setShowBar] = useState(false);
+  // Pe ecran mare (lg) rezultatul stă alături de date; butonul rămâne la final.
+  const [isDesktop, setIsDesktop] = useState(() => typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(min-width: 1024px)").matches);
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const update = () => setIsDesktop(mq.matches);
+    update();
+    mq.addEventListener?.("change", update);
+    return () => mq.removeEventListener?.("change", update);
+  }, []);
   useEffect(() => {
     if (typeof IntersectionObserver === "undefined" || !inputsRef.current || !resultRef.current) return;
     const seen = { inputs: false, result: false };
@@ -385,6 +395,26 @@ const UnifiedCalculator = () => {
     </h3>
   );
 
+  const leadAction = (
+leadSent ? (
+              <div role="status" aria-live="polite" className="flex gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-3 md:p-4">
+                <Check className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+                <div>
+                  <p className="font-semibold text-foreground">{adminReceived ? (ro ? "Andrei a primit cererea ta" : "Andrei has received your request") : (ro ? "Cererea a fost înregistrată" : "Your request has been registered")}</p>
+                  <p className="text-sm text-muted-foreground">{adminReceived ? (ro ? "Livrarea notificării către Andrei este confirmată." : "Notification delivery to Andrei is confirmed.") : (ro ? "Datele sunt salvate. Așteptăm confirmarea livrării notificării către Andrei." : "Your details are saved. Awaiting confirmation of notification delivery to Andrei.")}</p>
+                  <Button type="button" variant="outline" className="mt-3 min-h-12" onClick={() => { setLeadSent(false); setReceipt(null); }}>Calcul nou / Actualizat</Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Button size="lg" className="min-h-14 w-full bg-gold text-gold-foreground hover:bg-gold-dark" onClick={openLead}>
+                  <MessageCircle className="mr-2 h-5 w-5" />Trimite proiecția pe WhatsApp
+                </Button>
+                <p className="text-center text-xs text-muted-foreground">{ro ? "Primești calculul complet și o discuție scurtă cu Andrei. Fără obligații." : "Get the full calculation and a short chat with Andrei. No obligation."}</p>
+              </div>
+            )
+  );
+
   return (
     <div data-calculator-ready="true" className="overflow-clip rounded-3xl border border-border bg-card shadow-elegant">
       <div className="border-b border-border px-4 py-4 md:px-10 md:py-8">
@@ -564,6 +594,9 @@ const UnifiedCalculator = () => {
               )}
             </div>
 
+            {/* Pe telefon, butonul vine imediat sub venitul net. */}
+            {!isDesktop && leadAction}
+
             {surfaceValid && (
               <>
                 {/* Comparație */}
@@ -641,23 +674,7 @@ const UnifiedCalculator = () => {
               </>
             )}
 
-            {leadSent ? (
-              <div role="status" aria-live="polite" className="flex gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-3 md:p-4">
-                <Check className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
-                <div>
-                  <p className="font-semibold text-foreground">{adminReceived ? (ro ? "Andrei a primit cererea ta" : "Andrei has received your request") : (ro ? "Cererea a fost înregistrată" : "Your request has been registered")}</p>
-                  <p className="text-sm text-muted-foreground">{adminReceived ? (ro ? "Livrarea notificării către Andrei este confirmată." : "Notification delivery to Andrei is confirmed.") : (ro ? "Datele sunt salvate. Așteptăm confirmarea livrării notificării către Andrei." : "Your details are saved. Awaiting confirmation of notification delivery to Andrei.")}</p>
-                  <Button type="button" variant="outline" className="mt-3 min-h-12" onClick={() => { setLeadSent(false); setReceipt(null); }}>Calcul nou / Actualizat</Button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Button size="lg" className="min-h-14 w-full bg-gold text-gold-foreground hover:bg-gold-dark" onClick={openLead}>
-                  <MessageCircle className="mr-2 h-5 w-5" />Trimite proiecția pe WhatsApp
-                </Button>
-                <p className="text-center text-xs text-muted-foreground">{ro ? "Primești calculul complet și o discuție scurtă cu Andrei. Fără obligații." : "Get the full calculation and a short chat with Andrei. No obligation."}</p>
-              </div>
-            )}
+            {isDesktop && leadAction}
             <SocialFollow dismissible />
           </div>
         </aside>
