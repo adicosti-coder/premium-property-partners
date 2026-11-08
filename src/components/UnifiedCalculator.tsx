@@ -86,6 +86,16 @@ const UnifiedCalculator = () => {
   const viewTracked = useRef(false);
   const inputsRef = useRef<HTMLDivElement>(null);
   const [showBar, setShowBar] = useState(false);
+  // Pe ecran mare (lg) rezultatul stă alături de date; butonul rămâne la final.
+  const [isDesktop, setIsDesktop] = useState(() => typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(min-width: 1024px)").matches);
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const update = () => setIsDesktop(mq.matches);
+    update();
+    mq.addEventListener?.("change", update);
+    return () => mq.removeEventListener?.("change", update);
+  }, []);
   useEffect(() => {
     if (typeof IntersectionObserver === "undefined" || !inputsRef.current || !resultRef.current) return;
     const seen = { inputs: false, result: false };
