@@ -10,6 +10,7 @@ import type { Plugin } from 'vite';
 import fs from 'fs';
 import path from 'path';
 import { PUBLIC_ROUTE_SEO } from '../src/lib/publicRouteSeo';
+import { ORGANIZATION_SCHEMA, REAL_ESTATE_AGENT_SCHEMA, LODGING_BUSINESS_SCHEMA } from '../src/lib/orgIdentity';
 import {
   fetchPublicArticles,
   fetchComplexes,
@@ -897,54 +898,9 @@ export function buildStaticRoutes(): PrerenderRoute[] {
     h1: 'RealTrust Timișoara — Imobiliare, Investiții și Property Management',
     canonical: `${BASE_URL}/`,
     seoBody: HOMEPAGE_AUTHORITY_BODY,
-    jsonLd: [{
-      '@context': 'https://schema.org',
-      '@type': 'Organization',
-      '@id': `${BASE_URL}/#organization`,
-      name: 'RealTrust',
-      legalName: 'SC Imo Business Centrum SRL',
-      taxID: 'RO14380627',
-      url: `${BASE_URL}/`,
-      department: [{ '@id': `${BASE_URL}/#realestateagent` }, { '@id': `${BASE_URL}/#lodgingbusiness` }],
-    }, {
-      '@context': 'https://schema.org',
-      '@type': 'LodgingBusiness',
-      '@id': `${BASE_URL}/#lodgingbusiness`,
-      name: 'ApArt Hotel Timișoara',
-      description: 'Apartamente în regim hotelier în Timișoara, administrate de RealTrust.',
-      url: `${BASE_URL}/cazare`,
-      telephone: '+40799069256',
-      address: { '@type': 'PostalAddress', addressLocality: 'Timișoara', addressRegion: 'Timiș', postalCode: '300125', addressCountry: 'RO' },
-      geo: { '@type': 'GeoCoordinates', latitude: 45.7489, longitude: 21.2087 },
-      parentOrganization: { '@id': `${BASE_URL}/#organization` },
-      sameAs: ['https://www.instagram.com/ap.art.hotel/'],
-    }, {
-      '@context': 'https://schema.org',
-      '@type': 'RealEstateAgent',
-      '@id': `${BASE_URL}/#realestateagent`,
-      parentOrganization: { '@id': `${BASE_URL}/#organization` },
-      subOrganization: { '@id': `${BASE_URL}/#lodgingbusiness` },
-      name: 'RealTrust',
-      legalName: 'SC Imo Business Centrum SRL',
-      taxID: 'RO14380627',
-      description: 'Servicii imobiliare, investiții și administrare de proprietăți în regim hotelier în Timișoara.',
-      url: `${BASE_URL}/`,
-      telephone: '+40799069256',
-      address: {
-        '@type': 'PostalAddress',
-        addressLocality: 'Timișoara',
-        addressRegion: 'Timiș',
-        postalCode: '300125',
-        addressCountry: 'RO',
-      },
-      geo: { '@type': 'GeoCoordinates', latitude: 45.7489, longitude: 21.2087 },
-      areaServed: 'Timișoara',
-      priceRange: '$$',
-      sameAs: [
-        'https://www.facebook.com/realtrust.ro',
-        'https://www.google.com/maps/place/RealTrust/data=!4m2!3m1!1s0x40918b091135b1b3:0x714fdcd64f129651',
-      ],
-    }],
+    // Entity nodes come verbatim from orgIdentity so the static HTML and the
+    // runtime homepage describe the same legal organization, agency and hotel.
+    jsonLd: [ORGANIZATION_SCHEMA, REAL_ESTATE_AGENT_SCHEMA, LODGING_BUSINESS_SCHEMA],
   });
 
   // /cartiere
@@ -1748,12 +1704,12 @@ export function generateHtml(template: string, route: PrerenderRoute, protectedH
 
   let html = template.replace(
     /<title>[^<]*<\/title>/,
-    `<title>${escapeHtml(route.title)}</title>`
+    () => `<title>${escapeHtml(route.title)}</title>`
   );
 
   html = html.replace(
     /<meta name="description" content="[^"]*">/,
-    `<meta name="description" content="${escapeHtml(route.description)}">`
+    () => `<meta name="description" content="${escapeHtml(route.description)}">`
   );
 
   // Romanian crawlers receive a canonical in the static document. The same
@@ -1768,7 +1724,7 @@ export function generateHtml(template: string, route: PrerenderRoute, protectedH
     `<link rel="alternate" hreflang="x-default" href="${roHref}" />`,
   ].join('\n  ');
   const englishHead = `<script>(function(){if((new URLSearchParams(location.search).get('lang')||'').toLowerCase()==='en'){var c=document.querySelector('link[rel="canonical"]');if(c)c.href=${JSON.stringify(`${roHref}?lang=en`)};var r=document.querySelector('meta[name="robots"]');if(r)r.content='noindex, follow';document.documentElement.lang='en';}})();</script>`;
-  html = html.replace('</head>', `  ${hreflangTags}\n  ${englishHead}\n</head>`);
+  html = html.replace('</head>', () => `  ${hreflangTags}\n  ${englishHead}\n</head>`);
 
   // Per-route Open Graph / Twitter tags. The static shell ships sitewide
   // values; without this, every prerendered page shares the homepage preview.
@@ -1783,7 +1739,7 @@ export function generateHtml(template: string, route: PrerenderRoute, protectedH
   const setMeta = (attr: 'property' | 'name', key: string, value: string) => {
     const re = new RegExp(`<meta ${attr}="${key.replace(':', ':')}" content="[^"]*"\\s*/?>`);
     const tag = `<meta ${attr}="${key}" content="${escapeHtml(value)}" />`;
-    html = re.test(html) ? html.replace(re, tag) : html.replace('</head>', `  ${tag}\n</head>`);
+    html = re.test(html) ? html.replace(re, () => tag) : html.replace('</head>', () => `  ${tag}\n</head>`);
   };
   const ogT = route.ogTitle || route.title;
   const ogD = route.ogDescription || route.description;
@@ -1859,9 +1815,11 @@ export function generateHtml(template: string, route: PrerenderRoute, protectedH
     </div>`
     : '';
 
+  // Function replacement: JSON-LD values such as priceRange "$$$" must not be
+  // read as String.replace patterns ("$$" → "$").
   html = html.replace(
     '<div id="root">',
-    `${seoBlock}${routeShell}\n    <div id="root">`
+    () => `${seoBlock}${routeShell}\n    <div id="root">`
   );
 
   // Deduplicate CSS links: if a preload-swap tag already exists for the same

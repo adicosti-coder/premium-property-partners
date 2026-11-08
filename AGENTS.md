@@ -59,3 +59,4 @@
 - Commercial review configuration remains disconnected from public copy until administrator approval; managed, accommodation and promoted inventory are separate metrics — prevents resolving disputed figures by assumption.
 - Owner lead forms emit one conversion after persistence; confirmation-page visits emit none, and GA4 automatic page views are disabled in favor of the existing SPA emitter — prevents duplicate or unverified conversions.
 - Language switching updates the existing language query through the router while preserving other parameters, hash and state — prevents reload from undoing the visitor's choice.
+- Homepage entity JSON-LD comes only from `src/lib/orgIdentity.ts` (runtime + prerender); prerender replaces use function replacements — keeps entities identical and `$$` intact.
