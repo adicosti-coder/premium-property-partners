@@ -376,9 +376,9 @@ export const LODGING_BUSINESS_SCHEMA = {
         },
         "priceSpecification": {
           "@type": "PriceSpecification",
-          "price": "20",
-          "priceCurrency": "EUR",
-          "unitText": "% commission on revenue",
+          "minPrice": "15",
+          "maxPrice": "20",
+          "unitText": "% din venitul net (venit brut minus comisioane canale și utilități)",
         },
       },
       {

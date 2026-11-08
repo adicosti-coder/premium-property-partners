@@ -61,4 +61,13 @@ describe("prerendered homepage head", () => {
     expect(agent).toEqual(JSON.parse(JSON.stringify(REAL_ESTATE_AGENT_SCHEMA)));
     expect(generateLocalBusinessSchema()).toEqual(hotel);
   });
+
+  it("states the management fee as 15–20% of net income in the ApArt Hotel node", () => {
+    const offers = (LODGING_BUSINESS_SCHEMA.hasOfferCatalog.itemListElement as readonly { itemOffered: { name: string }; priceSpecification: Record<string, string> }[]);
+    const management = offers.find((offer) => offer.itemOffered.name === "Property Management");
+    expect(management?.priceSpecification.minPrice).toBe("15");
+    expect(management?.priceSpecification.maxPrice).toBe("20");
+    expect(management?.priceSpecification.unitText).toContain("venitul net");
+    expect(management?.priceSpecification).not.toHaveProperty("price");
+  });
 });
