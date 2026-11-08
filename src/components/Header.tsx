@@ -39,6 +39,7 @@ const PropertyCodeSearch = lazy(() => import("./PropertyCodeSearch"));
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
@@ -250,49 +251,50 @@ const Header = () => {
     setMobileMenuOpen(false);
   };
 
-  // Grouped nav links with icons for premium mobile menu
+  // Mobile menu: 3 collapsible categories + simple rows
+  const ro = language === "ro";
   const navGroups = [
     {
-      label: language === "ro" ? "Principal" : "Main",
+      id: "servicii",
+      label: ro ? "Servicii Imobiliare" : "Real Estate Services",
+      icon: <BuildingIcon />,
       links: [
-        { href: "/", label: t.nav.home, isHome: true, icon: <HomeIcon /> },
+        { href: "/anunturi?tranzactie=vanzare", label: ro ? "Vânzări" : "Sales", isPage: true, icon: <BuildingIcon /> },
+        { href: "/anunturi?tranzactie=inchiriere", label: ro ? "Închirieri" : "Rentals", isPage: true, icon: <HomeIcon /> },
+        { href: "/evaluare-gratuita", label: ro ? "Evaluare Gratuită 24h" : "Free Valuation in 24h", isPage: true, icon: <ScanIcon /> },
+        { href: "/anunturi", label: ro ? "Portofoliu Anunțuri" : "Listings Portfolio", isPage: true, icon: <BookOpenIcon /> },
       ],
     },
     {
-      label: language === "ro" ? "Proprietari" : "Owners",
+      id: "proprietari",
+      label: ro ? "Regim Hotelier / Proprietari" : "Short-Term Rental / Owners",
+      icon: <TrendingIcon />,
       links: [
-        { href: "/servicii-imobiliare", label: language === "ro" ? "Servicii Imobiliare" : "Real Estate Services", isPage: true, icon: <BuildingIcon /> },
-        { href: "/pentru-proprietari", label: language === "ro" ? "Pentru Proprietari" : "For Owners", isPage: true, icon: <BuildingIcon /> },
-        { href: "/preturi", label: language === "ro" ? "Prețuri & Pachete" : "Pricing & Packages", isPage: true, icon: <TrendingIcon /> },
-        { href: "/hostscan-ai", label: language === "ro" ? "HostScan AI" : "HostScan AI", isPage: true, icon: <ScanIcon /> },
-        { href: "/analiza-anunt", label: language === "ro" ? "Analizează un anunț" : "Analyze a listing", isPage: true, icon: <ScanIcon /> },
+        { href: "/pentru-proprietari", label: ro ? "Cum funcționează" : "How it works", isPage: true, icon: <BuildingIcon /> },
+        { href: "/preturi", label: ro ? "Prețuri & Comisioane 15–20%" : "Pricing & Fees 15–20%", isPage: true, icon: <TrendingIcon /> },
+        { href: "/pentru-proprietari#calculator", label: ro ? "Calculator Venituri" : "Income Calculator", isPage: true, icon: <ScanIcon /> },
       ],
     },
     {
-      label: language === "ro" ? "Oaspeți" : "Guests",
+      id: "cazare",
+      label: ro ? "Cazare & Oaspeți" : "Stays & Guests",
+      icon: <BedIcon />,
       links: [
-        { href: "/cazare", label: language === "ro" ? "Cazare Regim Hotelier" : "Hotel Accommodation", isPage: true, icon: <BedIcon /> },
-        { href: "/ansambluri-rezidentiale", label: language === "ro" ? "Complexuri Rezidențiale" : "Residential Complexes", isPage: true, icon: <BuildingIcon /> },
-      ],
-    },
-    {
-      label: language === "ro" ? "Investiții" : "Investments",
-      links: [
-        { href: "/investitii", label: language === "ro" ? "Investiții Premium" : "Premium Investments", isPage: true, icon: <TrendingIcon /> },
-        { href: "/catalog-investitii", label: language === "ro" ? "Catalog Investiții 2026" : "Investment Catalog 2026", isPage: true, icon: <BookOpenIcon /> },
-        { href: "/imobiliare", label: t.nav.realEstate, isPage: true, icon: <BuildingIcon /> },
-        { href: "/cartiere", label: language === "ro" ? "Cartiere Timișoara" : "Timișoara Neighborhoods", isPage: true, icon: <BuildingIcon /> },
-      ],
-    },
-    {
-      label: language === "ro" ? "Informații" : "Info",
-      links: [
-        { href: "/blog", label: language === "ro" ? "Blog & Ghiduri" : "Blog & Guides", isPage: true, icon: <BookOpenIcon /> },
-        { href: "/despre-noi", label: t.nav.aboutUs, isPage: true, icon: <HomeIcon /> },
-        { href: "#contact", label: t.nav.contact, icon: <PhoneIcon /> },
+        { href: "/cazare", label: ro ? "Cazare Timișoara – ApArt Hotel" : "Timișoara Stays – ApArt Hotel", isPage: true, icon: <BedIcon /> },
+        { href: "/rezerva-direct", label: ro ? "Rezervare Directă -5%" : "Book Direct -5%", isPage: true, icon: <HomeIcon /> },
       ],
     },
   ];
+  const moreLinks = [
+    { href: "/hostscan-ai", label: "HostScan AI" },
+    { href: "/analiza-anunt", label: ro ? "Analizează un anunț" : "Analyze a listing" },
+    { href: "/ansambluri-rezidentiale", label: ro ? "Complexuri" : "Complexes" },
+    { href: "/investitii", label: ro ? "Investiții" : "Investments" },
+    { href: "/catalog-investitii", label: ro ? "Catalog 2026" : "Catalog 2026" },
+    { href: "/cartiere", label: ro ? "Cartiere" : "Neighborhoods" },
+  ];
+  const pathOf = (h: string) => h.split(/[?#]/)[0];
+  const currentGroupId = navGroups.find((g) => g.links.some((l) => pathOf(l.href) === location.pathname))?.id ?? null;
 
   // Desktop nav link styling - optimized for 1024px+ screens
   // Ultra-compact on lg (1024-1279), compact on xl (1280-1535), comfortable on 2xl (1536+)
@@ -453,44 +455,58 @@ const Header = () => {
                   </div>
                 )}
 
-                {navGroups.map((group, gi) => (
-                  <div key={group.label}>
-                    {gi > 0 && <div className="h-px bg-border/50 my-1" />}
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 px-1 mb-1">
-                      {group.label}
-                    </p>
-                    {group.links.map((link) => {
-                      const isActive = activeSection === link.href;
-                      const linkClasses = `flex min-h-12 items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                        isActive 
-                          ? "text-primary bg-primary/10 font-semibold" 
-                          : "text-foreground/70 hover:text-foreground hover:bg-muted/50"
-                      }`;
-
-                      return (
-                        <div key={link.href}>
-                          {link.isHome ? (
-                            <a href={link.href} onClick={handleHomeClick} className={linkClasses}>
-                              <span className="text-primary/70">{link.icon}</span>
-                              {link.label}
-                            </a>
-                          ) : link.isPage ? (
-                            <Link to={link.href} className={linkClasses} onClick={() => setMobileMenuOpen(false)}>
+                {navGroups.map((group) => {
+                  const open = openGroup === group.id;
+                  return (
+                    <div key={group.id} className="border-b border-border/50">
+                      <button
+                        type="button"
+                        aria-expanded={open}
+                        aria-controls={`mnav-${group.id}`}
+                        onClick={() => setOpenGroup(open ? null : group.id)}
+                        className="flex min-h-12 w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-semibold text-foreground rounded-lg hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <span className="text-primary">{group.icon}</span>
+                        <span className="flex-1">{group.label}</span>
+                        <svg aria-hidden="true" width="16" height="16" className={`w-4 h-4 transition-transform duration-200 motion-reduce:transition-none ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+                      </button>
+                      <div id={`mnav-${group.id}`} hidden={!open} className="pb-2 pl-3">
+                        {group.links.map((link) => {
+                          const isActive = location.pathname + location.search === link.href;
+                          return (
+                            <Link
+                              key={link.href}
+                              to={link.href}
+                              onClick={() => setMobileMenuOpen(false)}
+                              aria-current={isActive ? "page" : undefined}
+                              className={`flex min-h-12 items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-lg transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${isActive ? "text-primary bg-primary/10 font-semibold" : "text-foreground/70 hover:text-foreground hover:bg-muted/50"}`}
+                            >
                               <span className="text-primary/70">{link.icon}</span>
                               {link.label}
                             </Link>
-                          ) : (
-                            <a href={link.href} className={linkClasses} onClick={(e) => handleAnchorClick(e, link.href)}>
-                              <span className="text-primary/70">{link.icon}</span>
-                              {link.label}
-                            </a>
-                          )}
-                        </div>
-                      );
-                    })}
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Simple rows */}
+                <div className="flex flex-wrap gap-1 pt-1">
+                  <a href="/" onClick={handleHomeClick} className="inline-flex min-h-12 items-center px-3 text-sm font-medium text-foreground/70 hover:text-foreground rounded-lg hover:bg-muted/50">{t.nav.home}</a>
+                  <Link to="/blog" onClick={() => setMobileMenuOpen(false)} className="inline-flex min-h-12 items-center px-3 text-sm font-medium text-foreground/70 hover:text-foreground rounded-lg hover:bg-muted/50">Blog</Link>
+                  <Link to="/despre-noi" onClick={() => setMobileMenuOpen(false)} className="inline-flex min-h-12 items-center px-3 text-sm font-medium text-foreground/70 hover:text-foreground rounded-lg hover:bg-muted/50">{t.nav.aboutUs}</Link>
+                  <a href="#contact" onClick={(e) => handleAnchorClick(e, "#contact")} className="inline-flex min-h-12 items-center px-3 text-sm font-medium text-foreground/70 hover:text-foreground rounded-lg hover:bg-muted/50">{t.nav.contact}</a>
+                </div>
+                <div className="border-t border-border/50 pt-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-1 mb-1">{ro ? "Mai mult" : "More"}</p>
+                  <div className="flex flex-wrap gap-x-1">
+                    {moreLinks.map((l) => (
+                      <Link key={l.href} to={l.href} onClick={() => setMobileMenuOpen(false)} className="inline-flex min-h-12 items-center px-3 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted/50">{l.label}</Link>
+                    ))}
                   </div>
-                ))}
-                
+                </div>
+
                 {/* Admin links in mobile menu - only for users with admin role */}
                 {isAuthenticated === true && isAdmin && (
                   <>
