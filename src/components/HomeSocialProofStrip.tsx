@@ -1,4 +1,4 @@
-import { Star, TrendingUp, FileCheck } from "lucide-react";
+import { Users, Star, Percent } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 /** Three compact, approved proof points under the homepage hero. Static, no data fetching. */
@@ -6,9 +6,9 @@ const HomeSocialProofStrip = () => {
   const { language } = useLanguage();
   const ro = language !== "en";
   const items = [
-    { Icon: Star, title: "9,7/10", text: ro ? "scor consolidat pe Booking" : "consolidated Booking score" },
-    { Icon: TrendingUp, title: "6,5–9,4%", text: ro ? "randament net estimat pe an" : "estimated net yield per year" },
-    { Icon: FileCheck, title: ro ? "Contract scris" : "Written contract", text: ro ? "și raportare lunară" : "and monthly reporting" },
+    { Icon: Users, title: ro ? "Peste 10.000" : "Over 10,000", text: ro ? "oaspeți cazați" : "guests hosted" },
+    { Icon: Star, title: "9,7/10 Booking · 4,9/5 Airbnb", text: ro ? "evaluarea oaspeților" : "guest rating" },
+    { Icon: Percent, title: ro ? "Comision 15–20%" : "15–20% fee", text: ro ? "din venitul net" : "of net income" },
   ];
   return (
     <section aria-label={ro ? "De ce RealTrust" : "Why RealTrust"} className="border-b border-border bg-background">
