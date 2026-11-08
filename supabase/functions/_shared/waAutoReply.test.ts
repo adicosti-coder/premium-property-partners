@@ -105,7 +105,7 @@ test("cererea de acord arată analiza gratuită și cere „CONFIRM”", () => {
   expect(text).toContain("https://realtrust.ro/analiza-anunt?url=https%3A%2F%2Fwww.olx.ro%2Fd%2Foferta%2Fapartament-2-camere-iosefin-IDabc.html%3Fx%3D1%26y%3D2");
   expect(text).toContain("Comision 0%");
   expect(text).toContain("fără exclusivitate");
-  expect(text).toContain("răspundeți doar cu „CONFIRM” și îl activăm în 2 minute");
+  expect(text).toContain("Răspundeți DA pentru acord sau NU dacă nu doriți");
 });
 
 test("cererea de acord fără link de anunț folosește pagina de analiză simplă", () => {
