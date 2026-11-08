@@ -387,7 +387,7 @@ const UnifiedCalculator = () => {
 
   return (
     <div data-calculator-ready="true" className="overflow-clip rounded-3xl border border-border bg-card shadow-elegant">
-      <div className="border-b border-border px-4 py-5 md:px-10 md:py-8">
+      <div className="border-b border-border px-4 py-4 md:px-10 md:py-8">
         <div className="mb-2 flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
           <span className="text-xs font-semibold uppercase tracking-widest text-primary">{ro ? "Calculator venit · rezultat pe loc" : "Income calculator · instant result"}</span>
@@ -398,7 +398,7 @@ const UnifiedCalculator = () => {
 
       <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)]">
         {/* ── Date ── */}
-        <div ref={inputsRef} className="space-y-6 px-4 py-5 md:space-y-8 md:px-10 md:py-8">
+        <div ref={inputsRef} className="space-y-5 px-4 py-4 md:space-y-8 md:px-10 md:py-8">
           <section>
             {sectionTitle(1, ro ? "Cum vrei să introduci datele proprietății?" : "How would you like to enter your property details?")}
             <Tabs value={mode} onValueChange={(v) => setMode(v as InputMode)}>
@@ -550,24 +550,24 @@ const UnifiedCalculator = () => {
 
         {/* ── Rezultat live ── */}
         <aside ref={resultRef} aria-label={ro ? "Rezultatul calculului" : "Calculation result"} className="scroll-mt-24 border-t border-border bg-muted/30 lg:border-l lg:border-t-0">
-          <div className="space-y-5 px-4 py-5 md:space-y-6 md:px-8 md:py-8 lg:sticky lg:top-20">
+          <div className="space-y-3 px-4 py-4 md:space-y-6 md:px-8 md:py-8 lg:sticky lg:top-20">
             <div aria-live="polite" aria-atomic="true">
               <p className="text-sm text-muted-foreground">{typeLabel} · {zoneLabel} · {surfaceValid ? surfaceNum : "—"} mp · {ro ? "Parcare" : "Parking"}: {parking ? (ro ? "Da" : "Yes") : (ro ? "Nu" : "No")} · {finishLabel}</p>
               {surfaceValid ? (
                 <>
-                  <p className="mt-4 text-xs font-semibold uppercase tracking-widest text-primary">{ro ? "Regim hotelier · venit net lunar" : "Short-term rental · monthly net"}</p>
+                  <p className="mt-3 md:mt-4 text-xs font-semibold uppercase tracking-widest text-primary">{ro ? "Regim hotelier · venit net lunar" : "Short-term rental · monthly net"}</p>
                   <p className="mt-1 font-serif text-4xl font-semibold text-foreground md:text-5xl">{fmt(s.netMin)}–{fmt(s.netMax)} €</p>
                   <p className="mt-1 text-sm text-muted-foreground">≈ {fmt(s.netMid * 12)} € / {ro ? "an" : "year"} · {ro ? "după toate costurile de mai jos" : "after all costs below"}</p>
                 </>
               ) : (
-                <p className="mt-4 rounded-xl border border-border bg-background p-4 text-sm text-muted-foreground">{ro ? "Introdu o suprafață între 15 și 5.000 mp ca să vezi estimarea." : "Enter an area between 15 and 5,000 sqm to see the estimate."}</p>
+                <p className="mt-3 md:mt-4 rounded-xl border border-border bg-background p-3 md:p-4 text-sm text-muted-foreground">{ro ? "Introdu o suprafață între 15 și 5.000 mp ca să vezi estimarea." : "Enter an area between 15 and 5,000 sqm to see the estimate."}</p>
               )}
             </div>
 
             {surfaceValid && (
               <>
                 {/* Comparație */}
-                <div className="space-y-3 rounded-2xl border border-border bg-background p-4">
+                <div className="space-y-2.5 md:space-y-3 rounded-2xl border border-border bg-background p-3 md:p-4">
                   <div>
                     <div className="mb-1 flex justify-between text-sm"><span className="text-muted-foreground">{ro ? "Chirie clasică" : "Traditional rent"} <span className="text-xs">({rentNote})</span></span><span className="font-semibold text-foreground">~{fmt(s.classicRent)} €</span></div>
                     <div className="h-2.5 overflow-hidden rounded-full bg-border"><div className="h-full rounded-full bg-muted-foreground transition-all duration-500" style={{ width: `${(s.classicRent / maxBar) * 100}%` }} /></div>
@@ -584,7 +584,7 @@ const UnifiedCalculator = () => {
                 </div>
 
                 {/* Scenariu */}
-                <div className="space-y-5 rounded-2xl border border-border bg-background p-4">
+                <div className="space-y-3 md:space-y-5 rounded-2xl border border-border bg-background p-3 md:p-4">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-semibold text-foreground">{ro ? "Încearcă alt scenariu" : "Try another scenario"}</p>
                     {scenarioChanged && (
@@ -594,21 +594,21 @@ const UnifiedCalculator = () => {
                     )}
                   </div>
                   <div>
-                    <div className="mb-3 flex justify-between text-sm"><span className="text-muted-foreground">{ro ? "Tarif mediu pe noapte" : "Average nightly rate"}</span><span className="font-semibold text-foreground">{s.nightlyRate} €</span></div>
+                    <div className="mb-2 md:mb-3 flex justify-between text-sm"><span className="text-muted-foreground">{ro ? "Tarif mediu pe noapte" : "Average nightly rate"}</span><span className="font-semibold text-foreground">{s.nightlyRate} €</span></div>
                     <Slider aria-label={ro ? "Tarif mediu pe noapte" : "Average nightly rate"} min={nightlyMin} max={nightlyMax} step={1} value={[s.nightlyRate]} onValueChange={([v]) => setNightlyOverride(v)} />
                   </div>
                   <div>
-                    <div className="mb-3 flex justify-between text-sm"><span className="text-muted-foreground">{ro ? "Grad de ocupare" : "Occupancy"}</span><span className="font-semibold text-foreground">{Math.round(s.occupancy * 100)}%</span></div>
+                    <div className="mb-2 md:mb-3 flex justify-between text-sm"><span className="text-muted-foreground">{ro ? "Grad de ocupare" : "Occupancy"}</span><span className="font-semibold text-foreground">{Math.round(s.occupancy * 100)}%</span></div>
                     <Slider aria-label={ro ? "Grad de ocupare" : "Occupancy"} min={MANAGEMENT_POLICY.occupancyMin * 100} max={MANAGEMENT_POLICY.occupancyMax * 100} step={1} value={[Math.round(s.occupancy * 100)]} onValueChange={([v]) => setOccOverride(v / 100)} />
-                    <p className="mt-2 text-xs text-muted-foreground">{ro ? "Interval realist anual: 65–75%." : "Realistic annual range: 65–75%."}</p>
+                    <p className="mt-1.5 md:mt-2 text-xs text-muted-foreground">{ro ? "Interval realist anual: 65–75%." : "Realistic annual range: 65–75%."}</p>
                   </div>
                 </div>
 
                 {/* 12 luni */}
-                <div className="rounded-2xl border border-border bg-background p-4">
+                <div className="rounded-2xl border border-border bg-background p-3 md:p-4">
                   <p className="text-sm font-semibold text-foreground">{ro ? "Venit net pe 12 luni" : "Net income over 12 months"}</p>
                   <p className="text-xs text-muted-foreground">{ro ? `Cea mai bună lună: ${bestMonth.label} (~${fmt(bestMonth.hotel)} €) · cea mai slabă: ${weakMonth.label} (~${fmt(weakMonth.hotel)} €)` : `Best month: ${bestMonth.label} (~€${fmt(bestMonth.hotel)}) · weakest: ${weakMonth.label} (~€${fmt(weakMonth.hotel)})`}</p>
-                  <div className="mt-3 h-36" role="img" aria-label={ro ? `Grafic venit lunar, între ${fmt(weakMonth.hotel)} și ${fmt(bestMonth.hotel)} euro` : `Monthly income chart, between ${fmt(weakMonth.hotel)} and ${fmt(bestMonth.hotel)} euro`}>
+                  <div className="mt-2 md:mt-3 h-36" role="img" aria-label={ro ? `Grafic venit lunar, între ${fmt(weakMonth.hotel)} și ${fmt(bestMonth.hotel)} euro` : `Monthly income chart, between ${fmt(weakMonth.hotel)} and ${fmt(bestMonth.hotel)} euro`}>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
                         <XAxis dataKey="label" tickLine={false} axisLine={false} interval={0} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
@@ -621,28 +621,28 @@ const UnifiedCalculator = () => {
                 </div>
 
                 {/* Costuri */}
-                <div className="rounded-2xl border border-border bg-background p-4">
+                <div className="rounded-2xl border border-border bg-background p-3 md:p-4">
                   <p className="mb-2 text-sm font-semibold text-foreground">{ro ? "Cum se ajunge la venitul net (lunar)" : "How we get to the net income (monthly)"}</p>
                   <dl className="divide-y divide-border text-sm">
                     {costRows.map((row) => (
-                      <div key={row.label} className="flex justify-between gap-3 py-2">
+                      <div key={row.label} className="flex justify-between gap-3 py-1.5 md:py-2">
                         <dt className={row.strong ? "font-medium text-foreground" : "text-muted-foreground"}>{row.label}</dt>
                         <dd className="shrink-0 font-medium text-foreground">{row.range ?? `${row.value! < 0 ? "−" : ""}${fmt(Math.abs(row.value!))} €`}</dd>
                       </div>
                     ))}
-                    <div className="flex justify-between gap-3 py-2">
+                    <div className="flex justify-between gap-3 py-1.5 md:py-2">
                       <dt className="font-semibold text-foreground">{ro ? "Rămâne la tine" : "You keep"}</dt>
                       <dd className="shrink-0 font-semibold text-primary">{fmt(s.netMin)}–{fmt(s.netMax)} €</dd>
                     </div>
                   </dl>
-                  <p className="mt-2 flex gap-2 text-xs text-muted-foreground"><Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />{ro ? `~${s.nightlyRate} €/noapte × ${Math.round(s.occupancy * 100)}% ocupare. Menajul e plătit separat de oaspete; impozitele și reparațiile nu sunt incluse. Randament estimat 6,5–9,4% net/an.` : `~€${s.nightlyRate}/night × ${Math.round(s.occupancy * 100)}% occupancy. Cleaning is paid separately by the guest; taxes and repairs not included. Estimated net yield 6.5–9.4%/yr.`}</p>
+                  <p className="mt-1.5 md:mt-2 flex gap-2 text-xs text-muted-foreground"><Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />{ro ? `~${s.nightlyRate} €/noapte × ${Math.round(s.occupancy * 100)}% ocupare. Menajul e plătit separat de oaspete; impozitele și reparațiile nu sunt incluse. Randament estimat 6,5–9,4% net/an.` : `~€${s.nightlyRate}/night × ${Math.round(s.occupancy * 100)}% occupancy. Cleaning is paid separately by the guest; taxes and repairs not included. Estimated net yield 6.5–9.4%/yr.`}</p>
                   {indicativeType && <p className="mt-2 text-xs text-muted-foreground">{ro ? "Referințe orientative pentru întreaga proprietate, nu tarife pe cameră. Capacitatea, sezonalitatea și costurile reale necesită o evaluare individuală." : "Indicative whole-property benchmarks, not per-room rates. Capacity, seasonality and actual costs require an individual assessment."}</p>}
                 </div>
               </>
             )}
 
             {leadSent ? (
-              <div role="status" aria-live="polite" className="flex gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4">
+              <div role="status" aria-live="polite" className="flex gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-3 md:p-4">
                 <Check className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
                 <div>
                   <p className="font-semibold text-foreground">{adminReceived ? (ro ? "Andrei a primit cererea ta" : "Andrei has received your request") : (ro ? "Cererea a fost înregistrată" : "Your request has been registered")}</p>
