@@ -1,4 +1,6 @@
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BROKERAGE_FEES, parsePricingTab } from "@/lib/brokerageFees";
 import { CheckCircle2, X, MessageCircle, ArrowRight, TrendingUp, Shield, Star, Zap, HelpCircle } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
@@ -176,6 +178,21 @@ const Preturi = () => {
   const pkgs = packages[lang];
   const guar = guarantees[lang];
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = parsePricingTab(searchParams.get("serviciu"));
+  const setTab = (v: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (v === "intermediere") next.set("serviciu", "intermediere"); else next.delete("serviciu");
+    setSearchParams(next, { replace: true, preventScrollReset: true });
+  };
+  const handleBrokerageWhatsApp = (kind: "sale" | "rent") => {
+    const ro = lang === "ro";
+    const text = kind === "sale"
+      ? (ro ? "Bună ziua! Vreau să vând o proprietate și aș dori o evaluare gratuită." : "Hello! I want to sell a property and would like a free valuation.")
+      : (ro ? "Bună ziua! Vreau să închiriez o proprietate și aș dori detalii despre intermediere." : "Hello! I want to rent out a property and would like brokerage details.");
+    window.open(`https://wa.me/40799069256?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+  };
+
   const handleWhatsApp = () => {
     const msg = encodeURIComponent(
       lang === "ro"
@@ -323,6 +340,12 @@ const Preturi = () => {
       {/* Pricing Cards */}
       <section id="pachete" className="py-16 px-6 scroll-mt-24">
         <div className="container mx-auto max-w-6xl">
+          <Tabs value={tab} onValueChange={setTab}>
+          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-2 h-auto mb-10 p-1">
+            <TabsTrigger value="administrare" className="min-h-12 whitespace-normal text-sm">{lang === "ro" ? "Administrare Regim Hotelier" : "Short-Term Rental Management"}</TabsTrigger>
+            <TabsTrigger value="intermediere" className="min-h-12 whitespace-normal text-sm">{lang === "ro" ? "Intermediere Imobiliară Clasică" : "Classic Real Estate Brokerage"}</TabsTrigger>
+          </TabsList>
+          <TabsContent value="administrare">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {pkgs.map((pkg) => {
               const Icon = pkg.icon;
@@ -388,6 +411,30 @@ const Preturi = () => {
               ? "* Toate prețurile sunt fără TVA. Comisionul se aplică doar pe veniturile generate — dacă nu se generează venituri, nu se percepe comision."
               : "* All prices exclude VAT. The commission only applies to generated revenue — if no revenue is generated, no commission is charged."}
           </p>
+          </TabsContent>
+          <TabsContent value="intermediere">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">
+              <div className="rounded-2xl border border-border bg-card p-6 flex flex-col">
+                <h2 className="text-xl font-serif font-bold text-foreground">{lang === "ro" ? "Vânzări" : "Sales"}</h2>
+                <p className="text-sm text-muted-foreground mb-4">{lang === "ro" ? "Intermediere la vânzarea proprietății tale" : "Brokerage for selling your property"}</p>
+                <span className="text-5xl font-serif font-bold text-foreground">{BROKERAGE_FEES.sale.commission}</span>
+                <p className="text-sm text-muted-foreground mt-1 mb-4">{lang === "ro" ? "comision, plătit doar la rezultat" : "commission, paid only on success"}</p>
+                <p className="flex items-center gap-2 text-sm text-foreground mb-8 flex-1"><CheckCircle2 className="w-4 h-4 text-primary shrink-0" />{lang === "ro" ? "Evaluare: " : "Valuation: "}<strong>{BROKERAGE_FEES.sale.evaluation}</strong></p>
+                <div className="flex flex-col gap-3">
+                  <Button asChild variant="hero" size="lg" className="w-full"><Link to="/evaluare-gratuita">{lang === "ro" ? "Cere evaluarea gratuită" : "Request free valuation"} <ArrowRight className="w-4 h-4 ml-2" /></Link></Button>
+                  <Button variant="heroOutline" size="lg" className="w-full" onClick={() => handleBrokerageWhatsApp("sale")}><MessageCircle className="w-4 h-4 mr-2" />WhatsApp</Button>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-border bg-card p-6 flex flex-col">
+                <h2 className="text-xl font-serif font-bold text-foreground">{lang === "ro" ? "Închirieri" : "Rentals"}</h2>
+                <p className="text-sm text-muted-foreground mb-4">{lang === "ro" ? "Găsim chiriașul potrivit pentru proprietatea ta" : "We find the right tenant for your property"}</p>
+                <span className="text-5xl font-serif font-bold text-foreground">{BROKERAGE_FEES.rent.commission}</span>
+                <p className="text-sm text-muted-foreground mt-1 mb-8 flex-1">{lang === "ro" ? "din prima chirie" : "of the first month's rent"}</p>
+                <Button variant="heroOutline" size="lg" className="w-full" onClick={() => handleBrokerageWhatsApp("rent")}><MessageCircle className="w-4 h-4 mr-2" />{lang === "ro" ? "Discută pe WhatsApp" : "Chat on WhatsApp"}</Button>
+              </div>
+            </div>
+          </TabsContent>
+          </Tabs>
         </div>
       </section>
 
