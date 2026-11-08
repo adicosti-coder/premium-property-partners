@@ -645,7 +645,7 @@ Deno.serve(async (req) => {
         // Întrebare scrisă de proprietar → alertă pe numerele de administrare
         // (cel mult una la 24h pe număr); Andrei răspunde în continuare automat.
         if (
-          ownerCtx && looksLikeOwnerQuestion(text) &&
+          (ownerCtx || consentRow?.request_template === WA_OWNER_OUTREACH_TEMPLATE) && looksLikeOwnerQuestion(text) &&
           !(quick && (OWNER_HANDOVER_KINDS.has(quick.kind) || /^(publish_|quick_no|quick_stop)/.test(quick.kind)))
         ) {
           try {
@@ -653,7 +653,7 @@ Deno.serve(async (req) => {
             const alert = reserved
               ? await notifyOwnerHandover(supabase, {
                 phone: from, profile_name: profileName, message: text,
-                kind: "owner_question", conversation_id: convId, prospect: ownerCtx,
+                kind: "owner_question", conversation_id: convId, prospect: ownerCtx ?? await loadProspectContext(supabase, from),
               })
               : null;
             if (reserved) await markPhoneSent(supabase, from, "owner_question_alert");
