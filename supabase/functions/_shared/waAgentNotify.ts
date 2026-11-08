@@ -169,7 +169,10 @@ const HANDOVER_LABEL: Record<string, string> = {
   owner_call_request: "cere să fie SUNAT",
   owner_hotel_calc: "vrea CALCUL REGIM HOTELIER",
   owner_question: "are o ÎNTREBARE",
+  owner_consent_unverified: "a apăsat DA, dar Make nu a confirmat șablonul",
 };
+
+export type OwnerHandoverResult = { email_sent: boolean; wa_sent: string[]; wa_failed: string[] };
 
 /** Alertă imediată: proprietarul s-a arătat interesat → preia un om. */
 export async function notifyOwnerHandover(
@@ -182,7 +185,8 @@ export async function notifyOwnerHandover(
     conversation_id?: string | null;
     prospect?: ProspectContext | null;
   },
-) {
+): Promise<OwnerHandoverResult> {
+  const result: OwnerHandoverResult = { email_sent: false, wa_sent: [], wa_failed: [] };
   const agent = await resolveAgent(supabase, input.conversation_id ?? null);
   const label = HANDOVER_LABEL[input.kind] ?? "este interesat";
   const p = input.prospect ?? null;
@@ -206,13 +210,14 @@ export async function notifyOwnerHandover(
   const recipients = Array.from(new Set([agent.email, FALLBACK_AGENT_EMAIL]));
   for (const to of recipients) {
     try {
-      await sendTeamEmail({
+      const r = await sendTeamEmail({
         to,
         subject: `URGENT — proprietar ${label}: ${input.profile_name || input.phone}`,
         html,
         leadId: null,
         source: "wa-owner-handover",
       }, supabase);
+      if (r?.sent) result.email_sent = true;
     } catch (e) {
       console.error("[wa-owner-handover] email failed:", e);
     }
@@ -249,13 +254,17 @@ export async function notifyOwnerHandover(
           },
         );
         if (!resp.ok) {
+          result.wa_failed.push(to);
           console.error("[wa-owner-handover] admin WA alert failed:", to, resp.status, (await resp.text()).slice(0, 300));
+        } else {
+          result.wa_sent.push(to);
         }
       }
     }
   } catch (e) {
     console.error("[wa-owner-handover] admin WA alert error:", e);
   }
+  return result;
 }
 
 
