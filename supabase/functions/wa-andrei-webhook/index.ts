@@ -13,6 +13,7 @@ import {
   loadProspectContext,
   autoReplyText,
   OWNER_HANDOVER_KINDS,
+  OWNER_HOTEL_CALC_ACK,
   detectPublishIntent,
   PUBLISH_CONSENT_ACK,
   PUBLISH_REVOKE_ACK,

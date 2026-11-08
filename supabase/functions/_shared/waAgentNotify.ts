@@ -4,8 +4,8 @@ import { sendTeamEmail } from "./teamEmail.ts";
 import { prospectSummary, type ProspectContext } from "./waAutoReply.ts";
 import { WA_PHONE_NUMBER_ID, waToken } from "./waConfig.ts";
 
-/** Numărul de administrare care primește alertele urgente pe WhatsApp (număr personal de test/admin). */
-const ADMIN_WA_ALERT_NUMBER = "40723154520";
+/** Numerele de administrare care primesc alertele urgente pe WhatsApp (0723 154 520 și 0799 069 256). */
+export const ADMIN_WA_ALERT_NUMBERS = ["40723154520", "40799069256"];
 
 const esc = (s: unknown) =>
   String(s ?? "").replace(/[&<>"]/g, (c) =>
@@ -167,6 +167,8 @@ const HANDOVER_LABEL: Record<string, string> = {
   owner_viewing: "vrea VIZIONARE",
   owner_collab_yes: "acceptă COLABORAREA",
   owner_call_request: "cere să fie SUNAT",
+  owner_hotel_calc: "vrea CALCUL REGIM HOTELIER",
+  owner_question: "are o ÎNTREBARE",
 };
 
 /** Alertă imediată: proprietarul s-a arătat interesat → preia un om. */
@@ -189,7 +191,7 @@ export async function notifyOwnerHandover(
   const html = `
     <div style="font-family:Arial,Helvetica,sans-serif;color:#111;max-width:620px">
       <h2 style="margin:0 0 6px;color:#b45309">🔥 Proprietar ${esc(label)}</h2>
-      <p style="margin:0 0 12px">Preia conversația acum — Andrei a confirmat automat și a spus că revine un coleg.</p>
+      <p style="margin:0 0 12px">${input.kind === "owner_question" ? "Preia conversația — Andrei a răspuns automat, dar întrebarea merită un răspuns de la un om." : "Preia conversația acum — Andrei a confirmat automat și a spus că revine un coleg."}</p>
       <table style="border-collapse:collapse;font-size:14px">
         <tr><td style="padding:4px 10px 4px 0"><b>Nume</b></td><td>${esc(input.profile_name || p?.contact_name || "—")}</td></tr>
         <tr><td style="padding:4px 10px 4px 0"><b>Telefon</b></td><td>${esc(input.phone)}</td></tr>
@@ -232,21 +234,23 @@ export async function notifyOwnerHandover(
         `Mesaj: ${input.message.slice(0, 300)}`,
         `Răspunde: ${wa}`,
       ].filter(Boolean).join("\n");
-      const resp = await fetch(
-        `https://graph.facebook.com/v20.0/${WA_PHONE_NUMBER_ID}/messages`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            messaging_product: "whatsapp",
-            to: ADMIN_WA_ALERT_NUMBER,
-            type: "text",
-            text: { preview_url: false, body: waText },
-          }),
-        },
-      );
-      if (!resp.ok) {
-        console.error("[wa-owner-handover] admin WA alert failed:", resp.status, (await resp.text()).slice(0, 300));
+      for (const to of ADMIN_WA_ALERT_NUMBERS) {
+        const resp = await fetch(
+          `https://graph.facebook.com/v20.0/${WA_PHONE_NUMBER_ID}/messages`,
+          {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              messaging_product: "whatsapp",
+              to,
+              type: "text",
+              text: { preview_url: false, body: waText },
+            }),
+          },
+        );
+        if (!resp.ok) {
+          console.error("[wa-owner-handover] admin WA alert failed:", to, resp.status, (await resp.text()).slice(0, 300));
+        }
       }
     }
   } catch (e) {
