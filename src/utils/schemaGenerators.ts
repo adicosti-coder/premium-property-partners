@@ -17,6 +17,7 @@ import {
   REAL_ESTATE_AGENT_SCHEMA,
   ORGANIZATION_SCHEMA,
   LODGING_BUSINESS_ID,
+  LODGING_BUSINESS_SCHEMA,
   SITE_ORIGIN,
   GOOGLE_BUSINESS_PROFILE_URL,
   HOTEL_BRAND_NAME,
@@ -30,138 +31,8 @@ const ORGANIZATION = ORGANIZATION_REF;
 
 // LodgingBusiness Schema for the ApArt Hotel accommodation brand.
 // This is the brand node — the legal entity lives in ORGANIZATION_SCHEMA.
-export const generateLocalBusinessSchema = () => ({
-  "@context": "https://schema.org",
-  "@type": "LodgingBusiness",
-  "@id": LODGING_BUSINESS_ID,
-  "name": HOTEL_BRAND_NAME,
-  "alternateName": ["ApArt Hotel", "ApArt Hotel by RealTrust"],
-  "description": "Apartamente regim hotelier, închirieri pe termen scurt și investiții imobiliare în Timișoara, aproape de Aeroport Timișoara, Iulius Town, Openville, Gara de Nord și Spitalul Județean.",
-  "url": `${SITE_ORIGIN}/cazare`,
-  "telephone": BRAND.telephone,
-  "email": BRAND.email,
-  "image": BRAND.image,
-  "logo": BRAND.logo,
-  "foundingDate": BRAND.foundingDate,
-  "parentOrganization": { "@id": ORG_ID },
-
-
-  "address": {
-    "@type": "PostalAddress",
-    "addressLocality": "Timișoara",
-    "addressRegion": "Timiș",
-    "postalCode": "300125",
-    "addressCountry": "RO",
-  },
-  "geo": {
-    "@type": "GeoCoordinates",
-    "latitude": 45.7489,
-    "longitude": 21.2087,
-  },
-  // Enhanced PriceRange for AI matching with user budgets
-  "priceRange": "€50-€150 per night",
-  // GeoCircle — defines exact service radius for AI/local search
-  "areaServed": [
-    {
-      "@type": "GeoCircle",
-      "geoMidpoint": {
-        "@type": "GeoCoordinates",
-        "latitude": 45.7489,
-        "longitude": 21.2087,
-      },
-      "geoRadius": "25000",
-    },
-    {
-      "@type": "City",
-      "name": "Timișoara",
-      "sameAs": "https://en.wikipedia.org/wiki/Timi%C8%99oara",
-      "containedInPlace": {
-        "@type": "AdministrativeArea",
-        "name": "Timiș County",
-        "containedInPlace": {
-          "@type": "Country",
-          "name": "Romania",
-        },
-      },
-    },
-  ],
-  // E-E-A-T: knowsAbout signals for GEO/LLM discoverability
-  "knowsAbout": [
-    "property management Timișoara",
-    "short-term rental management Romania",
-    "Airbnb management Timișoara",
-    "Booking.com management",
-    "regim hotelier Timișoara",
-    "investiții imobiliare Timișoara",
-    "Randament apartamente Timișoara",
-    "administrare apartamente",
-    "real estate investment Romania",
-    "vacation rental management",
-    "apartamente de inchiriat Timișoara Aeroport",
-    "cazare Timișoara Spitalul Județean",
-    "apartamente de vanzare Timișoara Openville",
-    "regim hotelier Timișoara Gara de Nord",
-    "apartamente Timișoara Piața Unirii",
-    "apartamente de lux Timișoara Centru",
-    "inchirieri apartamente Timișoara termen scurt",
-    "agentie imobiliara Timișoara pareri",
-  ],
-  // Keywords for AI citation
-  "keywords": "apartamente regim hotelier Timișoara, Aeroport Timișoara, apartamente de inchiriat Timișoara Aeroport, cazare Timișoara Spitalul Județean, apartamente de vanzare Timișoara Openville, regim hotelier Timișoara Gara de Nord, apartamente Timișoara Piața Unirii, apartamente de lux Timișoara Centru, inchirieri apartamente Timișoara termen scurt, agentie imobiliara Timișoara pareri",
-  "slogan": "Tu încasezi, noi ne ocupăm de tot.",
-  "openingHoursSpecification": {
-    "@type": "OpeningHoursSpecification",
-    "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-    "opens": "00:00",
-    "closes": "23:59",
-  },
-  "amenityFeature": [
-    { "@type": "LocationFeatureSpecification", "name": "Self Check-in", "value": true },
-    { "@type": "LocationFeatureSpecification", "name": "Free WiFi", "value": true },
-    { "@type": "LocationFeatureSpecification", "name": "Air Conditioning", "value": true },
-    { "@type": "LocationFeatureSpecification", "name": "Parking", "value": true },
-    { "@type": "LocationFeatureSpecification", "name": "Smart Lock Access", "value": true },
-    { "@type": "LocationFeatureSpecification", "name": "24/7 Guest Support", "value": true },
-  ],
-  // Service offerings for AI understanding
-  "hasOfferCatalog": {
-    "@type": "OfferCatalog",
-    "name": "Short-Term Rental Management Services",
-    "itemListElement": [
-      {
-        "@type": "Offer",
-        "itemOffered": {
-          "@type": "Service",
-          "name": "Property Management",
-          "description": "Complete hands-off property management with 6.5-9.4% estimated net ROI",
-        },
-        "priceSpecification": {
-          "@type": "PriceSpecification",
-          "price": "20",
-          "priceCurrency": "EUR",
-          "unitText": "% commission on revenue",
-        },
-      },
-      {
-        "@type": "Offer",
-        "itemOffered": {
-          "@type": "Service",
-          "name": "Short-Term Rental Accommodation",
-          "description": "Premium furnished apartments in Timișoara for business and leisure travelers",
-        },
-        "priceSpecification": {
-          "@type": "PriceSpecification",
-          "minPrice": "50",
-          "maxPrice": "150",
-          "priceCurrency": "EUR",
-          "unitText": "per night",
-        },
-      },
-    ],
-  },
-  // Payment methods accepted
-  "paymentAccepted": "Cash, Credit Card, Bank Transfer",
-});
+export const generateLocalBusinessSchema = () =>
+  JSON.parse(JSON.stringify(LODGING_BUSINESS_SCHEMA)) as Record<string, unknown>;
 
 // Apartment/Property Schema
 export interface PropertySchemaData {
