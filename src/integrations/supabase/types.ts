@@ -12455,6 +12455,7 @@ export type Database = {
       wa_publish_consents: {
         Row: {
           consent_text: string | null
+          consent_trigger: string | null
           consented_at: string | null
           created_at: string
           id: string
@@ -12465,6 +12466,7 @@ export type Database = {
           prospect_listing_id: string | null
           published_at: string | null
           reminder_sent_at: string | null
+          request_template: string | null
           requested_at: string | null
           revoked_at: string | null
           source: string
@@ -12473,6 +12475,7 @@ export type Database = {
         }
         Insert: {
           consent_text?: string | null
+          consent_trigger?: string | null
           consented_at?: string | null
           created_at?: string
           id?: string
@@ -12483,6 +12486,7 @@ export type Database = {
           prospect_listing_id?: string | null
           published_at?: string | null
           reminder_sent_at?: string | null
+          request_template?: string | null
           requested_at?: string | null
           revoked_at?: string | null
           source?: string
@@ -12491,6 +12495,7 @@ export type Database = {
         }
         Update: {
           consent_text?: string | null
+          consent_trigger?: string | null
           consented_at?: string | null
           created_at?: string
           id?: string
@@ -12501,6 +12506,7 @@ export type Database = {
           prospect_listing_id?: string | null
           published_at?: string | null
           reminder_sent_at?: string | null
+          request_template?: string | null
           requested_at?: string | null
           revoked_at?: string | null
           source?: string
