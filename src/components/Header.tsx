@@ -295,6 +295,10 @@ const Header = () => {
   ];
   const pathOf = (h: string) => h.split(/[?#]/)[0];
   const currentGroupId = navGroups.find((g) => g.links.some((l) => pathOf(l.href) === location.pathname))?.id ?? null;
+  useEffect(() => {
+    if (mobileMenuOpen) setOpenGroup(currentGroupId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mobileMenuOpen]);
 
   // Desktop nav link styling - optimized for 1024px+ screens
   // Ultra-compact on lg (1024-1279), compact on xl (1280-1535), comfortable on 2xl (1536+)
