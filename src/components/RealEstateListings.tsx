@@ -250,7 +250,7 @@ const RealEstateListings = ({ limit, compact = false }: RealEstateListingsProps 
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-2">
+                    <div className={compact ? "flex flex-col gap-2" : "flex gap-2"}>
                       <Button
                         size="sm"
                         className="flex-1"
