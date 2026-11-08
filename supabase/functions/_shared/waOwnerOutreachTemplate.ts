@@ -68,3 +68,39 @@ export function looksLikeOwnerQuestion(raw: string): boolean {
   if (t.includes("?")) return true;
   return /^(?:cat|cate|cand|cum|unde|care|ce|de ce|cine|se poate|puteti|aveti|exista|ma intereseaza|as vrea sa stiu|vreau sa stiu)\b/.test(t);
 }
+
+/** Răspunsurile afirmative acceptate pentru primul mesaj cu butoane. */
+const OUTREACH_AFFIRMATIVE_RE =
+  /^(?:da+|da,?\s+(?:puteti|se\s+poate)(?:\s+(?:sa\s+)?(?:il\s+)?publica(?:ti)?)?|pute?ti(?:\s+sa)?\s+(?:il\s+)?publica(?:ti)?|(?:e|este)\s+in\s+regula|in\s+regula)(?:[\s!.,]+(?:multumesc|mersi|va\s+multumesc))?[\s!.,]*$/;
+
+/** „button” = butonul „DA, activează gratuit”; „text” = DA / Puteți publica / E în regulă scris. */
+export function ownerOutreachConsentReply(raw: string): "button" | "text" | null {
+  const t = norm(raw);
+  if (!t) return null;
+  if (t === norm(OWNER_OUTREACH_BUTTONS.consent)) return "button";
+  return OUTREACH_AFFIRMATIVE_RE.test(t) ? "text" : null;
+}
+
+export type OwnerOutreachConsentCheck =
+  | { status: "valid"; trigger: "outreach_button" | "outreach_text" }
+  | { status: "missing_template" }
+  | { status: "not_applicable" };
+
+/**
+ * Acordul din fluxul cu butoane este valid DOAR dacă Make a confirmat trimiterea
+ * șablonului `outreach_proprietar_butoane_v1` (salvat în `request_template`) și
+ * proprietarul a apăsat „DA, activează gratuit” sau a scris DA / Puteți publica / E în regulă.
+ * Butonul fără confirmarea șablonului nu este acord; textul fără șablon rămâne pe regulile vechi.
+ */
+export function ownerOutreachConsentCheck(raw: string, requestTemplate?: string | null): OwnerOutreachConsentCheck {
+  const reply = ownerOutreachConsentReply(raw);
+  if (!reply) return { status: "not_applicable" };
+  if (requestTemplate === WA_OWNER_OUTREACH_TEMPLATE) {
+    return { status: "valid", trigger: reply === "button" ? "outreach_button" : "outreach_text" };
+  }
+  return reply === "button" ? { status: "missing_template" } : { status: "not_applicable" };
+}
+
+/** Răspuns către proprietar când butonul DA vine fără confirmarea șablonului: preia un om. */
+export const OWNER_CONSENT_UNVERIFIED_ACK =
+  "Mulțumim! Un coleg RealTrust vă confirmă activarea în scurt timp, aici pe WhatsApp.";

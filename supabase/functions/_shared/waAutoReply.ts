@@ -237,7 +237,7 @@ export function propertyFinanceBlock(p: {
 // Acord explicit de publicare (menționează publicarea) — contează oricând.
 // „CONFIRM” + publicare sau vechiul „DA PUBLIC” (tranziție) — ambele acceptate.
 const PUBLISH_CONSENT_STRONG_RE =
-  /\bda\s*public\b|\bdapublic\b|confirma(?:ti)?\s+(?:publicarea|public|anuntul)|accept(?:a|ati)?\s+publicarea|sunt de acord (?:cu|sa|să)?\s*public|acord(?:ul)?\s+(?:de|pentru)\s+publicare|pute?ti\s+(?:sa\s+)?publica|publicati\s+anuntul|da,?\s*publica(?:ti|ți)?|\bactiveaza\s+gratuit\b/;
+  /\bda\s*public\b|\bdapublic\b|confirma(?:ti)?\s+(?:publicarea|public|anuntul)|accept(?:a|ati)?\s+publicarea|sunt de acord (?:cu|sa|să)?\s*public|acord(?:ul)?\s+(?:de|pentru)\s+publicare|pute?ti\s+(?:sa\s+)?publica|publicati\s+anuntul|da,?\s*publica(?:ti|ți)?/;
 // Răspuns pozitiv simplu („DA”, „CONFIRM”, „De acord”, „ok”, „publicati”, 👍) —
 // contează ca acord doar dacă proprietarului i s-a cerut acordul (are o linie în
 // wa_publish_consents), ca un „da” dintr-o conversație obișnuită să nu fie
