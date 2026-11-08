@@ -1739,7 +1739,7 @@ export function generateHtml(template: string, route: PrerenderRoute, protectedH
   const setMeta = (attr: 'property' | 'name', key: string, value: string) => {
     const re = new RegExp(`<meta ${attr}="${key.replace(':', ':')}" content="[^"]*"\\s*/?>`);
     const tag = `<meta ${attr}="${key}" content="${escapeHtml(value)}" />`;
-    html = re.test(html) ? html.replace(re, tag) : html.replace('</head>', `  ${tag}\n</head>`);
+    html = re.test(html) ? html.replace(re, () => tag) : html.replace('</head>', () => `  ${tag}\n</head>`);
   };
   const ogT = route.ogTitle || route.title;
   const ogD = route.ogDescription || route.description;
