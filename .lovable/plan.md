@@ -3,7 +3,7 @@
 ## Ce se schimbă pentru vizitator
 1. Primul punct din banda de dovezi devine **„Evaluare gratuită în 24h”** (înlocuiește „Peste 10.000 oaspeți cazați”). Celelalte două rămân neschimbate.
 2. Imediat sub Hero (înaintea benzii de dovezi) apar două carduri compacte:
-   - **Vânzări / Cumpărări** → duce la /servicii-imobiliare
+   - **Vânzări / Cumpărări / Închirieri** → duce la /servicii-imobiliare
    - **Administrare Regim Hotelier** → duce la /administrare (pagina existentă de administrare; se confirmă adresa canonică la implementare)
    Pe telefon: unul sub altul; pe ecran mare: două coloane. Fiecare card are titlu, o propoziție scurtă și o săgeată, zonă de apăsare minim 48px.
 
