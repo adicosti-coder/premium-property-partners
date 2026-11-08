@@ -387,7 +387,7 @@ const UnifiedCalculator = () => {
 
   return (
     <div data-calculator-ready="true" className="overflow-clip rounded-3xl border border-border bg-card shadow-elegant">
-      <div className="border-b border-border px-5 py-6 md:px-10 md:py-8">
+      <div className="border-b border-border px-4 py-5 md:px-10 md:py-8">
         <div className="mb-2 flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
           <span className="text-xs font-semibold uppercase tracking-widest text-primary">{ro ? "Calculator venit · rezultat pe loc" : "Income calculator · instant result"}</span>
@@ -398,7 +398,7 @@ const UnifiedCalculator = () => {
 
       <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)]">
         {/* ── Date ── */}
-        <div ref={inputsRef} className="space-y-8 px-5 py-6 md:px-10 md:py-8">
+        <div ref={inputsRef} className="space-y-6 px-4 py-5 md:space-y-8 md:px-10 md:py-8">
           <section>
             {sectionTitle(1, ro ? "Cum vrei să introduci datele proprietății?" : "How would you like to enter your property details?")}
             <Tabs value={mode} onValueChange={(v) => setMode(v as InputMode)}>
@@ -550,7 +550,7 @@ const UnifiedCalculator = () => {
 
         {/* ── Rezultat live ── */}
         <aside ref={resultRef} aria-label={ro ? "Rezultatul calculului" : "Calculation result"} className="scroll-mt-24 border-t border-border bg-muted/30 lg:border-l lg:border-t-0">
-          <div className="space-y-6 px-5 py-6 md:px-8 md:py-8 lg:sticky lg:top-20">
+          <div className="space-y-5 px-4 py-5 md:space-y-6 md:px-8 md:py-8 lg:sticky lg:top-20">
             <div aria-live="polite" aria-atomic="true">
               <p className="text-sm text-muted-foreground">{typeLabel} · {zoneLabel} · {surfaceValid ? surfaceNum : "—"} mp · {ro ? "Parcare" : "Parking"}: {parking ? (ro ? "Da" : "Yes") : (ro ? "Nu" : "No")} · {finishLabel}</p>
               {surfaceValid ? (

@@ -24,6 +24,7 @@ import AIQuoteBlock from "@/components/AIQuoteBlock";
 // Factual intro paragraph directly under the H1 — tiny, kept eager so it is
 // present in the initial HTML for crawlers and AI engines.
 import HomeIntro from "@/components/home/HomeIntro";
+import HomeSocialProofStrip from "@/components/HomeSocialProofStrip";
 
 // Hero MUST be eager: it is the LCP element and the static shell in
 // index.html is wiped by React mount. Any Suspense gap here produces
@@ -326,6 +327,7 @@ const Index = () => {
             index.html paints first; React Hero replaces it on mount with
             an identical layout (#root has min-height to prevent CLS). */}
         <Hero />
+        <HomeSocialProofStrip />
         {/* Factual, link-rich intro right under the H1 */}
         <HomeIntro />
         {/* SEO-only block (sr-only) — rendered after the visual hero so crawlers
