@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { buildStaticRoutes, generateHtml } from "../../plugins/vite-prerender-seo";
+import { LODGING_BUSINESS_SCHEMA, REAL_ESTATE_AGENT_SCHEMA } from "./orgIdentity";
+import { generateLocalBusinessSchema } from "../utils/schemaGenerators";
 
 const template = `<!doctype html><html lang="ro"><head><title>Template</title><meta name="description" content="Template"><meta name="robots" content="index, follow"></head><body><div id="root"></div></body></html>`;
 
@@ -47,5 +49,16 @@ describe("prerendered homepage head", () => {
     expect(organization.legalName).toBe("SC Imo Business Centrum SRL");
     expect(hotel.parentOrganization).toEqual({ "@id": organization["@id"] });
     expect(agent.parentOrganization).toEqual({ "@id": organization["@id"] });
+  });
+
+  it("uses the shared orgIdentity nodes for the hotel and the agency", () => {
+    document.body.innerHTML = homepageHtml().match(/<body>([\s\S]*?)<\/body>/)?.[1] ?? "";
+    const schemas = Array.from(document.querySelectorAll('script[type="application/ld+json"]')).map((script) => JSON.parse(script.textContent || "{}"));
+    const hotel = schemas.find((schema) => schema["@id"] === "https://realtrust.ro/#lodgingbusiness");
+    const agent = schemas.find((schema) => schema["@id"] === "https://realtrust.ro/#realestateagent");
+
+    expect(hotel).toEqual(JSON.parse(JSON.stringify(LODGING_BUSINESS_SCHEMA)));
+    expect(agent).toEqual(JSON.parse(JSON.stringify(REAL_ESTATE_AGENT_SCHEMA)));
+    expect(generateLocalBusinessSchema()).toEqual(hotel);
   });
 });
