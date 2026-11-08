@@ -1,6 +1,7 @@
 // Mesajele automate WhatsApp (calificare + confirmare), într-un singur loc,
 // ca webhook-ul Meta și puntea Make.com să trimită exact același text.
 
+import { isHotelCalcRequest } from "./waOwnerOutreachTemplate.ts";
 import { detectZone } from "./detectZone.ts";
 
 export type ProspectContext = {
@@ -236,13 +237,13 @@ export function propertyFinanceBlock(p: {
 // Acord explicit de publicare (menționează publicarea) — contează oricând.
 // „CONFIRM” + publicare sau vechiul „DA PUBLIC” (tranziție) — ambele acceptate.
 const PUBLISH_CONSENT_STRONG_RE =
-  /\bda\s*public\b|\bdapublic\b|confirma(?:ti)?\s+(?:publicarea|public|anuntul)|accept(?:a|ati)?\s+publicarea|sunt de acord (?:cu|sa|să)?\s*public|acord(?:ul)?\s+(?:de|pentru)\s+publicare|pute?ti\s+(?:sa\s+)?publica|publicati\s+anuntul|da,?\s*publica(?:ti|ți)?/;
+  /\bda\s*public\b|\bdapublic\b|confirma(?:ti)?\s+(?:publicarea|public|anuntul)|accept(?:a|ati)?\s+publicarea|sunt de acord (?:cu|sa|să)?\s*public|acord(?:ul)?\s+(?:de|pentru)\s+publicare|pute?ti\s+(?:sa\s+)?publica|publicati\s+anuntul|da,?\s*publica(?:ti|ți)?|\bactiveaza\s+gratuit\b/;
 // Răspuns pozitiv simplu („DA”, „CONFIRM”, „De acord”, „ok”, „publicati”, 👍) —
 // contează ca acord doar dacă proprietarului i s-a cerut acordul (are o linie în
 // wa_publish_consents), ca un „da” dintr-o conversație obișnuită să nu fie
 // citit drept acord de publicare.
 const PUBLISH_CONSENT_SOFT_RE =
-  /^(?:da+|dapublic|confirm(?:a|at|ati)?|de\s+acord|sunt\s+de\s+acord|ok(?:ee?y)?|ok\s+da|da\s+ok|(?:e|este)\s+ok|(?:e|este)\s+bine|bine|sigur|desigur|aprob|accept(?:am)?|publicati|publica|da,?\s+(?:puteti|se\s+poate|sigur|ok|de\s+acord|accept)|da,?\s+puteti\s+(?:sa\s+)?(?:il\s+)?publica(?:ti)?)(?:[\s!.,?]+(?:multumesc|mersi|va\s+multumesc))?[\s!.,?]*$/;
+  /^(?:da+|dapublic|confirm(?:a|at|ati)?|de\s+acord|sunt\s+de\s+acord|ok(?:ee?y)?|ok\s+da|da\s+ok|(?:e|este)\s+ok|(?:e|este)\s+bine|(?:e|este)\s+in\s+regula|in\s+regula|bine|sigur|desigur|aprob|accept(?:am)?|publicati|publica|da,?\s+(?:puteti|se\s+poate|sigur|ok|de\s+acord|accept)|da,?\s+puteti\s+(?:sa\s+)?(?:il\s+)?publica(?:ti)?)(?:[\s!.,?]+(?:multumesc|mersi|va\s+multumesc))?[\s!.,?]*$/;
 // Acord condiționat de costuri („Dacă nu am costuri e ok”, „Dacă e gratuit, da”).
 const PUBLISH_CONSENT_CONDITIONAL_RE =
   /\bdaca\b.{0,40}\b(?:cost|costuri|plat|bani|gratuit|gratis|comision|taxa)\w*.{0,40}\b(?:e|este|sunt)?\s*(?:ok|bine|de\s+acord|da|accept|in\s+regula)\b/;
@@ -346,6 +347,11 @@ export function quickReplyText(
       kind: "quick_no",
       text: "Am înțeles. Nu vă mai deranjăm. Dacă vă pot ajuta altădată, îmi scrieți aici. O zi frumoasă!",
     };
+  }
+
+  // Butonul „Calcul Regim Hotelier” din primul mesaj → predare către om (alertă admin).
+  if (isHotelCalcRequest(raw)) {
+    return { kind: "owner_hotel_calc", text: OWNER_HOTEL_CALC_ACK };
   }
 
   if (/vanzare/.test(t)) {
@@ -664,7 +670,12 @@ export function clientViewingStepReply(
 export const OWNER_TERMS_URL = "https://realtrust.ro/conditii-proprietari";
 
 /** Tipurile de răspuns care înseamnă „proprietarul vrea să continue” → predare către om. */
-export const OWNER_HANDOVER_KINDS = new Set(["owner_viewing", "owner_collab_yes", "owner_call_request"]);
+export const OWNER_HANDOVER_KINDS = new Set(["owner_viewing", "owner_collab_yes", "owner_call_request", "owner_hotel_calc"]);
+
+/** Răspunsul la butonul „Calcul Regim Hotelier”: confirmă, fără termene promise. */
+export const OWNER_HOTEL_CALC_ACK =
+  "Mulțumim! Un coleg vă pregătește calculul de venit în regim hotelier pentru apartamentul dumneavoastră și vă scrie aici. " +
+  "Până atunci, puteți vedea o estimare orientativă: https://realtrust.ro/pentru-proprietari#calculator";
 
 function ownerRef(ctx: ProspectContext): string {
   const parts: string[] = [];

@@ -1,8 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 import {
   OWNER_OUTREACH_BUTTONS, WA_OWNER_OUTREACH_FOOTER, isHotelCalcRequest, looksLikeOwnerQuestion, ownerOutreachPreviewUrl,
-} from "./waOwnerOutreachTemplate";
-import { detectPublishIntent, isClearRefusal, quickReplyText, OWNER_HANDOVER_KINDS } from "./waAutoReply";
+} from "./waOwnerOutreachTemplate.ts";
+import { detectPublishIntent, isClearRefusal, quickReplyText, OWNER_HANDOVER_KINDS } from "./waAutoReply.ts";
 
 describe("primul mesaj către proprietari", () => {
   it("butoanele și subsolul respectă limitele Meta", () => {
