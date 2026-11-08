@@ -37,6 +37,7 @@ import Hero from "@/components/Hero";
 const Header = lazy(() => import("@/components/Header"));
 const QuickLeadForm = lazy(() => import("@/components/QuickLeadForm"));
 const UnifiedCalculator = lazy(() => import("@/components/UnifiedCalculator"));
+const RealEstateListings = lazy(() => import("@/components/RealEstateListings"));
 const Testimonials = lazy(() => import("@/components/Testimonials"));
 const FAQ = lazy(() => import("@/components/FAQ"));
 const OwnerFearsFAQ = lazy(() => import("@/components/OwnerFearsFAQ"));
@@ -90,6 +91,7 @@ const NearFoldSection = ({ forceCalc = false }: { forceCalc?: boolean }) => {
           ) : <div className="min-h-[200px]" />}
         </div>
       </section>
+      {showCalc && <Suspense fallback={<div className="min-h-[400px]" />}><RealEstateListings limit={4} compact /></Suspense>}
       {showCalc && <Suspense fallback={<div className="min-h-[200px]" />}><QuickLeadForm /></Suspense>}
     </div>
   );

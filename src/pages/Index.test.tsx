@@ -8,6 +8,7 @@ vi.mock("@/lib/supabaseClient", () => ({ supabase: { functions: { invoke: vi.fn(
 vi.mock("@/components/social/SocialFollow", () => ({ SocialFollow: () => null }));
 vi.mock('@/components/AIQuoteBlock', () => ({ default: () => null, AIQuoteBlock: () => null }));
 vi.mock('@/components/BlogPreview', () => ({ default: () => null, BlogPreview: () => null }));
+vi.mock('@/components/RealEstateListings', () => ({ default: () => null }));
 vi.mock('@/components/CTA', () => ({ default: () => null, CTA: () => null }));
 vi.mock('@/components/ChannelLogos', () => ({ default: () => null, ChannelLogos: () => null }));
 vi.mock('@/components/ContactSection', () => ({ default: () => null, ContactSection: () => null }));

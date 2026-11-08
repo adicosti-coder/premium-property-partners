@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { fetchWithRetry } from "@/lib/supabaseRetry";
@@ -26,7 +26,17 @@ interface ListingProperty {
   property_images: { image_path: string; is_primary: boolean; display_order: number }[];
 }
 
-const RealEstateListings = () => {
+export const allListingsHref = (tab: "vanzare" | "inchiriere") =>
+  tab === "inchiriere" ? "/anunturi?tranzactie=inchiriere" : "/anunturi";
+
+interface RealEstateListingsProps {
+  /** Max cards shown; undefined = all. */
+  limit?: number;
+  /** Homepage variant: own title, tighter spacing, "see all" button, hidden when empty. */
+  compact?: boolean;
+}
+
+const RealEstateListings = ({ limit, compact = false }: RealEstateListingsProps = {}) => {
   const { language } = useLanguage();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"vanzare" | "inchiriere">("vanzare");
@@ -61,7 +71,8 @@ const RealEstateListings = () => {
     retryDelay: (attempt) => Math.min(2000, 400 * 3 ** attempt),
   });
 
-  const filtered = listings?.filter(l => l.listing_type === activeTab) || [];
+  const allFiltered = listings?.filter(l => l.listing_type === activeTab) || [];
+  const filtered = limit ? allFiltered.slice(0, limit) : allFiltered;
 
   const t = language === "ro" ? {
     badge: "Anunțuri Active",
@@ -76,6 +87,8 @@ const RealEstateListings = () => {
     cta: "Programează o Vizionare",
     details: "Detalii",
     noResults: "Niciun anunț disponibil în această categorie.",
+    compactTitle: "Proprietăți de Vânzare & Închiriere",
+    seeAll: "Vezi toate anunțurile imobiliare",
   } : {
     badge: "Active Listings",
     title: "Available Properties",
@@ -89,7 +102,12 @@ const RealEstateListings = () => {
     cta: "Schedule a Viewing",
     details: "Details",
     noResults: "No listings available in this category.",
+    compactTitle: "Properties for Sale & Rent",
+    seeAll: "See all real estate listings",
   };
+
+  if (compact && !isLoading && (listings?.length ?? 0) === 0) return null;
+  const gridCls = compact ? "grid sm:grid-cols-2 lg:grid-cols-4 gap-6" : "grid md:grid-cols-2 lg:grid-cols-3 gap-8";
 
   const getImageUrl = (listing: ListingProperty) => {
     const path =
@@ -110,7 +128,7 @@ const RealEstateListings = () => {
   };
 
   return (
-    <section id="listings" className="py-20 md:py-28 bg-muted/30">
+    <section id={compact ? "home-listings" : "listings"} className={compact ? "py-12 md:py-16 bg-muted/30" : "py-20 md:py-28 bg-muted/30"}>
       <div className="container mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-10">
@@ -118,7 +136,7 @@ const RealEstateListings = () => {
             {t.badge}
           </span>
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
-            {t.title}
+            {compact ? t.compactTitle : t.title}
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
             {t.subtitle}
@@ -153,8 +171,8 @@ const RealEstateListings = () => {
 
         {/* Grid */}
         {isLoading ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3].map((i) => (
+          <div className={gridCls}>
+            {(compact ? [1, 2, 3, 4] : [1, 2, 3]).map((i) => (
               <Skeleton key={i} className="h-96 rounded-2xl" />
             ))}
           </div>
@@ -164,7 +182,7 @@ const RealEstateListings = () => {
             <p className="text-muted-foreground">{t.noResults}</p>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className={gridCls}>
             {filtered.map((listing) => {
               const price = formatPrice(listing.capital_necesar, listing.listing_type);
               const propertyPath = `/proprietate/${listing.slug ?? listing.id}`;
@@ -232,7 +250,7 @@ const RealEstateListings = () => {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-2">
+                    <div className={compact ? "flex flex-col gap-2" : "flex gap-2"}>
                       <Button
                         size="sm"
                         className="flex-1"
@@ -260,6 +278,16 @@ const RealEstateListings = () => {
                 </div>
               );
             })}
+          </div>
+        )}
+        {compact && (
+          <div className="mt-10 text-center">
+            <Button asChild size="lg" className="min-h-12">
+              <Link to={allListingsHref(activeTab)}>
+                {t.seeAll}
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Link>
+            </Button>
           </div>
         )}
       </div>
