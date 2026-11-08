@@ -1,4 +1,4 @@
-import { Users, Star, Percent } from "lucide-react";
+import { Clock, Star, Percent } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 /** Three compact, approved proof points under the homepage hero. Static, no data fetching. */
@@ -6,7 +6,7 @@ const HomeSocialProofStrip = () => {
   const { language } = useLanguage();
   const ro = language !== "en";
   const items = [
-    { Icon: Users, title: ro ? "Peste 10.000" : "Over 10,000", text: ro ? "oaspeți cazați" : "guests hosted" },
+    { Icon: Clock, title: ro ? "Evaluare gratuită" : "Free valuation", text: ro ? "în 24h" : "within 24h" },
     { Icon: Star, title: "9,7/10 Booking · 4,9/5 Airbnb", text: ro ? "evaluarea oaspeților" : "guest rating" },
     { Icon: Percent, title: ro ? "Comision 15–20%" : "15–20% fee", text: ro ? "din venitul net" : "of net income" },
   ];

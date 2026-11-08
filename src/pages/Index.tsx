@@ -25,6 +25,7 @@ import AIQuoteBlock from "@/components/AIQuoteBlock";
 // present in the initial HTML for crawlers and AI engines.
 import HomeIntro from "@/components/home/HomeIntro";
 import HomeSocialProofStrip from "@/components/HomeSocialProofStrip";
+import HomeAudienceCards from "@/components/HomeAudienceCards";
 
 // Hero MUST be eager: it is the LCP element and the static shell in
 // index.html is wiped by React mount. Any Suspense gap here produces
@@ -327,6 +328,7 @@ const Index = () => {
             index.html paints first; React Hero replaces it on mount with
             an identical layout (#root has min-height to prevent CLS). */}
         <Hero />
+        <HomeAudienceCards />
         <HomeSocialProofStrip />
         {/* Factual, link-rich intro right under the H1 */}
         <HomeIntro />
