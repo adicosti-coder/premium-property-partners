@@ -161,8 +161,8 @@ Deno.serve(async (req) => {
       } else extracted = dryRun ? fresh.length : 0;
     }
 
-    // Rotație: continuăm alternanța după ultima postare din calendar înainte de primul slot liber.
-    const before = scheduledFeed().filter((r) => !free[0] || new Date(r.scheduled_at!) < free[0])
+    // Rotație: pornim de la tipul ultimei postări din feed dinaintea primului slot.
+    const before = scheduledFeed().filter((r) => !slots[0] || new Date(r.scheduled_at!) < new Date(slots[0].getTime() - 60 * 60_000))
       .sort((a, b) => b.scheduled_at!.localeCompare(a.scheduled_at!))[0];
     let after = before?.type ?? null;
     if (!after) {
@@ -182,7 +182,7 @@ Deno.serve(async (req) => {
       else verified.push(d);
     }
 
-    const plan = planSchedule(slots, scheduledFeed().map((r) => new Date(r.scheduled_at!)), verified, after);
+    const plan = planSchedule(slots, scheduledFeed().map((r) => ({ at: new Date(r.scheduled_at!), type: r.type })), verified, after);
     const done: { id: string; at: string }[] = [];
     if (!dryRun) {
       for (const item of plan) {

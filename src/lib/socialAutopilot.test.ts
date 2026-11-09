@@ -56,6 +56,12 @@ describe("social autopilot", () => {
     const plan = planSchedule(slots, [], [draft({ id: "b1" }), draft({ id: "p1", type: "property", property_id: "p1" })], "property");
     expect(plan.map((p) => p.id)).toEqual(["b1", "p1"]);
   });
+  it("alternates around posts already scheduled in between", () => {
+    const slots = ["2026-11-14T08:00:00Z", "2026-11-14T16:00:00Z", "2026-11-15T08:00:00Z", "2026-11-15T16:00:00Z"].map((s) => new Date(s));
+    const taken = [{ at: slots[0], type: "property" }, { at: slots[2], type: "property" }];
+    const plan = planSchedule(slots, taken, [draft({ id: "p9", type: "property", property_id: "p1" }), draft({ id: "b1" }), draft({ id: "b2", created_at: "2026-11-02T00:00:00Z" })]);
+    expect(plan.map((p) => [p.id, p.at.toISOString()])).toEqual([["b1", "2026-11-14T16:00:00.000Z"], ["b2", "2026-11-15T16:00:00.000Z"]]);
+  });
 });
 
 describe("social autopilot yield guard", () => {

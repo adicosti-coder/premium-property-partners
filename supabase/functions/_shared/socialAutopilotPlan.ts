@@ -145,9 +145,30 @@ export function freeSlots(slots: Date[], scheduled: Date[]): Date[] {
   return slots.filter((s) => !scheduled.some((t) => Math.abs(t.getTime() - s.getTime()) < 60 * 60_000));
 }
 
-export function planSchedule(slots: Date[], scheduled: Date[], drafts: DraftRow[], after?: string | null): { id: string; at: Date }[] {
-  const free = freeSlots(slots, scheduled);
-  return orderDrafts(drafts, after).slice(0, free.length).map((d, i) => ({ id: d.id, at: free[i] }));
+/**
+ * Walks every slot in time order and keeps the property/article rotation across posts
+ * already in the calendar: each free slot gets the opposite type of the previous post
+ * (oldest draft first), falling back to the other type only when one runs out.
+ */
+export function planSchedule(
+  slots: Date[], scheduled: Array<Date | { at: Date; type?: string | null }>, drafts: DraftRow[], after?: string | null,
+): { id: string; at: Date }[] {
+  const taken = scheduled.map((s) => (s instanceof Date ? { at: s, type: null } : { at: s.at, type: s.type ?? null }));
+  const byAge = (a: DraftRow, b: DraftRow) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id);
+  const props = drafts.filter((d) => d.type === "property").sort(byAge);
+  const blogs = drafts.filter((d) => d.type !== "property").sort(byAge);
+  const kind = (t: string | null | undefined) => (t == null ? null : t === "property" ? "property" : "blog");
+  let prev = kind(after);
+  const out: { id: string; at: Date }[] = [];
+  for (const slot of [...slots].sort((a, b) => a.getTime() - b.getTime())) {
+    const occupant = taken.find((t) => Math.abs(t.at.getTime() - slot.getTime()) < 60 * 60_000);
+    if (occupant) { prev = kind(occupant.type) ?? prev; continue; }
+    const pick = prev === "property" ? (blogs.shift() ?? props.shift()) : (props.shift() ?? blogs.shift());
+    if (!pick) break;
+    out.push({ id: pick.id, at: slot });
+    prev = kind(pick.type);
+  }
+  return out;
 }
 
 /** Auto-extracted drafts open with their real title so the caption headline is meaningful. */
