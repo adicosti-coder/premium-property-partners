@@ -1,8 +1,11 @@
 // Garda de randament pentru textele generate automat de Social Engine.
-// Orice afirmație de randament / ROI / yield devine intervalul aprobat
-// „6,5%–9,4% net estimat”, cu excepția unei valori setate explicit de admin
-// pe proprietate (`properties.social_yield_override`).
-export const APPROVED_YIELD_RO = "6,5%–9,4% net estimat";
+// - Articole / servicii / atragere proprietari: mereu intervalul aprobat „6,5% – 9,4% net estimat”.
+// - Anunțuri individuale de vânzare/investiție: randamentul exact al anunțului din baza de date
+//   (`social_yield_override`, apoi `roi_percentage` până la plafonul grilei), altfel intervalul aprobat.
+export const APPROVED_YIELD_RO = "6,5% – 9,4% net estimat";
+/** Grila oficială: fără afirmații peste 9,5%; o valoare automată mai mare revine la interval. */
+export const MAX_LISTING_YIELD = 9.5;
+const LISTING_TYPES = new Set(["vanzare", "investitie"]);
 export const APPROVED_YIELD_EN = "6.5% – 9.4% net estimat";
 
 const NUM = String.raw`\d{1,2}(?:[.,]\d{1,2})?`;
@@ -25,10 +28,27 @@ function formatOverride(v: number): string {
   return `${v.toFixed(v % 1 === 0 ? 0 : 1).replace(".", ",")}% net estimat`;
 }
 
+const parsePct = (raw: unknown): number => typeof raw === "number" ? raw
+  : typeof raw === "string" && raw.trim() ? Number(raw.replace(",", ".").replace("%", "").trim()) : NaN;
+
 /** Parses an explicit admin override; anything else (null, NaN, out of range) means "use the approved range". */
 export function yieldOverride(raw: unknown): number | null {
-  const n = typeof raw === "number" ? raw : typeof raw === "string" && raw.trim() ? Number(raw.replace(",", ".")) : NaN;
+  const n = parsePct(raw);
   return Number.isFinite(n) && n > 0 && n <= 30 ? n : null;
+}
+
+export interface YieldProperty { listing_type?: string | null; roi_percentage?: unknown; social_yield_override?: unknown }
+
+/**
+ * Yield to show for one post: null = approved range. Only individual sale/investment listings
+ * may show their own figure; general service and owner-acquisition posts always get the range.
+ */
+export function postYieldValue(postType: string | null | undefined, property?: YieldProperty | null): number | null {
+  if (postType !== "property" || !property || !LISTING_TYPES.has(String(property.listing_type ?? ""))) return null;
+  const explicit = yieldOverride(property.social_yield_override);
+  if (explicit != null) return explicit;
+  const roi = parsePct(property.roi_percentage);
+  return Number.isFinite(roi) && roi > 0 && roi <= MAX_LISTING_YIELD ? roi : null;
 }
 
 const label = (kw: string) => {
