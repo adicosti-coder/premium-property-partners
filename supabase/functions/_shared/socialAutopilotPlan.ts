@@ -69,13 +69,54 @@ export interface DraftRow {
 
 export interface EligibilityContext { activePropertyIds: Set<string>; publishedBlogSlugs: Set<string>; minCaption: number }
 
+// ── „Necesită corectare manuală” ─────────────────────────────────────────────
+// Ciornele care nu pot pleca automat primesc acest marcaj în `last_error`, rămân
+// în afara programării automate și apar în Social Engine cu motivul exact.
+export const MANUAL_FIX_PREFIX = "Necesită corectare manuală: ";
+const PRIOR_FAILURE = "publicarea anterioară a eșuat";
+
+/** Image URLs a feed draft needs (cover first, then carousel), deduplicated. */
+export function draftMediaUrls(d: Pick<DraftRow, "image_url" | "image_urls">): string[] {
+  return [...new Set([d.image_url, ...(d.image_urls ?? [])].filter((u): u is string => typeof u === "string" && /^https:\/\//.test(u.trim())).map((u) => u.trim()))];
+}
+
+/** Content problems that only a person can fix; null = media and format are fine. */
+export function manualFixReason(d: DraftRow): string | null {
+  if (d.media_type === "STORY" || d.media_type === "REELS" || d.video_url) {
+    return "format Story/Reel nesuportat de autopilot — se programează manual după verificare";
+  }
+  if (!d.title?.trim()) return "lipsește titlul";
+  const media = draftMediaUrls(d);
+  if (!media.length) return "lipsesc imaginile obligatorii";
+  if (d.media_type === "CAROUSEL" && media.length < 2) return "caruselul are nevoie de cel puțin 2 imagini";
+  return null;
+}
+
+export const isManualFixFlag = (err: string | null | undefined) => !!err && err.startsWith(MANUAL_FIX_PREFIX);
+
+/**
+ * New `last_error` for a draft, or `undefined` when nothing changes.
+ * Earlier publishing failures stay flagged until a person republishes;
+ * content-only flags clear themselves once the draft is fixed.
+ */
+export function manualFixUpdate(d: DraftRow, mediaProblem?: string | null): string | null | undefined {
+  const reason = mediaProblem ?? manualFixReason(d);
+  const err = d.last_error?.trim() || null;
+  if (!err) return reason ? `${MANUAL_FIX_PREFIX}${reason}` : undefined;
+  if (isManualFixFlag(err)) {
+    if (err.includes(PRIOR_FAILURE)) return undefined;
+    const next = reason ? `${MANUAL_FIX_PREFIX}${reason}` : null;
+    return next === err ? undefined : next;
+  }
+  const prior = `${PRIOR_FAILURE}: ${err}`.slice(0, 400);
+  return `${MANUAL_FIX_PREFIX}${reason ? `${reason} (${prior})` : prior}`;
+}
+
 /** Only clean feed photo drafts with real images and still-live content go out automatically. */
 export function isAutopilotEligible(d: DraftRow, ctx: EligibilityContext): boolean {
-  if (!d.title?.trim()) return false;
   if (d.last_error) return false;
-  if (d.media_type === "STORY" || d.media_type === "REELS" || d.video_url) return false;
+  if (manualFixReason(d)) return false;
   if ((d.caption ?? "").trim().length < ctx.minCaption) return false;
-  if (!d.image_url && !(d.image_urls?.length)) return false;
   if (d.type === "property") return !!d.property_id && ctx.activePropertyIds.has(d.property_id);
   if (d.type === "blog") {
     const slug = (d.source_url ?? "").match(/\/blog\/([^/?#]+)/)?.[1];
@@ -84,15 +125,17 @@ export function isAutopilotEligible(d: DraftRow, ctx: EligibilityContext): boole
   return false;
 }
 
-/** Oldest first, alternating properties and articles for variety. */
-export function orderDrafts(drafts: DraftRow[]): DraftRow[] {
+/** Oldest first, alternating properties and articles; `after` = type of the last post already in the calendar. */
+export function orderDrafts(drafts: DraftRow[], after?: string | null): DraftRow[] {
   const byAge = (a: DraftRow, b: DraftRow) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id);
   const props = drafts.filter((d) => d.type === "property").sort(byAge);
   const blogs = drafts.filter((d) => d.type !== "property").sort(byAge);
   const out: DraftRow[] = [];
+  let wantProperty = after !== "property";
   while (props.length || blogs.length) {
-    if (props.length) out.push(props.shift()!);
-    if (blogs.length) out.push(blogs.shift()!);
+    const from = (wantProperty && props.length) || !blogs.length ? props : blogs;
+    out.push(from.shift()!);
+    wantProperty = from !== props;
   }
   return out;
 }
@@ -102,9 +145,9 @@ export function freeSlots(slots: Date[], scheduled: Date[]): Date[] {
   return slots.filter((s) => !scheduled.some((t) => Math.abs(t.getTime() - s.getTime()) < 60 * 60_000));
 }
 
-export function planSchedule(slots: Date[], scheduled: Date[], drafts: DraftRow[]): { id: string; at: Date }[] {
+export function planSchedule(slots: Date[], scheduled: Date[], drafts: DraftRow[], after?: string | null): { id: string; at: Date }[] {
   const free = freeSlots(slots, scheduled);
-  return orderDrafts(drafts).slice(0, free.length).map((d, i) => ({ id: d.id, at: free[i] }));
+  return orderDrafts(drafts, after).slice(0, free.length).map((d, i) => ({ id: d.id, at: free[i] }));
 }
 
 /** Auto-extracted drafts open with their real title so the caption headline is meaningful. */
