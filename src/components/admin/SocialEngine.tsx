@@ -1,5 +1,5 @@
 import { renderReelFromImages } from "@/lib/reelVideo";
-import { isManualFixFlag, MANUAL_FIX_PREFIX } from "../../../supabase/functions/_shared/socialAutopilotPlan";
+import { isManualFixFlag, manualFixText } from "../../../supabase/functions/_shared/socialAutopilotPlan";
 import { Sparkles as AiSparkles, Loader2 as AiLoader } from "lucide-react";
 import { renderStoryImage, validateStoryVideo } from "@/lib/storyMedia";
 import { readSocialVariants, selectedVariant, type SocialVariants } from "@/lib/socialVariants";
