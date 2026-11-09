@@ -171,6 +171,21 @@ export function planSchedule(
   return out;
 }
 
+/** How many property and article drafts the free slots need to keep a strict rotation. */
+export function rotationNeeds(
+  slots: Date[], scheduled: Array<{ at: Date; type?: string | null }>, after?: string | null,
+): { property: number; blog: number } {
+  const need = { property: 0, blog: 0 };
+  let prev: string | null = after == null ? null : after === "property" ? "property" : "blog";
+  for (const slot of [...slots].sort((a, b) => a.getTime() - b.getTime())) {
+    const occupant = scheduled.find((t) => Math.abs(t.at.getTime() - slot.getTime()) < 60 * 60_000);
+    if (occupant) { prev = occupant.type == null ? prev : occupant.type === "property" ? "property" : "blog"; continue; }
+    prev = prev === "property" ? "blog" : "property";
+    need[prev as "property" | "blog"]++;
+  }
+  return need;
+}
+
 /** Auto-extracted drafts open with their real title so the caption headline is meaningful. */
 export function withTitleLine(title: string, caption: string): string {
   const t = title.trim();

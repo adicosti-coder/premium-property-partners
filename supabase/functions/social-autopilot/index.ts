@@ -13,7 +13,7 @@ import { relayToMake } from "../_shared/makeRelay.ts";
 import { ADMIN_WA_ALERT_NUMBERS } from "../_shared/waAgentNotify.ts";
 import { guardSocialPostYield } from "../_shared/socialYieldGuard.ts";
 import {
-  autopilotConfig, upcomingSlots, isAutopilotEligible, planSchedule, freeSlots, withTitleLine, orderDrafts,
+  autopilotConfig, upcomingSlots, isAutopilotEligible, planSchedule, freeSlots, withTitleLine, orderDrafts, rotationNeeds,
   manualFixUpdate, manualFixReason, draftMediaUrls, isManualFixFlag, MANUAL_FIX_PREFIX, TZ, type DraftRow,
 } from "../_shared/socialAutopilotPlan.ts";
 
@@ -117,13 +117,23 @@ Deno.serve(async (req) => {
     let eligible = state.drafts.filter((d) => isAutopilotEligible(d, state.ctx));
     let extracted = 0;
 
+    // Rotație: pornim de la tipul ultimei postări din feed dinaintea primului slot.
+    const before = scheduledFeed().filter((r) => !slots[0] || new Date(r.scheduled_at!) < new Date(slots[0].getTime() - 60 * 60_000))
+      .sort((a, b) => b.scheduled_at!.localeCompare(a.scheduled_at!))[0];
+    let after = before?.type ?? null;
+    if (!after) {
+      const { data: last } = await sb.from("social_posts").select("type").eq("status", "posted").neq("media_type", "STORY")
+        .order("updated_at", { ascending: false }).limit(1).maybeSingle();
+      after = last?.type ?? null;
+    }
+
     // Ciorne insuficiente (sau lipsește un tip pentru alternanță) → completăm din conținutul local
     // (fără scraping extern), o singură dată per conținut.
-    const half = Math.floor(free.length / 2);
+    const needs = rotationNeeds(slots, scheduledFeed().map((r) => ({ at: new Date(r.scheduled_at!), type: r.type })), after);
     const nProps = eligible.filter((d) => d.type === "property").length;
-    const short = { property: Math.max(0, half - nProps), blog: Math.max(0, half - (eligible.length - nProps)) };
+    const short = { property: Math.max(0, needs.property - nProps), blog: Math.max(0, needs.blog - (eligible.length - nProps)) };
     if (eligible.length < free.length || short.property || short.blog) {
-      const need = Math.min(10, Math.max(free.length - eligible.length + 2, short.property + short.blog + 1));
+      const need = Math.min(10, Math.max(free.length - eligible.length + 2, short.property + short.blog));
       const [properties, articles, existing, gallery] = await Promise.all([
         sb.from("properties").select("id,slug,name,description_ro,location,image_path,images,listing_type,capital_necesar,base_price_per_night,social_yield_override").eq("is_active", true).order("updated_at", { ascending: false }).limit(1000),
         sb.from("blog_articles").select("slug,title,excerpt,content,cover_image,main_image_url").eq("is_published", true).order("published_at", { ascending: false }).limit(1000),
@@ -159,16 +169,6 @@ Deno.serve(async (req) => {
         free = freeSlots(slots, scheduledFeed().map((r) => new Date(r.scheduled_at!)));
         eligible = state.drafts.filter((d) => isAutopilotEligible(d, state.ctx));
       } else extracted = dryRun ? fresh.length : 0;
-    }
-
-    // Rotație: pornim de la tipul ultimei postări din feed dinaintea primului slot.
-    const before = scheduledFeed().filter((r) => !slots[0] || new Date(r.scheduled_at!) < new Date(slots[0].getTime() - 60 * 60_000))
-      .sort((a, b) => b.scheduled_at!.localeCompare(a.scheduled_at!))[0];
-    let after = before?.type ?? null;
-    if (!after) {
-      const { data: last } = await sb.from("social_posts").select("type").eq("status", "posted").neq("media_type", "STORY")
-        .order("updated_at", { ascending: false }).limit(1).maybeSingle();
-      after = last?.type ?? null;
     }
 
     // Verificarea media înainte de programare: o poză care nu se încarcă scoate ciorna din coadă.
