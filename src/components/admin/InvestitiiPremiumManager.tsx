@@ -58,6 +58,7 @@ interface InvestProperty {
   display_order: number;
   estimated_revenue: string | null;
   roi_percentage: string | null;
+  social_yield_override?: number | null;
   capital_necesar: number | null;
   contact_name?: string | null;
   contact_phone?: string | null;
@@ -97,6 +98,7 @@ const emptyProperty: Omit<InvestProperty, "id"> = {
   display_order: 0,
   estimated_revenue: null,
   roi_percentage: null,
+  social_yield_override: null,
   capital_necesar: null,
   contact_name: null,
   contact_phone: null,
@@ -370,6 +372,7 @@ export default function InvestitiiPremiumManager() {
       display_order: editingProperty.display_order,
       estimated_revenue: editingProperty.estimated_revenue,
       roi_percentage: editingProperty.roi_percentage,
+      social_yield_override: editingProperty.social_yield_override ?? null,
       capital_necesar: editingProperty.capital_necesar,
       source_url: editingProperty.source_url,
       source_platform: editingProperty.source_platform,
@@ -931,6 +934,24 @@ export default function InvestitiiPremiumManager() {
                   <div>
                     <Label>Venit Estimat</Label>
                     <Input value={editingProperty.estimated_revenue || ""} onChange={(e) => updateField("estimated_revenue", e.target.value)} placeholder="ex: 800-1200 €/lună" />
+                  </div>
+                  <div className="md:col-span-3">
+                    <Label htmlFor="social-yield-override">Randament în postările sociale (% net estimat, opțional)</Label>
+                    <Input
+                      id="social-yield-override"
+                      type="number"
+                      inputMode="decimal"
+                      min={0.1}
+                      max={30}
+                      step={0.1}
+                      value={editingProperty.social_yield_override ?? ""}
+                      onChange={(e) => {
+                        const v = e.target.value === "" ? null : Number(e.target.value);
+                        updateField("social_yield_override", v != null && Number.isFinite(v) && v > 0 && v <= 30 ? v : null);
+                      }}
+                      placeholder="Gol = 6,5%–9,4% net estimat"
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">Lasă gol ca postările automate să folosească intervalul aprobat 6,5%–9,4% net estimat. Completează doar dacă ai o cifră verificată pentru această proprietate.</p>
                   </div>
                 </div>
               </div>

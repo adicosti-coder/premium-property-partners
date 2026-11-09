@@ -967,6 +967,13 @@
       "when": 1794143531434,
       "tag": "0137_wa_publish_consents_outreach_template",
       "breakpoints": true
+    },
+    {
+      "idx": 138,
+      "version": "7",
+      "when": 1794229300039,
+      "tag": "0138_properties_social_yield_override",
+      "breakpoints": true
     }
   ]
 }

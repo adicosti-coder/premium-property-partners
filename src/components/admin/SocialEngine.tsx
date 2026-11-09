@@ -1,4 +1,5 @@
 import { renderReelFromImages } from "@/lib/reelVideo";
+import { isManualFixFlag, MANUAL_FIX_PREFIX } from "../../../supabase/functions/_shared/socialAutopilotPlan";
 import { Sparkles as AiSparkles, Loader2 as AiLoader } from "lucide-react";
 import { renderStoryImage, validateStoryVideo } from "@/lib/storyMedia";
 import { readSocialVariants, selectedVariant, type SocialVariants } from "@/lib/socialVariants";
@@ -245,9 +246,11 @@ export default function SocialEngine() {
   const schedulePost = async (id: string, date: Date | null) => {
     const scheduled_at = date ? date.toISOString() : null;
     const status = date ? "scheduled" : "draft";
+    // Programarea manuală înseamnă că adminul a verificat ciorna: marcajul autopilotului dispare.
+    const clearFlag = date && isManualFixFlag(posts.find((p) => p.id === id)?.last_error);
     const { error } = await supabase
       .from("social_posts")
-      .update({ scheduled_at, status } as any)
+      .update({ scheduled_at, status, ...(clearFlag ? { last_error: null } : {}) } as any)
       .eq("id", id);
     if (error) {
       toast({ title: "Programarea nu a fost salvată", description: error.message, variant: "destructive" });
@@ -1354,7 +1357,7 @@ function SocialCard({
             post.status === "scheduled" ? "bg-accent/90 text-accent-foreground" :
             "bg-success/90 text-success-foreground"
           )}>
-            {post.status === "posting" ? "În curs de publicare" : post.last_error ? (post.posted_to.length ? "Publicare parțială" : "Publicare eșuată") : post.status === "draft" ? "Ciornă" : post.status === "scheduled" ? "Programat" : "Publicat"}
+            {post.status === "posting" ? "În curs de publicare" : isManualFixFlag(post.last_error) ? "Necesită corectare manuală" : post.last_error ? (post.posted_to.length ? "Publicare parțială" : "Publicare eșuată") : post.status === "draft" ? "Ciornă" : post.status === "scheduled" ? "Programat" : "Publicat"}
           </Badge>
           {post.posted_to.length > 0 && (
             <div className="flex gap-1 mt-1">
@@ -1382,7 +1385,7 @@ function SocialCard({
       </CardHeader>
 
       <CardContent className="pt-0 pb-4 flex flex-col flex-1 gap-3">
-        {post.last_error && <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive break-words"><strong>Publicarea nu a fost finalizată</strong><p className="mt-1 whitespace-pre-wrap">{post.last_error}</p></div>}
+        {post.last_error && <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive break-words"><strong>{isManualFixFlag(post.last_error) ? "Necesită corectare manuală — autopilotul nu o programează" : "Publicarea nu a fost finalizată"}</strong><p className="mt-1 whitespace-pre-wrap">{isManualFixFlag(post.last_error) ? post.last_error.slice(MANUAL_FIX_PREFIX.length) : post.last_error}</p></div>}
         {/* Caption */}
         <div className="relative">
           <div className="flex items-center justify-between mb-1">

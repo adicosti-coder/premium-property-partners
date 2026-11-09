@@ -1,5 +1,12 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Autopilot social: gardă randament și ciorne de corectat — 9 noiembrie
+- [x] Randament în ciorne/programări: „6,5%–9,4% net estimat”, excepție doar câmpul explicit pe proprietate
+- [x] Verificare poze înainte de programare; HELIOS și Story „5 Greșeli Comune” marcate „Necesită corectare manuală”
+- [x] Alertă 48h prin Make (cu rezervă directă pe WhatsApp); rotație strictă proprietate/articol; deduplicare păstrată
+- [ ] Ruta Make pentru evenimentul `social_autopilot_window_gap` — trebuie configurată în scenariul Make
+- [ ] 56 articole fără poză publică — necesită acordul utilizatorului pentru încărcarea copertelor
+
 ## Consolidare livrare și SEO — 6 noiembrie, 22:10 UTC
 - [x] E-mail: webhook Resend semnat, reconciliere orară, pending/delivered/failed și erori; două cereri confirmate `delivered` din Resend
 - [x] Retrimitere e-mail separată de WhatsApp pe același ID; deduplicarea veche nu mai blochează retry-ul, iar semnăturile false sunt respinse
