@@ -46,9 +46,9 @@ export function normalizeYieldClaims(text: string | null | undefined, override?:
   return text
     .replace(KEYWORD_FIRST, (_m, kw: string) => `${label(kw)} ${value}`)
     .replace(NUMBER_FIRST, (_m, kw: string) => `${label(kw)} ${value}`)
-    .replace(KEYWORD_LOOSE, (m, kw: string, mid: string) => {
+    .replace(KEYWORD_LOOSE, (m, kw: string, mid: string, link?: string) => {
       if (NOT_YIELD.test(mid) || mid.includes(value)) return m;
-      return `${kw}${mid} ${value}`;
+      return `${kw}${mid} ${/\bde\s*$/i.test(link ?? "") ? "de " : ""}${value}`;
     });
 }
 
