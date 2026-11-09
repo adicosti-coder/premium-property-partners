@@ -8,15 +8,18 @@ export const APPROVED_YIELD_EN = "6.5% – 9.4% net estimat";
 const NUM = String.raw`\d{1,2}(?:[.,]\d{1,2})?`;
 const QUAL = String.raw`(?:net|brut|anual|annual|estimat|estimată|mediu|medie|potențial|potential|garantat|de|peste|până|pana|la|minim|minimum|min\.|cca\.?|aprox\.?|aproximativ|chiar|un|over|up|to|of|al|anual)`;
 // keyword [qualifiers] [: / –] [NUM% –] NUM % [+] [trailing qualifiers]
-const KEYWORD_FIRST = new RegExp(
-  String.raw`\b(yield|randament(?:ul|e|ele)?|roi|rentabilitate(?:a)?)((?:\s+${QUAL})*)\s*[:–-]?\s*(?:${NUM}\s*%?\s*(?:[-–—]|până la|pana la|to)\s*)?${NUM}\s*%\s*\+?(?:\s*(?:\/\s*an|pe an|per an|anual|net|brut|estimat)\b)*`,
-  "giu",
-);
-// NUM% [+] keyword  (ex. „9%+ yield”, „9% randament”)
+const PCT = String.raw`(?:${NUM}\s*%?\s*(?:[-–—]|până la|pana la|to)\s*)?${NUM}\s*%(?:\s*\+)?(?:\s*\/\s*an|\s+(?:pe an|per an|anual|net estimat|net|brut|estimat)(?![\p{L}]))*`;
+const KW = String.raw`yield|randament(?:ul|e|ele)?|roi|rentabilitate(?:a)?`;
+// keyword [qualifiers] [: / –] PCT  (ex. „Yield 9%+”, „randament estimat de peste 9%”)
+const KEYWORD_FIRST = new RegExp(String.raw`\b(${KW})((?:\s+${QUAL})*)\s*[:–-]?\s*${PCT}`, "giu");
+// [peste/până la] PCT keyword  (ex. „9%+ yield”, „până la 12% randament”)
 const NUMBER_FIRST = new RegExp(
-  String.raw`(?:${NUM}\s*%?\s*[-–—]\s*)?${NUM}\s*%\s*\+?\s+(?:net\s+)?(yield|randament(?:ul)?|roi)\b`,
+  String.raw`(?:(?:peste|până la|pana la|minim|de|cca\.?|aprox\.?)\s+)*(?:${NUM}\s*%?\s*[-–—]\s*)?${NUM}\s*%(?:\s*\+)?\s+(?:net\s+)?(${KW})\b`,
   "giu",
 );
+// keyword … (max 6 cuvinte, aceeași propoziție) … PCT  (ex. „Randamentul în regim hotelier este de 12%”)
+const KEYWORD_LOOSE = new RegExp(String.raw`\b(${KW})((?:[\s,]+[^\s\d.;!?%|]+){1,6}?)\s+((?:peste|până la|pana la|minim|de)\s+)*${PCT}`, "giu");
+const NOT_YIELD = /comision|ocupare|impozit|deducer|tax|cot[aă]|discount|reducer|avans|dobând|dobind/i;
 
 function formatOverride(v: number): string {
   return `${v.toFixed(v % 1 === 0 ? 0 : 1).replace(".", ",")}% net estimat`;
@@ -42,7 +45,11 @@ export function normalizeYieldClaims(text: string | null | undefined, override?:
   const value = o == null ? APPROVED_YIELD_RO : formatOverride(o);
   return text
     .replace(KEYWORD_FIRST, (_m, kw: string) => `${label(kw)} ${value}`)
-    .replace(NUMBER_FIRST, (_m, kw: string) => `${label(kw)} ${value}`);
+    .replace(NUMBER_FIRST, (_m, kw: string) => `${label(kw)} ${value}`)
+    .replace(KEYWORD_LOOSE, (m, kw: string, mid: string) => {
+      if (NOT_YIELD.test(mid) || mid.includes(value)) return m;
+      return `${kw}${mid} ${value}`;
+    });
 }
 
 /** True when the text contains a yield claim that differs from the approved form. */
