@@ -42,7 +42,7 @@ export function formatSocialCaption(raw: string, options: SocialCaptionOptions):
     paragraphs.push(blocks.slice(Math.floor(i * blocks.length / count), Math.floor((i + 1) * blocks.length / count)).join(" "));
   }
   const cta = options.platform === "instagram"
-    ? options.type === "blog" ? "🔗 Link în Bio pentru articolul complet!" : "📥 Salvează postarea și accesează link-ul din profilul nostru!"
+    ? options.type === "blog" ? "🔗 Link în Bio pentru articolul complet!" : "📥 Salvează postarea — detalii și toate pozele prin Link în Bio!"
     : options.sourceUrl || extractedUrl;
   const suffix = [cta, hashtags].filter(Boolean).join("\n\n");
   const max = options.max ?? (options.platform === "instagram" ? 2200 : 63206);

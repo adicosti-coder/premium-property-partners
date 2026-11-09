@@ -1,9 +1,10 @@
 import { describe, it, expect } from "vitest";
 import {
   autopilotConfig, bucharestTime, upcomingSlots, isAutopilotEligible, planSchedule, withTitleLine, type DraftRow,
-  manualFixUpdate, MANUAL_FIX_PREFIX, rotationNeeds,
+  manualFixUpdate, MANUAL_FIX_PREFIX, rotationNeeds, isManualFixFlag, manualFixText,
 } from "../../supabase/functions/_shared/socialAutopilotPlan";
-import { normalizeYieldClaims, guardSocialPostYield } from "../../supabase/functions/_shared/socialYieldGuard";
+import { normalizeYieldClaims, guardSocialPostYield, postYieldValue } from "../../supabase/functions/_shared/socialYieldGuard";
+import { formatSocialCaption } from "../../supabase/functions/_shared/socialCaption";
 
 const draft = (o: Partial<DraftRow>): DraftRow => ({
   id: "d1", type: "blog", title: "Ghid", caption: "x".repeat(200), media_type: "IMAGE", video_url: null,
@@ -74,15 +75,15 @@ describe("social autopilot rotation needs", () => {
 describe("social autopilot yield guard", () => {
   it("replaces „Yield 9%+” in titles with the approved range", () => {
     expect(normalizeYieldClaims("Apartament 2 Camere, Bv. Regele Carol I | Yield 9%+"))
-      .toBe("Apartament 2 Camere, Bv. Regele Carol I | Randament 6,5%–9,4% net estimat");
+      .toBe("Apartament 2 Camere, Bv. Regele Carol I | Randament 6,5% – 9,4% net estimat");
   });
   it("replaces „peste 9%” in descriptions with the approved range", () => {
     expect(normalizeYieldClaims("te bucuri de un randament estimat de peste 9% și de management"))
-      .toBe("te bucuri de un randament 6,5%–9,4% net estimat și de management");
+      .toBe("te bucuri de un randament 6,5% – 9,4% net estimat și de management");
   });
   it("uses an explicit property-level value only when one is set", () => {
     expect(normalizeYieldClaims("Yield 9%+", 8.2)).toBe("Randament 8,2% net estimat");
-    expect(normalizeYieldClaims("Yield 9%+", null)).toBe("Randament 6,5%–9,4% net estimat");
+    expect(normalizeYieldClaims("Yield 9%+", null)).toBe("Randament 6,5% – 9,4% net estimat");
   });
   it("leaves commission, occupancy and tax percentages untouched", () => {
     const t = "Comision 15–20% din venitul net, ocupare 70%, impozit 10%";
@@ -90,7 +91,7 @@ describe("social autopilot yield guard", () => {
   });
   it("also fixes per-format captions and Story overlay text", () => {
     const g = guardSocialPostYield({ title: "x", caption: "y", content_variants: { STORY: { caption: "randament 9%+", overlay_text: "Randament 9%+ | 79.000 EUR" } } });
-    expect(g.content_variants).toEqual({ STORY: { caption: "randament 6,5%–9,4% net estimat", overlay_text: "Randament 6,5%–9,4% net estimat | 79.000 EUR" } });
+    expect(g.content_variants).toEqual({ STORY: { caption: "randament 6,5% – 9,4% net estimat", overlay_text: "Randament 6,5% – 9,4% net estimat | 79.000 EUR" } });
   });
 });
 
@@ -101,7 +102,7 @@ describe("social autopilot manual-fix flag", () => {
     expect(isAutopilotEligible(draft({ last_error: flag! }), ctx)).toBe(false);
   });
   it("flags Story drafts as an unsupported autopilot format", () => {
-    expect(manualFixUpdate(draft({ media_type: "STORY" }))).toMatch(/^Necesită corectare manuală: format Story/);
+    expect(manualFixUpdate(draft({ media_type: "STORY" }))).toMatch(/^Necesită verificare manuală: format Story/);
   });
   it("flags carousels with fewer than 2 images", () => {
     expect(manualFixUpdate(draft({ media_type: "CAROUSEL", image_urls: [] }))).toBe(`${MANUAL_FIX_PREFIX}caruselul are nevoie de cel puțin 2 imagini`);
@@ -113,5 +114,54 @@ describe("social autopilot manual-fix flag", () => {
     const flag = manualFixUpdate(draft({ last_error: "Upstream 404", image_url: null }))!;
     expect(flag).toContain("Upstream 404");
     expect(manualFixUpdate(draft({ last_error: flag }))).toBeUndefined();
+  });
+});
+
+describe("social yield by post type", () => {
+  it("service and owner-acquisition posts always use the approved range", () => {
+    expect(postYieldValue("blog", { listing_type: "investitie", roi_percentage: "9.1%" })).toBeNull();
+    expect(normalizeYieldClaims("Randament peste 9%", postYieldValue("blog", null))).toBe("Randament 6,5% – 9,4% net estimat");
+  });
+  it("a sale/investment listing shows its own stored yield (9.1%)", () => {
+    const v = postYieldValue("property", { listing_type: "investitie", roi_percentage: "9.1%" });
+    expect(v).toBe(9.1);
+    expect(normalizeYieldClaims("Yield 9%+", v)).toBe("Randament 9,1% net estimat");
+  });
+  it("a listing without a stored yield falls back to the approved range", () => {
+    expect(postYieldValue("property", { listing_type: "vanzare", roi_percentage: null })).toBeNull();
+  });
+  it("stays and rentals never show a listing figure", () => {
+    expect(postYieldValue("property", { listing_type: "cazare", roi_percentage: "9.1%" })).toBeNull();
+    expect(postYieldValue("property", { listing_type: "inchiriere", roi_percentage: "9.1%" })).toBeNull();
+  });
+  it("automatic listing figures above 9.5% fall back to the range; the explicit social field wins", () => {
+    expect(postYieldValue("property", { listing_type: "investitie", roi_percentage: "17.5%" })).toBeNull();
+    expect(postYieldValue("property", { listing_type: "investitie", roi_percentage: "17.5%", social_yield_override: 8.4 })).toBe(8.4);
+  });
+  it("rewrites the earlier range wording to the new spacing", () => {
+    expect(normalizeYieldClaims("Randament 6,5%–9,4% net estimat")).toBe("Randament 6,5% – 9,4% net estimat");
+  });
+});
+
+describe("Needs Manual Review flag wording", () => {
+  it("uses „Necesită verificare manuală” and still recognises the earlier wording", () => {
+    expect(MANUAL_FIX_PREFIX).toBe("Necesită verificare manuală: ");
+    const legacy = "Necesită corectare manuală: lipsesc imaginile obligatorii";
+    expect(isManualFixFlag(legacy)).toBe(true);
+    expect(manualFixText(legacy)).toBe("lipsesc imaginile obligatorii");
+    expect(manualFixUpdate(draft({ image_url: null, last_error: legacy }))).toBe(`${MANUAL_FIX_PREFIX}lipsesc imaginile obligatorii`);
+  });
+});
+
+describe("platform captions", () => {
+  const raw = "🔑 Apartament 2 camere\n\nDetalii reale. https://realtrust.ro/proprietate/x";
+  it("Facebook keeps the inline listing link", () => {
+    expect(formatSocialCaption(raw, { platform: "facebook", type: "property", sourceUrl: "https://realtrust.ro/proprietate/x" })).toContain("https://realtrust.ro/proprietate/x");
+  });
+  it("Instagram drops the URL and uses a Link în Bio CTA for listings and articles", () => {
+    const ig = formatSocialCaption(raw, { platform: "instagram", type: "property" });
+    expect(ig).not.toContain("https://");
+    expect(ig).toContain("Link în Bio");
+    expect(formatSocialCaption(raw, { platform: "instagram", type: "blog" })).toContain("Link în Bio");
   });
 });

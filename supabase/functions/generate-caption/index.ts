@@ -4,6 +4,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { currentYear, refreshYears } from "../_shared/currentYear.ts";
 import { formatSocialCaption } from "../_shared/socialCaption.ts";
+import { normalizeYieldClaims, postYieldValue, yieldText } from "../_shared/socialYieldGuard.ts";
 import { resolveSocialFeaturedImage } from "../_shared/socialImages.ts";
 import { usableSocialImage } from "../_shared/socialImageSelection.ts";
 
@@ -22,8 +23,9 @@ Reguli:
 - Pentru articole: ce află cititorul și invitația de a citi pe realtrust.ro.
 - Anul curent este ${YEAR}. Înlocuiește orice mențiune a anilor trecuți din titluri sau texte cu anul curent (${YEAR}). Excepție: fapte istorice (ex: Capitala Culturală Europeană 2023).
 - Nu include URL-uri în corpul textului, nici hashtag-uri între paragrafe.
-- Instagram: încheie cu „🔗 Link în Bio pentru articolul complet!” pentru articole sau „📥 Salvează postarea și accesează link-ul din profilul nostru!” pentru proprietăți. Nu include URL-ul.
+- Instagram: încheie cu „🔗 Link în Bio pentru articolul complet!” pentru articole sau „📥 Salvează postarea — detalii și toate pozele prin Link în Bio!” pentru proprietăți. Nu include URL-ul.
 - Facebook: poți păstra linkul primit la sfârșitul textului.
+- Randament: nu scrie niciodată „peste X%”, „X%+” sau „Yield”. Pentru articole și servicii folosește exact „6,5% – 9,4% net estimat”; pentru un anunț folosește doar cifra din câmpul „randament” primit, altfel același interval.
 - NU adăuga hashtag-uri: un singur bloc compact de 5–8 hashtag-uri relevante fără dubluri se atașează automat la final.
 Răspunde doar cu textul descrierii.`; };
 
@@ -60,6 +62,7 @@ Deno.serve(async (req) => {
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const slug = decodeURIComponent(new URL(sourceUrl).pathname.split("/").filter(Boolean).pop() || "");
     let facts: unknown = null;
+    let listingYield: number | null = null;
     const images: string[] = [];
     const { data: storedPost } = body.post_id ? await sb.from("social_posts").select("property_id,image_url,image_urls").eq("id", body.post_id).maybeSingle() : { data: null };
     for (const raw of [storedPost?.image_url, ...(storedPost?.image_urls ?? [])]) {
@@ -69,10 +72,11 @@ Deno.serve(async (req) => {
     const featured = await resolveSocialFeaturedImage(sb, { title, type, sourceUrl });
     if (featured) images.push(featured);
     if (type === "property") {
-      const { data: property } = await sb.from("properties").select("id,name,location,description_ro,listing_type,capital_necesar,bedrooms,rooms,bathrooms,size,amenities,floor,parking,furnished,images,is_active").eq(storedPost?.property_id || /^[0-9a-f-]{36}$/i.test(slug) ? "id" : "slug", storedPost?.property_id || slug).eq("is_active", true).maybeSingle();
+      const { data: property } = await sb.from("properties").select("id,name,location,description_ro,listing_type,capital_necesar,bedrooms,rooms,bathrooms,size,amenities,floor,parking,furnished,images,is_active,roi_percentage,social_yield_override").eq(storedPost?.property_id || /^[0-9a-f-]{36}$/i.test(slug) ? "id" : "slug", storedPost?.property_id || slug).eq("is_active", true).maybeSingle();
       if (property) {
-        const { id, images: gallery, is_active, ...publicFacts } = property;
-        facts = publicFacts;
+        const { id, images: gallery, is_active, roi_percentage, social_yield_override, ...publicFacts } = property;
+        listingYield = postYieldValue("property", property);
+        facts = { ...publicFacts, randament: yieldText(listingYield) };
         const { data: rows } = await sb.from("property_images").select("image_path").eq("property_id", id).eq("is_published", true).order("display_order").limit(10);
         for (const raw of [...(rows ?? []).map((r: any) => r.image_path), ...(gallery ?? [])]) {
           if (typeof raw !== "string") continue;
@@ -110,11 +114,11 @@ Deno.serve(async (req) => {
     if (variantsMode) {
       const parsed = JSON.parse(output.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, ""));
       if (![parsed.feed, parsed.reels, parsed.story, parsed.overlay_text].every(v => typeof v === "string" && v.trim())) return json({ error: "Variante AI incomplete" }, 502);
-      const format = (v: string) => formatSocialCaption(refreshYears(v), { platform, type, sourceUrl, hashtags: tags });
-      variants = { FEED: { caption: format(parsed.feed) }, REELS: { caption: format(parsed.reels) }, STORY: { caption: format(parsed.story), overlay_text: refreshYears(parsed.overlay_text).slice(0, 100), story_link_url: sourceUrl } };
+      const format = (v: string) => formatSocialCaption(normalizeYieldClaims(refreshYears(v), listingYield), { platform, type, sourceUrl, hashtags: tags });
+      variants = { FEED: { caption: format(parsed.feed) }, REELS: { caption: format(parsed.reels) }, STORY: { caption: format(parsed.story), overlay_text: normalizeYieldClaims(refreshYears(parsed.overlay_text), listingYield).slice(0, 100), story_link_url: sourceUrl } };
     }
     const body0 = (variants ? variants.FEED.caption : output).replace(/(\s*#[\p{L}\p{N}_]+)+\s*$/u, "").trim();
-    const fresh0 = refreshYears(body0);
+    const fresh0 = normalizeYieldClaims(refreshYears(body0), listingYield);
     const caption = fresh0 ? formatSocialCaption(fresh0, { platform, type, sourceUrl, hashtags: tags }) : "";
     if (!caption) return json({ error: "Răspuns AI gol" }, 502);
 
