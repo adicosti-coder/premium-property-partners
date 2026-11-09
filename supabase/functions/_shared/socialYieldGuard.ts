@@ -27,6 +27,8 @@ const NOT_YIELD = /comision|ocupare|impozit|deducer|tax|cot[aă]|discount|reduce
 function formatOverride(v: number): string {
   return `${new Intl.NumberFormat("ro-RO", { maximumFractionDigits: 2 }).format(v)}% net estimat`;
 }
+/** Text used for a post: the listing's own figure or the approved range. */
+export const yieldText = (value: number | null) => value != null ? formatOverride(value) : APPROVED_YIELD_RO;
 
 const parsePct = (raw: unknown): number => typeof raw === "number" ? raw
   : typeof raw === "string" && raw.trim() ? Number(raw.replace(",", ".").replace("%", "").trim()) : NaN;

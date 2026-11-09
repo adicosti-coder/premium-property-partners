@@ -4,7 +4,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { currentYear, refreshYears } from "../_shared/currentYear.ts";
 import { formatSocialCaption } from "../_shared/socialCaption.ts";
-import { normalizeYieldClaims, postYieldValue, APPROVED_YIELD_RO } from "../_shared/socialYieldGuard.ts";
+import { normalizeYieldClaims, postYieldValue, yieldText } from "../_shared/socialYieldGuard.ts";
 import { resolveSocialFeaturedImage } from "../_shared/socialImages.ts";
 import { usableSocialImage } from "../_shared/socialImageSelection.ts";
 
@@ -62,6 +62,7 @@ Deno.serve(async (req) => {
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const slug = decodeURIComponent(new URL(sourceUrl).pathname.split("/").filter(Boolean).pop() || "");
     let facts: unknown = null;
+    let listingYield: number | null = null;
     const images: string[] = [];
     const { data: storedPost } = body.post_id ? await sb.from("social_posts").select("property_id,image_url,image_urls").eq("id", body.post_id).maybeSingle() : { data: null };
     for (const raw of [storedPost?.image_url, ...(storedPost?.image_urls ?? [])]) {
@@ -75,7 +76,7 @@ Deno.serve(async (req) => {
       if (property) {
         const { id, images: gallery, is_active, roi_percentage, social_yield_override, ...publicFacts } = property;
         listingYield = postYieldValue("property", property);
-        facts = { ...publicFacts, randament: listingYield != null ? normalizeYieldClaims("randament 1%", listingYield).replace(/^randament /, "") : APPROVED_YIELD_RO };
+        facts = { ...publicFacts, randament: yieldText(listingYield) };
         const { data: rows } = await sb.from("property_images").select("image_path").eq("property_id", id).eq("is_published", true).order("display_order").limit(10);
         for (const raw of [...(rows ?? []).map((r: any) => r.image_path), ...(gallery ?? [])]) {
           if (typeof raw !== "string") continue;
@@ -113,11 +114,11 @@ Deno.serve(async (req) => {
     if (variantsMode) {
       const parsed = JSON.parse(output.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, ""));
       if (![parsed.feed, parsed.reels, parsed.story, parsed.overlay_text].every(v => typeof v === "string" && v.trim())) return json({ error: "Variante AI incomplete" }, 502);
-      const format = (v: string) => formatSocialCaption(refreshYears(v), { platform, type, sourceUrl, hashtags: tags });
-      variants = { FEED: { caption: format(parsed.feed) }, REELS: { caption: format(parsed.reels) }, STORY: { caption: format(parsed.story), overlay_text: refreshYears(parsed.overlay_text).slice(0, 100), story_link_url: sourceUrl } };
+      const format = (v: string) => formatSocialCaption(normalizeYieldClaims(refreshYears(v), listingYield), { platform, type, sourceUrl, hashtags: tags });
+      variants = { FEED: { caption: format(parsed.feed) }, REELS: { caption: format(parsed.reels) }, STORY: { caption: format(parsed.story), overlay_text: normalizeYieldClaims(refreshYears(parsed.overlay_text), listingYield).slice(0, 100), story_link_url: sourceUrl } };
     }
     const body0 = (variants ? variants.FEED.caption : output).replace(/(\s*#[\p{L}\p{N}_]+)+\s*$/u, "").trim();
-    const fresh0 = refreshYears(body0);
+    const fresh0 = normalizeYieldClaims(refreshYears(body0), listingYield);
     const caption = fresh0 ? formatSocialCaption(fresh0, { platform, type, sourceUrl, hashtags: tags }) : "";
     if (!caption) return json({ error: "Răspuns AI gol" }, 502);
 
