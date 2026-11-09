@@ -4,6 +4,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { currentYear, refreshYears } from "../_shared/currentYear.ts";
 import { formatSocialCaption } from "../_shared/socialCaption.ts";
+import { normalizeYieldClaims, postYieldValue, APPROVED_YIELD_RO } from "../_shared/socialYieldGuard.ts";
 import { resolveSocialFeaturedImage } from "../_shared/socialImages.ts";
 import { usableSocialImage } from "../_shared/socialImageSelection.ts";
 
@@ -22,8 +23,9 @@ Reguli:
 - Pentru articole: ce află cititorul și invitația de a citi pe realtrust.ro.
 - Anul curent este ${YEAR}. Înlocuiește orice mențiune a anilor trecuți din titluri sau texte cu anul curent (${YEAR}). Excepție: fapte istorice (ex: Capitala Culturală Europeană 2023).
 - Nu include URL-uri în corpul textului, nici hashtag-uri între paragrafe.
-- Instagram: încheie cu „🔗 Link în Bio pentru articolul complet!” pentru articole sau „📥 Salvează postarea și accesează link-ul din profilul nostru!” pentru proprietăți. Nu include URL-ul.
+- Instagram: încheie cu „🔗 Link în Bio pentru articolul complet!” pentru articole sau „📥 Salvează postarea — detalii și toate pozele prin Link în Bio!” pentru proprietăți. Nu include URL-ul.
 - Facebook: poți păstra linkul primit la sfârșitul textului.
+- Randament: nu scrie niciodată „peste X%”, „X%+” sau „Yield”. Pentru articole și servicii folosește exact „6,5% – 9,4% net estimat”; pentru un anunț folosește doar cifra din câmpul „randament” primit, altfel același interval.
 - NU adăuga hashtag-uri: un singur bloc compact de 5–8 hashtag-uri relevante fără dubluri se atașează automat la final.
 Răspunde doar cu textul descrierii.`; };
 
@@ -69,10 +71,11 @@ Deno.serve(async (req) => {
     const featured = await resolveSocialFeaturedImage(sb, { title, type, sourceUrl });
     if (featured) images.push(featured);
     if (type === "property") {
-      const { data: property } = await sb.from("properties").select("id,name,location,description_ro,listing_type,capital_necesar,bedrooms,rooms,bathrooms,size,amenities,floor,parking,furnished,images,is_active").eq(storedPost?.property_id || /^[0-9a-f-]{36}$/i.test(slug) ? "id" : "slug", storedPost?.property_id || slug).eq("is_active", true).maybeSingle();
+      const { data: property } = await sb.from("properties").select("id,name,location,description_ro,listing_type,capital_necesar,bedrooms,rooms,bathrooms,size,amenities,floor,parking,furnished,images,is_active,roi_percentage,social_yield_override").eq(storedPost?.property_id || /^[0-9a-f-]{36}$/i.test(slug) ? "id" : "slug", storedPost?.property_id || slug).eq("is_active", true).maybeSingle();
       if (property) {
-        const { id, images: gallery, is_active, ...publicFacts } = property;
-        facts = publicFacts;
+        const { id, images: gallery, is_active, roi_percentage, social_yield_override, ...publicFacts } = property;
+        listingYield = postYieldValue("property", property);
+        facts = { ...publicFacts, randament: listingYield != null ? normalizeYieldClaims("randament 1%", listingYield).replace(/^randament /, "") : APPROVED_YIELD_RO };
         const { data: rows } = await sb.from("property_images").select("image_path").eq("property_id", id).eq("is_published", true).order("display_order").limit(10);
         for (const raw of [...(rows ?? []).map((r: any) => r.image_path), ...(gallery ?? [])]) {
           if (typeof raw !== "string") continue;

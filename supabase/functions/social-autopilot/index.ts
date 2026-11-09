@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
     }
   };
 
-  /** Rule 2: write / clear the „Necesită corectare manuală” flag. */
+  /** Rule 2: write / clear the „Necesită verificare manuală” flag. */
   const setFlag = async (row: Row, next: string | null) => {
     row.last_error = next;
     if (next && isManualFixFlag(next)) flagged.push({ id: row.id, title: row.title ?? "(fără titlu)", reason: manualFixText(next) });

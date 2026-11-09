@@ -10,6 +10,20 @@ import { resolveSocialFeaturedImage } from "../_shared/socialImages.ts";
 import { usableSocialImage } from "../_shared/socialImageSelection.ts";
 import { publishToMetaSocial } from "../_shared/metaSocial.ts";
 import { publicationState, makePublicationResult, type PublicationResult } from "../_shared/socialPublicationState.ts";
+import { guardSocialPostYield, postYieldValue } from "../_shared/socialYieldGuard.ts";
+
+/** Scheduled publications re-apply the yield rule, so posts scheduled or edited after the autopilot run stay compliant. */
+async function guardScheduledYield(sb: any, post: any) {
+  let property = null;
+  if (post.type === "property" && post.property_id) {
+    const { data } = await sb.from("properties").select("listing_type,roi_percentage,social_yield_override").eq("id", post.property_id).maybeSingle();
+    property = data;
+  }
+  const g = guardSocialPostYield(post, postYieldValue(post.type, property));
+  if (!g.changed) return;
+  Object.assign(post, { title: g.title, caption: g.caption, content_variants: g.content_variants });
+  await sb.from("social_posts").update({ title: g.title, caption: g.caption, content_variants: g.content_variants }).eq("id", post.id);
+}
 
 /** Feed photo posts go directly to Meta Graph API (confirmed post IDs); Make only answers "accepted". */
 async function publishFeedDirect(sb: any, post: any, platforms: string[], trigger: string) {
@@ -231,6 +245,7 @@ Deno.serve(async (req) => {
     const { data: claimed } = await sb.from("social_posts").update({ status: "posting", updated_at: new Date().toISOString() })
       .eq("id", post.id).eq("status", "scheduled").select("id");
     if (!claimed?.length) continue;
+    await guardScheduledYield(sb, post).catch((e) => console.warn("[process-scheduled-posts] yield guard:", e?.message));
     // Story fără link explicit: folosim pagina articolului (fără „#story”).
     if (storyMode && !post.story_link_url && typeof post.source_url === "string") {
       post.story_link_url = post.source_url.replace(/#story$/, "");
