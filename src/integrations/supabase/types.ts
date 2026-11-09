@@ -5526,6 +5526,7 @@ export type Database = {
           seo_title: string | null
           size: number | null
           slug: string | null
+          social_yield_override: number | null
           source_platform: string | null
           source_url: string | null
           status_operativ: string | null
@@ -5626,6 +5627,7 @@ export type Database = {
           seo_title?: string | null
           size?: number | null
           slug?: string | null
+          social_yield_override?: number | null
           source_platform?: string | null
           source_url?: string | null
           status_operativ?: string | null
@@ -5726,6 +5728,7 @@ export type Database = {
           seo_title?: string | null
           size?: number | null
           slug?: string | null
+          social_yield_override?: number | null
           source_platform?: string | null
           source_url?: string | null
           status_operativ?: string | null
