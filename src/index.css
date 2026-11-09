@@ -720,8 +720,11 @@
     animation: none !important;
   }
 
-  /* Disable backdrop-blur on mobile (GPU-heavy) */
-  .glass {
+  /* Disable backdrop-blur on mobile (GPU-heavy). Without blur a translucent
+     bar lets scrolled text show through under the logo, so it becomes opaque. */
+  .glass,
+  .light .glass {
+    background: hsl(var(--background));
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
