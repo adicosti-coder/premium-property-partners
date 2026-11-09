@@ -117,9 +117,13 @@ Deno.serve(async (req) => {
     let eligible = state.drafts.filter((d) => isAutopilotEligible(d, state.ctx));
     let extracted = 0;
 
-    // Ciorne insuficiente → completăm din conținutul local (fără scraping extern), o singură dată per conținut.
-    if (eligible.length < free.length) {
-      const need = Math.min(10, free.length - eligible.length + 2);
+    // Ciorne insuficiente (sau lipsește un tip pentru alternanță) → completăm din conținutul local
+    // (fără scraping extern), o singură dată per conținut.
+    const half = Math.floor(free.length / 2);
+    const nProps = eligible.filter((d) => d.type === "property").length;
+    const short = { property: Math.max(0, half - nProps), blog: Math.max(0, half - (eligible.length - nProps)) };
+    if (eligible.length < free.length || short.property || short.blog) {
+      const need = Math.min(10, Math.max(free.length - eligible.length + 2, short.property + short.blog + 1));
       const [properties, articles, existing, gallery] = await Promise.all([
         sb.from("properties").select("id,slug,name,description_ro,location,image_path,images,listing_type,capital_necesar,base_price_per_night,social_yield_override").eq("is_active", true).order("updated_at", { ascending: false }).limit(1000),
         sb.from("blog_articles").select("slug,title,excerpt,content,cover_image,main_image_url").eq("is_published", true).order("published_at", { ascending: false }).limit(1000),
@@ -130,7 +134,7 @@ Deno.serve(async (req) => {
       if (error) throw new Error(error.message);
       const photos = new Map<string, string[]>();
       for (const row of gallery.data ?? []) photos.set(row.property_id, [...(photos.get(row.property_id) ?? []), row.image_path]);
-      const fresh = localSocialRows(
+      const candidates = localSocialRows(
         (properties.data ?? []).map((p: any) => ({ ...p, images: [...(p.images ?? []), ...(photos.get(p.id) ?? [])] })),
         articles.data ?? [],
         (v: string) => sb.storage.from("property-images").getPublicUrl(v).data.publicUrl,
@@ -141,8 +145,12 @@ Deno.serve(async (req) => {
           return { ...r, title: g.title, caption: g.caption };
         })
         .filter((r: any) => r.caption.length >= cfg.min_caption + (r.title?.length ?? 0)
-          && !manualFixReason({ ...r, id: "new", last_error: null, created_at: "" }))
-        .slice(0, need);
+          && !manualFixReason({ ...r, id: "new", last_error: null, created_at: "" }));
+      const first = [
+        ...candidates.filter((r: any) => r.type === "blog").slice(0, short.blog),
+        ...candidates.filter((r: any) => r.type === "property").slice(0, short.property),
+      ];
+      const fresh = [...first, ...candidates.filter((r: any) => !first.includes(r))].slice(0, need);
       if (fresh.length && !dryRun) {
         const ins = await sb.from("social_posts").upsert(fresh, { onConflict: "source_url", ignoreDuplicates: true }).select("id");
         if (ins.error) throw new Error(ins.error.message);
