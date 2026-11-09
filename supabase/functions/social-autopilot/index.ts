@@ -172,14 +172,26 @@ Deno.serve(async (req) => {
     }
 
     // Verificarea media înainte de programare: o poză care nu se încarcă scoate ciorna din coadă.
+    // Întâi tipurile cerute de rotație; restul rămân rezervă când un tip se termină.
     const verified: Row[] = [];
+    const spare: Row[] = [];
     let checks = 0;
-    for (const d of orderDrafts(eligible, after) as Row[]) {
-      if (verified.length >= free.length || checks >= 40) break;
+    const count = (t: string) => verified.filter((v) => (v.type === "property") === (t === "property")).length;
+    const check = async (d: Row) => {
       checks++;
       const problem = await mediaProblem(draftMediaUrls(d));
       if (problem) await setFlag(d, manualFixUpdate(d, problem) ?? `${MANUAL_FIX_PREFIX}${problem}`);
       else verified.push(d);
+    };
+    for (const d of orderDrafts(eligible, after) as Row[]) {
+      if ((count("property") >= needs.property && count("blog") >= needs.blog) || checks >= 40) break;
+      const t = d.type === "property" ? "property" : "blog";
+      if (count(t) >= needs[t]) { spare.push(d); continue; }
+      await check(d);
+    }
+    for (const d of spare) {
+      if (verified.length >= free.length || checks >= 40) break;
+      await check(d);
     }
 
     const plan = planSchedule(slots, scheduledFeed().map((r) => ({ at: new Date(r.scheduled_at!), type: r.type })), verified, after);
