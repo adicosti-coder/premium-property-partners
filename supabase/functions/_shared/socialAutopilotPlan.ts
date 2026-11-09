@@ -92,7 +92,7 @@ export function manualFixReason(d: DraftRow): string | null {
   return null;
 }
 
-export const isManualFixFlag = (err: string | null | undefined) => !!err && err.startsWith(MANUAL_FIX_PREFIX);
+export const isManualFixFlag = (err: string | null | undefined): err is string => !!err && err.startsWith(MANUAL_FIX_PREFIX);
 
 /**
  * New `last_error` for a draft, or `undefined` when nothing changes.
