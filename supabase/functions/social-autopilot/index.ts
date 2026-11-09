@@ -138,7 +138,7 @@ Deno.serve(async (req) => {
         .filter((r: any) => !isKnownSocialContent(r, existing.data ?? []))
         .map((r: any) => {
           const g = guardSocialPostYield({ title: r.title, caption: withTitleLine(r.title ?? "", r.caption ?? "") }, r.property_id ? state.overrides.get(r.property_id) : null);
-          return { ...r, title: g.title, caption: g.caption, media_type: (r.image_urls?.length ?? 0) > 1 ? "CAROUSEL" : "IMAGE" };
+          return { ...r, title: g.title, caption: g.caption };
         })
         .filter((r: any) => r.caption.length >= cfg.min_caption + (r.title?.length ?? 0)
           && !manualFixReason({ ...r, id: "new", last_error: null, created_at: "" }))

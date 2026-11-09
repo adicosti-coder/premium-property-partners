@@ -73,7 +73,7 @@ export interface EligibilityContext { activePropertyIds: Set<string>; publishedB
 // Ciornele care nu pot pleca automat primesc acest marcaj în `last_error`, rămân
 // în afara programării automate și apar în Social Engine cu motivul exact.
 export const MANUAL_FIX_PREFIX = "Necesită corectare manuală: ";
-const PRIOR_FAILURE = "publicarea anterioară a eșuat";
+const PRIOR_FAILURE = "eroare anterioară";
 
 /** Image URLs a feed draft needs (cover first, then carousel), deduplicated. */
 export function draftMediaUrls(d: Pick<DraftRow, "image_url" | "image_urls">): string[] {
@@ -96,7 +96,7 @@ export const isManualFixFlag = (err: string | null | undefined) => !!err && err.
 
 /**
  * New `last_error` for a draft, or `undefined` when nothing changes.
- * Earlier publishing failures stay flagged until a person republishes;
+ * Drafts that already carried another error stay flagged until a person fixes and republishes;
  * content-only flags clear themselves once the draft is fixed.
  */
 export function manualFixUpdate(d: DraftRow, mediaProblem?: string | null): string | null | undefined {
