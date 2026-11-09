@@ -69,10 +69,15 @@ export interface DraftRow {
 
 export interface EligibilityContext { activePropertyIds: Set<string>; publishedBlogSlugs: Set<string>; minCaption: number }
 
-// ── „Necesită corectare manuală” ─────────────────────────────────────────────
+// ── „Necesită verificare manuală” (Needs Manual Review) ──────────────────────
 // Ciornele care nu pot pleca automat primesc acest marcaj în `last_error`, rămân
 // în afara programării automate și apar în Social Engine cu motivul exact.
-export const MANUAL_FIX_PREFIX = "Necesită corectare manuală: ";
+export const MANUAL_FIX_PREFIX = "Necesită verificare manuală: ";
+const LEGACY_PREFIXES = ["Necesită corectare manuală: "];
+const canonicalFlag = (err: string) => {
+  const legacy = LEGACY_PREFIXES.find((p) => err.startsWith(p));
+  return legacy ? MANUAL_FIX_PREFIX + err.slice(legacy.length) : err;
+};
 const PRIOR_FAILURE = "eroare anterioară";
 
 /** Image URLs a feed draft needs (cover first, then carousel), deduplicated. */
@@ -92,7 +97,10 @@ export function manualFixReason(d: DraftRow): string | null {
   return null;
 }
 
-export const isManualFixFlag = (err: string | null | undefined): err is string => !!err && err.startsWith(MANUAL_FIX_PREFIX);
+export const isManualFixFlag = (err: string | null | undefined): err is string =>
+  !!err && [MANUAL_FIX_PREFIX, ...LEGACY_PREFIXES].some((p) => err.startsWith(p));
+/** Reason text without the flag prefix (current or legacy wording). */
+export const manualFixText = (err: string) => canonicalFlag(err).slice(MANUAL_FIX_PREFIX.length);
 
 /**
  * New `last_error` for a draft, or `undefined` when nothing changes.
@@ -101,13 +109,14 @@ export const isManualFixFlag = (err: string | null | undefined): err is string =
  */
 export function manualFixUpdate(d: DraftRow, mediaProblem?: string | null): string | null | undefined {
   const reason = mediaProblem ?? manualFixReason(d);
-  const err = d.last_error?.trim() || null;
-  if (!err) return reason ? `${MANUAL_FIX_PREFIX}${reason}` : undefined;
-  if (isManualFixFlag(err)) {
-    if (err.includes(PRIOR_FAILURE)) return undefined;
-    const next = reason ? `${MANUAL_FIX_PREFIX}${reason}` : null;
-    return next === err ? undefined : next;
+  const stored = d.last_error?.trim() || null;
+  if (!stored) return reason ? `${MANUAL_FIX_PREFIX}${reason}` : undefined;
+  if (isManualFixFlag(stored)) {
+    const err = canonicalFlag(stored);
+    const next = err.includes(PRIOR_FAILURE) ? err : reason ? `${MANUAL_FIX_PREFIX}${reason}` : null;
+    return next === stored ? undefined : next;
   }
+  const err = stored;
   const prior = `${PRIOR_FAILURE}: ${err}`.slice(0, 400);
   return `${MANUAL_FIX_PREFIX}${reason ? `${reason} (${prior})` : prior}`;
 }

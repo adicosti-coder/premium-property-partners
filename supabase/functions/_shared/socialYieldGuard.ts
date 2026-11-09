@@ -25,7 +25,7 @@ const KEYWORD_LOOSE = new RegExp(String.raw`\b(${KW})((?:[\s,]+[^\s\d.;!?%|]+){1
 const NOT_YIELD = /comision|ocupare|impozit|deducer|tax|cot[aă]|discount|reducer|avans|dobând|dobind/i;
 
 function formatOverride(v: number): string {
-  return `${v.toFixed(v % 1 === 0 ? 0 : 1).replace(".", ",")}% net estimat`;
+  return `${new Intl.NumberFormat("ro-RO", { maximumFractionDigits: 2 }).format(v)}% net estimat`;
 }
 
 const parsePct = (raw: unknown): number => typeof raw === "number" ? raw
