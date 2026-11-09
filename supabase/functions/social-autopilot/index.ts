@@ -1,6 +1,6 @@
 // Social autopilot: menține calendarul de postări din feed alimentat.
 // Rulează zilnic din orchestrator (`social.autopilot`, 07:15): aplică garda de
-// randament pe ciorne și postări programate, marchează „Necesită corectare
+// randament pe ciorne și postări programate, marchează „Necesită verificare
 // manuală” ciornele fără media sau în format nesuportat, verifică pozele înainte
 // de programare și umple sloturile libere (10:00/18:00) alternând proprietăți și
 // articole. Publicarea rămâne la `process-scheduled-posts`.
@@ -11,10 +11,10 @@ import { localSocialRows, isKnownSocialContent } from "../_shared/socialLocalExt
 import { sendAdminText } from "../_shared/listingInspection.ts";
 import { relayToMake } from "../_shared/makeRelay.ts";
 import { ADMIN_WA_ALERT_NUMBERS } from "../_shared/waAgentNotify.ts";
-import { guardSocialPostYield } from "../_shared/socialYieldGuard.ts";
+import { guardSocialPostYield, postYieldValue, type YieldProperty } from "../_shared/socialYieldGuard.ts";
 import {
   autopilotConfig, upcomingSlots, isAutopilotEligible, planSchedule, freeSlots, withTitleLine, orderDrafts, rotationNeeds,
-  manualFixUpdate, manualFixReason, draftMediaUrls, isManualFixFlag, MANUAL_FIX_PREFIX, TZ, type DraftRow,
+  manualFixUpdate, manualFixReason, manualFixText, draftMediaUrls, isManualFixFlag, MANUAL_FIX_PREFIX, TZ, type DraftRow,
 } from "../_shared/socialAutopilotPlan.ts";
 
 const json = (b: unknown, status = 200) =>
@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
 
   const loadContext = async () => {
     const [props, blogs, queued, drafts] = await Promise.all([
-      sb.from("properties").select("id,social_yield_override").eq("is_active", true).limit(2000),
+      sb.from("properties").select("id,listing_type,roi_percentage,social_yield_override").eq("is_active", true).limit(2000),
       sb.from("blog_articles").select("slug").eq("is_published", true).limit(2000),
       sb.from("social_posts").select(`${DRAFT_COLS},status,scheduled_at`).eq("status", "scheduled")
         .gte("scheduled_at", new Date(now.getTime() - 60 * 60_000).toISOString()).limit(500),
@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
     ]);
     const error = props.error || blogs.error || queued.error || drafts.error;
     if (error) throw new Error(error.message);
-    const overrides = new Map<string, unknown>((props.data ?? []).map((p: { id: string; social_yield_override: unknown }) => [p.id, p.social_yield_override]));
+    const overrides = new Map<string, YieldProperty>((props.data ?? []).map((p: YieldProperty & { id: string }) => [p.id, p]));
     return {
       ctx: {
         activePropertyIds: new Set(overrides.keys()),
@@ -83,10 +83,10 @@ Deno.serve(async (req) => {
     };
   };
 
-  /** Rule 1: every draft and scheduled post carries only the approved yield range (or the explicit property override). */
-  const applyYieldGuard = async (rows: Row[], overrides: Map<string, unknown>) => {
+  /** Rule 1: approved range everywhere, except an individual sale/investment listing with its own stored yield. */
+  const applyYieldGuard = async (rows: Row[], overrides: Map<string, YieldProperty>) => {
     for (const row of rows) {
-      const g = guardSocialPostYield(row, row.property_id ? overrides.get(row.property_id) : null);
+      const g = guardSocialPostYield(row, postYieldValue(row.type, row.property_id ? overrides.get(row.property_id) : null));
       if (!g.changed) continue;
       yieldFixed++;
       Object.assign(row, { title: g.title, caption: g.caption, content_variants: g.content_variants });
@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
   /** Rule 2: write / clear the „Necesită corectare manuală” flag. */
   const setFlag = async (row: Row, next: string | null) => {
     row.last_error = next;
-    if (next && isManualFixFlag(next)) flagged.push({ id: row.id, title: row.title ?? "(fără titlu)", reason: next.slice(MANUAL_FIX_PREFIX.length) });
+    if (next && isManualFixFlag(next)) flagged.push({ id: row.id, title: row.title ?? "(fără titlu)", reason: manualFixText(next) });
     if (!dryRun) await sb.from("social_posts").update({ last_error: next }).eq("id", row.id).eq("status", "draft");
   };
 
@@ -110,7 +110,7 @@ Deno.serve(async (req) => {
     for (const d of state.drafts) {
       const next = manualFixUpdate(d);
       if (next !== undefined) await setFlag(d, next);
-      else if (isManualFixFlag(d.last_error)) flagged.push({ id: d.id, title: d.title ?? "(fără titlu)", reason: d.last_error!.slice(MANUAL_FIX_PREFIX.length) });
+      else if (isManualFixFlag(d.last_error)) flagged.push({ id: d.id, title: d.title ?? "(fără titlu)", reason: manualFixText(d.last_error) });
     }
     const scheduledFeed = () => state.queued.filter((r) => r.media_type !== "STORY");
     let free = freeSlots(slots, scheduledFeed().map((r) => new Date(r.scheduled_at!)));
@@ -135,7 +135,7 @@ Deno.serve(async (req) => {
     if (eligible.length < free.length || short.property || short.blog) {
       const need = Math.min(10, Math.max(free.length - eligible.length + 2, short.property + short.blog));
       const [properties, articles, existing, gallery] = await Promise.all([
-        sb.from("properties").select("id,slug,name,description_ro,location,image_path,images,listing_type,capital_necesar,base_price_per_night,social_yield_override").eq("is_active", true).order("updated_at", { ascending: false }).limit(1000),
+        sb.from("properties").select("id,slug,name,description_ro,location,image_path,images,listing_type,capital_necesar,base_price_per_night").eq("is_active", true).order("updated_at", { ascending: false }).limit(1000),
         sb.from("blog_articles").select("slug,title,excerpt,content,cover_image,main_image_url").eq("is_published", true).order("published_at", { ascending: false }).limit(1000),
         sb.from("social_posts").select("source_url,title,type,status").limit(10000),
         sb.from("property_images").select("property_id,image_path").eq("is_published", true).order("display_order").limit(10000),
@@ -151,7 +151,7 @@ Deno.serve(async (req) => {
       )
         .filter((r: any) => !isKnownSocialContent(r, existing.data ?? []))
         .map((r: any) => {
-          const g = guardSocialPostYield({ title: r.title, caption: withTitleLine(r.title ?? "", r.caption ?? "") }, r.property_id ? state.overrides.get(r.property_id) : null);
+          const g = guardSocialPostYield({ title: r.title, caption: withTitleLine(r.title ?? "", r.caption ?? "") }, postYieldValue(r.type, r.property_id ? state.overrides.get(r.property_id) : null));
           return { ...r, title: g.title, caption: g.caption };
         })
         .filter((r: any) => r.caption.length >= cfg.min_caption + (r.title?.length ?? 0)
@@ -213,7 +213,7 @@ Deno.serve(async (req) => {
       const message =
         `⚠️ Autopilot social: ${soonEmpty.length} ${soonEmpty.length === 1 ? "slot liber" : "sloturi libere"} în următoarele 48h (10:00/18:00), primul: ${fmt(soonEmpty[0])}.\n` +
         (flagged.length
-          ? `${flagged.length} ${flagged.length === 1 ? "ciornă necesită" : "ciorne necesită"} corectare manuală:\n${list}\n`
+          ? `${flagged.length} ${flagged.length === 1 ? "ciornă necesită" : "ciorne necesită"} verificare manuală:\n${list}\n`
           : "Nu mai există ciorne publicabile. Adaugă o proprietate sau un articol nou.\n") +
         `https://realtrust.ro/admin?tab=social`;
       const relay = await relayToMake("social_autopilot_window_gap", {
