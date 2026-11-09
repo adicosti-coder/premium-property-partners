@@ -72,6 +72,8 @@ const JOB_FN: Record<string, string> = {
   "lead.uncontacted_reminder": "lead-uncontacted-reminder",
   // Social: coadă Facebook/Instagram la interval fix
   "social.autopost_drain": "social-autopost-drain",
+  // Social: menține calendarul de postări alimentat (programează ciorne, extrage altele noi)
+  "social.autopilot": "social-autopilot",
   // System
   "system.daily_digest": "automation-daily-digest",
   "system.self_healing": "automation-self-healing",
