@@ -17,12 +17,12 @@ const OwnersTeaser = () => {
       title: "Randament net previzibil,",
       titleHighlight: "fără sarcini operaționale",
       subtitle: "Administrare în regim hotelier, gestionată integral de echipa noastră. Tu deții activul, noi construim operațiunea — cu raportare clară și ipoteze publice.",
-      cta: "Calculează Randamentul Imobiliar (ROI) tău",
+      cta: "Calculează Randamentul tău Imobiliar (ROI)",
       features: [
         {
           icon: TrendingUp,
-          title: "Randament net 9,4%",
-          description: "Calculat pe ipoteze publice (ocupare 75%)",
+          title: "Randament net 6,5%–9,4%",
+          description: "Estimat pe ipoteze publice (ocupare 65–75%)",
         },
         {
           icon: Shield,
@@ -54,8 +54,8 @@ const OwnersTeaser = () => {
       features: [
         {
           icon: TrendingUp,
-          title: "9.4% net return",
-          description: "On public assumptions (75% occupancy)",
+          title: "6.5%–9.4% net return",
+          description: "Estimated on public assumptions (65–75% occupancy)",
         },
         {
           icon: Shield,
