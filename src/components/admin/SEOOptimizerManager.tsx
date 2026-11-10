@@ -161,6 +161,19 @@ const SEOOptimizerManager = () => {
     });
   }, [history, filter, filterLang, minScore]);
 
+  // Ultimul scor RO per pagină urmărită (istoricul vine ordonat descrescător).
+  const trackedScores = useMemo(() => {
+    const m = new Map<string, number>();
+    history.forEach((audit) => {
+      if (audit.language && audit.language !== "ro") return;
+      if ((audit as any).raw_analysis?.ai_fallback) return;
+      let path: string;
+      try { path = new URL(audit.url).pathname.replace(/\/+$/, "") || "/"; } catch { return; }
+      if (!m.has(path) && typeof audit.overall_score === "number") m.set(path, audit.overall_score);
+    });
+    return m;
+  }, [history]);
+
   const seoStats = useMemo(() => {
     // Adrese vechi care doar redirecționează — nu sunt pagini reale, nu intră în scor.
     const normalize = (u: string) => {
