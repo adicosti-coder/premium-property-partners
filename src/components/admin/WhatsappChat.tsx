@@ -83,7 +83,7 @@ export default function WhatsappChat() {
   const [searchParams] = useSearchParams();
   const phoneParam = searchParams.get("phone");
   const pendingPhoneRef = useRef<string | null>(phoneParam);
-  useEffect(() => { if (phoneParam) pendingPhoneRef.current = phoneParam; }, [phoneParam]);
+  const handledPhoneRef = useRef<string | null>(phoneParam);
 
   const loadConvs = useCallback(async () => {
     const [convRes, agentRes] = await Promise.all([
@@ -140,6 +140,14 @@ export default function WhatsappChat() {
   useEffect(() => {
     void loadConvs();
   }, [loadConvs]);
+
+  // Navigare nouă către alt număr cât timp chatul e deja deschis.
+  useEffect(() => {
+    if (!phoneParam || handledPhoneRef.current === phoneParam) return;
+    handledPhoneRef.current = phoneParam;
+    pendingPhoneRef.current = phoneParam;
+    void loadConvs();
+  }, [phoneParam, loadConvs]);
 
   useEffect(() => {
     if (selectedId) void loadThread(selectedId);
