@@ -287,4 +287,3 @@
 - [x] Toate paginile, prerandarea, datele Google (JSON-LD), textele pentru asistenți AI și traducerile EN aliniate
 - [x] FounderProfile: scos „birou fizic în Cetate”; vizionări și consultanțe la proprietate
 - [x] Ani oficiali: ApArt Hotel 2017, firmă 2001 în datele pentru Google
-- [ ] Anul lansării ApArt Hotel (2017 în cronologie) — neconfirmat
