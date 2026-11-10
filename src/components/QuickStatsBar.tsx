@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { REAL_ESTATE_SINCE } from "@/lib/businessFacts";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Building, Users, Calendar, TrendingUp, Star, Euro, UserCheck, Clock, MapPin, Award, User as UserIcon, Shield, Eye, LogOut, LayoutDashboard, Settings, ChevronDown, UserCircle, Heart } from "lucide-react";
@@ -45,7 +46,7 @@ const QuickStatsBar = () => {
     avgRating: 4.8,
     monthlyRevenue: 0,
     totalGuests: 0,
-    yearsExperience: 25,
+    yearsExperience: REAL_ESTATE_SINCE,
   });
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -69,7 +70,7 @@ const QuickStatsBar = () => {
       rating: "Rating",
       revenue: "Venit lunar",
       guests: "Oaspeți",
-      yearsExp: "Ani experiență",
+      yearsExp: "În imobiliare din",
       cities: "Orașe",
       satisfaction: "Satisfacție",
       tooltips: {
@@ -79,7 +80,7 @@ const QuickStatsBar = () => {
         guests: "Numărul total de oaspeți care au beneficiat de serviciile noastre",
         revenue: "Venitul net lunar generat pentru proprietari în luna curentă",
         occupancy: "Rata medie de ocupare a apartamentelor din portofoliul nostru",
-        yearsExp: "Numărul de ani de experiență în managementul proprietăților",
+        yearsExp: "Anul de început al activității imobiliare",
         cities: "Numărul de orașe în care operăm",
         satisfaction: "Rata de satisfacție a clienților noștri",
         leads: "Numărul total de solicitări de la potențiali clienți",
@@ -93,7 +94,7 @@ const QuickStatsBar = () => {
       rating: "Rating",
       revenue: "Monthly Rev",
       guests: "Guests",
-      yearsExp: "Years Exp",
+      yearsExp: "Since",
       cities: "Cities",
       satisfaction: "Satisfaction",
       tooltips: {
@@ -103,7 +104,7 @@ const QuickStatsBar = () => {
         guests: "Total number of guests who have used our services",
         revenue: "Net monthly income generated for property owners this month",
         occupancy: "Average occupancy rate of apartments in our portfolio",
-        yearsExp: "Years of experience in property management",
+        yearsExp: "Year we started in real estate",
         cities: "Number of cities where we operate",
         satisfaction: "Customer satisfaction rate",
         leads: "Total number of inquiries from potential clients",
@@ -152,7 +153,7 @@ const QuickStatsBar = () => {
         avgRating: 4.8,
         monthlyRevenue: Math.max(0, monthlyRevenue),
         totalGuests: guestsRes.count || 0,
-        yearsExperience: 25,
+        yearsExperience: REAL_ESTATE_SINCE,
       });
     } catch (error) {
       console.error("Error fetching stats:", error);
@@ -286,7 +287,8 @@ const QuickStatsBar = () => {
       icon: Clock,
       value: stats.yearsExperience,
       label: t.yearsExp,
-      suffix: "+",
+      suffix: "",
+      formatFn: (v: number) => String(Math.round(v)),
       color: "text-foreground",
       action: () => scrollToSection("how-it-works"),
       tooltip: t.tooltips.yearsExp,
