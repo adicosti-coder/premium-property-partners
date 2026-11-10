@@ -104,16 +104,22 @@ const HubSection = ({
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             )}
           >
-            <Button asChild variant="hero" size="xl" className="group">
+            <Button
+              asChild
+              variant="hero"
+              size="xl"
+              className="group whitespace-normal h-auto min-h-12 py-3.5 px-6 leading-snug text-center sm:whitespace-nowrap sm:h-14 sm:px-10"
+            >
               <Link to={ctaLink}>
                 {ctaText}
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-5 h-5 ml-2 shrink-0 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
             {secondaryCta && (
               <Button
                 variant="heroOutline"
                 size="xl"
+                className="whitespace-normal h-auto min-h-12 py-3.5 px-6 leading-snug text-center sm:whitespace-nowrap sm:h-14 sm:px-10"
                 onClick={secondaryCta.onClick}
               >
                 {secondaryCta.text}
