@@ -15,6 +15,9 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  REAUDIT_GAP_MS, isLegacyAuditPath, reauditWithRecovery, runSequential, supabaseReauditDeps,
+} from "@/lib/seoReaudit";
 
 interface AuditRow {
   id: string;
@@ -45,9 +48,11 @@ const urlToPath = (full: string) => {
   try { const u = new URL(full); let p = u.pathname.replace(/\/{2,}/g, "/"); if (p.length > 1 && p.endsWith("/")) p = p.slice(0, -1); return p || "/"; } catch { return full; }
 };
 
-type ScoreDelta = { before: number | null; after: number | null; status: "pending" | "running" | "done" | "error" };
+type ScoreDelta = { before: number | null; after: number | null; status: "pending" | "running" | "done" | "error"; recovered?: boolean };
 
-const PREMIUM_PLUS_CONCURRENCY = 3;
+/** Bulk runs are sequential: parallel re-audits time out on phones and slow connections. */
+const PREMIUM_PLUS_CONCURRENCY = 1;
+const APPLY_ONLY_GAP_MS = 150;
 const APPLY_RETRIES = 3;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -116,17 +121,6 @@ async function withRetry<T>(fn: () => Promise<T>, attempts = APPLY_RETRIES): Pro
   throw last;
 }
 
-async function runPool<T>(items: T[], worker: (item: T, index: number) => Promise<void>, concurrency = PREMIUM_PLUS_CONCURRENCY) {
-  let cursor = 0;
-  const workers = Array.from({ length: Math.min(concurrency, Math.max(items.length, 1)) }, async () => {
-    while (cursor < items.length) {
-      const index = cursor++;
-      await worker(items[index], index);
-    }
-  });
-  await Promise.all(workers);
-}
-
 export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
   const qc = useQueryClient();
   const cancelRunRef = useRef(false);
@@ -137,13 +131,10 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
   const reauditAndCapture = async (path: string, beforeScore: number | null, language: string) => {
     setScoreDeltas((s) => ({ ...s, [path]: { before: beforeScore, after: null, status: "running" } }));
     try {
-      const url = `https://${CANONICAL_HOST}${path}`;
-      const { data, error } = await supabase.functions.invoke("seo-ai-optimizer", {
-        body: { url, language: language || "ro", forceRefresh: true },
-      });
-      if (error) throw error;
-      const after = (data as any)?.audit?.overall_score ?? (data as any)?.overall_score ?? null;
-      setScoreDeltas((s) => ({ ...s, [path]: { before: beforeScore, after, status: "done" } }));
+      // Timeout or dropped connection → read the audit saved meanwhile in seo_audits.
+      const res = await reauditWithRecovery(path, language || "ro", CANONICAL_HOST, supabaseReauditDeps(supabase));
+      const after = res.score;
+      setScoreDeltas((s) => ({ ...s, [path]: { before: beforeScore, after, status: "done", recovered: res.recovered } }));
       return after;
     } catch (e) {
       setScoreDeltas((s) => ({ ...s, [path]: { before: beforeScore, after: null, status: "error" } }));
@@ -161,6 +152,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
   const targetsBelow = useMemo(() => {
     const seen = new Set<string>();
     return history
+      .filter((a) => !isLegacyAuditPath(a.url))
       .filter((a) => (a.overall_score ?? 100) < 80 && (a.suggested_title || a.suggested_meta))
       .filter((a) => {
         const k = urlToPath(a.url);
@@ -230,7 +222,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
     let ok = 0, err = 0, skipped = 0, done = 0;
     const results: typeof masterLog = [];
     try {
-      await runPool(targetsBelow, async (a) => {
+      await runSequential(targetsBelow, async (a) => {
         if (cancelRunRef.current) return;
         const path = urlToPath(a.url);
         const before = a.overall_score ?? null;
@@ -252,7 +244,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
           done++;
           setMasterProgress({ done, total: targetsBelow.length, ok, err });
         }
-      });
+      }, { gapMs: masterReaudit ? REAUDIT_GAP_MS : APPLY_ONLY_GAP_MS, shouldStop: () => cancelRunRef.current });
       await finishPremiumRun(runId, cancelRunRef.current ? "cancelled" : err ? "completed_with_errors" : "completed", { done, ok, err, skipped }, results);
     } catch (e: any) {
       await finishPremiumRun(runId, "failed", { done, ok, err, skipped }, results, friendlyError(e));
@@ -269,6 +261,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
     const seen = new Set<string>();
     return history
       .filter((a) => {
+        if (isLegacyAuditPath(a.url)) return false;
         const k = urlToPath(a.url);
         if (seen.has(k)) return false;
         seen.add(k);
@@ -281,12 +274,11 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
 
   const refreshMutation = useMutation({
     mutationFn: async (a: AuditRow) => {
-      const { data, error } = await supabase.functions.invoke("seo-ai-optimizer", {
-        body: { url: a.url, language: a.language || "ro", forceRefresh: true },
+      const path = urlToPath(a.url);
+      return reauditAndCapture(path, a.overall_score ?? null, a.language || "ro").then((after) => {
+        if (after == null && scoreDeltasRef.current[path]?.status === "error") throw new Error("Re-analiza nu a putut fi confirmată. Reîncearcă.");
+        return after;
       });
-      if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
-      return data;
     },
     onSuccess: (_d, a) => {
       qc.invalidateQueries({ queryKey: ["seo-audits-history"] });
@@ -328,6 +320,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
     const seen = new Set<string>();
     return history
       .filter((a) => {
+        if (isLegacyAuditPath(a.url)) return false;
         const k = urlToPath(a.url);
         if (seen.has(k)) return false;
         seen.add(k);
@@ -369,7 +362,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
     const results: { url: string; status: string; reason?: string }[] = [];
     let ok = 0, err = 0, skipped = 0, done = 0;
     try {
-      await runPool(items, async (a) => {
+      await runSequential(items, async (a) => {
         if (cancelRunRef.current) return;
         const path = urlToPath(a.url);
         const before = a.overall_score ?? null;
@@ -387,7 +380,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
           done++;
           setPriorityProgress({ done, total: items.length, ok, err });
         }
-      });
+      }, { gapMs: priorityReaudit ? REAUDIT_GAP_MS : APPLY_ONLY_GAP_MS, shouldStop: () => cancelRunRef.current });
       await finishPremiumRun(runId, cancelRunRef.current ? "cancelled" : err ? "completed_with_errors" : "completed", { done, ok, err, skipped }, results);
     } catch (e: any) {
       await finishPremiumRun(runId, "failed", { done, ok, err, skipped }, results, friendlyError(e));
@@ -410,6 +403,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
   const stats = useMemo(() => {
     const seen = new Map<string, AuditRow>();
     history.forEach((a) => {
+      if (isLegacyAuditPath(a.url)) return;
       const k = urlToPath(a.url);
       const existing = seen.get(k);
       if (!existing || new Date(a.created_at) > new Date(existing.created_at)) seen.set(k, a);
