@@ -3,7 +3,8 @@
 ## Mesaje Flux proprietari — 10 noiembrie (seara)
 - [x] „Primul mesaj — ofertă de închiriere” cere acord neexclusiv, cu 0% comision de la proprietar (formulare exactă Adrian)
 - [x] „Primul mesaj — vânzare” cere același acord neexclusiv, cu 0% comision de la proprietar (formulare exactă Adrian)
-- [ ] Semnătură de unificat: vânzare + ofertă de închiriere spun încă „Andrei, de la RealTrust Timișoara” — de confirmat dacă rămân așa
+- [x] Semnătură unificată în toate mesajele: „Bună ziua! Sunt Andrei, RealTrust & ApArt Hotel Timișoara.” (inclusiv copy-ul trimis automat prin Make)
+- [ ] Mementourile (24h/72h) spun încă „Sunt Andrei de la RealTrust” (forma scurtă) — de confirmat dacă rămân așa
 
 ## Secțiunea „Astăzi” din admin — 10 noiembrie
 - [x] „De verificat” → Pasul 2; „Fără WhatsApp” → „Apeluri de făcut”; scurtături Coadă WhatsApp și Jurnal apeluri Andrei
