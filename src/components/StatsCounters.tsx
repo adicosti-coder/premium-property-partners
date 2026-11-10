@@ -1,4 +1,5 @@
 import { useCountAnimation } from "@/hooks/useCountAnimation";
+import { REAL_ESTATE_SINCE } from "@/lib/businessFacts";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Users, Calendar, TrendingUp, Star, Building2 } from "lucide-react";
 
@@ -10,7 +11,7 @@ const translations = {
     stats: [
       { value: 50, suffix: "+", label: "Proprietăți Gestionate", icon: Building2 },
       { value: 10000, suffix: "+", label: "Oaspeți Mulțumiți", icon: Users },
-      { value: 25, suffix: "+", label: "Ani de Experiență", icon: Calendar },
+      { value: REAL_ESTATE_SINCE, suffix: "", label: "În imobiliare din", icon: Calendar, plain: true },
       { value: 85, suffix: "%", label: "Rată Ocupare/An", icon: TrendingUp },
       { value: 9.7, suffix: "/10", label: "Scor Booking.com", icon: Star, decimals: 1 },
     ],
@@ -22,7 +23,7 @@ const translations = {
     stats: [
       { value: 50, suffix: "+", label: "Managed Properties", icon: Building2 },
       { value: 10000, suffix: "+", label: "Happy Guests", icon: Users },
-      { value: 25, suffix: "+", label: "Years Experience", icon: Calendar },
+      { value: REAL_ESTATE_SINCE, suffix: "", label: "In real estate since", icon: Calendar, plain: true },
       { value: 85, suffix: "%", label: "Occupancy Rate/Year", icon: TrendingUp },
       { value: 9.7, suffix: "/10", label: "Booking.com Score", icon: Star, decimals: 1 },
     ],
@@ -36,9 +37,11 @@ interface StatCardProps {
   icon: React.ComponentType<{ className?: string }>;
   decimals?: number;
   delay?: number;
+  /** Shown as-is (a year), without count-up or thousands separator. */
+  plain?: boolean;
 }
 
-const StatCard = ({ value, suffix, label, icon: Icon, decimals = 0, delay = 0 }: StatCardProps) => {
+const StatCard = ({ value, suffix, label, icon: Icon, decimals = 0, delay = 0, plain = false }: StatCardProps) => {
   const { count, elementRef } = useCountAnimation({
     end: value,
     duration: 2500,
@@ -64,7 +67,7 @@ const StatCard = ({ value, suffix, label, icon: Icon, decimals = 0, delay = 0 }:
       {/* Counter */}
       <div className="relative mb-2">
         <span className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-foreground">
-          {decimals > 0 ? count.toFixed(decimals) : count.toLocaleString()}
+          {plain ? String(value) : decimals > 0 ? count.toFixed(decimals) : count.toLocaleString()}
         </span>
         <span className="text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-primary ml-1">
           {suffix}

@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import { HOTEL_MANAGEMENT_SINCE } from "@/lib/businessFacts";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { ExternalLink, Award } from "lucide-react";
 
@@ -18,8 +19,8 @@ const ExpertSignature = ({ authorName, className = "" }: ExpertSignatureProps) =
       : "Certified Real Estate Consultant · Short-Term Rental Investment Expert",
     linkedin: "https://www.linkedin.com/in/costi-adrian-2b50931a",
     bio: language === "ro"
-      ? "Cu peste 8 ani de experiență în administrarea proprietăților în regim hotelier și un portofoliu gestionat cu randament net estimat de 6,5–9,4% pe an, Adrian oferă consultanță bazată pe date reale de piață din Timișoara."
-      : "With over 8 years of experience managing short-term rental properties and a managed portfolio with an estimated 6.5–9.4% net yield per year, Adrian provides consulting based on real market data from Timișoara.",
+      ? `Administrează proprietăți în regim hotelier din ${HOTEL_MANAGEMENT_SINCE}, cu un portofoliu gestionat cu randament net estimat de 6,5–9,4% pe an, Adrian oferă consultanță bazată pe date reale de piață din Timișoara.`
+      : `Managing short-term rental properties since ${HOTEL_MANAGEMENT_SINCE}, with a managed portfolio with an estimated 6.5–9.4% net yield per year, Adrian provides consulting based on real market data from Timișoara.`,
   };
 
   // Show the signature only when the article author matches or use default

@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { REAL_ESTATE_SINCE, HOTEL_MANAGEMENT_SINCE } from "@/lib/businessFacts";
 import { Link } from "react-router-dom";
 import { Mail, Linkedin, MapPin, ArrowRight } from "lucide-react";
 import Header from "@/components/Header";
@@ -21,7 +22,7 @@ const AUTHOR_EMAIL = "adrian@realtrust.ro";
  * Editorial author profile — the single identity behind the RealTrust content.
  *
  * STRICT RULE: this page may only restate facts already published elsewhere on
- * the site (founder & CEO role, 25+ years in Timișoara real estate, the 15
+ * the site (founder & CEO role, in Timișoara real estate since REAL_ESTATE_SINCE, the 15
  * managed apartments, the services and the published yield assumptions).
  * No diplomas, certifications, awards or client counts may be added here
  * without written confirmation from Adrian Costi.
@@ -69,7 +70,7 @@ const AutorAdrianCosti = () => {
     <div className="min-h-screen bg-background">
       <SEOHead
         title="Adrian Costi — fondator RealTrust Timișoara | RealTrust"
-        description="Adrian Costi, fondator RealTrust Timișoara, cu peste 25 de ani în tranzacții și administrare. Autorul ghidurilor despre investiții și regim hotelier."
+        description={`Adrian Costi, fondator RealTrust Timișoara, activ din ${REAL_ESTATE_SINCE} în tranzacții și administrare. Autorul ghidurilor despre investiții și regim hotelier.`}
         url={URL}
         breadcrumbItems={[
           { name: "Acasă", url: BASE_URL },
@@ -131,7 +132,7 @@ const AutorAdrianCosti = () => {
           >
             <p className="text-sm md:text-base leading-relaxed text-foreground/90">
               Adrian Costi este fondatorul și CEO-ul RealTrust ({BRAND.legalName}), companie
-              imobiliară din Timișoara. Are peste 25 de ani de activitate în tranzacții și
+              imobiliară din Timișoara. Activează din {REAL_ESTATE_SINCE} în tranzacții și
               administrare de proprietăți în Timișoara și vestul României și coordonează direct
               administrarea celor 15 apartamente din portofoliul RealTrust, operate în regim hotelier
               sub brandul ApArt Hotel. Este identitatea editorială din spatele ghidurilor și
@@ -144,7 +145,7 @@ const AutorAdrianCosti = () => {
               Experiență relevantă
             </h2>
             <p className="text-sm md:text-base text-muted-foreground leading-relaxed mb-3">
-              Peste 25 de ani în tranzacții și administrare de proprietăți în Timișoara. A fondat
+              Tranzacții și administrare de proprietăți în Timișoara din {REAL_ESTATE_SINCE}, regim hotelier din {HOTEL_MANAGEMENT_SINCE}. A fondat
               RealTrust și brandul de cazare ApArt Hotel pentru a oferi proprietarilor un model
               complet: de la închiriere clasică pe termen lung până la operare în regim hotelier la
               standard de boutique hotel.

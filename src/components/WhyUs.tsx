@@ -1,4 +1,5 @@
 import { useLanguage } from "@/i18n/LanguageContext";
+import { REAL_ESTATE_SINCE } from "@/lib/businessFacts";
 import { Button } from "@/components/ui/button";
 import {
   KeyRound,
@@ -69,9 +70,9 @@ const WhyUs = ({ variant = "owner" }: WhyUsProps) => {
           icon: MapPin,
           title: "Experiență & cunoaștere locală",
           description:
-            "Peste 25 de ani de expertiză pe piața imobiliară din Timișoara, cu focus pe maximizarea gradului de ocupare și protejarea activului pe termen lung.",
+            `Activi pe piața imobiliară din Timișoara din ${REAL_ESTATE_SINCE}, cu focus pe maximizarea gradului de ocupare și protejarea activului pe termen lung.`,
           highlights: [
-            "25+ ani în imobiliare Timișoara",
+            `În imobiliare în Timișoara din ${REAL_ESTATE_SINCE}`,
             "Ocupare medie 75%",
             "Randament net țintă 9,4%",
             "Rating consolidat 9,7/10",
@@ -128,9 +129,9 @@ const WhyUs = ({ variant = "owner" }: WhyUsProps) => {
           icon: MapPin,
           title: "Experience & local market knowledge",
           description:
-            "Over 25 years of expertise in the Timișoara real estate market, focused on maximizing occupancy and protecting your asset in the long run.",
+            `Active in the Timișoara real estate market since ${REAL_ESTATE_SINCE}, focused on maximizing occupancy and protecting your asset in the long run.`,
           highlights: [
-            "25+ years in Timișoara real estate",
+            `In Timișoara real estate since ${REAL_ESTATE_SINCE}`,
             "75% average occupancy",
             "9.4% target net yield",
             "Consolidated 9.7/10 rating",

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { REAL_ESTATE_SINCE } from "@/lib/businessFacts";
 import { Helmet } from "react-helmet-async";
 import {
   ClipboardCheck,
@@ -44,7 +45,7 @@ const ProcesulNostru = () => {
       duration: "Durată",
       expertTitle: "Coordonat de fondatorul RealTrust",
       expertBody:
-        "Fiecare etapă este supervizată personal de Adrian Costi, fondator & CEO RealTrust, cu peste 20 de ani de experiență în piața imobiliară din Timișoara. Adrian a coordonat onboarding-ul a peste 180 de proprietăți și menține un standard de randament net estimat de 6,5–9,4% pe an pentru proprietarii noștri.",
+        `Fiecare etapă este supervizată personal de Adrian Costi, fondator & CEO RealTrust, activ din ${REAL_ESTATE_SINCE} în piața imobiliară din Timișoara. Adrian a coordonat onboarding-ul a peste 180 de proprietăți și menține un standard de randament net estimat de 6,5–9,4% pe an pentru proprietarii noștri.`,
       expertCta: "Despre Adrian Costi",
       finalTitle: "Gata să începi?",
       finalSubtitle: "Calculează venitul tău în 60 de secunde — fără costuri ascunse.",
@@ -104,7 +105,7 @@ const ProcesulNostru = () => {
       duration: "Duration",
       expertTitle: "Coordinated by the RealTrust founder",
       expertBody:
-        "Every stage is personally supervised by Adrian Costi, founder & CEO of RealTrust, with over 20 years of experience in the Timișoara real estate market. Adrian has coordinated onboarding for 180+ properties and maintains an estimated 6.5–9.4% net yearly randament standard for our owners.",
+        `Every stage is personally supervised by Adrian Costi, founder & CEO of RealTrust, active in the Timișoara real estate market since ${REAL_ESTATE_SINCE}. Adrian has coordinated onboarding for 180+ properties and maintains an estimated 6.5–9.4% net yearly randament standard for our owners.`,
       expertCta: "About Adrian Costi",
       finalTitle: "Ready to start?",
       finalSubtitle: "Calculate your income in 60 seconds — no hidden fees.",
