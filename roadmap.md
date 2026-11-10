@@ -1,5 +1,12 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Vechime pe site și panou SEO — 10 noiembrie
+- [ ] Vechimea comunicată (peste 25/20/15/8 ani) — așteaptă cifra corectă de la Adrian
+- [ ] SEO: re-audit secvențial la „Aplică toate” + verificare în `seo_audits` la timeout, cu override-uri incluse
+- [ ] SEO: H1 local pe /contact și ierarhie titluri pe /calculator-roi
+- [ ] SEO: listă URL-uri urmărite aerisită pe mobil
+- [ ] Teste și build
+
 ## Autopilot social: gardă randament și ciorne de corectat — 9 noiembrie
 - [x] Randament în ciorne/programări: „6,5%–9,4% net estimat”, excepție doar câmpul explicit pe proprietate
 - [x] Verificare poze înainte de programare; HELIOS și Story „5 Greșeli Comune” marcate „Necesită corectare manuală”
