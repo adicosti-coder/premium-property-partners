@@ -1,4 +1,9 @@
+import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { MessageSquare, Send, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TODAY_ROUTES, prospectDetailRoute, whatsappChatRoute } from "@/lib/adminTodayRoutes";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -50,9 +55,19 @@ export default function OutreachMonitorPanel() {
     },
   });
 
-  // „Livrate (confirmat Meta)” se reîmprospătează la fiecare confirmare reală de livrare.
+  // Reîmprospătare grupată: mai multe evenimente apropiate → o singură reîncărcare.
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scheduleRefetch = () => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => { timer.current = null; void refetch(); }, 1200);
+  };
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+
+  // „Livrate (confirmat Meta)” se reîmprospătează la fiecare confirmare reală de livrare,
+  // iar mesajele noi primite apar imediat, fără să aștepte minutul următor.
   useRealtimeChannel("outreach-monitor", [
-    { event: "UPDATE", table: "wa_outbound_queue", handler: () => void refetch() },
+    { event: "UPDATE", table: "wa_outbound_queue", handler: scheduleRefetch },
+    { event: "INSERT", table: "wa_messages", handler: scheduleRefetch },
   ]);
 
 
@@ -74,14 +89,14 @@ export default function OutreachMonitorPanel() {
           Monitorizare outreach
           {data?.settings?.outbound_paused && <Badge variant="destructive">Trimitere pe pauză</Badge>}
         </CardTitle>
-        <CardDescription>Mesaje WhatsApp, răspunsuri primite și activitatea scorării AI. Se actualizează la fiecare minut.</CardDescription>
+        <CardDescription>Mesaje WhatsApp, răspunsuri primite și activitatea scorării AI. Mesajele noi apar imediat.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {isLoading || !data ? (
           <div className="text-sm text-muted-foreground">Se încarcă…</div>
         ) : (
           <>
-            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+            <div className="grid grid-cols-1 min-[380px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
               {tiles.map((t) => (
                 <div key={t.label} className="rounded-lg border p-3">
                   <div className="text-xs text-muted-foreground">{t.label}</div>
@@ -110,16 +125,29 @@ export default function OutreachMonitorPanel() {
               {data.recentReplies.length === 0 ? (
                 <div className="text-sm text-muted-foreground">Niciun răspuns încă.</div>
               ) : (
-                <ul className="space-y-1 text-sm">
-                  {data.recentReplies.map((r: any) => (
-                    <li key={r.id} className="flex justify-between gap-2">
-                      <span className="truncate">
-                        {r.wa_profile_name || r.listing?.contact_name || r.phone_normalized}
-                        <span className="text-muted-foreground"> · {r.listing ? `${r.listing.title ?? "Anunț"} · ${r.listing.zone ?? "zonă necunoscută"}` : "fără anunț legat"}</span>
-                      </span>
-                      <span className="text-xs text-muted-foreground shrink-0">{fmt(r.last_inbound_at)}</span>
-                    </li>
-                  ))}
+                <ul className="space-y-2 text-sm">
+                  {data.recentReplies.map((r: any) => {
+                    const name = r.wa_profile_name || r.listing?.contact_name || r.phone_normalized;
+                    return (
+                      <li key={r.id}>
+                        <Link
+                          to={whatsappChatRoute(r.phone_normalized)}
+                          aria-label={`Deschide chatul WhatsApp cu ${name}`}
+                          className="flex min-h-[44px] items-center gap-3 rounded-lg border p-2.5 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          <MessageSquare className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate font-medium">{name}</span>
+                            <span className="block truncate text-xs text-muted-foreground">
+                              {r.listing ? `${r.listing.title ?? "Anunț"} · ${r.listing.zone ?? "zonă necunoscută"}` : "fără anunț legat"} · {fmt(r.last_inbound_at)}
+                            </span>
+                          </span>
+                          <span className="hidden shrink-0 text-xs font-medium text-primary sm:inline">Deschide chat</span>
+                          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                        </Link>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>
@@ -128,11 +156,26 @@ export default function OutreachMonitorPanel() {
               {data.hot.length === 0 ? (
                 <div className="text-sm text-muted-foreground">Niciun anunț încă.</div>
               ) : (
-                <ul className="space-y-1 text-sm">
+                <ul className="space-y-2 text-sm">
                   {data.hot.map((h: any) => (
-                    <li key={h.id} className="flex justify-between gap-2">
-                      <span className="truncate">{h.title ?? "Anunț"} <span className="text-muted-foreground">· {h.source_platform}</span></span>
-                      <Badge variant="secondary">{h.lead_score}</Badge>
+                    <li key={h.id} className="flex items-stretch gap-2">
+                      <Link
+                        to={prospectDetailRoute(h.id)}
+                        aria-label={`Deschide fișa anunțului ${h.title ?? "fără titlu"}, scor ${h.lead_score}`}
+                        className="flex min-h-[44px] min-w-0 flex-1 items-center gap-2 rounded-lg border p-2.5 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <Badge variant="secondary" className="shrink-0 tabular-nums">{h.lead_score}</Badge>
+                        <span className="min-w-0 flex-1 truncate">
+                          {h.title ?? "Anunț"} <span className="text-muted-foreground">· {h.source_platform}</span>
+                        </span>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                      </Link>
+                      <Button asChild variant="outline" size="sm" className="min-h-[44px] min-w-[44px] shrink-0 gap-1.5 px-3">
+                        <Link to={TODAY_ROUTES.contact} aria-label={`Contactează proprietarul: ${h.title ?? "anunț"}`}>
+                          <Send className="h-4 w-4 shrink-0" aria-hidden="true" />
+                          <span className="hidden sm:inline">Contactează</span>
+                        </Link>
+                      </Button>
                     </li>
                   ))}
                 </ul>

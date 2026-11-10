@@ -195,7 +195,7 @@ export default function SocialPostDraftsPanel() {
                   {publishingId === d.id ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Send className="h-4 w-4 mr-1" />}Publică acum
                 </Button>
               )}
-              <Button size="sm" variant="outline" className="min-h-12" aria-label={`Descarcă toate fotografiile pentru ${d.title}`} onClick={() => downloadAll(d.photos, d.title)}><Download className="h-4 w-4 mr-1" />Descarcă toate pozele</Button>
+              <Button size="sm" variant="outline" className="min-h-12" disabled={!d.photos.length} aria-label={`Descarcă toate fotografiile pentru ${d.title}`} onClick={() => downloadAll(d.photos, d.title)}><Download className="h-4 w-4 mr-1" />Descarcă toate pozele</Button>
               {d.status !== "posted" && <Button size="sm" variant="outline" className="min-h-12" onClick={() => setStatus(d.id, "posted")}><Check className="h-4 w-4 mr-1" />Marchează postat</Button>}
               <Button size="sm" variant="ghost" className="min-h-12" onClick={() => remove(d.id)} aria-label="Șterge draftul"><Trash2 className="h-4 w-4" /></Button>
             </div>
