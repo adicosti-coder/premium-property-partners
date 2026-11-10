@@ -1,5 +1,9 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Mesaje Flux proprietari — 10 noiembrie (seara)
+- [x] „Primul mesaj — ofertă de închiriere” cere acord neexclusiv, cu 0% comision de la proprietar (formulare exactă Adrian)
+- [ ] Semnătură de unificat: vânzare + ofertă de închiriere spun încă „Andrei, de la RealTrust Timișoara” — de confirmat dacă rămân așa
+
 ## Secțiunea „Astăzi” din admin — 10 noiembrie
 - [x] „De verificat” → Pasul 2; „Fără WhatsApp” → „Apeluri de făcut”; scurtături Coadă WhatsApp și Jurnal apeluri Andrei
 - [x] Răspunsuri proprietari → chat WhatsApp pe numărul lor; scoruri ≥70 → fișa anunțului + „Contactează”; mesaje noi apar instant
