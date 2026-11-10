@@ -981,9 +981,7 @@ export function buildStaticRoutes(): PrerenderRoute[] {
     seoBody: `
       <h2>Cât poate produce proprietatea ta?</h2>
       <p>Compară chiria clasică cu regimul hotelier pe chirii reale din zona ta. Randament net estimat în regim hotelier: 6,5–9,4% pe an (estimare, nu garanție).</p>
-      <h3>Tip proprietate</h3>
-      <h3>Locație</h3>
-      <h3>Suprafață și dotări</h3>
+      <p>Alegi tipul proprietății, locația și suprafața cu dotările, apoi primești venitul net lunar estimat pentru ambele variante.</p>
       <h2>Costuri de achiziție</h2>
       <p>La prețul apartamentului se adaugă notarul, comisionul agenției, TVA-ul când este cazul și mobilarea.</p>
       <h2>Venituri: chirie clasică vs. regim hotelier</h2>
@@ -995,7 +993,9 @@ export function buildStaticRoutes(): PrerenderRoute[] {
       <h2>Rata de ocupare</h2>
       <p>Calculatorul folosește 70%, în intervalul anual asumat 65–75%.</p>
       <h2>Cash flow și amortizare</h2>
+      <p>Cash flow-ul lunar este venitul brut minus administrarea, utilitățile, mentenanța, rata creditului (dacă există) și taxele.</p>
       <h2>Glosarul investitorului imobiliar</h2>
+      <p>ROI, yield brut și net, cash flow, amortizare, DAE, ADR și RevPAR, explicate pe scurt.</p>
       <h2>Întrebări frecvente despre randament imobiliar</h2>
       <p>Vezi și <a href="${BASE_URL}/analiza-roi-apartament" tabindex="-1">analiza de randament personalizată</a> și <a href="${BASE_URL}/catalog-investitii" tabindex="-1">catalogul de investiții</a>.</p>
     `,
