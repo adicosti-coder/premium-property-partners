@@ -1,5 +1,11 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Secțiunea „Astăzi” din admin — 10 noiembrie
+- [x] „De verificat” → Pasul 2; „Fără WhatsApp” → „Apeluri de făcut”; scurtături Coadă WhatsApp și Jurnal apeluri Andrei
+- [x] Răspunsuri proprietari → chat WhatsApp pe numărul lor; scoruri ≥70 → fișa anunțului + „Contactează”; mesaje noi apar instant
+- [x] Andrei: „Vezi jurnal apeluri”; postări sociale: protecție la lipsă poze/galerie + „Deschide Social Engine”
+- [x] Ținte de atingere ≥44px pe mobil; teste și verificare pe telefon simulat
+
 ## Vechime pe site și panou SEO — 10 noiembrie
 - [x] Vechimea comunicată — Adrian a confirmat: din 2000 / din 2016
 - [x] SEO: re-audit secvențial la „Aplică toate” + verificare în `seo_audits` la timeout, cu override-uri incluse
