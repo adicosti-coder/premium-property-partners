@@ -86,7 +86,7 @@ const AboutUs = () => {
             { title: "Experiență Oaspeți", description: "Comunicare 24/7, check-in flexibil, recomandări locale personalizate și rezolvare rapidă a oricărei situații." }
           ]
         },
-        conclusion: "Am învățat că succesul în imobiliare nu vine din promisiuni, ci din rezultate măsurabile. Fiecare proprietate pe care o administrăm primește aceeași atenție la detalii pe care am perfecționat-o în peste 25 de ani de activitate."
+        conclusion: `Am învățat că succesul în imobiliare nu vine din promisiuni, ci din rezultate măsurabile. Fiecare proprietate pe care o administrăm primește aceeași atenție la detalii pe care am perfecționat-o în activitatea noastră din ${REAL_ESTATE_SINCE}.`
       },
       brands: {
         title: "Două Branduri, Servicii Complete",
