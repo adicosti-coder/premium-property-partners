@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { TODAY_ROUTES } from "@/lib/adminTodayRoutes";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Phone, ThumbsUp, Ban, Timer } from "lucide-react";
+import { Phone, ThumbsUp, Ban, Timer, ScrollText } from "lucide-react";
 
 const YES = ["interesat", "programare", "acord", "scheduled"];
 const STOP = ["neinteresat", "stop", "refuz", "dnc", "nu_doreste"];
@@ -45,14 +47,19 @@ export default function AndreiCallsCounter() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-start justify-between gap-3">
-        <div>
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <CardTitle className="text-base">Apelurile lui Andrei</CardTitle>
           <CardDescription>Durata medie = de la conectarea apelului până la încheiere (doar apelurile la care s-a răspuns).</CardDescription>
         </div>
-        <div className="flex gap-1">
+        <div className="flex flex-wrap gap-2 sm:shrink-0">
+          <Button asChild size="sm" variant="ghost" className="min-h-[44px] gap-1.5">
+            <Link to={TODAY_ROUTES.callLog} aria-label="Vezi jurnalul apelurilor lui Andrei, cu transcrieri și detalii">
+              <ScrollText className="h-4 w-4 shrink-0" /> Vezi jurnal apeluri
+            </Link>
+          </Button>
           {[7, 30].map((d) => (
-            <Button key={d} size="sm" variant={days === d ? "default" : "outline"} onClick={() => setDays(d)}>
+            <Button key={d} size="sm" className="min-h-[44px] min-w-[44px]" variant={days === d ? "default" : "outline"} aria-pressed={days === d} onClick={() => setDays(d)}>
               {d} zile
             </Button>
           ))}

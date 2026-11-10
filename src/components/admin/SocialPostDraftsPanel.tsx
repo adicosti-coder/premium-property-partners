@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Copy, Check, Trash2, Download, Send, Loader2 } from "lucide-react";
+import { Copy, Check, Trash2, Download, Send, Loader2, ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
+import { TODAY_ROUTES } from "@/lib/adminTodayRoutes";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { describeSocialImage, facebookPostOptimization, instagramPostDescription, readableSocialPost } from "@/lib/socialDraftContent";
 import { resolvePropertyImageUrl } from "@/utils/resolvePropertyImageUrl";
 
-type Draft = { id: string; property_id: string; title: string | null; post_text: string; images: string[]; status: string; created_at: string };
+type Draft = { id: string; property_id: string; title: string | null; post_text: string | null; images: string[] | null; status: string; created_at: string };
 
 export default function SocialPostDraftsPanel() {
   const qc = useQueryClient();
@@ -21,27 +23,31 @@ export default function SocialPostDraftsPanel() {
       if (error) throw error;
       const drafts = (data ?? []) as Draft[];
       if (!drafts.length) return [];
-      const ids = [...new Set(drafts.map((draft) => draft.property_id))];
-      const [{ data: gallery, error: galleryError }, { data: props }] = await Promise.all([
+      const ids = [...new Set(drafts.map((draft) => draft.property_id).filter(Boolean))];
+      // Galeria și proprietățile sunt informații suplimentare: dacă una eșuează,
+      // drafturile se afișează oricum, cu descrieri/linkuri de rezervă.
+      const [galleryRes, propsRes] = await Promise.all([
         supabase.from("property_images")
           .select("property_id,image_path,original_url,caption,alt_text")
           .in("property_id", ids).eq("is_published", true).order("display_order"),
         supabase.from("properties").select("id,name,slug,description_ro").in("id", ids),
       ]);
-      if (galleryError) throw galleryError;
-      const propMap = new Map((props ?? []).map((p: any) => [p.id, p]));
+      const gallery = galleryRes.error ? [] : galleryRes.data ?? [];
+      const props = propsRes.error ? [] : propsRes.data ?? [];
+      if (galleryRes.error || propsRes.error) console.warn("[SocialPostDraftsPanel] date suplimentare indisponibile");
+      const propMap = new Map(props.map((p: any) => [p.id, p]));
       return drafts.map((draft) => {
         const prop: any = propMap.get(draft.property_id);
         const title = prop?.name || draft.title || "Proprietate RealTrust";
-        const photos = draft.images.map((src, index) => ({
+        const photos = (Array.isArray(draft.images) ? draft.images : []).filter((src): src is string => typeof src === "string" && src.length > 0).map((src, index) => ({
           src: resolvePropertyImageUrl(src) || src,
-          ...describeSocialImage(src, (gallery ?? []).filter((image) => image.property_id === draft.property_id), title, index),
+          ...describeSocialImage(src, gallery.filter((image) => image.property_id === draft.property_id), title, index),
         }));
         const listing = {
           link: prop?.slug ? `https://realtrust.ro/proprietate/${prop.slug}` : "",
           description: String(prop?.description_ro || "").replace(/[#*_>`]/g, "").replace(/\s+/g, " ").trim().slice(0, 300),
         };
-        return { ...draft, title, photos, listing, readableText: readableSocialPost(draft.post_text, photos.map((photo) => photo.caption)) };
+        return { ...draft, title, photos, listing, readableText: readableSocialPost(draft.post_text ?? "", photos.map((photo) => photo.caption)) };
       });
     },
   });
@@ -112,9 +118,16 @@ export default function SocialPostDraftsPanel() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Postări Facebook / Instagram</CardTitle>
-        <CardDescription>Drafturi create automat la publicarea cu acord. Copiezi textul, descarci pozele și postezi tu.</CardDescription>
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 space-y-1.5">
+          <CardTitle>Postări Facebook / Instagram</CardTitle>
+          <CardDescription>Drafturi create automat la publicarea cu acord. Copiezi textul, descarci pozele și postezi tu.</CardDescription>
+        </div>
+        <Button asChild size="sm" variant="outline" className="min-h-[44px] gap-1.5 sm:shrink-0">
+          <Link to={TODAY_ROUTES.socialEngine}>
+            <ExternalLink className="h-4 w-4 shrink-0" /> Deschide Social Engine
+          </Link>
+        </Button>
       </CardHeader>
       <CardContent className="space-y-4">
         {isLoading ? <p role="status" className="text-sm text-muted-foreground">Se încarcă…</p> : isError ? (
@@ -127,6 +140,7 @@ export default function SocialPostDraftsPanel() {
               <h3 id={`social-title-${d.id}`} className="min-w-0 break-words font-medium text-foreground">{d.title}</h3>
               <Badge variant={d.status === "posted" ? "default" : "secondary"}>{d.status === "posted" ? "Postat" : d.status === "queued" ? "Programat" : d.status === "posting" ? "Se postează" : "Draft"}</Badge>
             </div>
+            {d.photos.length === 0 && <p className="text-sm text-muted-foreground">Acest draft nu are imagini atașate.</p>}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {d.photos.map((photo, index) => (
                 <figure key={`${photo.src}-${index}`} className="min-w-0 space-y-2">
