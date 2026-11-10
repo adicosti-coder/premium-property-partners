@@ -33,6 +33,7 @@ import {
   Wand2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { REAUDIT_GAP_MS, auditUrlWithRecovery } from "@/lib/seoReaudit";
 
 interface AuditRow {
   id: string;
@@ -332,12 +333,12 @@ export const SEOQuickWinsPanel = ({ history, overrides }: Props) => {
     setRegenerating(true);
     try {
       let done = 0;
-      for (const r of targets) {
+      for (let i = 0; i < targets.length; i++) {
+        const r = targets[i];
+        if (i > 0) await new Promise((res) => setTimeout(res, REAUDIT_GAP_MS));
         try {
-          const { data } = await supabase.functions.invoke("seo-ai-optimizer", {
-            body: { url: r.audit.url, language: r.audit.language || "ro", forceRefresh: true },
-          });
-          const newAudit = data?.audit;
+          const { audit } = await auditUrlWithRecovery(supabase, r.audit.url, r.audit.language || "ro", true);
+          const newAudit = audit as any;
           if (newAudit) {
             setPreviewRows((prev) =>
               prev.map((p) =>
@@ -557,19 +558,21 @@ export const SEOQuickWinsPanel = ({ history, overrides }: Props) => {
     }
     setReauditing(true);
     let done = 0;
-    for (const p of paths) {
+    let failed = 0;
+    for (let i = 0; i < paths.length; i++) {
+      const p = paths[i];
+      if (i > 0) await new Promise((res) => setTimeout(res, REAUDIT_GAP_MS));
       try {
-        const url = `https://realtrust.ro${p}`;
-        await supabase.functions.invoke("seo-ai-optimizer", {
-          body: { url, language: "ro", forceRefresh: true },
-        });
+        await auditUrlWithRecovery(supabase, `https://realtrust.ro${p}`, "ro", true);
+        done++;
       } catch (e) {
+        failed++;
         console.warn("re-audit failed for", p, e);
       }
-      done++;
     }
     setReauditing(false);
-    toast.success(`Re-auditate ${done} pagini`);
+    if (failed) toast.warning(`Re-auditate ${done} pagini · ${failed} fără scor salvat`);
+    else toast.success(`Re-auditate ${done} pagini`);
     qc.invalidateQueries({ queryKey: ["seo-audits-history"] });
     qc.invalidateQueries({ queryKey: ["seo-overrides"] });
   };

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { REAUDIT_GAP_MS, auditUrlWithRecovery } from "@/lib/seoReaudit";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -183,20 +184,31 @@ export const SEOAutoPilot = ({ history, overrides }: Props) => {
     let ok = 0, err = 0, skipped = 0;
     const appliedUrls: string[] = [];
     const results: any[] = [];
+    const reauditQueue: { path: string; language: string }[] = [];
     for (const a of targets) {
       try {
         const { path, res } = await applyOne(a);
         if (res?.action === "skipped") { skipped++; pushEvent({ kind: "skipped", url: path, message: `Neschimbat: ${path}` }); }
         else { ok++; appliedUrls.push(`https://${CANONICAL_HOST}${path}`); pushEvent({ kind: "applied", url: path, message: `Aplicat: ${path}` }); }
         results.push({ url: path, status: res?.action || "ok" });
-        if (cfg.reauditAfter) {
-          supabase.functions.invoke("seo-ai-optimizer", { body: { url: `https://${CANONICAL_HOST}${path}`, language: a.language || "ro", forceRefresh: true } }).catch(() => null);
-        }
+        if (cfg.reauditAfter) reauditQueue.push({ path, language: a.language || "ro" });
       } catch (e: any) {
         err++;
         const path = urlToPath(a.url);
         pushEvent({ kind: "error", url: path, message: `Eroare: ${path} — ${e?.message || "unknown"}` });
         results.push({ url: path, status: "error", reason: e?.message });
+      }
+    }
+
+    // Re-audits run one at a time after applying, so slow connections don't time out.
+    for (let i = 0; i < reauditQueue.length; i++) {
+      const q = reauditQueue[i];
+      if (i > 0) await new Promise((r) => setTimeout(r, REAUDIT_GAP_MS));
+      try {
+        const { score, recovered } = await auditUrlWithRecovery(supabase, `https://${CANONICAL_HOST}${q.path}`, q.language, true);
+        pushEvent({ kind: "info", url: q.path, message: `Re-audit ${q.path}: ${score ?? "—"}/100${recovered ? " (scor salvat)" : ""}` });
+      } catch (e: any) {
+        pushEvent({ kind: "error", url: q.path, message: `Re-audit eșuat: ${q.path} — ${e?.message || "unknown"}` });
       }
     }
 
