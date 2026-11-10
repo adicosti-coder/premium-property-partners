@@ -135,7 +135,7 @@ export const OWNER_OUTREACH_TEMPLATES: OutreachTemplate[] = [
     kind: "first",
     build: (ctx) =>
       [
-        "Bună ziua! Sunt Andrei, de la RealTrust Timișoara.",
+        `Bună ziua! Sunt ${SENDER_FULL}.`,
         "",
         `Am văzut anunțul dumneavoastră pentru ${listingRef(ctx)}.`,
         "",
@@ -158,7 +158,7 @@ export const OWNER_OUTREACH_TEMPLATES: OutreachTemplate[] = [
     kind: "first",
     build: (ctx) =>
       [
-        "Bună ziua! Sunt Andrei, de la RealTrust Timișoara.",
+        `Bună ziua! Sunt ${SENDER_FULL}.`,
         "",
         `Am văzut anunțul dumneavoastră pentru ${listingRef(ctx)}.`,
         "",

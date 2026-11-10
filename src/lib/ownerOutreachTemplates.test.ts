@@ -40,7 +40,7 @@ describe("outreach template by listing type", () => {
   it("sale first message uses the approved wording with listing rooms, zone and source", () => {
     const msg = getTemplate("first_sale").build({ zone: "Iosefin", rooms: 2, platform: "OLX-Vanzari" });
     expect(msg).toBe(
-      "Bună ziua! Sunt Andrei, de la RealTrust Timișoara.\n\nAm văzut anunțul dumneavoastră pentru apartamentul de 2 camere din zona Iosefin publicat pe OLX.\n\nAvem clienți cumpărători activi în căutare pe această zonă. Doriți să promovăm și noi proprietatea în regim de colaborare deschisă (neexclusivă), cu 0% comision din partea dumneavoastră?\n\nDacă sunteți de acord, ne puteți confirma printr-un simplu răspuns sau ne puteți spune când putem stabili o scurtă vizionare."
+      "Bună ziua! Sunt Andrei, RealTrust & ApArt Hotel Timișoara.\n\nAm văzut anunțul dumneavoastră pentru apartamentul de 2 camere din zona Iosefin publicat pe OLX.\n\nAvem clienți cumpărători activi în căutare pe această zonă. Doriți să promovăm și noi proprietatea în regim de colaborare deschisă (neexclusivă), cu 0% comision din partea dumneavoastră?\n\nDacă sunteți de acord, ne puteți confirma printr-un simplu răspuns sau ne puteți spune când putem stabili o scurtă vizionare."
     );
     expect(msg).not.toMatch(/100%|garant/i);
   });
@@ -55,16 +55,15 @@ describe("outreach template by listing type", () => {
   it("rental offer asks for non-exclusive collaboration with the approved wording", () => {
     const msg = getTemplate("first_rent_offer").build({ zone: "Lipovei", rooms: 2, platform: "storia" });
     expect(msg).toBe(
-      "Bună ziua! Sunt Andrei, de la RealTrust Timișoara.\n\nAm văzut anunțul dumneavoastră pentru apartamentul de 2 camere din zona Lipovei publicat pe Storia.\n\nAvem clienți chiriași verificați în căutare pe această zonă. Doriți să promovăm și noi proprietatea în regim de colaborare deschisă (neexclusivă), cu 0% comision din partea dumneavoastră?\n\nDacă sunteți de acord, ne puteți confirma printr-un simplu răspuns sau ne puteți spune când putem stabili o vizionare."
+      "Bună ziua! Sunt Andrei, RealTrust & ApArt Hotel Timișoara.\n\nAm văzut anunțul dumneavoastră pentru apartamentul de 2 camere din zona Lipovei publicat pe Storia.\n\nAvem clienți chiriași verificați în căutare pe această zonă. Doriți să promovăm și noi proprietatea în regim de colaborare deschisă (neexclusivă), cu 0% comision din partea dumneavoastră?\n\nDacă sunteți de acord, ne puteți confirma printr-un simplu răspuns sau ne puteți spune când putem stabili o vizionare."
     );
     expect(msg).not.toMatch(/garant/i);
   });
   it("rental offer omits generic sources", () => {
     expect(getTemplate("first_rent_offer").build({ zone: "Fabric", rooms: 3, platform: "General" })).toContain("pentru apartamentul de 3 camere din zona Fabric.");
   });
-  it("every template except the two approved wordings uses the new sender", () => {
+  it("every template opens with the unified sender", () => {
     for (const t of OWNER_OUTREACH_TEMPLATES) {
-      if (t.key === "first_sale" || t.key === "first_rent_offer") continue;
       const msg = t.build({ zone: "Iosefin", rooms: 2 });
       expect(msg).not.toContain("de la RealTrust Timișoara");
       expect(msg).toMatch(/Andrei de la RealTrust|Andrei[,–\s]+RealTrust & ApArt Hotel Timișoara/);
