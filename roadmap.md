@@ -2,9 +2,10 @@
 
 ## Vechime pe site și panou SEO — 10 noiembrie
 - [ ] Vechimea comunicată (peste 25/20/15/8 ani) — așteaptă cifra corectă de la Adrian
-- [ ] SEO: re-audit secvențial la „Aplică toate” + verificare în `seo_audits` la timeout, cu override-uri incluse
-- [ ] SEO: H1 local pe /contact și ierarhie titluri pe /calculator-roi
-- [ ] SEO: listă URL-uri urmărite aerisită pe mobil
+- [x] SEO: re-audit secvențial la „Aplică toate” + verificare în `seo_audits` la timeout, cu override-uri incluse
+- [x] SEO: H1 local pe /contact și ierarhie titluri pe /calculator-roi (live după publicare)
+- [ ] SEO /contact: override activ cu „Adresă” și cuvinte despre sediu — așteaptă decizia lui Adrian
+- [x] SEO: listă URL-uri urmărite aerisită pe mobil
 - [ ] Teste și build
 
 ## Autopilot social: gardă randament și ciorne de corectat — 9 noiembrie
