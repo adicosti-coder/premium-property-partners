@@ -1,22 +1,14 @@
-// Primul mesaj WhatsApp pentru anunțurile de ÎNCHIRIERE (aprobat de Adrian Costi).
-// Dacă lipsește zona sau numărul de camere, folosește „apartamentul dumneavoastră din Timișoara".
-// Păstrați sincronizat cu src/lib/ownerOutreachTemplates.ts (rentalFirstMessage).
+// Primul mesaj WhatsApp pentru anunțurile de ÎNCHIRIERE (formulare exactă aprobată de Adrian Costi, 10.11.2026).
+// {numar_camere} și {zona} vin din anunț; fără camere → „apartamentul dumneavoastră din zona X”, fără zonă → „din Timișoara”.
+// Păstrați sincronizat cu src/lib/ownerOutreachTemplates.ts (rentalFirstMessage / apartmentRef).
+function apartmentRef(rooms?: number | string | null, zone?: string | null): string {
+  const n = Number(String(rooms ?? "").trim());
+  const r = Number.isFinite(n) && n > 0 && Number.isInteger(n) ? (n === 1 ? "o cameră" : `${n} camere`) : "";
+  const z = String(zone ?? "").trim();
+  const where = z ? `din zona ${z}` : "din Timișoara";
+  return r ? `apartamentul de ${r} ${where}` : `apartamentul dumneavoastră ${where}`;
+}
+
 export function rentalFirstMessage(rooms?: number | string | null, zone?: string | null): string {
-  const r = rooms != null && String(rooms).trim() !== "" && Number(rooms) > 0 ? String(Number(rooms)) : "";
-  const z = (zone ?? "").trim();
-  const ref = r && z ? `apartamentul cu ${r} camere din ${z}` : "apartamentul dumneavoastră din Timișoara";
-  return [
-    `Bună ziua! Sunt Andrei de la RealTrust Timișoara. Am văzut anunțul dumneavoastră pentru ${ref}, propus spre închiriere.`,
-    "",
-    "Preluăm apartamente în administrare completă în Timișoara (regim hotelier sau hibrid). Scopul este un venit net estimat mai bun decât chiria clasică, fără grija chiriașilor rău-platnici.",
-    "",
-    "Ne ocupăm de:",
-    "• promovare pe Booking, Airbnb și realtrust.ro",
-    "• curățenie profesională, lenjerii și verificarea oaspeților",
-    "• mentenanță curentă",
-    "",
-    "Vă pot trimite gratuit o simulare de randament net pentru zona dumneavoastră. Pot trece și 15 minute pe la apartament să vă prezint opțiunile.",
-    "",
-    "Când v-ar fi mai comod să discutăm: azi spre seară sau mâine? Dacă nu vă interesează, răspundeți NU și nu vă mai deranjăm.",
-  ].join("\n");
+  return `Bună ziua! Sunt Andrei – RealTrust & ApArt Hotel Timișoara. Vă contactez în legătură cu ${apartmentRef(rooms, zone)}. Oferim servicii complete de administrare în regim hotelier (promovare Booking/Airbnb, curățenie, mentenanță), cu un venit net estimat cu 30-40% mai mare decât chiria clasică. Vă pot trimite gratuit o simulare de randament net pentru zona dumneavoastră?`;
 }

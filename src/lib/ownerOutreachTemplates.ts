@@ -9,25 +9,44 @@
  *  - orașul este Timișoara.
  */
 
+/** Semnătura expeditorului în mesajele către proprietari. */
+export const SENDER_SHORT = "Andrei de la RealTrust";
+export const SENDER_FULL = "Andrei, RealTrust & ApArt Hotel Timișoara";
+
+/** {numar_camere}: „o cameră” / „2 camere”, din numărul de camere al anunțului; gol dacă lipsește. */
+export function roomsLabel(rooms?: number | string | null): string {
+  const n = Number(String(rooms ?? "").trim());
+  if (!Number.isFinite(n) || n <= 0 || !Number.isInteger(n)) return "";
+  return n === 1 ? "o cameră" : `${n} camere`;
+}
+
+/** {sursa}: numele portalului din anunț; gol pentru surse generice sau necunoscute. */
+export function sourceLabel(platform?: string | null): string {
+  const t = String(platform ?? "").trim().toLowerCase();
+  if (!t) return "";
+  const known: [RegExp, string][] = [
+    [/^olx/, "OLX"], [/^storia/, "Storia"], [/^imobiliare/, "Imobiliare.ro"], [/^publi24/, "Publi24"],
+    [/marketplace/, "Facebook Marketplace"], [/facebook/, "Facebook"], [/^anuntul/, "Anuntul.ro"],
+    [/^bursaimobiliara/, "BursaImobiliara.ro"], [/^homezz/, "Homezz.ro"],
+  ];
+  return known.find(([re]) => re.test(t))?.[1] ?? "";
+}
+
+/**
+ * „apartamentul [dumneavoastră] de {numar_camere} din zona {zona}”, cu date din anunț.
+ * Fără camere: „apartamentul dumneavoastră din zona X”; fără zonă: „… din Timișoara”.
+ */
+export function apartmentRef(rooms?: number | string | null, zone?: string | null, possessive = false): string {
+  const r = roomsLabel(rooms);
+  const z = String(zone ?? "").trim();
+  const where = z ? `din zona ${z}` : "din Timișoara";
+  if (!r) return `apartamentul dumneavoastră ${where}`;
+  return `apartamentul${possessive ? " dumneavoastră" : ""} de ${r} ${where}`;
+}
+
 /** Primul mesaj WhatsApp pentru anunțurile de închiriere (sincron cu supabase/functions/_shared/rentalIntroMessage.ts). */
 export function rentalFirstMessage(rooms?: number | string | null, zone?: string | null): string {
-  const r = rooms != null && String(rooms).trim() !== "" && Number(rooms) > 0 ? String(Number(rooms)) : "";
-  const z = (zone ?? "").trim();
-  const ref = r && z ? `apartamentul cu ${r} camere din ${z}` : "apartamentul dumneavoastră din Timișoara";
-  return [
-    `Bună ziua! Sunt Andrei de la RealTrust Timișoara. Am văzut anunțul dumneavoastră pentru ${ref}, propus spre închiriere.`,
-    "",
-    "Preluăm apartamente în administrare completă în Timișoara (regim hotelier sau hibrid). Scopul este un venit net estimat mai bun decât chiria clasică, fără grija chiriașilor rău-platnici.",
-    "",
-    "Ne ocupăm de:",
-    "• promovare pe Booking, Airbnb și realtrust.ro",
-    "• curățenie profesională, lenjerii și verificarea oaspeților",
-    "• mentenanță curentă",
-    "",
-    "Vă pot trimite gratuit o simulare de randament net pentru zona dumneavoastră. Pot trece și 15 minute pe la apartament să vă prezint opțiunile.",
-    "",
-    "Când v-ar fi mai comod să discutăm: azi spre seară sau mâine? Dacă nu vă interesează, răspundeți NU și nu vă mai deranjăm.",
-  ].join("\n");
+  return `Bună ziua! Sunt Andrei – RealTrust & ApArt Hotel Timișoara. Vă contactez în legătură cu ${apartmentRef(rooms, zone)}. Oferim servicii complete de administrare în regim hotelier (promovare Booking/Airbnb, curățenie, mentenanță), cu un venit net estimat cu 30-40% mai mare decât chiria clasică. Vă pot trimite gratuit o simulare de randament net pentru zona dumneavoastră?`;
 }
 
 export interface OutreachContext {
@@ -63,12 +82,9 @@ const greeting = (ctx: OutreachContext) => {
 };
 
 const listingRef = (ctx: OutreachContext) => {
-  const parts: string[] = [];
-  if (ctx.rooms) parts.push(`${ctx.rooms} camere`);
-  if (ctx.zone) parts.push(ctx.zone);
-  const detail = parts.join(", ");
-  const base = detail ? `apartamentul dumneavoastră (${detail})` : "apartamentul dumneavoastră";
-  return ctx.platform ? `${base} publicat pe ${ctx.platform}` : base;
+  const src = sourceLabel(ctx.platform);
+  const base = apartmentRef(ctx.rooms, ctx.zone);
+  return src ? `${base} publicat pe ${src}` : base;
 };
 
 export type ListingTransaction = "vanzare" | "inchiriere" | "necunoscut";
@@ -115,24 +131,17 @@ export const OWNER_OUTREACH_TEMPLATES: OutreachTemplate[] = [
   {
     key: "first_sale",
     label: "Primul mesaj — vânzare",
-    hint: "Ofertare deschisă: oferte scrise după vizionări, prag minim stabilit de proprietar; DA = vrea să discute.",
+    hint: "Cumpărători în căutare pe zonă, promovare și selecția ofertelor; cere 5 minute de discuție.",
     kind: "first",
-    build: (ctx) =>
-      [
-        greeting(ctx),
-        "",
-        `Sunt Andrei, de la RealTrust Timișoara. Am văzut anunțul pentru ${listingRef(ctx)}.`,
-        "Cea mai grea decizie la vânzare este prețul. Nu lăsați primul cumpărător care vă face o ofertă să decidă cât valorează proprietatea dumneavoastră.",
-        "",
-        "Prin ofertarea deschisă, după vizionări fiecare cumpărător trimite o ofertă scrisă. Dumneavoastră stabiliți pragul minim, vedeți toate ofertele și decideți, fără nicio obligație.",
-        "",
-        "Doriți să discutăm dacă această strategie se potrivește proprietății dumneavoastră? Răspundeți cu DA, sau NU dacă nu doriți să vă mai contactăm.",
-      ].join("\n"),
+    build: (ctx) => {
+      const src = sourceLabel(ctx.platform);
+      return `Bună ziua! Sunt Andrei, de la RealTrust Timișoara. Am văzut anunțul dumneavoastră pentru ${apartmentRef(ctx.rooms, ctx.zone)}${src ? ` publicat pe ${src}` : ""}. Avem clienți cumpărători în căutare pe această zonă și vă putem ajuta cu promovarea și selecția ofertelor. Când ați avea 5 minute disponibile pentru o scurtă discuție?`;
+    },
   },
   {
     key: "first_management",
     label: "Primul mesaj — închiriere (administrare)",
-    hint: "Prezentare administrare regim hotelier/hibrid; zonă/camere cu text de rezervă; NU = opt-out.",
+    hint: "Administrare în regim hotelier, venit net estimat cu 30-40% peste chiria clasică; oferă simularea gratuită.",
     kind: "first",
     build: (ctx) => rentalFirstMessage(ctx.rooms, ctx.zone),
   },
@@ -164,24 +173,20 @@ export const OWNER_OUTREACH_TEMPLATES: OutreachTemplate[] = [
   {
     key: "first_short",
     label: "Primul mesaj — scurt",
-    hint: "Variantă foarte scurtă, pentru SMS.",
+    hint: "Variantă scurtă: estimare gratuită de venit net lunar.",
     kind: "first",
     build: (ctx) =>
-      [
-        greeting(ctx),
-        `Sunt Andrei, RealTrust Timișoara, despre ${listingRef(ctx)}.`,
-        "Avem o propunere de administrare cu venit lunar garantat prin contract. Vă pot trimite calculul exact?",
-      ].join(" "),
+      `Bună ziua! Sunt ${SENDER_FULL}. Referitor la ${apartmentRef(ctx.rooms, ctx.zone, true)}: vă putem oferi o estimare gratuită de venit net lunar (regim hotelier / chirie). Vă pot trimite calculul exact pe WhatsApp?`,
   },
   {
     key: "reminder_sale_24h", label: "Memento vânzare 24h", kind: "reminder24",
     hint: "Evaluare și reprezentare la vânzare.",
-    build: (ctx) => [greeting(ctx), "", `Revin în legătură cu ${listingRef(ctx)}, scos la vânzare.`, "Vă pot trimite evaluarea gratuită și detalii despre reprezentarea la vânzare?"].join("\n"),
+    build: (ctx) => [greeting(ctx), "", `Sunt ${SENDER_SHORT}. Revin în legătură cu ${listingRef(ctx)}, scos la vânzare.`, "Vă pot trimite evaluarea gratuită și detalii despre reprezentarea la vânzare?"].join("\n"),
   },
   {
     key: "reminder_sale_72h", label: "Memento vânzare 72h", kind: "reminder72",
     hint: "Ultima reamintire despre vânzare.",
-    build: (ctx) => [greeting(ctx), "", `Ultimul mesaj despre ${listingRef(ctx)}, scos la vânzare.`, "Mai este disponibil? Dacă doriți o evaluare gratuită sau ajutor la vânzare, vă stau la dispoziție. Mulțumesc!"].join("\n"),
+    build: (ctx) => [greeting(ctx), "", `Sunt ${SENDER_SHORT}, cu ultimul mesaj despre ${listingRef(ctx)}, scos la vânzare.`, "Mai este disponibil? Dacă doriți o evaluare gratuită sau ajutor la vânzare, vă stau la dispoziție. Mulțumesc!"].join("\n"),
   },
   {
     key: "reminder_24h",
@@ -193,7 +198,7 @@ export const OWNER_OUTREACH_TEMPLATES: OutreachTemplate[] = [
       return [
         greeting(ctx),
         "",
-        `Revin pe scurt în legătură cu ${listingRef(ctx)}.`,
+        `Sunt ${SENDER_SHORT} și revin pe scurt în legătură cu ${listingRef(ctx)}.`,
         offer
           ? `Propunerea rămâne valabilă: ${offer} pe lună, contract semnat și toate cheltuielile de administrare la noi.`
           : "Propunerea rămâne valabilă: venit lunar prin contract și toate cheltuielile de administrare la noi.",

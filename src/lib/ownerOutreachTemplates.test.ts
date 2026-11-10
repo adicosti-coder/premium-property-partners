@@ -37,25 +37,36 @@ describe("outreach template by listing type", () => {
     expect(message).not.toContain("25%");
     expect(message).not.toContain("garantat");
   });
-  it("sale first message uses open offers without guarantees and offers NU", () => {
-    const msg = getTemplate("first_sale").build({ zone: "Iosefin", rooms: 2 });
-    expect(msg).toContain("Iosefin");
-    expect(msg).toContain("ofertă scrisă");
-    expect(msg).toContain("NU");
+  it("sale first message uses the approved wording with listing rooms, zone and source", () => {
+    const msg = getTemplate("first_sale").build({ zone: "Iosefin", rooms: 2, platform: "OLX-Vanzari" });
+    expect(msg).toBe("Bună ziua! Sunt Andrei, de la RealTrust Timișoara. Am văzut anunțul dumneavoastră pentru apartamentul de 2 camere din zona Iosefin publicat pe OLX. Avem clienți cumpărători în căutare pe această zonă și vă putem ajuta cu promovarea și selecția ofertelor. Când ați avea 5 minute disponibile pentru o scurtă discuție?");
     expect(msg).not.toMatch(/100%|garant/i);
+  });
+  it("sale first message omits generic sources", () => {
+    expect(getTemplate("first_sale").build({ zone: "Fabric", rooms: 3, platform: "General" })).toContain("apartamentul de 3 camere din zona Fabric. Avem");
+  });
+  it("short first message uses the full sender name and listing data", () => {
+    expect(getTemplate("first_short").build({ zone: "Cetate", rooms: 1 })).toBe("Bună ziua! Sunt Andrei, RealTrust & ApArt Hotel Timișoara. Referitor la apartamentul dumneavoastră de o cameră din zona Cetate: vă putem oferi o estimare gratuită de venit net lunar (regim hotelier / chirie). Vă pot trimite calculul exact pe WhatsApp?");
+  });
+  it("reminders name the sender", () => {
+    for (const key of ["reminder_24h", "reminder_sale_24h", "reminder_sale_72h", "reminder_72h"]) {
+      expect(getTemplate(key).build({ zone: "Iosefin", rooms: 2 })).toMatch(/Andrei,? de la RealTrust/);
+    }
   });
 });
 
 import { rentalFirstMessage as rfm } from "./ownerOutreachTemplates";
+import { rentalFirstMessage as edgeRfm } from "../../supabase/functions/_shared/rentalIntroMessage";
 describe("rentalFirstMessage", () => {
-  it("folosește camerele și zona când există ambele", () => {
-    expect(rfm(2, "Iosefin")).toContain("pentru apartamentul cu 2 camere din Iosefin, propus spre închiriere");
+  it("folosește formularea aprobată cu camerele și zona din anunț", () => {
+    expect(rfm(2, "Iosefin")).toBe("Bună ziua! Sunt Andrei – RealTrust & ApArt Hotel Timișoara. Vă contactez în legătură cu apartamentul de 2 camere din zona Iosefin. Oferim servicii complete de administrare în regim hotelier (promovare Booking/Airbnb, curățenie, mentenanță), cu un venit net estimat cu 30-40% mai mare decât chiria clasică. Vă pot trimite gratuit o simulare de randament net pentru zona dumneavoastră?");
   });
   it("folosește textul de rezervă când lipsește zona sau camerele", () => {
-    expect(rfm(2, "")).toContain("pentru apartamentul dumneavoastră din Timișoara, propus");
-    expect(rfm(null, "Cetate")).toContain("pentru apartamentul dumneavoastră din Timișoara, propus");
+    expect(rfm(2, "")).toContain("apartamentul de 2 camere din Timișoara.");
+    expect(rfm(null, "Cetate")).toContain("apartamentul dumneavoastră din zona Cetate.");
+    expect(rfm(null, null)).toContain("apartamentul dumneavoastră din Timișoara.");
   });
-  it("are opțiune clară de refuz", () => {
-    expect(rfm(3, "Fabric")).toContain("răspundeți NU și nu vă mai deranjăm");
+  it("mesajul trimis automat prin Make este identic cu cel din panou", () => {
+    for (const [r, z] of [[2, "Iosefin"], [1, ""], [null, "Fabric"]] as const) expect(edgeRfm(r, z)).toBe(rfm(r, z));
   });
 });
