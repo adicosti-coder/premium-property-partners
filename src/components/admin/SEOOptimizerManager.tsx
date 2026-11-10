@@ -37,6 +37,7 @@ import { GlobalCanonicalFixButton } from "./GlobalCanonicalFixButton";
 import { RobotsCacheStatus } from "./RobotsCacheStatus";
 import { LocalSEORecommendations } from "./LocalSEORecommendations";
 import { SEOIssuesPanel } from "./SEOIssuesPanel";
+import { REAUDIT_GAP_MS, auditUrlWithRecovery, isLegacyAuditPath, isRecoverableAuditError } from "@/lib/seoReaudit";
 
 const QUICK_URLS = [
   // Principal
@@ -195,9 +196,14 @@ const SEOOptimizerManager = () => {
 
   const auditMutation = useMutation({
     mutationFn: async ({ targetUrl, force }: { targetUrl: string; force: boolean }) => {
-      const { data, error } = await supabase.functions.invoke("seo-ai-optimizer", {
-        body: { url: targetUrl, language, forceRefresh: force },
-      });
+      let data: any = null;
+      let error: any = null;
+      try {
+        // Timeout / dropped connection → use the audit the server saved meanwhile.
+        data = (await auditUrlWithRecovery(supabase, targetUrl, language, force)).data;
+      } catch (e) {
+        error = e;
+      }
       if (error) {
         // 503 = scraping indisponibil (credite Firecrawl epuizate / rate limit).
         // Afișăm un avertisment clar, fără să blocăm restul panoului.
@@ -222,7 +228,7 @@ const SEOOptimizerManager = () => {
       return data;
     },
     onSuccess: (data) => {
-      toast.success(data.cached ? "Audit din cache" : "Audit nou generat");
+      toast.success(data.recovered ? "Audit salvat — scor citit din baza de date după răspunsul întârziat" : data.cached ? "Audit din cache" : "Audit nou generat");
       setSelectedAudit(data.audit);
       qc.invalidateQueries({ queryKey: ["seo-audits-history"] });
     },
@@ -380,14 +386,13 @@ const SEOOptimizerManager = () => {
     let success = 0;
     for (let i = 0; i < QUICK_URLS.length; i++) {
       try {
-        await supabase.functions.invoke("seo-ai-optimizer", {
-          body: { url: QUICK_URLS[i], language, forceRefresh: true },
-        });
+        await auditUrlWithRecovery(supabase, QUICK_URLS[i], language, true);
         success++;
       } catch (e) {
         console.error("Bulk audit fail for", QUICK_URLS[i], e);
       }
       setBulkProgress({ done: i + 1, total: QUICK_URLS.length });
+      if (i < QUICK_URLS.length - 1) await new Promise((r) => setTimeout(r, REAUDIT_GAP_MS));
     }
     qc.invalidateQueries({ queryKey: ["seo-audits-history"] });
     setBulkRunning(false);
@@ -399,12 +404,9 @@ const SEOOptimizerManager = () => {
     let lastAudit: AuditRow | null = null;
     try {
       for (const lang of ["ro", "en"] as const) {
-        const { data, error } = await supabase.functions.invoke("seo-ai-optimizer", {
-          body: { url, language: lang, forceRefresh: true },
-        });
-        if (error) throw error;
-        if (data?.error) throw new Error(data.error);
+        const { data } = await auditUrlWithRecovery(supabase, url, lang, true);
         if (data?.audit) lastAudit = data.audit as AuditRow;
+        if (lang === "ro") await new Promise((r) => setTimeout(r, REAUDIT_GAP_MS));
       }
       if (lastAudit) setSelectedAudit(lastAudit);
       qc.invalidateQueries({ queryKey: ["seo-audits-history"] });

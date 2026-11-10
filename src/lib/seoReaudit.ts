@@ -24,6 +24,8 @@ export interface ReauditResult {
   score: number | null;
   /** True when the score was read from the database after a timeout/disconnect. */
   recovered: boolean;
+  /** Raw function response (or `{ audit, recovered: true }` after a fallback). */
+  data: any;
 }
 
 const errStatus = (e: any): number | undefined => e?.context?.status ?? e?.status;
@@ -79,7 +81,7 @@ export async function reauditWithRecovery(
     }
     const audit = (data?.audit ?? null) as SavedAudit | null;
     const score = audit?.overall_score ?? data?.overall_score ?? null;
-    return { audit, score, recovered: false };
+    return { audit, score, recovered: false, data };
   } catch (e) {
     failure = e;
   }
@@ -90,18 +92,18 @@ export async function reauditWithRecovery(
   const interval = deps.pollIntervalMs ?? REAUDIT_POLL_INTERVAL_MS;
   for (let i = 0; i < attempts; i++) {
     const saved = await deps.findRecent(target, language || "ro", sinceIso).catch(() => null);
-    if (saved) return { audit: saved, score: saved.overall_score ?? null, recovered: true };
+    if (saved) return { audit: saved, score: saved.overall_score ?? null, recovered: true, data: { audit: saved, cached: false, recovered: true } };
     if (i < attempts - 1) await sleep(interval);
   }
   throw failure;
 }
 
 /** Supabase-backed dependencies used by the admin SEO panels. */
-export function supabaseReauditDeps(client: any, timeoutMs = REAUDIT_CLIENT_TIMEOUT_MS): ReauditDeps {
+export function supabaseReauditDeps(client: any, timeoutMs = REAUDIT_CLIENT_TIMEOUT_MS, forceRefresh = true): ReauditDeps {
   return {
     invoke: (url, language) =>
       client.functions.invoke("seo-ai-optimizer", {
-        body: { url, language, forceRefresh: true },
+        body: { url, language, forceRefresh },
         timeout: timeoutMs,
       }),
     findRecent: async (path, language, sinceIso) => {
@@ -132,4 +134,11 @@ export async function runSequential<T>(
     await worker(items[i], i);
     if (i < items.length - 1 && (opts.gapMs ?? 0) > 0) await sleep(opts.gapMs!);
   }
+}
+
+/** Audits a full URL (any realtrust.ro host) with the same timeout fallback. */
+export function auditUrlWithRecovery(client: any, url: string, language: string, forceRefresh = true): Promise<ReauditResult> {
+  let host = "www.realtrust.ro";
+  try { host = new URL(url).host || host; } catch { /* default host */ }
+  return reauditWithRecovery(url, language, host, supabaseReauditDeps(client, REAUDIT_CLIENT_TIMEOUT_MS, forceRefresh));
 }
