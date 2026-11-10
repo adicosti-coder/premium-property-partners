@@ -8,6 +8,7 @@
 
 import { readFileSync, writeFileSync } from "fs";
 import { resolve } from "path";
+import { CONTACT_HOURS, REAL_ESTATE_SINCE, HOTEL_MANAGEMENT_SINCE } from "../src/lib/businessFacts";
 
 const BASE_URL = "https://realtrust.ro";
 
@@ -135,7 +136,8 @@ function build(props: Prop[]): string {
   lines.push("- Telefon: +40 799 069 256");
   lines.push("- E-mail: info@realtrust.ro");
   lines.push(`- Website: ${BASE_URL}`);
-  lines.push("- Program: luni–vineri, 10:00–18:00 (Europe/Bucharest)");
+  lines.push(`- Program: ${CONTACT_HOURS.long.ro.replace(/^Program /, "")} (telefon, WhatsApp, e-mail)`);
+  lines.push(`- În imobiliare din ${REAL_ESTATE_SINCE}; administrare în regim hotelier din ${HOTEL_MANAGEMENT_SINCE}`);
   lines.push("- Facebook: https://www.facebook.com/realtrust.ro");
   lines.push("- Instagram: https://www.instagram.com/ap.art.hotel/");
   lines.push("");

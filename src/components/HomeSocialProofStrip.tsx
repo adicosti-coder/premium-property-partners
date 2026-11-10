@@ -1,4 +1,5 @@
 import { Award, Star, ShieldCheck } from "lucide-react";
+import { realEstateSinceLabel } from "@/lib/businessFacts";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 /** Three compact proof points (experience, guest rating, trial period) under the homepage hero. Static, no data fetching. */
@@ -6,7 +7,7 @@ const HomeSocialProofStrip = () => {
   const { language } = useLanguage();
   const ro = language !== "en";
   const items = [
-    { Icon: Award, title: ro ? "Peste 25 de ani de experiență" : "Over 25 years of experience", text: ro ? "Tradiție și consiliere imobiliară de încredere în Timișoara." : "Trusted real estate tradition and advice in Timișoara." },
+    { Icon: Award, title: realEstateSinceLabel(language), text: ro ? "Tradiție și consiliere imobiliară de încredere în Timișoara." : "Trusted real estate tradition and advice in Timișoara." },
     { Icon: Star, title: "9,7/10 Booking · 4,9/5 Airbnb", text: ro ? "Evaluarea oaspeților noștri." : "Our guests' rating." },
     { Icon: ShieldCheck, title: ro ? "90 de zile perioadă de probă" : "90-day trial period", text: ro ? "Testează serviciul fără obligații pe termen lung." : "Try the service without a long-term commitment." },
   ];

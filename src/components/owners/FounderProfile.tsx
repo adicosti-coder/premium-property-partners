@@ -1,4 +1,5 @@
 import { useLanguage } from "@/i18n/LanguageContext";
+import { REAL_ESTATE_SINCE, contactHoursLabel } from "@/lib/businessFacts";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,11 +34,11 @@ const FounderProfile = () => {
           "Firma este din Timișoara, birou fizic în Cetate, cu o echipă care se ocupă zilnic de apartamente ca al tău.",
         founderRole: "Fondator & Administrator",
         founderBio:
-          "Adrian Costi este fondatorul RealTrust & ApArt Hotel, cu o carieră de peste 25 de ani dedicată pieței imobiliare din Timișoara. A coordonat sute de tranzacții imobiliare și a dezvoltat un model integrat de administrare completă a proprietăților — de la închirierea pe termen lung, până la operarea în regim hotelier la standard de boutique hotel. Viziunea sa este simplă: fiecare proprietate să fie gestionată ca o investiție performantă, cu transparență totală, raportare clară și venituri optimizate pentru proprietar.",
-        founderPromise: "Răspund personal la telefon în timpul programului (L–V, 10:00–18:00).",
+          `Adrian Costi este fondatorul RealTrust & ApArt Hotel, cu o carieră dedicată pieței imobiliare din Timișoara din ${REAL_ESTATE_SINCE}. A coordonat sute de tranzacții imobiliare și a dezvoltat un model integrat de administrare completă a proprietăților — de la închirierea pe termen lung, până la operarea în regim hotelier la standard de boutique hotel. Viziunea sa este simplă: fiecare proprietate să fie gestionată ca o investiție performantă, cu transparență totală, raportare clară și venituri optimizate pentru proprietar.`,
+        founderPromise: `Răspund personal la telefon — ${contactHoursLabel("ro").toLowerCase()}.`,
         visionTitle: "Viziunea și experiența locală",
         vision: [
-          "Peste 25 de ani în imobiliare exclusiv în Timișoara — cunosc tarifele reale pe fiecare zonă, de la Cetate și Iosefin până la Dumbrăvița și Aradului.",
+          `În imobiliare din ${REAL_ESTATE_SINCE}, exclusiv în Timișoara — cunosc tarifele reale pe fiecare zonă, de la Cetate și Iosefin până la Dumbrăvița și Aradului.`,
           "Cred că un apartament administrat corect trebuie să bată chiria clasică cu cifre, nu cu promisiuni: ținta noastră de lucru este un randament net de 6,5–9,4% pe an.",
           "Standard hotelier aplicat la scară mică: aceleași reguli de curățenie, comunicare și raportare pentru un apartament ca pentru un hotel.",
           "Preferăm un portofoliu mic și performant decât multe apartamente administrate superficial.",
@@ -50,7 +51,7 @@ const FounderProfile = () => {
         legalNote: "Poți verifica firma oricând înainte să semnezi ceva.",
         labels: { company: "Firma", cui: "CUI", office: "Birou", contact: "Contact" },
         stats: [
-          { value: "25+", suffix: "", label: "Ani experiență în imobiliare Timișoara", icon: "clock" as const },
+          { value: `Din ${REAL_ESTATE_SINCE}`, suffix: "", label: "În imobiliare în Timișoara", icon: "clock" as const },
           { value: "6,5–9,4", suffix: "%", label: "Randament net estimat pentru proprietari, pe an", icon: "trending" as const },
           { value: "100", suffix: "%", label: "Administrare completă, de la A la Z", icon: "shield" as const },
         ],
@@ -69,11 +70,11 @@ const FounderProfile = () => {
           "A Timișoara-based team working digitally and on site at your property, handling apartments like yours every day.",
         founderRole: "Founder & Managing Director",
         founderBio:
-          "Adrian Costi is the founder of RealTrust & ApArt Hotel, with a 25+ year career dedicated to the Timișoara real estate market. He has coordinated hundreds of real estate transactions and developed an integrated full-property management model — from long-term rentals to boutique-hotel-standard short-term operations. His vision is straightforward: every property should be managed as a high-performing investment, with full transparency, clear reporting, and optimized owner returns.",
-        founderPromise: "I answer the phone personally during business hours (Mon–Fri, 10:00–18:00).",
+          `Adrian Costi is the founder of RealTrust & ApArt Hotel, with a career dedicated to the Timișoara real estate market since ${REAL_ESTATE_SINCE}. He has coordinated hundreds of real estate transactions and developed an integrated full-property management model — from long-term rentals to boutique-hotel-standard short-term operations. His vision is straightforward: every property should be managed as a high-performing investment, with full transparency, clear reporting, and optimized owner returns.`,
+        founderPromise: `I answer the phone personally — ${contactHoursLabel("en").toLowerCase()}.`,
         visionTitle: "Vision and local experience",
         vision: [
-          "Over 25 years in real estate exclusively in Timișoara — I know the real rates per area, from Cetate and Iosefin to Dumbrăvița and Aradului.",
+          `In real estate since ${REAL_ESTATE_SINCE}, exclusively in Timișoara — I know the real rates per area, from Cetate and Iosefin to Dumbrăvița and Aradului.`,
           "A properly managed apartment should beat long-term rent with numbers, not promises: our working target is a 6.5–9.4% net yield per year.",
           "Hotel standards at small scale: the same cleaning, communication and reporting rules as a hotel.",
           "We prefer a small, high-performing portfolio over many loosely managed apartments.",
@@ -86,7 +87,7 @@ const FounderProfile = () => {
         legalNote: "You can verify the company any time before signing anything.",
         labels: { company: "Company", cui: "VAT ID", office: "Office", contact: "Contact" },
         stats: [
-          { value: "25+", suffix: "", label: "Years of real estate experience in Timișoara", icon: "clock" as const },
+          { value: `Since ${REAL_ESTATE_SINCE}`, suffix: "", label: "In real estate in Timișoara", icon: "clock" as const },
           { value: "6.5–9.4", suffix: "%", label: "Estimated net yield for owners, per year", icon: "trending" as const },
           { value: "100", suffix: "%", label: "End-to-end management, from A to Z", icon: "shield" as const },
         ],

@@ -1,4 +1,5 @@
 import { useLanguage } from "@/i18n/LanguageContext";
+import { REAL_ESTATE_SINCE } from "@/lib/businessFacts";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -62,7 +63,7 @@ const AboutUs = () => {
       story: {
         title: "Povestea Noastră",
         subtitle: "De la prima tranzacție la 13 cazări active administrate",
-        intro: "Am început în Timișoara ca o agenție imobiliară locală, axată pe tranzacții corecte și pe relații pe termen lung. Cu peste 15 ani de experiență directă pe piața imobiliară Timișoara, urmărim zilnic evoluția prețurilor apartamente Timișoara pe fiecare cartier — de la Centru și Iosefin la ISHO, Dumbrăvița și Complex Studențesc — și oferim consultanță credit ipotecar prin parteneriate cu brokeri și bănci (BCR, BT, ING, Raiffeisen, BRD). Pe măsură ce piața s-a maturizat, am observat că tot mai mulți proprietari căutau venituri pasive fără bătăi de cap — așa s-a născut ApArt Hotel, divizia noastră de regim hotelier. Astăzi gestionăm 13 cazări active cu un randament net estimat de 6,5–9,4% pe an și un rating consolidat de 9,7/10.",
+        intro: `Am început în Timișoara ca o agenție imobiliară locală, axată pe tranzacții corecte și pe relații pe termen lung. Activi pe piața imobiliară din Timișoara din ${REAL_ESTATE_SINCE}, urmărim zilnic evoluția prețurilor apartamente Timișoara pe fiecare cartier — de la Centru și Iosefin la ISHO, Dumbrăvița și Complex Studențesc — și oferim consultanță credit ipotecar prin parteneriate cu brokeri și bănci (BCR, BT, ING, Raiffeisen, BRD). Pe măsură ce piața s-a maturizat, am observat că tot mai mulți proprietari căutau venituri pasive fără bătăi de cap — așa s-a născut ApArt Hotel, divizia noastră de regim hotelier. Astăzi gestionăm 13 cazări active cu un randament net estimat de 6,5–9,4% pe an și un rating consolidat de 9,7/10.`,
         realEstate: {
           title: "Servicii Imobiliare Complete",
           description: "Sub brandul RealTrust, oferim un spectru complet de servicii imobiliare care acoperă toate nevoile proprietarilor și investitorilor:",
@@ -85,7 +86,7 @@ const AboutUs = () => {
             { title: "Experiență Oaspeți", description: "Comunicare 24/7, check-in flexibil, recomandări locale personalizate și rezolvare rapidă a oricărei situații." }
           ]
         },
-        conclusion: "Am învățat că succesul în imobiliare nu vine din promisiuni, ci din rezultate măsurabile. Fiecare proprietate pe care o administrăm primește aceeași atenție la detalii pe care am perfecționat-o în peste 25 de ani de activitate."
+        conclusion: `Am învățat că succesul în imobiliare nu vine din promisiuni, ci din rezultate măsurabile. Fiecare proprietate pe care o administrăm primește aceeași atenție la detalii pe care am perfecționat-o în activitatea noastră din ${REAL_ESTATE_SINCE}.`
       },
       brands: {
         title: "Două Branduri, Servicii Complete",
@@ -173,7 +174,7 @@ const AboutUs = () => {
       faq: {
         title: "Întrebări Frecvente despre RealTrust",
         items: [
-          { q: "Cine este fondatorul RealTrust Timișoara?", a: "Compania este fondată și condusă de Adrian Costi, antreprenor local cu peste 25 de ani de experiență în piața imobiliară din Timișoara și vestul României. Adrian este implicat direct în fiecare colaborare cu proprietarii." },
+          { q: "Cine este fondatorul RealTrust Timișoara?", a: `Compania este fondată și condusă de Adrian Costi, antreprenor local activ din ${REAL_ESTATE_SINCE} în piața imobiliară din Timișoara și vestul României. Adrian este implicat direct în fiecare colaborare cu proprietarii.` },
           { q: "Ce comision are agenția imobiliară RealTrust Timișoara?", a: "Pentru vânzări aplicăm un comision standard de 2% + TVA din partea vânzătorului, iar pentru închirieri pe termen lung un comision egal cu o chirie lunară. Pentru administrare în regim hotelier, Property Management RealTrust este 15–20% din net (brut minus comisioane de canal și utilități), în funcție de pachetul ales, fără taxe ascunse. Toate condițiile sunt agreate înainte de semnarea contractului." },
           { q: "Oferiți consultanță pentru credit imobiliar Timișoara?", a: "Da, colaborăm cu brokeri independenți de credite și cu băncile partenere (BCR, BT, ING, Raiffeisen, BRD) pentru pre-aprobare, comparare oferte (dobândă fixă vs. variabilă), Prima Casă/Noua Casă și evaluare ANEVAR. Consultanța inițială este gratuită pentru clienții noștri." },
           { q: "Vindeți și case de vânzare Timișoara, nu doar apartamente?", a: "Da. Portofoliul nostru include case de vânzare Timișoara — case individuale, duplexuri și vile cu teren intravilan în zonele Dumbrăvița, Giroc, Moșnița Nouă, Ghiroda, Săcălaz, Chișoda și Freidorf — pe lângă apartamente (1–4 camere) în tot orașul." },
@@ -227,7 +228,7 @@ const AboutUs = () => {
             { title: "Guest Experience", description: "24/7 communication, flexible check-in, personalized local recommendations, and quick resolution of any situation." }
           ]
         },
-        conclusion: "We've learned that success in real estate doesn't come from promises, but from measurable results. Every property we manage receives the same attention to detail that we've perfected over 25 years of activity."
+        conclusion: `We've learned that success in real estate doesn't come from promises, but from measurable results. Every property we manage receives the same attention to detail that we've perfected since ${REAL_ESTATE_SINCE}.`
       },
       brands: {
         title: "Two Brands, Complete Services",
@@ -315,7 +316,7 @@ const AboutUs = () => {
       faq: {
         title: "Frequently Asked Questions about RealTrust",
         items: [
-          { q: "Who is the founder of RealTrust Timișoara?", a: "The company is founded and led by Adrian Costi, a local entrepreneur with over 25 years of experience in the Timișoara real estate market. Adrian is directly involved in every owner collaboration." },
+          { q: "Who is the founder of RealTrust Timișoara?", a: `The company is founded and led by Adrian Costi, a local entrepreneur active in the Timișoara real estate market since ${REAL_ESTATE_SINCE}. Adrian is directly involved in every owner collaboration.` },
           { q: "What commission does RealTrust real estate agency charge?", a: "For sales we apply a standard 2% + VAT commission from the seller; for long-term rentals one monthly rent. For short-term rental management, Property Management RealTrust is 15–20% of net (gross minus channels and utilities) depending on the package, with no hidden costs. All terms are agreed upfront." },
           { q: "Do you offer mortgage consulting in Timișoara?", a: "Yes, we partner with independent mortgage brokers and partner banks (BCR, BT, ING, Raiffeisen, BRD) for pre-approval, offer comparison (fixed vs. variable rate), Prima Casă/Noua Casă programs and ANEVAR appraisal. Initial consulting is free for our clients." },
           { q: "Do you sell houses in Timișoara, not just apartments?", a: "Yes. Our portfolio includes both apartments (1–4 rooms) and houses for sale in Timișoara and the metropolitan area (Dumbrăvița, Giroc, Moșnița Nouă, Ghiroda, Săcălaz) — single-family houses, duplexes and villas with land." },

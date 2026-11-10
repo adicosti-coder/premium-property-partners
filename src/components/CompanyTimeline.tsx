@@ -1,4 +1,5 @@
 import { useLanguage } from "@/i18n/LanguageContext";
+import { REAL_ESTATE_SINCE, HOTEL_MANAGEMENT_SINCE } from "@/lib/businessFacts";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { 
   Rocket, 
@@ -19,12 +20,12 @@ const CompanyTimeline = () => {
 
   const content = {
     ro: {
-      badge: "25+ Ani de Excelență",
+      badge: `Din ${REAL_ESTATE_SINCE}`,
       title: "Evoluția Noastră",
-      subtitle: "O călătorie de peste un sfert de secol în imobiliare",
+      subtitle: `În imobiliare din ${REAL_ESTATE_SINCE}`,
       milestones: [
         {
-          year: "1999",
+          year: String(REAL_ESTATE_SINCE),
           icon: Rocket,
           title: "Începuturile",
           description: "Punerea fundamentelor unei agenții imobiliare în Timișoara, cu viziunea de a aduce standarde internaționale în piața locală.",
@@ -52,7 +53,7 @@ const CompanyTimeline = () => {
           highlight: "Servicii complete de administrare"
         },
         {
-          year: "2015",
+          year: String(HOTEL_MANAGEMENT_SINCE),
           icon: Users,
           title: "Continuare Diversificare",
           description: "Lansarea serviciilor de property management și administrare de imobile în regim hotelier pentru proprietari absenți.",
@@ -63,7 +64,7 @@ const CompanyTimeline = () => {
           icon: Home,
           title: "Nașterea ApArt Hotel",
           description: "Identificarea oportunității în piața de închirieri pe termen scurt și lansarea brandului ApArt Hotel.",
-          highlight: "Primele proprietăți în regim hotelier"
+          highlight: "Brandul de cazare ApArt Hotel"
         },
         {
           year: "2021",
@@ -89,12 +90,12 @@ const CompanyTimeline = () => {
       ]
     },
     en: {
-      badge: "25+ Years of Excellence",
+      badge: `Since ${REAL_ESTATE_SINCE}`,
       title: "Our Evolution",
-      subtitle: "A journey of over a quarter century in real estate",
+      subtitle: `In real estate since ${REAL_ESTATE_SINCE}`,
       milestones: [
         {
-          year: "1999",
+          year: String(REAL_ESTATE_SINCE),
           icon: Rocket,
           title: "The Beginning",
           description: "Laying the foundations of a real estate agency in Timișoara, with the vision of bringing international standards to the local market.",
@@ -122,7 +123,7 @@ const CompanyTimeline = () => {
           highlight: "Complete management services"
         },
         {
-          year: "2015",
+          year: String(HOTEL_MANAGEMENT_SINCE),
           icon: Users,
           title: "Continued Diversification",
           description: "Launching property management and hotel-regime building administration services for absentee owners.",
@@ -133,7 +134,7 @@ const CompanyTimeline = () => {
           icon: Home,
           title: "Birth of ApArt Hotel",
           description: "Identifying the opportunity in the short-term rental market and launching the ApArt Hotel brand.",
-          highlight: "First properties in hotel regime"
+          highlight: "The ApArt Hotel accommodation brand"
         },
         {
           year: "2021",

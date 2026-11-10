@@ -1,4 +1,5 @@
 import { CheckCircle, ShieldCheck, Star, Building2, Clock } from "lucide-react";
+import { CONTACT_HOURS } from "@/lib/businessFacts";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 /**
@@ -23,21 +24,21 @@ interface FormTrustBadgesProps {
 
 const COPY = {
   ro: {
-    badges: ["Răspuns în 24 de ore lucrătoare", "Gratuit, fără obligații", "Consultanți din Timișoara"],
+    badges: ["Răspuns în max. 24 de ore", "Gratuit, fără obligații", "Consultanți din Timișoara"],
     proof: [
       { icon: Star, label: "Rating 9,7 pe Booking" },
       { icon: Building2, label: "15 proprietăți administrate" },
-      { icon: Clock, label: "Răspuns în max. 15 minute în orar" },
+      { icon: Clock, label: CONTACT_HOURS.long.ro },
     ],
     privacy:
       "Confidențialitate garantată. Fără obligații contractuale la analiză — datele tale nu ajung la terți.",
   },
   en: {
-    badges: ["Reply within 24 business hours", "Free, no obligation", "Consultants based in Timișoara"],
+    badges: ["Reply within 24 hours", "Free, no obligation", "Consultants based in Timișoara"],
     proof: [
       { icon: Star, label: "9.7 rating on Booking" },
       { icon: Building2, label: "15 properties managed" },
-      { icon: Clock, label: "Reply within 15 minutes in office hours" },
+      { icon: Clock, label: CONTACT_HOURS.long.en },
     ],
     privacy:
       "Your privacy is guaranteed. No contract commitment for the analysis — we never share your data with third parties.",

@@ -11,6 +11,7 @@ import fs from 'fs';
 import path from 'path';
 import { PUBLIC_ROUTE_SEO } from '../src/lib/publicRouteSeo';
 import { ORGANIZATION_SCHEMA, REAL_ESTATE_AGENT_SCHEMA, LODGING_BUSINESS_SCHEMA } from '../src/lib/orgIdentity';
+import { CONTACT_HOURS, REAL_ESTATE_SINCE } from '../src/lib/businessFacts';
 import {
   fetchPublicArticles,
   fetchComplexes,
@@ -1149,7 +1150,7 @@ export function buildStaticRoutes(): PrerenderRoute[] {
     seoBody: `
       ${ENTITY_DEFINITION_HTML}
       <h2>Date de contact RealTrust Timișoara</h2>
-      <p>Telefon și WhatsApp: +40 799 069 256. E-mail: info@realtrust.ro. Program: luni–vineri, 10:00–18:00 (Europe/Bucharest). Suport oaspeți ApArt Hotel 24/7 prin WhatsApp.</p>
+      <p>Telefon și WhatsApp: +40 799 069 256. E-mail: info@realtrust.ro. ${CONTACT_HOURS.long.ro}. Suport oaspeți ApArt Hotel 24/7 prin WhatsApp.</p>
       <h2>Consultanță la distanță și vizionări la proprietate</h2>
       <p>Nu primim clienți într-un birou: evaluările, consultanța și administrarea se fac telefonic, pe WhatsApp sau online, iar vizionările se programează direct la proprietate.</p>
       <h2>Zonele din Timișoara în care lucrăm</h2>
@@ -1176,7 +1177,7 @@ export function buildStaticRoutes(): PrerenderRoute[] {
           url: BASE_URL,
           telephone: '+40799069256',
           email: 'info@realtrust.ro',
-          openingHours: 'Mo-Fr 10:00-18:00',
+          openingHours: CONTACT_HOURS.schemaText,
           areaServed: { '@type': 'City', name: 'Timișoara' },
           address: {
             '@type': 'PostalAddress',
@@ -1247,12 +1248,12 @@ export function buildStaticRoutes(): PrerenderRoute[] {
   routes.push({
     path: '/autor/adrian-costi',
     title: 'Adrian Costi — Fondator RealTrust Timișoara | Autor articole imobiliare',
-    description: 'Adrian Costi, fondator și CEO RealTrust Timișoara, cu peste 25 de ani în tranzacții și administrare de proprietăți. Autorul ghidurilor despre investiții, regim hotelier și evaluare.',
+    description: `Adrian Costi, fondator și CEO RealTrust Timișoara, activ din ${REAL_ESTATE_SINCE} în tranzacții și administrare de proprietăți. Autorul ghidurilor despre investiții, regim hotelier și evaluare.`,
     h1: 'Adrian Costi',
     canonical: `${BASE_URL}/autor/adrian-costi`,
     seoBody: `
       <h2>Fondator &amp; CEO RealTrust</h2>
-      <p>Adrian Costi este fondatorul și CEO-ul RealTrust (Imo Business Centrum SRL), companie imobiliară din Timișoara, cu peste 25 de ani în tranzacții și administrare de proprietăți în Timișoara și vestul României. Coordonează direct administrarea celor 13 cazări active din portofoliu, operate în regim hotelier sub brandul ApArt Hotel.</p>
+      <p>Adrian Costi este fondatorul și CEO-ul RealTrust (Imo Business Centrum SRL), companie imobiliară din Timișoara, activ din ${REAL_ESTATE_SINCE} în tranzacții și administrare de proprietăți în Timișoara și vestul României. Coordonează direct administrarea celor 13 cazări active din portofoliu, operate în regim hotelier sub brandul ApArt Hotel.</p>
     `,
     jsonLd: {
       '@context': 'https://schema.org',

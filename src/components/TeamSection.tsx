@@ -1,4 +1,5 @@
 import { useLanguage } from "@/i18n/LanguageContext";
+import { REAL_ESTATE_SINCE } from "@/lib/businessFacts";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -41,14 +42,14 @@ const TeamSection = () => {
         {
           name: "Adrian Costi",
           role: "Fondator & CEO",
-          description: "Cu peste 25 de ani în tranzacții și administrare de proprietăți în Timișoara, Adrian a fondat RealTrust & ApArt Hotel pentru a oferi proprietarilor un model complet: de la închiriere pe termen lung la regim hotelier la standard de boutique hotel.",
+          description: `Activ din ${REAL_ESTATE_SINCE} în tranzacții și administrare de proprietăți în Timișoara, Adrian a fondat RealTrust & ApArt Hotel pentru a oferi proprietarilor un model complet: de la închiriere pe termen lung la regim hotelier la standard de boutique hotel.`,
           image: ceoImageAsset.url,
           linkedin: "https://www.linkedin.com/in/costi-adrian-2b50931a",
           email: "adrian@realtrust.ro"
         }
       ],
       founderStats: [
-        { value: "25+", suffix: "", label: "Ani experiență în imobiliare Timișoara", icon: "clock" as const },
+        { value: `Din ${REAL_ESTATE_SINCE}`, suffix: "", label: "În imobiliare în Timișoara", icon: "clock" as const },
         { value: "6,5–9,4", suffix: "%", label: "Randament net estimat pentru proprietari, pe an", icon: "trending" as const },
         { value: "100", suffix: "%", label: "Administrare completă, de la A la Z", icon: "shield" as const },
       ],
@@ -66,14 +67,14 @@ const TeamSection = () => {
         {
           name: "Adrian Costi",
           role: "Founder & CEO",
-          description: "With over 25 years in real estate transactions and property management in Timișoara, Adrian founded RealTrust & ApArt Hotel to give owners a complete model: from long-term rentals to boutique-hotel-standard short-term operations.",
+          description: `Active since ${REAL_ESTATE_SINCE} in real estate transactions and property management in Timișoara, Adrian founded RealTrust & ApArt Hotel to give owners a complete model: from long-term rentals to boutique-hotel-standard short-term operations.`,
           image: ceoImageAsset.url,
           linkedin: "https://www.linkedin.com/in/costi-adrian-2b50931a",
           email: "adrian@realtrust.ro"
         }
       ],
       founderStats: [
-        { value: "25+", suffix: "", label: "Years of real estate experience in Timișoara", icon: "clock" as const },
+        { value: `Since ${REAL_ESTATE_SINCE}`, suffix: "", label: "In real estate in Timișoara", icon: "clock" as const },
         { value: "6.5–9.4", suffix: "%", label: "Estimated net yield for owners, per year", icon: "trending" as const },
         { value: "100", suffix: "%", label: "End-to-end management, from A to Z", icon: "shield" as const },
       ],

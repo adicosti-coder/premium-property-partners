@@ -13,7 +13,8 @@ import { trackConversion, attributionParams, OWNER_FUNNEL_VALUE_EUR } from "@/li
 
 /**
  * FounderCallBooking — programare call de 15 minute direct cu fondatorul.
- * Sloturi generate local (zile lucrătoare, program 10:00–18:00 Europe/Bucharest),
+ * Sloturi generate local (zile lucrătoare, 10:00–18:00 Europe/Bucharest) — intervale pentru apel,
+ * separate de programul de contact non-stop din businessFacts;
  * salvate în `chatbot_appointments` (insert public permis prin RLS + rate limit pe telefon).
  */
 
@@ -77,7 +78,7 @@ const FounderCallBooking = () => {
         errDesc: "Încearcă din nou sau scrie-ne pe WhatsApp la 0799 069 256.",
         doneTitle: "Ne auzim curând",
         doneBody: "Programarea a fost înregistrată. Primești confirmarea pe telefon.",
-        note: "Program: luni–vineri, 10:00–18:00. Durată: 15 minute, fără obligații.",
+        note: "Durată: 15 minute, fără obligații.",
       }
     : {
         badge: "15-minute call",
@@ -100,7 +101,7 @@ const FounderCallBooking = () => {
         errDesc: "Please try again or message us on WhatsApp at +40 799 069 256.",
         doneTitle: "Talk soon",
         doneBody: "Your booking is registered. You'll get a confirmation by phone.",
-        note: "Hours: Mon–Fri, 10:00–18:00. Duration: 15 minutes, no obligation.",
+        note: "Duration: 15 minutes, no obligation.",
       };
 
   /** Pas de funnel: prima selecție de interval = intent (o singură dată per sesiune de formular). */

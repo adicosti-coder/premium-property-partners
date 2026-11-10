@@ -1,4 +1,5 @@
 import { useLanguage } from "@/i18n/LanguageContext";
+import { REAL_ESTATE_SINCE } from "@/lib/businessFacts";
 
 interface SEOFooterTextProps {
   city?: string;
@@ -15,7 +16,7 @@ ${neighborhood ? `Zona ${neighborhood} este una dintre cele mai căutate din ${c
 
 Prețurile din ${city} rămân cu 30-50% mai mici comparativ cu București sau Cluj-Napoca, ceea ce creează un potențial semnificativ de apreciere a capitalului. Randamentul mediu în regim hotelier se situează între 8% și 11% net anual, semnificativ peste media chiriei clasice de 3-4%. Această diferență face din administrarea profesională în regim hotelier o alternativă viabilă și profitabilă.
 
-RealTrust Imobiliare oferă servicii complete de intermediere, consultanță și administrare în ${city}. Cu o experiență de peste 25 de ani pe piața locală, echipa noastră cunoaște în profunzime dinamica fiecărui cartier, tendințele de preț și oportunitățile de investiție. Fie că doriți să cumpărați, să vindeți sau să închiriați o proprietate, vă oferim suport complet: evaluare de piață, negociere, asistență juridică și optimizare fiscală.
+RealTrust Imobiliare oferă servicii complete de intermediere, consultanță și administrare în ${city}. Activă pe piața locală din ${REAL_ESTATE_SINCE}, echipa noastră cunoaște în profunzime dinamica fiecărui cartier, tendințele de preț și oportunitățile de investiție. Fie că doriți să cumpărați, să vindeți sau să închiriați o proprietate, vă oferim suport complet: evaluare de piață, negociere, asistență juridică și optimizare fiscală.
 
 Piața de închirieri pe termen scurt din ${city} a înregistrat o creștere consistentă în ultimii ani, alimentată de turismul cultural, medical și de afaceri. Evenimentele internaționale, conferințele IT și festivalurile culturale generează o cerere sezonieră predictibilă, iar platforma noastră de administrare ApArt Hotel asigură maximizarea veniturilor prin pricing dinamic, marketing profesional și gestionarea completă a operațiunilor zilnice.
 
@@ -43,7 +44,7 @@ ${neighborhood ? `The ${neighborhood} area is one of the most sought-after in ${
 
 Prices in ${city} remain 30-50% lower compared to Bucharest or Cluj-Napoca, creating significant capital appreciation potential. Average returns in hotel-style management range between 8% and 11% net annually, significantly above the classic rental average of 3-4%. This difference makes professional hotel-style management a viable and profitable alternative.
 
-RealTrust Real Estate offers complete brokerage, consulting and management services in ${city}. With over 25 years of local market experience, our team deeply understands the dynamics of each neighborhood, price trends and investment opportunities. Whether you want to buy, sell or rent a property, we provide complete support: market evaluation, negotiation, legal assistance and tax optimization.
+RealTrust Real Estate offers complete brokerage, consulting and management services in ${city}. Active in the local market since ${REAL_ESTATE_SINCE}, our team deeply understands the dynamics of each neighborhood, price trends and investment opportunities. Whether you want to buy, sell or rent a property, we provide complete support: market evaluation, negotiation, legal assistance and tax optimization.
 
 The short-term rental market in ${city} has recorded consistent growth in recent years, driven by cultural, medical and business tourism. International events, IT conferences and cultural festivals generate predictable seasonal demand, and our ApArt Hotel management platform ensures revenue maximization through dynamic pricing, professional marketing and complete daily operations management.
 

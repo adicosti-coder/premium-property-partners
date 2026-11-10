@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { REAL_ESTATE_SINCE } from "@/lib/businessFacts";
 import { Briefcase, Calculator, LineChart } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 
@@ -21,8 +22,8 @@ export function SEOConsultingStrip() {
       icon: Briefcase,
       h3: isRo ? "Consultanță imobiliară Timișoara" : "Real estate consulting Timișoara",
       desc: isRo
-        ? "Consultanți seniori cu peste 25 ani experiență locală — strategie de cumpărare, vânzare și investiție pentru piața din Timișoara."
-        : "Senior consultants with 25+ years of local experience — buy, sell and investment strategy for Timișoara's market.",
+        ? `Consultanță imobiliară locală din ${REAL_ESTATE_SINCE} — strategie de cumpărare, vânzare și investiție pentru piața din Timișoara.`
+        : `Local real estate consulting since ${REAL_ESTATE_SINCE} — buy, sell and investment strategy for Timișoara's market.`,
     },
     {
       to: "/evaluare-gratuita",

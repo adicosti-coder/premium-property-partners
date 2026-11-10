@@ -406,8 +406,8 @@ const PreCalcMiniForm = ({ source = "pre_calc_owner", eyebrow, variant = "full",
             <CheckCircle2 className="mx-auto mb-2 h-12 w-12 text-gold" />
             <DialogTitle className="text-center">{L("Consultanța e rezervată", "Consultation booked")}</DialogTitle>
             <DialogDescription className="text-center">
-              {L(`Mulțumim, ${form.name.split(" ")[0]}! Te sunăm în cel mult 24 de ore (L–V) ca să stabilim o oră potrivită.`,
-                `Thanks, ${form.name.split(" ")[0]}! We'll call you within 24 hours (Mon–Fri) to set a time.`)}
+              {L(`Mulțumim, ${form.name.split(" ")[0]}! Te sunăm în cel mult 24 de ore ca să stabilim o oră potrivită.`,
+                `Thanks, ${form.name.split(" ")[0]}! We'll call you within 24 hours to set a time.`)}
             </DialogDescription>
           </DialogHeader>
           <Button onClick={() => setConsultOpen(false)} className="w-full h-12">OK</Button>
