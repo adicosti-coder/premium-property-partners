@@ -1403,7 +1403,7 @@ const SEOOptimizerManager = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-96">
+          <ScrollArea className="h-96 [&>[data-radix-scroll-area-viewport]>div]:!block">
             <div className="space-y-2">
               {filteredHistory.map((a) => {
                 const path = urlToPath(a.url);

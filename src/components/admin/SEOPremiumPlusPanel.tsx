@@ -562,7 +562,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
             </div>
           )}
           {priorityTargets.length > 0 ? (
-            <ScrollArea className="h-64 rounded-lg border bg-background/80 backdrop-blur">
+            <ScrollArea className="h-64 rounded-lg border bg-background/80 backdrop-blur [&>[data-radix-scroll-area-viewport]>div]:!block">
               <ul className="divide-y text-sm">
                 {priorityTargets.map((a) => {
                   const path = urlToPath(a.url);
@@ -645,7 +645,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
                 <span className="px-2 py-1 rounded bg-emerald-100 text-emerald-700 font-medium">✅ {masterProgress.ok} aplicate</span>
                 {masterProgress.err > 0 && <span className="px-2 py-1 rounded bg-rose-100 text-rose-700 font-medium">❌ {masterProgress.err} erori</span>}
               </div>
-              <ScrollArea className="h-48 rounded-lg border bg-background/80 backdrop-blur">
+              <ScrollArea className="h-48 rounded-lg border bg-background/80 backdrop-blur [&>[data-radix-scroll-area-viewport]>div]:!block">
                 <ul className="divide-y text-xs">
                   {masterLog.map((l, i) => {
                     const delta = l.after != null && l.before != null ? l.after - l.before : null;
@@ -693,7 +693,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
             <Badge variant="secondary">{refreshTargets.length} pagini</Badge>
           </div>
           {refreshTargets.length > 0 ? (
-            <ScrollArea className="h-48 rounded-lg border bg-background">
+            <ScrollArea className="h-48 rounded-lg border bg-background [&>[data-radix-scroll-area-viewport]>div]:!block">
               <ul className="divide-y text-sm">
                 {refreshTargets.map((a) => {
                   const ageDays = Math.floor((Date.now() - new Date(a.created_at).getTime()) / (24 * 3600 * 1000));

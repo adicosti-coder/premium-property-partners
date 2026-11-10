@@ -395,7 +395,7 @@ export const SEOCompetitorGapPanel = () => {
         </div>
 
         <Tabs defaultValue="overview">
-          <TabsList>
+          <TabsList className="flex-wrap h-auto justify-start">
             <TabsTrigger value="overview"><TrendingUp className="w-4 h-4 mr-1" /> Vedere combinată</TabsTrigger>
             <TabsTrigger value="trends"><LineIcon className="w-4 h-4 mr-1" /> Trends</TabsTrigger>
             <TabsTrigger value="history"><History className="w-4 h-4 mr-1" /> Istoric ({snapshots.length})</TabsTrigger>
@@ -430,7 +430,7 @@ export const SEOCompetitorGapPanel = () => {
                 <Download className="w-3 h-3" /> Export CSV
               </Button>
             </div>
-            <ScrollArea className="h-[420px] rounded-md border">
+            <ScrollArea className="h-[420px] rounded-md border [&>[data-radix-scroll-area-viewport]>div]:!block">
               <ul className="divide-y text-sm">
                 {grouped.map((g) => {
                   const allGaps = g.snaps.flatMap((s) => Array.isArray(s.ai_gaps) ? s.ai_gaps : []);
@@ -626,7 +626,7 @@ export const SEOCompetitorGapPanel = () => {
                 <Download className="w-3 h-3" /> Export istoric scoruri
               </Button>
             </div>
-            <ScrollArea className="h-[420px] rounded-md border">
+            <ScrollArea className="h-[420px] rounded-md border [&>[data-radix-scroll-area-viewport]>div]:!block">
               <ul className="divide-y text-sm">
                 {snapshots.map((s) => (
                   <li key={s.id} className="px-3 py-2 space-y-1">
@@ -654,7 +654,7 @@ export const SEOCompetitorGapPanel = () => {
 
           {/* SCHEDULES */}
           <TabsContent value="schedules">
-            <ScrollArea className="h-[420px] rounded-md border">
+            <ScrollArea className="h-[420px] rounded-md border [&>[data-radix-scroll-area-viewport]>div]:!block">
               <ul className="divide-y text-sm">
                 {schedules.map((s) => {
                   const urls = Array.isArray(s.competitor_urls) ? s.competitor_urls : [];
@@ -749,7 +749,7 @@ export const SEOCompetitorGapPanel = () => {
                     <Plus className="w-3 h-3" /> Adaugă
                   </Button>
                 </Label>
-                <ScrollArea className="h-[220px] rounded border">
+                <ScrollArea className="h-[220px] rounded border [&>[data-radix-scroll-area-viewport]>div]:!block">
                   <ul className="divide-y">
                     {preview.keywords.map((k, i) => (
                       <li key={i} className="p-2 grid gap-1 sm:grid-cols-[1fr_2fr_auto] items-start">

@@ -179,7 +179,7 @@ export function RobotsCacheStatus({ defaultHost = DEFAULT_HOST }: { defaultHost?
               Cache 24h pentru robots.txt — invalidare manuală + log de evenimente pentru a evita conflictele din date învechite.
             </CardDescription>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button size="sm" variant="outline" onClick={() => load()} disabled={loading || acting}>
               <RefreshCw className={`w-3.5 h-3.5 mr-1 ${loading ? "animate-spin" : ""}`} />
               Reîncarcă status
@@ -268,7 +268,7 @@ export function RobotsCacheStatus({ defaultHost = DEFAULT_HOST }: { defaultHost?
             <History className="w-4 h-4" />
             Log evenimente recente
           </div>
-          <ScrollArea className="h-56 rounded-md border">
+          <ScrollArea className="h-56 rounded-md border [&>[data-radix-scroll-area-viewport]>div]:!block">
             <div className="divide-y">
               {(data?.log || []).length === 0 && (
                 <div className="p-3 text-xs text-muted-foreground">Niciun eveniment înregistrat.</div>

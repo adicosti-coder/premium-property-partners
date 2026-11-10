@@ -115,7 +115,7 @@ export const SEOReauditSchedulerPanel = ({ history }: Props) => {
 
         <div>
           <h4 className="text-sm font-medium mb-2">Trend istoric (ultimele snapshot-uri)</h4>
-          <ScrollArea className="h-56 rounded-md border">
+          <ScrollArea className="h-56 rounded-md border [&>[data-radix-scroll-area-viewport]>div]:!block">
             <ul className="divide-y text-sm">
               {Array.from(deltaByUrl.entries()).map(([url, v]) => {
                 const Icon = (v.delta ?? 0) > 0 ? TrendingUp : (v.delta ?? 0) < 0 ? TrendingDown : Minus;
