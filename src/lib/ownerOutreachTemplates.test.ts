@@ -39,11 +39,15 @@ describe("outreach template by listing type", () => {
   });
   it("sale first message uses the approved wording with listing rooms, zone and source", () => {
     const msg = getTemplate("first_sale").build({ zone: "Iosefin", rooms: 2, platform: "OLX-Vanzari" });
-    expect(msg).toBe("Bună ziua! Sunt Andrei, de la RealTrust Timișoara. Am văzut anunțul dumneavoastră pentru apartamentul de 2 camere din zona Iosefin publicat pe OLX. Avem clienți cumpărători în căutare pe această zonă și vă putem ajuta cu promovarea și selecția ofertelor. Când ați avea 5 minute disponibile pentru o scurtă discuție?");
+    expect(msg).toBe(
+      "Bună ziua! Sunt Andrei, de la RealTrust Timișoara.\n\nAm văzut anunțul dumneavoastră pentru apartamentul de 2 camere din zona Iosefin publicat pe OLX.\n\nAvem clienți cumpărători activi în căutare pe această zonă. Doriți să promovăm și noi proprietatea în regim de colaborare deschisă (neexclusivă), cu 0% comision din partea dumneavoastră?\n\nDacă sunteți de acord, ne puteți confirma printr-un simplu răspuns sau ne puteți spune când putem stabili o scurtă vizionare."
+    );
     expect(msg).not.toMatch(/100%|garant/i);
   });
   it("sale first message omits generic sources", () => {
-    expect(getTemplate("first_sale").build({ zone: "Fabric", rooms: 3, platform: "General" })).toContain("apartamentul de 3 camere din zona Fabric. Avem");
+    const msg = getTemplate("first_sale").build({ zone: "Fabric", rooms: 3, platform: "General" });
+    expect(msg).toContain("pentru apartamentul de 3 camere din zona Fabric.");
+    expect(msg).not.toContain("publicat pe");
   });
   it("short first message uses the full sender name and listing data", () => {
     expect(getTemplate("first_short").build({ zone: "Cetate", rooms: 1 })).toBe("Bună ziua! Sunt Andrei, RealTrust & ApArt Hotel Timișoara. Referitor la apartamentul dumneavoastră de o cameră din zona Cetate: vă putem oferi o estimare gratuită de venit net lunar (regim hotelier / chirie). Vă pot trimite calculul exact pe WhatsApp?");
