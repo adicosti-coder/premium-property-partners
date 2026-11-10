@@ -4,9 +4,9 @@
 - [x] Vechimea comunicată — Adrian a confirmat: din 2000 / din 2016
 - [x] SEO: re-audit secvențial la „Aplică toate” + verificare în `seo_audits` la timeout, cu override-uri incluse
 - [x] SEO: H1 local pe /contact și ierarhie titluri pe /calculator-roi (live după publicare)
-- [ ] SEO /contact: override activ cu „Adresă” și cuvinte despre sediu — așteaptă decizia lui Adrian
+- [x] SEO /contact: titlu, descriere și cuvinte-cheie fără „Adresă”/sediu; datele vechi pentru Google scoase din panou
 - [x] SEO: listă URL-uri urmărite aerisită pe mobil
-- [ ] Teste și build
+- [x] Teste și build
 
 ## Autopilot social: gardă randament și ciorne de corectat — 9 noiembrie
 - [x] Randament în ciorne/programări: „6,5%–9,4% net estimat”, excepție doar câmpul explicit pe proprietate
@@ -285,5 +285,5 @@
 ## Vechime și program — sursă unică, 10 noiembrie
 - [x] Sursă unică: imobiliare din 2000, regim hotelier din 2016, formulare „din anul X”, contact non-stop
 - [x] Toate paginile, prerandarea, datele Google (JSON-LD), textele pentru asistenți AI și traducerile EN aliniate
-- [ ] FounderProfile: „birou fizic în Cetate” contrazice regula fără birou — așteaptă decizia lui Adrian
-- [ ] Anul lansării ApArt Hotel (2017 în cronologie) — neconfirmat
+- [x] FounderProfile: scos „birou fizic în Cetate”; vizionări și consultanțe la proprietate
+- [x] Ani oficiali: ApArt Hotel 2017, firmă 2001 în datele pentru Google

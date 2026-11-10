@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
-  REAL_ESTATE_SINCE, HOTEL_MANAGEMENT_SINCE, realEstateSinceLabel, hotelSinceLabel,
+  REAL_ESTATE_SINCE, HOTEL_MANAGEMENT_SINCE, APART_HOTEL_BRAND_SINCE, LEGAL_ENTITY_FOUNDED, realEstateSinceLabel, hotelSinceLabel,
   contactHoursLabel, CONTACT_OPENING_HOURS_SPEC, CONTACT_HOURS, isContactOpen,
 } from "./businessFacts";
-import { REAL_ESTATE_AGENT_SCHEMA } from "./orgIdentity";
+import { REAL_ESTATE_AGENT_SCHEMA, ORGANIZATION_SCHEMA, LODGING_BUSINESS_SCHEMA } from "./orgIdentity";
 
 describe("business facts confirmed by Adrian (10 Nov 2026)", () => {
   it("real estate activity started in 2000", () => {
@@ -23,6 +23,17 @@ describe("business facts confirmed by Adrian (10 Nov 2026)", () => {
     expect(CONTACT_OPENING_HOURS_SPEC.opens).toBe("00:00");
     expect(CONTACT_OPENING_HOURS_SPEC.closes).toBe("23:59");
     expect(isContactOpen(new Date("2026-11-15T03:00:00+02:00"))).toBe(true); // Sunday, 03:00
+  });
+
+  it("ApArt Hotel brand launched in 2017", () => {
+    expect(APART_HOTEL_BRAND_SINCE).toBe(2017);
+    expect((LODGING_BUSINESS_SCHEMA as any).foundingDate).toBe("2017");
+  });
+
+  it("SC Imo Business Centrum SRL was founded in 2001", () => {
+    expect(LEGAL_ENTITY_FOUNDED).toBe(2001);
+    expect((ORGANIZATION_SCHEMA as any).foundingDate).toBe("2001");
+    expect((REAL_ESTATE_AGENT_SCHEMA as any).foundingDate).toBe("2001");
   });
 
   it("Google data uses the same contact hours", () => {

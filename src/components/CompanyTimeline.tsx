@@ -1,5 +1,5 @@
 import { useLanguage } from "@/i18n/LanguageContext";
-import { REAL_ESTATE_SINCE, HOTEL_MANAGEMENT_SINCE } from "@/lib/businessFacts";
+import { REAL_ESTATE_SINCE, HOTEL_MANAGEMENT_SINCE, APART_HOTEL_BRAND_SINCE } from "@/lib/businessFacts";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { 
   Rocket, 
@@ -60,7 +60,7 @@ const CompanyTimeline = () => {
           highlight: "Servicii complete de administrare imobile în regim hotelier"
         },
         {
-          year: "2017",
+          year: String(APART_HOTEL_BRAND_SINCE),
           icon: Home,
           title: "Nașterea ApArt Hotel",
           description: "Identificarea oportunității în piața de închirieri pe termen scurt și lansarea brandului ApArt Hotel.",
@@ -130,7 +130,7 @@ const CompanyTimeline = () => {
           highlight: "Complete hotel-regime property management services"
         },
         {
-          year: "2017",
+          year: String(APART_HOTEL_BRAND_SINCE),
           icon: Home,
           title: "Birth of ApArt Hotel",
           description: "Identifying the opportunity in the short-term rental market and launching the ApArt Hotel brand.",

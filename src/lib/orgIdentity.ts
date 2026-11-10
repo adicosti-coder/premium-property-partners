@@ -18,7 +18,7 @@
  */
 
 import { ENTITY_SHORT, ENTITY_ANSWER } from "./entityDefinition";
-import { CONTACT_HOURS } from "./businessFacts";
+import { APART_HOTEL_BRAND_SINCE, CONTACT_HOURS, LEGAL_ENTITY_FOUNDED } from "./businessFacts";
 
 export const SITE_ORIGIN = "https://realtrust.ro";
 
@@ -43,7 +43,8 @@ export const BRAND = {
   logo: `${SITE_ORIGIN}/images/icon-512.png`,
   image: `${SITE_ORIGIN}/images/hero-optimized-1920w.webp`,
   url: SITE_ORIGIN,
-  foundingDate: "2001",
+  // Legal entity founding year; the ApArt Hotel brand has its own year below.
+  foundingDate: String(LEGAL_ENTITY_FOUNDED),
   address: {
     addressLocality: "Timișoara",
     addressRegion: "Timiș",
@@ -166,6 +167,7 @@ export const REAL_ESTATE_AGENT_SCHEMA = {
   currenciesAccepted: "EUR, RON",
   paymentAccepted: "Cash, Credit Card, Bank Transfer",
   openingHours: CONTACT_HOURS.schemaText,
+  foundingDate: BRAND.foundingDate,
   address: POSTAL_ADDRESS,
   geo: GEO_COORDINATES,
   areaServed: [
@@ -228,6 +230,7 @@ export const FINANCIAL_SERVICE_SCHEMA = {
   currenciesAccepted: "EUR, RON",
   paymentAccepted: "Cash, Credit Card, Bank Transfer",
   openingHours: CONTACT_HOURS.schemaText,
+  foundingDate: BRAND.foundingDate,
   address: POSTAL_ADDRESS,
   geo: GEO_COORDINATES,
   areaServed: { "@type": "City", name: "Timișoara" },
@@ -282,7 +285,7 @@ export const LODGING_BUSINESS_SCHEMA = {
   "email": BRAND.email,
   "image": BRAND.image,
   "logo": BRAND.logo,
-  "foundingDate": BRAND.foundingDate,
+  "foundingDate": String(APART_HOTEL_BRAND_SINCE),
   "parentOrganization": { "@id": ORG_ID },
 
 
