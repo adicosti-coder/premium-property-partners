@@ -77,7 +77,7 @@ const WhyUs = ({ variant = "owner" }: WhyUsProps) => {
             "Randament net țintă 9,4%",
             "Rating consolidat 9,7/10",
           ],
-          stat: { value: "25+", label: "ani experiență" },
+          stat: { value: `Din ${REAL_ESTATE_SINCE}`, label: "în imobiliare" },
         },
       ] as BenefitCard[],
       trustPills: [
@@ -136,7 +136,7 @@ const WhyUs = ({ variant = "owner" }: WhyUsProps) => {
             "9.4% target net yield",
             "Consolidated 9.7/10 rating",
           ],
-          stat: { value: "25+", label: "years experience" },
+          stat: { value: `Since ${REAL_ESTATE_SINCE}`, label: "in real estate" },
         },
       ] as BenefitCard[],
       trustPills: [
