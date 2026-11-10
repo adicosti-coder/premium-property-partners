@@ -337,7 +337,8 @@ export const SEOQuickWinsPanel = ({ history, overrides }: Props) => {
         const r = targets[i];
         if (i > 0) await new Promise((res) => setTimeout(res, REAUDIT_GAP_MS));
         try {
-          const { audit: newAudit } = await auditUrlWithRecovery(supabase, r.audit.url, r.audit.language || "ro", true);
+          const { audit } = await auditUrlWithRecovery(supabase, r.audit.url, r.audit.language || "ro", true);
+          const newAudit = audit as any;
           if (newAudit) {
             setPreviewRows((prev) =>
               prev.map((p) =>
