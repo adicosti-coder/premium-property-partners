@@ -228,7 +228,7 @@ const AboutUs = () => {
             { title: "Guest Experience", description: "24/7 communication, flexible check-in, personalized local recommendations, and quick resolution of any situation." }
           ]
         },
-        conclusion: "We've learned that success in real estate doesn't come from promises, but from measurable results. Every property we manage receives the same attention to detail that we've perfected over 25 years of activity."
+        conclusion: `We've learned that success in real estate doesn't come from promises, but from measurable results. Every property we manage receives the same attention to detail that we've perfected since ${REAL_ESTATE_SINCE}.`
       },
       brands: {
         title: "Two Brands, Complete Services",

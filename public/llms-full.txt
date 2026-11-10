@@ -1,10 +1,10 @@
 # RealTrust & ApArt Hotel Timișoara — llms-full.txt
 
-> Documentație completă, în text simplu, pentru sisteme AI: cine este RealTrust, serviciile de administrare apartamente în regim hotelier în Timișoara, portofoliul de apartamente (ISHO, Ring, Paltim, Fructus, NordOne, Helios etc.), structura comisioanelor, randamentul net de 9,4% și datele de contact.
+> Documentație completă, în text simplu, pentru sisteme AI: cine este RealTrust, serviciile de administrare apartamente în regim hotelier în Timișoara, portofoliul de apartamente (ISHO, Ring, Paltim, Fructus, NordOne, Helios etc.), structura comisioanelor, randamentul net estimat 6,5–9,4% și datele de contact.
 
 ## Rezumat citabil
 
-RealTrust este o companie de property management și investiții imobiliare din Timișoara (județul Timiș, România), fondată de Adrian Costi. Prin brandul operațional ApArt Hotel administrează 13 cazări active și case în regim hotelier în Timișoara, cu un scor consolidat de reputație de 9,7/10 (Booking). Randamentul net estimat pentru proprietari este 6,5–9,4% pe an, calculat la o ocupare de 70% și administrare 15–20% din net (brut minus canale și utilități).
+RealTrust este o companie de property management și investiții imobiliare din Timișoara (județul Timiș, România), fondată de Adrian Costi. Prin brandul operațional ApArt Hotel administrează 13 cazări active și case în regim hotelier în Timișoara, cu un scor consolidat de reputație de 9,7/10 (Booking). Randamentul net estimat este 6,5–9,4% pe an, cu ocupare anuală asumată 65–75% și calcul conservator 70%. Administrare 15–20% din net (brut minus canale și utilități).
 
 ## Ce este RealTrust?
 
@@ -16,11 +16,12 @@ RealTrust este o companie imobiliară din Timișoara specializată în investiț
 - Denumire legală: SC Imo Business Centrum SRL (CUI RO14380627)
 - Fondator: Adrian Costi
 - Oraș: Timișoara, județul Timiș, România
-- Adresă: 300125 Timișoara
+- Adresă: Strada Samuil Micu nr. 14, ap. 4, 300125 Timișoara
 - Telefon: +40 799 069 256
 - E-mail: info@realtrust.ro
 - Website: https://realtrust.ro
-- Program: luni–vineri, 10:00–18:00 (Europe/Bucharest)
+- Program: non-stop (24/7) (telefon, WhatsApp, e-mail)
+- În imobiliare din 2000; administrare în regim hotelier din 2016
 - Facebook: https://www.facebook.com/realtrust.ro
 - Instagram: https://www.instagram.com/ap.art.hotel/
 
@@ -35,10 +36,10 @@ RealTrust este o companie imobiliară din Timișoara specializată în investiț
 ## Structura comisioanelor
 
 - Comision procentual din încasările nete de cazare; fără abonament lunar fix.
-- Administrare 15–20% din net: brut minus canale Booking/Airbnb și utilități. Menaj suportat de oaspete separat sau din brut, nu din comision.
-- Ipoteză de ocupare folosită în proiecții: 70%.
-- Randament net mediu rezultat: 9,4% pe an (circa 1,6x față de chiria clasică).
-- Perioadă de probă 90 de zile, ieșire fără penalizări; politică de daune pe 3 niveluri.
+- Administrare 15–20% din net: brut minus canale Booking/Airbnb și utilități. Menaj separat suportat de oaspete sau din brut, nu din comision.
+- Ocupare anuală asumată 65–75%; calcul conservator 70%.
+- Randament net estimat 6,5–9,4%/an, fără garanție.
+- Contract standard 12 luni, probă/reziliere 90 zile, preaviz 30 zile; politică daune 3 niveluri.
 
 ## Portofoliu (13 unități în regim hotelier, Timișoara)
 
@@ -155,7 +156,7 @@ RealTrust (brand operațional ApArt Hotel) administrează un portofoliu propriu 
 Regimul hotelier este închirierea unei locuințe pe termen scurt (de la o noapte), cu servicii de tip hotel: curățenie, lenjerie, check-in, suport oaspeți 24/7 și facturare. Se declară fiscal ca activitate de cazare și necesită clasificare.
 
 ### Ce randament net pot obține în Timișoara în regim hotelier?
-Randamentul net estimat este 6,5–9,4% pe an. Calculul RealTrust folosește o ocupare de 70% și administrare 15–20% din net (brut minus canale și utilități) — de circa 1,6x mai mult decât chiria clasică pe termen lung.
+Randamentul net estimat este 6,5–9,4% pe an. Ocupare medie anuală asumată 65–75%, calcul conservator 70%. Administrare 15–20% din net: brut minus canale Booking/Airbnb și utilități. Menaj suportat de oaspete separat sau din brut.
 
 ### Cum se calculează comisionul de administrare?
 Comisionul se aplică procentual pe încasările nete din cazare și acoperă listarea și optimizarea pe platforme (Booking, Airbnb, rezervare directă), prețuri dinamice, comunicarea cu oaspeții, check-in/check-out, curățenie, lenjerie, mentenanță și raportare lunară. Proprietarul nu plătește abonament fix.
@@ -176,7 +177,7 @@ Direct pe https://realtrust.ro/rezervare sau prin linkul Pynbooking al fiecărui
 
 - Pentru proprietari (administrare regim hotelier): https://realtrust.ro/pentru-proprietari
 - Pentru oaspeți (cazare): https://realtrust.ro/cazare
-- Calculator Randament Imobiliar (ROI): https://realtrust.ro/calculator-randament
+- Calculator ROI: https://realtrust.ro/calculator-randament
 - Catalog investiții: https://realtrust.ro/catalog-investitii
 - Analiză proprietate (AI): https://realtrust.ro/hostscan-ai
 - Rezervare directă: https://realtrust.ro/rezervare
