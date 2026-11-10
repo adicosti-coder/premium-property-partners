@@ -46,7 +46,7 @@ export function apartmentRef(rooms?: number | string | null, zone?: string | nul
 
 /** Primul mesaj WhatsApp pentru anunțurile de închiriere (sincron cu supabase/functions/_shared/rentalIntroMessage.ts). */
 export function rentalFirstMessage(rooms?: number | string | null, zone?: string | null): string {
-  return `Bună ziua! Sunt Andrei – RealTrust & ApArt Hotel Timișoara. Vă contactez în legătură cu ${apartmentRef(rooms, zone)}. Oferim servicii complete de administrare în regim hotelier (promovare Booking/Airbnb, curățenie, mentenanță), cu un venit net estimat cu 30-40% mai mare decât chiria clasică. Vă pot trimite gratuit o simulare de randament net pentru zona dumneavoastră?`;
+  return `Bună ziua! Sunt ${SENDER_FULL}. Vă contactez în legătură cu ${apartmentRef(rooms, zone)}. Oferim servicii complete de administrare în regim hotelier (promovare Booking/Airbnb, curățenie, mentenanță), cu un venit net estimat cu 30-40% mai mare decât chiria clasică. Vă pot trimite gratuit o simulare de randament net pentru zona dumneavoastră?`;
 }
 
 export interface OutreachContext {
@@ -135,7 +135,7 @@ export const OWNER_OUTREACH_TEMPLATES: OutreachTemplate[] = [
     kind: "first",
     build: (ctx) =>
       [
-        "Bună ziua! Sunt Andrei, de la RealTrust Timișoara.",
+        `Bună ziua! Sunt ${SENDER_FULL}.`,
         "",
         `Am văzut anunțul dumneavoastră pentru ${listingRef(ctx)}.`,
         "",
@@ -158,7 +158,7 @@ export const OWNER_OUTREACH_TEMPLATES: OutreachTemplate[] = [
     kind: "first",
     build: (ctx) =>
       [
-        "Bună ziua! Sunt Andrei, de la RealTrust Timișoara.",
+        `Bună ziua! Sunt ${SENDER_FULL}.`,
         "",
         `Am văzut anunțul dumneavoastră pentru ${listingRef(ctx)}.`,
         "",
