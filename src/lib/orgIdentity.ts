@@ -18,7 +18,7 @@
  */
 
 import { ENTITY_SHORT, ENTITY_ANSWER } from "./entityDefinition";
-import { CONTACT_HOURS, REAL_ESTATE_SINCE } from "./businessFacts";
+import { CONTACT_HOURS } from "./businessFacts";
 
 export const SITE_ORIGIN = "https://realtrust.ro";
 
