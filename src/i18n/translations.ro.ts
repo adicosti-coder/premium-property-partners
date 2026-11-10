@@ -1,3 +1,4 @@
+import { CONTACT_HOURS } from "../lib/businessFacts";
 export const ro = {
   // Header
   nav: {
@@ -401,6 +402,7 @@ export const ro = {
     sendEmail: "Trimite Email",
     schedule: "Program",
     mondayFriday: "Luni - Vineri",
+    everyDay: "Luni – Duminică",
     saturday: "Sâmbătă",
     guestSupport: "Suport Oaspeți",
     quickTemplate: "Șablon Rapid pentru Proprietari",
@@ -987,7 +989,7 @@ Mulțumesc!`,
       phone: "Telefon",
       email: "Email",
       location: "Locație",
-      responseTime: "Răspundem în maximum 24 de ore lucrătoare (Luni–Vineri, 10:00–18:00).",
+      responseTime: `${CONTACT_HOURS.long.ro}. Răspundem în maximum 24 de ore.`,
     },
   },
   

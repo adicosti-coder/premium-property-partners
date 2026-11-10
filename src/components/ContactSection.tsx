@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { contactHoursLabel } from "@/lib/businessFacts";
 import { Phone, Mail, MapPin, Copy, Check, Send, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -127,8 +128,8 @@ const ContactSection = () => {
               <h4 className="font-semibold text-foreground mb-4">{t.contactSection.schedule}</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-foreground/60 dark:text-muted-foreground">{t.contactSection.mondayFriday}</span>
-                  <span className="text-foreground">10:00 - 18:00</span>
+                  <span className="text-foreground/60 dark:text-muted-foreground">{t.contactSection.everyDay}</span>
+                  <span className="text-foreground">{contactHoursLabel(language, "short")}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-foreground/60 dark:text-muted-foreground">{t.contactSection.guestSupport}</span>

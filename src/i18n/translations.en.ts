@@ -1,3 +1,4 @@
+import { CONTACT_HOURS } from "../lib/businessFacts";
 import type { Translations } from "./translations";
 
 export const en: Translations = {
@@ -402,6 +403,7 @@ export const en: Translations = {
     sendEmail: "Send Email",
     schedule: "Schedule",
     mondayFriday: "Monday - Friday",
+    everyDay: "Monday – Sunday",
     saturday: "Saturday",
     guestSupport: "Guest Support",
     quickTemplate: "Quick Template for Owners",
@@ -988,7 +990,7 @@ Thank you!`,
       phone: "Phone",
       email: "Email",
       location: "Location",
-      responseTime: "We reply within 24 business hours (Mon–Fri, 10:00–18:00).",
+      responseTime: `${CONTACT_HOURS.long.en}. We reply within 24 hours.`,
     },
   },
   

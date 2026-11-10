@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { contactHoursLabel, isContactOpen } from "@/lib/businessFacts";
 import { MessageCircle, X, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
@@ -26,12 +27,8 @@ const SmartWhatsApp = () => {
     return () => document.removeEventListener("mousedown", handler);
   }, [isExpanded]);
 
-  const isOfficeHours = () => {
-    const bucharestNow = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Bucharest" }));
-    const day = bucharestNow.getDay(); // 0=Sun
-    const hour = bucharestNow.getHours();
-    return day >= 1 && day <= 5 && hour >= 10 && hour < 18;
-  };
+  // Contact hours come from businessFacts (currently non-stop).
+  const isOfficeHours = () => isContactOpen();
 
   const openWa = (message: string) => {
     trackWhatsApp();
@@ -93,7 +90,7 @@ const SmartWhatsApp = () => {
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-1 border-t border-border">
             <Clock className="w-3.5 h-3.5" />
             <span>
-              Luni – Vineri, 10:00 – 18:00
+              {contactHoursLabel("ro")}
               {!isOfficeHours() && (
                 <span className="block text-xs italic mt-0.5">
                   Răspundem în câteva ore
