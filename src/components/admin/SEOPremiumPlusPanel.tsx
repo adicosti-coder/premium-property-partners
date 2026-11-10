@@ -274,17 +274,14 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
 
   const refreshMutation = useMutation({
     mutationFn: async (a: AuditRow) => {
-      const path = urlToPath(a.url);
-      return reauditAndCapture(path, a.overall_score ?? null, a.language || "ro").then((after) => {
-        if (after == null && scoreDeltasRef.current[path]?.status === "error") throw new Error("Re-analiza nu a putut fi confirmată. Reîncearcă.");
-        return after;
-      });
+      // Same timeout fallback as bulk runs: a slow response reads the saved audit.
+      return reauditWithRecovery(urlToPath(a.url), a.language || "ro", CANONICAL_HOST, supabaseReauditDeps(supabase));
     },
-    onSuccess: (_d, a) => {
+    onSuccess: (res, a) => {
       qc.invalidateQueries({ queryKey: ["seo-audits-history"] });
-      toast.success(`Re-analizat: ${urlToPath(a.url)}`);
+      toast.success(`Re-analizat: ${urlToPath(a.url)}${res.recovered ? " (scor citit din auditul salvat)" : ""}`);
     },
-    onError: (e: any) => toast.error(e.message || "Eșec re-analiză"),
+    onError: (e: any) => toast.error(friendlyError(e, "Eșec re-analiză")),
   });
 
   /* ============ 3. BULK INDEXNOW + SITEMAP ============ */
@@ -430,7 +427,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
         <Loader2 className="w-3 h-3 animate-spin" /> re-audit...
       </span>
     );
-    if (d.status === "error") return <span className="text-[10px] text-rose-500">re-audit eșuat</span>;
+    if (d.status === "error") return <span className="text-[10px] text-rose-500">re-audit neconfirmat</span>;
     if (d.status === "done" && d.after != null) {
       const delta = (d.after ?? 0) - (d.before ?? 0);
       const positive = delta > 0;
@@ -439,6 +436,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
         <span className={`inline-flex items-center gap-1 text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded
           ${positive ? "bg-emerald-100 text-emerald-700" : neutral ? "bg-slate-100 text-slate-600" : "bg-rose-100 text-rose-700"}`}>
           {d.before ?? "—"} → {d.after}
+          {d.recovered && <span className="font-normal opacity-80" title="Răspunsul a întârziat; scorul a fost citit din auditul salvat.">· salvat</span>}
           {!neutral && (
             <>
               <ArrowUpRight className={`w-3 h-3 ${positive ? "" : "rotate-90"}`} />
