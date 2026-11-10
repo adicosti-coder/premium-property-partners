@@ -688,8 +688,8 @@ ${scraped.markdown}
 5. Recomandările trebuie să fie ACȚIONABILE și NETRIVIALE — nu generic "adaugă testimoniale".
 6. Dacă scor ≥ 90, focus pe oportunități STRATEGICE (schema avansat, content hubs, internal linking), NU pe ajustări minore titlu/meta.
 7. Pentru fiecare keyword sugerat, verifică DUBLU dacă NU e deja în textul analizat. Dacă e, OMITE-l.
-9. RealTrust NU are birou deschis clienților (vizionările se fac la proprietate). NU recomanda indicații de orientare spre sediu/birou și nu cere „adresa biroului".
 8. Issues cu severity "info" sunt rezervate pentru observații cu impact REAL — nu pentru ajustări estetice.
+9. RealTrust NU are birou deschis clienților (vizionările se fac la proprietate). NU recomanda indicații de orientare spre sediu/birou și nu cere „adresa biroului".
 
 Returnează EXCLUSIV JSON valid (fără markdown):
 {
