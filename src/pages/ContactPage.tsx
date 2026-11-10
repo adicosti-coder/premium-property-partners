@@ -134,10 +134,10 @@ const ContactPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title={isRo ? "Contact & Locație | Management Proprietăți Timișoara — RealTrust" : "Contact & Location | Property Management Timișoara — RealTrust"}
+        title={isRo ? "Contact RealTrust & ApArt Hotel Timișoara | Telefon, WhatsApp" : "Contact RealTrust & ApArt Hotel Timișoara | Phone, WhatsApp"}
         description={isRo
-          ? "Contactează echipa RealTrust Timișoara: telefon +40 799 069 256, WhatsApp și info@realtrust.ro. Consultanță la distanță și vizionări programate direct la proprietate."
-          : "Contact the RealTrust Timișoara team: phone +40 799 069 256, WhatsApp and info@realtrust.ro. Remote consulting and viewings scheduled directly at the property."}
+          ? "Contact RealTrust & ApArt Hotel Timișoara: telefon și WhatsApp +40 799 069 256, info@realtrust.ro. Consultanță la distanță, vizionări direct la proprietate."
+          : "Contact RealTrust & ApArt Hotel Timișoara: phone and WhatsApp +40 799 069 256, info@realtrust.ro. Remote consulting, viewings directly at the property."}
         url={`${BASE_URL}/contact`}
         jsonLd={jsonLdSchemas}
       />
@@ -152,15 +152,10 @@ const ContactPage = () => {
             ]}
           />
 
-          {/* ENTITY SEO / GEO: canonical "Ce este RealTrust?" definition */}
-          <div className="mt-4 max-w-4xl mx-auto">
-            <EntityDefinitionBlock pagePath="/contact" />
-          </div>
-
-          {/* Hero */}
-          <section className="text-center max-w-2xl mx-auto mb-10">
+          {/* Hero — the page H1 comes first, before any H2 */}
+          <section className="text-center max-w-2xl mx-auto mt-4 mb-10">
             <h1 className="text-3xl sm:text-4xl font-serif font-bold mb-3">
-              {isRo ? "Contact — RealTrust Timișoara" : "Contact — RealTrust Timișoara"}
+              Contact RealTrust &amp; ApArt Hotel Timișoara
             </h1>
             <p className="text-base text-muted-foreground mb-5">
               {isRo
@@ -177,6 +172,11 @@ const ContactPage = () => {
               </Button>
             </Link>
           </section>
+
+          {/* ENTITY SEO / GEO: canonical "Ce este RealTrust?" definition */}
+          <div className="max-w-4xl mx-auto mb-10">
+            <EntityDefinitionBlock pagePath="/contact" />
+          </div>
 
           <CallbackCard />
 
@@ -273,6 +273,49 @@ const ContactPage = () => {
                     WhatsApp
                   </Button>
                 </a>
+              </div>
+            </div>
+          </section>
+
+          {/* Relevanță locală: zone deservite + servicii, fără adresă de birou */}
+          <section className="max-w-4xl mx-auto mb-12 p-8 bg-card border rounded-2xl">
+            <h2 className="text-2xl font-serif font-semibold mb-3 flex items-center gap-2">
+              <MapPin className="w-6 h-6 text-primary" />
+              {isRo ? "Zonele din Timișoara în care lucrăm" : "Where we work in Timișoara"}
+            </h2>
+            <p className="text-muted-foreground leading-relaxed mb-5">
+              {isRo
+                ? "Echipa RealTrust & ApArt Hotel lucrează pe teren în Timișoara și în zona metropolitană. Vizionările, evaluările și predarea cheilor au loc la proprietate, în cartierul tău."
+                : "The RealTrust & ApArt Hotel team works on the ground in Timișoara and its metropolitan area. Viewings, valuations and key handovers take place at the property, in your neighbourhood."}
+            </p>
+            <ul className="flex flex-wrap gap-2 mb-6" aria-label={isRo ? "Zone deservite" : "Areas served"}>
+              <li className="rounded-full border bg-background px-3 py-1.5 text-sm">Centru / Cetate</li>
+              <li><Link to="/imobiliare-timisoara/iosefin" className="inline-flex rounded-full border bg-background px-3 py-1.5 text-sm hover:border-primary/50 hover:text-primary">Iosefin</Link></li>
+              <li className="rounded-full border bg-background px-3 py-1.5 text-sm">Fabric</li>
+              <li><Link to="/imobiliare-timisoara/dumbravita" className="inline-flex rounded-full border bg-background px-3 py-1.5 text-sm hover:border-primary/50 hover:text-primary">Dumbrăvița</Link></li>
+              <li><Link to="/imobiliare-timisoara/zona-aradului" className="inline-flex rounded-full border bg-background px-3 py-1.5 text-sm hover:border-primary/50 hover:text-primary">{isRo ? "Zona Aradului" : "Arad corridor"}</Link></li>
+            </ul>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div>
+                <h3 className="font-semibold mb-1">{isRo ? "Proprietari" : "Owners"}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {isRo ? "Administrare în regim hotelier, vânzare sau închiriere." : "Short-term rental management, sales or rentals."}{" "}
+                  <Link to="/pentru-proprietari" className="text-primary hover:underline">{isRo ? "Detalii pentru proprietari" : "Owner details"}</Link>
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">{isRo ? "Cumpărători și chiriași" : "Buyers and tenants"}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {isRo ? "Apartamente de vânzare și închiriere în Timișoara." : "Apartments for sale and rent in Timișoara."}{" "}
+                  <Link to="/imobiliare" className="text-primary hover:underline">{isRo ? "Vezi anunțurile" : "See listings"}</Link>
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">{isRo ? "Oaspeți ApArt Hotel" : "ApArt Hotel guests"}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {isRo ? "Cazare în apartamente din Timișoara, suport prin WhatsApp." : "Apartment stays in Timișoara, support via WhatsApp."}{" "}
+                  <Link to="/cazare" className="text-primary hover:underline">{isRo ? "Vezi cazarea" : "See stays"}</Link>
+                </p>
               </div>
             </div>
           </section>
