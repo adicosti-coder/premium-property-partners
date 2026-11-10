@@ -774,40 +774,73 @@ const SEOOptimizerManager = () => {
               </div>
               <div className="space-y-1">
                 {seoStats.urgentAudits.map((audit) => (
-                  <button key={`${audit.id}-priority`} onClick={() => setSelectedAudit(audit)} className="block w-full truncate text-left text-xs hover:text-primary">
-                    {audit.overall_score ?? "—"}/100 · {audit.url}
+                  <button key={`${audit.id}-priority`} onClick={() => setSelectedAudit(audit)} className="flex w-full min-w-0 items-baseline gap-2 py-1 text-left text-xs hover:text-primary">
+                    <span className="shrink-0 font-semibold tabular-nums">{audit.overall_score ?? "—"}/100</span>
+                    <span className="min-w-0 break-all">{audit.url.replace(/^https?:\/\/(www\.)?realtrust\.ro/, "") || "/"}</span>
                   </button>
                 ))}
               </div>
             </div>
           )}
 
-          <div className="flex flex-wrap gap-2 items-center">
-            {QUICK_URLS.map((u) => (
-              <Button key={u} variant="outline" size="sm" onClick={() => setUrl(u)}>
-                {u.replace("https://realtrust.ro", "") || "/"}
+          <section aria-labelledby="seo-tracked-urls" className="rounded-lg border bg-muted/20 p-3">
+            <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <h3 id="seo-tracked-urls" className="text-sm font-semibold">
+                Pagini urmărite <span className="font-normal text-muted-foreground">({QUICK_URLS.length})</span>
+              </h3>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={runBulkAudit}
+                disabled={bulkRunning}
+                className="min-h-12 w-full sm:min-h-9 sm:w-auto"
+              >
+                {bulkRunning ? (
+                  <>
+                    <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                    Bulk {bulkProgress.done}/{bulkProgress.total}
+                  </>
+                ) : (
+                  <>
+                    <Layers className="w-3 h-3 mr-2" />
+                    Analizează toate ({QUICK_URLS.length})
+                  </>
+                )}
               </Button>
-            ))}
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={runBulkAudit}
-              disabled={bulkRunning}
-              className="ml-auto"
-            >
-              {bulkRunning ? (
-                <>
-                  <Loader2 className="w-3 h-3 mr-2 animate-spin" />
-                  Bulk {bulkProgress.done}/{bulkProgress.total}
-                </>
-              ) : (
-                <>
-                  <Layers className="w-3 h-3 mr-2" />
-                  Analizează toate ({QUICK_URLS.length})
-                </>
-              )}
-            </Button>
-          </div>
+            </div>
+            <ul className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap">
+              {QUICK_URLS.map((u) => {
+                const path = u.replace("https://realtrust.ro", "") || "/";
+                const score = trackedScores.get(path);
+                const active = url === u;
+                return (
+                  <li key={u} className="min-w-0">
+                    <button
+                      type="button"
+                      onClick={() => setUrl(u)}
+                      aria-pressed={active}
+                      title={path}
+                      className={`flex min-h-12 w-full min-w-0 items-center justify-between gap-1.5 rounded-md border px-2.5 py-1.5 text-left text-xs transition-colors sm:min-h-9 sm:w-auto ${
+                        active ? "border-primary bg-primary/10 text-primary" : "bg-background hover:border-primary/50 hover:text-primary"
+                      }`}
+                    >
+                      <span className="min-w-0 break-all leading-snug">{path}</span>
+                      {typeof score === "number" && (
+                        <span
+                          className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${
+                            score < 50 ? "bg-destructive/10 text-destructive" : score < 75 ? "bg-muted text-foreground" : "bg-primary/10 text-primary"
+                          }`}
+                          aria-label={`Scor ${score}`}
+                        >
+                          {score}
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
           {bulkRunning && (
             <Progress value={(bulkProgress.done / Math.max(bulkProgress.total, 1)) * 100} />
           )}
