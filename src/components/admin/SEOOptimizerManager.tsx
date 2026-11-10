@@ -37,7 +37,7 @@ import { GlobalCanonicalFixButton } from "./GlobalCanonicalFixButton";
 import { RobotsCacheStatus } from "./RobotsCacheStatus";
 import { LocalSEORecommendations } from "./LocalSEORecommendations";
 import { SEOIssuesPanel } from "./SEOIssuesPanel";
-import { REAUDIT_GAP_MS, auditUrlWithRecovery, isLegacyAuditPath, isRecoverableAuditError } from "@/lib/seoReaudit";
+import { REAUDIT_GAP_MS, auditUrlWithRecovery, isLegacyAuditPath } from "@/lib/seoReaudit";
 
 const QUICK_URLS = [
   // Principal
@@ -163,7 +163,6 @@ const SEOOptimizerManager = () => {
 
   const seoStats = useMemo(() => {
     // Adrese vechi care doar redirecționează — nu sunt pagini reale, nu intră în scor.
-    const LEGACY_REDIRECTS = new Set(["/pentru-oaspeti", "/imobiliare-timisoara", "/servicii-imobiliare-timisoara"]);
     const normalize = (u: string) => {
       try {
         const p = new URL(u);
@@ -173,7 +172,8 @@ const SEOOptimizerManager = () => {
     const latest = new Map<string, AuditRow>();
     history.forEach((audit) => {
       const path = normalize(audit.url).replace(/^[^/]+/, "");
-      if (LEGACY_REDIRECTS.has(path)) return;
+      // Adrese vechi redirecționate: auditul lor măsoară pagina principală.
+      if (isLegacyAuditPath(path)) return;
       // Audituri eșuate (AI indisponibil) nu reflectă pagina — le ignorăm.
       if ((audit as any).raw_analysis?.ai_fallback) return;
       const key = `${normalize(audit.url)}::${audit.language}`;
