@@ -8,6 +8,7 @@
  * fields here; reference ORGANIZATION_REF / REAL_ESTATE_AGENT_REF by @id
  * so Google merges all per-page schemas into one Knowledge Graph entity.
  */
+import { CONTACT_OPENING_HOURS_SPEC } from "@/lib/businessFacts";
 
 import {
   BRAND,
@@ -290,9 +291,7 @@ export const generateRealEstateAgentSchema = (rating?: AggregateRatingData) => {
         { "@type": "Offer", itemOffered: { "@type": "Service", name: "Consultanță Imobiliară", description: "Analiză de piață, evaluare proprietăți și consiliere investiții" } },
       ],
     },
-    openingHoursSpecification: [
-      { "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], opens: "10:00", closes: "18:00" },
-    ],
+    openingHoursSpecification: [CONTACT_OPENING_HOURS_SPEC],
   };
 
   if (rating && rating.reviewCount > 0 && rating.ratingValue >= 1) {

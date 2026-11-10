@@ -18,6 +18,7 @@
  */
 
 import { ENTITY_SHORT, ENTITY_ANSWER } from "./entityDefinition";
+import { CONTACT_HOURS, REAL_ESTATE_SINCE } from "./businessFacts";
 
 export const SITE_ORIGIN = "https://realtrust.ro";
 
@@ -164,7 +165,7 @@ export const REAL_ESTATE_AGENT_SCHEMA = {
   priceRange: "$$$",
   currenciesAccepted: "EUR, RON",
   paymentAccepted: "Cash, Credit Card, Bank Transfer",
-  openingHours: "Mo-Fr 10:00-18:00",
+  openingHours: CONTACT_HOURS.schemaText,
   address: POSTAL_ADDRESS,
   geo: GEO_COORDINATES,
   areaServed: [
@@ -226,7 +227,7 @@ export const FINANCIAL_SERVICE_SCHEMA = {
   priceRange: "$$$",
   currenciesAccepted: "EUR, RON",
   paymentAccepted: "Cash, Credit Card, Bank Transfer",
-  openingHours: "Mo-Fr 10:00-18:00",
+  openingHours: CONTACT_HOURS.schemaText,
   address: POSTAL_ADDRESS,
   geo: GEO_COORDINATES,
   areaServed: { "@type": "City", name: "Timișoara" },
