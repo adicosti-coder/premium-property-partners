@@ -837,7 +837,11 @@ const SEOOptimizerManager = () => {
                         active ? "border-primary bg-primary/10 text-primary" : "bg-background hover:border-primary/50 hover:text-primary"
                       }`}
                     >
-                      <span className="min-w-0 break-all leading-snug">{path}</span>
+                      <span className="min-w-0 break-words leading-snug">
+                        {path.split(/(?<=[/-])/).map((part, i) => (
+                          <span key={i}>{i > 0 && <wbr />}{part}</span>
+                        ))}
+                      </span>
                       {typeof score === "number" && (
                         <span
                           className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${
