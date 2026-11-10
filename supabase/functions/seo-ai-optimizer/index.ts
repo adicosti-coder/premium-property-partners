@@ -324,7 +324,9 @@ serve(async (req) => {
       });
     } finally {
       // Always release the lock — even on fallback or error path
-      await sb.rpc("seo_release_audit_lock", { p_url: url, p_language: language }).catch(() => {});
+      try {
+        await sb.rpc("seo_release_audit_lock", { p_url: url, p_language: language });
+      } catch { /* lock expires on its own */ }
     }
   } catch (err: any) {
     console.error("seo-ai-optimizer fatal:", err);
