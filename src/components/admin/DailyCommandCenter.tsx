@@ -163,7 +163,7 @@ export default function DailyCommandCenter() {
                 >
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <c.icon className="h-3.5 w-3.5 shrink-0" />
-                    <span className="line-clamp-2 break-words">{c.label}</span>
+                    <span className="line-clamp-3 break-words">{c.label}</span>
                   </div>
                   <div className="mt-1 text-2xl font-semibold tabular-nums">{c.count}</div>
                   <div className="text-[11px] text-muted-foreground line-clamp-2">{c.hint}</div>
