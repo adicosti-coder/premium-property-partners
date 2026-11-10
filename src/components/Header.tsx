@@ -511,6 +511,18 @@ const Header = () => {
                   </div>
                 </div>
 
+                {/* Discreet admin entry for signed-out or expired sessions; /admin redirects to sign-in */}
+                {!(isAuthenticated === true && isAdmin) && (
+                  <Link
+                    to="/admin"
+                    className="inline-flex min-h-12 items-center gap-2 self-start px-3 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted/50"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <ShieldIcon className="w-3.5 h-3.5" />
+                    {ro ? "Admin / Autentificare" : "Admin / Sign in"}
+                  </Link>
+                )}
+
                 {/* Admin links in mobile menu - only for users with admin role */}
                 {isAuthenticated === true && isAdmin && (
                   <>
