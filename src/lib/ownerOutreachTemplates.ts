@@ -148,27 +148,18 @@ export const OWNER_OUTREACH_TEMPLATES: OutreachTemplate[] = [
   {
     key: "first_rent_offer",
     label: "Primul mesaj — ofertă de închiriere",
-    hint: "Ofertă directă de închiriere pe termen lung, fără comision de la proprietar.",
+    hint: "Cere acordul pentru colaborare deschisă (neexclusivă), 0% comision de la proprietar; confirmare simplă sau vizionare.",
     kind: "first",
-    build: (ctx) => {
-      const offer = money(ctx.offerPrice, ctx.currency);
-      const asking = money(ctx.price, ctx.currency);
-      const duration = ctx.durationMonths ? `${ctx.durationMonths} luni` : "12 luni";
-      return [
-        greeting(ctx),
+    build: (ctx) =>
+      [
+        "Bună ziua! Sunt Andrei, de la RealTrust Timișoara.",
         "",
-        `Sunt ${SENDER_FULL}. Vă contactez în legătură cu ${listingRef(ctx)}.`,
-        offer
-          ? `Vă propunem închirierea pe ${duration}, cu ${offer} pe lună, plata la dată fixă și contract semnat.`
-          : `Vă propunem închirierea pe ${duration}, cu plata la dată fixă și contract semnat.`,
-        asking && offer ? `Prețul cerut în anunț este ${asking}, deci suntem foarte aproape.` : "",
-        "Nu percepem comision de la dumneavoastră și ne ocupăm noi de întreținerea apartamentului.",
+        `Am văzut anunțul dumneavoastră pentru ${listingRef(ctx)}.`,
         "",
-        "Putem stabili o vizionare la apartament în următoarele zile?",
-      ]
-        .filter(Boolean)
-        .join("\n");
-    },
+        "Avem clienți chiriași verificați în căutare pe această zonă. Doriți să promovăm și noi proprietatea în regim de colaborare deschisă (neexclusivă), cu 0% comision din partea dumneavoastră?",
+        "",
+        "Dacă sunteți de acord, ne puteți confirma printr-un simplu răspuns sau ne puteți spune când putem stabili o vizionare.",
+      ].join("\n"),
   },
   {
     key: "first_short",
