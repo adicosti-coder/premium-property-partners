@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, Calendar, TrendingDown, TrendingUp, Minus, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
-import { REAUDIT_GAP_MS, auditUrlWithRecovery } from "@/lib/seoReaudit";
+import { REAUDIT_GAP_MS, auditUrlWithRecovery, isLegacyAuditPath } from "@/lib/seoReaudit";
 
 interface AuditRow {
   id: string;
@@ -44,6 +44,7 @@ export const SEOReauditSchedulerPanel = ({ history }: Props) => {
   const targets = useMemo(() => {
     const seen = new Map<string, AuditRow>();
     history.forEach((a) => {
+      if (isLegacyAuditPath(a.url)) return;
       if (!seen.has(a.url)) seen.set(a.url, a);
     });
     return Array.from(seen.values());
