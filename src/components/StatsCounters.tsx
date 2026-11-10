@@ -118,6 +118,7 @@ const StatsCounters = () => {
               label={stat.label}
               icon={stat.icon}
               decimals={stat.decimals}
+              plain={stat.plain}
               delay={index * 150}
             />
           ))}
