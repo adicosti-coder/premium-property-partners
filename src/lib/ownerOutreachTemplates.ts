@@ -131,12 +131,18 @@ export const OWNER_OUTREACH_TEMPLATES: OutreachTemplate[] = [
   {
     key: "first_sale",
     label: "Primul mesaj — vânzare",
-    hint: "Cumpărători în căutare pe zonă, promovare și selecția ofertelor; cere 5 minute de discuție.",
+    hint: "Cere acordul pentru colaborare deschisă (neexclusivă), 0% comision de la proprietar; confirmare simplă sau vizionare.",
     kind: "first",
-    build: (ctx) => {
-      const src = sourceLabel(ctx.platform);
-      return `Bună ziua! Sunt Andrei, de la RealTrust Timișoara. Am văzut anunțul dumneavoastră pentru ${apartmentRef(ctx.rooms, ctx.zone)}${src ? ` publicat pe ${src}` : ""}. Avem clienți cumpărători în căutare pe această zonă și vă putem ajuta cu promovarea și selecția ofertelor. Când ați avea 5 minute disponibile pentru o scurtă discuție?`;
-    },
+    build: (ctx) =>
+      [
+        "Bună ziua! Sunt Andrei, de la RealTrust Timișoara.",
+        "",
+        `Am văzut anunțul dumneavoastră pentru ${listingRef(ctx)}.`,
+        "",
+        "Avem clienți cumpărători activi în căutare pe această zonă. Doriți să promovăm și noi proprietatea în regim de colaborare deschisă (neexclusivă), cu 0% comision din partea dumneavoastră?",
+        "",
+        "Dacă sunteți de acord, ne puteți confirma printr-un simplu răspuns sau ne puteți spune când putem stabili o scurtă vizionare.",
+      ].join("\n"),
   },
   {
     key: "first_management",
