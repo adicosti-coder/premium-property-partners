@@ -283,5 +283,7 @@
 - [ ] Scorare AI leaduri noi vs. client ideal + rezumat + marcaj „merită apel” — așteaptă răspunsuri (client ideal, surse, mod de semnalare)
 
 ## Vechime și program — sursă unică, 10 noiembrie
-- [ ] Sursă unică: imobiliare din 2000, regim hotelier din 2016, formulare „din anul X”, contact non-stop
-- [ ] Toate paginile, prerandarea, datele Google (JSON-LD) și traducerile EN aliniate
+- [x] Sursă unică: imobiliare din 2000, regim hotelier din 2016, formulare „din anul X”, contact non-stop
+- [x] Toate paginile, prerandarea, datele Google (JSON-LD), textele pentru asistenți AI și traducerile EN aliniate
+- [ ] FounderProfile: „birou fizic în Cetate” contrazice regula fără birou — așteaptă decizia lui Adrian
+- [ ] Anul lansării ApArt Hotel (2017 în cronologie) — neconfirmat
