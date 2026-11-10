@@ -4,6 +4,8 @@ import { isOwnSiteUrl } from "../_shared/ssrfGuard.ts";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { analyzeLocalGeo } from "./localGeo.ts";
 import { isClearlyBrokenScrape, isObviouslyInvalidCachedAudit, pickBestScrapeResult } from "./scrapeQuality.ts";
+import { applyActiveOverride, countPageHeadings, overrideNewerThan, overridePromptNote } from "./auditInputs.ts";
+import { canonicalAuditPath, canonicalAuditUrl, normalizeAuditPath } from "../_shared/seoAuditTarget.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -97,10 +99,14 @@ serve(async (req) => {
     }
 
     // ============= SINGLE AUDIT =============
-    const { url, language = "ro", forceRefresh = false }: RequestBody = rawBody;
-    if (!url || !/^https?:\/\//.test(url)) return json({ error: "URL invalid" }, 400);
+    const { url: requestedUrl, language = "ro", forceRefresh = false }: RequestBody = rawBody;
+    if (!requestedUrl || !/^https?:\/\//.test(requestedUrl)) return json({ error: "URL invalid" }, 400);
     // The optimizer audits our own pages only — never arbitrary destinations.
-    if (!isOwnSiteUrl(url)) return json({ error: "URL must be on realtrust.ro" }, 400);
+    if (!isOwnSiteUrl(requestedUrl)) return json({ error: "URL must be on realtrust.ro" }, 400);
+    // Legacy aliases are only redirected client-side; the server answers them
+    // with the homepage shell. Audit (and store) the canonical page instead.
+    const url = canonicalAuditUrl(requestedUrl);
+    const resolvedFrom = url !== requestedUrl ? requestedUrl : null;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
@@ -116,7 +122,7 @@ serve(async (req) => {
         !isObviouslyInvalidCachedAudit(cached) &&
         (Date.now() - new Date(cached.created_at).getTime()) < CONFIG.CACHE_TTL_MS
       ) {
-        return json({ audit: cached, cached: true, cache_source: "audit_row_24h" });
+        return json({ audit: cached, cached: true, cache_source: "audit_row_24h", resolved_from: resolvedFrom });
       }
     }
 
@@ -139,8 +145,23 @@ serve(async (req) => {
     try {
       // 1. Scrape (with retry + timeout)
       const scrapeStart = Date.now();
-      const scraped = await scrapePage(url, FIRECRAWL_API_KEY, forceRefresh);
+      const rawScraped = await scrapePage(url, FIRECRAWL_API_KEY, forceRefresh);
       const scrapeMs = Date.now() - scrapeStart;
+
+      // Active override for this page: the live site applies it on the client,
+      // so the audit scores those values (plain HTML only has the static ones).
+      const auditPath = canonicalAuditPath(normalizeAuditPath(url));
+      const { data: activeOverride } = await sb.from("seo_overrides")
+        .select("title, meta_description, extra_keywords, applied_at, updated_at")
+        .eq("url_path", auditPath)
+        .eq("is_active", true)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const { scraped, override: overrideInfo } = (rawScraped as any).source === "none"
+        ? { scraped: rawScraped, override: applyActiveOverride(rawScraped, null).override }
+        : applyActiveOverride(rawScraped, activeOverride as any);
+      (scraped as any).overrideNote = overridePromptNote(overrideInfo);
 
       // Nicio sursă de scraping nu a răspuns (ex: credite Firecrawl epuizate / 429).
       // Nu mai continuăm cu AI + salvare pe conținut gol — returnăm un mesaj clar.
@@ -191,7 +212,7 @@ serve(async (req) => {
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle();
-        if (prior?.raw_analysis) {
+        if (prior?.raw_analysis && !overrideNewerThan(overrideInfo, prior.created_at)) {
           // Recompute deterministic score from current signals (cheap, no AI)
           const { score, breakdown } = calculateDeterministicScore(scraped, localGeo, duplicates || []);
           analysis = {
@@ -260,6 +281,8 @@ serve(async (req) => {
         ai_ms: aiMs,
         ai_error: aiError,
         force_refresh: forceRefresh,
+        resolved_from: resolvedFrom,
+        override_applied: overrideInfo,
         audited_at: new Date().toISOString(),
       };
       const enrichedAnalysis = { ...analysis, _diagnostics: diagnostics };
@@ -297,10 +320,13 @@ serve(async (req) => {
         ai_fallback: !!analysis.ai_fallback,
         duplicates: duplicates || [],
         diagnostics,
+        resolved_from: resolvedFrom,
       });
     } finally {
       // Always release the lock — even on fallback or error path
-      await sb.rpc("seo_release_audit_lock", { p_url: url, p_language: language }).catch(() => {});
+      try {
+        await sb.rpc("seo_release_audit_lock", { p_url: url, p_language: language });
+      } catch { /* lock expires on its own */ }
     }
   } catch (err: any) {
     console.error("seo-ai-optimizer fatal:", err);
@@ -461,14 +487,7 @@ function parseScraped(markdown: string, html: string, meta: any) {
   const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
   const metaCandidates = collectMetaDescriptionCandidates(html, meta);
 
-  const allH1 = html.match(/<h1\b[^>]*>[\s\S]*?<\/h1>/gi) || [];
-  const allH2 = html.match(/<h2\b[^>]*>[\s\S]*?<\/h2>/gi) || [];
-  const isShellHeading = (tag: string): boolean => {
-    const open = tag.match(/<h[12]\b[^>]*>/i)?.[0] || "";
-    return /data-prerender-title|aria-hidden=["']?true|hidden(\s|=|>)|sr-only|visually-hidden|display\s*:\s*none|visibility\s*:\s*hidden/i.test(open);
-  };
-  const h1Matches = allH1.filter((t) => !isShellHeading(t));
-  const h2Matches = allH2.filter((t) => !isShellHeading(t));
+  const { h1Count, h2Count } = countPageHeadings(html);
   const text = markdown || htmlToText(html);
 
   const detectedTitle = meta.title || titleMatch?.[1]?.trim() || "";
@@ -477,8 +496,8 @@ function parseScraped(markdown: string, html: string, meta: any) {
     title: detectedTitle,
     metaDescription: pickBestMetaDescription(metaCandidates, detectedTitle),
     metaCandidatesDebug: metaCandidates,
-    h1Count: h1Matches.length,
-    h2Count: h2Matches.length,
+    h1Count,
+    h2Count,
     wordCount: text.split(/\s+/).filter(Boolean).length,
     markdown: text.slice(0, 8000),
     fullText: text,
@@ -649,6 +668,7 @@ Meta description actuală (${metaLen} chars): "${scraped.metaDescription}"
 Număr H1: ${scraped.h1Count} | H2: ${scraped.h2Count || 0}
 Număr cuvinte: ${scraped.wordCount}
 ${dupNote}
+${scraped.overrideNote || ""}
 
 === SCOR DETERMINIST (calculat din semnale măsurabile) ===
 Scor total: ${deterministicScore}/100
@@ -673,6 +693,7 @@ ${scraped.markdown}
 6. Dacă scor ≥ 90, focus pe oportunități STRATEGICE (schema avansat, content hubs, internal linking), NU pe ajustări minore titlu/meta.
 7. Pentru fiecare keyword sugerat, verifică DUBLU dacă NU e deja în textul analizat. Dacă e, OMITE-l.
 8. Issues cu severity "info" sunt rezervate pentru observații cu impact REAL — nu pentru ajustări estetice.
+9. RealTrust NU are birou deschis clienților (vizionările se fac la proprietate). NU recomanda indicații de orientare spre sediu/birou și nu cere „adresa biroului".
 
 Returnează EXCLUSIV JSON valid (fără markdown):
 {

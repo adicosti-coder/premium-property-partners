@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, Calendar, TrendingDown, TrendingUp, Minus, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
+import { REAUDIT_GAP_MS, auditUrlWithRecovery, isLegacyAuditPath } from "@/lib/seoReaudit";
 
 interface AuditRow {
   id: string;
@@ -43,6 +44,7 @@ export const SEOReauditSchedulerPanel = ({ history }: Props) => {
   const targets = useMemo(() => {
     const seen = new Map<string, AuditRow>();
     history.forEach((a) => {
+      if (isLegacyAuditPath(a.url)) return;
       if (!seen.has(a.url)) seen.set(a.url, a);
     });
     return Array.from(seen.values());
@@ -73,15 +75,13 @@ export const SEOReauditSchedulerPanel = ({ history }: Props) => {
     let ok = 0, fail = 0;
     for (let i = 0; i < targets.length; i++) {
       try {
-        const { error } = await supabase.functions.invoke("seo-ai-optimizer", {
-          body: { url: targets[i].url, language: targets[i].language || "ro", forceRefresh: true },
-        });
-        if (error) throw error;
+        await auditUrlWithRecovery(supabase, targets[i].url, targets[i].language || "ro", true);
         ok++;
       } catch {
         fail++;
       }
       setProgress({ done: i + 1, total: targets.length });
+      if (i < targets.length - 1) await new Promise((r) => setTimeout(r, REAUDIT_GAP_MS));
     }
     setRunning(false);
     toast.success(`Re-audit: ${ok} OK, ${fail} eșuate`);
@@ -115,7 +115,7 @@ export const SEOReauditSchedulerPanel = ({ history }: Props) => {
 
         <div>
           <h4 className="text-sm font-medium mb-2">Trend istoric (ultimele snapshot-uri)</h4>
-          <ScrollArea className="h-56 rounded-md border">
+          <ScrollArea className="h-56 rounded-md border [&>[data-radix-scroll-area-viewport]>div]:!block">
             <ul className="divide-y text-sm">
               {Array.from(deltaByUrl.entries()).map(([url, v]) => {
                 const Icon = (v.delta ?? 0) > 0 ? TrendingUp : (v.delta ?? 0) < 0 ? TrendingDown : Minus;

@@ -529,7 +529,7 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
           <span className="text-muted-foreground">Selectează toate filtrate ({filtered.length})</span>
         </div>
 
-        <ScrollArea className="h-[420px] rounded-md border">
+        <ScrollArea className="h-[420px] rounded-md border [&>[data-radix-scroll-area-viewport]>div]:!block">
           <ul className="divide-y text-sm">
             {filtered.map((s: any) => (
               <li key={s.id} className="px-3 py-2 flex items-start gap-2 hover:bg-muted/40">
@@ -585,7 +585,7 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
               <Zap className="w-4 h-4 text-amber-600" />
               Rulări auto-linking (Revert All)
             </div>
-            <ScrollArea className="h-32 rounded-md border">
+            <ScrollArea className="h-32 rounded-md border [&>[data-radix-scroll-area-viewport]>div]:!block">
               <ul className="divide-y text-xs">
                 {autoRuns.filter((r: any) => !r.run_id.startsWith("single:")).map((r: any) => {
                   const active = r.count - r.reverted;
@@ -626,7 +626,7 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
               <Zap className="w-4 h-4 text-amber-600" />
               Auto-aplicate recent ({autoLogs.filter((l: any) => !l.reverted).length} active)
             </div>
-            <ScrollArea className="h-40 rounded-md border">
+            <ScrollArea className="h-40 rounded-md border [&>[data-radix-scroll-area-viewport]>div]:!block">
               <ul className="divide-y text-xs">
                 {autoLogs.map((l: any) => (
                   <li key={l.id} className="px-3 py-2 flex items-center gap-2">

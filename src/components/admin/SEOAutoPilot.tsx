@@ -388,7 +388,7 @@ export const SEOAutoPilot = ({ history, overrides }: Props) => {
               </div>
               <Badge variant="secondary" className="text-[10px]">{events.length}</Badge>
             </div>
-            <ScrollArea className="h-64 rounded-lg border bg-muted/20">
+            <ScrollArea className="h-64 rounded-lg border bg-muted/20 [&>[data-radix-scroll-area-viewport]>div]:!block">
               {events.length === 0 ? (
                 <div className="p-6 text-center text-xs text-muted-foreground italic">
                   {cfg.enabled ? "Așteaptă primul ciclu…" : "Auto-Pilot inactiv. Pornește pentru activitate live."}
@@ -423,7 +423,7 @@ export const SEOAutoPilot = ({ history, overrides }: Props) => {
               </div>
               <Badge variant="secondary" className="text-[10px]">{recentOverrides.length}</Badge>
             </div>
-            <ScrollArea className="h-64 rounded-lg border bg-muted/20">
+            <ScrollArea className="h-64 rounded-lg border bg-muted/20 [&>[data-radix-scroll-area-viewport]>div]:!block">
               {recentOverrides.length === 0 ? (
                 <div className="p-6 text-center text-xs text-muted-foreground italic">Niciun override activ.</div>
               ) : (

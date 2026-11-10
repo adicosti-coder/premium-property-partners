@@ -37,6 +37,7 @@ import { GlobalCanonicalFixButton } from "./GlobalCanonicalFixButton";
 import { RobotsCacheStatus } from "./RobotsCacheStatus";
 import { LocalSEORecommendations } from "./LocalSEORecommendations";
 import { SEOIssuesPanel } from "./SEOIssuesPanel";
+import { REAUDIT_GAP_MS, auditUrlWithRecovery, isLegacyAuditPath } from "@/lib/seoReaudit";
 
 const QUICK_URLS = [
   // Principal
@@ -160,9 +161,21 @@ const SEOOptimizerManager = () => {
     });
   }, [history, filter, filterLang, minScore]);
 
+  // Ultimul scor RO per pagină urmărită (istoricul vine ordonat descrescător).
+  const trackedScores = useMemo(() => {
+    const m = new Map<string, number>();
+    history.forEach((audit) => {
+      if (audit.language && audit.language !== "ro") return;
+      if ((audit as any).raw_analysis?.ai_fallback) return;
+      let path: string;
+      try { path = new URL(audit.url).pathname.replace(/\/+$/, "") || "/"; } catch { return; }
+      if (!m.has(path) && typeof audit.overall_score === "number") m.set(path, audit.overall_score);
+    });
+    return m;
+  }, [history]);
+
   const seoStats = useMemo(() => {
     // Adrese vechi care doar redirecționează — nu sunt pagini reale, nu intră în scor.
-    const LEGACY_REDIRECTS = new Set(["/pentru-oaspeti", "/imobiliare-timisoara", "/servicii-imobiliare-timisoara"]);
     const normalize = (u: string) => {
       try {
         const p = new URL(u);
@@ -172,7 +185,8 @@ const SEOOptimizerManager = () => {
     const latest = new Map<string, AuditRow>();
     history.forEach((audit) => {
       const path = normalize(audit.url).replace(/^[^/]+/, "");
-      if (LEGACY_REDIRECTS.has(path)) return;
+      // Adrese vechi redirecționate: auditul lor măsoară pagina principală.
+      if (isLegacyAuditPath(path)) return;
       // Audituri eșuate (AI indisponibil) nu reflectă pagina — le ignorăm.
       if ((audit as any).raw_analysis?.ai_fallback) return;
       const key = `${normalize(audit.url)}::${audit.language}`;
@@ -195,9 +209,14 @@ const SEOOptimizerManager = () => {
 
   const auditMutation = useMutation({
     mutationFn: async ({ targetUrl, force }: { targetUrl: string; force: boolean }) => {
-      const { data, error } = await supabase.functions.invoke("seo-ai-optimizer", {
-        body: { url: targetUrl, language, forceRefresh: force },
-      });
+      let data: any = null;
+      let error: any = null;
+      try {
+        // Timeout / dropped connection → use the audit the server saved meanwhile.
+        data = (await auditUrlWithRecovery(supabase, targetUrl, language, force)).data;
+      } catch (e) {
+        error = e;
+      }
       if (error) {
         // 503 = scraping indisponibil (credite Firecrawl epuizate / rate limit).
         // Afișăm un avertisment clar, fără să blocăm restul panoului.
@@ -222,7 +241,7 @@ const SEOOptimizerManager = () => {
       return data;
     },
     onSuccess: (data) => {
-      toast.success(data.cached ? "Audit din cache" : "Audit nou generat");
+      toast.success(data.recovered ? "Audit salvat — scor citit din baza de date după răspunsul întârziat" : data.cached ? "Audit din cache" : "Audit nou generat");
       setSelectedAudit(data.audit);
       qc.invalidateQueries({ queryKey: ["seo-audits-history"] });
     },
@@ -380,14 +399,13 @@ const SEOOptimizerManager = () => {
     let success = 0;
     for (let i = 0; i < QUICK_URLS.length; i++) {
       try {
-        await supabase.functions.invoke("seo-ai-optimizer", {
-          body: { url: QUICK_URLS[i], language, forceRefresh: true },
-        });
+        await auditUrlWithRecovery(supabase, QUICK_URLS[i], language, true);
         success++;
       } catch (e) {
         console.error("Bulk audit fail for", QUICK_URLS[i], e);
       }
       setBulkProgress({ done: i + 1, total: QUICK_URLS.length });
+      if (i < QUICK_URLS.length - 1) await new Promise((r) => setTimeout(r, REAUDIT_GAP_MS));
     }
     qc.invalidateQueries({ queryKey: ["seo-audits-history"] });
     setBulkRunning(false);
@@ -399,12 +417,9 @@ const SEOOptimizerManager = () => {
     let lastAudit: AuditRow | null = null;
     try {
       for (const lang of ["ro", "en"] as const) {
-        const { data, error } = await supabase.functions.invoke("seo-ai-optimizer", {
-          body: { url, language: lang, forceRefresh: true },
-        });
-        if (error) throw error;
-        if (data?.error) throw new Error(data.error);
+        const { data } = await auditUrlWithRecovery(supabase, url, lang, true);
         if (data?.audit) lastAudit = data.audit as AuditRow;
+        if (lang === "ro") await new Promise((r) => setTimeout(r, REAUDIT_GAP_MS));
       }
       if (lastAudit) setSelectedAudit(lastAudit);
       qc.invalidateQueries({ queryKey: ["seo-audits-history"] });
@@ -772,40 +787,77 @@ const SEOOptimizerManager = () => {
               </div>
               <div className="space-y-1">
                 {seoStats.urgentAudits.map((audit) => (
-                  <button key={`${audit.id}-priority`} onClick={() => setSelectedAudit(audit)} className="block w-full truncate text-left text-xs hover:text-primary">
-                    {audit.overall_score ?? "—"}/100 · {audit.url}
+                  <button key={`${audit.id}-priority`} onClick={() => setSelectedAudit(audit)} className="flex w-full min-w-0 items-baseline gap-2 py-1 text-left text-xs hover:text-primary">
+                    <span className="shrink-0 font-semibold tabular-nums">{audit.overall_score ?? "—"}/100</span>
+                    <span className="min-w-0 break-all">{audit.url.replace(/^https?:\/\/(www\.)?realtrust\.ro/, "") || "/"}</span>
                   </button>
                 ))}
               </div>
             </div>
           )}
 
-          <div className="flex flex-wrap gap-2 items-center">
-            {QUICK_URLS.map((u) => (
-              <Button key={u} variant="outline" size="sm" onClick={() => setUrl(u)}>
-                {u.replace("https://realtrust.ro", "") || "/"}
+          <section aria-labelledby="seo-tracked-urls" className="rounded-lg border bg-muted/20 p-3">
+            <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <h3 id="seo-tracked-urls" className="text-sm font-semibold">
+                Pagini urmărite <span className="font-normal text-muted-foreground">({QUICK_URLS.length})</span>
+              </h3>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={runBulkAudit}
+                disabled={bulkRunning}
+                className="min-h-12 w-full sm:min-h-9 sm:w-auto"
+              >
+                {bulkRunning ? (
+                  <>
+                    <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                    Bulk {bulkProgress.done}/{bulkProgress.total}
+                  </>
+                ) : (
+                  <>
+                    <Layers className="w-3 h-3 mr-2" />
+                    Analizează toate ({QUICK_URLS.length})
+                  </>
+                )}
               </Button>
-            ))}
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={runBulkAudit}
-              disabled={bulkRunning}
-              className="ml-auto"
-            >
-              {bulkRunning ? (
-                <>
-                  <Loader2 className="w-3 h-3 mr-2 animate-spin" />
-                  Bulk {bulkProgress.done}/{bulkProgress.total}
-                </>
-              ) : (
-                <>
-                  <Layers className="w-3 h-3 mr-2" />
-                  Analizează toate ({QUICK_URLS.length})
-                </>
-              )}
-            </Button>
-          </div>
+            </div>
+            <ul className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap">
+              {QUICK_URLS.map((u) => {
+                const path = u.replace("https://realtrust.ro", "") || "/";
+                const score = trackedScores.get(path);
+                const active = url === u;
+                return (
+                  <li key={u} className="min-w-0">
+                    <button
+                      type="button"
+                      onClick={() => setUrl(u)}
+                      aria-pressed={active}
+                      title={path}
+                      className={`flex min-h-12 w-full min-w-0 items-center justify-between gap-1.5 rounded-md border px-2.5 py-1.5 text-left text-xs transition-colors sm:min-h-9 sm:w-auto ${
+                        active ? "border-primary bg-primary/10 text-primary" : "bg-background hover:border-primary/50 hover:text-primary"
+                      }`}
+                    >
+                      <span className="min-w-0 break-words leading-snug">
+                        {path.split(/(?<=[/-])/).map((part, i) => (
+                          <span key={i}>{i > 0 && <wbr />}{part}</span>
+                        ))}
+                      </span>
+                      {typeof score === "number" && (
+                        <span
+                          className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${
+                            score < 50 ? "bg-destructive/10 text-destructive" : score < 75 ? "bg-muted text-foreground" : "bg-primary/10 text-primary"
+                          }`}
+                          aria-label={`Scor ${score}`}
+                        >
+                          {score}
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
           {bulkRunning && (
             <Progress value={(bulkProgress.done / Math.max(bulkProgress.total, 1)) * 100} />
           )}
@@ -1355,7 +1407,7 @@ const SEOOptimizerManager = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-96">
+          <ScrollArea className="h-96 [&>[data-radix-scroll-area-viewport]>div]:!block">
             <div className="space-y-2">
               {filteredHistory.map((a) => {
                 const path = urlToPath(a.url);

@@ -218,7 +218,7 @@ export const SEOTrafficROIPanel = () => {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="table" className="space-y-4">
-          <TabsList>
+          <TabsList className="flex-wrap h-auto justify-start">
             <TabsTrigger value="table">Prioritizare Inteligentă</TabsTrigger>
             <TabsTrigger value="bubble">Bubble Chart (SEO × Trafic × Conversii)</TabsTrigger>
           </TabsList>

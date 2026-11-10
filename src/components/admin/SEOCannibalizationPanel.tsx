@@ -235,7 +235,7 @@ export const SEOCannibalizationPanel = ({ history }: Props) => {
             <button onClick={() => setSeverityFilter("all")} className="text-xs text-primary hover:underline">Resetează filtrul</button>
           </div>
         ) : (
-          <ScrollArea className="h-[420px] pr-3 -mr-3">
+          <ScrollArea className="h-[420px] pr-3 -mr-3 [&>[data-radix-scroll-area-viewport]>div]:!block">
             <ul className="space-y-3">
               {filteredClusters.slice(0, 50).map((c, i) => {
                 const winnerIdx = (c.scores[0] ?? 0) >= (c.scores[1] ?? 0) ? 0 : 1;

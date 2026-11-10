@@ -394,7 +394,7 @@ export const SEOSchemaGeneratorPanel = ({ history, overrides }: Props) => {
             </div>
           </div>
           <TabsContent value={filter} className="mt-3">
-            <ScrollArea className="h-72 rounded-md border">
+            <ScrollArea className="h-72 rounded-md border [&>[data-radix-scroll-area-viewport]>div]:!block">
               <ul className="divide-y text-sm">
                 {filtered.length === 0 && (
                   <li className="px-3 py-6 text-center text-muted-foreground">Niciun rezultat</li>
@@ -485,7 +485,7 @@ export const SEOSchemaGeneratorPanel = ({ history, overrides }: Props) => {
                   </ul>
                 </div>
               )}
-              <ScrollArea className="h-80 rounded border bg-muted/30">
+              <ScrollArea className="h-80 rounded border bg-muted/30 [&>[data-radix-scroll-area-viewport]>div]:!block">
                 <pre className="text-xs p-3 whitespace-pre-wrap break-all">
                   {JSON.stringify(previewRow.override?.json_ld, null, 2)}
                 </pre>

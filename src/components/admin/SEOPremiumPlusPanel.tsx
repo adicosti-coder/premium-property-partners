@@ -15,6 +15,9 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  REAUDIT_GAP_MS, isLegacyAuditPath, reauditWithRecovery, runSequential, supabaseReauditDeps,
+} from "@/lib/seoReaudit";
 
 interface AuditRow {
   id: string;
@@ -45,9 +48,11 @@ const urlToPath = (full: string) => {
   try { const u = new URL(full); let p = u.pathname.replace(/\/{2,}/g, "/"); if (p.length > 1 && p.endsWith("/")) p = p.slice(0, -1); return p || "/"; } catch { return full; }
 };
 
-type ScoreDelta = { before: number | null; after: number | null; status: "pending" | "running" | "done" | "error" };
+type ScoreDelta = { before: number | null; after: number | null; status: "pending" | "running" | "done" | "error"; recovered?: boolean };
 
-const PREMIUM_PLUS_CONCURRENCY = 3;
+/** Bulk runs are sequential: parallel re-audits time out on phones and slow connections. */
+const PREMIUM_PLUS_CONCURRENCY = 1;
+const APPLY_ONLY_GAP_MS = 150;
 const APPLY_RETRIES = 3;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -116,17 +121,6 @@ async function withRetry<T>(fn: () => Promise<T>, attempts = APPLY_RETRIES): Pro
   throw last;
 }
 
-async function runPool<T>(items: T[], worker: (item: T, index: number) => Promise<void>, concurrency = PREMIUM_PLUS_CONCURRENCY) {
-  let cursor = 0;
-  const workers = Array.from({ length: Math.min(concurrency, Math.max(items.length, 1)) }, async () => {
-    while (cursor < items.length) {
-      const index = cursor++;
-      await worker(items[index], index);
-    }
-  });
-  await Promise.all(workers);
-}
-
 export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
   const qc = useQueryClient();
   const cancelRunRef = useRef(false);
@@ -137,13 +131,10 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
   const reauditAndCapture = async (path: string, beforeScore: number | null, language: string) => {
     setScoreDeltas((s) => ({ ...s, [path]: { before: beforeScore, after: null, status: "running" } }));
     try {
-      const url = `https://${CANONICAL_HOST}${path}`;
-      const { data, error } = await supabase.functions.invoke("seo-ai-optimizer", {
-        body: { url, language: language || "ro", forceRefresh: true },
-      });
-      if (error) throw error;
-      const after = (data as any)?.audit?.overall_score ?? (data as any)?.overall_score ?? null;
-      setScoreDeltas((s) => ({ ...s, [path]: { before: beforeScore, after, status: "done" } }));
+      // Timeout or dropped connection → read the audit saved meanwhile in seo_audits.
+      const res = await reauditWithRecovery(path, language || "ro", CANONICAL_HOST, supabaseReauditDeps(supabase));
+      const after = res.score;
+      setScoreDeltas((s) => ({ ...s, [path]: { before: beforeScore, after, status: "done", recovered: res.recovered } }));
       return after;
     } catch (e) {
       setScoreDeltas((s) => ({ ...s, [path]: { before: beforeScore, after: null, status: "error" } }));
@@ -161,6 +152,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
   const targetsBelow = useMemo(() => {
     const seen = new Set<string>();
     return history
+      .filter((a) => !isLegacyAuditPath(a.url))
       .filter((a) => (a.overall_score ?? 100) < 80 && (a.suggested_title || a.suggested_meta))
       .filter((a) => {
         const k = urlToPath(a.url);
@@ -230,7 +222,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
     let ok = 0, err = 0, skipped = 0, done = 0;
     const results: typeof masterLog = [];
     try {
-      await runPool(targetsBelow, async (a) => {
+      await runSequential(targetsBelow, async (a) => {
         if (cancelRunRef.current) return;
         const path = urlToPath(a.url);
         const before = a.overall_score ?? null;
@@ -252,7 +244,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
           done++;
           setMasterProgress({ done, total: targetsBelow.length, ok, err });
         }
-      });
+      }, { gapMs: masterReaudit ? REAUDIT_GAP_MS : APPLY_ONLY_GAP_MS, shouldStop: () => cancelRunRef.current });
       await finishPremiumRun(runId, cancelRunRef.current ? "cancelled" : err ? "completed_with_errors" : "completed", { done, ok, err, skipped }, results);
     } catch (e: any) {
       await finishPremiumRun(runId, "failed", { done, ok, err, skipped }, results, friendlyError(e));
@@ -269,6 +261,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
     const seen = new Set<string>();
     return history
       .filter((a) => {
+        if (isLegacyAuditPath(a.url)) return false;
         const k = urlToPath(a.url);
         if (seen.has(k)) return false;
         seen.add(k);
@@ -281,18 +274,14 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
 
   const refreshMutation = useMutation({
     mutationFn: async (a: AuditRow) => {
-      const { data, error } = await supabase.functions.invoke("seo-ai-optimizer", {
-        body: { url: a.url, language: a.language || "ro", forceRefresh: true },
-      });
-      if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
-      return data;
+      // Same timeout fallback as bulk runs: a slow response reads the saved audit.
+      return reauditWithRecovery(urlToPath(a.url), a.language || "ro", CANONICAL_HOST, supabaseReauditDeps(supabase));
     },
-    onSuccess: (_d, a) => {
+    onSuccess: (res, a) => {
       qc.invalidateQueries({ queryKey: ["seo-audits-history"] });
-      toast.success(`Re-analizat: ${urlToPath(a.url)}`);
+      toast.success(`Re-analizat: ${urlToPath(a.url)}${res.recovered ? " (scor citit din auditul salvat)" : ""}`);
     },
-    onError: (e: any) => toast.error(e.message || "Eșec re-analiză"),
+    onError: (e: any) => toast.error(friendlyError(e, "Eșec re-analiză")),
   });
 
   /* ============ 3. BULK INDEXNOW + SITEMAP ============ */
@@ -328,6 +317,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
     const seen = new Set<string>();
     return history
       .filter((a) => {
+        if (isLegacyAuditPath(a.url)) return false;
         const k = urlToPath(a.url);
         if (seen.has(k)) return false;
         seen.add(k);
@@ -369,7 +359,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
     const results: { url: string; status: string; reason?: string }[] = [];
     let ok = 0, err = 0, skipped = 0, done = 0;
     try {
-      await runPool(items, async (a) => {
+      await runSequential(items, async (a) => {
         if (cancelRunRef.current) return;
         const path = urlToPath(a.url);
         const before = a.overall_score ?? null;
@@ -387,7 +377,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
           done++;
           setPriorityProgress({ done, total: items.length, ok, err });
         }
-      });
+      }, { gapMs: priorityReaudit ? REAUDIT_GAP_MS : APPLY_ONLY_GAP_MS, shouldStop: () => cancelRunRef.current });
       await finishPremiumRun(runId, cancelRunRef.current ? "cancelled" : err ? "completed_with_errors" : "completed", { done, ok, err, skipped }, results);
     } catch (e: any) {
       await finishPremiumRun(runId, "failed", { done, ok, err, skipped }, results, friendlyError(e));
@@ -410,6 +400,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
   const stats = useMemo(() => {
     const seen = new Map<string, AuditRow>();
     history.forEach((a) => {
+      if (isLegacyAuditPath(a.url)) return;
       const k = urlToPath(a.url);
       const existing = seen.get(k);
       if (!existing || new Date(a.created_at) > new Date(existing.created_at)) seen.set(k, a);
@@ -436,7 +427,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
         <Loader2 className="w-3 h-3 animate-spin" /> re-audit...
       </span>
     );
-    if (d.status === "error") return <span className="text-[10px] text-rose-500">re-audit eșuat</span>;
+    if (d.status === "error") return <span className="text-[10px] text-rose-500">re-audit neconfirmat</span>;
     if (d.status === "done" && d.after != null) {
       const delta = (d.after ?? 0) - (d.before ?? 0);
       const positive = delta > 0;
@@ -445,6 +436,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
         <span className={`inline-flex items-center gap-1 text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded
           ${positive ? "bg-emerald-100 text-emerald-700" : neutral ? "bg-slate-100 text-slate-600" : "bg-rose-100 text-rose-700"}`}>
           {d.before ?? "—"} → {d.after}
+          {d.recovered && <span className="font-normal opacity-80" title="Răspunsul a întârziat; scorul a fost citit din auditul salvat.">· salvat</span>}
           {!neutral && (
             <>
               <ArrowUpRight className={`w-3 h-3 ${positive ? "" : "rotate-90"}`} />
@@ -570,7 +562,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
             </div>
           )}
           {priorityTargets.length > 0 ? (
-            <ScrollArea className="h-64 rounded-lg border bg-background/80 backdrop-blur">
+            <ScrollArea className="h-64 rounded-lg border bg-background/80 backdrop-blur [&>[data-radix-scroll-area-viewport]>div]:!block">
               <ul className="divide-y text-sm">
                 {priorityTargets.map((a) => {
                   const path = urlToPath(a.url);
@@ -653,7 +645,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
                 <span className="px-2 py-1 rounded bg-emerald-100 text-emerald-700 font-medium">✅ {masterProgress.ok} aplicate</span>
                 {masterProgress.err > 0 && <span className="px-2 py-1 rounded bg-rose-100 text-rose-700 font-medium">❌ {masterProgress.err} erori</span>}
               </div>
-              <ScrollArea className="h-48 rounded-lg border bg-background/80 backdrop-blur">
+              <ScrollArea className="h-48 rounded-lg border bg-background/80 backdrop-blur [&>[data-radix-scroll-area-viewport]>div]:!block">
                 <ul className="divide-y text-xs">
                   {masterLog.map((l, i) => {
                     const delta = l.after != null && l.before != null ? l.after - l.before : null;
@@ -701,7 +693,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
             <Badge variant="secondary">{refreshTargets.length} pagini</Badge>
           </div>
           {refreshTargets.length > 0 ? (
-            <ScrollArea className="h-48 rounded-lg border bg-background">
+            <ScrollArea className="h-48 rounded-lg border bg-background [&>[data-radix-scroll-area-viewport]>div]:!block">
               <ul className="divide-y text-sm">
                 {refreshTargets.map((a) => {
                   const ageDays = Math.floor((Date.now() - new Date(a.created_at).getTime()) / (24 * 3600 * 1000));

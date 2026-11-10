@@ -975,8 +975,30 @@ export function buildStaticRoutes(): PrerenderRoute[] {
     path: '/calculator-randament',
     title: 'Randament imobiliar Timișoara | Calculator RealTrust',
     description: 'Calculator Randament Imobiliar (ROI) Timișoara: compară chiria vs regimul hotelier pe chirii reale din fiecare zonă. Afli venitul net lunar estimat în 3 pași.',
-    h1: 'Calculator Randament Imobiliar (ROI) în Timișoara: regim hotelier vs. chirie clasică',
+    // Must match the React H1 in src/pages/CalculatorROI.tsx; H2/H3 mirror its sections.
+    h1: 'Calculator Randament Imobiliar (ROI) Timișoara',
     canonical: `${BASE_URL}/calculator-randament`,
+    seoBody: `
+      <h2>Cât poate produce proprietatea ta?</h2>
+      <p>Compară chiria clasică cu regimul hotelier pe chirii reale din zona ta. Randament net estimat în regim hotelier: 6,5–9,4% pe an (estimare, nu garanție).</p>
+      <p>Alegi tipul proprietății, locația și suprafața cu dotările, apoi primești venitul net lunar estimat pentru ambele variante.</p>
+      <h2>Costuri de achiziție</h2>
+      <p>La prețul apartamentului se adaugă notarul, comisionul agenției, TVA-ul când este cazul și mobilarea.</p>
+      <h2>Venituri: chirie clasică vs. regim hotelier</h2>
+      <p>Chiria clasică aduce un venit predictibil; regimul hotelier depinde de tariful pe noapte, ocupare și sezon.</p>
+      <h2>Costuri operaționale (mentenanță, utilități)</h2>
+      <p>Calculatorul include canale estimate 15%, utilități estimate 120 €/lună și administrare din venitul net. Menajul este separat.</p>
+      <h2>Taxe și impozite — proprietate Timișoara</h2>
+      <p>Impozitul local pe clădire, impozitul pe venit, CASS și taxa turistică municipală.</p>
+      <h2>Rata de ocupare</h2>
+      <p>Calculatorul folosește 70%, în intervalul anual asumat 65–75%.</p>
+      <h2>Cash flow și amortizare</h2>
+      <p>Cash flow-ul lunar este venitul brut minus administrarea, utilitățile, mentenanța, rata creditului (dacă există) și taxele.</p>
+      <h2>Glosarul investitorului imobiliar</h2>
+      <p>ROI, yield brut și net, cash flow, amortizare, DAE, ADR și RevPAR, explicate pe scurt.</p>
+      <h2>Întrebări frecvente despre randament imobiliar</h2>
+      <p>Vezi și <a href="${BASE_URL}/analiza-roi-apartament" tabindex="-1">analiza de randament personalizată</a> și <a href="${BASE_URL}/catalog-investitii" tabindex="-1">catalogul de investiții</a>.</p>
+    `,
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'WebApplication',
@@ -1119,14 +1141,26 @@ export function buildStaticRoutes(): PrerenderRoute[] {
   // /contact — NAP page (address, phone, hours) + entity definition
   routes.push({
     path: '/contact',
-    title: 'Contact RealTrust Timișoara | Adresă, Telefon & Program',
-    description: 'Contact RealTrust Timișoara: telefon +40 799 069 256, info@realtrust.ro. Program luni–vineri 10:00–18:00.',
-    h1: 'Contact & Locație — Sediu RealTrust Timișoara',
+    title: 'Contact RealTrust & ApArt Hotel Timișoara | Telefon, WhatsApp',
+    description: 'Contact RealTrust & ApArt Hotel Timișoara: telefon și WhatsApp +40 799 069 256, info@realtrust.ro. Consultanță la distanță, vizionări direct la proprietate.',
+    // Must match the React H1 in src/pages/ContactPage.tsx.
+    h1: 'Contact RealTrust & ApArt Hotel Timișoara',
     canonical: `${BASE_URL}/contact`,
     seoBody: `
       ${ENTITY_DEFINITION_HTML}
       <h2>Date de contact RealTrust Timișoara</h2>
-      <p>Sediu: 300125 Timișoara, județul Timiș. Telefon: +40 799 069 256. E-mail: info@realtrust.ro. Program: luni–vineri, 10:00–18:00 (Europe/Bucharest).</p>
+      <p>Telefon și WhatsApp: +40 799 069 256. E-mail: info@realtrust.ro. Program: luni–vineri, 10:00–18:00 (Europe/Bucharest). Suport oaspeți ApArt Hotel 24/7 prin WhatsApp.</p>
+      <h2>Consultanță la distanță și vizionări la proprietate</h2>
+      <p>Nu primim clienți într-un birou: evaluările, consultanța și administrarea se fac telefonic, pe WhatsApp sau online, iar vizionările se programează direct la proprietate.</p>
+      <h2>Zonele din Timișoara în care lucrăm</h2>
+      <p>Centru / Cetate, <a href="${BASE_URL}/imobiliare-timisoara/iosefin" tabindex="-1">Iosefin</a>, Fabric, <a href="${BASE_URL}/imobiliare-timisoara/dumbravita" tabindex="-1">Dumbrăvița</a> și <a href="${BASE_URL}/imobiliare-timisoara/zona-aradului" tabindex="-1">Zona Aradului</a>.</p>
+      <h3>Proprietari</h3>
+      <p>Administrare în regim hotelier, vânzare sau închiriere — <a href="${BASE_URL}/pentru-proprietari" tabindex="-1">detalii pentru proprietari</a>.</p>
+      <h3>Cumpărători și chiriași</h3>
+      <p>Apartamente de vânzare și închiriere în Timișoara — <a href="${BASE_URL}/imobiliare" tabindex="-1">vezi anunțurile</a>.</p>
+      <h3>Oaspeți ApArt Hotel</h3>
+      <p>Cazare în apartamente din Timișoara — <a href="${BASE_URL}/cazare" tabindex="-1">vezi cazarea</a>.</p>
+      <p>Date juridice: SC Imo Business Centrum SRL, Timișoara, județul Timiș.</p>
     `,
     jsonLd: [
       ENTITY_QUESTION_SCHEMA(`${BASE_URL}/contact`),
