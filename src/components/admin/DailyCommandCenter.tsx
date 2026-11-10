@@ -5,12 +5,13 @@ import { supabase } from "@/lib/supabaseClient";
 import OutreachMonitorPanel from "./OutreachMonitorPanel";
 import AndreiCallsCounter from "./AndreiCallsCounter";
 import SocialPostDraftsPanel from "./SocialPostDraftsPanel";
+import { TODAY_ROUTES } from "@/lib/adminTodayRoutes";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Loader2, RefreshCw, Search, CheckCircle2, MessageSquare, TrendingDown,
-  Clock, AlertTriangle, ArrowRight, Flame, PhoneOff,
+  Clock, AlertTriangle, ArrowRight, Flame, PhoneOff, PhoneCall, ListOrdered,
 } from "lucide-react";
 
 const AMBIGUOUS_TYPES = ["generic_search", "sale", "rent", "vanzare", "necunoscut"];
@@ -115,15 +116,15 @@ export default function DailyCommandCenter() {
 
   const cards: ActionCard[] = d ? [
     { key: "new", label: "Anunțuri noi (24h)", hint: "găsite automat pe portaluri", count: d.newToday, tab: "flux-proprietari", icon: Search, tone: "blue" },
-    { key: "verify", label: "De verificat", hint: "așteaptă aprobarea ta", count: d.toVerify, tab: "flux-proprietari", icon: CheckCircle2, tone: "amber" },
-    { key: "hot", label: "Proprietari fierbinți", hint: "scor peste 80, gata de contact", count: d.hot, tab: "flux-proprietari", route: "/admin/flux-proprietari?step=contact", icon: Flame, tone: "rose" },
-    { key: "outreach", label: "Mesaje pregătite", hint: "oferte de trimis proprietarilor", count: d.outreachPending, tab: "flux-proprietari", route: "/admin/flux-proprietari?step=contact", icon: MessageSquare, tone: "green" },
+    { key: "verify", label: "De verificat", hint: "așteaptă aprobarea ta", count: d.toVerify, tab: "flux-proprietari", route: TODAY_ROUTES.verify, icon: CheckCircle2, tone: "amber" },
+    { key: "hot", label: "Proprietari fierbinți", hint: "scor peste 80, gata de contact", count: d.hot, tab: "flux-proprietari", route: TODAY_ROUTES.contact, icon: Flame, tone: "rose" },
+    { key: "outreach", label: "Mesaje pregătite", hint: "oferte de trimis proprietarilor", count: d.outreachPending, tab: "flux-proprietari", route: TODAY_ROUTES.contact, icon: MessageSquare, tone: "green" },
     { key: "wa", label: "În coada WhatsApp", hint: "așteaptă trimiterea", count: d.waPending, tab: "whatsapp-queue", icon: MessageSquare, tone: "slate" },
     { key: "wa-failed", label: "WhatsApp eșuate", hint: "necesită reluare manuală", count: d.waFailed, tab: "whatsapp-queue", icon: AlertTriangle, tone: d.waFailed > 0 ? "rose" : "slate" },
     { key: "drops", label: "Scăderi de preț (24h)", hint: "ocazii de negociere", count: d.priceDrops, tab: "price-drops", icon: TrendingDown, tone: "green" },
     { key: "stale", label: "Posibil expirate", hint: "nevăzute peste 21 de zile", count: d.expiringSoon, tab: "expired-listings", icon: Clock, tone: "slate" },
     { key: "anomalies", label: "Probleme automatizări", hint: "nerezolvate", count: d.anomalies, tab: "automation", icon: AlertTriangle, tone: d.anomalies > 0 ? "rose" : "slate" },
-    { key: "no-wa", label: "Necesită Apel Telefonic (Fără WhatsApp)", hint: "numere fără WhatsApp — de sunat direct", count: d.noWhatsApp, tab: "unified-pipeline", icon: PhoneOff, tone: d.noWhatsApp > 0 ? "rose" : "slate" },
+    { key: "no-wa", label: "Necesită Apel Telefonic (Fără WhatsApp)", hint: "numere fără WhatsApp — de sunat direct", count: d.noWhatsApp, tab: "unified-pipeline", route: TODAY_ROUTES.noWhatsApp, icon: PhoneOff, tone: d.noWhatsApp > 0 ? "rose" : "slate" },
   ] : [];
 
   const urgent = cards.filter((c) => c.count > 0 && ["verify", "hot", "outreach", "wa-failed", "anomalies", "no-wa"].includes(c.key));
@@ -132,8 +133,8 @@ export default function DailyCommandCenter() {
     <div className="space-y-6">
       <Card>
         <CardHeader className="flex flex-row items-start justify-between gap-3">
-          <div>
-            <CardTitle className="flex items-center gap-2">
+          <div className="min-w-0">
+            <CardTitle className="flex flex-wrap items-center gap-2">
               Astăzi
               {urgent.length > 0 && (
                 <Badge variant="destructive">{urgent.reduce((s, c) => s + c.count, 0)} de rezolvat</Badge>
@@ -143,7 +144,7 @@ export default function DailyCommandCenter() {
               Tot ce cere o acțiune acum, cu un singur clic până la locul unde o rezolvi.
             </CardDescription>
           </div>
-          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching} aria-label="Reîmprospătează">
+          <Button variant="outline" size="sm" className="min-h-[44px] min-w-[44px] shrink-0" onClick={() => refetch()} disabled={isFetching} aria-label="Reîmprospătează">
             {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
           </Button>
         </CardHeader>
@@ -151,18 +152,18 @@ export default function DailyCommandCenter() {
           {isLoading ? (
             <div className="py-10 text-center text-sm text-muted-foreground">Se încarcă…</div>
           ) : (
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 min-[380px]:grid-cols-2 lg:grid-cols-3 gap-3">
               {cards.map((c) => (
                 <button
                   key={c.key}
                   type="button"
                   onClick={() => go(c.tab, c.route)}
-                  className={`text-left rounded-lg border p-3 min-h-[96px] transition-colors hover:bg-accent/40 ${TONE[c.tone]}`}
+                  className={`min-w-0 text-left rounded-lg border p-3 min-h-[96px] transition-colors hover:bg-accent/40 ${TONE[c.tone]}`}
                   aria-label={`${c.label}: ${c.count}. Deschide secțiunea.`}
                 >
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <c.icon className="h-3.5 w-3.5 shrink-0" />
-                    <span className="truncate">{c.label}</span>
+                    <span className="line-clamp-3 break-words">{c.label}</span>
                   </div>
                   <div className="mt-1 text-2xl font-semibold tabular-nums">{c.count}</div>
                   <div className="text-[11px] text-muted-foreground line-clamp-2">{c.hint}</div>
@@ -184,13 +185,19 @@ export default function DailyCommandCenter() {
           <CardTitle className="text-base">Continuă fluxul</CardTitle>
           <CardDescription>De la căutare până la ofertă, fără să schimbi secțiunea.</CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-wrap gap-2">
-          <Button onClick={() => go("flux-proprietari")} className="gap-2">
-            Deschide fluxul proprietari <ArrowRight className="h-4 w-4" />
+        <CardContent className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
+          <Button onClick={() => go("flux-proprietari")} className="min-h-[44px] gap-2 whitespace-normal">
+            Deschide fluxul proprietari <ArrowRight className="h-4 w-4 shrink-0" />
           </Button>
-          <Button variant="outline" onClick={() => go("owner-search")}>Doar căutarea</Button>
-          <Button variant="outline" onClick={() => go("whatsapp-chat")}>Discuții WhatsApp</Button>
-          <Button variant="outline" onClick={() => go("saved-listings")}>Anunțuri salvate</Button>
+          <Button variant="outline" className="min-h-[44px]" onClick={() => go("owner-search")}>Doar căutarea</Button>
+          <Button variant="outline" className="min-h-[44px]" onClick={() => go("whatsapp-chat")}>Discuții WhatsApp</Button>
+          <Button variant="outline" className="min-h-[44px] gap-2" onClick={() => go("whatsapp-queue", TODAY_ROUTES.whatsappQueue)}>
+            <ListOrdered className="h-4 w-4 shrink-0" /> Coadă WhatsApp
+          </Button>
+          <Button variant="outline" className="min-h-[44px] gap-2" onClick={() => go("call-dashboard", TODAY_ROUTES.callLog)}>
+            <PhoneCall className="h-4 w-4 shrink-0" /> Jurnal apeluri Andrei
+          </Button>
+          <Button variant="outline" className="min-h-[44px]" onClick={() => go("saved-listings")}>Anunțuri salvate</Button>
         </CardContent>
       </Card>
     </div>

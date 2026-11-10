@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
+import { samePhone } from "@/lib/adminTodayRoutes";
 import { AdminPageShell } from "@/components/admin/shared/AdminPageShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -77,6 +79,11 @@ export default function WhatsappChat() {
   const [meetingAt, setMeetingAt] = useState("");
   const [error, setError] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
+  // `?phone=` (ex. din „Astăzi” → „Ultimele răspunsuri”) deschide direct conversația cu acel număr.
+  const [searchParams] = useSearchParams();
+  const phoneParam = searchParams.get("phone");
+  const pendingPhoneRef = useRef<string | null>(phoneParam);
+  const handledPhoneRef = useRef<string | null>(phoneParam);
 
   const loadConvs = useCallback(async () => {
     const [convRes, agentRes] = await Promise.all([
@@ -92,9 +99,27 @@ export default function WhatsappChat() {
     if (convRes.error) setError(convRes.error.message);
     else {
       setError(null);
-      const rows = (convRes.data ?? []) as Conv[];
+      let rows = (convRes.data ?? []) as Conv[];
+      const wanted = pendingPhoneRef.current;
+      let wantedId: string | null = null;
+      if (wanted) {
+        pendingPhoneRef.current = null;
+        let match = rows.find((c) => samePhone(c.phone_normalized, wanted));
+        if (!match) {
+          const { data: one } = await supabase
+            .from("wa_conversations")
+            .select("id, phone_normalized, wa_profile_name, last_inbound_at, last_outbound_at, assigned_agent_id, created_at")
+            .eq("phone_normalized", wanted)
+            .maybeSingle();
+          if (one) {
+            match = one as Conv;
+            rows = [match, ...rows];
+          }
+        }
+        wantedId = match?.id ?? null;
+      }
       setConvs(rows);
-      setSelectedId((prev) => prev ?? rows[0]?.id ?? null);
+      setSelectedId((prev) => wantedId ?? prev ?? rows[0]?.id ?? null);
     }
     setAgents((agentRes.data ?? []) as Agent[]);
     setLoading(false);
@@ -115,6 +140,14 @@ export default function WhatsappChat() {
   useEffect(() => {
     void loadConvs();
   }, [loadConvs]);
+
+  // Navigare nouă către alt număr cât timp chatul e deja deschis.
+  useEffect(() => {
+    if (!phoneParam || handledPhoneRef.current === phoneParam) return;
+    handledPhoneRef.current = phoneParam;
+    pendingPhoneRef.current = phoneParam;
+    void loadConvs();
+  }, [phoneParam, loadConvs]);
 
   useEffect(() => {
     if (selectedId) void loadThread(selectedId);
