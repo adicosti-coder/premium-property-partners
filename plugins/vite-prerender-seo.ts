@@ -1150,7 +1150,7 @@ export function buildStaticRoutes(): PrerenderRoute[] {
     seoBody: `
       ${ENTITY_DEFINITION_HTML}
       <h2>Date de contact RealTrust Timișoara</h2>
-      <p>Telefon și WhatsApp: +40 799 069 256. E-mail: info@realtrust.ro. Program: ${CONTACT_HOURS.long.ro.toLowerCase()}. Suport oaspeți ApArt Hotel 24/7 prin WhatsApp.</p>
+      <p>Telefon și WhatsApp: +40 799 069 256. E-mail: info@realtrust.ro. ${CONTACT_HOURS.long.ro}. Suport oaspeți ApArt Hotel 24/7 prin WhatsApp.</p>
       <h2>Consultanță la distanță și vizionări la proprietate</h2>
       <p>Nu primim clienți într-un birou: evaluările, consultanța și administrarea se fac telefonic, pe WhatsApp sau online, iar vizionările se programează direct la proprietate.</p>
       <h2>Zonele din Timișoara în care lucrăm</h2>
