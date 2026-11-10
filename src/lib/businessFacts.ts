@@ -10,6 +10,10 @@
 export const REAL_ESTATE_SINCE = 2000;
 /** Year RealTrust started short-term (hotel-regime) property management. */
 export const HOTEL_MANAGEMENT_SINCE = 2016;
+/** Official launch year of the ApArt Hotel accommodation brand. */
+export const APART_HOTEL_BRAND_SINCE = 2017;
+/** Founding year of the legal entity SC Imo Business Centrum SRL (Schema.org foundingDate). */
+export const LEGAL_ENTITY_FOUNDED = 2001;
 
 type Lang = "ro" | "en";
 const pick = (lang: string | undefined, ro: string, en: string) => (lang === "en" ? en : ro);

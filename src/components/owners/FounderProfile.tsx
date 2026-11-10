@@ -13,7 +13,8 @@ import guestRelationsImage from "@/assets/team/guest-relations.jpg";
 
 /**
  * FounderProfile — "cine ești, cu față": fondatorul cu poză și telefon direct,
- * echipa operațională și datele legale ale firmei (CUI, adresă birou).
+ * echipa operațională și datele legale ale firmei (CUI, sediu social).
+ * Nu avem birou pentru clienți: vizionările și consultanțele au loc la proprietate.
  * Componentă pur prezentațională.
  */
 
@@ -31,7 +32,7 @@ const FounderProfile = () => {
         badge: "Cine suntem",
         title: "Discuți cu oameni reali, nu cu un call-center",
         subtitle:
-          "Firma este din Timișoara, birou fizic în Cetate, cu o echipă care se ocupă zilnic de apartamente ca al tău.",
+          "Firma este din Timișoara, cu o echipă care se ocupă zilnic de apartamente ca al tău. Vizionările și consultanțele la fața locului au loc direct la proprietate.",
         founderRole: "Fondator & Administrator",
         founderBio:
           `Adrian Costi este fondatorul RealTrust & ApArt Hotel, cu o carieră dedicată pieței imobiliare din Timișoara din ${REAL_ESTATE_SINCE}. A coordonat sute de tranzacții imobiliare și a dezvoltat un model integrat de administrare completă a proprietăților — de la închirierea pe termen lung, până la operarea în regim hotelier la standard de boutique hotel. Viziunea sa este simplă: fiecare proprietate să fie gestionată ca o investiție performantă, cu transparență totală, raportare clară și venituri optimizate pentru proprietar.`,
@@ -49,7 +50,7 @@ const FounderProfile = () => {
         teamTitle: "Echipa care se ocupă de apartamentul tău",
         legalTitle: "Date de identificare",
         legalNote: "Poți verifica firma oricând înainte să semnezi ceva.",
-        labels: { company: "Firma", cui: "CUI", office: "Birou", contact: "Contact" },
+        labels: { company: "Firma", cui: "CUI", office: "Sediu social", contact: "Contact" },
         stats: [
           { value: `Din ${REAL_ESTATE_SINCE}`, suffix: "", label: "În imobiliare în Timișoara", icon: "clock" as const },
           { value: "6,5–9,4", suffix: "%", label: "Randament net estimat pentru proprietari, pe an", icon: "trending" as const },
@@ -67,7 +68,7 @@ const FounderProfile = () => {
         badge: "Who we are",
         title: "You talk to real people, not a call center",
         subtitle:
-          "A Timișoara-based team working digitally and on site at your property, handling apartments like yours every day.",
+          "A Timișoara-based team handling apartments like yours every day. Viewings and on-site consultations take place directly at the property.",
         founderRole: "Founder & Managing Director",
         founderBio:
           `Adrian Costi is the founder of RealTrust & ApArt Hotel, with a career dedicated to the Timișoara real estate market since ${REAL_ESTATE_SINCE}. He has coordinated hundreds of real estate transactions and developed an integrated full-property management model — from long-term rentals to boutique-hotel-standard short-term operations. His vision is straightforward: every property should be managed as a high-performing investment, with full transparency, clear reporting, and optimized owner returns.`,
@@ -85,7 +86,7 @@ const FounderProfile = () => {
         teamTitle: "The team handling your apartment",
         legalTitle: "Company details",
         legalNote: "You can verify the company any time before signing anything.",
-        labels: { company: "Company", cui: "VAT ID", office: "Office", contact: "Contact" },
+        labels: { company: "Company", cui: "VAT ID", office: "Registered office", contact: "Contact" },
         stats: [
           { value: `Since ${REAL_ESTATE_SINCE}`, suffix: "", label: "In real estate in Timișoara", icon: "clock" as const },
           { value: "6.5–9.4", suffix: "%", label: "Estimated net yield for owners, per year", icon: "trending" as const },
