@@ -285,5 +285,6 @@
 ## Vechime și program — sursă unică, 10 noiembrie
 - [x] Sursă unică: imobiliare din 2000, regim hotelier din 2016, formulare „din anul X”, contact non-stop
 - [x] Toate paginile, prerandarea, datele Google (JSON-LD), textele pentru asistenți AI și traducerile EN aliniate
-- [ ] FounderProfile: „birou fizic în Cetate” contrazice regula fără birou — așteaptă decizia lui Adrian
+- [x] FounderProfile: scos „birou fizic în Cetate”; vizionări și consultanțe la proprietate
+- [x] Ani oficiali: ApArt Hotel 2017, firmă 2001 în datele pentru Google
 - [ ] Anul lansării ApArt Hotel (2017 în cronologie) — neconfirmat
