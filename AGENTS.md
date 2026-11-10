@@ -60,4 +60,3 @@
 - Owner lead forms emit one conversion after persistence; confirmation-page visits emit none, and GA4 automatic page views are disabled in favor of the existing SPA emitter — prevents duplicate or unverified conversions.
 - Language switching updates the existing language query through the router while preserving other parameters, hash and state — prevents reload from undoing the visitor's choice.
 - Homepage entity JSON-LD comes only from `src/lib/orgIdentity.ts` (runtime + prerender); prerender replaces use function replacements — keeps entities identical and `$$` intact.
-- Admin SEO re-audits run one at a time through `src/lib/seoReaudit.ts`, recover timeouts from the latest saved `seo_audits` row, and audit client-only legacy aliases at their canonical path via `_shared/seoAuditTarget.ts`; the auditor scores the active `seo_overrides` title/meta — avoids false failures and homepage-shell audits.
