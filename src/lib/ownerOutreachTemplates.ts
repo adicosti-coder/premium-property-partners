@@ -157,7 +157,7 @@ export const OWNER_OUTREACH_TEMPLATES: OutreachTemplate[] = [
       return [
         greeting(ctx),
         "",
-        `Sunt Andrei, de la RealTrust Timișoara, în legătură cu ${listingRef(ctx)}.`,
+        `Sunt ${SENDER_FULL}. Vă contactez în legătură cu ${listingRef(ctx)}.`,
         offer
           ? `Vă propunem închirierea pe ${duration}, cu ${offer} pe lună, plata la dată fixă și contract semnat.`
           : `Vă propunem închirierea pe ${duration}, cu plata la dată fixă și contract semnat.`,
@@ -215,7 +215,7 @@ export const OWNER_OUTREACH_TEMPLATES: OutreachTemplate[] = [
       [
         greeting(ctx),
         "",
-        `Sunt Andrei, de la RealTrust Timișoara — ultimul mesaj legat de ${listingRef(ctx)}.`,
+        `Sunt ${SENDER_SHORT}, cu ultimul mesaj legat de ${listingRef(ctx)}.`,
         "Dacă apartamentul este încă disponibil, putem începe chiar săptămâna aceasta; dacă l-ați rezolvat deja, spuneți-mi și nu vă mai deranjez.",
         "Mulțumesc!",
       ].join("\n"),

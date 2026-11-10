@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultFirstTemplateKey, detectListingTransaction, getTemplate, saleMessageViolations, SALE_PUBLISH_TEXT } from "./ownerOutreachTemplates";
+import { OWNER_OUTREACH_TEMPLATES, defaultFirstTemplateKey, detectListingTransaction, getTemplate, saleMessageViolations, SALE_PUBLISH_TEXT } from "./ownerOutreachTemplates";
 
 describe("outreach template by listing type", () => {
   it(" predefined sale text offers free publishing and asks DA or NU", () => {
@@ -47,6 +47,18 @@ describe("outreach template by listing type", () => {
   });
   it("short first message uses the full sender name and listing data", () => {
     expect(getTemplate("first_short").build({ zone: "Cetate", rooms: 1 })).toBe("Bună ziua! Sunt Andrei, RealTrust & ApArt Hotel Timișoara. Referitor la apartamentul dumneavoastră de o cameră din zona Cetate: vă putem oferi o estimare gratuită de venit net lunar (regim hotelier / chirie). Vă pot trimite calculul exact pe WhatsApp?");
+  });
+  it("rental offer names the full sender", () => {
+    const msg = getTemplate("first_rent_offer").build({ zone: "Lipovei", rooms: 2, platform: "storia" });
+    expect(msg).toContain("Sunt Andrei, RealTrust & ApArt Hotel Timișoara. Vă contactez în legătură cu apartamentul de 2 camere din zona Lipovei publicat pe Storia.");
+  });
+  it("every template except the approved sale wording uses the new sender", () => {
+    for (const t of OWNER_OUTREACH_TEMPLATES) {
+      if (t.key === "first_sale") continue;
+      const msg = t.build({ zone: "Iosefin", rooms: 2 });
+      expect(msg).not.toContain("de la RealTrust Timișoara");
+      expect(msg).toMatch(/Andrei de la RealTrust|Andrei[,–\s]+RealTrust & ApArt Hotel Timișoara/);
+    }
   });
   it("reminders name the sender", () => {
     for (const key of ["reminder_24h", "reminder_sale_24h", "reminder_sale_72h", "reminder_72h"]) {
