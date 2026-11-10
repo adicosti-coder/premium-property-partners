@@ -155,6 +155,8 @@ serve(async (req) => {
         .select("title, meta_description, extra_keywords, applied_at, updated_at")
         .eq("url_path", auditPath)
         .eq("is_active", true)
+        .order("updated_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
       const { scraped, override: overrideInfo } = (rawScraped as any).source === "none"
         ? { scraped: rawScraped, override: applyActiveOverride(rawScraped, null).override }
