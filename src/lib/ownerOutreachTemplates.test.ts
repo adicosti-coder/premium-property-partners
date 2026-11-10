@@ -80,7 +80,7 @@ import { rentalFirstMessage as rfm } from "./ownerOutreachTemplates";
 import { rentalFirstMessage as edgeRfm } from "../../supabase/functions/_shared/rentalIntroMessage";
 describe("rentalFirstMessage", () => {
   it("folosește formularea aprobată cu camerele și zona din anunț", () => {
-    expect(rfm(2, "Iosefin")).toBe("Bună ziua! Sunt Andrei – RealTrust & ApArt Hotel Timișoara. Vă contactez în legătură cu apartamentul de 2 camere din zona Iosefin. Oferim servicii complete de administrare în regim hotelier (promovare Booking/Airbnb, curățenie, mentenanță), cu un venit net estimat cu 30-40% mai mare decât chiria clasică. Vă pot trimite gratuit o simulare de randament net pentru zona dumneavoastră?");
+    expect(rfm(2, "Iosefin")).toBe("Bună ziua! Sunt Andrei, RealTrust & ApArt Hotel Timișoara. Vă contactez în legătură cu apartamentul de 2 camere din zona Iosefin. Oferim servicii complete de administrare în regim hotelier (promovare Booking/Airbnb, curățenie, mentenanță), cu un venit net estimat cu 30-40% mai mare decât chiria clasică. Vă pot trimite gratuit o simulare de randament net pentru zona dumneavoastră?");
   });
   it("folosește textul de rezervă când lipsește zona sau camerele", () => {
     expect(rfm(2, "")).toContain("apartamentul de 2 camere din Timișoara.");
