@@ -71,6 +71,8 @@ const JOB_FN: Record<string, string> = {
   "wa.followup_nudge": "wa-followup-nudge",
   // Primul mesaj către proprietari amânat în afara orelor 09:00–19:30 → pleacă de la 09:05
   "wa.owner_outreach_queue_drain": "outreach-dispatch",
+  // Reluare unică la 30 de zile pentru proprietarii fără răspuns (anunț încă activ)
+  "wa.owner_recontact": "wa-owner-recontact",
   "lead.uncontacted_reminder": "lead-uncontacted-reminder",
   // Social: coadă Facebook/Instagram la interval fix
   "social.autopost_drain": "social-autopost-drain",

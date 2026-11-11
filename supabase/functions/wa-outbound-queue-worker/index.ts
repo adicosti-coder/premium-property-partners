@@ -1,6 +1,8 @@
 // wa-outbound-queue-worker — golește coada de mesaje inițiale (marketing template)
 // către proprietarii extrași de scraper. Rulează pe cron sau manual din Admin.
 // Internal-only (cron secret / service role) sau admin.
+import { outreachWindow } from "../_shared/ownerOutreachPolicy.ts";
+import { OWNER_RECONTACT_SOURCE } from "../_shared/waOwnerRecontact.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { isInternalWaNumber } from "../_shared/waInternalNumbers.ts";
 import { requireAdmin } from "../_shared/adminAuth.ts";
@@ -351,6 +353,11 @@ Deno.serve(async (req) => {
   const TIME_BUDGET_MS = 40_000;
 
   for (const [idx, item] of queue.entries()) {
+    // Reluarea către proprietari (30 de zile) pleacă doar 09:00–19:30, ora României.
+    if (item.source === OWNER_RECONTACT_SOURCE && !outreachWindow(new Date()).open) {
+      results.push({ id: item.id, status: "deferred", reason: "owner_recontact_window" });
+      continue;
+    }
     // ── Normalizare unică E.164: "0733…", "+40733…", "40733…" = același număr ──
     const rawPhone = item.phone_normalized;
     const canon = canonicalWaPhone(rawPhone);
@@ -500,7 +507,7 @@ Deno.serve(async (req) => {
     // Orice altă rulare (paralelă sau ulterioară) vede imediat că numărul e
     // „în curs de trimitere / trimis” și nu mai trimite, chiar dacă
     // confirmarea Meta întârzie. Reamintirile au propria cheie.
-    const reserveKind = isFollowup ? `queue-${item.source}` : "queue-first-contact";
+    const reserveKind = isFollowup || item.source === OWNER_RECONTACT_SOURCE ? `queue-${item.source}` : "queue-first-contact";
     const reserved = await reservePhoneSend(supabase, phoneDigits, reserveKind, 23 * 3_600_000, { queue_id: item.id });
     T("Rezervare număr înainte de trimitere", reserved, reserved ? "Număr marcat „în curs de trimitere”" : "Număr deja rezervat de altă trimitere în ultimele 23h");
     if (!reserved) {
@@ -535,7 +542,7 @@ Deno.serve(async (req) => {
         conversationId = conv.id;
       }
 
-      const selectedTemplate = item.source === "followup" || item.source === "followup2" || item.source === "andrei_followup"
+      const selectedTemplate = item.source === "followup" || item.source === "followup2" || item.source === "andrei_followup" || item.source === OWNER_RECONTACT_SOURCE
         ? item.template_name
         : item.source === "publish_consent_request"
           ? await preferredPublishConsentTemplate()
