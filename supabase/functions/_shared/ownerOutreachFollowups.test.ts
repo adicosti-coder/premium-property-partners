@@ -1,6 +1,8 @@
 import { describe, expect, it } from "bun:test";
-import { adminApprovalSummary } from "./listingInspection.ts";
-import { recontactBlocker, WA_OWNER_RECONTACT_BODY, OWNER_RECONTACT_AFTER_DAYS } from "./waOwnerRecontact.ts";
+// Modulele Meta citesc Deno.env la încărcare; în bun simulăm doar lipsa variabilelor.
+(globalThis as any).Deno ??= { env: { get: () => undefined } };
+const { adminApprovalSummary } = await import("./listingInspection.ts");
+const { recontactBlocker, WA_OWNER_RECONTACT_BODY, OWNER_RECONTACT_AFTER_DAYS } = await import("./waOwnerRecontact.ts");
 
 describe("alerta de aprobare 1/2 pentru admin", () => {
   it("rezumatul are zona, tipul, prețul, chiria estimată și scorul /10", () => {
