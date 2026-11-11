@@ -12,7 +12,7 @@ import { supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient"
 import { submitLead } from "@/lib/leadSubmission";
 import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { ListingAnalysis } from "@/components/analiza/AiListingAnalyzer";
-import { parseOwnerOutreachParams } from "@/lib/ownerOutreachLink";
+import { parseOwnerOutreachParams, RENTAL_ANALYSIS_BADGE } from "@/lib/ownerOutreachLink";
 
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
@@ -69,7 +69,7 @@ const AnalizaAnunt = () => {
   });
   // Linkurile din primul mesaj WhatsApp către proprietari vin și cu ?zona=…&tip=….
   const [outreach] = useState(() =>
-    typeof window === "undefined" ? { zone: null, type: null } : parseOwnerOutreachParams(window.location.search));
+    typeof window === "undefined" ? { zone: null, type: null, listingType: null } : parseOwnerOutreachParams(window.location.search));
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState<ListingAnalysis | null>(null);
@@ -199,6 +199,12 @@ const AnalizaAnunt = () => {
       <Suspense fallback={null}><Header /></Suspense>
       <main className="px-4 pt-28 pb-16">
         <section className="mx-auto max-w-3xl text-center">
+          {outreach.listingType === "inchiriere" && (
+            <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
+              <Hotel className="h-4 w-4" aria-hidden="true" />
+              {RENTAL_ANALYSIS_BADGE}
+            </p>
+          )}
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground">
             Analizează orice anunț imobiliar din Timișoara
           </h1>
