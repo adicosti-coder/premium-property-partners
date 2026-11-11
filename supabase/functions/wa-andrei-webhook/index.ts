@@ -6,6 +6,7 @@ import { extractWaLeadDetails, waEngagementBonus, gradeForScore, waSimulationFie
 import { canonicalWaPhone, phoneVariants, reservePhoneSend, markPhoneSent } from "../_shared/waPhone.ts";
 import {
   isHotelCalcRequest, looksLikeOwnerQuestion, ownerOutreachConsentCheck, OWNER_CONSENT_UNVERIFIED_ACK, WA_OWNER_OUTREACH_TEMPLATE,
+  ownerOutreachReplySignals, ownerOutreachObjectionReply, OWNER_CUSTOM_NOTES_ACK, OWNER_LISTING_CLOSED_ACK,
 } from "../_shared/waOwnerOutreachTemplate.ts";
 import { recordOwnerConsent } from "../_shared/ownerConsentApproval.ts";
 import {
@@ -161,7 +162,8 @@ async function recordOwnerHandoff(
 ) {
   const event = args.kind === "owner_hotel_calc"
     ? "owner_income_analysis_request"
-    : args.kind === "owner_consent_unverified" ? "owner_consent_unverified" : "owner_question_handoff";
+    : args.kind === "owner_consent_unverified" ? "owner_consent_unverified"
+    : args.kind === "owner_custom_notes" ? "owner_custom_notes_handoff" : "owner_question_handoff";
   let prospectId: string | null = null;
   try {
     const variants = phoneVariants(args.phone);
@@ -628,6 +630,64 @@ Deno.serve(async (req) => {
           quick = { kind: "publish_consent_reconfirm", text: PUBLISH_CONSENT_RECONFIRM_TEXT };
         }
 
+        // Mesajul cu butoane (outreach_proprietar_butoane_v1): retragere / vândut,
+        // răspunsuri fixe la cost și obiecții, corecturi → has_custom_notes + alertă admin.
+        const inOutreachFlow = consentRow?.request_template === WA_OWNER_OUTREACH_TEMPLATE;
+        const outreachSignals = (inOutreachFlow || ownerCtx) ? ownerOutreachReplySignals(text) : null;
+        let customNotesAlerted = false;
+        if (outreachSignals?.optOut) {
+          try {
+            const closed = outreachSignals.optOut === "sold" || outreachSignals.optOut === "unavailable";
+            const variants = phoneVariants(from);
+            const ors = variants.flatMap((v) => [`phone_normalized.eq.${v}`, `contact_phone.eq.${v}`]).join(",");
+            await supabase.from("prospect_listings").update({
+              outreach_status: "unsubscribed", outreach_status_at: nowIso, outreach_scheduled_at: null,
+              ...(closed ? { lifecycle_status: "expired" } : {}),
+            }).or(ors);
+            if (closed) {
+              // Anunț vândut / închiriat / indisponibil → acordul se închide și anunțul iese de pe site.
+              if (!publishIntent) {
+                await handlePublishIntent(supabase, { phone: from, intent: "revoke", message: text, supabaseUrl, serviceKey });
+              }
+              quick = { kind: "owner_listing_closed", text: OWNER_LISTING_CLOSED_ACK };
+            }
+          } catch (e) {
+            console.error("[wa-webhook] outreach opt-out failed:", e);
+          }
+        } else if (inOutreachFlow && outreachSignals && !publishIntent && quick?.kind !== "publish_consent_reconfirm") {
+          const objectionReply = ownerOutreachObjectionReply(outreachSignals);
+          if (objectionReply && quick?.kind !== "owner_hotel_calc") {
+            quick = { kind: outreachSignals.fee ? "owner_outreach_fee" : "owner_outreach_safety", text: objectionReply };
+          }
+          if (outreachSignals.customNotes) {
+            try {
+              if (consentRow?.id) {
+                await supabase.from("wa_publish_consents").update({ has_custom_notes: true }).eq("id", consentRow.id);
+              }
+              // Oportunitate caldă: proprietarul a răspuns cu detalii.
+              await supabase.from("prospect_listings").update({ lifecycle_status: "interested" })
+                .in("phone_normalized", phoneVariants(from))
+                .not("lifecycle_status", "in", "(rejected,expired,posted)");
+              // „Calcul Regim Hotelier” are deja alerta lui (o dată pe conversație), cu același antet.
+              if (quick?.kind !== "owner_hotel_calc") {
+                const alert = await notifyOwnerHandover(supabase, {
+                  phone: from, profile_name: profileName, message: text,
+                  kind: "owner_custom_notes", conversation_id: convId,
+                  prospect: ownerCtx ?? await loadProspectContext(supabase, from),
+                });
+                await recordOwnerHandoff(supabase, {
+                  kind: "owner_custom_notes", phone: from, conversationId: convId, waMessageId: waId,
+                  message: text, alert,
+                });
+                customNotesAlerted = true;
+              }
+              if (!quick || quick.kind === "intake") quick = { kind: "owner_custom_notes", text: OWNER_CUSTOM_NOTES_ACK };
+            } catch (e) {
+              console.error("[wa-webhook] owner custom notes failed:", e);
+            }
+          }
+        }
+
         // Orice răspuns al unui proprietar din „Cozi Aprobare” ajunge pe e-mail
         // la echipă, ca acordul sau întrebarea lui să nu treacă neobservată.
         try {
@@ -645,6 +705,7 @@ Deno.serve(async (req) => {
         // Întrebare scrisă de proprietar → alertă pe numerele de administrare
         // (cel mult una la 24h pe număr); Andrei răspunde în continuare automat.
         if (
+          !customNotesAlerted &&
           (ownerCtx || consentRow?.request_template === WA_OWNER_OUTREACH_TEMPLATE) && looksLikeOwnerQuestion(text) &&
           !(quick && (OWNER_HANDOVER_KINDS.has(quick.kind) || /^(publish_|quick_no|quick_stop)/.test(quick.kind)))
         ) {
@@ -757,7 +818,7 @@ Deno.serve(async (req) => {
         // Nu repetăm același răspuns automat la fiecare mesaj: dacă exact acest
         // răspuns a plecat în ultimele 6 ore, lăsăm discuția pe mâna agentului.
         if (
-          quick && quick.kind !== "quick_no" && quick.kind !== "quick_stop" &&
+          quick && quick.kind !== "quick_no" && quick.kind !== "quick_stop" && quick.kind !== "owner_listing_closed" &&
           quick.kind !== "publish_consent" && quick.kind !== "publish_revoke"
         ) {
           try {
@@ -783,7 +844,7 @@ Deno.serve(async (req) => {
           // Răspuns la butoanele din primul mesaj → trimitem imediat răspunsul
           // potrivit, independent de regula de 3 ore, ca discuția să continue.
           const previousQuick = quickReplyConversations.get(convId);
-          if (!previousQuick || !["quick_no", "quick_stop"].includes(previousQuick.kind)) {
+          if (!previousQuick || !["quick_no", "quick_stop", "owner_listing_closed"].includes(previousQuick.kind)) {
             quickReplyConversations.set(convId, { phone: from, ...quick });
           }
         } else if (!outboundCount) {
@@ -1112,12 +1173,14 @@ Deno.serve(async (req) => {
 
   // Răspuns automat la butoanele din primul mesaj (vânzare / administrare / refuz).
   for (const [convId, quick] of quickReplyConversations) {
-    if (quick.kind === "quick_no" || quick.kind === "quick_stop") {
+    if (quick.kind === "quick_no" || quick.kind === "quick_stop" || quick.kind === "owner_listing_closed") {
       try {
         await supabase.from("wa_dnc_list").upsert({
           phone_normalized: quick.phone,
-          label: "refuz expres",
-          reason: "clientul a refuzat expres pe WhatsApp (buton „Nu, mulțumesc” sau STOP)",
+          label: quick.kind === "owner_listing_closed" ? "anunț închis" : "refuz expres",
+          reason: quick.kind === "owner_listing_closed"
+            ? "proprietarul a confirmat pe WhatsApp că anunțul nu mai e valabil (vândut / închiriat)"
+            : "clientul a refuzat expres pe WhatsApp (buton „Nu, mulțumesc” sau STOP)",
         }, { onConflict: "phone_normalized" });
       } catch (e) {
         console.error("[wa-webhook] dnc upsert failed:", e);
@@ -1128,9 +1191,9 @@ Deno.serve(async (req) => {
         const ors = variants.flatMap((v) => [`phone_normalized.eq.${v}`, `contact_phone.eq.${v}`]).join(",");
         await supabase.from("prospect_listings").update({
           do_not_call: true,
-          do_not_call_reason: "refuz expres pe WhatsApp",
+          do_not_call_reason: quick.kind === "owner_listing_closed" ? "anunț vândut / indisponibil (WhatsApp)" : "refuz expres pe WhatsApp",
           do_not_call_at: new Date().toISOString(),
-          lifecycle_status: "rejected",
+          lifecycle_status: quick.kind === "owner_listing_closed" ? "expired" : "rejected",
         }).or(ors);
       } catch (e) {
         console.error("[wa-webhook] prospect dnc mark failed:", e);

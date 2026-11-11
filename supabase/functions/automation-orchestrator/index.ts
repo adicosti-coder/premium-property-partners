@@ -69,6 +69,8 @@ const JOB_FN: Record<string, string> = {
   // WhatsApp (Andrei)
   "wa.outbound_drain": "wa-outbound-queue-worker",
   "wa.followup_nudge": "wa-followup-nudge",
+  // Primul mesaj către proprietari amânat în afara orelor 09:00–19:30 → pleacă de la 09:05
+  "wa.owner_outreach_queue_drain": "outreach-dispatch",
   "lead.uncontacted_reminder": "lead-uncontacted-reminder",
   // Social: coadă Facebook/Instagram la interval fix
   "social.autopost_drain": "social-autopost-drain",
@@ -94,6 +96,7 @@ const JOB_BODY: Record<string, Record<string, unknown>> = {
   "auto-publish-listings": { batch_size: 3 },
   // WhatsApp: loturi mici, cu delay uman între mesaje (rămâne sub timeout-ul funcției)
   "wa.outbound_drain": { batch_size: 5 },
+  "wa.owner_outreach_queue_drain": { action: "drain_queue" },
 };
 
 // Event-driven jobs declanșate automat de triggere DB / cod aplicație.

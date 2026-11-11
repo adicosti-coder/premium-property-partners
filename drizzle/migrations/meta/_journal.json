@@ -974,6 +974,13 @@
       "when": 1794229300039,
       "tag": "0138_properties_social_yield_override",
       "breakpoints": true
+    },
+    {
+      "idx": 139,
+      "version": "7",
+      "when": 1794429982979,
+      "tag": "0139_owner_outreach_queue_and_custom_notes",
+      "breakpoints": true
     }
   ]
 }

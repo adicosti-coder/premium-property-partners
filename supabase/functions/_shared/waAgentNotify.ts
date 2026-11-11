@@ -170,7 +170,12 @@ const HANDOVER_LABEL: Record<string, string> = {
   owner_hotel_calc: "vrea CALCUL REGIM HOTELIER",
   owner_question: "are o ÎNTREBARE",
   owner_consent_unverified: "a apăsat DA, dar Make nu a confirmat șablonul",
+  owner_custom_notes: "a trimis o MODIFICARE / SOLICITARE",
 };
+
+/** Modificări / solicitări ale proprietarului: alerta începe cu antetul fix, urmat de textul exact. */
+const OWNER_REQUEST_KINDS = new Set(["owner_custom_notes", "owner_hotel_calc"]);
+const OWNER_REQUEST_HEADLINE = "[MODIFICARE/SOLICITARE PROPRIETAR DETECTATĂ]:";
 
 export type OwnerHandoverResult = { email_sent: boolean; wa_sent: string[]; wa_failed: string[] };
 
@@ -192,8 +197,10 @@ export async function notifyOwnerHandover(
   const p = input.prospect ?? null;
   const price = p?.price ? `${Math.round(Number(p.price)).toLocaleString("ro-RO")} ${String(p.currency || "EUR").toUpperCase() === "RON" ? "lei" : "€"}` : "—";
   const wa = `https://wa.me/${input.phone.replace(/\D/g, "")}`;
+  const isRequest = OWNER_REQUEST_KINDS.has(input.kind);
   const html = `
     <div style="font-family:Arial,Helvetica,sans-serif;color:#111;max-width:620px">
+      ${isRequest ? `<p style="margin:0 0 12px;font-size:16px"><b>${esc(OWNER_REQUEST_HEADLINE)}</b> ${esc(input.message)}</p>` : ""}
       <h2 style="margin:0 0 6px;color:#b45309">🔥 Proprietar ${esc(label)}</h2>
       <p style="margin:0 0 12px">${input.kind === "owner_question" ? "Preia conversația — Andrei a răspuns automat, dar întrebarea merită un răspuns de la un om." : "Preia conversația acum — Andrei a confirmat automat și a spus că revine un coleg."}</p>
       <table style="border-collapse:collapse;font-size:14px">
@@ -212,7 +219,9 @@ export async function notifyOwnerHandover(
     try {
       const r = await sendTeamEmail({
         to,
-        subject: `URGENT — proprietar ${label}: ${input.profile_name || input.phone}`,
+        subject: isRequest
+          ? `${OWNER_REQUEST_HEADLINE} ${input.message.replace(/\s+/g, " ").slice(0, 120)}`
+          : `URGENT — proprietar ${label}: ${input.profile_name || input.phone}`,
         html,
         leadId: null,
         source: "wa-owner-handover",
@@ -231,12 +240,13 @@ export async function notifyOwnerHandover(
     const token = waToken();
     if (token) {
       const waText = [
+        isRequest ? `*${OWNER_REQUEST_HEADLINE}* ${input.message.slice(0, 600)}` : null,
         `🔥 URGENT: proprietar ${label}`,
         `Nume: ${input.profile_name || p?.contact_name || "—"}`,
         `Telefon: ${input.phone}`,
         p?.title ? `Anunț: ${p.title}` : null,
         p?.zone || p?.rooms ? `Zonă/camere: ${p?.zone || p?.location || "—"} / ${p?.rooms ?? "—"}` : null,
-        `Mesaj: ${input.message.slice(0, 300)}`,
+        isRequest ? null : `Mesaj: ${input.message.slice(0, 300)}`,
         `Răspunde: ${wa}`,
       ].filter(Boolean).join("\n");
       for (const to of ADMIN_WA_ALERT_NUMBERS) {
