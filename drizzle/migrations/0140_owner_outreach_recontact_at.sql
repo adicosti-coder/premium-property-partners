@@ -1,0 +1,2 @@
+ALTER TABLE public.prospect_listings ADD COLUMN IF NOT EXISTS outreach_recontact_at timestamptz;
+COMMENT ON COLUMN public.prospect_listings.outreach_recontact_at IS 'When the single "still available?" WhatsApp re-contact was queued for an owner who never replied to the first outreach.';

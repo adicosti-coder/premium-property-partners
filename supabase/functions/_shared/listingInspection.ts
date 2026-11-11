@@ -240,3 +240,30 @@ export async function handleInspectionDecision(
     await sendAdminText(`⚠️ Aprobat, dar publicarea nu a reușit (${r?.reason || r?.error || "eroare"}). Verificați în Admin.`);
   }
 }
+
+/**
+ * Rezumatul din alerta de aprobare 1/2 trimisă adminului. Cifrele vin doar din anunț și din
+ * estimarea pe comparabile reale; când lipsesc, apare „—” (nimic inventat).
+ */
+export function adminApprovalSummary(x: {
+  zone?: string | null;
+  isRent: boolean;
+  price?: number | null;
+  estimateMonthly?: number | null;
+  leadScore?: number | null;
+}): string {
+  const eur = (n: number) => `${Math.round(n).toLocaleString("ro-RO")} €`;
+  const price = Number(x.price) > 0 ? `${eur(Number(x.price))}${x.isRent ? "/lună" : ""}` : "—";
+  const est = Number(x.estimateMonthly) > 0 ? `${eur(Number(x.estimateMonthly))}/lună` : "—";
+  const ls = Number(x.leadScore);
+  const score = Number.isFinite(ls) && x.leadScore != null
+    ? (Math.round(Math.max(0, Math.min(100, ls))) / 10).toLocaleString("ro-RO", { maximumFractionDigits: 1 })
+    : "—";
+  return [
+    `*[APROBARE NOUĂ]:* Anunț în zona ${String(x.zone || "").trim() || "—"} (${x.isRent ? "Închiriere" : "Vânzare"})`,
+    `Preț cerut: ${price}`,
+    `Chirie/Randament estimat: ${est}`,
+    `Scor Lead: ${score}/10`,
+    "Răspunde cu 1 (Aprobă) sau 2 (Respinge).",
+  ].join("\n");
+}
