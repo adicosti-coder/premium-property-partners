@@ -101,6 +101,10 @@ async function dispatchOne(sb: Sb, id: string, opts: { dryRun: boolean; fromQueu
       .or(ors).neq("id", id).gte("outreach_status_at", since)
       .not("outreach_status", "in", "(queued,failed,skipped)");
     if (recent) return skip(["recent_outreach_30d"]);
+    // Numărul a scris RETRAG / Nu / S-a vândut → nu mai primește outreach pe niciun anunț.
+    const { count: unsub } = await sb.from("prospect_listings")
+      .select("id", { count: "exact", head: true }).or(ors).eq("outreach_status", "unsubscribed");
+    if (unsub) return skip(["unsubscribed"]);
     if (!await reservePhoneSend(sb, phone, OUTREACH_COOLDOWN_KIND, cooldownMs, { prospect_id: id })) return skip(["recent_outreach_30d"]);
   }
 
