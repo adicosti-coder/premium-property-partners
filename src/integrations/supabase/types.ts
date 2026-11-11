@@ -6717,6 +6717,7 @@ export type Database = {
           migrated_from_scraper_id: string | null
           next_callback_at: string | null
           outreach_error: string | null
+          outreach_scheduled_at: string | null
           outreach_status: string | null
           outreach_status_at: string | null
           owner_sentiment: string | null
@@ -6831,6 +6832,7 @@ export type Database = {
           migrated_from_scraper_id?: string | null
           next_callback_at?: string | null
           outreach_error?: string | null
+          outreach_scheduled_at?: string | null
           outreach_status?: string | null
           outreach_status_at?: string | null
           owner_sentiment?: string | null
@@ -6945,6 +6947,7 @@ export type Database = {
           migrated_from_scraper_id?: string | null
           next_callback_at?: string | null
           outreach_error?: string | null
+          outreach_scheduled_at?: string | null
           outreach_status?: string | null
           outreach_status_at?: string | null
           owner_sentiment?: string | null
@@ -12461,6 +12464,7 @@ export type Database = {
           consent_trigger: string | null
           consented_at: string | null
           created_at: string
+          has_custom_notes: boolean
           id: string
           last_reply_notified_at: string | null
           notes: string | null
@@ -12481,6 +12485,7 @@ export type Database = {
           consent_trigger?: string | null
           consented_at?: string | null
           created_at?: string
+          has_custom_notes?: boolean
           id?: string
           last_reply_notified_at?: string | null
           notes?: string | null
@@ -12501,6 +12506,7 @@ export type Database = {
           consent_trigger?: string | null
           consented_at?: string | null
           created_at?: string
+          has_custom_notes?: boolean
           id?: string
           last_reply_notified_at?: string | null
           notes?: string | null
