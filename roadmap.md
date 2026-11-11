@@ -1,5 +1,13 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Outreach WhatsApp cu butoane — 11 noiembrie
+- [x] Text nou (acord de preluare a anunțului exact cum e publicat), același șablon v1 și aceleași 3 butoane — trimis la Meta, în verificare
+- [x] Trimitere doar 09:00–19:30; în afara intervalului → coadă pentru 09:05; doar mobile; maximum 1 mesaj / 30 zile / număr
+- [x] Răspunsuri fixe la comision (0 lei) și obiecții (ApArt Hotel); corecturi → has_custom_notes + alertă e-mail/WhatsApp cu antet îngroșat
+- [x] RETRAG / Nu / S-a vândut / Nu mai e valabil → număr „unsubscribed”; vândut → anunț expirat
+- [x] Eticheta „Ideal pentru Închiriere Clasică & Regim Hotelier (ApArt Hotel)” pe /analiza-anunt?listing_type=inchiriere
+- [ ] Aprobarea Meta pentru noul text (până atunci pleacă mesajul vechi, deja aprobat)
+
 ## Mesaje Flux proprietari — 10 noiembrie (seara)
 - [x] „Primul mesaj — ofertă de închiriere” cere acord neexclusiv, cu 0% comision de la proprietar (formulare exactă Adrian)
 - [x] „Primul mesaj — vânzare” cere același acord neexclusiv, cu 0% comision de la proprietar (formulare exactă Adrian)
