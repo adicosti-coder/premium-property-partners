@@ -13,9 +13,9 @@ export const OWNER_OUTREACH_BUTTONS = {
 
 export const WA_OWNER_OUTREACH_BODY =
   "Bună ziua! Sunt Andrei de la RealTrust Timișoara. Am văzut apartamentul dumneavoastră din {{1}}.\n\n" +
-  "Pentru că avem investitori activi care caută în această zonă, am pregătit deja o pagină de prezentare optimizată pentru proprietatea dumneavoastră:\n" +
-  "🔗 {{2}}\n\n" +
-  "Promovarea către comunitatea noastră este 100% gratuită (0 lei costuri, 0% comision proprietar, fără exclusivitate).";
+  "Pentru că avem clienți calificați și investitori care caută exact în această zonă, am dori acordul dumneavoastră să preluăm anunțul exact așa cum este publicat, pentru a-l prezenta direct cumpărătorilor și chiriașilor noștri interesați.\n\n" +
+  "Puteți vedea analiza de prezentare aici: {{2}}\n\n" +
+  "Promovarea este 100% gratuită (0 lei costuri, 0% comision proprietar, fără exclusivitate). Dacă doriți să corectăm sau să adăugăm ceva la detalii sau preț, ne puteți scrie direct aici.";
 
 /** Subsol: cererea de acord rămâne explicită și retragerea e anunțată de la început. */
 export const WA_OWNER_OUTREACH_FOOTER = "Răspundeți DA pentru publicare sau NU. Retragere: RETRAG";
@@ -31,7 +31,10 @@ export function ownerOutreachPreviewUrl(p?: {
 } | null): string {
   const params = new URLSearchParams();
   params.set("zona", ownerOutreachZone(p));
-  params.set("tip", /vanzare|sale/i.test(String(p?.category ?? "")) ? "vanzare" : "inchiriere");
+  const tip = /vanzare|sale/i.test(String(p?.category ?? "")) ? "vanzare" : "inchiriere";
+  params.set("tip", tip);
+  // `listing_type=inchiriere` afișează pe /analiza-anunt eticheta pentru închiriere clasică & regim hotelier.
+  params.set("listing_type", tip);
   const src = String(p?.source_url ?? "").trim();
   if (/^https:\/\//i.test(src)) params.set("url", src.slice(0, 500));
   return `https://realtrust.ro/analiza-anunt?${params.toString()}`;
@@ -104,3 +107,75 @@ export function ownerOutreachConsentCheck(raw: string, requestTemplate?: string 
 /** Răspuns către proprietar când butonul DA vine fără confirmarea șablonului: preia un om. */
 export const OWNER_CONSENT_UNVERIFIED_ACK =
   "Mulțumim! Un coleg RealTrust vă confirmă activarea în scurt timp, aici pe WhatsApp.";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Răspunsurile proprietarului după mesajul cu butoane (outreach_proprietar_butoane_v1).
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Răspuns fix la întrebările despre cost / comision (doar pentru promovarea gratuită). */
+export const OWNER_OUTREACH_FEE_REPLY =
+  "Comisionul pentru dumneavoastră este fix 0 lei. Promovarea și prezentarea către clienții noștri este complet gratuită pentru proprietar.";
+
+/** Răspuns la obiecțiile despre chiriași / siguranță: propunem ApArt Hotel. */
+export const OWNER_OUTREACH_SAFETY_REPLY =
+  "Înțelegem perfect. Prin ApArt Hotel oferim administrare completă, menaj profesionist și protecția proprietății. Vă putem trimite o simulare de Regim Hotelier?";
+
+/** Confirmare când proprietarul trimite corecturi și nu există alt răspuns pregătit. */
+export const OWNER_CUSTOM_NOTES_ACK =
+  "Mulțumim! Am notat ce ne-ați transmis, iar un coleg RealTrust verifică detaliile și vă confirmă aici.";
+
+/** Confirmare când anunțul nu mai este valabil (vândut / închiriat). */
+export const OWNER_LISTING_CLOSED_ACK =
+  "Mulțumim că ne-ați anunțat! Am notat că anunțul nu mai este valabil și nu vă mai deranjăm. Mult succes!";
+
+/** Prefixul alertelor către administrator (bold pe WhatsApp cu *…*). */
+export const OWNER_REQUEST_ALERT_PREFIX = "[MODIFICARE/SOLICITARE PROPRIETAR DETECTATĂ]: ";
+
+export function ownerRequestAlertLine(message: string): string {
+  return `*${OWNER_REQUEST_ALERT_PREFIX.trim()}* ${message}`;
+}
+
+export type OwnerOutreachOptOut = "retrag" | "nu" | "sold" | "unavailable";
+export type OwnerOutreachReplySignals = {
+  optOut: OwnerOutreachOptOut | null;
+  fee: boolean;
+  safety: boolean;
+  customNotes: boolean;
+};
+
+const FEE_RE = /\b(?:cost\w*|comision\w*|pret(?:ul)?\s+servici\w*|pretul\s+serviciilor)\b/;
+// Întrebările despre administrare (15–20% din net) nu primesc răspunsul „0 lei”.
+const MANAGEMENT_RE = /administr|regim\w*\s+hotelier|\bhotelier|apart\s*hotel/;
+const SAFETY_RE = /\b(?:student\w*|stricaci\w*|garanti\w*|sigurant\w*)\b/;
+const CUSTOM_RE = /\b(?:pret\w*|parcar\w*|negociabil\w*|liber\w*|poz[ae]\w*)\b/;
+const SOLD_RE = /\bs-?a\s+(?:vandut|inchiriat)\b|\b(?:e|este|a\s+fost)\s+(?:deja\s+)?(?:vandut|inchiriat)\w*\b|\bam\s+(?:vandut|inchiriat)\b/;
+const UNAVAILABLE_RE = /\bnu\s+mai\s+(?:e|este)\s+(?:valabil|disponibil)\w*/;
+
+/**
+ * Semnalele din răspunsul proprietarului: retragere / refuz / vândut, întrebare de cost,
+ * obiecție de siguranță și corecturi (cifre, preț, parcare, negociabil, liber, poze, calcul hotelier).
+ */
+export function ownerOutreachReplySignals(raw: string): OwnerOutreachReplySignals {
+  const t = norm(raw);
+  const none: OwnerOutreachReplySignals = { optOut: null, fee: false, safety: false, customNotes: false };
+  if (!t) return none;
+  let optOut: OwnerOutreachOptOut | null = null;
+  if (/^retrag\b/.test(t)) optOut = "retrag";
+  else if (/^nu+(?:\s+doresc)?[\s!.,]*$/.test(t)) optOut = "nu";
+  else if (SOLD_RE.test(t)) optOut = "sold";
+  else if (UNAVAILABLE_RE.test(t)) optOut = "unavailable";
+  if (optOut) return { ...none, optOut };
+  const fee = FEE_RE.test(t) && !MANAGEMENT_RE.test(t);
+  const safety = SAFETY_RE.test(t);
+  const hasDigits = /\d/.test(t);
+  // „Cât e prețul serviciilor?” este o întrebare de cost, nu o corectură de preț.
+  const customWords = CUSTOM_RE.test(fee ? t.replace(FEE_RE, " ") : t);
+  const customNotes = hasDigits || customWords || isHotelCalcRequest(raw);
+  return { optOut: null, fee, safety, customNotes };
+}
+
+/** Textul răspunsului automat pentru cost și/sau obiecții (null dacă nu e cazul). */
+export function ownerOutreachObjectionReply(s: OwnerOutreachReplySignals): string | null {
+  const parts = [s.fee ? OWNER_OUTREACH_FEE_REPLY : null, s.safety ? OWNER_OUTREACH_SAFETY_REPLY : null].filter(Boolean);
+  return parts.length ? parts.join("\n\n") : null;
+}
