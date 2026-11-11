@@ -6717,6 +6717,7 @@ export type Database = {
           migrated_from_scraper_id: string | null
           next_callback_at: string | null
           outreach_error: string | null
+          outreach_recontact_at: string | null
           outreach_scheduled_at: string | null
           outreach_status: string | null
           outreach_status_at: string | null
@@ -6832,6 +6833,7 @@ export type Database = {
           migrated_from_scraper_id?: string | null
           next_callback_at?: string | null
           outreach_error?: string | null
+          outreach_recontact_at?: string | null
           outreach_scheduled_at?: string | null
           outreach_status?: string | null
           outreach_status_at?: string | null
@@ -6947,6 +6949,7 @@ export type Database = {
           migrated_from_scraper_id?: string | null
           next_callback_at?: string | null
           outreach_error?: string | null
+          outreach_recontact_at?: string | null
           outreach_scheduled_at?: string | null
           outreach_status?: string | null
           outreach_status_at?: string | null
