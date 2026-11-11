@@ -66,3 +66,79 @@ describe("răspunsurile proprietarului", () => {
     expect(looksLikeOwnerQuestion("Mulțumesc frumos")).toBe(false);
   });
 });
+
+import {
+  OWNER_OUTREACH_FEE_REPLY, OWNER_OUTREACH_SAFETY_REPLY, WA_OWNER_OUTREACH_BODY, ownerOutreachReplySignals,
+  ownerOutreachObjectionReply, ownerRequestAlertLine,
+} from "./waOwnerOutreachTemplate.ts";
+import { outreachWindow, OUTREACH_COOLDOWN_DAYS } from "./ownerOutreachPolicy.ts";
+
+describe("mesajul cu butoane — text și link (11 noiembrie)", () => {
+  it("textul nou cere acordul de preluare și păstrează cele 2 variabile", () => {
+    expect(WA_OWNER_OUTREACH_BODY.startsWith("Bună ziua! Sunt Andrei de la RealTrust Timișoara. Am văzut apartamentul dumneavoastră din {{1}}.")).toBe(true);
+    expect(WA_OWNER_OUTREACH_BODY).toContain("am dori acordul dumneavoastră să preluăm anunțul exact așa cum este publicat");
+    expect(WA_OWNER_OUTREACH_BODY).toContain("Puteți vedea analiza de prezentare aici: {{2}}");
+    expect(WA_OWNER_OUTREACH_BODY).toContain("0 lei costuri, 0% comision proprietar, fără exclusivitate");
+    expect(WA_OWNER_OUTREACH_BODY.match(/\{\{\d\}\}/g)).toEqual(["{{1}}", "{{2}}"]);
+    expect(WA_OWNER_OUTREACH_BODY.length).toBeLessThanOrEqual(1024);
+  });
+  it("linkul pentru închiriere poartă listing_type=inchiriere", () => {
+    expect(new URL(ownerOutreachPreviewUrl({ category: "inchiriere" })).searchParams.get("listing_type")).toBe("inchiriere");
+    expect(new URL(ownerOutreachPreviewUrl({ category: "vanzare" })).searchParams.get("listing_type")).toBe("vanzare");
+  });
+});
+
+describe("răspunsuri automate după mesajul cu butoane", () => {
+  it("cost / comision / preț servicii → 0 lei fix", () => {
+    for (const t of ["Cât costă?", "Care e comisionul?", "pret servicii?"]) {
+      const s = ownerOutreachReplySignals(t);
+      expect(s.fee).toBe(true);
+      expect(ownerOutreachObjectionReply(s)).toBe(OWNER_OUTREACH_FEE_REPLY);
+    }
+    expect(OWNER_OUTREACH_FEE_REPLY).toBe("Comisionul pentru dumneavoastră este fix 0 lei. Promovarea și prezentarea către clienții noștri este complet gratuită pentru proprietar.");
+    expect(ownerOutreachReplySignals("pret servicii?").customNotes).toBe(false);
+  });
+  it("întrebările despre administrare nu primesc „0 lei”", () => {
+    expect(ownerOutreachReplySignals("Cât e comisionul la administrare în regim hotelier?").fee).toBe(false);
+  });
+  it("studenți / stricăciuni / garanție / siguranță → oferta ApArt Hotel", () => {
+    for (const t of ["Nu vreau studenți", "mi-e frică de stricăciuni", "aveți garanție?", "e o problemă de siguranță"]) {
+      expect(ownerOutreachObjectionReply(ownerOutreachReplySignals(t))).toBe(OWNER_OUTREACH_SAFETY_REPLY);
+    }
+  });
+  it("corecturile (cifre, preț, parcare, negociabil, liber, poze, calcul hotelier) sunt note de proprietar", () => {
+    for (const t of ["Prețul e 85000", "are și parcare", "negociabil", "e liber din decembrie", "vă trimit poze noi", OWNER_OUTREACH_BUTTONS.hotelCalc]) {
+      expect(ownerOutreachReplySignals(t).customNotes).toBe(true);
+    }
+    expect(ownerOutreachReplySignals("DA").customNotes).toBe(false);
+  });
+  it("RETRAG, Nu, S-a vândut, Nu mai e valabil → dezabonare", () => {
+    expect(ownerOutreachReplySignals("RETRAG").optOut).toBe("retrag");
+    expect(ownerOutreachReplySignals("Nu").optOut).toBe("nu");
+    expect(ownerOutreachReplySignals("S-a vândut").optOut).toBe("sold");
+    expect(ownerOutreachReplySignals("Nu mai e valabil").optOut).toBe("unavailable");
+    expect(ownerOutreachReplySignals("S-a vândut, preț 90000").customNotes).toBe(false);
+  });
+  it("alerta către admin începe cu prefixul îngroșat și textul exact", () => {
+    expect(ownerRequestAlertLine("are parcare")).toBe("*[MODIFICARE/SOLICITARE PROPRIETAR DETECTATĂ]:* are parcare");
+  });
+});
+
+describe("intervalul de trimitere și limita pe număr", () => {
+  it("09:00–19:30 ora României; în afara intervalului → 09:05", () => {
+    // 11 nov 2026: ora României = UTC+2
+    expect(outreachWindow(new Date("2026-11-11T07:00:00Z")).open).toBe(true);   // 09:00
+    expect(outreachWindow(new Date("2026-11-11T17:30:00Z")).open).toBe(true);   // 19:30
+    const late = outreachWindow(new Date("2026-11-11T17:31:00Z"));             // 19:31
+    expect(late.open).toBe(false);
+    expect(late.nextSendAt.toISOString()).toBe("2026-11-12T07:05:00.000Z");
+    const early = outreachWindow(new Date("2026-11-11T05:00:00Z"));            // 07:00
+    expect(early.open).toBe(false);
+    expect(early.nextSendAt.toISOString()).toBe("2026-11-11T07:05:00.000Z");
+    // vara: UTC+3
+    expect(outreachWindow(new Date("2026-07-01T20:00:00Z")).nextSendAt.toISOString()).toBe("2026-07-02T06:05:00.000Z");
+  });
+  it("cel mult un mesaj la 30 de zile pe număr", () => {
+    expect(OUTREACH_COOLDOWN_DAYS).toBe(30);
+  });
+});
