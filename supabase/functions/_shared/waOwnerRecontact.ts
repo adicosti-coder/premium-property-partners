@@ -8,9 +8,10 @@ export const WA_OWNER_RECONTACT_LANGUAGE = "ro";
 export const OWNER_RECONTACT_AFTER_DAYS = 30;
 export const OWNER_RECONTACT_SOURCE = "owner_recontact";
 
+// Meta nu acceptă o variabilă la finalul corpului → încheiem cu „Vă mulțumim!”.
 export const WA_OWNER_RECONTACT_BODY =
   "Bună ziua! Am văzut că apartamentul dumneavoastră din {{1}} este încă disponibil. " +
-  "Avem noi cereri de la investitori și clienți calificați în zonă. Doriți să îl prezentăm acestora? {{2}}";
+  "Avem noi cereri de la investitori și clienți calificați în zonă. Doriți să îl prezentăm acestora? {{2}}\n\nVă mulțumim!";
 
 export const WA_OWNER_RECONTACT_COMPONENTS = [
   {

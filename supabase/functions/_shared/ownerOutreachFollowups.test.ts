@@ -27,7 +27,7 @@ describe("re-contactarea unică la 30 de zile", () => {
   const now = new Date("2026-12-15T10:00:00Z");
   const base = { outreach_status: "whatsapp_delivered", outreach_status_at: "2026-11-10T10:00:00Z", outreach_recontact_at: null, lifecycle_status: "new", expiry_check_status: "ok", do_not_call: false };
   it("textul este cel aprobat, cu zona și linkul", () => {
-    expect(WA_OWNER_RECONTACT_BODY).toBe("Bună ziua! Am văzut că apartamentul dumneavoastră din {{1}} este încă disponibil. Avem noi cereri de la investitori și clienți calificați în zonă. Doriți să îl prezentăm acestora? {{2}}");
+    expect(WA_OWNER_RECONTACT_BODY).toBe("Bună ziua! Am văzut că apartamentul dumneavoastră din {{1}} este încă disponibil. Avem noi cereri de la investitori și clienți calificați în zonă. Doriți să îl prezentăm acestora? {{2}}\n\nVă mulțumim!");
     expect(OWNER_RECONTACT_AFTER_DAYS).toBe(30);
   });
   it("eligibil după 30 de zile fără răspuns, cu anunțul activ", () => {
