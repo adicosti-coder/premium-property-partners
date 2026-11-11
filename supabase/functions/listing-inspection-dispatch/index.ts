@@ -2,7 +2,7 @@
 // + mesaj de inspecție pe WhatsApp-ul de administrare cu butoanele Aprob / Respinge.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
-import { ensureInspectionTemplate, isOutsideWindowError, missingCriticalFields, sendAdminWa, sendInspectionTemplate } from "../_shared/listingInspection.ts";
+import { adminApprovalSummary, ensureInspectionTemplate, isOutsideWindowError, missingCriticalFields, sendAdminWa, sendInspectionTemplate } from "../_shared/listingInspection.ts";
 import { detectZone } from "../_shared/detectZone.ts";
 
 const corsHeaders = {
@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
 
-  const SELECT = "id, title, description, zone, price, rooms, size, category, source_url, contact_phone, phone_normalized";
+  const SELECT = "id, title, description, zone, price, rooms, size, category, source_url, contact_phone, phone_normalized, lead_score";
   let { data: p } = await supabase.from("prospect_listings").select(SELECT).eq("id", prospectId).maybeSingle();
   if (!p) return json({ error: "not found" }, 404);
 
@@ -105,19 +105,35 @@ Deno.serve(async (req) => {
     .replace(/^###.*$/gm, "").replace(/[*_#>`]/g, "").replace(/\s+/g, " ").trim().slice(0, 300);
   const isRent = String(p.category || "").toLowerCase() === "inchiriere";
   const priceTxt = clean.price ? `${Number(clean.price).toLocaleString("ro-RO")} €${isRent ? "/lună" : ""}` : "—";
+  // Chirie estimată: la închiriere = chiria cerută; la vânzare = chiria clasică din comparabilele
+  // reale (listing-market-score, ultimele 180 de zile). Fără date → „—”.
+  const zoneTxt = clean.neighborhood || p.zone || "—";
+  let estimateMonthly: number | null = isRent ? (Number(clean.price) || Number(p.price) || null) : null;
+  if (!isRent && Number(clean.price || p.price) >= 10_000 && Number(p.size) >= 15) {
+    try {
+      const mr = await fetch(`${supabaseUrl}/functions/v1/listing-market-score`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: serviceKey, Authorization: `Bearer ${serviceKey}` },
+        body: JSON.stringify({ price: Number(clean.price || p.price), size: Number(p.size), rooms: p.rooms, zone: zoneTxt }),
+        signal: AbortSignal.timeout(8_000),
+      });
+      const m = await mr.json().catch(() => ({}));
+      if (mr.ok && Number(m?.classic_rent_month) > 0) estimateMonthly = Number(m.classic_rent_month);
+    } catch (e) { console.error("[inspection] market estimate failed:", e); }
+  }
+  const summary = adminApprovalSummary({
+    zone: zoneTxt, isRent, price: Number(clean.price) || Number(p.price) || null, estimateMonthly, leadScore: p.lead_score,
+  });
   const warn = missing.length
     ? `⚠️ LIPSEȘTE: ${missing.join(" și ")}. Răspundeți la mesaj cu valoarea + decizia, ex. ${missing.includes("preț") ? "„75000 1”" : "„Iosefin 1”"}.`
     : "";
   const bodyText = [
-    isRent ? "🔎 Anunț nou de inspectat · ÎNCHIRIERE" : "🔎 Anunț nou de inspectat · VÂNZARE",
+    summary,
+    "",
     `*${clean.clean_title}*`,
-    `💶 ${priceTxt} · 📍 ${clean.neighborhood || p.zone || "—"}`,
     warn,
-    "",
-    preview ? `${preview}…` : "",
-    "",
-    "Răspundeți 1 / Aprob pentru publicare sau 2 / Respinge pentru arhivare.",
-  ].join("\n").slice(0, 1020);
+    preview ? `${preview.slice(0, 220)}…` : "",
+  ].filter((l, i, a) => l !== "" || a[i - 1] !== "").join("\n").slice(0, 1020);
 
   let sent = await sendAdminWa({
     type: "interactive",
@@ -140,7 +156,11 @@ Deno.serve(async (req) => {
       title: clean.clean_title,
       price: priceTxt,
       zone: clean.neighborhood || p.zone || "—",
-      note: missing.length ? `lipsește ${missing.join(" și ")}, răspundeți cu valoarea și decizia` : "date complete",
+      note: [
+        missing.length ? `lipsește ${missing.join(" și ")}, răspundeți cu valoarea și decizia` : "date complete",
+        `chirie/randament estimat ${estimateMonthly ? `${Math.round(estimateMonthly).toLocaleString("ro-RO")} €/lună` : "—"}`,
+        `scor lead ${p.lead_score != null ? (Math.round(Number(p.lead_score)) / 10).toLocaleString("ro-RO") : "—"}/10`,
+      ].join("; "),
     });
     sent = t.ok ? t : { ok: false, error: `${sent.error} | ${t.error}` };
   }
