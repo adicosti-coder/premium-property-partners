@@ -8,15 +8,16 @@ import { SourceLink } from "@/components/admin/shared/SourceLink";
 import AndreiBatchCampaignControl from "@/components/admin/AndreiBatchCampaignControl";
 import { useWebMCP } from "use-webmcp-tool";
 import { runWebMCPTool } from "@/lib/webmcp-telemetry";
+import { ownerSmsHref, ownerSmsText } from "@/lib/ownerSmsFallback";
 
-type Row = { id: string; title: string | null; price: number | null; zone: string | null; location: string | null; phone_normalized: string | null; contact_phone: string | null; source_url: string | null; seller_type?: string | null; seller_type_reason?: string | null; reason: "no_mobile" | "no_reply" | "no_whatsapp" };
+type Row = { id: string; title: string | null; category?: string | null; price: number | null; zone: string | null; location: string | null; phone_normalized: string | null; contact_phone: string | null; source_url: string | null; seller_type?: string | null; seller_type_reason?: string | null; reason: "no_mobile" | "no_reply" | "no_whatsapp" };
 const isMobile = (p?: string | null) => /^\+407\d{8}$/.test(p ?? "");
 const toE164 = (p?: string | null) => {
   const d = (p ?? "").replace(/\D/g, "").replace(/^0040/, "40");
   const n = d.startsWith("40") ? d : d.startsWith("0") ? `40${d.slice(1)}` : d;
   return n ? `+${n}` : "";
 };
-const COLS = "id, title, price, zone, location, phone_normalized, contact_phone, source_url, seller_type, seller_type_reason";
+const COLS = "id, title, category, price, zone, location, phone_normalized, contact_phone, source_url, seller_type, seller_type_reason";
 const SELLER: Record<string, { label: string; v: "default" | "destructive" | "outline" }> = {
   privat: { label: "Proprietar Privat", v: "default" },
   agentie: { label: "Agenție", v: "destructive" },
@@ -89,6 +90,19 @@ export default function CallsToMakePanel() {
     toast.success("Andrei sună acum. Rezultatul apare la prospect după apel.");
   };
 
+  // Fără WhatsApp: copiază SMS-ul și, pe telefon, deschide direct aplicația de mesaje.
+  const sendSms = async (r: Row) => {
+    const to = toE164(r.phone_normalized || r.contact_phone);
+    const text = ownerSmsText(r.zone || r.location, r.category);
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Textul SMS a fost copiat");
+    } catch {
+      toast.info(text, { duration: 15_000 });
+    }
+    if (to && window.matchMedia?.("(pointer: coarse)").matches) window.location.href = ownerSmsHref(to, text);
+  };
+
   const rows = q.data ?? [];
 
   useWebMCP({
@@ -140,6 +154,11 @@ export default function CallsToMakePanel() {
                   <td className="p-2"><SourceLink url={r.source_url} /></td>
                   <td className="p-2">
                     <div className="flex flex-col gap-2">
+                      {r.reason === "no_whatsapp" && (
+                        <Button size="sm" variant="outline" className="min-h-[44px]" onClick={() => sendSms(r)}>
+                          Copiază / Trimite SMS
+                        </Button>
+                      )}
                       {isMobile(toE164(phone)) && (
                         <Button size="sm" variant="secondary" className="min-h-[44px]" disabled={calling === r.id} onClick={() => callAndrei(r)}>
                           {calling === r.id ? "Se apelează…" : "Sune Andrei (Agent AI)"}
