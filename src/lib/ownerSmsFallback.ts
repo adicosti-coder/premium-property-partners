@@ -16,7 +16,7 @@ export function ownerSmsShortLink(zone?: string | null, category?: string | null
 
 export function ownerSmsText(zone?: string | null, category?: string | null): string {
   const z = noDiacritics(cleanZone(zone));
-  return `Buna ziua! Am vazut anuntul dumneavoastra din ${z}. Vedeti gratuit analiza de prezentare RealTrust aici: ${ownerSmsShortLink(zone, category)} . Detalii la ${OWNER_SMS_CONTACT_PHONE}.`;
+  return `Buna ziua! Am vazut anuntul dvoastra din ${z}. Vedeti gratuit analiza de prezentare RealTrust aici: ${ownerSmsShortLink(zone, category)} . Detalii la ${OWNER_SMS_CONTACT_PHONE}.`;
 }
 
 /** Link `sms:` care deschide aplicația de mesaje cu textul completat (iOS și Android). */

@@ -4,7 +4,7 @@ import { ownerSmsHref, ownerSmsShortLink, ownerSmsText, shortAnalysisTarget } fr
 describe("SMS pentru proprietarii fără WhatsApp", () => {
   it("textul are zona, linkul scurt și numărul de contact", () => {
     expect(ownerSmsText("Iosefin", "inchiriere")).toBe(
-      "Buna ziua! Am vazut anuntul dumneavoastra din Iosefin. Vedeti gratuit analiza de prezentare RealTrust aici: realtrust.ro/aa/i/Iosefin . Detalii la 0723154520.",
+      "Buna ziua! Am vazut anuntul dvoastra din Iosefin. Vedeti gratuit analiza de prezentare RealTrust aici: realtrust.ro/aa/i/Iosefin . Detalii la 0723154520.",
     );
   });
   it("vânzare → /aa/v, fără diacritice, zonă de rezervă Timișoara", () => {
