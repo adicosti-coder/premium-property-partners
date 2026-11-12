@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { hasEnglishTranslation, sitemapAlternateLinks, sitemapLanguageBlocks } from "../_shared/seoLanguage.ts";
+import { CONSOLIDATED_ARTICLE_SLUG_LIST } from "../_shared/consolidatedArticles.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -116,6 +117,8 @@ serve(async (req: Request) => {
       .eq("is_published", true)
       // Members-only articles are not public pages — keep them out.
       .eq("is_premium", false)
+      // Consolidated articles redirect to another page — never list them.
+      .not("slug", "in", CONSOLIDATED_ARTICLE_SLUG_LIST)
       .not("slug", "is", null)
       .order("published_at", { ascending: false });
 

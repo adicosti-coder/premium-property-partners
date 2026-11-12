@@ -96,3 +96,27 @@ describe("prerender head script", () => {
     }
   });
 });
+
+import { CONSOLIDATED_ARTICLE_REDIRECTS } from "../data/consolidatedArticleRedirects";
+import { CONSOLIDATED_ARTICLE_SLUGS } from "../../supabase/functions/_shared/consolidatedArticles";
+import { generateRedirectHtml } from "../../plugins/vite-prerender-seo";
+import dynamicSitemapXml from "../../public/sitemap-dynamic.xml?raw";
+
+describe("consolidated articles", () => {
+  it("sitemap functions exclude exactly the redirected slugs", () => {
+    expect([...CONSOLIDATED_ARTICLE_SLUGS].sort()).toEqual(Object.keys(CONSOLIDATED_ARTICLE_REDIRECTS).sort());
+  });
+  it("are not listed in the sitemap", () => {
+    for (const slug of Object.keys(CONSOLIDATED_ARTICLE_REDIRECTS)) {
+      expect(dynamicSitemapXml).not.toContain(`<loc>https://realtrust.ro/blog/${slug}<`);
+      expect(dynamicSitemapXml).not.toContain(`<loc>https://realtrust.ro/blog/${slug}?`);
+    }
+  });
+  it("the reported address redirects to the investment guide and keeps the English choice", () => {
+    const html = generateRedirectHtml(CONSOLIDATED_ARTICLE_REDIRECTS["timisoara-investitii-imobiliare"]);
+    expect(html).toContain('<link rel="canonical" href="https://realtrust.ro/blog/ghid-investitii-imobiliare-timisoara-2026" />');
+    expect(html).toContain('http-equiv="refresh" content="0; url=https://realtrust.ro/blog/ghid-investitii-imobiliare-timisoara-2026"');
+    expect(html).toContain("?lang=en");
+    expect(html).not.toContain("noindex");
+  });
+});

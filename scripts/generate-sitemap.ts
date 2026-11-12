@@ -28,6 +28,7 @@
 import { writeFileSync, existsSync, readFileSync } from "fs";
 import { resolve } from "path";
 import { ENGLISH_VERSION_PATTERN } from "../src/lib/seoLanguagePolicy";
+import { CONSOLIDATED_ARTICLE_REDIRECTS } from "../src/data/consolidatedArticleRedirects";
 
 const BASE_URL = "https://realtrust.ro";
 const HOST = "realtrust.ro";
@@ -235,6 +236,8 @@ const isListable = (block: string, publicSlugs: Set<string> | null): boolean => 
   }
 
   const articleSlug = path.match(/^\/blog\/([^/]+)$/)?.[1];
+  // Consolidated articles permanently redirect elsewhere.
+  if (articleSlug && CONSOLIDATED_ARTICLE_REDIRECTS[articleSlug]) return false;
   // Only articles a visitor can actually read may be listed. The gated
   // (member-only) list is not readable at build time by design, so the check is
   // an allowlist of public slugs rather than a blocklist of premium ones.
