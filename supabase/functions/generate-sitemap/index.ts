@@ -21,6 +21,8 @@ const BASE_URL = "https://realtrust.ro";
 interface BlogArticle {
   slug: string;
   title: string;
+  title_en?: string | null;
+  content_en?: string | null;
   published_at: string | null;
   created_at: string;
   cover_image: string | null;
