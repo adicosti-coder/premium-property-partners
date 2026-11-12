@@ -1,5 +1,5 @@
 import { marked } from "marked";
-import { useParams, Link, useNavigate, Navigate } from "react-router-dom";
+import { useParams, Link, useNavigate, Navigate, useLocation } from "react-router-dom";
 import { hasAnalyticsConsent } from "@/lib/conversionTracking";
 import { resolveConsolidatedArticle, CONSOLIDATED_ARTICLE_SLUG_LIST } from "@/data/consolidatedArticleRedirects";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -12,7 +12,7 @@ import { useArticleViewTracking } from "@/hooks/useArticleViewTracking";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
-import { hasEnglishTranslation } from "@/lib/seoLanguagePolicy";
+import { hasEnglishTranslation, isEnglishRequest } from "@/lib/seoLanguagePolicy";
 import { SocialFollow } from "@/components/social/SocialFollow";
 
 const BlogComments = lazy(() => import("@/components/BlogComments"));
@@ -1026,8 +1026,13 @@ const BlogArticlePage = () => {
 
 const BlogArticleRoute = () => {
   const { slug } = useParams();
+  const { search, hash } = useLocation();
   const consolidatedTarget = resolveConsolidatedArticle(slug);
-  if (consolidatedTarget) return <Navigate to={consolidatedTarget} replace />;
+  // Keep only the language choice on the permanent redirect (tracking
+  // parameters are dropped so the destination URL stays canonical).
+  if (consolidatedTarget) {
+    return <Navigate to={{ pathname: consolidatedTarget, search: isEnglishRequest(search) ? "?lang=en" : "", hash }} replace />;
+  }
   return <BlogArticlePage />;
 };
 
