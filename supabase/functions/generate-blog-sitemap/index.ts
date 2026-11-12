@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { hasEnglishTranslation, sitemapLanguageBlocks } from "../_shared/seoLanguage.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,7 +31,7 @@ serve(async (req: Request) => {
 
     const { data: articles } = await supabase
       .from("blog_articles")
-      .select("slug, title, published_at, updated_at, created_at, cover_image, main_image_url, geo_location")
+      .select("slug, title, title_en, content_en, published_at, updated_at, created_at, cover_image, main_image_url, geo_location")
       .eq("is_published", true)
       // Premium articles are members-only: they are not public documents, so
       // they must never appear in the sitemap.
@@ -119,21 +120,14 @@ serve(async (req: Request) => {
       <image:title>${escapeXml(a.title)}</image:title>
     </image:image>`;
       }
-      const articleLoc = `${BASE_URL}/blog/${a.slug}`;
-      // RO + EN both resolve to the same client-side URL (language is app state,
-      // not a URL segment). Declare xhtml:link hreflang alternates so Google
-      // indexes both language variants against the shared canonical.
-      const hreflangTags = `
-    <xhtml:link rel="alternate" hreflang="ro-RO" href="${articleLoc}"/>
-
-    <xhtml:link rel="alternate" hreflang="x-default" href="${articleLoc}"/>`;
-      xml += `  <url>
-    <loc>${articleLoc}</loc>${lastmod ? `
-    <lastmod>${lastmod}</lastmod>` : ""}
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>${hreflangTags}${imageTag}
-  </url>
-`;
+      // Translated articles list the Romanian URL and its `?lang=en` version,
+      // each with reciprocal ro/en/x-default alternates (src/lib/seoLanguagePolicy.ts).
+      xml += sitemapLanguageBlocks(`/blog/${a.slug}`, hasEnglishTranslation(a), {
+        lastmod,
+        changefreq: "weekly",
+        priority: "0.7",
+        image: imageTag,
+      });
     }
 
     xml += `</urlset>`;
