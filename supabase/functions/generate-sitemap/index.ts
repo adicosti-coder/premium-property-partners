@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { hasEnglishTranslation, sitemapAlternateLinks, sitemapLanguageBlocks } from "../_shared/seoLanguage.ts";
+import { CONSOLIDATED_ARTICLE_SLUG_LIST } from "../_shared/consolidatedArticles.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,6 +22,8 @@ const BASE_URL = "https://realtrust.ro";
 interface BlogArticle {
   slug: string;
   title: string;
+  title_en?: string | null;
+  content_en?: string | null;
   published_at: string | null;
   created_at: string;
   cover_image: string | null;
@@ -109,10 +113,12 @@ serve(async (req: Request) => {
     // Fetch published blog articles (with image for image sitemap)
     const { data: blogArticles, error: blogError } = await supabase
       .from("blog_articles")
-      .select("slug, title, published_at, created_at, cover_image")
+      .select("slug, title, title_en, content_en, published_at, created_at, cover_image")
       .eq("is_published", true)
       // Members-only articles are not public pages — keep them out.
       .eq("is_premium", false)
+      // Consolidated articles redirect to another page — never list them.
+      .not("slug", "in", CONSOLIDATED_ARTICLE_SLUG_LIST)
       .not("slug", "is", null)
       .order("published_at", { ascending: false });
 
@@ -166,12 +172,9 @@ serve(async (req: Request) => {
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 `;
 
-    // Helper to generate hreflang alternates — RO and EN share the same canonical URL
-    // (language is a client-side state, not a URL segment). This prevents GSC from reporting
-    // duplicate "alternative page with canonical tag" pages for ?lang=en variants.
-    const hreflang = (path: string) => `    <xhtml:link rel="alternate" hreflang="ro" href="${BASE_URL}${path}" />
-
-    <xhtml:link rel="alternate" hreflang="x-default" href="${BASE_URL}${path}" />`;
+    // Romanian-only pages: ro + x-default. English alternates only for pages
+    // with a real translation (see _shared/seoLanguage.ts).
+    const hreflang = (path: string) => sitemapAlternateLinks(path, false);
 
     // Add static pages — no <lastmod>: these pages have no per-page timestamp,
     // and emitting the current date on every request is a meaningless signal.
@@ -209,14 +212,12 @@ ${hreflang(page.url)}
     </image:image>`;
         }
 
-        xml += `  <url>
-    <loc>${BASE_URL}/blog/${article.slug}</loc>
-    <lastmod>${lastmod}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>${imageTag}
-${hreflang(`/blog/${article.slug}`)}
-  </url>
-`;
+        xml += sitemapLanguageBlocks(`/blog/${article.slug}`, hasEnglishTranslation(article), {
+          lastmod,
+          changefreq: "weekly",
+          priority: "0.7",
+          image: imageTag,
+        });
       }
     }
 

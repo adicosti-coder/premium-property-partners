@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { CONSOLIDATED_ARTICLE_SLUG_LIST } from "@/data/consolidatedArticleRedirects";
 import { Link } from "react-router-dom";
 import { ArrowRight, BookOpen, Calculator, FileText, Shield, TrendingUp } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
@@ -46,6 +47,7 @@ export default function HomeRecommendedLinks() {
         .from("blog_articles")
         .select("title,title_en,slug,excerpt,excerpt_en,category")
         .eq("is_published", true)
+        .not("slug", "in", CONSOLIDATED_ARTICLE_SLUG_LIST)
         .or("title.ilike.%ROI%,excerpt.ilike.%ROI%,category.ilike.%invest%")
         .order("published_at", { ascending: false })
         .limit(2);

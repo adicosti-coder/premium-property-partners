@@ -1,6 +1,6 @@
 # Project Architecture Rules
 
-- LanguageProvider allows explicit English selection; SEOHead shares the language robots policy and the provider supplies an English fallback tag — prevents partial translations from becoming indexable while preserving Romanian route restrictions.
+- Canonical/hreflang/robots come only from `src/lib/seoLanguagePolicy.ts` (edge mirror `_shared/seoLanguage.ts`, parity-tested); `?lang=en` self-canonicalizes only on pages passing `englishAvailable`, else points to Romanian; robots ignore language — prevents duplicate-canonical and noindex conflicts.
 
 - Visitor-memory AI summaries require a verified user and session ownership before metered work; automation completion RPC is service-role-only — prevents unauthorized credit consumption and job manipulation.
 - Restaurant-guide JSON-LD escapes HTML tag openers and lead-magnet diagnostics record only fixed messages/status codes — prevents stored script injection and personal data in logs.
@@ -51,7 +51,7 @@
 - Calculator submissions use a payload-bound stable submission UUID; channel sends atomically claim per-lead state and only definitive failures permit channel-specific admin retry, while capability-scoped polling and signed Meta/Resend receipts confirm delivery — prevents duplicate saves, cross-channel resends and false receipt promises.
 - Homepage calculator anchors stay outside lazy boundaries; both hash aliases and CTAs force loading and wait for the tool's step-independent readiness marker before scrolling — prevents jumps to placeholders and broken navigation after step 1.
 - Viewing requests persist through the protected lead endpoint before opening WhatsApp or emitting Lead; failures produce neither chat navigation nor conversion — prevents false conversions.
-- Prerendered HTML ships one static Romanian canonical that the global route Helmet emitter replaces on mount; singular complex routes have a client fallback to plural — prevents duplicate canonicals while server redirects remain hosting-owned.
+- Prerender ships a raw canonical only if identical for all query variants (else a sync head script sets it); consolidated blog slugs get redirect documents and stay out of lists/sitemaps — raw and rendered canonicals never disagree.
 - Social publication claims use `posting`, not `posted`; only confirmed external IDs finalize publication, failures return to draft with errors and partial delivery preserves successful platforms — prevents false published states and duplicate retries.
 - English on public pages falls back to `PhraseTranslator` (exact-phrase map in `public/i18n/en-phrases.json`, lazy-loaded, skips admin/owner portal/blog articles); new hardcoded Romanian copy needs a map entry or a dictionary key — avoids rewriting every page while translations are partial.
 - PhraseTranslator restores its text and attribute mutations on cleanup only while they still match its translated values — prevents mixed-language round trips without overwriting newer React content.

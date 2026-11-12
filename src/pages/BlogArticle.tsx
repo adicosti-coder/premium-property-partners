@@ -1,7 +1,7 @@
 import { marked } from "marked";
-import { useParams, Link, useNavigate, Navigate } from "react-router-dom";
+import { useParams, Link, useNavigate, Navigate, useLocation } from "react-router-dom";
 import { hasAnalyticsConsent } from "@/lib/conversionTracking";
-import { resolveConsolidatedArticle } from "@/data/consolidatedArticleRedirects";
+import { resolveConsolidatedArticle, CONSOLIDATED_ARTICLE_SLUG_LIST } from "@/data/consolidatedArticleRedirects";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
@@ -12,6 +12,7 @@ import { useArticleViewTracking } from "@/hooks/useArticleViewTracking";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
+import { hasEnglishTranslation, isEnglishRequest } from "@/lib/seoLanguagePolicy";
 import { SocialFollow } from "@/components/social/SocialFollow";
 
 const BlogComments = lazy(() => import("@/components/BlogComments"));
@@ -93,6 +94,7 @@ const BlogArticlePage = () => {
             "id, slug, title, excerpt, cover_image, main_image_url, category, geo_location, published_at, created_at, view_count"
           )
           .eq("is_published", true)
+          .not("slug", "in", CONSOLIDATED_ARTICLE_SLUG_LIST)
           .not("geo_location", "is", null)
           .order("published_at", { ascending: false });
         return (data ?? []).filter(
@@ -555,6 +557,7 @@ const BlogArticlePage = () => {
           description={displayExcerpt}
           type="article"
           noIndex
+          englishAvailable={false}
         />
         <Header />
         <main className="pt-24 pb-16">
@@ -735,6 +738,7 @@ const BlogArticlePage = () => {
         author={canonicalAuthor}
         articleTags={article.tags}
         articleCategory={article.category}
+        englishAvailable={hasEnglishTranslation(article)}
       />
       <Header />
       <Suspense fallback={null}>
@@ -1022,8 +1026,13 @@ const BlogArticlePage = () => {
 
 const BlogArticleRoute = () => {
   const { slug } = useParams();
+  const { search, hash } = useLocation();
   const consolidatedTarget = resolveConsolidatedArticle(slug);
-  if (consolidatedTarget) return <Navigate to={consolidatedTarget} replace />;
+  // Keep only the language choice on the permanent redirect (tracking
+  // parameters are dropped so the destination URL stays canonical).
+  if (consolidatedTarget) {
+    return <Navigate to={{ pathname: consolidatedTarget, search: isEnglishRequest(search) ? "?lang=en" : "", hash }} replace />;
+  }
   return <BlogArticlePage />;
 };
 

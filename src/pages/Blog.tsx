@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { CONSOLIDATED_ARTICLE_SLUG_LIST } from "@/data/consolidatedArticleRedirects";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery, keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
@@ -85,6 +86,7 @@ const Blog = () => {
         .from("blog_articles")
         .select("*")
         .eq("is_published", true)
+        .not("slug", "in", CONSOLIDATED_ARTICLE_SLUG_LIST)
         .order("published_at", { ascending: false });
 
       if (error) throw error;

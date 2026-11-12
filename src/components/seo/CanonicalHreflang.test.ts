@@ -9,9 +9,14 @@ describe("buildLangAlternates", () => {
     expect(r.canonical).toBe(base);
     expect(r.languages).toEqual({ ro: base, "x-default": base });
   });
-  it("EN page self-canonicalizes with ?lang=en", () => {
+  it("untranslated EN page canonicalizes to the Romanian URL", () => {
     const r = buildLangAlternates("/avenue-of-mara-apart-hotel", "?lang=en&fbclid=x");
+    expect(r.canonical).toBe(base);
+  });
+  it("translated EN page self-canonicalizes with ?lang=en", () => {
+    const r = buildLangAlternates("/avenue-of-mara-apart-hotel", "?lang=en&fbclid=x", true);
     expect(r.canonical).toBe(`${base}?lang=en`);
+    expect(r.languages).toEqual({ ro: base, en: `${base}?lang=en`, "x-default": base });
   });
 });
 

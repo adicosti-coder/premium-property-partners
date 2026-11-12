@@ -9,6 +9,8 @@
  * publicly, so they are emitted as `noindex` documents instead.
  */
 
+import { hasEnglishTranslation } from '../src/lib/seoLanguagePolicy';
+
 const BASE_URL = 'https://realtrust.ro';
 const SUPABASE_URL = 'https://mvzssjyzbwccioqvhjpo.supabase.co';
 const SUPABASE_ANON_KEY =
@@ -25,6 +27,9 @@ export interface ExtraRoute {
   image?: string;
   /** Emitted with `<meta name="robots" content="noindex, follow">`. */
   noindex?: boolean;
+  /** Real English translation exists (title_en + content_en). */
+  englishAvailable?: boolean;
+  english?: { title?: string; description?: string };
 }
 
 const esc = (s: string): string =>
@@ -159,6 +164,9 @@ interface DbArticle {
   faq_items: unknown;
   geo_location: string | null;
   tags: string[] | null;
+  title_en?: string | null;
+  excerpt_en?: string | null;
+  content_en?: string | null;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -173,7 +181,7 @@ const CATEGORY_SLUGS = Object.keys(CATEGORY_LABELS);
 /** Articles readable by an anonymous visitor (non-premium, published). */
 export async function fetchPublicArticles(): Promise<DbArticle[]> {
   return restGet<DbArticle>(
-    'blog_articles?is_published=eq.true&is_premium=eq.false&select=slug,title,excerpt,content,category,author_name,published_at,updated_at,created_at,meta_title,meta_description,cover_image,main_image_url,faq_items,geo_location,tags&order=published_at.desc',
+    'blog_articles?is_published=eq.true&is_premium=eq.false&select=slug,title,excerpt,content,title_en,excerpt_en,content_en,category,author_name,published_at,updated_at,created_at,meta_title,meta_description,cover_image,main_image_url,faq_items,geo_location,tags&order=published_at.desc',
   );
 }
 
@@ -281,6 +289,7 @@ export function buildArticleRoutes(articles: DbArticle[]): ExtraRoute[] {
       });
     }
 
+    const englishAvailable = hasEnglishTranslation(a);
     return {
       path: `/blog/${a.slug}`,
       title,
@@ -290,6 +299,15 @@ export function buildArticleRoutes(articles: DbArticle[]): ExtraRoute[] {
       seoBody,
       image: img,
       jsonLd,
+      englishAvailable,
+      ...(englishAvailable
+        ? {
+            english: {
+              title: clampText(`${(a.title_en || '').trim()} | RealTrust`, 60),
+              description: clampText((a.excerpt_en || a.title_en || '').trim(), 158),
+            },
+          }
+        : {}),
     };
   });
 }

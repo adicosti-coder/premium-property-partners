@@ -15,8 +15,9 @@
  * Canonical hygiene enforced here (nothing else in the pipeline is trusted):
  *   - https only
  *   - apex host `realtrust.ro` (www + function host are rewritten)
- *   - no query strings at all (`?lang=en`, utm_*, gclid… are dropped);
- *     language variants are expressed exclusively through <xhtml:link hreflang>
+ *   - no query strings (utm_*, gclid… are dropped) except `?lang=en` on
+ *     translated article pages (src/lib/seoLanguagePolicy.ts), which are
+ *     listed only with reciprocal ro/en/x-default alternates
  *   - no trailing slash except the root
  *   - deduplicated by <loc>
  *
@@ -26,6 +27,8 @@
 
 import { writeFileSync, existsSync, readFileSync } from "fs";
 import { resolve } from "path";
+import { ENGLISH_VERSION_PATTERN } from "../src/lib/seoLanguagePolicy";
+import { CONSOLIDATED_ARTICLE_REDIRECTS } from "../src/data/consolidatedArticleRedirects";
 
 const BASE_URL = "https://realtrust.ro";
 const HOST = "realtrust.ro";
@@ -83,7 +86,7 @@ const complexLandingSlugsFromSource = (): string[] => {
  * and fragment, strip trailing slashes (root excepted).
  * Returns null when the URL points somewhere that must not be listed.
  */
-const canonicalizeUrl = (raw: string): string | null => {
+const canonicalizeUrl = (raw: string, keepEnglish = false): string | null => {
   let url: URL;
   try {
     url = new URL(raw.trim());
@@ -96,35 +99,63 @@ const canonicalizeUrl = (raw: string): string | null => {
     const host = url.hostname.toLowerCase();
     if (host !== "www.realtrust.ro" && host !== "mvzssjyzbwccioqvhjpo.supabase.co") return null;
   }
-  const path = url.pathname.replace(/\/+$/, "") || "/";
-  return `${BASE_URL}${path.replace(/^\/complex\//, "/complexe/")}`;
+  const path = (url.pathname.replace(/\/+$/, "") || "/").replace(/^\/complex\//, "/complexe/");
+  const english =
+    keepEnglish &&
+    url.searchParams.get("lang")?.toLowerCase() === "en" &&
+    ENGLISH_VERSION_PATTERN.test(path);
+  return `${BASE_URL}${path}${english ? "?lang=en" : ""}`;
 };
 
 /** Rewrite every <loc>/<xhtml:link href> in a block to its canonical form. */
 const canonicalizeBlock = (block: string): string | null => {
   const loc = block.match(/<loc>([^<]+)<\/loc>/)?.[1];
   if (!loc) return null;
-  const canonicalLoc = canonicalizeUrl(loc);
+  const isEnglishLoc = /[?&]lang=en(?:&|$)/i.test(loc);
+  const canonicalLoc = canonicalizeUrl(loc, true);
   if (!canonicalLoc) return null;
+  // An English loc is listed only for a translated page (with its en alternate).
+  if (isEnglishLoc && !canonicalLoc.endsWith("?lang=en")) return null;
+  const hasEnglishAlternate = /hreflang="en(?:-[^"]+)?"/.test(block);
+  if (isEnglishLoc && !hasEnglishAlternate) return null;
 
   let out = block.replace(/<loc>[^<]+<\/loc>/, `<loc>${canonicalLoc}</loc>`);
+  const roLoc = canonicalLoc.replace(/\?lang=en$/, "");
 
-  // hreflang alternates: ro / x-default = canonical URL. `en` is the same
-  // document (language is client state), so it must not introduce a
-  // parameterized duplicate either.
   out = out.replace(
     /<xhtml:link\b([^>]*?)href="([^"]+)"([^>]*)\/>/g,
     (_m, before: string, href: string, after: string) => {
-      const canonicalHref = canonicalizeUrl(href) ?? canonicalLoc;
-      // English alternate is the same path served with ?lang=en (matches page hreflang).
-      if (/hreflang="en(?:-[^"]+)?"/.test(before + after)) {
-        return "";
+      const attrs = (before + after).replace(/hreflang="ro-RO"/, 'hreflang="ro"');
+      if (/hreflang="en(?:-[^"]+)?"/.test(attrs)) {
+        const enHref = canonicalizeUrl(href, true);
+        // English alternates must point at this page's own `?lang=en` URL.
+        if (!enHref || enHref !== `${roLoc}?lang=en`) return "";
+        return `<xhtml:link${attrs.replace(/hreflang="en-[^"]+"/, 'hreflang="en"')}href="${enHref}"/>`;
       }
-      return `<xhtml:link${before}href="${canonicalHref}"${after}/>`;
+      return `<xhtml:link${attrs}href="${canonicalizeUrl(href) ?? roLoc}"/>`;
     },
   );
 
   return out;
+};
+
+/**
+ * Keeps language clusters reciprocal: an `en` alternate survives only when its
+ * `?lang=en` URL is itself listed, and vice versa.
+ */
+const enforceReciprocalLanguages = (blocks: string[]): string[] => {
+  const locOf = (b: string) => b.match(/<loc>([^<]+)<\/loc>/)?.[1] ?? "";
+  const locs = new Set(blocks.map(locOf));
+  return blocks
+    .filter((b) => {
+      const loc = locOf(b);
+      return !loc.endsWith("?lang=en") || locs.has(loc.replace(/\?lang=en$/, ""));
+    })
+    .map((b) =>
+      b.replace(/\s*<xhtml:link\b[^>]*hreflang="en"[^>]*href="([^"]+)"[^>]*\/>/g, (m, href: string) =>
+        locs.has(href) ? m : "",
+      ),
+    );
 };
 
 const extractUrlBlocks = (xml: string): string[] => xml.match(/<url>[\s\S]*?<\/url>/g) ?? [];
@@ -143,7 +174,7 @@ const dedupeByLoc = (blocks: string[]): string[] => {
 
 const isDynamic = (block: string): boolean => {
   const loc = block.match(/<loc>([^<]+)<\/loc>/)?.[1] ?? "";
-  const path = loc.slice(BASE_URL.length);
+  const path = loc.slice(BASE_URL.length).split("?")[0];
   return DYNAMIC_PREFIXES.some((p) => path.startsWith(p) && path.length > p.length);
 };
 
@@ -190,7 +221,7 @@ const REDIRECT_ONLY_PATHS = new Set([
  */
 const isListable = (block: string, publicSlugs: Set<string> | null): boolean => {
   const loc = block.match(/<loc>([^<]+)<\/loc>/)?.[1] ?? "";
-  const path = loc.slice(BASE_URL.length) || "/";
+  const path = loc.slice(BASE_URL.length).split("?")[0] || "/";
 
   if (REDIRECT_ONLY_PATHS.has(path)) return false;
 
@@ -205,6 +236,8 @@ const isListable = (block: string, publicSlugs: Set<string> | null): boolean => 
   }
 
   const articleSlug = path.match(/^\/blog\/([^/]+)$/)?.[1];
+  // Consolidated articles permanently redirect elsewhere.
+  if (articleSlug && CONSOLIDATED_ARTICLE_REDIRECTS[articleSlug]) return false;
   // Only articles a visitor can actually read may be listed. The gated
   // (member-only) list is not readable at build time by design, so the check is
   // an allowlist of public slugs rather than a blocklist of premium ones.
@@ -298,8 +331,9 @@ const main = async () => {
     `[sitemap] ${unique.length - deduped.length} URLs dropped (invalid, redirect-only or gated); ${publicSlugs ? `${publicSlugs.size} public articles allowed` : "article gating check skipped"}`,
   );
 
-  const dynamicBlocks = deduped.filter(isDynamic);
-  const staticBlocks = deduped.filter((b) => !isDynamic(b));
+  const clustered = enforceReciprocalLanguages(deduped);
+  const dynamicBlocks = clustered.filter(isDynamic);
+  const staticBlocks = clustered.filter((b) => !isDynamic(b));
 
   writeIfNotEmpty("sitemap-static.xml", staticBlocks, "static");
   writeIfNotEmpty("sitemap-dynamic.xml", dynamicBlocks, "dynamic");

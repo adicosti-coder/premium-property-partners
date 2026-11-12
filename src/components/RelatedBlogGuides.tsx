@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { CONSOLIDATED_ARTICLE_SLUG_LIST } from "@/data/consolidatedArticleRedirects";
 import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -51,6 +52,7 @@ const RelatedBlogGuides = ({ propertyLocation, listingType }: RelatedBlogGuidesP
         .from("blog_articles")
         .select("id, slug, title, title_en, excerpt, excerpt_en, cover_image, category, published_at")
         .eq("is_published", true)
+        .not("slug", "in", CONSOLIDATED_ARTICLE_SLUG_LIST)
         .order("published_at", { ascending: false })
         .limit(20);
 

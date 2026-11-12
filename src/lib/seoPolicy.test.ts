@@ -10,11 +10,33 @@ describe("approved SEO policy", () => {
     expect(ORGANIZATION_SCHEMA.taxID).toBe("RO14380627");
     expect(generateLocalBusinessSchema()["@type"]).toBe("LodgingBusiness");
   });
+  it("sitemap-static.xml lists no English URLs or alternates", () => {
+    expect(staticSitemap).not.toMatch(/hreflang="en(?:-[^"]+)?"/);
+    expect(staticSitemap).not.toContain("?lang=en");
+  });
   for (const [filename, xml] of [["sitemap-static.xml", staticSitemap], ["sitemap-dynamic.xml", dynamicSitemap]]) {
-    it(`${filename} excludes English alternates and language URLs`, () => {
-      expect(xml).not.toMatch(/hreflang="en(?:-[^"]+)?"/);
-      expect(xml).not.toContain("?lang=en");
+    it(`${filename} uses plural complex addresses and plain ro hreflang`, () => {
       expect(xml).not.toContain("https://realtrust.ro/complex/");
+      expect(xml).not.toContain('hreflang="ro-RO"');
     });
   }
+  it("sitemap-dynamic.xml lists ?lang=en only for translated articles, in reciprocal pairs", () => {
+    const blocks = dynamicSitemap.match(/<url>[\s\S]*?<\/url>/g) ?? [];
+    const locs = new Set(blocks.map((b) => b.match(/<loc>([^<]+)<\/loc>/)?.[1]));
+    for (const block of blocks) {
+      const loc = block.match(/<loc>([^<]+)<\/loc>/)?.[1] ?? "";
+      const en = block.match(/hreflang="en" href="([^"]+)"/)?.[1];
+      if (loc.endsWith("?lang=en")) {
+        expect(loc).toMatch(/^https:\/\/realtrust\.ro\/blog\/[^/?]+\?lang=en$/);
+        expect(en).toBe(loc);
+        expect(locs.has(loc.replace("?lang=en", ""))).toBe(true);
+      } else {
+        expect(loc).not.toContain("?");
+        if (en) {
+          expect(en).toBe(`${loc}?lang=en`);
+          expect(locs.has(en)).toBe(true);
+        }
+      }
+    }
+  });
 });

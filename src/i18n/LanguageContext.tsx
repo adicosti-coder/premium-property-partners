@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { ro, loadEnglish, Language, Translations } from './translations';
 import { isBrowser, safeLocalStorage } from '@/utils/browserStorage';
-import { Helmet } from 'react-helmet-async';
 import { initialLanguage } from './languagePolicy';
 
 interface LanguageContextType {
@@ -67,9 +66,6 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t: dict }}>
-      {language === 'en' && (
-        <Helmet><meta name="robots" content="noindex, follow" /></Helmet>
-      )}
       {children}
     </LanguageContext.Provider>
   );

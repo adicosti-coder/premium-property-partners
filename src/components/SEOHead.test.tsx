@@ -27,7 +27,7 @@ describe('audited public head policy', () => {
     state.language = 'en';
     view.rerender(<HelmetProvider><SEOHead title="Old page title" description="Old page description" /></HelmetProvider>);
     await waitFor(() => expect(document.title).toBe(getPublicRouteSeo('/preturi', 'en')?.title));
-    expect(document.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex, follow');
+    expect(document.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('index, follow');
     expect(document.querySelector('meta[name="description"]')?.getAttribute('content')).toBe(getPublicRouteSeo('/preturi', 'en')?.description);
     state.language = 'ro';
     view.rerender(<HelmetProvider><SEOHead /></HelmetProvider>);
