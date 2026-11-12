@@ -12,6 +12,7 @@ import { useArticleViewTracking } from "@/hooks/useArticleViewTracking";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
+import { hasEnglishTranslation } from "@/lib/seoLanguagePolicy";
 import { SocialFollow } from "@/components/social/SocialFollow";
 
 const BlogComments = lazy(() => import("@/components/BlogComments"));
@@ -555,6 +556,7 @@ const BlogArticlePage = () => {
           description={displayExcerpt}
           type="article"
           noIndex
+          englishAvailable={false}
         />
         <Header />
         <main className="pt-24 pb-16">
@@ -735,6 +737,7 @@ const BlogArticlePage = () => {
         author={canonicalAuthor}
         articleTags={article.tags}
         articleCategory={article.category}
+        englishAvailable={hasEnglishTranslation(article)}
       />
       <Header />
       <Suspense fallback={null}>
