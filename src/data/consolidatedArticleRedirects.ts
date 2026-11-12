@@ -33,3 +33,12 @@ export const CONSOLIDATED_ARTICLE_REDIRECTS: Record<string, string> = {
 
 export const resolveConsolidatedArticle = (slug?: string): string | null =>
   (slug && CONSOLIDATED_ARTICLE_REDIRECTS[slug]) || null;
+
+/**
+ * PostgREST `in` list of consolidated slugs. Public article lists exclude them
+ * so cards and internal links never point at a redirecting address.
+ */
+export const CONSOLIDATED_ARTICLE_SLUG_LIST = `(${Object.keys(CONSOLIDATED_ARTICLE_REDIRECTS).join(",")})`;
+
+export const isConsolidatedArticle = (slug?: string | null): boolean =>
+  Boolean(slug && CONSOLIDATED_ARTICLE_REDIRECTS[slug]);

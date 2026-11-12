@@ -1,7 +1,7 @@
 import { marked } from "marked";
 import { useParams, Link, useNavigate, Navigate } from "react-router-dom";
 import { hasAnalyticsConsent } from "@/lib/conversionTracking";
-import { resolveConsolidatedArticle } from "@/data/consolidatedArticleRedirects";
+import { resolveConsolidatedArticle, CONSOLIDATED_ARTICLE_SLUG_LIST } from "@/data/consolidatedArticleRedirects";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
@@ -94,6 +94,7 @@ const BlogArticlePage = () => {
             "id, slug, title, excerpt, cover_image, main_image_url, category, geo_location, published_at, created_at, view_count"
           )
           .eq("is_published", true)
+          .not("slug", "in", CONSOLIDATED_ARTICLE_SLUG_LIST)
           .not("geo_location", "is", null)
           .order("published_at", { ascending: false });
         return (data ?? []).filter(

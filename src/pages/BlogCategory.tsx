@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { CONSOLIDATED_ARTICLE_SLUG_LIST } from "@/data/consolidatedArticleRedirects";
 import { useParams, Link, Navigate, useSearchParams } from "react-router-dom";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
@@ -64,6 +65,7 @@ const BlogCategory = () => {
         .from("blog_articles")
         .select("id, slug, title, excerpt, cover_image, category, published_at, created_at, view_count")
         .eq("is_published", true)
+        .not("slug", "in", CONSOLIDATED_ARTICLE_SLUG_LIST)
         .in("category", meta!.dbCategories)
         .order("published_at", { ascending: false });
       if (error) throw error;

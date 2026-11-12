@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { CONSOLIDATED_ARTICLE_SLUG_LIST } from "@/data/consolidatedArticleRedirects";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { ArrowRight, BookOpen } from "lucide-react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
@@ -106,6 +107,7 @@ const InternalLinks = ({ category, tags, currentSlug }: InternalLinksProps) => {
         .from("blog_articles")
         .select("slug, title, title_en")
         .eq("is_published", true)
+        .not("slug", "in", CONSOLIDATED_ARTICLE_SLUG_LIST)
         .eq("category", category)
         .neq("slug", currentSlug || "")
         .order("view_count", { ascending: false })

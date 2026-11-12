@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { CONSOLIDATED_ARTICLE_SLUG_LIST } from "@/data/consolidatedArticleRedirects";
 import { keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { Link } from "react-router-dom";
@@ -53,6 +54,7 @@ const BlogPreview = () => {
         .from("blog_articles")
         .select("id, title, title_en, slug, excerpt, excerpt_en, cover_image, category, published_at, created_at")
         .eq("is_published", true)
+        .not("slug", "in", CONSOLIDATED_ARTICLE_SLUG_LIST)
         .order("published_at", { ascending: false })
         .limit(3);
 

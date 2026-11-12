@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { CONSOLIDATED_ARTICLE_SLUG_LIST } from "@/data/consolidatedArticleRedirects";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -59,6 +60,7 @@ const RelatedArticles = ({ currentArticleId, category, tags }: RelatedArticlesPr
         .from("blog_articles")
         .select("*")
         .eq("is_published", true)
+        .not("slug", "in", CONSOLIDATED_ARTICLE_SLUG_LIST)
         .neq("id", currentArticleId)
         .order("published_at", { ascending: false })
         .limit(10);

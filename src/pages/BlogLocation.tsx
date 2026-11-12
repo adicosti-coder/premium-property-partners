@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { CONSOLIDATED_ARTICLE_SLUG_LIST } from "@/data/consolidatedArticleRedirects";
 import { useParams, Link, Navigate, useSearchParams } from "react-router-dom";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
@@ -67,6 +68,7 @@ const BlogLocation = () => {
           "id, slug, title, excerpt, cover_image, main_image_url, category, geo_location, published_at, created_at, view_count"
         )
         .eq("is_published", true)
+        .not("slug", "in", CONSOLIDATED_ARTICLE_SLUG_LIST)
         .not("geo_location", "is", null)
         .order("published_at", { ascending: false });
       if (error) throw error;
@@ -87,6 +89,7 @@ const BlogLocation = () => {
         .from("blog_articles")
         .select("geo_location")
         .eq("is_published", true)
+        .not("slug", "in", CONSOLIDATED_ARTICLE_SLUG_LIST)
         .not("geo_location", "is", null);
       if (error) throw error;
       const map = new Map<string, LocationSummary>();
