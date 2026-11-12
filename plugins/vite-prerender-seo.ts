@@ -10,6 +10,7 @@ import type { Plugin } from 'vite';
 import fs from 'fs';
 import path from 'path';
 import { PUBLIC_ROUTE_SEO } from '../src/lib/publicRouteSeo';
+import { normalizeSeoPath, prerenderHeadLinks, prerenderLanguageScript } from '../src/lib/seoLanguagePolicy';
 import { ORGANIZATION_SCHEMA, REAL_ESTATE_AGENT_SCHEMA, LODGING_BUSINESS_SCHEMA } from '../src/lib/orgIdentity';
 import { CONTACT_HOURS, REAL_ESTATE_SINCE } from '../src/lib/businessFacts';
 import {
@@ -40,6 +41,10 @@ interface PrerenderRoute {
   image?: string;
   /** Emits `<meta name="robots" content="noindex, follow">` for gated pages. */
   noindex?: boolean;
+  /** Real English translation exists → self-canonical `?lang=en` + hreflang en. */
+  englishAvailable?: boolean;
+  /** English head values applied before React when `?lang=en` is requested. */
+  english?: { title?: string; description?: string };
 }
 
 /**
@@ -1747,18 +1752,21 @@ export function generateHtml(template: string, route: PrerenderRoute, protectedH
     () => `<meta name="description" content="${escapeHtml(route.description)}">`
   );
 
-  // Romanian crawlers receive a canonical in the static document. The same
-  // file can be served for ?lang=en, so an inline head-only switch applies the
-  // approved English self-canonical and noindex policy before React mounts.
+  // Canonical + hreflang follow src/lib/seoLanguagePolicy.ts. One static file
+  // is served for every query variant (?lang=en, ?page=2, utm_*…):
+  // - pages whose canonical never depends on the query ship it in raw HTML;
+  // - translated / paginated pages ship no raw canonical (it would contradict
+  //   the variant's own URL); an inline head script inserts the
+  //   self-referencing one synchronously, before React.
   html = html.replace(/<link\b[^>]*rel=["']canonical["'][^>]*>\s*/gi, '');
   html = html.replace(/<link rel="alternate" hreflang="[^"]*" href="[^"]*"\s*\/?>\s*/g, '');
-  const roHref = route.canonical.split('?')[0];
-  const hreflangTags = [
-    `<link rel="canonical" href="${escapeHtml(roHref)}" />`,
-    `<link rel="alternate" hreflang="ro" href="${roHref}" />`,
-    `<link rel="alternate" hreflang="x-default" href="${roHref}" />`,
-  ].join('\n  ');
-  const englishHead = `<script>(function(){if((new URLSearchParams(location.search).get('lang')||'').toLowerCase()==='en'){var c=document.querySelector('link[rel="canonical"]');if(c)c.href=${JSON.stringify(`${roHref}?lang=en`)};var r=document.querySelector('meta[name="robots"]');if(r)r.content='noindex, follow';document.documentElement.lang='en';}})();</script>`;
+  const seoPath = normalizeSeoPath(route.canonical.replace(/^https?:\/\/[^/]+/i, '').split('?')[0]);
+  const englishAvailable = Boolean(route.englishAvailable);
+  const hreflangTags = prerenderHeadLinks(seoPath, englishAvailable).join('\n  ');
+  const englishHead = prerenderLanguageScript(seoPath, englishAvailable, route.english);
+  if (englishAvailable) {
+    html = html.replace(/<html\b([^>]*)>/i, (_m, attrs: string) => `<html${attrs.replace(/\sdata-en-path="[^"]*"/, '')} data-en-path="${escapeHtml(seoPath)}">`);
+  }
   html = html.replace('</head>', () => `  ${hreflangTags}\n  ${englishHead}\n</head>`);
 
   // Per-route Open Graph / Twitter tags. The static shell ships sitewide
