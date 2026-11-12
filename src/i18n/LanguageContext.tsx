@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { ro, loadEnglish, Language, Translations } from './translations';
 import { isBrowser, safeLocalStorage } from '@/utils/browserStorage';
-import { Helmet } from 'react-helmet-async';
 import { initialLanguage } from './languagePolicy';
 
 interface LanguageContextType {
