@@ -328,8 +328,9 @@ const main = async () => {
     `[sitemap] ${unique.length - deduped.length} URLs dropped (invalid, redirect-only or gated); ${publicSlugs ? `${publicSlugs.size} public articles allowed` : "article gating check skipped"}`,
   );
 
-  const dynamicBlocks = deduped.filter(isDynamic);
-  const staticBlocks = deduped.filter((b) => !isDynamic(b));
+  const clustered = enforceReciprocalLanguages(deduped);
+  const dynamicBlocks = clustered.filter(isDynamic);
+  const staticBlocks = clustered.filter((b) => !isDynamic(b));
 
   writeIfNotEmpty("sitemap-static.xml", staticBlocks, "static");
   writeIfNotEmpty("sitemap-dynamic.xml", dynamicBlocks, "dynamic");
