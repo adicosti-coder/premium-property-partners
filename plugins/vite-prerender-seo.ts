@@ -10,7 +10,8 @@ import type { Plugin } from 'vite';
 import fs from 'fs';
 import path from 'path';
 import { PUBLIC_ROUTE_SEO } from '../src/lib/publicRouteSeo';
-import { normalizeSeoPath, prerenderHeadLinks, prerenderLanguageScript } from '../src/lib/seoLanguagePolicy';
+import { normalizeSeoPath, prerenderHeadLinks, prerenderLanguageScript, SITE_ORIGIN } from '../src/lib/seoLanguagePolicy';
+import { CONSOLIDATED_ARTICLE_REDIRECTS, isConsolidatedArticle } from '../src/data/consolidatedArticleRedirects';
 import { ORGANIZATION_SCHEMA, REAL_ESTATE_AGENT_SCHEMA, LODGING_BUSINESS_SCHEMA } from '../src/lib/orgIdentity';
 import { CONTACT_HOURS, REAL_ESTATE_SINCE } from '../src/lib/businessFacts';
 import {
@@ -1740,6 +1741,27 @@ function hasBreadcrumb(jsonLd: PrerenderRoute['jsonLd']): boolean {
   });
 }
 
+/** Static permanent-redirect document for an address whose content moved. */
+export function generateRedirectHtml(targetPath: string): string {
+  const target = `${SITE_ORIGIN}${normalizeSeoPath(targetPath)}`;
+  const safe = escapeHtml(target);
+  return `<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RealTrust — pagina s-a mutat</title>
+  <link rel="canonical" href="${safe}" />
+  <meta http-equiv="refresh" content="0; url=${safe}" />
+  <script>(function(){var en=(new URLSearchParams(location.search).get('lang')||'').toLowerCase()==='en';location.replace(${JSON.stringify(target)}+(en?'?lang=en':'')+location.hash);})();</script>
+</head>
+<body>
+  <p>Conținutul s-a mutat la <a href="${safe}">${safe}</a>.</p>
+</body>
+</html>
+`;
+}
+
 export function generateHtml(template: string, route: PrerenderRoute, protectedHeadNodes: string[]): string {
 
   let html = template.replace(
@@ -2020,8 +2042,10 @@ export default function vitePrerenderSeo(): Plugin {
         ]);
 
         const contentRoutes = [
-          ...buildArticleRoutes(articles),
-          ...buildBlogHubRoutes(articles),
+          // Consolidated articles redirect to their destination; they never get
+          // their own indexable document or a card in the hubs.
+          ...buildArticleRoutes(articles.filter((a) => !isConsolidatedArticle(a.slug))),
+          ...buildBlogHubRoutes(articles.filter((a) => !isConsolidatedArticle(a.slug))),
           ...buildComplexRoutes(complexes, complexLandingSlugs, takenPaths),
           ...buildRemainingStaticRoutes(),
         ].filter((r) => {
@@ -2072,6 +2096,18 @@ export default function vitePrerenderSeo(): Plugin {
 
           console.log(`  ✓ ${isRoot ? '/' : route.path}/index.html`);
         }
+
+        // Consolidated article addresses ship a permanent-redirect document:
+        // canonical + instant refresh to the destination (Google treats both
+        // as a redirect), keeping only the language choice.
+        for (const [slug, target] of Object.entries(CONSOLIDATED_ARTICLE_REDIRECTS)) {
+          const redirectHtml = generateRedirectHtml(target);
+          const dirPath = path.join(outDir, 'blog', slug);
+          fs.mkdirSync(dirPath, { recursive: true });
+          fs.writeFileSync(path.join(dirPath, 'index.html'), redirectHtml, 'utf-8');
+          fs.writeFileSync(path.join(outDir, 'blog', `${slug}.html`), redirectHtml, 'utf-8');
+        }
+        console.log(`[prerender-seo] ${Object.keys(CONSOLIDATED_ARTICLE_REDIRECTS).length} consolidated article redirects written`);
 
         console.log(`[prerender-seo] Done — ${allRoutes.length} pages prerendered (${staticRoutes.length} static + ${propertyRoutes.length} db properties + ${guestRoutes.length} guest apartments + ${contentRoutes.length} content routes)`);
       },
