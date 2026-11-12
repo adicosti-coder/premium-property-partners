@@ -15,7 +15,4 @@ export function searchForLanguage(search: string, language: Language): string {
   return next ? `?${next}` : '';
 }
 
-export function languageRobots(language: Language, noIndex = false): string {
-  if (language === 'en') return 'noindex, follow';
-  return noIndex ? 'noindex, nofollow' : 'index, follow';
-}
+// Robots no longer depend on the language: see seoRobots in src/lib/seoLanguagePolicy.ts.
