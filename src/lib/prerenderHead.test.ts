@@ -25,15 +25,50 @@ describe("prerendered homepage head", () => {
     expect(html).toContain('<meta name="robots" content="index, follow" />');
   });
 
-  it("keeps the English query in canonical and applies noindex,follow before React", () => {
+  it("keeps the Romanian canonical for an untranslated page opened with ?lang=en, without noindex", () => {
     document.head.innerHTML = homepageHtml().match(/<head>([\s\S]*?)<\/head>/)?.[1] ?? "";
     window.history.replaceState({}, "", "/?lang=en");
     const languageScript = Array.from(document.head.querySelectorAll("script")).find((script) => script.textContent?.includes("URLSearchParams"));
     if (!languageScript?.textContent) throw new Error("English head switch missing");
     window.eval(languageScript.textContent);
 
-    expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute("href")).toBe("https://realtrust.ro/?lang=en");
-    expect(document.head.querySelector('meta[name="robots"]')?.getAttribute("content")).toBe("noindex, follow");
+    expect(document.head.querySelectorAll('link[rel="canonical"]')).toHaveLength(1);
+    expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute("href")).toBe("https://realtrust.ro/");
+    expect(document.head.querySelector('link[hreflang="en"]')).toBeNull();
+    expect(document.head.querySelector('meta[name="robots"]')?.getAttribute("content")).toBe("index, follow");
+  });
+
+  it("gives a translated article one self-referencing canonical per language and reciprocal hreflang", () => {
+    const route = {
+      path: "/blog/timisoara-investitii-imobiliare",
+      title: "Investiții",
+      description: "RO",
+      h1: "Investiții",
+      jsonLd: [],
+      canonical: "https://realtrust.ro/blog/timisoara-investitii-imobiliare",
+      englishAvailable: true,
+      english: { title: "Real estate investment | RealTrust", description: "EN" },
+    };
+    const html = generateHtml(template, route, []);
+    // Raw HTML must not contradict the ?lang=en variant served from the same file.
+    expect(html).not.toMatch(/<link rel="canonical"/);
+    expect(html).toContain('<link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/timisoara-investitii-imobiliare?lang=en" />');
+    expect(html).toContain('data-en-path="/blog/timisoara-investitii-imobiliare"');
+
+    for (const [search, expected] of [
+      ["?lang=en&utm_source=gsc", "https://realtrust.ro/blog/timisoara-investitii-imobiliare?lang=en"],
+      ["", "https://realtrust.ro/blog/timisoara-investitii-imobiliare"],
+    ]) {
+      document.head.innerHTML = html.match(/<head>([\s\S]*?)<\/head>/)?.[1] ?? "";
+      window.history.replaceState({}, "", `/blog/timisoara-investitii-imobiliare${search}`);
+      const script = Array.from(document.head.querySelectorAll("script")).find((node) => node.textContent?.includes("URLSearchParams"));
+      window.eval(script?.textContent ?? "");
+      expect(document.head.querySelectorAll('link[rel="canonical"]')).toHaveLength(1);
+      expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute("href")).toBe(expected);
+      expect(document.head.querySelector('meta[name="robots"]')?.getAttribute("content")).toBe("index, follow");
+    }
+    expect(document.head.querySelector('link[hreflang="ro"]')?.getAttribute("href")).toBe("https://realtrust.ro/blog/timisoara-investitii-imobiliare");
+    expect(document.head.querySelector('link[hreflang="x-default"]')?.getAttribute("href")).toBe("https://realtrust.ro/blog/timisoara-investitii-imobiliare");
   });
 
   it("keeps ApArt Hotel and RealTrust as distinct entities under the legal organization", () => {
