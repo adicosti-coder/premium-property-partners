@@ -4,6 +4,7 @@ import { MemoryRouter, Routes, Route, useLocation } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import CanonicalHreflang from "../CanonicalHreflang";
 import TrailingSlashRedirect from "../TrailingSlashRedirect";
+import { declareEnglishVersion, resetEnglishVersions } from "@/lib/seoEnglishAvailability";
 
 const SITE = "https://realtrust.ro";
 
@@ -89,5 +90,22 @@ describe("Trailing slash → redirect + canonical", () => {
     await new Promise((r) => setTimeout(r, 30));
     expect(getLocation().pathname).toBe("/pentru-oaspeti");
     await waitFor(() => expect(getCanonical()).toBe(`${SITE}/pentru-oaspeti`));
+  });
+
+  it("emits ?lang=en canonical and an en hreflang only for a translated page", async () => {
+    resetEnglishVersions();
+    declareEnglishVersion("/blog/timisoara-investitii-imobiliare", true);
+    renderAt("/blog/timisoara-investitii-imobiliare?lang=en");
+    await waitFor(() => expect(getCanonical()).toBe(`${SITE}/blog/timisoara-investitii-imobiliare?lang=en`));
+    expect(document.head.querySelectorAll('link[rel="canonical"]')).toHaveLength(1);
+    expect(document.head.querySelector('link[hreflang="en"]')?.getAttribute("href")).toBe(`${SITE}/blog/timisoara-investitii-imobiliare?lang=en`);
+    resetEnglishVersions();
+  });
+
+  it("points an untranslated page opened with ?lang=en at the Romanian URL", async () => {
+    resetEnglishVersions();
+    renderAt("/preturi?lang=en");
+    await waitFor(() => expect(getCanonical()).toBe(`${SITE}/preturi`));
+    expect(document.head.querySelector('link[hreflang="en"]')).toBeNull();
   });
 });
