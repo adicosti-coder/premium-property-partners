@@ -67,1060 +67,2188 @@
     <loc>https://realtrust.ro/blog/categorie/ghid-turistic-timisoara</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/categorie/ghid-turistic-timisoara" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/categorie/ghid-turistic-timisoara" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/categorie/ghid-turistic-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/categorie/ghid-turistic-timisoara"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/categorie/investitii-imobiliare</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/categorie/investitii-imobiliare" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/categorie/investitii-imobiliare" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/categorie/investitii-imobiliare"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/categorie/investitii-imobiliare"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/categorie/sfaturi-proprietari</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/categorie/sfaturi-proprietari" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/categorie/sfaturi-proprietari" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/categorie/sfaturi-proprietari"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/categorie/sfaturi-proprietari"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/categorie/taxe-legislatie</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/categorie/taxe-legislatie" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/categorie/taxe-legislatie" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/categorie/taxe-legislatie"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/categorie/taxe-legislatie"/>
   </url>
 <url>
     <loc>https://realtrust.ro/zona/centru</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/zona/centru" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/zona/centru" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/zona/centru"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/zona/centru"/>
   </url>
 <url>
     <loc>https://realtrust.ro/zona/iulius-town</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/zona/iulius-town" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/zona/iulius-town" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/zona/iulius-town"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/zona/iulius-town"/>
   </url>
 <url>
     <loc>https://realtrust.ro/zona/fabric</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/zona/fabric" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/zona/fabric" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/zona/fabric"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/zona/fabric"/>
   </url>
 <url>
     <loc>https://realtrust.ro/complexe/isho</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/complexe/isho" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/complexe/isho" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/complexe/isho"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/complexe/isho"/>
   </url>
 <url>
     <loc>https://realtrust.ro/complexe/ateneo</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/complexe/ateneo" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/complexe/ateneo" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/complexe/ateneo"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/complexe/ateneo"/>
   </url>
 <url>
     <loc>https://realtrust.ro/complexe/green-forest</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/complexe/green-forest" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/complexe/green-forest" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/complexe/green-forest"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/complexe/green-forest"/>
   </url>
 <url>
     <loc>https://realtrust.ro/complexe/helios</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/complexe/helios" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/complexe/helios" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/complexe/helios"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/complexe/helios"/>
   </url>
 <url>
     <loc>https://realtrust.ro/complexe/fructus-plaza</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/complexe/fructus-plaza" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/complexe/fructus-plaza" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/complexe/fructus-plaza"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/complexe/fructus-plaza"/>
   </url>
 <url>
     <loc>https://realtrust.ro/complexe/city-of-mara</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/complexe/city-of-mara" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/complexe/city-of-mara" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/complexe/city-of-mara"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/complexe/city-of-mara"/>
   </url>
 <url>
     <loc>https://realtrust.ro/complexe/vivalia</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/complexe/vivalia" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/complexe/vivalia" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/complexe/vivalia"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/complexe/vivalia"/>
   </url>
 <url>
     <loc>https://realtrust.ro/complexe/nord-one</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/complexe/nord-one" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/complexe/nord-one" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/complexe/nord-one"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/complexe/nord-one"/>
   </url>
 <url>
     <loc>https://realtrust.ro/complexe/xcity-towers</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/complexe/xcity-towers" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/complexe/xcity-towers" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/complexe/xcity-towers"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/complexe/xcity-towers"/>
   </url>
 <url>
     <loc>https://realtrust.ro/complexe/denya-forest</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/complexe/denya-forest" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/complexe/denya-forest" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/complexe/denya-forest"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/complexe/denya-forest"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/regim-hotelier-iosefin-timisoara</loc>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/regim-hotelier-iosefin-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/regim-hotelier-iosefin-timisoara"/>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images/featured/regim-hotelier-iosefin-timisoara-1793082028759.png</image:loc>
+      <image:title>Regim hotelier în Iosefin, Timișoara</image:title>
+    </image:image>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/zone-hot-investitii-timisoara-2026</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/zone-hot-investitii-timisoara-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/zone-hot-investitii-timisoara-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/zone-hot-investitii-timisoara-2026"/>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images/featured/zone-hot-investitii-timisoara-2026-1792531302739.png</image:loc>
+      <image:title>Zonele &quot;Hot&quot; în 2026: Unde Să Cumperi Acum în Timișoara</image:title>
+    </image:image>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/zone-hot-investitii-timisoara-2026?lang=en</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/zone-hot-investitii-timisoara-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/zone-hot-investitii-timisoara-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/zone-hot-investitii-timisoara-2026"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/housekeeping-qc-checklist-hotel</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/housekeeping-qc-checklist-hotel"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/housekeeping-qc-checklist-hotel?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/housekeeping-qc-checklist-hotel"/>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images/featured/housekeeping-qc-checklist-hotel-1792529116085.png</image:loc>
+      <image:title>Housekeeping ca la hotel: checklist, QC și foto-confirmări</image:title>
+    </image:image>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/housekeeping-qc-checklist-hotel?lang=en</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/housekeeping-qc-checklist-hotel"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/housekeeping-qc-checklist-hotel?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/housekeeping-qc-checklist-hotel"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/regim-hotelier-2026-sistem-forfetar-taxe</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/regim-hotelier-2026-sistem-forfetar-taxe"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/regim-hotelier-2026-sistem-forfetar-taxe?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/regim-hotelier-2026-sistem-forfetar-taxe"/>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images/featured/regim-hotelier-2026-sistem-forfetar-taxe-1792531318704.png</image:loc>
+      <image:title>Regim Hotelier în 2026: Adio Normă de Venit, Bun Venit Sistemului Forfetar</image:title>
+    </image:image>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/regim-hotelier-2026-sistem-forfetar-taxe?lang=en</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/regim-hotelier-2026-sistem-forfetar-taxe"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/regim-hotelier-2026-sistem-forfetar-taxe?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/regim-hotelier-2026-sistem-forfetar-taxe"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/mix-canale-reduce-dependenta-booking</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/mix-canale-reduce-dependenta-booking"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/mix-canale-reduce-dependenta-booking?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/mix-canale-reduce-dependenta-booking"/>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images//src/assets/blog/mix-canale.jpg</image:loc>
+      <image:title>Mix de canale: cum reduci dependența de Booking</image:title>
+    </image:image>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/mix-canale-reduce-dependenta-booking?lang=en</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/mix-canale-reduce-dependenta-booking"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/mix-canale-reduce-dependenta-booking?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/mix-canale-reduce-dependenta-booking"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/reviews-playbook-ghid-recenzii</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/reviews-playbook-ghid-recenzii"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/reviews-playbook-ghid-recenzii?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/reviews-playbook-ghid-recenzii"/>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images//src/assets/blog/reviews-playbook.jpg</image:loc>
+      <image:title>Reviews playbook: ghid pentru recenzii excelente</image:title>
+    </image:image>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/reviews-playbook-ghid-recenzii?lang=en</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/reviews-playbook-ghid-recenzii"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/reviews-playbook-ghid-recenzii?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/reviews-playbook-ghid-recenzii"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/apartamente-de-vanzare-in-cetate-timisoara</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/apartamente-de-vanzare-in-cetate-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/apartamente-de-vanzare-in-cetate-timisoara?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/apartamente-de-vanzare-in-cetate-timisoara"/>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images/featured/apartamente-de-vanzare-in-cetate-timisoara-1792538472039.png</image:loc>
+      <image:title>Apartamente de vânzare în Cetate, Timișoara</image:title>
+    </image:image>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/apartamente-de-vanzare-in-cetate-timisoara?lang=en</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/apartamente-de-vanzare-in-cetate-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/apartamente-de-vanzare-in-cetate-timisoara?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/apartamente-de-vanzare-in-cetate-timisoara"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/top-20-atractii-turistice-timisoara-ghid-complet-2026</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/top-20-atractii-turistice-timisoara-ghid-complet-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/top-20-atractii-turistice-timisoara-ghid-complet-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/top-20-atractii-turistice-timisoara-ghid-complet-2026"/>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images/featured/top-20-atractii-turistice-timisoara-ghid-complet-2026-1792534886984.png</image:loc>
+      <image:title>Top 20 atracții turistice Timișoara — ghid complet 2026</image:title>
+    </image:image>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/top-20-atractii-turistice-timisoara-ghid-complet-2026?lang=en</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/top-20-atractii-turistice-timisoara-ghid-complet-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/top-20-atractii-turistice-timisoara-ghid-complet-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/top-20-atractii-turistice-timisoara-ghid-complet-2026"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/pricing-weekends-strategii-profitabile</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/pricing-weekends-strategii-profitabile"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/pricing-weekends-strategii-profitabile?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/pricing-weekends-strategii-profitabile"/>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images//src/assets/blog/pricing-weekends.jpg</image:loc>
+      <image:title>Pricing weekends: strategii pentru weekenduri profitabile</image:title>
+    </image:image>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/pricing-weekends-strategii-profitabile?lang=en</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/pricing-weekends-strategii-profitabile"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/pricing-weekends-strategii-profitabile?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/pricing-weekends-strategii-profitabile"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/min-stay-strategie-adr-ocupare</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/min-stay-strategie-adr-ocupare"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/min-stay-strategie-adr-ocupare?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/min-stay-strategie-adr-ocupare"/>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images/featured/min-stay-strategie-adr-ocupare-1792531283351.png</image:loc>
+      <image:title>Min-stay inteligent: când 1 noapte te costă bani și când te ajută</image:title>
+    </image:image>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/min-stay-strategie-adr-ocupare?lang=en</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/min-stay-strategie-adr-ocupare"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/min-stay-strategie-adr-ocupare?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/min-stay-strategie-adr-ocupare"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/smart-locks-ghid-complet</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/smart-locks-ghid-complet"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/smart-locks-ghid-complet?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/smart-locks-ghid-complet"/>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images//src/assets/blog/smart-locks.jpg</image:loc>
+      <image:title>Smart locks: ghidul complet</image:title>
+    </image:image>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/smart-locks-ghid-complet?lang=en</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/smart-locks-ghid-complet"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/smart-locks-ghid-complet?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/smart-locks-ghid-complet"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/chirii-termen-lung-apartamente-nzeb-timisoara</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/chirii-termen-lung-apartamente-nzeb-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/chirii-termen-lung-apartamente-nzeb-timisoara?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/chirii-termen-lung-apartamente-nzeb-timisoara"/>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images/featured/chirii-termen-lung-apartamente-nzeb-timisoara-1792538457135.png</image:loc>
+      <image:title>Chiria pe Termen Lung: Noua Eră a Apartamentelor nZEB</image:title>
+    </image:image>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/chirii-termen-lung-apartamente-nzeb-timisoara?lang=en</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/chirii-termen-lung-apartamente-nzeb-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/chirii-termen-lung-apartamente-nzeb-timisoara?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/chirii-termen-lung-apartamente-nzeb-timisoara"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/perceptie-premium-fara-costuri-inutile</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/perceptie-premium-fara-costuri-inutile"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/perceptie-premium-fara-costuri-inutile?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/perceptie-premium-fara-costuri-inutile"/>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images//src/assets/blog/perceptie-premium.jpg</image:loc>
+      <image:title>Cum creezi percepție premium fără costuri inutile</image:title>
+    </image:image>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/perceptie-premium-fara-costuri-inutile?lang=en</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/perceptie-premium-fara-costuri-inutile"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/perceptie-premium-fara-costuri-inutile?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/perceptie-premium-fara-costuri-inutile"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/self-checkin-politica-elibereaza-timpul</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/self-checkin-politica-elibereaza-timpul"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/self-checkin-politica-elibereaza-timpul?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/self-checkin-politica-elibereaza-timpul"/>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images//src/assets/blog/self-checkin.jpg</image:loc>
+      <image:title>Self check-in: politica care îți eliberează timpul</image:title>
+    </image:image>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/self-checkin-politica-elibereaza-timpul?lang=en</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/self-checkin-politica-elibereaza-timpul"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/self-checkin-politica-elibereaza-timpul?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/self-checkin-politica-elibereaza-timpul"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/5-greseli-comune-administrare</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/5-greseli-comune-administrare"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/5-greseli-comune-administrare?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/5-greseli-comune-administrare"/>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images/featured/5-greseli-comune-administrare-1792529101392.png</image:loc>
+      <image:title>5 Greșeli Comune în Administrarea Proprietăților de Închiriat</image:title>
+    </image:image>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/5-greseli-comune-administrare?lang=en</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/5-greseli-comune-administrare"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/5-greseli-comune-administrare?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/5-greseli-comune-administrare"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/ghid-maximizare-venituri-inchirieri</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/ghid-maximizare-venituri-inchirieri"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/ghid-maximizare-venituri-inchirieri?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/ghid-maximizare-venituri-inchirieri"/>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images/featured/ghid-maximizare-venituri-inchirieri-1792529083767.png</image:loc>
+      <image:title>Ghid Complet: Cum să Maximizezi Veniturile din Închirieri pe Termen Scurt</image:title>
+    </image:image>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/ghid-maximizare-venituri-inchirieri?lang=en</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/ghid-maximizare-venituri-inchirieri"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/ghid-maximizare-venituri-inchirieri?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/ghid-maximizare-venituri-inchirieri"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/timisoara-investitii-imobiliare</loc>
+    <lastmod>2026-10-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/timisoara-investitii-imobiliare"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/timisoara-investitii-imobiliare?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/timisoara-investitii-imobiliare"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/timisoara-investitii-imobiliare?lang=en</loc>
+    <lastmod>2026-10-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/timisoara-investitii-imobiliare"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/timisoara-investitii-imobiliare?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/timisoara-investitii-imobiliare"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/inchiriere-lunara-cetate-centru-timisoara</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/inchiriere-lunara-cetate-centru-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/inchiriere-lunara-cetate-centru-timisoara?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/inchiriere-lunara-cetate-centru-timisoara"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/inchiriere-lunara-cetate-centru-timisoara?lang=en</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/inchiriere-lunara-cetate-centru-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/inchiriere-lunara-cetate-centru-timisoara?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/inchiriere-lunara-cetate-centru-timisoara"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/platforme-inchiriere-termen-scurt-timisoara</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/platforme-inchiriere-termen-scurt-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/platforme-inchiriere-termen-scurt-timisoara?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/platforme-inchiriere-termen-scurt-timisoara"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/platforme-inchiriere-termen-scurt-timisoara?lang=en</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/platforme-inchiriere-termen-scurt-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/platforme-inchiriere-termen-scurt-timisoara?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/platforme-inchiriere-termen-scurt-timisoara"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/coworking-piata-imobiliara-timisoara</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/coworking-piata-imobiliara-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/coworking-piata-imobiliara-timisoara?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/coworking-piata-imobiliara-timisoara"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/coworking-piata-imobiliara-timisoara?lang=en</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/coworking-piata-imobiliara-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/coworking-piata-imobiliara-timisoara?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/coworking-piata-imobiliara-timisoara"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/coworking-piata-imobiliara-timisoara-2</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/coworking-piata-imobiliara-timisoara-2"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/coworking-piata-imobiliara-timisoara-2?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/coworking-piata-imobiliara-timisoara-2"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/coworking-piata-imobiliara-timisoara-2?lang=en</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/coworking-piata-imobiliara-timisoara-2"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/coworking-piata-imobiliara-timisoara-2?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/coworking-piata-imobiliara-timisoara-2"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/evenimente-culturale-adr-timisoara</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/evenimente-culturale-adr-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/evenimente-culturale-adr-timisoara?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/evenimente-culturale-adr-timisoara"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/evenimente-culturale-adr-timisoara?lang=en</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/evenimente-culturale-adr-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/evenimente-culturale-adr-timisoara?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/evenimente-culturale-adr-timisoara"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/regim-hotelier-timisoara-persoana-fizica-pfa-sau-srl</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/regim-hotelier-timisoara-persoana-fizica-pfa-sau-srl"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/regim-hotelier-timisoara-persoana-fizica-pfa-sau-srl?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/regim-hotelier-timisoara-persoana-fizica-pfa-sau-srl"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/regim-hotelier-timisoara-persoana-fizica-pfa-sau-srl?lang=en</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/regim-hotelier-timisoara-persoana-fizica-pfa-sau-srl"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/regim-hotelier-timisoara-persoana-fizica-pfa-sau-srl?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/regim-hotelier-timisoara-persoana-fizica-pfa-sau-srl"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara-2</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara-2"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara-2?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara-2"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara-2?lang=en</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara-2"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara-2?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara-2"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/srl-vs-pfa-regim-hotelier-2026-comparatie-fiscala</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/srl-vs-pfa-regim-hotelier-2026-comparatie-fiscala"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/srl-vs-pfa-regim-hotelier-2026-comparatie-fiscala?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/srl-vs-pfa-regim-hotelier-2026-comparatie-fiscala"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/srl-vs-pfa-regim-hotelier-2026-comparatie-fiscala?lang=en</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/srl-vs-pfa-regim-hotelier-2026-comparatie-fiscala"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/srl-vs-pfa-regim-hotelier-2026-comparatie-fiscala?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/srl-vs-pfa-regim-hotelier-2026-comparatie-fiscala"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/regim-hotelier-vs-chirie-clasica-timisoara-cifre-reale</loc>
+    <lastmod>2026-10-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/regim-hotelier-vs-chirie-clasica-timisoara-cifre-reale"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/regim-hotelier-vs-chirie-clasica-timisoara-cifre-reale?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/regim-hotelier-vs-chirie-clasica-timisoara-cifre-reale"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/regim-hotelier-vs-chirie-clasica-timisoara-cifre-reale?lang=en</loc>
+    <lastmod>2026-10-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/regim-hotelier-vs-chirie-clasica-timisoara-cifre-reale"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/regim-hotelier-vs-chirie-clasica-timisoara-cifre-reale?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/regim-hotelier-vs-chirie-clasica-timisoara-cifre-reale"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara</loc>
     <lastmod>2026-09-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara"/>
   </url>
 <url>
-    <loc>https://realtrust.ro/blog/corporate-long-stay-timisoara-continental-hella-nokia-flex</loc>
-    <lastmod>2026-07-14</lastmod>
+    <loc>https://realtrust.ro/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara?lang=en</loc>
+    <lastmod>2026-09-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/corporate-long-stay-timisoara-continental-hella-nokia-flex" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/corporate-long-stay-timisoara-continental-hella-nokia-flex" />
-  </url>
-<url>
-    <loc>https://realtrust.ro/blog/srl-vs-pfa-regim-hotelier-2026-comparatie-fiscala</loc>
-    <lastmod>2026-07-14</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/srl-vs-pfa-regim-hotelier-2026-comparatie-fiscala" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/srl-vs-pfa-regim-hotelier-2026-comparatie-fiscala" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/digital-nomads-timisoara-2026-ghid-complet</loc>
     <lastmod>2026-07-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/digital-nomads-timisoara-2026-ghid-complet" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/digital-nomads-timisoara-2026-ghid-complet" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/digital-nomads-timisoara-2026-ghid-complet"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/digital-nomads-timisoara-2026-ghid-complet?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/digital-nomads-timisoara-2026-ghid-complet"/>
   </url>
 <url>
-    <loc>https://realtrust.ro/blog/autostrada-a1-lugoj-deva-impact-imobiliar-timisoara</loc>
+    <loc>https://realtrust.ro/blog/digital-nomads-timisoara-2026-ghid-complet?lang=en</loc>
     <lastmod>2026-07-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/autostrada-a1-lugoj-deva-impact-imobiliar-timisoara" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/autostrada-a1-lugoj-deva-impact-imobiliar-timisoara" />
-  </url>
-<url>
-    <loc>https://realtrust.ro/blog/rating-9-5-plus-booking-airbnb-playbook-aparthotel</loc>
-    <lastmod>2026-07-14</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/rating-9-5-plus-booking-airbnb-playbook-aparthotel" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/rating-9-5-plus-booking-airbnb-playbook-aparthotel" />
-  </url>
-<url>
-    <loc>https://realtrust.ro/blog/smart-lock-pms-check-in-automat-regim-hotelier-2026</loc>
-    <lastmod>2026-07-14</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/smart-lock-pms-check-in-automat-regim-hotelier-2026" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/smart-lock-pms-check-in-automat-regim-hotelier-2026" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/digital-nomads-timisoara-2026-ghid-complet"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/digital-nomads-timisoara-2026-ghid-complet?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/digital-nomads-timisoara-2026-ghid-complet"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/ircc-vs-credit-fix-2026-investitie-timisoara</loc>
     <lastmod>2026-07-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/ircc-vs-credit-fix-2026-investitie-timisoara" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/ircc-vs-credit-fix-2026-investitie-timisoara" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/ircc-vs-credit-fix-2026-investitie-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/ircc-vs-credit-fix-2026-investitie-timisoara?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/ircc-vs-credit-fix-2026-investitie-timisoara"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/ircc-vs-credit-fix-2026-investitie-timisoara?lang=en</loc>
+    <lastmod>2026-07-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/ircc-vs-credit-fix-2026-investitie-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/ircc-vs-credit-fix-2026-investitie-timisoara?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/ircc-vs-credit-fix-2026-investitie-timisoara"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/rating-9-5-plus-booking-airbnb-playbook-aparthotel</loc>
+    <lastmod>2026-07-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/rating-9-5-plus-booking-airbnb-playbook-aparthotel"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/rating-9-5-plus-booking-airbnb-playbook-aparthotel?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/rating-9-5-plus-booking-airbnb-playbook-aparthotel"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/rating-9-5-plus-booking-airbnb-playbook-aparthotel?lang=en</loc>
+    <lastmod>2026-07-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/rating-9-5-plus-booking-airbnb-playbook-aparthotel"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/rating-9-5-plus-booking-airbnb-playbook-aparthotel?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/rating-9-5-plus-booking-airbnb-playbook-aparthotel"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/smart-lock-pms-check-in-automat-regim-hotelier-2026</loc>
+    <lastmod>2026-07-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/smart-lock-pms-check-in-automat-regim-hotelier-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/smart-lock-pms-check-in-automat-regim-hotelier-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/smart-lock-pms-check-in-automat-regim-hotelier-2026"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/smart-lock-pms-check-in-automat-regim-hotelier-2026?lang=en</loc>
+    <lastmod>2026-07-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/smart-lock-pms-check-in-automat-regim-hotelier-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/smart-lock-pms-check-in-automat-regim-hotelier-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/smart-lock-pms-check-in-automat-regim-hotelier-2026"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/corporate-long-stay-timisoara-continental-hella-nokia-flex</loc>
+    <lastmod>2026-07-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/corporate-long-stay-timisoara-continental-hella-nokia-flex"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/corporate-long-stay-timisoara-continental-hella-nokia-flex?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/corporate-long-stay-timisoara-continental-hella-nokia-flex"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/corporate-long-stay-timisoara-continental-hella-nokia-flex?lang=en</loc>
+    <lastmod>2026-07-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/corporate-long-stay-timisoara-continental-hella-nokia-flex"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/corporate-long-stay-timisoara-continental-hella-nokia-flex?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/corporate-long-stay-timisoara-continental-hella-nokia-flex"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/autostrada-a1-lugoj-deva-impact-imobiliar-timisoara</loc>
+    <lastmod>2026-07-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/autostrada-a1-lugoj-deva-impact-imobiliar-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/autostrada-a1-lugoj-deva-impact-imobiliar-timisoara?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/autostrada-a1-lugoj-deva-impact-imobiliar-timisoara"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/autostrada-a1-lugoj-deva-impact-imobiliar-timisoara?lang=en</loc>
+    <lastmod>2026-07-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/autostrada-a1-lugoj-deva-impact-imobiliar-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/autostrada-a1-lugoj-deva-impact-imobiliar-timisoara?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/autostrada-a1-lugoj-deva-impact-imobiliar-timisoara"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/clasificare-ministerul-turismului-apartament-regim-hotelier-2026</loc>
     <lastmod>2026-05-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/clasificare-ministerul-turismului-apartament-regim-hotelier-2026" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/clasificare-ministerul-turismului-apartament-regim-hotelier-2026" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/clasificare-ministerul-turismului-apartament-regim-hotelier-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/clasificare-ministerul-turismului-apartament-regim-hotelier-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/clasificare-ministerul-turismului-apartament-regim-hotelier-2026"/>
   </url>
 <url>
-    <loc>https://realtrust.ro/blog/asigurare-rca-locuinta-regim-hotelier-timisoara</loc>
+    <loc>https://realtrust.ro/blog/clasificare-ministerul-turismului-apartament-regim-hotelier-2026?lang=en</loc>
     <lastmod>2026-05-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/asigurare-rca-locuinta-regim-hotelier-timisoara" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/asigurare-rca-locuinta-regim-hotelier-timisoara" />
-  </url>
-<url>
-    <loc>https://realtrust.ro/blog/taxa-hoteliera-locala-timisoara-2026</loc>
-    <lastmod>2026-05-15</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/taxa-hoteliera-locala-timisoara-2026" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/taxa-hoteliera-locala-timisoara-2026" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/clasificare-ministerul-turismului-apartament-regim-hotelier-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/clasificare-ministerul-turismului-apartament-regim-hotelier-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/clasificare-ministerul-turismului-apartament-regim-hotelier-2026"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/directiva-ue-2024-1028-inregistrare-obligatorie-inchirieri-scurte</loc>
     <lastmod>2026-05-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/directiva-ue-2024-1028-inregistrare-obligatorie-inchirieri-scurte" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/directiva-ue-2024-1028-inregistrare-obligatorie-inchirieri-scurte" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/directiva-ue-2024-1028-inregistrare-obligatorie-inchirieri-scurte"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/directiva-ue-2024-1028-inregistrare-obligatorie-inchirieri-scurte?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/directiva-ue-2024-1028-inregistrare-obligatorie-inchirieri-scurte"/>
   </url>
 <url>
-    <loc>https://realtrust.ro/blog/norme-isu-psi-apartament-regim-hotelier-timisoara</loc>
+    <loc>https://realtrust.ro/blog/directiva-ue-2024-1028-inregistrare-obligatorie-inchirieri-scurte?lang=en</loc>
     <lastmod>2026-05-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/norme-isu-psi-apartament-regim-hotelier-timisoara" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/norme-isu-psi-apartament-regim-hotelier-timisoara" />
-  </url>
-<url>
-    <loc>https://realtrust.ro/blog/casa-marcat-e-factura-regim-hotelier-2026</loc>
-    <lastmod>2026-05-15</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/casa-marcat-e-factura-regim-hotelier-2026" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/casa-marcat-e-factura-regim-hotelier-2026" />
-  </url>
-<url>
-    <loc>https://realtrust.ro/blog/fisa-anuntare-strainilor-politie-regim-hotelier-2026</loc>
-    <lastmod>2026-05-15</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/fisa-anuntare-strainilor-politie-regim-hotelier-2026" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/fisa-anuntare-strainilor-politie-regim-hotelier-2026" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/directiva-ue-2024-1028-inregistrare-obligatorie-inchirieri-scurte"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/directiva-ue-2024-1028-inregistrare-obligatorie-inchirieri-scurte?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/directiva-ue-2024-1028-inregistrare-obligatorie-inchirieri-scurte"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/dac7-raportare-booking-airbnb-anaf-2026</loc>
     <lastmod>2026-05-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/dac7-raportare-booking-airbnb-anaf-2026" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/dac7-raportare-booking-airbnb-anaf-2026" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/dac7-raportare-booking-airbnb-anaf-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/dac7-raportare-booking-airbnb-anaf-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/dac7-raportare-booking-airbnb-anaf-2026"/>
   </url>
 <url>
-    <loc>https://realtrust.ro/blog/shopping-timisoara-iulius-town-shopping-city-targuri-branduri-locale</loc>
-    <lastmod>2026-05-06</lastmod>
+    <loc>https://realtrust.ro/blog/dac7-raportare-booking-airbnb-anaf-2026?lang=en</loc>
+    <lastmod>2026-05-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/shopping-timisoara-iulius-town-shopping-city-targuri-branduri-locale" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/shopping-timisoara-iulius-town-shopping-city-targuri-branduri-locale" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/dac7-raportare-booking-airbnb-anaf-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/dac7-raportare-booking-airbnb-anaf-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/dac7-raportare-booking-airbnb-anaf-2026"/>
   </url>
 <url>
-    <loc>https://realtrust.ro/blog/viata-de-noapte-in-timisoara-top-cluburi-baruri-terase-de-vara-2026</loc>
-    <lastmod>2026-05-06</lastmod>
+    <loc>https://realtrust.ro/blog/taxa-hoteliera-locala-timisoara-2026</loc>
+    <lastmod>2026-05-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/viata-de-noapte-in-timisoara-top-cluburi-baruri-terase-de-vara-2026" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/viata-de-noapte-in-timisoara-top-cluburi-baruri-terase-de-vara-2026" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/taxa-hoteliera-locala-timisoara-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/taxa-hoteliera-locala-timisoara-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/taxa-hoteliera-locala-timisoara-2026"/>
   </url>
 <url>
-    <loc>https://realtrust.ro/blog/timisoara-cu-copii-top-activitati-family-friendly-locuri-de-joaca-2026</loc>
-    <lastmod>2026-05-06</lastmod>
+    <loc>https://realtrust.ro/blog/taxa-hoteliera-locala-timisoara-2026?lang=en</loc>
+    <lastmod>2026-05-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/timisoara-cu-copii-top-activitati-family-friendly-locuri-de-joaca-2026" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/timisoara-cu-copii-top-activitati-family-friendly-locuri-de-joaca-2026" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/taxa-hoteliera-locala-timisoara-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/taxa-hoteliera-locala-timisoara-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/taxa-hoteliera-locala-timisoara-2026"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/fisa-anuntare-strainilor-politie-regim-hotelier-2026</loc>
+    <lastmod>2026-05-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/fisa-anuntare-strainilor-politie-regim-hotelier-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/fisa-anuntare-strainilor-politie-regim-hotelier-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/fisa-anuntare-strainilor-politie-regim-hotelier-2026"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/fisa-anuntare-strainilor-politie-regim-hotelier-2026?lang=en</loc>
+    <lastmod>2026-05-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/fisa-anuntare-strainilor-politie-regim-hotelier-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/fisa-anuntare-strainilor-politie-regim-hotelier-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/fisa-anuntare-strainilor-politie-regim-hotelier-2026"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/asigurare-rca-locuinta-regim-hotelier-timisoara</loc>
+    <lastmod>2026-05-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/asigurare-rca-locuinta-regim-hotelier-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/asigurare-rca-locuinta-regim-hotelier-timisoara?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/asigurare-rca-locuinta-regim-hotelier-timisoara"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/asigurare-rca-locuinta-regim-hotelier-timisoara?lang=en</loc>
+    <lastmod>2026-05-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/asigurare-rca-locuinta-regim-hotelier-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/asigurare-rca-locuinta-regim-hotelier-timisoara?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/asigurare-rca-locuinta-regim-hotelier-timisoara"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/norme-isu-psi-apartament-regim-hotelier-timisoara</loc>
+    <lastmod>2026-05-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/norme-isu-psi-apartament-regim-hotelier-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/norme-isu-psi-apartament-regim-hotelier-timisoara?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/norme-isu-psi-apartament-regim-hotelier-timisoara"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/norme-isu-psi-apartament-regim-hotelier-timisoara?lang=en</loc>
+    <lastmod>2026-05-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/norme-isu-psi-apartament-regim-hotelier-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/norme-isu-psi-apartament-regim-hotelier-timisoara?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/norme-isu-psi-apartament-regim-hotelier-timisoara"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/casa-marcat-e-factura-regim-hotelier-2026</loc>
+    <lastmod>2026-05-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/casa-marcat-e-factura-regim-hotelier-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/casa-marcat-e-factura-regim-hotelier-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/casa-marcat-e-factura-regim-hotelier-2026"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/casa-marcat-e-factura-regim-hotelier-2026?lang=en</loc>
+    <lastmod>2026-05-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/casa-marcat-e-factura-regim-hotelier-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/casa-marcat-e-factura-regim-hotelier-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/casa-marcat-e-factura-regim-hotelier-2026"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/excursii-de-o-zi-din-timisoara-7-destinatii-2026</loc>
     <lastmod>2026-05-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/excursii-de-o-zi-din-timisoara-7-destinatii-2026" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/excursii-de-o-zi-din-timisoara-7-destinatii-2026" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/excursii-de-o-zi-din-timisoara-7-destinatii-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/excursii-de-o-zi-din-timisoara-7-destinatii-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/excursii-de-o-zi-din-timisoara-7-destinatii-2026"/>
   </url>
 <url>
-    <loc>https://realtrust.ro/blog/ghid-cartiere-timisoara-unde-sa-stai-in-functie-de-tipul-de-calatorie</loc>
+    <loc>https://realtrust.ro/blog/excursii-de-o-zi-din-timisoara-7-destinatii-2026?lang=en</loc>
     <lastmod>2026-05-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/ghid-cartiere-timisoara-unde-sa-stai-in-functie-de-tipul-de-calatorie" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/ghid-cartiere-timisoara-unde-sa-stai-in-functie-de-tipul-de-calatorie" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/excursii-de-o-zi-din-timisoara-7-destinatii-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/excursii-de-o-zi-din-timisoara-7-destinatii-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/excursii-de-o-zi-din-timisoara-7-destinatii-2026"/>
   </url>
 <url>
-    <loc>https://realtrust.ro/blog/evenimente-timisoara-2026-calendar-complet-festivaluri-concerte-targuri</loc>
+    <loc>https://realtrust.ro/blog/shopping-timisoara-iulius-town-shopping-city-targuri-branduri-locale</loc>
     <lastmod>2026-05-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/evenimente-timisoara-2026-calendar-complet-festivaluri-concerte-targuri" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/evenimente-timisoara-2026-calendar-complet-festivaluri-concerte-targuri" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/shopping-timisoara-iulius-town-shopping-city-targuri-branduri-locale"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/shopping-timisoara-iulius-town-shopping-city-targuri-branduri-locale?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/shopping-timisoara-iulius-town-shopping-city-targuri-branduri-locale"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/shopping-timisoara-iulius-town-shopping-city-targuri-branduri-locale?lang=en</loc>
+    <lastmod>2026-05-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/shopping-timisoara-iulius-town-shopping-city-targuri-branduri-locale"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/shopping-timisoara-iulius-town-shopping-city-targuri-branduri-locale?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/shopping-timisoara-iulius-town-shopping-city-targuri-branduri-locale"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/timisoara-cu-copii-top-activitati-family-friendly-locuri-de-joaca-2026</loc>
+    <lastmod>2026-05-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/timisoara-cu-copii-top-activitati-family-friendly-locuri-de-joaca-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/timisoara-cu-copii-top-activitati-family-friendly-locuri-de-joaca-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/timisoara-cu-copii-top-activitati-family-friendly-locuri-de-joaca-2026"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/timisoara-cu-copii-top-activitati-family-friendly-locuri-de-joaca-2026?lang=en</loc>
+    <lastmod>2026-05-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/timisoara-cu-copii-top-activitati-family-friendly-locuri-de-joaca-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/timisoara-cu-copii-top-activitati-family-friendly-locuri-de-joaca-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/timisoara-cu-copii-top-activitati-family-friendly-locuri-de-joaca-2026"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/viata-de-noapte-in-timisoara-top-cluburi-baruri-terase-de-vara-2026</loc>
+    <lastmod>2026-05-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/viata-de-noapte-in-timisoara-top-cluburi-baruri-terase-de-vara-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/viata-de-noapte-in-timisoara-top-cluburi-baruri-terase-de-vara-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/viata-de-noapte-in-timisoara-top-cluburi-baruri-terase-de-vara-2026"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/viata-de-noapte-in-timisoara-top-cluburi-baruri-terase-de-vara-2026?lang=en</loc>
+    <lastmod>2026-05-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/viata-de-noapte-in-timisoara-top-cluburi-baruri-terase-de-vara-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/viata-de-noapte-in-timisoara-top-cluburi-baruri-terase-de-vara-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/viata-de-noapte-in-timisoara-top-cluburi-baruri-terase-de-vara-2026"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/top-15-restaurante-din-timisoara-in-2026-ghid-complet-pentru-oaspeti</loc>
     <lastmod>2026-05-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/top-15-restaurante-din-timisoara-in-2026-ghid-complet-pentru-oaspeti" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/top-15-restaurante-din-timisoara-in-2026-ghid-complet-pentru-oaspeti" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/top-15-restaurante-din-timisoara-in-2026-ghid-complet-pentru-oaspeti"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/top-15-restaurante-din-timisoara-in-2026-ghid-complet-pentru-oaspeti?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/top-15-restaurante-din-timisoara-in-2026-ghid-complet-pentru-oaspeti"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/top-15-restaurante-din-timisoara-in-2026-ghid-complet-pentru-oaspeti?lang=en</loc>
+    <lastmod>2026-05-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/top-15-restaurante-din-timisoara-in-2026-ghid-complet-pentru-oaspeti"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/top-15-restaurante-din-timisoara-in-2026-ghid-complet-pentru-oaspeti?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/top-15-restaurante-din-timisoara-in-2026-ghid-complet-pentru-oaspeti"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/transport-public-timisoara-ghid-tramvai-bolt-aeroport-2026</loc>
     <lastmod>2026-05-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/transport-public-timisoara-ghid-tramvai-bolt-aeroport-2026" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/transport-public-timisoara-ghid-tramvai-bolt-aeroport-2026" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/transport-public-timisoara-ghid-tramvai-bolt-aeroport-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/transport-public-timisoara-ghid-tramvai-bolt-aeroport-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/transport-public-timisoara-ghid-tramvai-bolt-aeroport-2026"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/transport-public-timisoara-ghid-tramvai-bolt-aeroport-2026?lang=en</loc>
+    <lastmod>2026-05-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/transport-public-timisoara-ghid-tramvai-bolt-aeroport-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/transport-public-timisoara-ghid-tramvai-bolt-aeroport-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/transport-public-timisoara-ghid-tramvai-bolt-aeroport-2026"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/ghid-cartiere-timisoara-unde-sa-stai-in-functie-de-tipul-de-calatorie</loc>
+    <lastmod>2026-05-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/ghid-cartiere-timisoara-unde-sa-stai-in-functie-de-tipul-de-calatorie"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/ghid-cartiere-timisoara-unde-sa-stai-in-functie-de-tipul-de-calatorie?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/ghid-cartiere-timisoara-unde-sa-stai-in-functie-de-tipul-de-calatorie"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/ghid-cartiere-timisoara-unde-sa-stai-in-functie-de-tipul-de-calatorie?lang=en</loc>
+    <lastmod>2026-05-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/ghid-cartiere-timisoara-unde-sa-stai-in-functie-de-tipul-de-calatorie"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/ghid-cartiere-timisoara-unde-sa-stai-in-functie-de-tipul-de-calatorie?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/ghid-cartiere-timisoara-unde-sa-stai-in-functie-de-tipul-de-calatorie"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/evenimente-timisoara-2026-calendar-complet-festivaluri-concerte-targuri</loc>
+    <lastmod>2026-05-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/evenimente-timisoara-2026-calendar-complet-festivaluri-concerte-targuri"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/evenimente-timisoara-2026-calendar-complet-festivaluri-concerte-targuri?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/evenimente-timisoara-2026-calendar-complet-festivaluri-concerte-targuri"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/evenimente-timisoara-2026-calendar-complet-festivaluri-concerte-targuri?lang=en</loc>
+    <lastmod>2026-05-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/evenimente-timisoara-2026-calendar-complet-festivaluri-concerte-targuri"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/evenimente-timisoara-2026-calendar-complet-festivaluri-concerte-targuri?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/evenimente-timisoara-2026-calendar-complet-festivaluri-concerte-targuri"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/top-10-cafenele-de-specialty-in-timisoara-ghidul-cafelei-pentru-2026</loc>
     <lastmod>2026-05-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/top-10-cafenele-de-specialty-in-timisoara-ghidul-cafelei-pentru-2026" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/top-10-cafenele-de-specialty-in-timisoara-ghidul-cafelei-pentru-2026" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/top-10-cafenele-de-specialty-in-timisoara-ghidul-cafelei-pentru-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/top-10-cafenele-de-specialty-in-timisoara-ghidul-cafelei-pentru-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/top-10-cafenele-de-specialty-in-timisoara-ghidul-cafelei-pentru-2026"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/top-10-cafenele-de-specialty-in-timisoara-ghidul-cafelei-pentru-2026?lang=en</loc>
+    <lastmod>2026-05-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/top-10-cafenele-de-specialty-in-timisoara-ghidul-cafelei-pentru-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/top-10-cafenele-de-specialty-in-timisoara-ghidul-cafelei-pentru-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/top-10-cafenele-de-specialty-in-timisoara-ghidul-cafelei-pentru-2026"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/apartamente-nzeb-timisoara-lista-completa-2026-impact-roi</loc>
     <lastmod>2026-05-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/apartamente-nzeb-timisoara-lista-completa-2026-impact-roi" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/apartamente-nzeb-timisoara-lista-completa-2026-impact-roi" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/apartamente-nzeb-timisoara-lista-completa-2026-impact-roi"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/apartamente-nzeb-timisoara-lista-completa-2026-impact-roi?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/apartamente-nzeb-timisoara-lista-completa-2026-impact-roi"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/apartamente-nzeb-timisoara-lista-completa-2026-impact-roi?lang=en</loc>
+    <lastmod>2026-05-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/apartamente-nzeb-timisoara-lista-completa-2026-impact-roi"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/apartamente-nzeb-timisoara-lista-completa-2026-impact-roi?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/apartamente-nzeb-timisoara-lista-completa-2026-impact-roi"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/ghid-investitii-imobiliare-timisoara-2026</loc>
     <lastmod>2026-04-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/ghid-investitii-imobiliare-timisoara-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/ghid-investitii-imobiliare-timisoara-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/ghid-investitii-imobiliare-timisoara-2026"/>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images//blog/ghid-investitii-timisoara-2026.jpg</image:loc>
       <image:title>Ghidul Investițiilor Imobiliare în Timișoara 2026: ROI, Yield și Apreciere</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/ghid-investitii-imobiliare-timisoara-2026" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/ghid-investitii-imobiliare-timisoara-2026" />
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/ghid-investitii-imobiliare-timisoara-2026?lang=en</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/ghid-investitii-imobiliare-timisoara-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/ghid-investitii-imobiliare-timisoara-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/ghid-investitii-imobiliare-timisoara-2026"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/ghid-turistic-timisoara-atractii-activitati</loc>
     <lastmod>2026-02-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/ghid-turistic-timisoara-atractii-activitati" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/ghid-turistic-timisoara-atractii-activitati" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/ghid-turistic-timisoara-atractii-activitati"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/ghid-turistic-timisoara-atractii-activitati?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/ghid-turistic-timisoara-atractii-activitati"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/ghid-turistic-timisoara-atractii-activitati?lang=en</loc>
+    <lastmod>2026-02-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/ghid-turistic-timisoara-atractii-activitati"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/ghid-turistic-timisoara-atractii-activitati?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/ghid-turistic-timisoara-atractii-activitati"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/ghid-complet-fiscalitate-regim-hotelier-2026</loc>
     <lastmod>2026-02-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/ghid-complet-fiscalitate-regim-hotelier-2026" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/ghid-complet-fiscalitate-regim-hotelier-2026" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/ghid-complet-fiscalitate-regim-hotelier-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/ghid-complet-fiscalitate-regim-hotelier-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/ghid-complet-fiscalitate-regim-hotelier-2026"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/ghid-complet-fiscalitate-regim-hotelier-2026?lang=en</loc>
+    <lastmod>2026-02-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/ghid-complet-fiscalitate-regim-hotelier-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/ghid-complet-fiscalitate-regim-hotelier-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/ghid-complet-fiscalitate-regim-hotelier-2026"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/impactul-costului-vietii-asupra-chiriilor-timisoara</loc>
     <lastmod>2026-02-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/impactul-costului-vietii-asupra-chiriilor-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/impactul-costului-vietii-asupra-chiriilor-timisoara?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/impactul-costului-vietii-asupra-chiriilor-timisoara"/>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images/src/assets/blog/sezonalitate-timisoara.jpg</image:loc>
       <image:title>Cum Afectează Costul Vieții Piața Chiriilor din Timișoara în 2026</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/impactul-costului-vietii-asupra-chiriilor-timisoara" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/impactul-costului-vietii-asupra-chiriilor-timisoara" />
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/impactul-costului-vietii-asupra-chiriilor-timisoara?lang=en</loc>
+    <lastmod>2026-02-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/impactul-costului-vietii-asupra-chiriilor-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/impactul-costului-vietii-asupra-chiriilor-timisoara?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/impactul-costului-vietii-asupra-chiriilor-timisoara"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/preturi-dinamice-2026-ghid</loc>
     <lastmod>2026-01-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/preturi-dinamice-2026-ghid" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/preturi-dinamice-2026-ghid" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/preturi-dinamice-2026-ghid"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/preturi-dinamice-2026-ghid?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/preturi-dinamice-2026-ghid"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/preturi-dinamice-2026-ghid?lang=en</loc>
+    <lastmod>2026-01-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/preturi-dinamice-2026-ghid"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/preturi-dinamice-2026-ghid?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/preturi-dinamice-2026-ghid"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/mentenanta-preventiva-checklist-lunar</loc>
     <lastmod>2026-01-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/mentenanta-preventiva-checklist-lunar" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/mentenanta-preventiva-checklist-lunar" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/mentenanta-preventiva-checklist-lunar"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/mentenanta-preventiva-checklist-lunar?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/mentenanta-preventiva-checklist-lunar"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/mentenanta-preventiva-checklist-lunar?lang=en</loc>
+    <lastmod>2026-01-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/mentenanta-preventiva-checklist-lunar"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/mentenanta-preventiva-checklist-lunar?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/mentenanta-preventiva-checklist-lunar"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/mesaje-automate-checkin-template</loc>
     <lastmod>2026-01-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/mesaje-automate-checkin-template" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/mesaje-automate-checkin-template" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/mesaje-automate-checkin-template"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/mesaje-automate-checkin-template?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/mesaje-automate-checkin-template"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/mesaje-automate-checkin-template?lang=en</loc>
+    <lastmod>2026-01-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/mesaje-automate-checkin-template"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/mesaje-automate-checkin-template?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/mesaje-automate-checkin-template"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/vecini-zgomot-reguli-bloc</loc>
     <lastmod>2026-01-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/vecini-zgomot-reguli-bloc" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/vecini-zgomot-reguli-bloc" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/vecini-zgomot-reguli-bloc"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/vecini-zgomot-reguli-bloc?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/vecini-zgomot-reguli-bloc"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/vecini-zgomot-reguli-bloc?lang=en</loc>
+    <lastmod>2026-01-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/vecini-zgomot-reguli-bloc"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/vecini-zgomot-reguli-bloc?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/vecini-zgomot-reguli-bloc"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/onboarding-proprietar-7-pasi</loc>
     <lastmod>2026-01-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/onboarding-proprietar-7-pasi" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/onboarding-proprietar-7-pasi" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/onboarding-proprietar-7-pasi"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/onboarding-proprietar-7-pasi?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/onboarding-proprietar-7-pasi"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/onboarding-proprietar-7-pasi?lang=en</loc>
+    <lastmod>2026-01-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/onboarding-proprietar-7-pasi"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/onboarding-proprietar-7-pasi?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/onboarding-proprietar-7-pasi"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/titlu-booking-care-vinde</loc>
     <lastmod>2026-01-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/titlu-booking-care-vinde"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/titlu-booking-care-vinde?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/titlu-booking-care-vinde"/>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images//src/assets/blog/titlu-booking.jpg</image:loc>
       <image:title>Titlu Booking care vinde: structură + exemple</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/titlu-booking-care-vinde" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/titlu-booking-care-vinde" />
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/titlu-booking-care-vinde?lang=en</loc>
+    <lastmod>2026-01-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/titlu-booking-care-vinde"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/titlu-booking-care-vinde?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/titlu-booking-care-vinde"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/dotari-cresc-conversia-roi</loc>
     <lastmod>2026-01-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/dotari-cresc-conversia-roi"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/dotari-cresc-conversia-roi?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/dotari-cresc-conversia-roi"/>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images//src/assets/blog/dotari-roi.jpg</image:loc>
       <image:title>Dotări care cresc conversia (ROI real)</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/dotari-cresc-conversia-roi" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/dotari-cresc-conversia-roi" />
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/dotari-cresc-conversia-roi?lang=en</loc>
+    <lastmod>2026-01-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/dotari-cresc-conversia-roi"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/dotari-cresc-conversia-roi?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/dotari-cresc-conversia-roi"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/whatsapp-leads-comunicare-eficienta</loc>
     <lastmod>2026-01-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/whatsapp-leads-comunicare-eficienta"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/whatsapp-leads-comunicare-eficienta?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/whatsapp-leads-comunicare-eficienta"/>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images//src/assets/blog/whatsapp-leads.jpg</image:loc>
       <image:title>WhatsApp leads: comunicare eficientă cu clienții</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/whatsapp-leads-comunicare-eficienta" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/whatsapp-leads-comunicare-eficienta" />
   </url>
 <url>
-    <loc>https://realtrust.ro/blog/security-deposit-protejeaza-investitia</loc>
+    <loc>https://realtrust.ro/blog/whatsapp-leads-comunicare-eficienta?lang=en</loc>
     <lastmod>2026-01-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <image:image>
-      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images//src/assets/blog/security-deposit.jpg</image:loc>
-      <image:title>Security deposit: protejează-ți investiția</image:title>
-    </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/security-deposit-protejeaza-investitia" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/security-deposit-protejeaza-investitia" />
-  </url>
-<url>
-    <loc>https://realtrust.ro/blog/staging-cleaning-standarde-hoteliere</loc>
-    <lastmod>2026-01-23</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-    <image:image>
-      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images//src/assets/blog/staging-cleaning.jpg</image:loc>
-      <image:title>Staging &amp; cleaning: standardele hoteliere</image:title>
-    </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/staging-cleaning-standarde-hoteliere" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/staging-cleaning-standarde-hoteliere" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/whatsapp-leads-comunicare-eficienta"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/whatsapp-leads-comunicare-eficienta?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/whatsapp-leads-comunicare-eficienta"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/photo-upgrade-fotografii-care-vand</loc>
     <lastmod>2026-01-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/photo-upgrade-fotografii-care-vand"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/photo-upgrade-fotografii-care-vand?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/photo-upgrade-fotografii-care-vand"/>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images//src/assets/blog/photo-upgrade.jpg</image:loc>
       <image:title>Photo upgrade: fotografii care vând</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/photo-upgrade-fotografii-care-vand" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/photo-upgrade-fotografii-care-vand" />
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/photo-upgrade-fotografii-care-vand?lang=en</loc>
+    <lastmod>2026-01-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/photo-upgrade-fotografii-care-vand"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/photo-upgrade-fotografii-care-vand?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/photo-upgrade-fotografii-care-vand"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/raportare-lunara-kpi-uri-care-conteaza</loc>
     <lastmod>2026-01-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/raportare-lunara-kpi-uri-care-conteaza"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/raportare-lunara-kpi-uri-care-conteaza?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/raportare-lunara-kpi-uri-care-conteaza"/>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images//src/assets/blog/raportare-kpi.jpg</image:loc>
       <image:title>Raportare lunară: ce KPI-uri contează cu adevărat</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/raportare-lunara-kpi-uri-care-conteaza" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/raportare-lunara-kpi-uri-care-conteaza" />
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/raportare-lunara-kpi-uri-care-conteaza?lang=en</loc>
+    <lastmod>2026-01-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/raportare-lunara-kpi-uri-care-conteaza"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/raportare-lunara-kpi-uri-care-conteaza?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/raportare-lunara-kpi-uri-care-conteaza"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/sezonalitate-timisoara-profita-fiecare-perioada</loc>
     <lastmod>2026-01-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/sezonalitate-timisoara-profita-fiecare-perioada"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/sezonalitate-timisoara-profita-fiecare-perioada?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/sezonalitate-timisoara-profita-fiecare-perioada"/>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images//src/assets/blog/sezonalitate-timisoara.jpg</image:loc>
       <image:title>Sezonalitate Timișoara: cum să profiți de fiecare perioadă</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/sezonalitate-timisoara-profita-fiecare-perioada" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/sezonalitate-timisoara-profita-fiecare-perioada" />
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/sezonalitate-timisoara-profita-fiecare-perioada?lang=en</loc>
+    <lastmod>2026-01-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/sezonalitate-timisoara-profita-fiecare-perioada"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/sezonalitate-timisoara-profita-fiecare-perioada?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/sezonalitate-timisoara-profita-fiecare-perioada"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/plati-transparente-tu-incasezi-noi-operam</loc>
     <lastmod>2026-01-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/plati-transparente-tu-incasezi-noi-operam"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/plati-transparente-tu-incasezi-noi-operam?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/plati-transparente-tu-incasezi-noi-operam"/>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images//src/assets/blog/plati-transparente.jpg</image:loc>
       <image:title>Plăți transparente: tu încasezi, noi operăm</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/plati-transparente-tu-incasezi-noi-operam" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/plati-transparente-tu-incasezi-noi-operam" />
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/plati-transparente-tu-incasezi-noi-operam?lang=en</loc>
+    <lastmod>2026-01-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/plati-transparente-tu-incasezi-noi-operam"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/plati-transparente-tu-incasezi-noi-operam?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/plati-transparente-tu-incasezi-noi-operam"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/staging-cleaning-standarde-hoteliere</loc>
+    <lastmod>2026-01-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/staging-cleaning-standarde-hoteliere"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/staging-cleaning-standarde-hoteliere?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/staging-cleaning-standarde-hoteliere"/>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images//src/assets/blog/staging-cleaning.jpg</image:loc>
+      <image:title>Staging &amp; cleaning: standardele hoteliere</image:title>
+    </image:image>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/staging-cleaning-standarde-hoteliere?lang=en</loc>
+    <lastmod>2026-01-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/staging-cleaning-standarde-hoteliere"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/staging-cleaning-standarde-hoteliere?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/staging-cleaning-standarde-hoteliere"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/security-deposit-protejeaza-investitia</loc>
+    <lastmod>2026-01-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/security-deposit-protejeaza-investitia"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/security-deposit-protejeaza-investitia?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/security-deposit-protejeaza-investitia"/>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/blog-images//src/assets/blog/security-deposit.jpg</image:loc>
+      <image:title>Security deposit: protejează-ți investiția</image:title>
+    </image:image>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/security-deposit-protejeaza-investitia?lang=en</loc>
+    <lastmod>2026-01-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/security-deposit-protejeaza-investitia"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/security-deposit-protejeaza-investitia?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/security-deposit-protejeaza-investitia"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/faq-obiectii-proprietari-raspunsuri</loc>
     <lastmod>2026-01-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/faq-obiectii-proprietari-raspunsuri" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/faq-obiectii-proprietari-raspunsuri" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/faq-obiectii-proprietari-raspunsuri"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/faq-obiectii-proprietari-raspunsuri?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/faq-obiectii-proprietari-raspunsuri"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/faq-obiectii-proprietari-raspunsuri?lang=en</loc>
+    <lastmod>2026-01-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/faq-obiectii-proprietari-raspunsuri"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/faq-obiectii-proprietari-raspunsuri?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/faq-obiectii-proprietari-raspunsuri"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/brand-premium-regim-hotelier</loc>
     <lastmod>2026-01-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/brand-premium-regim-hotelier" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/brand-premium-regim-hotelier" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/brand-premium-regim-hotelier"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/brand-premium-regim-hotelier?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/brand-premium-regim-hotelier"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/brand-premium-regim-hotelier?lang=en</loc>
+    <lastmod>2026-01-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/brand-premium-regim-hotelier"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/brand-premium-regim-hotelier?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/brand-premium-regim-hotelier"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/rezervari-directe-ghid-complet</loc>
     <lastmod>2026-01-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/rezervari-directe-ghid-complet" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/rezervari-directe-ghid-complet" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/rezervari-directe-ghid-complet"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/rezervari-directe-ghid-complet?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/rezervari-directe-ghid-complet"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/blog/rezervari-directe-ghid-complet?lang=en</loc>
+    <lastmod>2026-01-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/rezervari-directe-ghid-complet"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/rezervari-directe-ghid-complet?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/rezervari-directe-ghid-complet"/>
   </url>
 <url>
     <loc>https://realtrust.ro/blog/automatizare-industria-ospitalitatii</loc>
     <lastmod>2025-12-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/automatizare-industria-ospitalitatii" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/automatizare-industria-ospitalitatii" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/automatizare-industria-ospitalitatii"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/automatizare-industria-ospitalitatii?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/automatizare-industria-ospitalitatii"/>
   </url>
 <url>
-    <loc>https://realtrust.ro/proprietate/apartament-premium-city-of-mara-investitie-cu-randament-9-timisoara</loc>
-    <lastmod>2026-06-22</lastmod>
+    <loc>https://realtrust.ro/blog/automatizare-industria-ospitalitatii?lang=en</loc>
+    <lastmod>2025-12-29</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/c40bc017-9ed0-468d-8665-112c0c494da8/1782061271143-optimized-0.jpg</image:loc>
-      <image:title>Apartament Premium City of Mara | Investiție cu Randament 9% | Timișoara - ApArt Hotel Timișoara</image:title>
-    </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-premium-city-of-mara-investitie-cu-randament-9-timisoara" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-premium-city-of-mara-investitie-cu-randament-9-timisoara" />
-  </url>
-<url>
-    <loc>https://realtrust.ro/proprietate/apartament-2-camere-vivalia-parter-parcare-terasa-mare-iulius-mall</loc>
-    <lastmod>2026-04-28</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/71497cf5-ca02-4510-a3db-69a8a7cd9aae/imported-0.jpg</image:loc>
-      <image:title>Apartament 2 camere Vivalia - parter +parcare, terasa mare,Iulius Mall - ApArt Hotel Timișoara</image:title>
-    </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-2-camere-vivalia-parter-parcare-terasa-mare-iulius-mall" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-2-camere-vivalia-parter-parcare-terasa-mare-iulius-mall" />
-  </url>
-<url>
-    <loc>https://realtrust.ro/proprietate/apartament-premium-2-camere-2025-zona-lidia-hotel-zet-randament-9</loc>
-    <lastmod>2026-06-22</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/e0dfaf1f-96b6-4e99-bfc4-87155dfcc564/imported-0.jpg</image:loc>
-      <image:title>Apartament Premium 2 Camere (2025) – Zona Lidia/Hotel Zet – Randament 9%+ - ApArt Hotel Timișoara</image:title>
-    </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-premium-2-camere-2025-zona-lidia-hotel-zet-randament-9" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-premium-2-camere-2025-zona-lidia-hotel-zet-randament-9" />
-  </url>
-<url>
-    <loc>https://realtrust.ro/proprietate/apartament-premium-2-camere-complex-ring-torontalului-parcare-subterana</loc>
-    <lastmod>2026-06-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/84eabb8f-f9ff-4863-b2d6-dbebabb69621/imported-0.jpg</image:loc>
-      <image:title>Apartament Premium 2 Camere | Complex Ring Torontalului | Parcare Subterană - ApArt Hotel Timișoara</image:title>
-    </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-premium-2-camere-complex-ring-torontalului-parcare-subterana" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-premium-2-camere-complex-ring-torontalului-parcare-subterana" />
-  </url>
-<url>
-    <loc>https://realtrust.ro/proprietate/apartament-2-camere-business-regim-hotelier-activ-cu-istoric-si-grad-de-ocupare-</loc>
-    <lastmod>2026-04-28</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/f908e7ab-ecb7-43c0-af3a-5588a1963658/1773409681761-v8sn8hr87y.webp</image:loc>
-      <image:title>Apartament 2 camere - Business regim hotelier activ, cu istoric si grad de ocupare 72% - Timisoara - ApArt Hotel Timișoara</image:title>
-    </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-2-camere-business-regim-hotelier-activ-cu-istoric-si-grad-de-ocupare-" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-2-camere-business-regim-hotelier-activ-cu-istoric-si-grad-de-ocupare-" />
-  </url>
-<url>
-    <loc>https://realtrust.ro/proprietate/garsoniera-moderna-in-zona-steaua-eficienta-energetica-langa-shopping-city</loc>
-    <lastmod>2026-04-28</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/b8b1c508-e1ad-4e60-adfb-d2753f2b47d5/imported-5.jpg</image:loc>
-      <image:title>Garsonieră Modernă în Zona Steaua | Eficiență Energetică lângă Shopping City - ApArt Hotel Timișoara</image:title>
-    </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/garsoniera-moderna-in-zona-steaua-eficienta-energetica-langa-shopping-city" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/garsoniera-moderna-in-zona-steaua-eficienta-energetica-langa-shopping-city" />
-  </url>
-<url>
-    <loc>https://realtrust.ro/proprietate/eleganta-urbana-apartament-cu-2-camere-in-vivalia-grand-zona-take-ionescu-44eae7</loc>
-    <lastmod>2026-09-05</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://i.roamcdn.net/prop/imo/gallery-main-900w-watermark/aCwmC7YjuEFmzB_IbjH6jg/-_1q4ZkIfcAIxMFX1cXT0eFgCBgiejrGOTtGuLp565UCwA/_1I8pjhgYWJiYGFpZmAA/8258741c-2fa2-4c09-be8b-71919309e0a0.jpeg</image:loc>
-      <image:title>Eleganță Urbană: Apartament cu 2 Camere în Vivalia Grand, Zona Take Ionescu - ApArt Hotel Timișoara</image:title>
-    </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/eleganta-urbana-apartament-cu-2-camere-in-vivalia-grand-zona-take-ionescu-44eae7" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/eleganta-urbana-apartament-cu-2-camere-in-vivalia-grand-zona-take-ionescu-44eae7" />
-  </url>
-<url>
-    <loc>https://realtrust.ro/proprietate/exclusivitate-realtrust-apartament-modern-cu-2-camere-si-parcare-acoperita-zona--904de6</loc>
-    <lastmod>2026-09-05</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://i.roamcdn.net/prop/imo/gallery-main-900w-watermark/xO4vCgbFQldmNmOL2J3s3w/-_1q4ZkoQBgXivJTE9VcAxWAJbRxaU5JWD7AA/_1I8pjhgaWxuaGJgbmAA/51957a93-f824-4df2-8ed0-77e4f2bb8f70.jpg</image:loc>
-      <image:title>Exclusivitate RealTrust: Apartament Modern cu 2 Camere și Parcare Acoperită, Zona Take Ionescu - ApArt Hotel Timișoara</image:title>
-    </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/exclusivitate-realtrust-apartament-modern-cu-2-camere-si-parcare-acoperita-zona--904de6" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/exclusivitate-realtrust-apartament-modern-cu-2-camere-si-parcare-acoperita-zona--904de6" />
-  </url>
-<url>
-    <loc>https://realtrust.ro/proprietate/apartament-3-camere-gh-lazar-investitie-premium-randament-9-net</loc>
-    <lastmod>2026-04-28</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/595c3bd1-4144-4669-a744-be34865004c0/imported-2.jpg</image:loc>
-      <image:title>Apartament 3 Camere Gh. Lazăr | Investiție Premium | Randament +10% Net - ApArt Hotel Timișoara</image:title>
-    </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-3-camere-gh-lazar-investitie-premium-randament-9-net" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-3-camere-gh-lazar-investitie-premium-randament-9-net" />
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/blog/automatizare-industria-ospitalitatii"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/blog/automatizare-industria-ospitalitatii?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/blog/automatizare-industria-ospitalitatii"/>
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/apartament-2-camere-dumbravita-ideal-locuinta-sau-investitie-ea0ba4</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-10-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://assets.imobiliare.ro/theme/imo/assets/map-placeholder-big-nAhkODtR.webp</image:loc>
       <image:title>Apartament 2 Camere, Dumbrăvița - Ideal Locuință sau Investiție - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-2-camere-dumbravita-ideal-locuinta-sau-investitie-ea0ba4" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-2-camere-dumbravita-ideal-locuinta-sau-investitie-ea0ba4" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-2-camere-dumbravita-ideal-locuinta-sau-investitie-ea0ba4"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-2-camere-dumbravita-ideal-locuinta-sau-investitie-ea0ba4"/>
   </url>
 <url>
-    <loc>https://realtrust.ro/proprietate/apartament-2-camere-design-premium-loc-parcare-xcity-tower-timisoara-bd6136</loc>
-    <lastmod>2026-05-28</lastmod>
+    <loc>https://realtrust.ro/proprietate/apartament-2-camere-vivalia-parter-parcare-terasa-mare-iulius-mall</loc>
+    <lastmod>2026-10-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://frankfurt.apollo.olxcdn.com/v1/files/y6asyiugzzv32-RO/image;s=860x573</image:loc>
-      <image:title>Apartament 2 Camere, Design Premium, Loc Parcare, XCity Tower Timișoara - ApArt Hotel Timișoara</image:title>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/71497cf5-ca02-4510-a3db-69a8a7cd9aae/imported-0.jpg</image:loc>
+      <image:title>Apartament 2 camere Vivalia - parter +parcare, terasa mare,Iulius Mall - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-2-camere-design-premium-loc-parcare-xcity-tower-timisoara-bd6136" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-2-camere-design-premium-loc-parcare-xcity-tower-timisoara-bd6136" />
-  </url>
-<url>
-    <loc>https://realtrust.ro/proprietate/apartament-premium-city-of-mara-timisoara-investitie-cu-randament-ridicat</loc>
-    <lastmod>2026-06-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/b2d449b1-28f3-420a-8b98-c5a89897772e/1782062096085-optimized-0.jpg</image:loc>
-      <image:title>Apartament Premium City of Mara Timișoara – Investiție cu Randament Ridicat - ApArt Hotel Timișoara</image:title>
-    </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-premium-city-of-mara-timisoara-investitie-cu-randament-ridicat" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-premium-city-of-mara-timisoara-investitie-cu-randament-ridicat" />
-  </url>
-<url>
-    <loc>https://realtrust.ro/proprietate/exclusivitate-realtrust-apartament-premium-cu-2-camere-in-isho-timisoara-41f313</loc>
-    <lastmod>2026-09-05</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://i.roamcdn.net/prop/imo/gallery-main-900w-watermark/jgG_kHkrLb2wb9_imKRFDw/-/_1I8pjhgaW5ibGlgZmAA/fd5345f8-2f4b-4763-98bd-4ac19394840d.jpg</image:loc>
-      <image:title>Exclusivitate RealTrust: Apartament Premium cu 2 Camere în ISHO, Timișoara - ApArt Hotel Timișoara</image:title>
-    </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/exclusivitate-realtrust-apartament-premium-cu-2-camere-in-isho-timisoara-41f313" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/exclusivitate-realtrust-apartament-premium-cu-2-camere-in-isho-timisoara-41f313" />
-  </url>
-<url>
-    <loc>https://realtrust.ro/proprietate/apartament-premium-77-mp-zona-torontalului-randament-investitional-ridicat</loc>
-    <lastmod>2026-06-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/3c3757a3-3732-47c1-846b-a3b551fe3091/1782064108355-optimized-0.jpg</image:loc>
-      <image:title>Apartament Premium 77 mp | Zona Torontalului | Randament Investițional Ridicat - ApArt Hotel Timișoara</image:title>
-    </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-premium-77-mp-zona-torontalului-randament-investitional-ridicat" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-premium-77-mp-zona-torontalului-randament-investitional-ridicat" />
-  </url>
-<url>
-    <loc>https://realtrust.ro/proprietate/apartament-2-camere-de-vanzare-dumbravita-confort-1-584bcf</loc>
-    <lastmod>2026-06-30</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://harta6.imonet.ro/hot/8/142/91.png</image:loc>
-      <image:title>Apartament 2 Camere de Vanzare, Dumbrăvița, Confort 1 - ApArt Hotel Timișoara</image:title>
-    </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-2-camere-de-vanzare-dumbravita-confort-1-584bcf" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-2-camere-de-vanzare-dumbravita-confort-1-584bcf" />
-  </url>
-<url>
-    <loc>https://realtrust.ro/proprietate/apartamente-exclusiviste-in-zona-lipovei-timisoara-realtrust-91f9a6</loc>
-    <lastmod>2026-06-28</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://harta6.imonet.ro/hot/8/142/91.png</image:loc>
-      <image:title>Apartamente Exclusiviste în Zona Lipovei, Timișoara - RealTrust - ApArt Hotel Timișoara</image:title>
-    </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartamente-exclusiviste-in-zona-lipovei-timisoara-realtrust-91f9a6" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartamente-exclusiviste-in-zona-lipovei-timisoara-realtrust-91f9a6" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-2-camere-vivalia-parter-parcare-terasa-mare-iulius-mall"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-2-camere-vivalia-parter-parcare-terasa-mare-iulius-mall"/>
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/investitie-premium-apartament-39mp-zona-istorica-traian-randament-9</loc>
-    <lastmod>2026-06-22</lastmod>
+    <lastmod>2026-10-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/3f37f54c-f20c-4ff4-8b5d-6e910bcd30ae/1782158116598-4u7457g4hg.webp</image:loc>
       <image:title>Investiție Premium: Apartament 39mp, Zona Istorică Traian – Randament 9%+ - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/investitie-premium-apartament-39mp-zona-istorica-traian-randament-9" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/investitie-premium-apartament-39mp-zona-istorica-traian-randament-9" />
-  </url>
-<url>
-    <loc>https://realtrust.ro/proprietate/proprietar-giroc-mobilat-utilat-nou-ap-parter-2-camere-mobilat-si-utilat-cu-2-lo</loc>
-    <lastmod>2026-06-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/fa941eea-f423-44f2-8602-3a2befde6014/imported-5.jpg</image:loc>
-      <image:title>Proprietar Giroc mobilat utilat nou ap parter 2 camere, mobilat si utilat cu 2 locuri de parcare - ApArt Hotel Timișoara</image:title>
-    </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/proprietar-giroc-mobilat-utilat-nou-ap-parter-2-camere-mobilat-si-utilat-cu-2-lo" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/proprietar-giroc-mobilat-utilat-nou-ap-parter-2-camere-mobilat-si-utilat-cu-2-lo" />
-  </url>
-<url>
-    <loc>https://realtrust.ro/proprietate/garsoniera-calea-buziasului-investitie-cu-randament-ridicat-si-management-realtr</loc>
-    <lastmod>2026-06-22</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/a96196bf-6eb9-401f-a529-af3854ee5688/1782111859878-optimized-1.jpg</image:loc>
-      <image:title>Garsonieră Calea Buziașului: Investiție cu Randament Ridicat și Management RealTrust - ApArt Hotel Timișoara</image:title>
-    </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/garsoniera-calea-buziasului-investitie-cu-randament-ridicat-si-management-realtr" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/garsoniera-calea-buziasului-investitie-cu-randament-ridicat-si-management-realtr" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/investitie-premium-apartament-39mp-zona-istorica-traian-randament-9"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/investitie-premium-apartament-39mp-zona-istorica-traian-randament-9"/>
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/investitie-premium-timisoara-apartament-zona-soarelui-yield-9-2-management-realt</loc>
-    <lastmod>2026-06-20</lastmod>
+    <lastmod>2026-10-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/7c38b3fc-e3a1-4921-aead-b9d78846cc0b/1781883254954-optimized-0.webp</image:loc>
       <image:title>Investiție Premium Timișoara: Apartament Zona Soarelui, Yield 9.2%, Management RealTrust - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/investitie-premium-timisoara-apartament-zona-soarelui-yield-9-2-management-realt" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/investitie-premium-timisoara-apartament-zona-soarelui-yield-9-2-management-realt" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/investitie-premium-timisoara-apartament-zona-soarelui-yield-9-2-management-realt"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/investitie-premium-timisoara-apartament-zona-soarelui-yield-9-2-management-realt"/>
   </url>
 <url>
-    <loc>https://realtrust.ro/proprietate/apartament-premium-torontalului-randament-9-parcare-inclusa-vox-park</loc>
-    <lastmod>2026-04-28</lastmod>
+    <loc>https://realtrust.ro/proprietate/apartament-premium-77-mp-zona-torontalului-randament-investitional-ridicat</loc>
+    <lastmod>2026-10-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/80ef6503-96ad-465a-bf96-5b5b1aafd67f/imported-0.jpg</image:loc>
-      <image:title>Apartament Premium Torontalului | Randament 9%+ | Parcare Inclusă | Vox Park - ApArt Hotel Timișoara</image:title>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/3c3757a3-3732-47c1-846b-a3b551fe3091/1782064108355-optimized-0.jpg</image:loc>
+      <image:title>Apartament Premium 77 mp | Zona Torontalului | Randament Investițional Ridicat - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-premium-torontalului-randament-9-parcare-inclusa-vox-park" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-premium-torontalului-randament-9-parcare-inclusa-vox-park" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-premium-77-mp-zona-torontalului-randament-investitional-ridicat"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-premium-77-mp-zona-torontalului-randament-investitional-ridicat"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/apartament-premium-2-camere-2025-zona-lidia-hotel-zet-randament-9</loc>
+    <lastmod>2026-10-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/e0dfaf1f-96b6-4e99-bfc4-87155dfcc564/imported-0.jpg</image:loc>
+      <image:title>Apartament Premium 2 Camere (2025) – Zona Lidia/Hotel Zet – Randament 9%+ - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-premium-2-camere-2025-zona-lidia-hotel-zet-randament-9"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-premium-2-camere-2025-zona-lidia-hotel-zet-randament-9"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/proprietar-giroc-mobilat-utilat-nou-ap-parter-2-camere-mobilat-si-utilat-cu-2-lo</loc>
+    <lastmod>2026-10-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/fa941eea-f423-44f2-8602-3a2befde6014/imported-5.jpg</image:loc>
+      <image:title>Proprietar Giroc mobilat utilat nou ap parter 2 camere, mobilat si utilat cu 2 locuri de parcare - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/proprietar-giroc-mobilat-utilat-nou-ap-parter-2-camere-mobilat-si-utilat-cu-2-lo"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/proprietar-giroc-mobilat-utilat-nou-ap-parter-2-camere-mobilat-si-utilat-cu-2-lo"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/investitie-premium-apartament-2-camere-bv-regele-carol-i-yield-9</loc>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/ac9b7440-d0a8-4fec-85c7-757ab6030008/1793127468274-optimized-0.jpg</image:loc>
+      <image:title>Investiție Premium: Apartament 2 Camere, Bv. Regele Carol I | Yield 9%+ - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/investitie-premium-apartament-2-camere-bv-regele-carol-i-yield-9"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/investitie-premium-apartament-2-camere-bv-regele-carol-i-yield-9"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/apartament-3-camere-universitate</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/0c241545-e956-434e-9949-51f164e9ce35/1770490598602-3baqb69d3na.webp</image:loc>
+      <image:title>Apartament 3 Camere Universitate - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-3-camere-universitate"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-3-camere-universitate"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/garsoniera-calea-buziasului-investitie-cu-randament-ridicat-si-management-realtr</loc>
+    <lastmod>2026-10-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/a96196bf-6eb9-401f-a529-af3854ee5688/1782111859878-optimized-1.jpg</image:loc>
+      <image:title>Garsonieră Calea Buziașului: Investiție cu Randament Ridicat și Management RealTrust - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/garsoniera-calea-buziasului-investitie-cu-randament-ridicat-si-management-realtr"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/garsoniera-calea-buziasului-investitie-cu-randament-ridicat-si-management-realtr"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/xcity-3-apart-hotel</loc>
+    <lastmod>2026-10-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://d3hj7i5wny7p5d.cloudfront.net/upload/hotel/42/7718/69009-m.jpg</image:loc>
+      <image:title>XCity 3 ApArt Hotel by RealTrust - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/xcity-3-apart-hotel"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/xcity-3-apart-hotel"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/apartamente-exclusiviste-in-zona-lipovei-timisoara-realtrust-91f9a6</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://harta6.imonet.ro/hot/8/142/91.png</image:loc>
+      <image:title>Apartamente Exclusiviste în Zona Lipovei, Timișoara - RealTrust - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartamente-exclusiviste-in-zona-lipovei-timisoara-realtrust-91f9a6"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartamente-exclusiviste-in-zona-lipovei-timisoara-realtrust-91f9a6"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/apartament-2-camere-mansarda-la-curte-comuna-2</loc>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/9b197be1-49ca-44cb-96f7-e39c2265186a/imported-0.png</image:loc>
+      <image:title>Apartament 2 camere + mansarda, la curte comuna - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-2-camere-mansarda-la-curte-comuna-2"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-2-camere-mansarda-la-curte-comuna-2"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/ring-residence-apart-hotel</loc>
+    <lastmod>2026-10-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://d3hj7i5wny7p5d.cloudfront.net/upload/hotel/1/7778/73005-m.jpg</image:loc>
+      <image:title>RING Family Residence - ApArt Hotel by RealTrust - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/ring-residence-apart-hotel"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/ring-residence-apart-hotel"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/apartament-aproape-de-spitalul-judetean-zona-cd3b1e</loc>
+    <lastmod>2026-10-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/properties/e75a94b4-f71d-4b1f-a17b-4e953ca4ca55/1791456731518-1.webp</image:loc>
+      <image:title>Apartament aproape de Spitalul Județean – Zona - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-aproape-de-spitalul-judetean-zona-cd3b1e"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-aproape-de-spitalul-judetean-zona-cd3b1e"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/apartament-primitor-cu-2-camere-zona-4b9444</loc>
+    <lastmod>2026-10-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/prospects/4b9444da-33e2-4c40-b76c-cf5376d38f1d/cover-footer-crop-v1.webp</image:loc>
+      <image:title>Apartament primitor cu 2 camere – Zona - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-primitor-cu-2-camere-zona-4b9444"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-primitor-cu-2-camere-zona-4b9444"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/exclusivitate-realtrust-apartament-premium-cu-2-camere-in-isho-timisoara-41f313</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://i.roamcdn.net/prop/imo/gallery-main-900w-watermark/jgG_kHkrLb2wb9_imKRFDw/-/_1I8pjhgaW5ibGlgZmAA/fd5345f8-2f4b-4763-98bd-4ac19394840d.jpg</image:loc>
+      <image:title>Apartament Premium cu 2 Camere în ISHO, Timișoara - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/exclusivitate-realtrust-apartament-premium-cu-2-camere-in-isho-timisoara-41f313"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/exclusivitate-realtrust-apartament-premium-cu-2-camere-in-isho-timisoara-41f313"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/apartament-2-camere-design-premium-loc-parcare-xcity-tower-timisoara-bd6136</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://frankfurt.apollo.olxcdn.com/v1/files/y6asyiugzzv32-RO/image;s=860x573</image:loc>
+      <image:title>Apartament 2 Camere, Design Premium, Loc Parcare, XCity Tower Timișoara - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-2-camere-design-premium-loc-parcare-xcity-tower-timisoara-bd6136"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-2-camere-design-premium-loc-parcare-xcity-tower-timisoara-bd6136"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/apartament-decomandat-cu-3-camere-367582</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/prospects/36758246-d28f-4362-ba34-63a9e882b071/cover-footer-crop-v1.webp</image:loc>
+      <image:title>Apartament decomandat cu 3 camere - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-decomandat-cu-3-camere-367582"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-decomandat-cu-3-camere-367582"/>
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/studio-premium-2025-zona-sagului-utilitati-incluse-management-realtrust</loc>
-    <lastmod>2026-04-28</lastmod>
+    <lastmod>2026-10-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/53b19b1d-de2a-48c1-bda9-79008269f7c4/imported-2.jpg</image:loc>
       <image:title>Studio Premium 2025 | Zona Șagului | Utilități Incluse &amp; Management RealTrust - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/studio-premium-2025-zona-sagului-utilitati-incluse-management-realtrust" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/studio-premium-2025-zona-sagului-utilitati-incluse-management-realtrust" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/studio-premium-2025-zona-sagului-utilitati-incluse-management-realtrust"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/studio-premium-2025-zona-sagului-utilitati-incluse-management-realtrust"/>
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/apartament-premium-tipografilor-investitie-strategica-randament-9</loc>
-    <lastmod>2026-06-20</lastmod>
+    <lastmod>2026-10-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/5ec370bf-a065-4cd5-b3b1-9f7251b365a2/imported-0.jpg</image:loc>
       <image:title>Apartament Premium Tipografilor | Investiție Strategică | Randament 9%+ - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-premium-tipografilor-investitie-strategica-randament-9" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-premium-tipografilor-investitie-strategica-randament-9" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-premium-tipografilor-investitie-strategica-randament-9"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-premium-tipografilor-investitie-strategica-randament-9"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/apartament-premium-city-of-mara-investitie-cu-randament-9-timisoara</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/c40bc017-9ed0-468d-8665-112c0c494da8/1782061271143-optimized-0.jpg</image:loc>
+      <image:title>Apartament Premium City of Mara | Investiție cu Randament 9% | Timișoara - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-premium-city-of-mara-investitie-cu-randament-9-timisoara"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-premium-city-of-mara-investitie-cu-randament-9-timisoara"/>
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/investitie-premium-studio-pe-take-ionescu-randament-9-in-regim-hotelier</loc>
-    <lastmod>2026-04-28</lastmod>
+    <lastmod>2026-10-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/04cb1891-9d6d-4bc8-bc1e-d9961e81eafc/imported-0.jpg</image:loc>
       <image:title>Investiție Premium: Studio pe Take Ionescu, Randament 9%+ în Regim Hotelier - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/investitie-premium-studio-pe-take-ionescu-randament-9-in-regim-hotelier" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/investitie-premium-studio-pe-take-ionescu-randament-9-in-regim-hotelier" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/investitie-premium-studio-pe-take-ionescu-randament-9-in-regim-hotelier"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/investitie-premium-studio-pe-take-ionescu-randament-9-in-regim-hotelier"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/garsoniera-decomandata-calea-martirilor-str-pepinierei-d68a88</loc>
+    <lastmod>2026-11-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/d68a8837-a235-487a-855d-677377343724/1794320962730-optimized-0.webp</image:loc>
+      <image:title>Garsonieră decomandată – Calea Martirilor / Str. Pepinierei - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/garsoniera-decomandata-calea-martirilor-str-pepinierei-d68a88"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/garsoniera-decomandata-calea-martirilor-str-pepinierei-d68a88"/>
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/apartament-premium-calea-torontalului-parcare-subterana</loc>
-    <lastmod>2026-07-13</lastmod>
+    <lastmod>2026-10-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/041558df-fb27-4e46-a255-eb1d21ccc5ba/1783974406792-optimized-0.webp</image:loc>
       <image:title>Apartament Premium Calea Torontalului | Parcare Subterană - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-premium-calea-torontalului-parcare-subterana" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-premium-calea-torontalului-parcare-subterana" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-premium-calea-torontalului-parcare-subterana"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-premium-calea-torontalului-parcare-subterana"/>
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/3-camere-complet-decomandat-hol-spatios-medicina-garaj</loc>
-    <lastmod>2026-04-28</lastmod>
+    <lastmod>2026-10-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/1f1726d1-f396-4ec6-87cf-7f805a33ff5d/1773827006194-jqobqco2h.jpg</image:loc>
       <image:title>3 camere complet decomandat | Hol spatios | Medicina | Garaj - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/3-camere-complet-decomandat-hol-spatios-medicina-garaj" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/3-camere-complet-decomandat-hol-spatios-medicina-garaj" />
-  </url>
-<url>
-    <loc>https://realtrust.ro/proprietate/apartament-premium-3-camere-city-of-mara-randament-investitional-ridicat</loc>
-    <lastmod>2026-04-28</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/913452ee-0a2a-4955-9789-ab12a39698d8/imported-0.jpg</image:loc>
-      <image:title>Apartament Premium 3 Camere City of Mara | Randament Investițional Ridicat - ApArt Hotel Timișoara</image:title>
-    </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-premium-3-camere-city-of-mara-randament-investitional-ridicat" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-premium-3-camere-city-of-mara-randament-investitional-ridicat" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/3-camere-complet-decomandat-hol-spatios-medicina-garaj"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/3-camere-complet-decomandat-hol-spatios-medicina-garaj"/>
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/apartament-premium-3-camere-bulevardul-revolutiei-randament-9-net</loc>
-    <lastmod>2026-04-28</lastmod>
+    <lastmod>2026-10-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/f8782d15-2ac2-4585-8b3c-2ff2a93eb770/1773584047389-wzv3yxxzcwk.jpg</image:loc>
       <image:title>Apartament Premium 3 Camere | Bulevardul Revoluției | Randament 9%+ Net - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-premium-3-camere-bulevardul-revolutiei-randament-9-net" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-premium-3-camere-bulevardul-revolutiei-randament-9-net" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-premium-3-camere-bulevardul-revolutiei-randament-9-net"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-premium-3-camere-bulevardul-revolutiei-randament-9-net"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/eleganta-urbana-apartament-cu-2-camere-in-vivalia-grand-zona-take-ionescu-44eae7</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://i.roamcdn.net/prop/imo/gallery-main-900w-watermark/aCwmC7YjuEFmzB_IbjH6jg/-_1q4ZkIfcAIxMFX1cXT0eFgCBgiejrGOTtGuLp565UCwA/_1I8pjhgYWJiYGFpZmAA/8258741c-2fa2-4c09-be8b-71919309e0a0.jpeg</image:loc>
+      <image:title>Eleganță Urbană: Apartament cu 2 Camere în Vivalia Grand, Zona Take Ionescu - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/eleganta-urbana-apartament-cu-2-camere-in-vivalia-grand-zona-take-ionescu-44eae7"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/eleganta-urbana-apartament-cu-2-camere-in-vivalia-grand-zona-take-ionescu-44eae7"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/apartament-cu-o-camera-si-centrala-zona-centru-bc5659</loc>
+    <lastmod>2026-10-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/prospects/bc565915-90ca-43c6-8b9b-363c6e0f66bd/cover-footer-crop-v1.webp</image:loc>
+      <image:title>Apartament cu o cameră și centrală – Zona Centru - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-cu-o-camera-si-centrala-zona-centru-bc5659"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-cu-o-camera-si-centrala-zona-centru-bc5659"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/apartament-premium-city-of-mara-timisoara-investitie-cu-randament-ridicat</loc>
+    <lastmod>2026-10-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/watermark-cleaned/5b1f53ee-de0e-4bc4-9323-4c8b22be5f4a.jpg</image:loc>
+      <image:title>Apartament Premium City of Mara Timișoara – Investiție cu Randament Ridicat - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-premium-city-of-mara-timisoara-investitie-cu-randament-ridicat"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-premium-city-of-mara-timisoara-investitie-cu-randament-ridicat"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/apartament-3-camere-gh-lazar-investitie-premium-randament-9-net</loc>
+    <lastmod>2026-10-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/595c3bd1-4144-4669-a744-be34865004c0/imported-2.jpg</image:loc>
+      <image:title>Apartament 3 Camere Gh. Lazăr | Investiție Premium | Randament +10% Net - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-3-camere-gh-lazar-investitie-premium-randament-9-net"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-3-camere-gh-lazar-investitie-premium-randament-9-net"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/moonlight-emerald-suite</loc>
+    <lastmod>2026-10-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://d3hj7i5wny7p5d.cloudfront.net/upload/hotel/22/7799/73158-m.jpg</image:loc>
+      <image:title>Moonlight Emerald Suite by RealTrust - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/moonlight-emerald-suite"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/moonlight-emerald-suite"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/apartament-premium-2-camere-complex-ring-torontalului-parcare-subterana</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/84eabb8f-f9ff-4863-b2d6-dbebabb69621/imported-0.jpg</image:loc>
+      <image:title>Apartament Premium 2 Camere | Complex Ring Torontalului | Parcare Subterană - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-premium-2-camere-complex-ring-torontalului-parcare-subterana"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-premium-2-camere-complex-ring-torontalului-parcare-subterana"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/exclusivitate-realtrust-apartament-modern-cu-2-camere-si-parcare-acoperita-zona--904de6</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://i.roamcdn.net/prop/imo/gallery-main-900w-watermark/xO4vCgbFQldmNmOL2J3s3w/-_1q4ZkoQBgXivJTE9VcAxWAJbRxaU5JWD7AA/_1I8pjhgaWxuaGJgbmAA/51957a93-f824-4df2-8ed0-77e4f2bb8f70.jpg</image:loc>
+      <image:title>Apartament Modern cu 2 Camere și Parcare Acoperită, Zona Take Ionescu - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/exclusivitate-realtrust-apartament-modern-cu-2-camere-si-parcare-acoperita-zona--904de6"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/exclusivitate-realtrust-apartament-modern-cu-2-camere-si-parcare-acoperita-zona--904de6"/>
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/apartament-1-5-camere-43-5-m2-4-5-m2-ext-vivalia-v6-full-mobilat-la-comanda</loc>
-    <lastmod>2026-04-28</lastmod>
+    <lastmod>2026-10-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/5b99e5bc-5652-445b-ad67-da18a92d507c/1773834173939-oacbu0o46df.jpg</image:loc>
       <image:title>Apartament 1+1 camere, 43.5 m2 + 4.5 m2 balcon, Vivalia - Full mobilat si utilat la comanda - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-1-5-camere-43-5-m2-4-5-m2-ext-vivalia-v6-full-mobilat-la-comanda" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-1-5-camere-43-5-m2-4-5-m2-ext-vivalia-v6-full-mobilat-la-comanda" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-1-5-camere-43-5-m2-4-5-m2-ext-vivalia-v6-full-mobilat-la-comanda"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-1-5-camere-43-5-m2-4-5-m2-ext-vivalia-v6-full-mobilat-la-comanda"/>
   </url>
 <url>
-    <loc>https://realtrust.ro/proprietate/nordone-apart-hotel-premium</loc>
-    <lastmod>2026-09-16</lastmod>
+    <loc>https://realtrust.ro/proprietate/apartament-premium-torontalului-randament-9-parcare-inclusa-vox-park</loc>
+    <lastmod>2026-10-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/nordone-apart-hotel-premium" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/nordone-apart-hotel-premium" />
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/80ef6503-96ad-465a-bf96-5b5b1aafd67f/imported-0.jpg</image:loc>
+      <image:title>Apartament Premium Torontalului | Randament 9%+ | Parcare Inclusă | Vox Park - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-premium-torontalului-randament-9-parcare-inclusa-vox-park"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-premium-torontalului-randament-9-parcare-inclusa-vox-park"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/apartament-2-camere-business-regim-hotelier-activ-cu-istoric-si-grad-de-ocupare-</loc>
+    <lastmod>2026-10-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/f908e7ab-ecb7-43c0-af3a-5588a1963658/1773409681761-v8sn8hr87y.webp</image:loc>
+      <image:title>Apartament 2 camere - Business regim hotelier activ, cu istoric si grad de ocupare 72% - Timisoara - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-2-camere-business-regim-hotelier-activ-cu-istoric-si-grad-de-ocupare-"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-2-camere-business-regim-hotelier-activ-cu-istoric-si-grad-de-ocupare-"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/apartament-premium-3-camere-city-of-mara-randament-investitional-ridicat</loc>
+    <lastmod>2026-10-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/913452ee-0a2a-4955-9789-ab12a39698d8/imported-0.jpg</image:loc>
+      <image:title>Apartament Premium 3 Camere City of Mara | Randament Investițional Ridicat - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-premium-3-camere-city-of-mara-randament-investitional-ridicat"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-premium-3-camere-city-of-mara-randament-investitional-ridicat"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/garsoniera-moderna-in-zona-steaua-eficienta-energetica-langa-shopping-city</loc>
+    <lastmod>2026-10-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/b8b1c508-e1ad-4e60-adfb-d2753f2b47d5/imported-5.jpg</image:loc>
+      <image:title>Garsonieră Modernă în Zona Steaua | Eficiență Energetică lângă Shopping City - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/garsoniera-moderna-in-zona-steaua-eficienta-energetica-langa-shopping-city"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/garsoniera-moderna-in-zona-steaua-eficienta-energetica-langa-shopping-city"/>
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/studio-deluxe-city-of-mara-design-premium-etaj-9-management-realtrust</loc>
-    <lastmod>2026-06-22</lastmod>
+    <lastmod>2026-10-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/4d68842f-09ec-4f26-8272-9ec8ad72d5fb/1781545655193-optimized-0.jpg</image:loc>
       <image:title>Studio DeLuxe City of Mara | Design Premium, Etaj 9 &amp; Management RealTrust - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/studio-deluxe-city-of-mara-design-premium-etaj-9-management-realtrust" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/studio-deluxe-city-of-mara-design-premium-etaj-9-management-realtrust" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/studio-deluxe-city-of-mara-design-premium-etaj-9-management-realtrust"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/studio-deluxe-city-of-mara-design-premium-etaj-9-management-realtrust"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/nordone-apart-hotel-premium</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/nordone-apart-hotel-premium"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/nordone-apart-hotel-premium"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/apartament-premium-2-camere-calea-circumvalatiunii</loc>
+    <lastmod>2026-10-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/88250dac-6655-4e9c-9850-a7e2c5c8e376/1770479602844-abgwm09wdgw.webp</image:loc>
+      <image:title>Apartament premium 2 camere - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-premium-2-camere-calea-circumvalatiunii"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-premium-2-camere-calea-circumvalatiunii"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/oportunitate-investitie-city-of-mara-2-1-camere-63-mp</loc>
+    <lastmod>2026-10-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/30708eaa-a98f-49db-8175-7a08f7e2bab5/1772802960155-iuq9z03ozva.webp</image:loc>
+      <image:title>Oportunitate Investiție City of Mara | 2 + 1 Camere | 63 mp | Randament Maxim - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/oportunitate-investitie-city-of-mara-2-1-camere-63-mp"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/oportunitate-investitie-city-of-mara-2-1-camere-63-mp"/>
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/green-forest-apart-hotel</loc>
-    <lastmod>2026-09-28</lastmod>
+    <lastmod>2026-10-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images//assets/apt-06.webp</image:loc>
       <image:title>GREEN FOREST ApArt Hotel - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/green-forest-apart-hotel" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/green-forest-apart-hotel" />
-  </url>
-<url>
-    <loc>https://realtrust.ro/proprietate/fructus-plaza-ultracentral-apart-hotel</loc>
-    <lastmod>2026-09-28</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images//assets/apt-04.webp</image:loc>
-      <image:title>Fructus Plaza ULTRACENTRAL ApArt Hotel - ApArt Hotel Timișoara</image:title>
-    </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/fructus-plaza-ultracentral-apart-hotel" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/fructus-plaza-ultracentral-apart-hotel" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/green-forest-apart-hotel"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/green-forest-apart-hotel"/>
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/city-of-mara-apartament-cu-2-camere</loc>
-    <lastmod>2026-09-05</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/30eac8d0-97d3-4479-a4d5-73d0a246199d/imported-0.jpg</image:loc>
       <image:title>City of Mara Apartament cu 2 camere - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/city-of-mara-apartament-cu-2-camere" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/city-of-mara-apartament-cu-2-camere" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/city-of-mara-apartament-cu-2-camere"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/city-of-mara-apartament-cu-2-camere"/>
   </url>
 <url>
-    <loc>https://realtrust.ro/proprietate/ultra-central-piata-unirii-ideal-investitie</loc>
-    <lastmod>2026-06-28</lastmod>
+    <loc>https://realtrust.ro/proprietate/fructus-plaza-ultracentral-apart-hotel</loc>
+    <lastmod>2026-10-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/d008d6b5-5e6e-42ad-ba6c-cc5f046c75f2/imported-0.jpg</image:loc>
-      <image:title>Ultra-Central | Piața Unirii | Ideal Investiție - ApArt Hotel Timișoara</image:title>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images//assets/apt-04.webp</image:loc>
+      <image:title>Fructus Plaza ULTRACENTRAL ApArt Hotel - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/ultra-central-piata-unirii-ideal-investitie" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/ultra-central-piata-unirii-ideal-investitie" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/fructus-plaza-ultracentral-apart-hotel"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/fructus-plaza-ultracentral-apart-hotel"/>
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/fullview-studio-deluxe</loc>
-    <lastmod>2026-09-28</lastmod>
+    <lastmod>2026-10-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/render/image/public/property-images/static/fullview-deluxe.jpg?width=800&amp;quality=75</image:loc>
       <image:title>Cross Square House by RealTrust - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/fullview-studio-deluxe" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/fullview-studio-deluxe" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/fullview-studio-deluxe"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/fullview-studio-deluxe"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/ultra-central-piata-unirii-ideal-investitie</loc>
+    <lastmod>2026-10-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/d008d6b5-5e6e-42ad-ba6c-cc5f046c75f2/imported-0.jpg</image:loc>
+      <image:title>Ultra-Central | Piața Unirii | Ideal Investiție - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/ultra-central-piata-unirii-ideal-investitie"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/ultra-central-piata-unirii-ideal-investitie"/>
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/avenue-of-mara-apart-hotel</loc>
-    <lastmod>2026-09-28</lastmod>
+    <lastmod>2026-10-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images//assets/apt-03.webp</image:loc>
       <image:title>AVENUE of MARA ApArt Hotel - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/avenue-of-mara-apart-hotel" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/avenue-of-mara-apart-hotel" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/avenue-of-mara-apart-hotel"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/avenue-of-mara-apart-hotel"/>
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/helios-apart-hotel</loc>
-    <lastmod>2026-09-28</lastmod>
+    <lastmod>2026-10-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images//assets/helios.webp</image:loc>
       <image:title>HELIOS ApArt Hotel - DeLuxe Residence - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/helios-apart-hotel" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/helios-apart-hotel" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/helios-apart-hotel"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/helios-apart-hotel"/>
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/ateneo-trevi-2-apart-hotel</loc>
-    <lastmod>2026-09-28</lastmod>
+    <lastmod>2026-10-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images//assets/apt-05.webp</image:loc>
       <image:title>Apicultorilor House by RealTrust - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/ateneo-trevi-2-apart-hotel" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/ateneo-trevi-2-apart-hotel" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/ateneo-trevi-2-apart-hotel"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/ateneo-trevi-2-apart-hotel"/>
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/ideal-investitie-utilat-complet-mobilat</loc>
-    <lastmod>2026-04-28</lastmod>
+    <lastmod>2026-10-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/3f01d5bc-14c2-4e68-8f02-3255e314909a/imported-0.jpg</image:loc>
       <image:title>Ideal investiție! Utilat complet, mobilat. - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/ideal-investitie-utilat-complet-mobilat" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/ideal-investitie-utilat-complet-mobilat" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/ideal-investitie-utilat-complet-mobilat"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/ideal-investitie-utilat-complet-mobilat"/>
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/sunset-da-ra-studio-deluxe</loc>
-    <lastmod>2026-09-28</lastmod>
+    <lastmod>2026-10-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images//assets/apt-11.webp</image:loc>
       <image:title>Sunset Da-Ra - Studio DeLuxe - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/sunset-da-ra-studio-deluxe" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/sunset-da-ra-studio-deluxe" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/sunset-da-ra-studio-deluxe"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/sunset-da-ra-studio-deluxe"/>
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/ateneo-apart-hotel-studio-deluxe</loc>
-    <lastmod>2026-09-28</lastmod>
+    <lastmod>2026-10-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images//assets/apt-07.webp</image:loc>
       <image:title>ATENEO ApArt Hotel - Studio DeLuxe - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/ateneo-apart-hotel-studio-deluxe" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/ateneo-apart-hotel-studio-deluxe" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/ateneo-apart-hotel-studio-deluxe"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/ateneo-apart-hotel-studio-deluxe"/>
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/modern-studio-apart-hotel</loc>
-    <lastmod>2026-09-28</lastmod>
+    <lastmod>2026-10-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/render/image/public/property-images/static/modern-studio-apt.jpg?width=800&amp;quality=75</image:loc>
       <image:title>MODERN Studio ApArt Hotel - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/modern-studio-apart-hotel" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/modern-studio-apart-hotel" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/modern-studio-apart-hotel"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/modern-studio-apart-hotel"/>
   </url>
 <url>
     <loc>https://realtrust.ro/complexe/ring</loc>
@@ -1148,7 +2276,7 @@
   </url>
 <url>
     <loc>https://realtrust.ro/blog/locatie/timisoara</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
