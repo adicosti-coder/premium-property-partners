@@ -224,8 +224,7 @@ const SEOHead = ({
     defaultSocialDescriptions.ro;
   const overrideKeywords = override?.extra_keywords?.map((k) => k.keyword).filter(Boolean) || [];
   
-  // Canonical URL: ALWAYS absolute on realtrust.ro (non-www, matches global canonical), pathname only (NO query params, NO hash, NO trailing slash except root).
-  // This ensures Google indexes one version per page regardless of ?lang, ?utm_*, ?id, filters, etc.
+  // Server-side fallback only; in the browser og:url uses the shared policy.
   const buildCanonical = (): string => {
     let pathname: string;
     if (url) {
@@ -275,11 +274,8 @@ const SEOHead = ({
   };
   const absoluteImage = toAbsoluteImage(image);
 
-  // Hreflang alternates — language is a client-side state (LanguageContext), not a URL segment.
-  // Both RO and EN share the SAME canonical URL (no ?lang= param) to prevent GSC "alternative
-  // page with canonical tag" duplicates. Google treats hreflang variants pointing to the same
-  // URL as a single canonical page in multiple languages.
-  const getAlternateUrl = (_lang: string) => finalUrl;
+  // Canonical + hreflang links are emitted once per route by CanonicalHreflang
+  // (src/lib/seoLanguagePolicy.ts); og:url reuses the same canonical.
   
   // Default schema: only the canonical Organization node. Per-page
   // LocalBusiness / RealEstateAgent nodes are emitted by the pages that

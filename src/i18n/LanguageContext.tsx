@@ -67,9 +67,6 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t: dict }}>
-      {language === 'en' && (
-        <Helmet><meta name="robots" content="noindex, follow" /></Helmet>
-      )}
       {children}
     </LanguageContext.Provider>
   );
