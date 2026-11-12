@@ -4,7 +4,8 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { BRAND, ORG_ID, SITE_ORIGIN, ORGANIZATION_SCHEMA } from "@/lib/orgIdentity";
 import { validateJsonLdConsistency } from "@/lib/schemaConsistency";
 import { buildLangAlternates } from "@/components/seo/CanonicalHreflang";
-import { languageRobots } from "@/i18n/languagePolicy";
+import { seoRobots } from "@/lib/seoLanguagePolicy";
+import { declareEnglishVersion, useEnglishVersionAvailable } from "@/lib/seoEnglishAvailability";
 import { getPublicRouteSeo } from "@/lib/publicRouteSeo";
 
 // Canonical host: NO www, matches CanonicalHreflang.tsx + prerender + sitemap.
@@ -47,6 +48,13 @@ interface SEOHeadProps {
    * so it canonicalizes to the clean URL.
    */
   canonicalQuery?: string;
+  /**
+   * The page shows a real English translation (e.g. a blog article with an
+   * English title and body). Enables the self-referencing `?lang=en`
+   * canonical and the ro/en/x-default hreflang set; otherwise `?lang=en`
+   * canonicalizes to the Romanian URL.
+   */
+  englishAvailable?: boolean;
 }
 
 // Helper to generate Article JSON-LD
@@ -139,9 +147,16 @@ const SEOHead = ({
   breadcrumbItems,
   includeWebSiteSchema = false,
   canonicalQuery,
+  englishAvailable,
 }: SEOHeadProps) => {
   const { language } = useLanguage();
-  const robots = languageRobots(language, noIndex);
+  const robots = seoRobots(noIndex);
+  const currentPath = typeof window !== "undefined" ? window.location.pathname : "/";
+  useEffect(() => {
+    if (englishAvailable === undefined) return;
+    declareEnglishVersion(currentPath, englishAvailable);
+  }, [currentPath, englishAvailable]);
+  const routeHasEnglish = useEnglishVersionAvailable(currentPath);
   const approvedSeo = typeof window !== 'undefined' ? getPublicRouteSeo(window.location.pathname, language) : undefined;
   useLayoutEffect(() => {
     document.head.querySelectorAll('meta[name="description"]:not([data-rh]), meta[name="robots"]:not([data-rh])').forEach((node) => node.remove());
@@ -240,7 +255,7 @@ const SEOHead = ({
   const forceNonWww = (url: string): string =>
     url.replace(/^https?:\/\/(www\.)?realtrust\.ro/i, BASE_URL);
   const finalUrl = typeof window !== "undefined"
-    ? buildLangAlternates(window.location.pathname, window.location.search).canonical
+    ? buildLangAlternates(window.location.pathname, window.location.search, routeHasEnglish).canonical
     : forceNonWww(buildCanonical());
 
 
