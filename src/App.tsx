@@ -2,6 +2,7 @@ import { Suspense, lazy, useState, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigationType } from "react-router-dom";
 import { LanguageProvider } from "@/i18n/LanguageContext";
+import RedirectWithQuery from "@/components/routing/RedirectWithQuery";
 import { PhraseTranslator } from "@/i18n/PhraseTranslator";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { AnimationPreferenceProvider } from "@/hooks/useAnimationPreference";
@@ -159,10 +160,7 @@ const LegacyRedirect = ({ to }: { to: string }) => {
   return null;
 };
 
-const EvaluationRedirect = () => {
-  const { search, hash } = useLocation();
-  return <Navigate to={`/evaluare-gratuita${search}${hash}`} replace />;
-};
+const EvaluationRedirect = () => <RedirectWithQuery to="/evaluare-gratuita" />;
 
 // Scroll to top on route change
 const ScrollToTop = () => {
@@ -263,11 +261,11 @@ const App = () => (
                     <Route path="/oaspeti" element={<Guests />} />
                     {/* Canonical: /cazare (short brand structure). */}
                     <Route path="/cazare" element={<PentruOaspeti />} />
-                    <Route path="/pentru-oaspeti" element={<Navigate to="/cazare" replace />} />
+                    <Route path="/pentru-oaspeti" element={<RedirectWithQuery to="/cazare" />} />
                     <Route path="/imobiliare" element={<Imobiliare />} />
                     <Route path="/anunturi" element={<Anunturi />} />
                     <Route path="/anunturi-proprietari" element={<AnunturiProprietari />} />
-                    <Route path="/apartamente" element={<Navigate to="/anunturi" replace />} />
+                    <Route path="/apartamente" element={<RedirectWithQuery to="/anunturi" />} />
 
                     <Route path="/blog" element={<Blog />} />
                     <Route path="/blog/categorie/:slug" element={<BlogCategory />} />
@@ -283,10 +281,10 @@ const App = () => (
                     <Route path="/portal-proprietar" element={<OwnerDashboard />} />
                     <Route path="/despre-noi" element={<AboutUs />} />
                     <Route path="/intrebari-frecvente" element={<IntrebariFrecvente />} />
-                    <Route path="/faq" element={<Navigate to="/intrebari-frecvente" replace />} />
+                    <Route path="/faq" element={<RedirectWithQuery to="/intrebari-frecvente" />} />
                     <Route path="/pentru-proprietari" element={<PentruProprietari />} />
                     {/* Short alias people type / share manually — keeps one canonical URL. */}
-                    <Route path="/proprietari" element={<Navigate to="/pentru-proprietari" replace />} />
+                    <Route path="/proprietari" element={<RedirectWithQuery to="/pentru-proprietari" />} />
 
                     <Route path="/profil" element={<Profile />} />
                     <Route path="/setari" element={<Settings />} />
@@ -302,7 +300,7 @@ const App = () => (
 
                     {/* Canonical: /ansambluri-rezidentiale (hub). Detail pages keep /complexe/:slug. */}
                     <Route path="/ansambluri-rezidentiale" element={<Complexe />} />
-                    <Route path="/complexe" element={<Navigate to="/ansambluri-rezidentiale" replace />} />
+                    <Route path="/complexe" element={<RedirectWithQuery to="/ansambluri-rezidentiale" />} />
                     <Route path="/complex/:slug" element={<ComplexRedirect />} />
                     <Route path="/complexe/city-of-mara" element={<CityOfMaraTimisoara />} />
                     <Route path="/complexe/:slug" element={<ComplexLanding />} />
@@ -311,19 +309,19 @@ const App = () => (
                     <Route path="/zona/:zone" element={<ZoneLanding />} />
                     {/* Canonical: /hostscan-ai */}
                     <Route path="/hostscan-ai" element={<AnalizaProprietate />} />
-                    <Route path="/analiza-proprietate" element={<Navigate to="/hostscan-ai" replace />} />
+                    <Route path="/analiza-proprietate" element={<RedirectWithQuery to="/hostscan-ai" />} />
                     <Route path="/guide/:bookingId" element={<GuestGuide />} />
                     <Route path="/catalog-investitii" element={<CatalogInvestitii />} />
                     {/* Canonical: /cartiere (hub). Zone pages keep /imobiliare-timisoara/:zona. */}
                     <Route path="/cartiere" element={<ImobiliareTimisoara />} />
-                    <Route path="/imobiliare-timisoara" element={<Navigate to="/cartiere" replace />} />
+                    <Route path="/imobiliare-timisoara" element={<RedirectWithQuery to="/cartiere" />} />
                     <Route path="/imobiliare-timisoara/:zona" element={<NeighborhoodDetail />} />
                     <Route path="/zone-investitii-timisoara" element={<ZoneInvestitiiTimisoara />} />
                     <Route path="/ghid-evaluare-apartament-timisoara" element={<GhidEvaluareApartament />} />
                     <Route path="/autor/adrian-costi" element={<AutorAdrianCosti />} />
 
                     <Route path="/calculator-randament" element={<CalculatorROI />} />
-                    <Route path="/calculator-roi" element={<Navigate to="/calculator-randament" replace />} />
+                    <Route path="/calculator-roi" element={<RedirectWithQuery to="/calculator-randament" />} />
                     <Route path="/admin/cereri-randament" element={<CereriRandament />} />
                     <Route path="/admin/andrei" element={<AndreiDashboard />} />
                     <Route path="/analiza-roi-apartament" element={<AnalizaROIApartament />} />
@@ -342,7 +340,7 @@ const App = () => (
                     <Route path="/status-lead/:token" element={<StatusLead />} />
                     <Route path="/analiza/:token" element={<AnalizaPartajata />} />
                     <Route path="/programare-confirmata" element={<ProgramareConfirmata />} />
-                    <Route path="/mulțumire" element={<Navigate to="/multumire" replace />} />
+                    <Route path="/mulțumire" element={<RedirectWithQuery to="/multumire" />} />
                     <Route path="/termeni-si-conditii" element={<LegalPage type="terms" />} />
                     <Route path="/politica-confidentialitate" element={<LegalPage type="privacy" />} />
                     <Route path="/unsubscribe" element={<Unsubscribe />} />
@@ -355,7 +353,7 @@ const App = () => (
                     <Route path="/admin/lead-dashboard" element={<AdminLeadDashboard />} />
                     <Route path="/admin/stare-baza" element={<DbHealth />} />
                     <Route path="/admin/properties/fast-review" element={<FastReview />} />
-                    <Route path="/prospect-listings" element={<Navigate to="/admin/prospect-listings" replace />} />
+                    <Route path="/prospect-listings" element={<RedirectWithQuery to="/admin/prospect-listings" />} />
                     <Route path="/contact" element={<ContactPage />} />
                     <Route path="/colaborare-agenti" element={<ColaborareAgenti />} />
                     <Route path="/rezervare" element={<Rezervare />} />
@@ -363,26 +361,26 @@ const App = () => (
                     <Route path="/procesul-nostru" element={<ProcesulNostru />} />
                     {/* Canonical: /servicii-imobiliare */}
                     <Route path="/servicii-imobiliare" element={<ServiciiImobiliareTimisoara />} />
-                    <Route path="/servicii-imobiliare-timisoara" element={<Navigate to="/servicii-imobiliare" replace />} />
+                    <Route path="/servicii-imobiliare-timisoara" element={<RedirectWithQuery to="/servicii-imobiliare" />} />
                     <Route path="/multumim" element={<Multumim />} />
                     <Route path="/succes-calcul" element={<SuccesCalcul />} />
                     <Route path="/comparatie/:shareCode" element={<SharedComparison />} />
-                    <Route path="/contact-locatie" element={<Navigate to="/contact" replace />} />
+                    <Route path="/contact-locatie" element={<RedirectWithQuery to="/contact" />} />
                     {/* Legacy / mistyped URLs shared manually — avoid 404 dead ends. */}
-                    <Route path="/favorites" element={<Navigate to="/favorite" replace />} />
-                    <Route path="/guests" element={<Navigate to="/cazare" replace />} />
+                    <Route path="/favorites" element={<RedirectWithQuery to="/favorite" />} />
+                    <Route path="/guests" element={<RedirectWithQuery to="/cazare" />} />
 
-                    <Route path="/proprietati" element={<Navigate to="/imobiliare" replace />} />
-                    <Route path="/legal/politica-de-confidentialitate" element={<Navigate to="/politica-confidentialitate" replace />} />
-                    <Route path="/legal/termeni-si-conditii" element={<Navigate to="/termeni-si-conditii" replace />} />
-                    <Route path="/index.html" element={<Navigate to="/" replace />} />
-                    <Route path="/index" element={<Navigate to="/" replace />} />
-                    <Route path="/index-en.html" element={<Navigate to="/" replace />} />
-                    <Route path="/index_EN.html" element={<Navigate to="/" replace />} />
-                    <Route path="/imobiliare-realtrust-en.html" element={<Navigate to="/" replace />} />
-                    <Route path="/imobiliare-realtrust.html" element={<Navigate to="/" replace />} />
-                    <Route path="/real-estate-en.html" element={<Navigate to="/imobiliare" replace />} />
-                    <Route path="/real-estate.html" element={<Navigate to="/imobiliare" replace />} />
+                    <Route path="/proprietati" element={<RedirectWithQuery to="/imobiliare" />} />
+                    <Route path="/legal/politica-de-confidentialitate" element={<RedirectWithQuery to="/politica-confidentialitate" />} />
+                    <Route path="/legal/termeni-si-conditii" element={<RedirectWithQuery to="/termeni-si-conditii" />} />
+                    <Route path="/index.html" element={<RedirectWithQuery to="/" />} />
+                    <Route path="/index" element={<RedirectWithQuery to="/" />} />
+                    <Route path="/index-en.html" element={<RedirectWithQuery to="/" />} />
+                    <Route path="/index_EN.html" element={<RedirectWithQuery to="/" />} />
+                    <Route path="/imobiliare-realtrust-en.html" element={<RedirectWithQuery to="/" />} />
+                    <Route path="/imobiliare-realtrust.html" element={<RedirectWithQuery to="/" />} />
+                    <Route path="/real-estate-en.html" element={<RedirectWithQuery to="/imobiliare" />} />
+                    <Route path="/real-estate.html" element={<RedirectWithQuery to="/imobiliare" />} />
                     <Route path="/sitemap.xml" element={<LegacyRedirect to={`https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/generate-sitemap`} />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
