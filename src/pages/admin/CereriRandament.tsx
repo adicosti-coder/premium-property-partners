@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { waLeadLink } from "@/lib/waLeadLink";
 import { toast } from "sonner";
+import { MonthlyMarketAlertsButton } from "@/components/admin/MonthlyMarketAlertsButton";
 import { canRetryNotification } from "../../../supabase/functions/_shared/calculatorNotificationPolicy";
 
 type Row = {
@@ -123,6 +124,18 @@ const CereriRandament = () => {
     } catch { toast.error("Nu am putut retrimite notificarea. Reîncarcă stările înainte de o nouă încercare."); }
     finally { setRetrying(null); }
   };
+  const [stopping, setStopping] = useState<string | null>(null);
+  const stopAlert = async (id: string) => {
+    if (stopping) return;
+    setStopping(id);
+    try {
+      const { error } = await supabase.functions.invoke("process-monthly-alerts", { body: { action: "unsubscribe", lead_id: id } });
+      if (error) throw error;
+      await q.refetch();
+      toast.success("Alerta lunară a fost oprită pentru acest contact.");
+    } catch { toast.error("Nu am putut opri alerta."); }
+    finally { setStopping(null); }
+  };
   const reload = async () => {
     if (refreshing) return;
     setRefreshing(true);
@@ -187,7 +200,8 @@ const CereriRandament = () => {
             <CardTitle>Cereri de randament</CardTitle>
             <CardDescription>Toate cererile trimise din calculatoarele de venit. {rows.length} cereri.</CardDescription>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
+            <MonthlyMarketAlertsButton />
             <Button variant="outline" size="sm" onClick={() => setDesc((v) => !v)}>
               <ArrowDownUp className="h-4 w-4 mr-1" />{desc ? "Cele mai noi" : "Cele mai vechi"}
             </Button>
@@ -223,7 +237,9 @@ const CereriRandament = () => {
                         <td className="py-2 pr-3">{zone}</td>
                         <td className="py-2 pr-3">{type}</td>
                         <td className="py-2 pr-3 whitespace-nowrap font-medium">{income(sd)}</td>
-                        <td className="py-2"><Badge variant="secondary">{sourceLabel(r.source)}</Badge>{typeof sd?.intent_label === "string" && <p className="mt-1 text-xs text-muted-foreground">{sd.intent_label as string}</p>}{typeof sd?.sale_value_mid === "number" && <p className="text-xs text-muted-foreground">Vânzare ~{Math.round(sd.sale_value_mid as number).toLocaleString("ro-RO")} €</p>}{sd?.market_alert_opt_in === true && <Badge variant="outline" className="mt-1">Alertă lunară</Badge>}</td>
+                        <td className="py-2"><Badge variant="secondary">{sourceLabel(r.source)}</Badge>{typeof sd?.intent_label === "string" && <p className="mt-1 text-xs text-muted-foreground">{sd.intent_label as string}</p>}{typeof sd?.sale_value_mid === "number" && <p className="text-xs text-muted-foreground">Vânzare ~{Math.round(sd.sale_value_mid as number).toLocaleString("ro-RO")} €</p>}{sd?.market_alert_opt_in === true && (typeof sd.market_alert_unsubscribed_at === "string"
+                          ? <Badge variant="outline" className="mt-1 text-muted-foreground">Alertă oprită</Badge>
+                          : <span className="mt-1 inline-flex items-center gap-1"><Badge variant="outline">Alertă lunară</Badge><Button variant="link" size="sm" className="h-auto p-0 text-xs" disabled={stopping === r.id} onClick={() => stopAlert(r.id)}>Oprește</Button></span>)}</td>
                         <td className="py-2 pr-3 min-w-36">
                           <Badge variant={r.email_status === "failed" ? "destructive" : "outline"}>{labels[r.email_status] ?? r.email_status}</Badge>
                           {r.email_error && <p className="mt-1 max-w-56 break-words text-xs text-destructive">{r.email_error}</p>}

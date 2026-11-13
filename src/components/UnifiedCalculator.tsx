@@ -419,6 +419,7 @@ const UnifiedCalculator = () => {
       photo_recommendations: photoInsights?.recommendations.slice(0, 3).join(" | ") || null,
       market_alert_opt_in: marketAlert,
       market_alert_zone: marketAlert ? zoneLabel : null,
+      market_alert_zone_key: marketAlert && locationMode !== "regional" ? zone : null,
       market_alert_consent_at: marketAlert ? new Date().toISOString() : null,
       prefilled_from_link: Boolean(prefill.zone || prefill.type || prefill.surface || prefill.intent || prefill.name),
     };
