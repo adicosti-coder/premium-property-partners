@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { fetchOwnerContactReady, fetchOwnerReview, fetchOwnerReminders, OWNER_FLOW_QUERY_KEY } from "@/lib/ownerFlowData";
 import { Loader2, Search, CheckCircle2, MessageSquare, TrendingDown, Calculator } from "lucide-react";
-import { CALCULATOR_LEADS_QUERY_KEY, fetchCalculatorLeads } from "@/components/admin/CalculatorLeadsPanel";
+import CalculatorLeadsPanel, { CALCULATOR_LEADS_QUERY_KEY, fetchCalculatorLeads } from "@/components/admin/CalculatorLeadsPanel";
 import AdminErrorBoundary from "@/components/admin/AdminErrorBoundary";
 
 const OwnerListingSearch = lazy(() => import("@/components/admin/OwnerListingSearch"));
@@ -13,7 +13,6 @@ const ProspectTriageQueue = lazy(() => import("@/components/admin/ProspectTriage
 const OwnerContactPanel = lazy(() => import("@/components/admin/OwnerContactPanel"));
 const OwnerFollowUpPanel = lazy(() => import("@/components/admin/OwnerFollowUpPanel"));
 const AndreiBulkCallTable = lazy(() => import("@/components/admin/AndreiBulkCallTable"));
-const CalculatorLeadsPanel = lazy(() => import("@/components/admin/CalculatorLeadsPanel"));
 
 type StepKey = "search" | "verify" | "contact" | "follow" | "calculator";
 
