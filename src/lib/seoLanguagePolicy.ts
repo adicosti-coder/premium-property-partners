@@ -26,6 +26,23 @@ export const PAGINATED_PREFIXES = ["/blog/categorie/", "/blog/locatie/"] as cons
 /** Routes that may carry an English version (`?lang=en`) in sitemaps. */
 export const ENGLISH_VERSION_PATTERN = /^\/blog\/(?!categorie$|locatie$)[^/]+$/;
 
+/**
+ * Static (non-blog) pages declared fully translated into English. Each one
+ * self-canonicalizes per language, lists ro + en + x-default and has its
+ * `?lang=en` URL in the sitemap. Mirrored in supabase/functions/_shared/seoLanguage.ts.
+ */
+export const TRANSLATED_STATIC_PATHS: readonly string[] = ["/cazare"];
+
+export function isTranslatedStaticPath(pathname: string): boolean {
+  return TRANSLATED_STATIC_PATHS.includes(normalizeSeoPath(pathname));
+}
+
+/** A path whose `?lang=en` URL may be listed (translated articles or static pages). */
+export function mayHaveEnglishVersion(pathname: string): boolean {
+  const path = normalizeSeoPath(pathname);
+  return ENGLISH_VERSION_PATTERN.test(path) || isTranslatedStaticPath(path);
+}
+
 export function normalizeSeoPath(pathname: string): string {
   let path = (pathname || "/").split(/[?#]/)[0].replace(/\/{2,}/g, "/").replace(/\/+$/, "");
   const complex = path.match(/^\/complex\/([^/]+)$/);

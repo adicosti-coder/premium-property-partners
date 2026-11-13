@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { normalizeSeoPath } from "./seoLanguagePolicy";
+import { isTranslatedStaticPath, normalizeSeoPath } from "./seoLanguagePolicy";
 
 /**
  * Which routes currently have a real English version. Pages declare it
@@ -21,6 +21,8 @@ export function declareEnglishVersion(pathname: string, available: boolean): voi
 
 export function isEnglishVersionAvailable(pathname: string): boolean {
   const path = normalizeSeoPath(pathname);
+  // Static pages declared translated are English-capable from the first render.
+  if (isTranslatedStaticPath(path)) return true;
   const value = declared.get(path);
   if (value !== undefined) return value;
   if (typeof document === "undefined") return false;

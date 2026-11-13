@@ -9,6 +9,13 @@
  */
 export const SEO_SITE_ORIGIN = "https://realtrust.ro";
 
+/** Static pages fully translated into English (same list as the site policy). */
+export const TRANSLATED_STATIC_PATHS: readonly string[] = ["/cazare"];
+
+export function isTranslatedStaticPath(path: string): boolean {
+  return TRANSLATED_STATIC_PATHS.includes(path);
+}
+
 export function hasEnglishTranslation(fields: { title_en?: string | null; content_en?: string | null } | null | undefined): boolean {
   return Boolean(fields?.title_en?.trim() && fields?.content_en?.trim());
 }
