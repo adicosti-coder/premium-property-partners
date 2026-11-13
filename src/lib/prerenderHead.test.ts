@@ -92,9 +92,14 @@ describe("prerendered homepage head", () => {
     const hotel = schemas.find((schema) => schema["@id"] === "https://realtrust.ro/#lodgingbusiness");
     const agent = schemas.find((schema) => schema["@id"] === "https://realtrust.ro/#realestateagent");
 
-    expect(hotel).toEqual(JSON.parse(JSON.stringify(LODGING_BUSINESS_SCHEMA)));
+    const { aggregateRating, ...hotelIdentity } = hotel;
+    expect(hotelIdentity).toEqual(JSON.parse(JSON.stringify(LODGING_BUSINESS_SCHEMA)));
     expect(agent).toEqual(JSON.parse(JSON.stringify(REAL_ESTATE_AGENT_SCHEMA)));
-    expect(generateLocalBusinessSchema()).toEqual(hotel);
+    expect(generateLocalBusinessSchema()).toEqual(hotelIdentity);
+    // Static HTML and the runtime homepage carry the same 9.7/10 brand rating.
+    expect(aggregateRating).toEqual({ "@type": "AggregateRating", ratingValue: 9.7, reviewCount: 500, bestRating: 10, worstRating: 1 });
+    const runtimeHotel = generateHomepageSchemas().find((schema) => schema["@id"] === "https://realtrust.ro/#lodgingbusiness");
+    expect(runtimeHotel?.aggregateRating).toEqual(aggregateRating);
   });
 
   it("states the management fee as 15–20% of net income in the ApArt Hotel node", () => {
