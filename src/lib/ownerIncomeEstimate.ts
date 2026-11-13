@@ -48,6 +48,8 @@ export interface EstimateInput {
   commissionRate?: number;
   /** Explicit neutral regional or approved local profile; existing callers keep their zone. */
   zoneProfile?: { rent: number; adr: number };
+  /** Tariff multiplier for parking; default 1.05. The unified calculator applies its own approved value. */
+  parkingAdrFactor?: number;
 }
 
 export interface EstimateResult {
@@ -70,7 +72,7 @@ export function estimateOwnerIncome(i: EstimateInput): EstimateResult {
   const premium = i.finish === "premium";
 
   const classic = t.classicRent * z.rent * size * (premium ? 1.15 : 1) + (i.parking ? 40 : 0);
-  const nightly = t.adr * z.adr * Math.sqrt(size) * (premium ? 1.2 : 1) * (i.parking ? 1.05 : 1);
+  const nightly = t.adr * z.adr * Math.sqrt(size) * (premium ? 1.2 : 1) * (i.parking ? (i.parkingAdrFactor ?? 1.05) : 1);
   const gross = nightly * DAYS_PER_MONTH * MANAGEMENT_POLICY.occupancyDefault;
   // Existing operating assumptions are exposed to the visitor; not commercial prices.
   const net = calculateManagedIncome({ gross, channelFees: gross * (i.channelFeeRate ?? .15), utilities: i.utilities ?? 120, commissionRate: i.commissionRate }).ownerIncome;

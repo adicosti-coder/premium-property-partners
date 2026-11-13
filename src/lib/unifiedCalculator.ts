@@ -4,6 +4,7 @@
  */
 import { calculateManagedIncome, MANAGEMENT_POLICY } from "./managementPolicy";
 import { estimateOwnerIncome, PROPERTY_TYPES, ZONES, type Finish, type PropertyTypeValue, type ZoneValue } from "./ownerIncomeEstimate";
+import { refinementFactors, type Refinements } from "./calculatorRefinements";
 
 export const MIN_PROPERTY_SURFACE = 15;
 export const MAX_PROPERTY_SURFACE = 5000;
@@ -73,6 +74,8 @@ export interface UnifiedInput {
   locationMode?: LocationMode;
   /** Mod național/manual: valorile introduse de proprietar înlocuiesc coeficienții de zonă. */
   manual?: { classicRent?: number; nightlyRate?: number } | null;
+  /** Bifele „Rafinează estimarea”: înlocuiesc `parking` și aplică procentele aprobate pe tarif și ocupare. */
+  refinements?: Refinements;
 }
 
 export interface UnifiedResult {
@@ -89,14 +92,21 @@ export interface UnifiedResult {
 }
 
 export function computeUnified(i: UnifiedInput): UnifiedResult {
+  const refine = i.refinements;
   const profile = UNIFIED_ZONES.find((candidate) => candidate.value === i.zone)?.profile ?? "alta-zona";
-  const base = { type: i.type, zone: profile, surface: i.surface, parking: i.parking, finish: i.finish, ...(i.locationMode === "regional" ? { zoneProfile: { rent: 1, adr: 1 } } : {}) };
+  const parking = refine ? refine.parking : i.parking;
+  // Cu bife, parcarea adaugă procentul aprobat pe tarif (mai jos), nu coeficientul vechi de 5%.
+  const base = { type: i.type, zone: profile, surface: i.surface, parking, finish: i.finish, ...(refine ? { parkingAdrFactor: 1 } : {}), ...(i.locationMode === "regional" ? { zoneProfile: { rent: 1, adr: 1 } } : {}) };
   const hi = estimateOwnerIncome({ ...base, commissionRate: MANAGEMENT_POLICY.commissionMax });
   const lo = estimateOwnerIncome({ ...base, commissionRate: MANAGEMENT_POLICY.commissionMin });
-  if (i.manual) {
-    const classicRent = i.manual.classicRent ?? hi.classicRent;
-    const nightlyRate = i.manual.nightlyRate ?? hi.nightlyRate;
-    const gross = Math.max(0, nightlyRate) * DAYS_PER_MONTH * MANAGEMENT_POLICY.occupancyDefault;
+  const f = refinementFactors(refine);
+  const refined = f.nightly !== 1 || f.occupancyBonus !== 0;
+  if (i.manual || refined) {
+    const classicRent = i.manual?.classicRent ?? hi.classicRent;
+    // Tariful introdus de proprietar rămâne al lui; bifele ajustează doar estimarea automată.
+    const nightlyRate = i.manual?.nightlyRate ?? Math.round(hi.nightlyRate * f.nightly);
+    const occupancy = Math.min(MANAGEMENT_POLICY.occupancyMax, MANAGEMENT_POLICY.occupancyDefault + f.occupancyBonus);
+    const gross = Math.max(0, nightlyRate) * DAYS_PER_MONTH * occupancy;
     const at = (rate: number) =>
       calculateManagedIncome({ gross, channelFees: gross * CHANNEL_FEE_RATE, utilities: UTILITIES, commissionRate: rate }).ownerIncome;
     const netMin = Math.round(at(MANAGEMENT_POLICY.commissionMax));
@@ -105,7 +115,7 @@ export function computeUnified(i: UnifiedInput): UnifiedResult {
     return {
       classicRent: Math.round(Math.max(0, classicRent)),
       nightlyRate: Math.round(nightlyRate),
-      occupancy: MANAGEMENT_POLICY.occupancyDefault,
+      occupancy,
       grossHotel: Math.round(gross),
       netMin, netMax, netMid,
       monthlyDelta: Math.round(netMid - classicRent),
@@ -150,6 +160,15 @@ const ZONE_PATTERNS: Array<[RegExp, UnifiedZoneValue]> = [
   [/centr|cetate|iosefin|elisabetin|fabric/i, "central"],
 ];
 
+/** Recunoaște un ansamblu/cartier eligibil după valoare, etichetă sau alias (ISHO rămâne exclus → „Altă zonă”). */
+export function matchUnifiedZone(text: string): UnifiedZoneValue | undefined {
+  const value = text.trim().toLowerCase();
+  if (!value) return undefined;
+  const exact = UNIFIED_ZONES.find((zone) => zone.value === value || zone.label.toLowerCase() === value);
+  if (exact) return exact.value;
+  return ZONE_PATTERNS.find(([re]) => re.test(text))?.[1];
+}
+
 /** Transformă rezultatul analizei (link sau foto) în datele calculatorului. */
 export function mapAnalysisToInput(a: ListingAnalysisLike): Partial<Pick<UnifiedInput, "type" | "zone" | "surface" | "finish">> {
   const out: Partial<Pick<UnifiedInput, "type" | "zone" | "surface" | "finish">> = {};
@@ -168,7 +187,7 @@ export function mapAnalysisToInput(a: ListingAnalysisLike): Partial<Pick<Unified
   const s = Number(a.suprafata);
   if (Number.isFinite(s) && s >= MIN_PROPERTY_SURFACE && s <= MAX_PROPERTY_SURFACE) out.surface = Math.round(s);
   const analysisZone = a.zona;
-  if (analysisZone) out.zone = ZONE_PATTERNS.find(([re]) => re.test(analysisZone))?.[1] ?? "alta-zona";
+  if (analysisZone) out.zone = matchUnifiedZone(analysisZone) ?? "alta-zona";
   const score = Number(a.scor);
   const max = Number(a.max_scor) || 100;
   if (Number.isFinite(score) && score > 0) out.finish = score / max >= 0.8 ? "premium" : "standard";
