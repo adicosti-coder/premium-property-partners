@@ -141,6 +141,8 @@ export interface ListingAnalysisLike {
   scor?: number | null;
   max_scor?: number | null;
   tip_proprietate?: string | null;
+  /** Recomandări din analiza foto/link (text liber, filtrat înainte de afișare). */
+  recomandari?: unknown;
 }
 
 const ZONE_PATTERNS: Array<[RegExp, UnifiedZoneValue]> = [

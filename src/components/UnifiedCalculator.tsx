@@ -207,7 +207,6 @@ const UnifiedCalculator = () => {
   const zoneLabel = locationIdentity.location;
   const locationSummary = `${locationIdentity.service_tag} Locație: ${zoneLabel} | Tip: ${typeLabel}`;
   const finishLabel = finish === "premium" ? "Premium Lux" : "Standard";
-  const maxBar = Math.max(s.classicRent, s.netMax, 1);
   const leadSource = `calculator_unificat_${source?.mode ?? "manual"}`;
   const analyticsContext = { location_mode: locationMode, property_type: type, location_name: zoneLabel, surface_sqm: surfaceNum };
   const selectLocationMode = (next: LocationMode) => {
