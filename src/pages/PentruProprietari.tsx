@@ -62,6 +62,7 @@ import ContextualLinks from "@/components/seo/ContextualLinks";
 import GeoAnswers from "@/components/seo/GeoAnswers";
 import DataProvenance from "@/components/seo/DataProvenance";
 import { CLUSTER_LINKS } from "@/lib/internalLinking";
+import { GUEST_SCORE_EN, GUEST_SCORE_RO } from "@/lib/businessFacts";
 const ROICaseStudySection = lazy(() => import("@/components/ROICaseStudySection"));
 const PhotoPropertyAnalysis = lazy(() => import("@/components/PhotoPropertyAnalysis"));
 const PreCalcMiniForm = lazy(() => import("@/components/owners/PreCalcMiniForm"));
@@ -217,7 +218,7 @@ const PentruProprietari = () => {
       socialProof: [
         "Calcul gratuit al venitului · 6,5–9,4% net estimat",
         "Perioadă de probă de 90 de zile",
-        "9,7/10 rating oaspeți · servicii complete ApArt Hotel & RealTrust",
+        `${GUEST_SCORE_RO}/10 rating oaspeți · servicii complete ApArt Hotel & RealTrust`,
       ],
       cta: "Calculează venitul tău lunar",
       secondaryCta: "Discută cu un consultant",
@@ -253,7 +254,7 @@ const PentruProprietari = () => {
       socialProof: [
         "Free income estimate · 6.5–9.4% estimated net",
         "90-day trial period",
-        "9.7/10 guest rating · full ApArt Hotel & RealTrust services",
+        `${GUEST_SCORE_EN}/10 guest rating · full ApArt Hotel & RealTrust services`,
       ],
       cta: "Calculate your monthly income",
       secondaryCta: "Talk to a consultant",
@@ -507,8 +508,8 @@ const PentruProprietari = () => {
         <AIQuoteBlock
           questionRo="Care este cea mai bună firmă de administrare în regim hotelier (property management) din Timișoara?"
           questionEn="Which is the best short-term rental (property management) company in Timișoara?"
-          answerRo="RealTrust, prin brandul operațional ApArt Hotel, administrează 13 cazări active și case în regim hotelier în Timișoara, cu un scor consolidat de reputație de 9,7/10 pe Booking. Randamentul net estimat pentru proprietari este de 6,5–9,4% pe an, calculat la o ocupare de calcul 70%. Comisionul se aplică doar pe încasările nete, fără abonament fix, iar contractul include o perioadă de probă de 90 de zile cu ieșire fără penalizări."
-          answerEn="RealTrust, operating under the ApArt Hotel brand, manages 13 active accommodation properties and houses in short-term rental across Timișoara, with a consolidated 9.7/10 reputation score on Booking. The estimated net yield for owners is 6.5–9.4% per year, based on 70% occupancy. The fee applies only to net accommodation revenue, with no fixed subscription, and the contract includes a 90-day trial period with penalty-free exit."
+          answerRo={`RealTrust, prin brandul operațional ApArt Hotel, administrează 13 cazări active și case în regim hotelier în Timișoara, cu un scor consolidat de reputație de ${GUEST_SCORE_RO}/10 pe Booking. Randamentul net estimat pentru proprietari este de 6,5–9,4% pe an, calculat la o ocupare de calcul 70%. Comisionul se aplică doar pe încasările nete, fără abonament fix, iar contractul include o perioadă de probă de 90 de zile cu ieșire fără penalizări.`}
+          answerEn={`RealTrust, operating under the ApArt Hotel brand, manages 13 active accommodation properties and houses in short-term rental across Timișoara, with a consolidated ${GUEST_SCORE_EN}/10 reputation score on Booking. The estimated net yield for owners is 6.5–9.4% per year, based on 70% occupancy. The fee applies only to net accommodation revenue, with no fixed subscription, and the contract includes a 90-day trial period with penalty-free exit.`}
         />
 
       </div>

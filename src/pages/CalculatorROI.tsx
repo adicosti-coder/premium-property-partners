@@ -10,6 +10,7 @@ import { REAL_ESTATE_AGENT_REF, FINANCIAL_SERVICE_SCHEMA } from "@/lib/orgIdenti
 import { Link } from "react-router-dom";
 import { Coins, Home, Wrench, Receipt, BedDouble, TrendingUp, Wallet, BookOpen, HelpCircle, MessageCircle } from "lucide-react";
 import { lazy, Suspense } from "react";
+import { GUEST_SCORE_RO } from "@/lib/businessFacts";
 
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 
@@ -115,7 +116,7 @@ const CalculatorROI = () => {
             <ul className="mt-4 flex flex-wrap justify-center gap-2 text-xs md:text-sm" aria-label="Avantaje">
               <li className="rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-foreground">6,5–9,4% net estimat</li>
               <li className="rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-foreground">90 zile probă</li>
-              <li className="rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-foreground">9,7/10 recenzii oaspeți</li>
+              <li className="rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-foreground">{GUEST_SCORE_RO}/10 recenzii oaspeți</li>
             </ul>
             <a
               href={`https://wa.me/40799069256?text=${encodeURIComponent("Bună! Vreau o estimare de randament pentru apartamentul meu din Timișoara.")}`}

@@ -1,4 +1,5 @@
 import { CONTACT_HOURS } from "../lib/businessFacts";
+import { GUEST_SCORE_RO } from "@/lib/businessFacts";
 export const ro = {
   // Header
   nav: {
@@ -185,7 +186,7 @@ export const ro = {
     label: "Testimoniale",
     title: "Ce Spun",
     titleHighlight: "Oaspeții",
-    subtitle: "Scor consolidat 9,7/10 pe Booking. Mai jos, ce au scris oaspeții care au stat efectiv în apartamentele noastre.",
+    subtitle: `Scor consolidat ${GUEST_SCORE_RO}/10 pe Booking. Mai jos, ce au scris oaspeții care au stat efectiv în apartamentele noastre.`,
     avgRating: "Rating mediu",
     verifiedReviews: "Recenzii verificate",
     happyClients: "Clienți mulțumiți",

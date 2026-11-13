@@ -21,6 +21,7 @@ import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import PageSummary from "@/components/PageSummary";
+import { GUEST_SCORE_EN } from "@/lib/businessFacts";
 
 const formatBookingDate = (date: string) => {
   const parsed = new Date(`${date}T00:00:00`);
@@ -490,11 +491,11 @@ const hasActiveFilters = searchQuery || checkInParam || checkOutParam || request
   const seoContent = {
     ro: {
       title: "Cazare Regim Hotelier Timișoara | ApArt Hotel — de la 250 RON",
-      description: "Apartamente regim hotelier în Timișoara — Cetate, Iosefin, Fabric, Dumbrăvița. Check-in digital 24/7, Wi-Fi, parcare. 9.7/10 Booking. Rezervă direct."
+      description: `Apartamente regim hotelier în Timișoara — Cetate, Iosefin, Fabric, Dumbrăvița. Check-in digital 24/7, Wi-Fi, parcare. ${GUEST_SCORE_EN}/10 Booking. Rezervă direct.`
     },
     en: {
       title: "Short-Term Accommodation Timișoara | ApArt Hotel — from 250 RON",
-      description: "Hotel-style apartments in Timișoara — Cetate, Iosefin, Fabric, Dumbrăvița. Self check-in 24/7, Wi-Fi, parking. 9.7/10 Booking. Book direct."
+      description: `Hotel-style apartments in Timișoara — Cetate, Iosefin, Fabric, Dumbrăvița. Self check-in 24/7, Wi-Fi, parking. ${GUEST_SCORE_EN}/10 Booking. Book direct.`
     }
   };
 

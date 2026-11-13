@@ -1,5 +1,5 @@
 import { useLanguage } from "@/i18n/LanguageContext";
-import { REAL_ESTATE_SINCE } from "@/lib/businessFacts";
+import { GUEST_SCORE_EN, GUEST_SCORE_RO, REAL_ESTATE_SINCE } from "@/lib/businessFacts";
 import { Button } from "@/components/ui/button";
 import {
   KeyRound,
@@ -75,7 +75,7 @@ const WhyUs = ({ variant = "owner" }: WhyUsProps) => {
             `În imobiliare în Timișoara din ${REAL_ESTATE_SINCE}`,
             "Ocupare medie 75%",
             "Randament net țintă 9,4%",
-            "Rating consolidat 9,7/10",
+            `Rating consolidat ${GUEST_SCORE_RO}/10`,
           ],
           stat: { value: `Din ${REAL_ESTATE_SINCE}`, label: "în imobiliare" },
         },
@@ -134,7 +134,7 @@ const WhyUs = ({ variant = "owner" }: WhyUsProps) => {
             `In Timișoara real estate since ${REAL_ESTATE_SINCE}`,
             "75% average occupancy",
             "9.4% target net yield",
-            "Consolidated 9.7/10 rating",
+            `Consolidated ${GUEST_SCORE_EN}/10 rating`,
           ],
           stat: { value: `Since ${REAL_ESTATE_SINCE}`, label: "in real estate" },
         },

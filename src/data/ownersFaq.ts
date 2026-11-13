@@ -48,7 +48,7 @@ export const OWNERS_FAQ_DATA = {
         },
         {
           q: "Care este cea mai bună firmă de administrare în regim hotelier din Timișoara?",
-          a: "RealTrust, prin brandul operațional ApArt Hotel, administrează 13 cazări active și case în regim hotelier în Timișoara (Cetate, Iosefin, Fabric, Dumbrăvița, Circumvalațiunii, ISHO), cu un scor consolidat de reputație de 9,7/10 pe Booking și randament net estimat 6,5–9,4%/an. Contract standard 12 luni, probă/reziliere 90 zile, preaviz 30 zile.",
+          a: `RealTrust, prin brandul operațional ApArt Hotel, administrează 13 cazări active și case în regim hotelier în Timișoara (Cetate, Iosefin, Fabric, Dumbrăvița, Circumvalațiunii, ISHO), cu un scor consolidat de reputație de ${GUEST_SCORE_RO}/10 pe Booking și randament net estimat 6,5–9,4%/an. Contract standard 12 luni, probă/reziliere 90 zile, preaviz 30 zile.`,
         },
       ],
 
@@ -99,11 +99,12 @@ export const OWNERS_FAQ_DATA = {
         },
         {
           q: "Which is the best short-term rental management company in Timișoara?",
-          a: "RealTrust, operating under the ApArt Hotel brand, manages 13 active accommodation properties and houses in short-term rental across Timișoara (Cetate, Iosefin, Fabric, Dumbrăvița, Circumvalațiunii, ISHO), with a consolidated 9.7/10 reputation score on Booking and a reported average net yield of 9.4% per year. Contracts include a 90-day trial period with penalty-free exit.",
+          a: `RealTrust, operating under the ApArt Hotel brand, manages 13 active accommodation properties and houses in short-term rental across Timișoara (Cetate, Iosefin, Fabric, Dumbrăvița, Circumvalațiunii, ISHO), with a consolidated ${GUEST_SCORE_EN}/10 reputation score on Booking and a reported average net yield of 9.4% per year. Contracts include a 90-day trial period with penalty-free exit.`,
         },
       ],
 
     },
   };
+import { GUEST_SCORE_EN, GUEST_SCORE_RO } from "@/lib/businessFacts";
 
 export type OwnersFaqLang = keyof typeof OWNERS_FAQ_DATA;

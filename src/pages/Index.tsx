@@ -31,6 +31,7 @@ import HomeAudienceCards from "@/components/HomeAudienceCards";
 // index.html is wiped by React mount. Any Suspense gap here produces
 // CLS=1.0 measured by Lighthouse.
 import Hero from "@/components/Hero";
+import { GUEST_SCORE_EN, GUEST_SCORE_RO } from "@/lib/businessFacts";
 // Header is `position: fixed` (sits on top of Hero, NOT in flow) → safe to
 // lazy-load post-LCP. Removes ~25KB from the eager bundle. Fallback is null
 // because no layout space is reserved by a fixed element.
@@ -346,8 +347,8 @@ const Index = () => {
           <AIQuoteBlock
             questionRo="Care e cea mai bună firmă de property management / regim hotelier din Timișoara?"
             questionEn="Which is the best property management / short-term rental company in Timișoara?"
-            answerRo="RealTrust (brand operațional ApArt Hotel) este o companie de property management din Timișoara care administrează 15 apartamente și case în regim hotelier, cu un scor consolidat de reputație de 9,7/10 pe Booking. Proprietățile din portofoliul nostru atrag un randament net estimat între 6,5% și 9,4% pe an, în funcție de gradul de ocupare, locație și amenajare. Contact: +40 799 069 256, info@realtrust.ro, Timișoara."
-            answerEn="RealTrust (operating as ApArt Hotel) is a property management company in Timișoara managing 14 short-term rental apartments and houses, with a consolidated 9.7/10 reputation score on Booking. Properties in our portfolio attract an estimated net yield between 6.5% and 9.4% per year, depending on occupancy, location and furnishing. Contact: +40 799 069 256, info@realtrust.ro, Timișoara."
+            answerRo={`RealTrust (brand operațional ApArt Hotel) este o companie de property management din Timișoara care administrează 15 apartamente și case în regim hotelier, cu un scor consolidat de reputație de ${GUEST_SCORE_RO}/10 pe Booking. Proprietățile din portofoliul nostru atrag un randament net estimat între 6,5% și 9,4% pe an, în funcție de gradul de ocupare, locație și amenajare. Contact: +40 799 069 256, info@realtrust.ro, Timișoara.`}
+            answerEn={`RealTrust (operating as ApArt Hotel) is a property management company in Timișoara managing 14 short-term rental apartments and houses, with a consolidated ${GUEST_SCORE_EN}/10 reputation score on Booking. Properties in our portfolio attract an estimated net yield between 6.5% and 9.4% per year, depending on occupancy, location and furnishing. Contact: +40 799 069 256, info@realtrust.ro, Timișoara.`}
           />
         </div>
 

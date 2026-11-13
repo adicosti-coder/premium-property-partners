@@ -5,6 +5,7 @@ import HubSection from "@/components/HubSection";
 import TeaserCard from "@/components/TeaserCard";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { GUEST_SCORE_EN, GUEST_SCORE_RO } from "@/lib/businessFacts";
 
 const OwnersTeaser = () => {
   const { language } = useLanguage();
@@ -161,8 +162,8 @@ const OwnersTeaser = () => {
         </div>
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5">
           {(language === "ro"
-            ? ["Fără obligații", "Comision doar din încasări", "9,7/10 rating oaspeți (Booking)"]
-            : ["No obligation", "Commission only on income", "9.7/10 guest rating (Booking)"]
+            ? ["Fără obligații", "Comision doar din încasări", `${GUEST_SCORE_RO}/10 rating oaspeți (Booking)`]
+            : ["No obligation", "Commission only on income", `${GUEST_SCORE_EN}/10 guest rating (Booking)`]
           ).map((item) => (
             <span key={item} className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <CheckCircle2 className="w-3.5 h-3.5 text-gold" />
