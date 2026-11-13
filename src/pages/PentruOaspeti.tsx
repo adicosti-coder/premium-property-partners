@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { GUEST_REPUTATION, guestRatingLabel, guestReviewCountLabel } from "@/lib/businessFacts";
 
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 const GuestGuideLeadMagnet = lazy(() => import("@/components/GuestGuideLeadMagnet"));
@@ -72,8 +73,8 @@ const PentruOaspeti = () => {
       titleHighlight: "în Timișoara",
       subtitle: "Apartamente ATENEO, GREEN FOREST, Cross Square House și HELIOS — complet echipate, lângă Iulius Mall, Amazonia Aquapark și Centrul Vechi. Curățenie profesională, parcare subterană gratuită și self check-in non-stop.",
       stats: [
-        { value: "9,7/10", label: "Scor Booking.com", icon: Star },
-        { value: "500+", label: "Recenzii verificate", icon: Award },
+        { value: `${guestRatingLabel("ro")}/${GUEST_REPUTATION.bestRating}`, label: "Scor Booking.com", icon: Star },
+        { value: guestReviewCountLabel(), label: "Recenzii verificate", icon: Award },
         { value: "24/7", label: "Suport disponibil", icon: Clock },
       ],
       ctaPrimary: "Rezervă direct",
@@ -196,8 +197,8 @@ const PentruOaspeti = () => {
       titleHighlight: "in Timișoara",
       subtitle: "ATENEO, GREEN FOREST, Cross Square House & HELIOS apartments — fully equipped, near Iulius Mall, Amazonia Aquapark & the Old Town. Professional cleaning, free underground parking and 24/7 self check-in.",
       stats: [
-        { value: "9.7", label: "Booking.com Rating", icon: Star },
-        { value: "500+", label: "5-Star Reviews", icon: Award },
+        { value: `${guestRatingLabel("en")}/${GUEST_REPUTATION.bestRating}`, label: "Booking.com Rating", icon: Star },
+        { value: guestReviewCountLabel(), label: "Verified reviews", icon: Award },
         { value: "24/7", label: "Support Available", icon: Clock },
       ],
       ctaPrimary: "Book Direct",

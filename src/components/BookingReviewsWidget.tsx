@@ -1,5 +1,6 @@
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Star } from "lucide-react";
+import { GUEST_REPUTATION, guestRatingLabel, guestReviewCountLabel } from "@/lib/businessFacts";
 
 /**
  * Booking.com reviews widget with embedded iframe (visual only).
@@ -21,8 +22,8 @@ const BookingReviewsWidget = () => {
         </h2>
         <p className="text-muted-foreground text-center max-w-2xl mx-auto mb-10">
           {language === "ro"
-            ? "Scor verificat din peste 527 de recenzii reale pe Booking.com"
-            : "Verified score from over 527 real reviews on Booking.com"}
+            ? `Scor verificat din peste ${GUEST_REPUTATION.reviewCount} de recenzii reale pe Booking.com`
+            : `Verified score from over ${GUEST_REPUTATION.reviewCount} real reviews on Booking.com`}
         </p>
 
         <div className="grid md:grid-cols-2 gap-8 items-center max-w-4xl mx-auto">
@@ -34,14 +35,14 @@ const BookingReviewsWidget = () => {
               </svg>
               <span className="text-sm font-medium text-muted-foreground">Booking.com</span>
             </div>
-            <div className="text-6xl font-bold text-primary">9.7</div>
+            <div className="text-6xl font-bold text-primary">{guestRatingLabel(language)}</div>
             <div className="flex gap-0.5">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star key={i} className="w-5 h-5 fill-primary text-primary" />
               ))}
             </div>
             <span className="text-sm text-muted-foreground">
-              {language === "ro" ? "527+ recenzii verificate" : "527+ verified reviews"}
+              {language === "ro" ? `${guestReviewCountLabel()} recenzii verificate` : `${guestReviewCountLabel()} verified reviews`}
             </span>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
               {language === "ro" ? "Superb" : "Superb"}

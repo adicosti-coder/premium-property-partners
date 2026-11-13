@@ -191,7 +191,7 @@ export const en: Translations = {
     verifiedReviews: "Verified reviews",
     happyClients: "Happy clients",
     platformReviewsLabel: "Platform Reviews",
-    platformReviewsTitle: "Over 500 five-star reviews",
+    platformReviewsTitle: "Over 500 verified reviews", // rendered from GUEST_REPUTATION (businessFacts)
     platformReviewsSubtitle: "from our guests across all platforms",
   },
   

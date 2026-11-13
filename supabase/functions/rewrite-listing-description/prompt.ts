@@ -1,3 +1,4 @@
+import { guestReputationSentenceRo } from "../_shared/guestReputation.ts";
 export interface PropertyData {
   title?: string;
   description_short?: string;
@@ -66,7 +67,7 @@ export function buildPrompt(data: PropertyData, listingType: string, tone: strin
   // Hotel regime and RealTrust collaboration sections only for cazare/investitie/vanzare
   const hotelRegimeInstructions = (listingType === 'cazare' || listingType === 'investitie' || listingType === 'vanzare')
     ? `6. OBLIGATORIU: Include o secțiune dedicată "🏨 Regim Hotelier — Randament Superior" care explică avantajele administrării în regim hotelier vs. închiriere clasică: ocupare optimizată, dynamic pricing, vizibilitate pe Booking/Airbnb, self check-in cu smart lock, curățenie profesionistă după fiecare sejur, rating-uri ridicate. Menționează randamentul net de 9%+ vs 3-4% închiriere clasică.
-7. OBLIGATORIU: Include o secțiune "🤝 Avantajele Colaborării cu RealTrust" care detaliază: management complet (fotografii profesionale, guest relations, dynamic pricing), comision de administrare 15–20% din venitul net, raportare lunară detaliată, asigurare 3M EUR, echipă dedicată, 180+ recenzii cu scor 9.4/10, ocupare 98%, proprietarul doar încasează profitul.`
+7. OBLIGATORIU: Include o secțiune "🤝 Avantajele Colaborării cu RealTrust" care detaliază: management complet (fotografii profesionale, guest relations, dynamic pricing), comision de administrare 15–20% din venitul net, raportare lunară detaliată, asigurare 3M EUR, echipă dedicată, scor ${guestReputationSentenceRo()}, ocupare 98%, proprietarul doar încasează profitul.`
     : `6. NU include secțiuni despre regim hotelier, Booking/Airbnb, dynamic pricing, sau avantajele colaborării cu RealTrust pentru administrare în regim hotelier. Focusul este exclusiv pe închirierea pe termen lung.
 7. Menționează doar că RealTrust oferă suport profesionist pentru administrarea închirierii pe termen lung.`;
 

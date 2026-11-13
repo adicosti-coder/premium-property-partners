@@ -1,6 +1,7 @@
 import { Star, Quote, ChevronLeft, ChevronRight } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { GUEST_REPUTATION, guestRatingLabel, guestReviewCountLabel } from "@/lib/businessFacts";
 import { useParallax } from "@/hooks/useParallax";
 import { useIsMobile } from "@/hooks/use-mobile";
 import useEmblaCarousel from "embla-carousel-react";
@@ -120,7 +121,7 @@ const TestimonialCard = ({ testimonial, isVisible, index }: { testimonial: Testi
 );
 
 const Testimonials = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
   const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.05 });
   const { ref: statsRef, isVisible: statsVisible } = useScrollAnimation();
@@ -267,7 +268,7 @@ const Testimonials = () => {
                 {t.testimonials.platformReviewsLabel || 'Recenzii de pe Platforme'}
               </p>
               <h3 className="text-2xl md:text-3xl lg:text-4xl heading-premium text-foreground">
-                {t.testimonials.platformReviewsTitle || 'Peste 500 de recenzii de 5 stele'}
+                {language === 'en' ? `Over ${GUEST_REPUTATION.reviewCount} verified reviews` : `Peste ${GUEST_REPUTATION.reviewCount} de recenzii verificate`}
               </h3>
               <p className="text-foreground/60 dark:text-muted-foreground text-sm mt-3 text-premium">
                 {t.testimonials.platformReviewsSubtitle || 'de la oaspeții noștri pe toate platformele'}
@@ -325,11 +326,11 @@ const Testimonials = () => {
           {/* Trust stats row */}
           <div className="flex flex-wrap justify-center gap-8 md:gap-16">
             <div className="text-center">
-              <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">9.7/10</p>
+              <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">{guestRatingLabel(language)}/{GUEST_REPUTATION.bestRating}</p>
               <p className="text-foreground/60 dark:text-muted-foreground text-sm">{t.testimonials.avgRating}</p>
             </div>
             <div className="text-center" style={{ transitionDelay: '100ms' }}>
-              <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">500+</p>
+              <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">{guestReviewCountLabel()}</p>
               <p className="text-foreground/60 dark:text-muted-foreground text-sm">{t.testimonials.verifiedReviews}</p>
             </div>
             <div className="text-center" style={{ transitionDelay: '200ms' }}>
