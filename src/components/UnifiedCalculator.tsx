@@ -550,6 +550,12 @@ leadSent ? (
           <span className="text-xs font-semibold uppercase tracking-widest text-primary">{ro ? "Calculator venit · rezultat pe loc" : "Income calculator · instant result"}</span>
         </div>
         <h2 className="font-serif text-2xl font-semibold text-foreground md:text-3xl">{ro ? "Cât poate produce proprietatea ta?" : "How much can your property earn?"}</h2>
+        {welcomeOpen && prefill.name && (
+          <div role="status" className="mt-3 flex items-start justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2 text-sm text-foreground">
+            <p>{ro ? `Bună, ${prefill.name}! Am pregătit deja calculul${prefill.zone ? ` pentru ${zoneLabel}` : ""}. Verifică datele și ajustează ce nu se potrivește.` : `Hi ${prefill.name}! Your calculation is ready${prefill.zone ? ` for ${zoneLabel}` : ""}. Check the details and adjust anything that doesn't fit.`}</p>
+            <button type="button" onClick={() => setWelcomeOpen(false)} aria-label={ro ? "Închide mesajul de bun venit" : "Close welcome message"} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
+          </div>
+        )}
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{ro ? "Completează datele, iar cifrele se actualizează imediat. Fără pași de continuare și fără date personale până nu ceri tu raportul." : "Fill in the details and the figures update instantly. No extra steps, no personal details until you ask for the report."}</p>
       </div>
 
@@ -676,13 +682,6 @@ leadSent ? (
                 <p id="uc-surface-hint" className={`mt-1 text-xs ${errors.surface || (surface !== "" && !surfaceValid) ? "text-destructive" : "text-muted-foreground"}`}>{errors.surface ?? (ro ? "Între 15 și 5.000 mp" : "Between 15 and 5,000 sqm")}</p>
               </div>
               <div>
-                <span className="mb-2 block text-sm font-medium text-foreground" id="uc-parking-label">{ro ? "Loc de parcare" : "Parking"}</span>
-                <div className="grid grid-cols-2 gap-2" role="group" aria-labelledby="uc-parking-label">
-                  <Choice active={parking} onClick={() => setParking(true)}>{ro ? "Da" : "Yes"}</Choice>
-                  <Choice active={!parking} onClick={() => setParking(false)}>{ro ? "Nu" : "No"}</Choice>
-                </div>
-              </div>
-              <div>
                 <span className="mb-2 block text-sm font-medium text-foreground" id="uc-finish-label">{ro ? "Finisaje" : "Finishes"}</span>
                 <div className="grid grid-cols-2 gap-2" role="group" aria-labelledby="uc-finish-label">
                   <Choice active={finish === "standard"} onClick={() => setFinish("standard")}>Standard</Choice>
@@ -691,6 +690,18 @@ leadSent ? (
               </div>
             </div>
             {source?.mode === "foto" && <p className="mt-2 text-xs text-muted-foreground">{ro ? "Finisajele sunt preselectate din analiza foto; le poți schimba." : "Finishes preselected from the photo analysis; you can change them."}</p>}
+            <div className="mt-4">
+              <CalculatorRefinePanel value={refinements} onChange={setRefinements} open={refineOpen} onOpenChange={setRefineOpen} language={ro ? "ro" : "en"} preselectedFromPhotos={photoInsights?.furnishedPreselected && refinements.furnished} />
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend className="contents">{sectionTitle(5, ro ? "Ce plan ai pentru proprietate?" : "What is your plan for the property?")}</legend>
+            <div className="grid grid-cols-2 gap-2">
+              {INTENTS.map((i) => (
+                <Choice key={i.value} active={intent === i.value} onClick={() => setIntent(i.value)}>{ro ? i.ro : i.en}</Choice>
+              ))}
+            </div>
           </fieldset>
 
           {/* Bară rezultat pe telefon */}
@@ -711,11 +722,9 @@ leadSent ? (
             <div aria-live="polite" aria-atomic="true">
               <p className="text-sm text-muted-foreground">{typeLabel} · {zoneLabel} · {surfaceValid ? surfaceNum : "—"} mp · {ro ? "Parcare" : "Parking"}: {parking ? (ro ? "Da" : "Yes") : (ro ? "Nu" : "No")} · {finishLabel}</p>
               {surfaceValid ? (
-                <>
-                  <p className="mt-3 md:mt-4 text-xs font-semibold uppercase tracking-widest text-primary">{ro ? "Regim hotelier · venit net lunar" : "Short-term rental · monthly net"}</p>
-                  <p className="mt-1 font-serif text-4xl font-semibold text-foreground md:text-5xl">{fmt(s.netMin)}–{fmt(s.netMax)} €</p>
-                  <p className="mt-1 text-sm text-muted-foreground">≈ {fmt(s.netMid * 12)} € / {ro ? "an" : "year"} · {ro ? "după toate costurile de mai jos" : "after all costs below"}</p>
-                </>
+                <div className="mt-3 md:mt-4">
+                  <CalculatorEstimateCards language={ro ? "ro" : "en"} sale={sale} saleSample={saleBenchmark.sample} classicRent={s.classicRent} rentNote={rentNote} netMin={s.netMin} netMax={s.netMax} netMid={s.netMid} yieldDisplay={yieldShown} />
+                </div>
               ) : (
                 <p className="mt-3 md:mt-4 rounded-xl border border-border bg-background p-3 md:p-4 text-sm text-muted-foreground">{ro ? "Introdu o suprafață între 15 și 5.000 mp ca să vezi estimarea." : "Enter an area between 15 and 5,000 sqm to see the estimate."}</p>
               )}
@@ -726,22 +735,26 @@ leadSent ? (
 
             {surfaceValid && (
               <>
-                {/* Comparație */}
-                <div className="space-y-2.5 md:space-y-3 rounded-2xl border border-border bg-background p-3 md:p-4">
-                  <div>
-                    <div className="mb-1 flex justify-between text-sm"><span className="text-muted-foreground">{ro ? "Chirie clasică" : "Traditional rent"} <span className="text-xs">({rentNote})</span></span><span className="font-semibold text-foreground">~{fmt(s.classicRent)} €</span></div>
-                    <div className="h-2.5 overflow-hidden rounded-full bg-border"><div className="h-full rounded-full bg-muted-foreground transition-all duration-500" style={{ width: `${(s.classicRent / maxBar) * 100}%` }} /></div>
+                {/* Proiecție la 5 ani */}
+                <CalculatorFiveYear p={projection} hasSale={Boolean(sale)} language={ro ? "ro" : "en"} />
+                {s.monthlyDelta > 0 ? (
+                  <p className="flex items-center gap-2 text-sm font-medium text-foreground"><TrendingUp className="h-4 w-4 text-primary" aria-hidden="true" />+{fmt(s.monthlyDelta)} €/{ro ? "lună" : "mo"} · +{fmt(s.monthlyDelta * 12)} €/{ro ? "an față de chirie" : "yr vs rent"}</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">{ro ? "La acest scenariu, chiria clasică e comparabilă. Îți spunem sincer dacă nu merită." : "In this scenario classic rent is comparable. We'll tell you honestly if it isn't worth it."}</p>
+                )}
+
+                {/* Recomandări */}
+                {tips.length > 0 && (
+                  <div className="rounded-2xl border border-border bg-background p-3 md:p-4">
+                    <p className="flex items-center gap-2 text-sm font-semibold text-foreground"><Lightbulb className="h-4 w-4 text-primary" aria-hidden="true" />{ro ? "Cum poți crește prețul și tariful" : "How to raise price and nightly rate"}</p>
+                    {photoInsights?.score != null && <p className="mt-1 text-xs text-muted-foreground">{ro ? `Scor foto AI: ${photoInsights.score}/100` : `AI photo score: ${photoInsights.score}/100`}</p>}
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-foreground">
+                      {tips.map((t) => <li key={t}>{t}</li>)}
+                    </ul>
                   </div>
-                  <div>
-                    <div className="mb-1 flex justify-between text-sm"><span className="font-medium text-primary">{ro ? "Regim hotelier RealTrust" : "RealTrust short-term"}</span><span className="font-semibold text-foreground">~{fmt(s.netMid)} €</span></div>
-                    <div className="h-2.5 overflow-hidden rounded-full bg-border"><div className="h-full rounded-full bg-gradient-to-r from-gold-dark via-gold to-gold-light transition-all duration-500" style={{ width: `${(s.netMid / maxBar) * 100}%` }} /></div>
-                  </div>
-                  {s.monthlyDelta > 0 ? (
-                    <p className="flex items-center gap-2 text-sm font-medium text-foreground"><TrendingUp className="h-4 w-4 text-primary" aria-hidden="true" />+{fmt(s.monthlyDelta)} €/{ro ? "lună" : "mo"} · +{fmt(s.monthlyDelta * 12)} €/{ro ? "an față de chirie" : "yr vs rent"}</p>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">{ro ? "La acest scenariu, chiria clasică e comparabilă. Îți spunem sincer dacă nu merită." : "In this scenario classic rent is comparable. We'll tell you honestly if it isn't worth it."}</p>
-                  )}
-                </div>
+                )}
+
+                <CalculatorZoneProof items={proof} zoneLabel={zoneLabel} language={ro ? "ro" : "en"} />
 
                 {/* Scenariu */}
                 <div className="space-y-3 md:space-y-5 rounded-2xl border border-border bg-background p-3 md:p-4">
@@ -810,8 +823,8 @@ leadSent ? (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Trimite proiecția pe WhatsApp</DialogTitle>
-            <DialogDescription>Îți trimitem calculul și asistentul Andrei te contactează pentru cifrele exacte.</DialogDescription>
+            <DialogTitle>{ro ? "Descarcă raportul PDF complet" : "Download the full PDF report"}</DialogTitle>
+            <DialogDescription>{ro ? "Raportul se descarcă imediat după salvare, iar asistentul Andrei te contactează pentru cifrele exacte." : "The report downloads right after saving, and our assistant Andrei will contact you with exact figures."}</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             {(["name", "phone", "email"] as const).map((k) => (
@@ -830,7 +843,11 @@ leadSent ? (
                 {errors[k] && <p className="mt-1 text-sm text-destructive">{errors[k]}</p>}
               </div>
             ))}
-            <Button type="submit" className="w-full" size="lg" disabled={submitting}>{submitting ? "Se trimite..." : "Trimite proiecția pe WhatsApp"}</Button>
+            <label htmlFor="uc-market-alert" className="flex min-h-12 cursor-pointer items-start gap-3 text-sm text-foreground">
+              <Checkbox id="uc-market-alert" checked={marketAlert} onCheckedChange={(c) => setMarketAlert(c === true)} className="mt-0.5 h-5 w-5" />
+              <span>{ro ? `Vreau alerta lunară de piață pentru ${zoneLabel}: evoluția prețului pe mp și a tarifelor de cazare (opțional, mă pot dezabona oricând).` : `Send me the monthly market alert for ${zoneLabel}: price per sqm and accommodation rates (optional, unsubscribe anytime).`}</span>
+            </label>
+            <Button type="submit" className="w-full" size="lg" disabled={submitting}>{submitting ? (ro ? "Se salvează..." : "Saving...") : (ro ? "Salvează și descarcă PDF" : "Save and download PDF")}</Button>
           </form>
         </DialogContent>
       </Dialog>
