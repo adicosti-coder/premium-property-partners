@@ -11,6 +11,8 @@
  * - reviewCount is never smaller than the number of reviews marked up.
  */
 
+import { GUEST_REPUTATION } from "./businessFacts";
+
 export const GUEST_RATING_BEST = 10;
 export const GUEST_RATING_WORST = 1;
 
@@ -127,4 +129,9 @@ export function sortGuestReviews<T extends GuestReviewInput>(reviews: T[]): T[] 
   return [...reviews].sort((a, b) =>
     String(b.review_date || b.created_at || "").localeCompare(String(a.review_date || a.created_at || "")),
   );
+}
+
+/** Brand-level AggregateRating (homepage ApArt Hotel node), same 1–10 scale. */
+export function brandAggregateRating(): Record<string, unknown> {
+  return buildAggregateRating(GUEST_REPUTATION.ratingValue, GUEST_REPUTATION.reviewCount)!;
 }

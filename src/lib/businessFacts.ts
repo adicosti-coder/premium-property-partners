@@ -50,3 +50,15 @@ export const CONTACT_OPENING_HOURS_SPEC = {
 
 /** True when the contact line is staffed at the given moment. */
 export const isContactOpen = (_at: Date = new Date()) => CONTACT_HOURS.open24h;
+
+/**
+ * Guest reputation shown on the homepage („9,7/10 Booking.com · 500+ recenzii
+ * verificate”). Schema.org AggregateRating for the ApArt Hotel brand uses
+ * exactly these values on the same 1–10 scale as the apartment pages, so the
+ * markup always matches the visible badge.
+ */
+export const GUEST_REPUTATION = {
+  ratingValue: 9.7,
+  bestRating: 10,
+  reviewCount: 500,
+} as const;
