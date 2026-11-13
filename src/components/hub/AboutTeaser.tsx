@@ -3,6 +3,7 @@ import { Users, Award, Building, ArrowRight, MapPin, Star, Clock } from "lucide-
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Button } from "@/components/ui/button";
+import { GUEST_SCORE_EN, GUEST_SCORE_RO } from "@/lib/businessFacts";
 
 const AboutTeaser = () => {
   const { language } = useLanguage();
@@ -18,7 +19,7 @@ const AboutTeaser = () => {
       cta: "Citește povestea echipei",
       stats: [
         { icon: Building, value: "15", label: "Proprietăți administrate" },
-        { icon: Star, value: "9,7/10", label: "Scor consolidat oaspeți" },
+        { icon: Star, value: `${GUEST_SCORE_RO}/10`, label: "Scor consolidat oaspeți" },
         { icon: Clock, value: "75%", label: "Ocupare medie anuală" },
         { icon: MapPin, value: "9,4%", label: "Randament net țintă" },
       ],
@@ -31,7 +32,7 @@ const AboutTeaser = () => {
       cta: "Read our story",
       stats: [
         { icon: Building, value: "15", label: "Properties managed" },
-        { icon: Star, value: "9.7/10", label: "Consolidated guest score" },
+        { icon: Star, value: `${GUEST_SCORE_EN}/10`, label: "Consolidated guest score" },
         { icon: Clock, value: "75%", label: "Average annual occupancy" },
         { icon: MapPin, value: "9.4%", label: "Target net yield" },
       ],

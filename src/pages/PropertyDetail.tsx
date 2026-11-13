@@ -70,6 +70,7 @@ import { generatePropertySEO } from "@/utils/generatePropertySEO";
 import { getDisplayLocation, resolvePropertyCoordinates, getPropertyPois } from "@/utils/propertyGeo";
 import ContextualLinks from "@/components/seo/ContextualLinks";
 import { buildPropertyLinks } from "@/lib/internalLinking";
+import { GUEST_SCORE_EN, GUEST_SCORE_RO } from "@/lib/businessFacts";
 
 // Extindem interfața pentru a include noile câmpuri de investiție
 interface DbPropertyData {
@@ -1426,8 +1427,8 @@ const PropertyDetail = () => {
                 </div>
                 <p className="text-sm text-muted-foreground italic">
                   {language === 'ro'
-                    ? 'Ocupare medie ~75% pe an | Scor consolidat oaspeți 9,7/10 (Booking.com)'
-                    : 'Average occupancy ~75% per year | Consolidated guest score 9.7/10 (Booking.com)'}
+                    ? `Ocupare medie ~75% pe an | Scor consolidat oaspeți ${GUEST_SCORE_RO}/10 (Booking.com)`
+                    : `Average occupancy ~75% per year | Consolidated guest score ${GUEST_SCORE_EN}/10 (Booking.com)`}
                 </p>
               </div>
 

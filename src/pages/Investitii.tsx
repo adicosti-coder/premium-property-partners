@@ -43,6 +43,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { Download, HelpCircle } from "lucide-react";
 import { storageImage, storageImageSrcSet } from "@/utils/supabaseImage";
+import { GUEST_SCORE_RO } from "@/lib/businessFacts";
 
 const ROICaseStudy = lazy(() => import("@/components/ROICaseStudy"));
 const InvestmentEngineV34 = lazy(() => import("@/components/InvestmentEngineV34"));
@@ -275,7 +276,7 @@ const Investitii = () => {
                 { value: "6,5–9,4%", label: language === "ro" ? "Randament net estimat / an" : "Estimated net ROI / yr" },
                 { value: "65–75%", label: language === "ro" ? "Ocupare medie" : "Average occupancy" },
                 { value: "10k+", label: language === "ro" ? "Sejururi în portofoliu" : "Stays in portfolio" },
-                { value: "9,7/10", label: language === "ro" ? "Scor recenzii" : "Reviews score" },
+                { value: `${GUEST_SCORE_RO}/10`, label: language === "ro" ? "Scor recenzii" : "Reviews score" },
               ].map((stat, i) => (
                 <div key={i} className="text-center px-4 py-2 rounded-xl bg-primary/10 border border-primary/20">
                   <p className="text-2xl font-bold font-sans text-primary">{stat.value}</p>

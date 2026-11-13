@@ -1,5 +1,5 @@
 import { useLanguage } from "@/i18n/LanguageContext";
-import { REAL_ESTATE_SINCE } from "@/lib/businessFacts";
+import { GUEST_SCORE_EN, GUEST_SCORE_RO, REAL_ESTATE_SINCE } from "@/lib/businessFacts";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -63,7 +63,7 @@ const AboutUs = () => {
       story: {
         title: "Povestea Noastră",
         subtitle: "De la prima tranzacție la 13 cazări active administrate",
-        intro: `Am început în Timișoara ca o agenție imobiliară locală, axată pe tranzacții corecte și pe relații pe termen lung. Activi pe piața imobiliară din Timișoara din ${REAL_ESTATE_SINCE}, urmărim zilnic evoluția prețurilor apartamente Timișoara pe fiecare cartier — de la Centru și Iosefin la ISHO, Dumbrăvița și Complex Studențesc — și oferim consultanță credit ipotecar prin parteneriate cu brokeri și bănci (BCR, BT, ING, Raiffeisen, BRD). Pe măsură ce piața s-a maturizat, am observat că tot mai mulți proprietari căutau venituri pasive fără bătăi de cap — așa s-a născut ApArt Hotel, divizia noastră de regim hotelier. Astăzi gestionăm 13 cazări active cu un randament net estimat de 6,5–9,4% pe an și un rating consolidat de 9,7/10.`,
+        intro: `Am început în Timișoara ca o agenție imobiliară locală, axată pe tranzacții corecte și pe relații pe termen lung. Activi pe piața imobiliară din Timișoara din ${REAL_ESTATE_SINCE}, urmărim zilnic evoluția prețurilor apartamente Timișoara pe fiecare cartier — de la Centru și Iosefin la ISHO, Dumbrăvița și Complex Studențesc — și oferim consultanță credit ipotecar prin parteneriate cu brokeri și bănci (BCR, BT, ING, Raiffeisen, BRD). Pe măsură ce piața s-a maturizat, am observat că tot mai mulți proprietari căutau venituri pasive fără bătăi de cap — așa s-a născut ApArt Hotel, divizia noastră de regim hotelier. Astăzi gestionăm 13 cazări active cu un randament net estimat de 6,5–9,4% pe an și un rating consolidat de ${GUEST_SCORE_RO}/10.`,
         realEstate: {
           title: "Servicii Imobiliare Complete",
           description: "Sub brandul RealTrust, oferim un spectru complet de servicii imobiliare care acoperă toate nevoile proprietarilor și investitorilor:",
@@ -158,7 +158,7 @@ const AboutUs = () => {
         items: [
           { value: "13", label: "Cazări active administrate" },
           { value: "65–75%", label: "Ocupare anuală asumată" },
-          { value: "9,7/10", label: "Rating consolidat oaspeți" },
+          { value: `${GUEST_SCORE_RO}/10`, label: "Rating consolidat oaspeți" },
           { value: "6,5–9,4%", label: "Randament net estimat / an" }
         ]
       },
@@ -205,7 +205,7 @@ const AboutUs = () => {
       story: {
         title: "Our Story",
         subtitle: "From the first transaction to 13 active accommodation properties",
-        intro: "We started in Timișoara as a local real estate agency, focused on fair transactions and long-term relationships. As the market matured, we noticed more owners sought passive income without hassle — that's how ApArt Hotel was born, our short-term rental division. Today we manage 13 active accommodation properties with an estimated 6.5–9.4% net yearly randament and a consolidated 9.7/10 rating.",
+        intro: `We started in Timișoara as a local real estate agency, focused on fair transactions and long-term relationships. As the market matured, we noticed more owners sought passive income without hassle — that's how ApArt Hotel was born, our short-term rental division. Today we manage 13 active accommodation properties with an estimated 6.5–9.4% net yearly randament and a consolidated ${GUEST_SCORE_EN}/10 rating.`,
         realEstate: {
           title: "Complete Real Estate Services",
           description: "Under the RealTrust brand, we offer a complete spectrum of real estate services covering all needs of owners and investors:",
@@ -300,7 +300,7 @@ const AboutUs = () => {
         items: [
           { value: "13", label: "Active accommodation properties" },
           { value: "65–75%", label: "Assumed annual occupancy" },
-          { value: "9.7/10", label: "Consolidated guest rating" },
+          { value: `${GUEST_SCORE_EN}/10`, label: "Consolidated guest rating" },
           { value: "6.5–9.4%", label: "Estimated net yield / yr" }
         ]
       },

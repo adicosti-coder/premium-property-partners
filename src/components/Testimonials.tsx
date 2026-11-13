@@ -1,7 +1,7 @@
 import { Star, Quote, ChevronLeft, ChevronRight } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { GUEST_REPUTATION, guestRatingLabel, guestReviewCountLabel } from "@/lib/businessFacts";
+import { GUEST_REPUTATION, GUEST_SCORE_EN, guestRatingLabel, guestReviewCountLabel } from "@/lib/businessFacts";
 import { useParallax } from "@/hooks/useParallax";
 import { useIsMobile } from "@/hooks/use-mobile";
 import useEmblaCarousel from "embla-carousel-react";
@@ -282,7 +282,7 @@ const Testimonials = () => {
                 <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-lg">B</div>
                 <div className="text-left">
                   <div className="flex items-center gap-1">
-              <span className="font-semibold text-foreground">9.7</span>
+              <span className="font-semibold text-foreground">{GUEST_SCORE_EN}</span>
                     <span className="text-xs text-muted-foreground">/10</span>
                   </div>
                   <p className="text-xs text-muted-foreground">Booking.com</p>

@@ -1,5 +1,5 @@
 import { CheckCircle, ShieldCheck, Star, Building2, Clock } from "lucide-react";
-import { CONTACT_HOURS } from "@/lib/businessFacts";
+import { CONTACT_HOURS, GUEST_SCORE_EN, GUEST_SCORE_RO } from "@/lib/businessFacts";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 /**
@@ -26,7 +26,7 @@ const COPY = {
   ro: {
     badges: ["Răspuns în max. 24 de ore", "Gratuit, fără obligații", "Consultanți din Timișoara"],
     proof: [
-      { icon: Star, label: "Rating 9,7 pe Booking" },
+      { icon: Star, label: `Rating ${GUEST_SCORE_RO} pe Booking` },
       { icon: Building2, label: "15 proprietăți administrate" },
       { icon: Clock, label: CONTACT_HOURS.long.ro },
     ],
@@ -36,7 +36,7 @@ const COPY = {
   en: {
     badges: ["Reply within 24 hours", "Free, no obligation", "Consultants based in Timișoara"],
     proof: [
-      { icon: Star, label: "9.7 rating on Booking" },
+      { icon: Star, label: `${GUEST_SCORE_EN} rating on Booking` },
       { icon: Building2, label: "15 properties managed" },
       { icon: Clock, label: CONTACT_HOURS.long.en },
     ],

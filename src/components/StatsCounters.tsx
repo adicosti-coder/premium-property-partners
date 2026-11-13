@@ -1,5 +1,5 @@
 import { useCountAnimation } from "@/hooks/useCountAnimation";
-import { REAL_ESTATE_SINCE } from "@/lib/businessFacts";
+import { GUEST_REPUTATION, REAL_ESTATE_SINCE } from "@/lib/businessFacts";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Users, Calendar, TrendingUp, Star, Building2 } from "lucide-react";
 
@@ -13,7 +13,7 @@ const translations = {
       { value: 10000, suffix: "+", label: "Oaspeți Mulțumiți", icon: Users },
       { value: REAL_ESTATE_SINCE, suffix: "", label: "În imobiliare din", icon: Calendar, plain: true },
       { value: 85, suffix: "%", label: "Rată Ocupare/An", icon: TrendingUp },
-      { value: 9.7, suffix: "/10", label: "Scor Booking.com", icon: Star, decimals: 1 },
+      { value: GUEST_REPUTATION.ratingValue, suffix: "/10", label: "Scor Booking.com", icon: Star, decimals: 1 },
     ],
   },
   en: {
@@ -25,7 +25,7 @@ const translations = {
       { value: 10000, suffix: "+", label: "Happy Guests", icon: Users },
       { value: REAL_ESTATE_SINCE, suffix: "", label: "In real estate since", icon: Calendar, plain: true },
       { value: 85, suffix: "%", label: "Occupancy Rate/Year", icon: TrendingUp },
-      { value: 9.7, suffix: "/10", label: "Booking.com Score", icon: Star, decimals: 1 },
+      { value: GUEST_REPUTATION.ratingValue, suffix: "/10", label: "Booking.com Score", icon: Star, decimals: 1 },
     ],
   },
 };

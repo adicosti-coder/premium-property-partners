@@ -68,3 +68,6 @@ export const guestRatingLabel = (lang?: string) =>
   pick(lang, String(GUEST_REPUTATION.ratingValue).replace(".", ","), String(GUEST_REPUTATION.ratingValue));
 /** „500+” — the review count as shown next to the score. */
 export const guestReviewCountLabel = () => `${GUEST_REPUTATION.reviewCount}+`;
+/** Guest score as written in page copy: „9,7” (Romanian) and “9.7” (English/dot form). */
+export const GUEST_SCORE_RO = guestRatingLabel("ro");
+export const GUEST_SCORE_EN = guestRatingLabel("en");

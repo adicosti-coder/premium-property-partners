@@ -1,5 +1,6 @@
 import { useLanguage } from "@/i18n/LanguageContext";
 import { ShieldCheck, ExternalLink } from "lucide-react";
+import { GUEST_SCORE_EN } from "@/lib/businessFacts";
 
 /**
  * External trust seal badges – Booking.com + Trusted.ro
@@ -11,7 +12,7 @@ const ExternalTrustSeals = () => {
   const seals = [
     {
       name: "Booking.com",
-      score: "9.7 / 10",
+      score: `${GUEST_SCORE_EN} / 10`,
       subtitle: language === "ro" ? "Scor Verificat" : "Verified Score",
       url: "https://www.booking.com/hotel/ro/apart-hotel-timisoara.html",
       logo: null, // Booking.com external SVG was returning 404; use icon fallback instead
