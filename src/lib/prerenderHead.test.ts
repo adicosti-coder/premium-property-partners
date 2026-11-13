@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { buildStaticRoutes, generateHtml } from "../../plugins/vite-prerender-seo";
 import { LODGING_BUSINESS_SCHEMA, REAL_ESTATE_AGENT_SCHEMA } from "./orgIdentity";
-import { generateLocalBusinessSchema } from "../utils/schemaGenerators";
+import { generateHomepageSchemas, generateLocalBusinessSchema } from "../utils/schemaGenerators";
 
 const template = `<!doctype html><html lang="ro"><head><title>Template</title><meta name="description" content="Template"><meta name="robots" content="index, follow"></head><body><div id="root"></div></body></html>`;
 
