@@ -4,6 +4,8 @@ import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 vi.mock("@/lib/supabaseClient", () => ({ supabase: {}, supabaseConfig: { url: "http://localhost" }, getSupabasePublishableKey: () => "" }));
 vi.mock("@/lib/leadSubmission", () => ({ submitLead: vi.fn() }));
 vi.mock("@/components/social/SocialFollow", () => ({ SocialFollow: () => null }));
+const pdfSave = vi.fn();
+vi.mock("@/utils/exportCalculatorReportPdf", () => ({ generateCalculatorReportPdf: vi.fn().mockResolvedValue({ save: (...a: unknown[]) => pdfSave(...a) }) }));
 vi.mock("@/i18n/LanguageContext", () => ({ useLanguage: () => ({ language: "ro" }) }));
 const track = vi.fn();
 vi.mock("@/lib/calculatorAnalytics", async (orig) => ({ ...(await orig<object>()), trackCalculatorEvent: (...a: unknown[]) => track(...a) }));
@@ -48,7 +50,7 @@ describe("UnifiedCalculator lead request integration", () => {
     fireEvent.change(input, { target: { value: "sinaia" } });
     fireEvent.click(screen.getByRole("option", { name: "Sinaia" }));
     fireEvent.change(screen.getByLabelText(/Suprafață utilă/), { target: { value: "60" } });
-    fireEvent.click(screen.getByRole("button", { name: /Trimite proiecția pe WhatsApp/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Descarcă raportul PDF complet/ }));
     fireEvent.change(screen.getByLabelText("Nume"), { target: { value: "Test" } });
     fireEvent.change(screen.getByLabelText("Telefon"), { target: { value: "0722 123 456" } });
     const form = screen.getByLabelText("Nume").closest("form");
@@ -67,5 +69,31 @@ describe("UnifiedCalculator lead request integration", () => {
     expect(body.venit_estimat_max).toBe(expected.netMax);
     expect(lead.simulation_data.realtrust_net).toBe(expected.netMid);
     expect(screen.queryByText(/Locație: Timișoara/)).toBeNull();
+    await vi.waitFor(() => expect(pdfSave).toHaveBeenCalled());
+    expect(lead.simulation_data).toMatchObject({ lead_tag: "Calculator", intent: "toate", market_alert_opt_in: false, sale_value_mid: null });
+  });
+});
+
+describe("UnifiedCalculator WhatsApp and prefill", () => {
+  it("opens WhatsApp directly with the simulation figures", () => {
+    const open = vi.spyOn(window, "open").mockReturnValue(null);
+    render(<UnifiedCalculator />);
+    fireEvent.click(screen.getByRole("button", { name: "Vreau să vând" }));
+    fireEvent.click(screen.getByRole("button", { name: /Continuă pe WhatsApp/ }));
+    const url = decodeURIComponent(String(open.mock.calls[0][0]));
+    expect(url).toContain("https://wa.me/40799069256?text=");
+    expect(url).toContain("Intenție: Vreau să vând");
+    expect(url).toContain("Valoare de vânzare:");
+    expect(url).toContain("Venit net regim hotelier:");
+    expect(open.mock.calls[0][2]).toBe("noopener,noreferrer");
+  });
+  it("pre-fills from an outbound link and greets the owner", () => {
+    window.history.replaceState(null, "", "/?zona=fructus&camere=3&mp=80&nume=Maria&intentie=chirie");
+    render(<UnifiedCalculator />);
+    expect(screen.getByText(/Bună, Maria!/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Suprafață utilă/)).toHaveValue("80");
+    expect(screen.getByRole("button", { name: "Chirie clasică" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText(/3 camere · Fructus Plaza · 80 mp/)).toBeInTheDocument();
+    window.history.replaceState(null, "", "/");
   });
 });
