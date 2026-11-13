@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, forwardRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Shield, SlidersHorizontal } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { initMetaPixel, revokeMetaPixel } from "@/lib/conversionTracking";
 import {
   COOKIE_BANNER_STATE_EVENT,
@@ -63,7 +64,49 @@ const updateConsent = (choice: ConsentChoice) => {
   else revokeMetaPixel();
 };
 
+/** Banner copy per language; Romanian is the default. */
+export const COOKIE_BANNER_TEXT = {
+  ro: {
+    title: "Îți respectăm datele personale",
+    desc: "Folosim cookie-uri esențiale pentru funcționarea site-ului și, doar cu acordul tău, cookie-uri de analiză și publicitate. Poți accepta tot, păstra doar strictul necesar sau alege în detaliu. Îți poți schimba oricând opțiunea.",
+    privacy: "Politica de confidențialitate",
+    essentialTitle: "Cookie-uri esențiale",
+    essentialDesc: "Necesare pentru navigare, securitate și formulare.",
+    alwaysOn: "Mereu active",
+    analyticsTitle: "Analiză trafic (GA4)",
+    analyticsDesc: "Statistici anonime despre paginile vizitate.",
+    adsTitle: "Publicitate (Meta Pixel, Google Ads)",
+    adsDesc: "Măsurarea campaniilor și remarketing.",
+    back: "Înapoi",
+    save: "Salvează preferințele",
+    openPrefsAria: "Deschide preferințele pentru cookie-uri",
+    prefs: "Preferințe",
+    essentialOnly: "Doar esențiale",
+    acceptAll: "Accept toate",
+  },
+  en: {
+    title: "We respect your personal data",
+    desc: "We use essential cookies for the site to function and, only with your consent, analytics and advertising cookies. You can accept all, keep only strictly necessary ones, or customize in detail. You can change your choice at any time.",
+    privacy: "Privacy policy",
+    essentialTitle: "Essential cookies",
+    essentialDesc: "Required for navigation, security and forms.",
+    alwaysOn: "Always on",
+    analyticsTitle: "Traffic analytics (GA4)",
+    analyticsDesc: "Anonymous statistics about the pages visited.",
+    adsTitle: "Advertising (Meta Pixel, Google Ads)",
+    adsDesc: "Campaign measurement and remarketing.",
+    back: "Back",
+    save: "Save preferences",
+    openPrefsAria: "Open cookie preferences",
+    prefs: "Preferences",
+    essentialOnly: "Essentials only",
+    acceptAll: "Accept all",
+  },
+} as const;
+
 const CookieConsent = forwardRef<HTMLDivElement>((_props, _ref) => {
+  const { language } = useLanguage();
+  const tx = language === "en" ? COOKIE_BANNER_TEXT.en : COOKIE_BANNER_TEXT.ro;
   const [visible, setVisible] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [analyticsEnabled, setAnalyticsEnabled] = useState(false);
@@ -131,14 +174,12 @@ const CookieConsent = forwardRef<HTMLDivElement>((_props, _ref) => {
           </div>
           <div className="flex-1 min-w-0">
             <h2 id="cookie-consent-title" className="text-sm font-semibold text-foreground leading-tight">
-              Îți respectăm datele personale
+              {tx.title}
             </h2>
             <p id="cookie-consent-desc" className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
-              Folosim cookie-uri esențiale pentru funcționarea site-ului și, doar cu acordul tău,
-              cookie-uri de analiză și publicitate. Poți accepta tot, păstra doar strictul necesar sau
-              alege în detaliu. Îți poți schimba oricând opțiunea.{" "}
+              {tx.desc}{" "}
               <Link to="/politica-confidentialitate" className="underline underline-offset-2 hover:text-foreground">
-                Politica de confidențialitate
+                {tx.privacy}
               </Link>
             </p>
           </div>
@@ -149,21 +190,21 @@ const CookieConsent = forwardRef<HTMLDivElement>((_props, _ref) => {
             <div className="border border-border rounded-lg p-3 space-y-3">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs text-foreground font-medium">
-                  Cookie-uri esențiale
+                  {tx.essentialTitle}
                   <span className="block text-[11px] font-normal text-muted-foreground">
-                    Necesare pentru navigare, securitate și formulare.
+                    {tx.essentialDesc}
                   </span>
                 </span>
                 <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded shrink-0">
-                  Mereu active
+                  {tx.alwaysOn}
                 </span>
               </div>
 
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs text-foreground" id="cookie-analytics-label">
-                  Analiză trafic (GA4)
+                  {tx.analyticsTitle}
                   <span className="block text-[11px] text-muted-foreground">
-                    Statistici anonime despre paginile vizitate.
+                    {tx.analyticsDesc}
                   </span>
                 </span>
                 <button
@@ -180,9 +221,9 @@ const CookieConsent = forwardRef<HTMLDivElement>((_props, _ref) => {
 
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs text-foreground" id="cookie-ads-label">
-                  Publicitate (Meta Pixel, Google Ads)
+                  {tx.adsTitle}
                   <span className="block text-[11px] text-muted-foreground">
-                    Măsurarea campaniilor și remarketing.
+                    {tx.adsDesc}
                   </span>
                 </span>
                 <button
@@ -210,10 +251,10 @@ const CookieConsent = forwardRef<HTMLDivElement>((_props, _ref) => {
                 onClick={() => setShowSettings(false)}
                 className="text-xs h-9 sm:mr-auto"
               >
-                Înapoi
+                {tx.back}
               </Button>
               <Button size="sm" onClick={handleSaveSettings} className="text-xs h-9 px-4">
-                Salvează preferințele
+                {tx.save}
               </Button>
             </>
           ) : (
@@ -223,10 +264,10 @@ const CookieConsent = forwardRef<HTMLDivElement>((_props, _ref) => {
                 size="sm"
                 onClick={() => setShowSettings(true)}
                 className="text-xs h-9 px-3 gap-1.5 sm:mr-auto"
-                aria-label="Deschide preferințele pentru cookie-uri"
+                aria-label={tx.openPrefsAria}
               >
                 <SlidersHorizontal className="w-3.5 h-3.5" aria-hidden="true" />
-                Preferințe
+                {tx.prefs}
               </Button>
               <Button
                 variant="outline"
@@ -234,10 +275,10 @@ const CookieConsent = forwardRef<HTMLDivElement>((_props, _ref) => {
                 onClick={() => save("declined")}
                 className="text-xs h-9 px-4"
               >
-                Doar esențiale
+                {tx.essentialOnly}
               </Button>
               <Button size="sm" onClick={() => save("all")} className="text-xs h-9 px-4">
-                Accept toate
+                {tx.acceptAll}
               </Button>
             </>
           )}
