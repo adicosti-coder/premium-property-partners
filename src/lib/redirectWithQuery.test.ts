@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
 import { withPreservedQuery } from "./redirectWithQuery";
 
 describe("legacy redirects keep the query string", () => {
@@ -16,7 +15,8 @@ describe("legacy redirects keep the query string", () => {
   });
 
   it("no route redirect in App drops the query string", () => {
-    const app = readFileSync(new URL("../App.tsx", import.meta.url), "utf8");
+    const app = Object.values(import.meta.glob("/src/App.tsx", { query: "?raw", import: "default", eager: true }))[0] as string;
+    expect(app).toContain("<RedirectWithQuery to=\"/cazare\" />");
     expect(app).not.toMatch(/element=\{<Navigate to="/);
   });
 });
