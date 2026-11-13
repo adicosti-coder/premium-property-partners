@@ -17,6 +17,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import StickyPropertyCTA from "@/components/StickyPropertyCTA";
 import SEOHead from "@/components/SEOHead";
+import RouteLoading from "@/components/RouteLoading";
 import { useCazareOverride } from "@/hooks/useCazareOverrides";
 import { trackListingClick } from "@/lib/listingClickTracking";
 import NotFound from "@/pages/NotFound";
@@ -806,6 +807,10 @@ const PropertyDetail = () => {
         productCurrency="EUR"
         jsonLd={propertySchemas}
       />
+      {/* SEOHead stays outside every suspending subtree: a lazy section that
+          suspends must never discard or hide the Helmet instance, which left
+          a stale duplicate LodgingBusiness/AggregateRating in the head. */}
+      <Suspense fallback={<RouteLoading />}>
       <Header />
       
       <main className="pt-20">
@@ -1713,6 +1718,7 @@ const PropertyDetail = () => {
         pricePerNight={dbProperty?.base_price_per_night ?? (staticProperty ? effectivePrice : undefined)}
       />
       <GlobalConversionWidgets showExitIntent={false} />
+      </Suspense>
       </Suspense>
     </div>
   );
