@@ -33,7 +33,7 @@ export function CalculatorRefinePanel({ value, onChange, open, onOpenChange, lan
           const id = `uc-refine-${r.key}`;
           return (
             <label key={r.key} htmlFor={id} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl px-1 py-2 text-sm text-foreground">
-              <Checkbox id={id} checked={value[r.key]} onCheckedChange={(c) => toggle(r.key, c === true)} className="h-5 w-5" />
+              <Checkbox id={id} checked={value[r.key]} onCheckedChange={(c) => toggle(r.key, c === true)} className="h-5 w-5 bg-background ring-2 ring-primary/70 ring-offset-0" />
               <span className="flex-1">
                 <span className="block font-medium">{r[language]}</span>
                 <span className="block text-xs text-muted-foreground">

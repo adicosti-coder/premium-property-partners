@@ -533,8 +533,8 @@ leadSent ? (
                 <Button size="lg" className="min-h-14 w-full bg-gold text-gold-foreground hover:bg-gold-dark" onClick={openLead}>
                   <FileDown className="mr-2 h-5 w-5" />{ro ? "Descarcă raportul PDF complet" : "Download the full PDF report"}
                 </Button>
-                <Button size="lg" variant="outline" className="min-h-14 w-full border-whatsapp text-foreground hover:bg-whatsapp/10" onClick={openWhatsapp}>
-                  <MessageCircle className="mr-2 h-5 w-5 text-whatsapp" aria-hidden="true" />{ro ? "Continuă pe WhatsApp" : "Continue on WhatsApp"}
+                <Button size="lg" className="min-h-14 w-full bg-whatsapp text-whatsapp-foreground hover:bg-whatsapp-hover" onClick={openWhatsapp}>
+                  <MessageCircle className="mr-2 h-5 w-5" aria-hidden="true" />{ro ? "Continuă pe WhatsApp" : "Continue on WhatsApp"}
                 </Button>
                 <p className="text-center text-xs text-muted-foreground">{ro ? "Raportul îl primești după datele de contact; pe WhatsApp mesajul are deja toate cifrele. Fără obligații." : "Get the report after your contact details; on WhatsApp the message already has all the figures. No obligation."}</p>
               </div>
@@ -843,7 +843,7 @@ leadSent ? (
               </div>
             ))}
             <label htmlFor="uc-market-alert" className="flex min-h-12 cursor-pointer items-start gap-3 text-sm text-foreground">
-              <Checkbox id="uc-market-alert" checked={marketAlert} onCheckedChange={(c) => setMarketAlert(c === true)} className="mt-0.5 h-5 w-5" />
+              <Checkbox id="uc-market-alert" checked={marketAlert} onCheckedChange={(c) => setMarketAlert(c === true)} className="mt-0.5 h-5 w-5 bg-background ring-2 ring-primary/70 ring-offset-0" />
               <span>{ro ? `Vreau alerta lunară de piață pentru ${zoneLabel}: evoluția prețului pe mp și a tarifelor de cazare (opțional, mă pot dezabona oricând).` : `Send me the monthly market alert for ${zoneLabel}: price per sqm and accommodation rates (optional, unsubscribe anytime).`}</span>
             </label>
             <Button type="submit" className="w-full" size="lg" disabled={submitting}>{submitting ? (ro ? "Se salvează..." : "Saving...") : (ro ? "Salvează și descarcă PDF" : "Save and download PDF")}</Button>
