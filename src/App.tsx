@@ -1,6 +1,6 @@
 import { Suspense, lazy, useState, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigationType } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, useNavigationType } from "react-router-dom";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import RedirectWithQuery from "@/components/routing/RedirectWithQuery";
 import { PhraseTranslator } from "@/i18n/PhraseTranslator";
