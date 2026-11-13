@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
-import { ArrowDown, ArrowRight, Camera, Check, Info, Link2, Loader2, MessageCircle, PenLine, RotateCcw, Sparkles, TrendingUp, Upload, X } from "lucide-react";
+import { ArrowDown, ArrowRight, Camera, Check, FileDown, Info, Lightbulb, Link2, Loader2, MessageCircle, PenLine, RotateCcw, Sparkles, TrendingUp, Upload, X } from "lucide-react";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { Slider } from "@/components/ui/slider";
 import { MANAGEMENT_POLICY } from "@/lib/managementPolicy";
@@ -23,6 +23,15 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { RegionalLocationInput } from "@/components/RegionalLocationInput";
 import { trackCalculatorEvent } from "@/lib/calculatorAnalytics";
 import { useCalculatorDelivery } from "@/hooks/useCalculatorDelivery";
+import { Checkbox } from "@/components/ui/checkbox";
+import { NO_REFINEMENTS, activeRefinementLabels, type Refinements } from "@/lib/calculatorRefinements";
+import { INTENTS, annualNetYieldPct, buildCalculatorWhatsappMessage, buildOptimizationTips, estimateSale, fiveYearProjection, gridSaleBenchmark, leadEventForIntent, parseCalculatorPrefill, resolveSaleBenchmark, roomsForType, yieldDisplay, type Intent, type SaleBenchmark } from "@/lib/calculatorValuation";
+import { matchPortfolioProperties, type PortfolioProperty } from "@/lib/portfolioProof";
+import { trackLeadCalculatorEvent } from "@/lib/calculatorAnalytics";
+import { CalculatorRefinePanel } from "@/components/calculator/CalculatorRefinePanel";
+import { CalculatorEstimateCards, saleTierLabel } from "@/components/calculator/CalculatorEstimateCards";
+import { CalculatorFiveYear } from "@/components/calculator/CalculatorFiveYear";
+import { CalculatorZoneProof } from "@/components/calculator/CalculatorZoneProof";
 
 const WHATSAPP_NUMBER = "40799069256";
 const ANALYSIS_URL = `${supabaseConfig.url}/functions/v1/public-listing-analysis`;
@@ -106,17 +115,27 @@ const UnifiedCalculator = () => {
     io.observe(inputsRef.current); io.observe(resultRef.current);
     return () => io.disconnect();
   }, []);
+  // Pre-completare din linkurile outbound (?zona=&camere=&mp=&nume=&intentie=), citită o singură dată.
+  const [prefill] = useState(() => (typeof window === "undefined" ? {} : parseCalculatorPrefill(window.location.search)));
+  const [welcomeOpen, setWelcomeOpen] = useState(Boolean(prefill.name));
   const [mode, setMode] = useState<InputMode>("manual");
   const [locationMode, setLocationMode] = useState<LocationMode>("local");
   const [regionalLocation, setRegionalLocation] = useState("");
   const [customRates, setCustomRates] = useState(false);
   const national = locationMode === "regional";
-  const [type, setType] = useState<PropertyTypeValue>("2-camere");
-  const [zone, setZone] = useState<UnifiedZoneValue>("central");
-  const [surface, setSurface] = useState("55");
+  const [type, setType] = useState<PropertyTypeValue>(prefill.type ?? "2-camere");
+  const [zone, setZone] = useState<UnifiedZoneValue>(prefill.zone ?? "central");
+  const [surface, setSurface] = useState(String(prefill.surface ?? PROPERTY_TYPES.find((t) => t.value === (prefill.type ?? "2-camere"))?.refSqm ?? 55));
   const [manualRent, setManualRent] = useState("");
   const [manualNightly, setManualNightly] = useState("");
-  const [parking, setParking] = useState(false);
+  const [refinements, setRefinements] = useState<Refinements>(NO_REFINEMENTS);
+  const parking = refinements.parking;
+  const [refineOpen, setRefineOpen] = useState(false);
+  const [intent, setIntent] = useState<Intent>(prefill.intent ?? "toate");
+  const [marketAlert, setMarketAlert] = useState(false);
+  const [photoInsights, setPhotoInsights] = useState<{ score: number | null; recommendations: string[]; furnishedPreselected: boolean } | null>(null);
+  const [saleBenchmark, setSaleBenchmark] = useState<SaleBenchmark>(() => gridSaleBenchmark(prefill.zone ?? "central"));
+  const [portfolio, setPortfolio] = useState<PortfolioProperty[]>([]);
   const [finish, setFinish] = useState<Finish>("standard");
   const [url, setUrl] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
@@ -124,7 +143,7 @@ const UnifiedCalculator = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const [source, setSource] = useState<{ mode: InputMode; note: string } | null>(null);
   const [open, setOpen] = useState(false);
-  const [lead, setLead] = useState({ name: "", phone: "", email: "" });
+  const [lead, setLead] = useState({ name: prefill.name ?? "", phone: "", email: "" });
   const [errors, setErrors] = useState<Partial<Record<"name" | "phone" | "email" | "surface" | "manual" | "location", string>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [leadSent, setLeadSent] = useState(false);
@@ -137,16 +156,48 @@ const UnifiedCalculator = () => {
   const surfaceNum = Number(surface);
   const manual = national && customRates ? { classicRent: manualRent ? Number(manualRent) : undefined, nightlyRate: manualNightly ? Number(manualNightly) : undefined } : null;
   const r = useMemo(
-    () => computeUnified({ type, zone, surface: surfaceNum, parking, finish, manual, locationMode }),
+    () => computeUnified({ type, zone, surface: surfaceNum, parking, finish, manual, locationMode, refinements }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [type, zone, surfaceNum, parking, finish, locationMode, customRates, manualRent, manualNightly],
+    [type, zone, surfaceNum, refinements, finish, locationMode, customRates, manualRent, manualNightly],
   );
   const surfaceValid = isValidPropertySurface(surfaceNum);
   // Glisoarele revin la estimare când se schimbă proprietatea.
-  useEffect(() => { setNightlyOverride(null); setOccOverride(null); }, [type, zone, surfaceNum, parking, finish, locationMode, customRates, manualRent, manualNightly]);
+  useEffect(() => { setNightlyOverride(null); setOccOverride(null); }, [type, zone, surfaceNum, refinements, finish, locationMode, customRates, manualRent, manualNightly]);
   const s = useMemo(() => applyScenario(r, { nightlyRate: nightlyOverride ?? undefined, occupancy: occOverride ?? undefined }), [r, nightlyOverride, occOverride]);
   const months = useMemo(() => monthlyProjection(s), [s]);
   const scenarioChanged = nightlyOverride !== null || occOverride !== null;
+
+  // Prețul €/mp: anunțuri colectate → indice de referință → grila evaluării gratuite (afișată imediat).
+  useEffect(() => {
+    if (national) return;
+    let cancelled = false;
+    setSaleBenchmark(gridSaleBenchmark(zone));
+    const rpc = (supabase as { rpc?: (fn: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: unknown }> }).rpc;
+    if (typeof rpc !== "function") return;
+    Promise.resolve(rpc.call(supabase, "get_calculator_sale_benchmark", { p_zone: zone, p_rooms: roomsForType(type) }))
+      .then(({ data, error }) => { if (!cancelled && !error) setSaleBenchmark(resolveSaleBenchmark(data, zone)); })
+      .catch(() => { /* grila rămâne afișată */ });
+    return () => { cancelled = true; };
+  }, [zone, type, national]);
+
+  // Proprietăți reale administrate (doar cazări active), pentru cardul de dovadă socială.
+  useEffect(() => {
+    const from = (supabase as { from?: unknown }).from;
+    if (typeof from !== "function") return;
+    let cancelled = false;
+    Promise.resolve(
+      supabase.from("properties").select("name, slug, location, booking_rating, booking_review_count").eq("is_active", true).eq("listing_type", "cazare").limit(100),
+    ).then(({ data }) => { if (!cancelled && Array.isArray(data)) setPortfolio(data as PortfolioProperty[]); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  const sale = useMemo(() => estimateSale(national ? null : saleBenchmark, surfaceNum, type, refinements), [national, saleBenchmark, surfaceNum, type, refinements]);
+  const netYield = annualNetYieldPct(s.netMid, sale?.mid ?? 0);
+  const yieldShown = yieldDisplay(netYield);
+  const projection = fiveYearProjection({ saleValue: sale?.mid ?? null, hotelNetMonthly: s.netMid, classicRentMonthly: s.classicRent });
+  const tips = buildOptimizationTips(refinements, photoInsights?.recommendations, language === "en" ? "en" : "ro");
+  const proof = national ? [] : matchPortfolioProperties(zone, portfolio);
+  const intentLabel = INTENTS.find((i) => i.value === intent)?.ro ?? "Analizez toate variantele";
   const nightlyMin = Math.max(15, Math.round(r.nightlyRate * NIGHTLY_SLIDER_MIN_FACTOR));
   const nightlyMax = Math.max(nightlyMin + 5, Math.round(r.nightlyRate * NIGHTLY_SLIDER_MAX_FACTOR));
   const propertyIdentity = getPropertyLeadIdentity(type);
@@ -198,6 +249,15 @@ const UnifiedCalculator = () => {
 
   const applyAnalysis = (a: ListingAnalysisLike, from: InputMode) => {
     const m = mapAnalysisToInput(a);
+    if (from === "foto") {
+      const score = Number(a.scor);
+      const max = Number(a.max_scor) || 100;
+      const scorePct = Number.isFinite(score) && score > 0 ? Math.round((score / max) * 100) : null;
+      // Scor foto ridicat → pre-bifăm mobilarea modernă (procente aprobate), proprietarul o poate debifa.
+      const furnishedPreselected = scorePct !== null && scorePct >= 80;
+      if (furnishedPreselected) { setRefinements((r) => ({ ...r, furnished: true })); setRefineOpen(true); }
+      setPhotoInsights({ score: scorePct, recommendations: Array.isArray(a.recomandari) ? a.recomandari.filter((t): t is string => typeof t === "string") : [], furnishedPreselected });
+    }
     if (m.type) setType(m.type);
     if (m.zone) setZone(m.zone);
     if (m.surface) setSurface(String(m.surface));
@@ -255,22 +315,58 @@ const UnifiedCalculator = () => {
     setPhotos((p) => [...p, ...data].slice(0, MAX_PHOTOS));
   };
 
-  const buildMessage = (name: string) =>
-    [
-      `Salut, sunt ${name}. Am folosit calculatorul RealTrust:`,
-      ``,
+  const buildMessage = (name?: string) =>
+    buildCalculatorWhatsappMessage({
+      name,
       locationSummary,
-      `🏠 Suprafață: ${surfaceNum} mp`,
-      `• Parcare: ${parking ? "Da" : "Nu"} · Finisaje: ${finishLabel}`,
-      source ? `• Date din: ${source.mode === "link" ? "link anunț" : source.mode === "foto" ? "analiză foto" : "introducere manuală"}` : null,
-      ``,
-      `📊 Proiecție lunară:`,
-      `• Chirie clasică: ~${fmt(s.classicRent)} €`,
-      `• Venit net regim hotelier: ${fmt(s.netMin)} – ${fmt(s.netMax)} € (după administrare 15–20% din venitul net)`,
-      `• Scenariu: ~${s.nightlyRate} €/noapte, ocupare ${Math.round(s.occupancy * 100)}%${scenarioChanged ? " (ajustat de mine)" : ""}`,
-      ``,
-      `Aș vrea o discuție scurtă ca să rafinăm cifrele.`,
-    ].filter((l) => l !== null).join("\n");
+      surface: surfaceNum,
+      intentLabel,
+      sale,
+      classicRent: s.classicRent,
+      netMin: s.netMin,
+      netMax: s.netMax,
+      nightlyRate: s.nightlyRate,
+      occupancy: s.occupancy,
+      refinements: [...activeRefinementLabels(refinements), ...(finish === "premium" ? ["finisaje Premium"] : [])],
+      photoScore: photoInsights?.score ?? null,
+    }) + (scenarioChanged ? "\n(Scenariul de tarif/ocupare a fost ajustat de mine.)" : "");
+
+  const openWhatsapp = () => {
+    if (!validateInputs()) return;
+    trackCalculatorEvent("calculator_whatsapp_open", analyticsContext);
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(buildMessage(prefill.name))}`, "_blank", "noopener,noreferrer");
+  };
+
+  const downloadReport = async (ownerName: string) => {
+    try {
+      const { generateCalculatorReportPdf } = await import("@/utils/exportCalculatorReportPdf");
+      const doc = await generateCalculatorReportPdf({
+        language: language === "en" ? "en" : "ro",
+        ownerName,
+        location: `${zoneLabel} ${locationIdentity.service_tag}`,
+        propertyType: typeLabel,
+        surface: surfaceNum,
+        intentLabel: INTENTS.find((i) => i.value === intent)?.[language === "en" ? "en" : "ro"] ?? intentLabel,
+        refinements: [...activeRefinementLabels(refinements, language === "en" ? "en" : "ro"), ...(finish === "premium" ? [language === "en" ? "Premium finishes" : "Finisaje Premium"] : [])],
+        sale,
+        saleSourceLabel: sale ? saleTierLabel(sale.tier, language === "en" ? "en" : "ro", saleBenchmark.sample) : "",
+        classicRent: s.classicRent,
+        netMin: s.netMin,
+        netMax: s.netMax,
+        netMid: s.netMid,
+        nightlyRate: s.nightlyRate,
+        occupancy: s.occupancy,
+        yieldLabel: yieldShown.kind === "exact" ? `${yieldShown.value.toLocaleString("ro-RO")}%` : (language === "en" ? "individual calculation (typical 6.5–9.4%)" : "calcul individual (interval tipic 6,5–9,4%)"),
+        projection,
+        tips,
+        photoScore: photoInsights?.score ?? null,
+      });
+      doc.save(`raport-realtrust-${surfaceNum}mp.pdf`);
+    } catch (err) {
+      console.warn("[UnifiedCalculator] PDF report failed", err);
+      toast.error(ro ? "Cererea e salvată, dar raportul PDF nu s-a putut genera. Încearcă din nou." : "Request saved, but the PDF report could not be generated. Please try again.");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -305,6 +401,27 @@ const UnifiedCalculator = () => {
       realtrust_net: s.netMid,
       realtrust_net_min: s.netMin,
       realtrust_net_max: s.netMax,
+      lead_tag: "Calculator",
+      intent,
+      intent_label: intentLabel,
+      refinements,
+      refinement_labels: activeRefinementLabels(refinements).join(", ") || "—",
+      sale_eur_sqm: sale?.eurSqm ?? null,
+      sale_value_min: sale?.min ?? null,
+      sale_value_mid: sale?.mid ?? null,
+      sale_value_max: sale?.max ?? null,
+      sale_source_tier: sale ? sale.tier : null,
+      net_yield_pct: netYield,
+      projection_years: projection.years,
+      projection_sale_today: sale ? projection.saleToday : null,
+      projection_hotel_total: projection.hotelTotal,
+      projection_classic_total: projection.classicTotal,
+      photo_score: photoInsights?.score ?? null,
+      photo_recommendations: photoInsights?.recommendations.slice(0, 3).join(" | ") || null,
+      market_alert_opt_in: marketAlert,
+      market_alert_zone: marketAlert ? zoneLabel : null,
+      market_alert_consent_at: marketAlert ? new Date().toISOString() : null,
+      prefilled_from_link: Boolean(prefill.zone || prefill.type || prefill.surface || prefill.intent || prefill.name),
     };
     const fingerprint = JSON.stringify({ d, specs });
     if (submission.current?.fingerprint !== fingerprint) submission.current = { fingerprint, id: crypto.randomUUID() };
@@ -315,7 +432,7 @@ const UnifiedCalculator = () => {
         email: d.email || undefined,
         property_type: type,
         property_area: surfaceNum,
-        message: `[calculator_unificat] ${locationSummary} · ${surfaceNum} mp · Parcare: ${parking ? "Da" : "Nu"} · Finisaje: ${finishLabel}`,
+        message: `[calculator_unificat] [Calculator] ${locationSummary} · ${surfaceNum} mp · Intenție: ${intentLabel} · Parcare: ${parking ? "Da" : "Nu"} · Finisaje: ${finishLabel}${sale ? ` · Vânzare ~${fmt(sale.mid)} €` : ""}`,
         source: leadSource,
         simulation_data: withCampaignTracking({ ...specs, generated_message: message }) as never,
         viaServer: true,
@@ -344,6 +461,7 @@ const UnifiedCalculator = () => {
             suprafata_mp: surfaceNum,
             parcare: parking,
             finisaje: finish,
+            ...(refinements.furnished ? { mobilat: "Complet mobilat & utilat modern" } : {}),
             chirie_clasica: s.classicRent,
             venit_net_realtrust: s.netMid,
             venit_estimat_min: s.netMin,
@@ -362,6 +480,9 @@ const UnifiedCalculator = () => {
       if (result.ok) {
         trackCalculatorEvent("calculator_lead_submit", analyticsContext);
         trackCriticalConversion("Lead_Submit", { source: leadSource, value: 90, currency: "EUR" });
+        const leadEvent = leadEventForIntent(intent, { saleValue: sale?.mid ?? null, hotelNetMonthly: s.netMid, classicRentMonthly: s.classicRent });
+        trackLeadCalculatorEvent(leadEvent.event, { ...analyticsContext, intent, value: leadEvent.value });
+        void downloadReport(d.name);
       }
       if (result.ok) {
         setLeadSent(true);
@@ -402,15 +523,21 @@ leadSent ? (
                 <div>
                   <p className="font-semibold text-foreground">{adminReceived ? (ro ? "Andrei a primit cererea ta" : "Andrei has received your request") : (ro ? "Cererea a fost înregistrată" : "Your request has been registered")}</p>
                   <p className="text-sm text-muted-foreground">{adminReceived ? (ro ? "Livrarea notificării către Andrei este confirmată." : "Notification delivery to Andrei is confirmed.") : (ro ? "Datele sunt salvate. Așteptăm confirmarea livrării notificării către Andrei." : "Your details are saved. Awaiting confirmation of notification delivery to Andrei.")}</p>
-                  <Button type="button" variant="outline" className="mt-3 min-h-12" onClick={() => { setLeadSent(false); setReceipt(null); }}>Calcul nou / Actualizat</Button>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button type="button" variant="outline" className="min-h-12" onClick={() => void downloadReport(lead.name.trim() || (ro ? "proprietar" : "owner"))}><FileDown className="mr-2 h-4 w-4" />{ro ? "Descarcă din nou PDF" : "Download PDF again"}</Button>
+                    <Button type="button" variant="outline" className="min-h-12" onClick={() => { setLeadSent(false); setReceipt(null); }}>Calcul nou / Actualizat</Button>
+                  </div>
                 </div>
               </div>
             ) : (
               <div className="space-y-2">
                 <Button size="lg" className="min-h-14 w-full bg-gold text-gold-foreground hover:bg-gold-dark" onClick={openLead}>
-                  <MessageCircle className="mr-2 h-5 w-5" />Trimite proiecția pe WhatsApp
+                  <FileDown className="mr-2 h-5 w-5" />{ro ? "Descarcă raportul PDF complet" : "Download the full PDF report"}
                 </Button>
-                <p className="text-center text-xs text-muted-foreground">{ro ? "Primești calculul complet și o discuție scurtă cu Andrei. Fără obligații." : "Get the full calculation and a short chat with Andrei. No obligation."}</p>
+                <Button size="lg" variant="outline" className="min-h-14 w-full border-whatsapp text-foreground hover:bg-whatsapp/10" onClick={openWhatsapp}>
+                  <MessageCircle className="mr-2 h-5 w-5 text-whatsapp" aria-hidden="true" />{ro ? "Continuă pe WhatsApp" : "Continue on WhatsApp"}
+                </Button>
+                <p className="text-center text-xs text-muted-foreground">{ro ? "Raportul îl primești după datele de contact; pe WhatsApp mesajul are deja toate cifrele. Fără obligații." : "Get the report after your contact details; on WhatsApp the message already has all the figures. No obligation."}</p>
               </div>
             )
   );
