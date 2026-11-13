@@ -1,3 +1,4 @@
+import { GUEST_SCORE_EN, GUEST_SCORE_RO } from "@/lib/businessFacts";
 // Shared FAQ content for the owners page. Kept outside the lazy OwnersFAQ
 // component so the FAQPage JSON-LD is registered even when the section is
 // below the fold and not yet mounted.
@@ -105,6 +106,5 @@ export const OWNERS_FAQ_DATA = {
 
     },
   };
-import { GUEST_SCORE_EN, GUEST_SCORE_RO } from "@/lib/businessFacts";
 
 export type OwnersFaqLang = keyof typeof OWNERS_FAQ_DATA;

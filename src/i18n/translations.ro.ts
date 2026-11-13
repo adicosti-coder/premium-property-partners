@@ -1,5 +1,4 @@
-import { CONTACT_HOURS } from "../lib/businessFacts";
-import { GUEST_SCORE_RO } from "@/lib/businessFacts";
+import { CONTACT_HOURS, GUEST_SCORE_RO } from "../lib/businessFacts";
 export const ro = {
   // Header
   nav: {
