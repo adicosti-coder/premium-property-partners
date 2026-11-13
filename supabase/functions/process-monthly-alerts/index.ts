@@ -1,4 +1,4 @@
-// „Alerta lunară de piață”: abonații din calculator + indicii timisoara_market_indices → webhook Make.com.
+// „Alerta lunară de piață”: abonații din calculator + indicii timisoara_market_indices (vânzare, chirie clasică, regim hotelier) → webhook Make.com.
 // Acțiuni: preview (fără trimitere), send (o cerere POST per abonat, o dată pe lună), unsubscribe (oprește alerta).
 // Webhook: secretul MAKE_MONTHLY_ALERT_WEBHOOK. Acces: doar administratori sau apeluri interne.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -10,6 +10,8 @@ import {
   alertPeriodMonth,
   buildMonthlyAlertPayload,
   pickMarketIndex,
+  previousValuesFromPayload,
+  rowHasIndexValues,
   selectAlertSubscribers,
   type AlertLead,
   type AlertValues,
@@ -106,10 +108,10 @@ Deno.serve(async (req) => {
 
     // 3. Indicii de piață (cele mai recente valori per zonă / camere).
     const { data: idxRows, error: idxErr } = await db.from("timisoara_market_indices")
-      .select("zone_key, rooms, sale_eur_sqm, rent_eur_month, source, source_url, period_month");
+      .select("zone_key, rooms, sale_eur_sqm, rent_eur_month, nightly_rate_eur, hotel_occupancy, hotel_net_min_eur_month, hotel_net_max_eur_month, hotel_source, source, source_url, period_month");
     if (idxErr) throw idxErr;
     const indices = (idxRows ?? []) as MarketIndexRow[];
-    const indexedZones = new Set(indices.filter((r) => r.sale_eur_sqm != null || r.rent_eur_month != null).map((r) => r.zone_key));
+    const indexedZones = new Set(indices.filter(rowHasIndexValues).map((r) => r.zone_key));
 
     const { eligible, excluded } = selectAlertSubscribers(leads, { indexedZones, dncPhones, blockedEmails });
 
@@ -125,8 +127,8 @@ Deno.serve(async (req) => {
       for (const r of data ?? []) {
         if (r.period_month === period && (r.status === "sent" || r.status === "sending")) sentThisMonth.add(r.contact_key);
         if (r.status === "sent" && r.period_month < period && !lastValues.has(r.contact_key)) {
-          const v = (r.payload as any)?.Valori_Curente_Luna_Asta;
-          if (v) lastValues.set(r.contact_key, { Luna: v.Luna, Vanzare_EUR_mp: v.Vanzare_EUR_mp ?? null, Chirie_Clasica_EUR_luna: v.Chirie_Clasica_EUR_luna ?? null });
+          const v = previousValuesFromPayload((r.payload as any)?.Valori_Curente_Luna_Asta);
+          if (v) lastValues.set(r.contact_key, v);
         }
       }
     }

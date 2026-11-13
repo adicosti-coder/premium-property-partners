@@ -48,6 +48,11 @@ export interface MarketIndexRow {
   rooms: number;
   sale_eur_sqm: number | string | null;
   rent_eur_month: number | string | null;
+  nightly_rate_eur?: number | string | null;
+  hotel_occupancy?: number | string | null;
+  hotel_net_min_eur_month?: number | string | null;
+  hotel_net_max_eur_month?: number | string | null;
+  hotel_source?: string | null;
   source: string | null;
   source_url: string | null;
   period_month: string;
@@ -65,6 +70,11 @@ export interface AlertValues {
   Luna: string;
   Vanzare_EUR_mp: number | null;
   Chirie_Clasica_EUR_luna: number | null;
+  /** Regim hotelier (grila calculatorului); lipsesc în alertele trimise înainte de noiembrie 2026. */
+  Tarif_Hotelier_EUR_noapte?: number | null;
+  Ocupare_Hotelier_Procent?: number | null;
+  Venit_Net_Hotelier_EUR_luna_Min?: number | null;
+  Venit_Net_Hotelier_EUR_luna_Max?: number | null;
 }
 
 /** Prima zi a lunii curente în Europe/Bucharest, format YYYY-MM-01. */
@@ -164,7 +174,32 @@ export function indexValues(row: MarketIndexRow): AlertValues {
     Luna: String(row.period_month).slice(0, 7),
     Vanzare_EUR_mp: n(row.sale_eur_sqm) != null ? Math.round(n(row.sale_eur_sqm)!) : null,
     Chirie_Clasica_EUR_luna: n(row.rent_eur_month) != null ? Math.round(n(row.rent_eur_month)!) : null,
+    Tarif_Hotelier_EUR_noapte: round(row.nightly_rate_eur),
+    Ocupare_Hotelier_Procent: n(row.hotel_occupancy) != null ? Math.round(n(row.hotel_occupancy)! * 100) : null,
+    Venit_Net_Hotelier_EUR_luna_Min: round(row.hotel_net_min_eur_month),
+    Venit_Net_Hotelier_EUR_luna_Max: round(row.hotel_net_max_eur_month),
   };
+}
+
+const round = (v: unknown): number | null => (n(v) != null ? Math.round(n(v)!) : null);
+
+/** Valorile vechi din payload-ul trimis luna trecută (câmpurile hoteliere pot lipsi la alertele vechi). */
+export function previousValuesFromPayload(v: Record<string, unknown> | null | undefined): AlertValues | null {
+  if (!v || typeof v.Luna !== "string") return null;
+  return {
+    Luna: v.Luna,
+    Vanzare_EUR_mp: n(v.Vanzare_EUR_mp),
+    Chirie_Clasica_EUR_luna: n(v.Chirie_Clasica_EUR_luna),
+    Tarif_Hotelier_EUR_noapte: n(v.Tarif_Hotelier_EUR_noapte),
+    Ocupare_Hotelier_Procent: n(v.Ocupare_Hotelier_Procent),
+    Venit_Net_Hotelier_EUR_luna_Min: n(v.Venit_Net_Hotelier_EUR_luna_Min),
+    Venit_Net_Hotelier_EUR_luna_Max: n(v.Venit_Net_Hotelier_EUR_luna_Max),
+  };
+}
+
+/** Zona are indice dacă are măcar o valoare (vânzare, chirie sau regim hotelier). */
+export function rowHasIndexValues(r: MarketIndexRow): boolean {
+  return [r.sale_eur_sqm, r.rent_eur_month, r.nightly_rate_eur, r.hotel_net_min_eur_month].some((v) => n(v) != null);
 }
 
 export function pctChange(oldV: number | null | undefined, newV: number | null | undefined): number | null {
@@ -199,10 +234,14 @@ export function buildMonthlyAlertPayload(input: {
       ...cur,
       Sursa: current.source ?? null,
       Sursa_URL: current.source_url ?? null,
+      Sursa_Hotelier: current.hotel_source ?? null,
     },
     Variatie_Procente: {
       Vanzare_EUR_mp: pctChange(previous?.Vanzare_EUR_mp, cur.Vanzare_EUR_mp),
       Chirie_Clasica_EUR_luna: pctChange(previous?.Chirie_Clasica_EUR_luna, cur.Chirie_Clasica_EUR_luna),
+      Tarif_Hotelier_EUR_noapte: pctChange(previous?.Tarif_Hotelier_EUR_noapte, cur.Tarif_Hotelier_EUR_noapte),
+      Venit_Net_Hotelier_EUR_luna_Min: pctChange(previous?.Venit_Net_Hotelier_EUR_luna_Min, cur.Venit_Net_Hotelier_EUR_luna_Min),
+      Venit_Net_Hotelier_EUR_luna_Max: pctChange(previous?.Venit_Net_Hotelier_EUR_luna_Max, cur.Venit_Net_Hotelier_EUR_luna_Max),
     },
     Estimare_La_Abonare: {
       Data: (sd.market_alert_consent_at as string) ?? sub.lead.created_at,

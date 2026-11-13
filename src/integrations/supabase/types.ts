@@ -10011,7 +10011,12 @@ export type Database = {
       }
       timisoara_market_indices: {
         Row: {
+          hotel_net_max_eur_month: number | null
+          hotel_net_min_eur_month: number | null
+          hotel_occupancy: number | null
+          hotel_source: string | null
           id: string
+          nightly_rate_eur: number | null
           period_month: string
           rent_eur_month: number | null
           rooms: number
@@ -10022,7 +10027,12 @@ export type Database = {
           zone_key: string
         }
         Insert: {
+          hotel_net_max_eur_month?: number | null
+          hotel_net_min_eur_month?: number | null
+          hotel_occupancy?: number | null
+          hotel_source?: string | null
           id?: string
+          nightly_rate_eur?: number | null
           period_month?: string
           rent_eur_month?: number | null
           rooms?: number
@@ -10033,7 +10043,12 @@ export type Database = {
           zone_key: string
         }
         Update: {
+          hotel_net_max_eur_month?: number | null
+          hotel_net_min_eur_month?: number | null
+          hotel_occupancy?: number | null
+          hotel_source?: string | null
           id?: string
+          nightly_rate_eur?: number | null
           period_month?: string
           rent_eur_month?: number | null
           rooms?: number

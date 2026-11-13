@@ -90,7 +90,7 @@ export function MonthlyMarketAlertsButton() {
           <DialogHeader>
             <DialogTitle>Alerta lunară de piață</DialogTitle>
             <DialogDescription>
-              Trimite către Make.com valorile curente pe cartier (€/mp vânzare și chirie clasică) pentru proprietarii care au bifat alerta. Fiecare contact primește cel mult o alertă pe lună.
+              Trimite către Make.com valorile curente pe cartier (€/mp vânzare, chirie clasică și venit net în regim hotelier) pentru proprietarii care au bifat alerta. Fiecare contact primește cel mult o alertă pe lună.
             </DialogDescription>
           </DialogHeader>
           {loading || !summary ? (
