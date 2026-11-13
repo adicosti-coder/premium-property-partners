@@ -1,5 +1,6 @@
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Star, ShieldCheck } from "lucide-react";
+import { GUEST_REPUTATION } from "@/lib/businessFacts";
 
 const VerifiedReviewsBadges = () => {
   const { language } = useLanguage();
@@ -8,9 +9,9 @@ const VerifiedReviewsBadges = () => {
   const badges = [
     {
       platform: "Booking.com",
-      score: "9.7",
-      scoreSuffix: "/10",
-      detail: isRo ? "500+ recenzii verificate" : "500+ verified reviews",
+      score: String(GUEST_REPUTATION.ratingValue),
+      scoreSuffix: `/${GUEST_REPUTATION.bestRating}`,
+      detail: isRo ? `${GUEST_REPUTATION.reviewCount}+ recenzii verificate` : `${GUEST_REPUTATION.reviewCount}+ verified reviews`,
       accent: "from-[#003580] to-[#0057b8]",
     },
     {

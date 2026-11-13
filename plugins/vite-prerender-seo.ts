@@ -13,7 +13,7 @@ import { PUBLIC_ROUTE_SEO } from '../src/lib/publicRouteSeo';
 import { normalizeSeoPath, prerenderHeadLinks, prerenderLanguageScript, SITE_ORIGIN } from '../src/lib/seoLanguagePolicy';
 import { CONSOLIDATED_ARTICLE_REDIRECTS, isConsolidatedArticle } from '../src/data/consolidatedArticleRedirects';
 import { LEGACY_PROPERTY_REDIRECTS } from '../src/data/legacyPropertyPaths';
-import { buildAggregateRating } from '../src/lib/reviewStructuredData';
+import { buildAggregateRating, brandAggregateRating } from '../src/lib/reviewStructuredData';
 import { ORGANIZATION_SCHEMA, REAL_ESTATE_AGENT_SCHEMA, LODGING_BUSINESS_SCHEMA } from '../src/lib/orgIdentity';
 import { CONTACT_HOURS, REAL_ESTATE_SINCE } from '../src/lib/businessFacts';
 import {
@@ -901,7 +901,7 @@ export function buildStaticRoutes(): PrerenderRoute[] {
     seoBody: HOMEPAGE_AUTHORITY_BODY,
     // Entity nodes come verbatim from orgIdentity so the static HTML and the
     // runtime homepage describe the same legal organization, agency and hotel.
-    jsonLd: [ORGANIZATION_SCHEMA, REAL_ESTATE_AGENT_SCHEMA, LODGING_BUSINESS_SCHEMA],
+    jsonLd: [ORGANIZATION_SCHEMA, REAL_ESTATE_AGENT_SCHEMA, { ...LODGING_BUSINESS_SCHEMA, aggregateRating: brandAggregateRating() }],
   });
 
   // /cartiere

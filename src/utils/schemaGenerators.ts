@@ -9,6 +9,7 @@
  * so Google merges all per-page schemas into one Knowledge Graph entity.
  */
 import { CONTACT_OPENING_HOURS_SPEC } from "@/lib/businessFacts";
+import { brandAggregateRating } from "@/lib/reviewStructuredData";
 
 import {
   BRAND,
@@ -310,67 +311,6 @@ export const generateRealEstateAgentSchema = (rating?: AggregateRatingData) => {
 /** Re-export the canonical identity so consumers can import from one place. */
 export { ORGANIZATION_SCHEMA, REAL_ESTATE_AGENT_SCHEMA, ORG_ID, REAL_ESTATE_AGENT_ID } from "@/lib/orgIdentity";
 
-
-// Generate reviews schema from database reviews
-export interface DatabaseReview {
-  id: string;
-  guest_name: string;
-  rating: number;
-  content: string | null;
-  title: string | null;
-  created_at: string;
-  property_name?: string;
-}
-
-// Clamp a rating value to the valid 1-5 range for schema.org
-const clampRating = (value: number): number => Math.max(1, Math.min(5, value));
-
-export const generateReviewsFromDatabase = (
-  reviews: DatabaseReview[],
-  _itemName: string,
-  _itemUrl: string
-): Record<string, unknown> | null => {
-  // Filter out reviews with invalid ratings (0 or negative)
-  const validReviews = reviews.filter((r) => r.rating >= 1 && r.rating <= 5);
-  if (validReviews.length === 0) return null;
-
-  const avgRating = clampRating(
-    validReviews.reduce((sum, r) => sum + r.rating, 0) / validReviews.length
-  );
-
-  // Return only the review + aggregateRating data to be merged into LodgingBusiness
-  return {
-    "review": validReviews.slice(0, 10).map((review) => ({
-      "@type": "Review",
-      "author": {
-        "@type": "Person",
-        "name": review.guest_name,
-      },
-      "datePublished": review.created_at.split("T")[0],
-      "reviewBody": review.content || review.title || "Experiență excelentă!",
-      "name": review.title || undefined,
-      "reviewRating": {
-        "@type": "Rating",
-        "ratingValue": String(clampRating(review.rating)),
-        "bestRating": "5",
-        "worstRating": "1",
-      },
-      ...(review.property_name && {
-        "itemReviewed": {
-          "@type": "Apartment",
-          "name": review.property_name,
-        },
-      }),
-    })),
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": avgRating.toFixed(1),
-      "reviewCount": String(validReviews.length),
-      "bestRating": "5",
-      "worstRating": "1",
-    },
-  };
-};
 
 // RealEstateListing Schema — price, currency, availability, publication date
 export const generateRealEstateListingSchema = (property: PropertySchemaData) => {
@@ -699,22 +639,12 @@ export const generatePropertyPageSchemas = (
 // Kept as a function for back-compat with existing call sites.
 export const generateOrganizationSchema = () => ({ ...ORGANIZATION_SCHEMA });
 
-// Homepage combined schema with reviews from database
-export const generateHomepageSchemas = (reviews?: DatabaseReview[]) => {
+// Homepage combined schema. The ApArt Hotel node carries only the brand
+// score visible on the homepage (9.7/10 Booking, 1–10 scale); individual
+// reviews are not marked up here because they are not shown on this page.
+export const generateHomepageSchemas = () => {
   const lodgingBusiness = generateLocalBusinessSchema();
-
-  // Merge reviews directly into LodgingBusiness to avoid a separate Product schema
-  if (reviews && reviews.length > 0) {
-    const reviewData = generateReviewsFromDatabase(
-      reviews,
-      HOTEL_BRAND_NAME,
-      BASE_URL
-    );
-    if (reviewData) {
-      // Override aggregateRating with real data and add individual reviews
-      Object.assign(lodgingBusiness, reviewData);
-    }
-  }
+  lodgingBusiness["aggregateRating"] = brandAggregateRating();
 
   const schemas: Record<string, unknown>[] = [
     generateHomepageRealEstateAgentSchema(),
