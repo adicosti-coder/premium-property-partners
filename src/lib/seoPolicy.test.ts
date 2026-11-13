@@ -3,6 +3,7 @@ import { generateLocalBusinessSchema } from "../utils/schemaGenerators";
 import staticSitemap from "../../public/sitemap-static.xml?raw";
 import dynamicSitemap from "../../public/sitemap-dynamic.xml?raw";
 import { ORGANIZATION_SCHEMA, REAL_ESTATE_AGENT_SCHEMA } from "./orgIdentity";
+import { TRANSLATED_STATIC_PATHS } from "./seoLanguagePolicy";
 describe("approved SEO policy", () => {
   it("uses confirmed legal identity for the agency and separate lodging entity", () => {
     expect(REAL_ESTATE_AGENT_SCHEMA.name).toBe("RealTrust");
@@ -10,9 +11,15 @@ describe("approved SEO policy", () => {
     expect(ORGANIZATION_SCHEMA.taxID).toBe("RO14380627");
     expect(generateLocalBusinessSchema()["@type"]).toBe("LodgingBusiness");
   });
-  it("sitemap-static.xml lists no English URLs or alternates", () => {
-    expect(staticSitemap).not.toMatch(/hreflang="en(?:-[^"]+)?"/);
-    expect(staticSitemap).not.toContain("?lang=en");
+  it("sitemap-static.xml lists English URLs and alternates only for pages declared translated", () => {
+    const translated = new Set(TRANSLATED_STATIC_PATHS.map((path) => `https://realtrust.ro${path}`));
+    const blocks = staticSitemap.match(/<url>[\s\S]*?<\/url>/g) ?? [];
+    const englishLocs = blocks.map((b) => b.match(/<loc>([^<]+)<\/loc>/)?.[1] ?? "").filter((loc) => loc.endsWith("?lang=en"));
+    expect(englishLocs.sort()).toEqual([...translated].map((loc) => `${loc}?lang=en`).sort());
+    for (const block of blocks) {
+      const loc = (block.match(/<loc>([^<]+)<\/loc>/)?.[1] ?? "").replace(/\?lang=en$/, "");
+      expect(/hreflang="en/.test(block)).toBe(translated.has(loc));
+    }
   });
   for (const [filename, xml] of [["sitemap-static.xml", staticSitemap], ["sitemap-dynamic.xml", dynamicSitemap]]) {
     it(`${filename} uses plural complex addresses and plain ro hreflang`, () => {
