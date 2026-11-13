@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { hasEnglishTranslation, isTranslatedStaticPath, sitemapLanguageBlocks } from "../_shared/seoLanguage.ts";
+import { hasEnglishTranslation, isTranslatedStaticPath, sitemapAlternateLinks, sitemapLanguageBlocks } from "../_shared/seoLanguage.ts";
 import { CONSOLIDATED_ARTICLE_SLUG_LIST } from "../_shared/consolidatedArticles.ts";
 
 const corsHeaders = {
@@ -241,7 +241,7 @@ serve(async (req: Request) => {
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>${imageTag}
-${hreflang(`/proprietate/${property.slug}`)}
+${sitemapAlternateLinks(`/proprietate/${property.slug}`, false)}
   </url>
 `;
       }
