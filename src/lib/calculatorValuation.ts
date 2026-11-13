@@ -22,6 +22,7 @@ const GRID_NEIGHBORHOODS: Partial<Record<UnifiedZoneValue, string[]>> = {
   "city-of-mara": ["circumvalatiunii"],
   nordone: ["zona-aradului"],
   monarch: ["zona-aradului"],
+  vivalia: ["circumvalatiunii"],
 };
 
 export function cityAverageSqm(): number {
@@ -76,9 +77,28 @@ export function annualNetYieldPct(netMonthly: number, saleValue: number): number
 }
 
 export const YIELD_RANGE = { min: 6.5, max: 9.4 } as const;
-/** Fără afirmații peste intervalul aprobat: peste 9,4% afișăm intervalul și evaluarea individuală. */
-export function yieldDisplay(pct: number | null): { kind: "exact"; value: number } | { kind: "range" } {
-  return pct !== null && pct <= YIELD_RANGE.max ? { kind: "exact", value: pct } : { kind: "range" };
+export type YieldDisplay = { kind: "exact"; value: number } | { kind: "above"; value: number } | { kind: "none" };
+/** Randamentul calculat se arată mereu; peste 9,4% e însoțit de media istorică a portofoliului (decizie 13 nov 2026). */
+export function yieldDisplay(pct: number | null): YieldDisplay {
+  if (pct === null || !Number.isFinite(pct)) return { kind: "none" };
+  return pct > YIELD_RANGE.max ? { kind: "above", value: pct } : { kind: "exact", value: pct };
+}
+
+const pctText = (v: number, language: "ro" | "en") => (language === "ro" ? String(v).replace(".", ",") : String(v));
+
+/** „11,8% net” + nota istorică separată, ca UI-ul să le afișeze una după alta. */
+export function yieldTexts(d: YieldDisplay, language: "ro" | "en" = "ro"): { main: string; note: string | null } {
+  const ro = language === "ro";
+  if (d.kind === "none") return { main: ro ? "calcul individual" : "individual calculation", note: null };
+  const main = `${pctText(d.value, language)}% net`;
+  if (d.kind === "exact") return { main, note: null };
+  const range = `${pctText(YIELD_RANGE.min, language)}% – ${pctText(YIELD_RANGE.max, language)}%`;
+  return { main, note: ro ? `(media istorică a portofoliului: ${range})` : `(historical portfolio average: ${range})` };
+}
+
+export function yieldLabel(d: YieldDisplay, language: "ro" | "en" = "ro"): string {
+  const t = yieldTexts(d, language);
+  return t.note ? `${t.main} ${t.note}` : t.main;
 }
 
 export interface FiveYearProjection { years: number; saleToday: number; hotelTotal: number; classicTotal: number }

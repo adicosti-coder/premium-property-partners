@@ -25,7 +25,7 @@ import { trackCalculatorEvent } from "@/lib/calculatorAnalytics";
 import { useCalculatorDelivery } from "@/hooks/useCalculatorDelivery";
 import { Checkbox } from "@/components/ui/checkbox";
 import { NO_REFINEMENTS, activeRefinementLabels, type Refinements } from "@/lib/calculatorRefinements";
-import { INTENTS, annualNetYieldPct, buildCalculatorWhatsappMessage, buildOptimizationTips, estimateSale, fiveYearProjection, gridSaleBenchmark, leadEventForIntent, parseCalculatorPrefill, resolveSaleBenchmark, roomsForType, yieldDisplay, type Intent, type SaleBenchmark } from "@/lib/calculatorValuation";
+import { INTENTS, yieldLabel, annualNetYieldPct, buildCalculatorWhatsappMessage, buildOptimizationTips, estimateSale, fiveYearProjection, gridSaleBenchmark, leadEventForIntent, parseCalculatorPrefill, resolveSaleBenchmark, roomsForType, yieldDisplay, type Intent, type SaleBenchmark } from "@/lib/calculatorValuation";
 import { matchPortfolioProperties, type PortfolioProperty } from "@/lib/portfolioProof";
 import { trackLeadCalculatorEvent } from "@/lib/calculatorAnalytics";
 import { CalculatorRefinePanel } from "@/components/calculator/CalculatorRefinePanel";
@@ -355,7 +355,7 @@ const UnifiedCalculator = () => {
         netMid: s.netMid,
         nightlyRate: s.nightlyRate,
         occupancy: s.occupancy,
-        yieldLabel: yieldShown.kind === "exact" ? `${yieldShown.value.toLocaleString("ro-RO")}%` : (language === "en" ? "individual calculation (typical 6.5–9.4%)" : "calcul individual (interval tipic 6,5–9,4%)"),
+        yieldLabel: yieldLabel(yieldShown, language === "en" ? "en" : "ro"),
         projection,
         tips,
         photoScore: photoInsights?.score ?? null,
