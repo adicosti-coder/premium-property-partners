@@ -11,8 +11,10 @@
 - [x] Evenimente lead_calculator_vanzare / _hotelier / _chirie cu valoarea estimată
 - [x] /evaluare-gratuita folosește aceeași grilă de vânzare
 - [x] Teste noi, toate testele, build, verificare pe telefon
-- [ ] De confirmat: afișarea randamentului calculat peste 9,4% (acum se arată intervalul 6,5–9,4% și „calcul individual”)
-- [ ] Completarea tabelului de indici publici (VDI.ro, Imo360, Imobiliare.ro, OferteImobiliare.ro) — de ales sursa și frecvența
+- [x] Randament calculat afișat real, cu media istorică a portofoliului peste 9,4%
+- [x] Indici de referință inițiali pentru toate zonele (VDI.ro, Cubix, Imobiliare.ro, anunțuri XCity)
+- [x] XCity Towers și Vivalia ca zone separate
+- [ ] Actualizarea periodică automată a indicilor (de ales frecvența)
 - [ ] Trimiterea lunară a alertei de piață (acum doar se salvează acordul)
 
 ## Pagina /cazare în engleză — 13 noiembrie

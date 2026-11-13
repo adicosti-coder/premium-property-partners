@@ -19,8 +19,20 @@ export function getPropertyLeadIdentity(type: PropertyTypeValue) {
   return { property_type: type, property_type_label: property.label, tip_proprietate: property.label, numar_camere: rooms };
 }
 
-export type UnifiedZoneValue = Exclude<ZoneValue, "isho"> | "monarch" | "paltim" | "denya-forest" | "ateneo" | "future-residence" | "alenia";
+export type UnifiedZoneValue = Exclude<ZoneValue, "isho"> | "monarch" | "paltim" | "denya-forest" | "ateneo" | "future-residence" | "alenia" | "xcity" | "vivalia";
 export type LocationMode = "local" | "regional";
+
+/**
+ * Coeficienți proprii pentru ansamblurile fără profil comun (raportați la grila pe tip de proprietate):
+ * - XCity Towers: chirie 550 €/lună la 2 camere/54 mp (mediana anunțurilor colectate, 2026); tarif calibrat
+ *   după XCity 3 (80 €/noapte) față de NordOne (75 €/noapte) — separat complet de NordOne.
+ * - Vivalia (Grand, zona Take Ionescu/Tipografilor): chirie 550 €/lună la 2 camere (VDI.ro, Take Ionescu, oct. 2026);
+ *   tarif la nivelul ansamblurilor noi de lângă mall-uri (City of Mara, Fructus), fără unitate administrată încă.
+ */
+export const OWN_ZONE_RATES: Partial<Record<UnifiedZoneValue, { rent: number; adr: number; occupancy: number }>> = {
+  xcity: { rent: 1.22, adr: 1.15, occupancy: 0.72 },
+  vivalia: { rent: 1.2, adr: 1.05, occupancy: 0.72 },
+};
 
 /** Scoped eligibility list; Monarch uses the explicitly approved NordOne estimates. */
 export const UNIFIED_ZONES: Array<{
@@ -34,7 +46,9 @@ export const UNIFIED_ZONES: Array<{
 }> = [
   ["monarch", "Monarch", "nordone"],
   ["nordone", "NordOne", "nordone"],
+  ["xcity", "XCity Towers", "alta-zona"],
   ["city-of-mara", "City of Mara", "city-of-mara"],
+  ["vivalia", "Vivalia", "alta-zona"],
   ["paltim", "Paltim", "alta-zona"],
   ["ring-residence", "Ring Residence", "ring-residence"],
   ["denya-forest", "Denya Forest", "alta-zona"],
@@ -48,7 +62,8 @@ export const UNIFIED_ZONES: Array<{
   ["alta-zona", "Altă zonă Timișoara / Giroc / Dumbrăvița", "alta-zona"],
 ].map(([value, label, profile]) => {
   const reference = ZONES.find((candidate) => candidate.value === profile) ?? ZONES[ZONES.length - 1];
-  return { ...reference, value: value as UnifiedZoneValue, label, profile: reference.value, indicative: profile === "alta-zona" };
+  const own = OWN_ZONE_RATES[value as UnifiedZoneValue];
+  return { ...reference, ...own, value: value as UnifiedZoneValue, label, profile: reference.value, indicative: !own && profile === "alta-zona" };
 });
 
 export function getLocationLeadIdentity(mode: LocationMode, zone: UnifiedZoneValue, regionalLocation: string) {
@@ -94,9 +109,10 @@ export interface UnifiedResult {
 export function computeUnified(i: UnifiedInput): UnifiedResult {
   const refine = i.refinements;
   const profile = UNIFIED_ZONES.find((candidate) => candidate.value === i.zone)?.profile ?? "alta-zona";
+  const own = OWN_ZONE_RATES[i.zone];
   const parking = refine ? refine.parking : i.parking;
   // Cu bife, parcarea adaugă procentul aprobat pe tarif (mai jos), nu coeficientul vechi de 5%.
-  const base = { type: i.type, zone: profile, surface: i.surface, parking, finish: i.finish, ...(refine ? { parkingAdrFactor: 1 } : {}), ...(i.locationMode === "regional" ? { zoneProfile: { rent: 1, adr: 1 } } : {}) };
+  const base = { type: i.type, zone: profile, surface: i.surface, parking, finish: i.finish, ...(refine ? { parkingAdrFactor: 1 } : {}), ...(i.locationMode === "regional" ? { zoneProfile: { rent: 1, adr: 1 } } : own ? { zoneProfile: { rent: own.rent, adr: own.adr } } : {}) };
   const hi = estimateOwnerIncome({ ...base, commissionRate: MANAGEMENT_POLICY.commissionMax });
   const lo = estimateOwnerIncome({ ...base, commissionRate: MANAGEMENT_POLICY.commissionMin });
   const f = refinementFactors(refine);
@@ -148,6 +164,8 @@ export interface ListingAnalysisLike {
 const ZONE_PATTERNS: Array<[RegExp, UnifiedZoneValue]> = [
   [/isho/i, "alta-zona"],
   [/monarch/i, "monarch"],
+  [/x\s*-?\s*city/i, "xcity"],
+  [/vivalia/i, "vivalia"],
   [/mara/i, "city-of-mara"],
   [/nord\s*one/i, "nordone"],
   [/ring/i, "ring-residence"],

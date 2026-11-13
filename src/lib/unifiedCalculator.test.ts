@@ -4,7 +4,7 @@ import { PROPERTY_TYPES } from "./ownerIncomeEstimate";
 
 describe("unified complex eligibility", () => {
   it("includes every requested local choice", () => {
-    expect(UNIFIED_ZONES.map((zone) => zone.label)).toEqual(["Monarch", "NordOne", "City of Mara", "Paltim", "Ring Residence", "Denya Forest", "Fructus Plaza", "Ateneo", "Future Residence", "Alenia", "Central / Iosefin / Elisabetin", "Calea Torontalului", "Complex Studențesc", "Altă zonă Timișoara / Giroc / Dumbrăvița"]);
+    expect(UNIFIED_ZONES.map((zone) => zone.label)).toEqual(["Monarch", "NordOne", "XCity Towers", "City of Mara", "Vivalia", "Paltim", "Ring Residence", "Denya Forest", "Fructus Plaza", "Ateneo", "Future Residence", "Alenia", "Central / Iosefin / Elisabetin", "Calea Torontalului", "Complex Studențesc", "Altă zonă Timișoara / Giroc / Dumbrăvița"]);
   });
   it("replaces restricted ISHO with Monarch", () => {
     const values = UNIFIED_ZONES.map((zone) => zone.value);

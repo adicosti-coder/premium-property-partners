@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { REFINEMENTS, NO_REFINEMENTS, refinementFactors } from "./calculatorRefinements";
-import { annualNetYieldPct, buildCalculatorWhatsappMessage, buildOptimizationTips, estimateSale, fiveYearProjection, gridSaleBenchmark, leadEventForIntent, parseCalculatorPrefill, resolveSaleBenchmark, yieldDisplay } from "./calculatorValuation";
-import { computeUnified } from "./unifiedCalculator";
+import { annualNetYieldPct, buildCalculatorWhatsappMessage, buildOptimizationTips, estimateSale, fiveYearProjection, gridSaleBenchmark, leadEventForIntent, parseCalculatorPrefill, resolveSaleBenchmark, yieldDisplay, yieldLabel, yieldTexts } from "./calculatorValuation";
+import { computeUnified, matchUnifiedZone, UNIFIED_ZONES } from "./unifiedCalculator";
 import { matchPortfolioProperties } from "./portfolioProof";
 import { buildLeadCalculatorPayload } from "./calculatorAnalytics";
 
@@ -63,9 +63,15 @@ describe("yield and 5-year projection", () => {
     expect(annualNetYieldPct(700, 110000)).toBe(7.6);
     expect(annualNetYieldPct(700, 0)).toBeNull();
   });
-  it("never displays a yield above 9.4%", () => {
+  it("shows the real yield and adds the historical portfolio average only above 9.4%", () => {
     expect(yieldDisplay(7.6)).toEqual({ kind: "exact", value: 7.6 });
-    expect(yieldDisplay(11.8)).toEqual({ kind: "range" });
+    expect(yieldDisplay(9.4)).toEqual({ kind: "exact", value: 9.4 });
+    expect(yieldDisplay(11.8)).toEqual({ kind: "above", value: 11.8 });
+    expect(yieldDisplay(null)).toEqual({ kind: "none" });
+    expect(yieldTexts(yieldDisplay(7.6))).toEqual({ main: "7,6% net", note: null });
+    expect(yieldTexts(yieldDisplay(11.8))).toEqual({ main: "11,8% net", note: "(media istorică a portofoliului: 6,5% – 9,4%)" });
+    expect(yieldLabel(yieldDisplay(11.8))).toBe("11,8% net (media istorică a portofoliului: 6,5% – 9,4%)");
+    expect(yieldLabel(yieldDisplay(11.8), "en")).toBe("11.8% net (historical portfolio average: 6.5% – 9.4%)");
   });
   it("compares sale today with 5 years of hotel and classic rent income, without growth", () => {
     expect(fiveYearProjection({ saleValue: 110000, hotelNetMonthly: 1000, classicRentMonthly: 450 })).toEqual({ years: 5, saleToday: 110000, hotelTotal: 60000, classicTotal: 27000 });
@@ -119,5 +125,32 @@ describe("tips, social proof and WhatsApp message", () => {
   it("pre-fills WhatsApp with zone, area, intent, sale and hotel net figures", () => {
     const msg = buildCalculatorWhatsappMessage({ locationSummary: "[Administrare Locală] Locație: City of Mara | Tip: 2 camere", surface: 55, intentLabel: "Vreau să vând", sale: { eurSqm: 2000, mid: 110000, min: 101000, max: 119000, tier: "listings" }, classicRent: 560, netMin: 1000, netMax: 1070, nightlyRate: 72, occupancy: 0.7, refinements: [] });
     for (const part of ["City of Mara", "2 camere", "55 mp", "Vreau să vând", "101.000 € – 119.000 €", "1.000 € – 1.070 €"]) expect(msg).toContain(part);
+  });
+});
+
+describe("XCity Towers and Vivalia zones", () => {
+  const input = (zone: "xcity" | "vivalia" | "nordone") => ({ type: "2-camere", zone, surface: 55, parking: false, finish: "standard" } as const);
+  it("lists both complexes as separate choices", () => {
+    expect(UNIFIED_ZONES.map((z) => z.label)).toEqual(expect.arrayContaining(["XCity Towers", "Vivalia"]));
+  });
+  it("recognises both names in links, photo analyses and prefill", () => {
+    expect(matchUnifiedZone("Apartament 2 camere XCity Towers, Torontalului")).toBe("xcity");
+    expect(matchUnifiedZone("X City Tower 3")).toBe("xcity");
+    expect(matchUnifiedZone("Vivalia Grand, Zimbrului")).toBe("vivalia");
+    expect(parseCalculatorPrefill("?zona=xcity").zone).toBe("xcity");
+    expect(parseCalculatorPrefill("?zona=vivalia").zone).toBe("vivalia");
+  });
+  it("uses their own rent and nightly rates, separate from NordOne", () => {
+    expect(computeUnified(input("xcity"))).toMatchObject({ classicRent: 561, nightlyRate: 76 });
+    expect(computeUnified(input("vivalia"))).toMatchObject({ classicRent: 552, nightlyRate: 69 });
+    expect(computeUnified(input("nordone"))).toMatchObject({ classicRent: 649, nightlyRate: 73 });
+  });
+  it("shows XCity managed apartments only for XCity, not for NordOne", () => {
+    const list = [
+      { name: "XCity 3 ApArt Hotel by RealTrust", slug: "xcity-3", location: "Strada Marin Constantin 5, Timișoara", booking_rating: 9.3, booking_review_count: 10 },
+      { name: "NordOne ApArt Hotel - Premium 60 mp", slug: "nordone", location: "Str. Marin Constantin", booking_rating: 10, booking_review_count: 4 },
+    ];
+    expect(matchPortfolioProperties("xcity", list).map((p) => p.slug)).toEqual(["xcity-3"]);
+    expect(matchPortfolioProperties("nordone", list).map((p) => p.slug)).toEqual(["nordone"]);
   });
 });

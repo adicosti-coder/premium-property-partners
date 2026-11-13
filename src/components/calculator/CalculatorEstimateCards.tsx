@@ -1,6 +1,6 @@
 import { BedDouble, Home, KeyRound } from "lucide-react";
 import type { SaleEstimate, SaleTier } from "@/lib/calculatorValuation";
-import { YIELD_RANGE } from "@/lib/calculatorValuation";
+import { yieldTexts, type YieldDisplay } from "@/lib/calculatorValuation";
 
 interface Props {
   language: "ro" | "en";
@@ -11,7 +11,7 @@ interface Props {
   netMin: number;
   netMax: number;
   netMid: number;
-  yieldDisplay: { kind: "exact"; value: number } | { kind: "range" };
+  yieldDisplay: YieldDisplay;
 }
 
 const fmt = (n: number) => n.toLocaleString("ro-RO");
@@ -25,9 +25,7 @@ export function saleTierLabel(tier: SaleTier, language: "ro" | "en", sample?: nu
 
 export function CalculatorEstimateCards({ language, sale, saleSample, classicRent, rentNote, netMin, netMax, netMid, yieldDisplay }: Props) {
   const ro = language === "ro";
-  const yieldText = yieldDisplay.kind === "exact"
-    ? `${yieldDisplay.value.toLocaleString("ro-RO")}% ${ro ? "net/an" : "net/yr"}`
-    : ro ? `calcul individual · interval tipic ${String(YIELD_RANGE.min).replace(".", ",")}–${String(YIELD_RANGE.max).replace(".", ",")}%` : `individual calculation · typical ${YIELD_RANGE.min}–${YIELD_RANGE.max}%`;
+  const yieldText = yieldTexts(yieldDisplay, language);
   return (
     <div className="grid gap-2 md:gap-3">
       <div className="rounded-2xl border border-border bg-background p-3 md:p-4">
@@ -49,7 +47,7 @@ export function CalculatorEstimateCards({ language, sale, saleSample, classicRen
       <div className="rounded-2xl border border-primary/40 bg-primary/5 p-3 md:p-4">
         <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary"><BedDouble className="h-4 w-4" aria-hidden="true" />{ro ? "Regim hotelier · venit net" : "Short-term rental · net income"}</p>
         <p className="mt-1 font-serif text-3xl font-semibold text-foreground md:text-4xl">{fmt(netMin)}–{fmt(netMax)} €<span className="text-sm font-normal text-muted-foreground">/{ro ? "lună" : "mo"}</span></p>
-        <p className="text-xs text-muted-foreground">≈ {fmt(netMid * 12)} € / {ro ? "an" : "year"} · {ro ? "randament" : "yield"}: <span className="font-medium text-foreground">{yieldText}</span></p>
+        <p className="text-xs text-muted-foreground">≈ {fmt(netMid * 12)} € / {ro ? "an" : "year"} · {ro ? "randament anual" : "annual yield"}: <span className="font-medium text-foreground" data-testid="calculator-yield">{yieldText.main}</span>{yieldText.note ? <> <span data-testid="calculator-yield-note">{yieldText.note}</span></> : null}</p>
       </div>
     </div>
   );
