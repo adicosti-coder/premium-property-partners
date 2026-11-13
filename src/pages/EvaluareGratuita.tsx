@@ -16,6 +16,7 @@ import { neighborhoods } from "@/data/neighborhoods";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { trackConversion, formatPhoneInput } from "@/lib/conversionTracking";
 import { trackSavedOwnerLead } from "@/lib/ownerLeadConversion";
+import { gridSaleBenchmark } from "@/lib/calculatorValuation";
 const UnifiedCalculator = lazy(() => import("@/components/UnifiedCalculator"));
 
 const EVAL_FAQS = [
@@ -155,11 +156,9 @@ const EvaluareGratuita = () => {
   const estimate = (() => {
     const sqm = parseInt(surface, 10);
     if (!sqm || sqm < 12 || sqm > 1000) return null;
-    const known = neighborhoods.map((n) => n.avgPricePerSqm).filter((v) => v > 0);
-    const cityAvg = known.length ? Math.round(known.reduce((a, b) => a + b, 0) / known.length) : 1900;
-    const zoneAvg = neighborhoods.find((n) => n.slug === form.zone)?.avgPricePerSqm;
+    // Aceeași grilă de cartiere ca nivelul 3 al calculatorului unificat.
     const typeFactor = form.propertyType === "casa" ? 1.1 : form.propertyType === "teren" ? 0.25 : form.propertyType === "comercial" ? 1.05 : 1;
-    const pricePerSqm = Math.round((zoneAvg && zoneAvg > 0 ? zoneAvg : cityAvg) * typeFactor);
+    const pricePerSqm = Math.round(gridSaleBenchmark(form.zone).eurSqm * typeFactor);
     const mid = Math.round((pricePerSqm * sqm) / 500) * 500;
     return { pricePerSqm, mid, min: Math.round((mid * 0.92) / 500) * 500, max: Math.round((mid * 1.08) / 500) * 500 };
   })();

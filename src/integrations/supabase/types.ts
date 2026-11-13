@@ -9964,6 +9964,42 @@ export type Database = {
         }
         Relationships: []
       }
+      timisoara_market_indices: {
+        Row: {
+          id: string
+          period_month: string
+          rent_eur_month: number | null
+          rooms: number
+          sale_eur_sqm: number | null
+          source: string
+          source_url: string | null
+          updated_at: string
+          zone_key: string
+        }
+        Insert: {
+          id?: string
+          period_month?: string
+          rent_eur_month?: number | null
+          rooms?: number
+          sale_eur_sqm?: number | null
+          source: string
+          source_url?: string | null
+          updated_at?: string
+          zone_key: string
+        }
+        Update: {
+          id?: string
+          period_month?: string
+          rent_eur_month?: number | null
+          rooms?: number
+          sale_eur_sqm?: number | null
+          source?: string
+          source_url?: string | null
+          updated_at?: string
+          zone_key?: string
+        }
+        Relationships: []
+      }
       timisoara_zones: {
         Row: {
           aliases: string[]
@@ -12993,6 +13029,10 @@ export type Database = {
         }[]
       }
       get_calculator_email_webhook_secret: { Args: never; Returns: string }
+      get_calculator_sale_benchmark: {
+        Args: { p_rooms?: number; p_zone: string }
+        Returns: Json
+      }
       get_collection_listings_report: {
         Args: { p_collection?: string; p_days?: number }
         Returns: {

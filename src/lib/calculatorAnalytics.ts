@@ -1,6 +1,7 @@
 import { hasAnalyticsConsent } from "./conversionTracking";
 import { PROPERTY_TYPES } from "./ownerIncomeEstimate";
 import { isValidPropertySurface, UNIFIED_ZONES, type LocationMode } from "./unifiedCalculator";
+import { INTENTS, type Intent, type LeadCalculatorEvent } from "./calculatorValuation";
 
 export const REGIONAL_DESTINATIONS = [
   "București", "Cluj-Napoca", "Brașov", "Sibiu", "Iași", "Constanța", "Oradea", "Arad", "Craiova",
@@ -27,7 +28,7 @@ export function getRegionalSuggestions(query: string): string[] {
   return matches;
 }
 
-type CalculatorEvent = "calculator_location_mode_select" | "calculator_result_view" | "calculator_lead_submit";
+type CalculatorEvent = "calculator_location_mode_select" | "calculator_result_view" | "calculator_lead_submit" | "calculator_whatsapp_open";
 type CalculatorContext = { location_mode: LocationMode; property_type?: string; location_name?: string; surface_sqm?: number };
 
 /** Never forward free text: even a location field may contain contact details. */
@@ -49,5 +50,19 @@ export function trackCalculatorEvent(event: CalculatorEvent, context: Calculator
   try {
     // gtag already queues into dataLayer; don't push a duplicate GTM event.
     window.gtag?.("event", event, payload);
+  } catch { /* Analytics must never interrupt the calculation. */ }
+}
+
+/** Lead din calculator, după salvare: eveniment distinct pe intenție, cu valoarea estimată (fără date personale). */
+export function buildLeadCalculatorPayload(context: CalculatorContext & { intent: Intent; value: number }) {
+  const payload: Record<string, string | number> = { ...buildCalculatorAnalyticsPayload(context), currency: "EUR", value: Math.max(0, Math.round(Number(context.value) || 0)) };
+  if (INTENTS.some((i) => i.value === context.intent)) payload.intent = context.intent;
+  return payload;
+}
+
+export function trackLeadCalculatorEvent(event: LeadCalculatorEvent, context: CalculatorContext & { intent: Intent; value: number }): void {
+  if (typeof window === "undefined" || !hasAnalyticsConsent()) return;
+  try {
+    window.gtag?.("event", event, buildLeadCalculatorPayload(context));
   } catch { /* Analytics must never interrupt the calculation. */ }
 }
