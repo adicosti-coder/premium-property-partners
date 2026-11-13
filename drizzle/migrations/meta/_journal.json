@@ -1002,6 +1002,13 @@
       "when": 1794600414710,
       "tag": "0142_calculator_benchmark_xcity_vivalia",
       "breakpoints": true
+    },
+    {
+      "idx": 143,
+      "version": "7",
+      "when": 1794602231414,
+      "tag": "0143_market_alert_deliveries",
+      "breakpoints": true
     }
   ]
 }
