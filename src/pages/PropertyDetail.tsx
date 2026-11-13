@@ -18,6 +18,7 @@ import Footer from "@/components/Footer";
 import StickyPropertyCTA from "@/components/StickyPropertyCTA";
 import SEOHead from "@/components/SEOHead";
 import RouteLoading from "@/components/RouteLoading";
+import JsonLdScript from "@/components/seo/JsonLdScript";
 import { useCazareOverride } from "@/hooks/useCazareOverrides";
 import { trackListingClick } from "@/lib/listingClickTracking";
 import NotFound from "@/pages/NotFound";
@@ -805,11 +806,10 @@ const PropertyDetail = () => {
         type="product"
         productPrice={effectivePrice || undefined}
         productCurrency="EUR"
-        jsonLd={propertySchemas}
       />
-      {/* SEOHead stays outside every suspending subtree: a lazy section that
-          suspends must never discard or hide the Helmet instance, which left
-          a stale duplicate LodgingBusiness/AggregateRating in the head. */}
+      {/* Property JSON-LD (incl. Review/AggregateRating) is effect-managed so a
+          discarded render can never leave a stale duplicate in the head. */}
+      <JsonLdScript id="property-detail" data={propertySchemas} />
       <Suspense fallback={<RouteLoading />}>
       <Header />
       
