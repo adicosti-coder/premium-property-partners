@@ -1009,6 +1009,13 @@
       "when": 1794602231414,
       "tag": "0143_market_alert_deliveries",
       "breakpoints": true
+    },
+    {
+      "idx": 144,
+      "version": "7",
+      "when": 1794602985033,
+      "tag": "0144_market_indices_hotel_values",
+      "breakpoints": true
     }
   ]
 }
