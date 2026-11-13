@@ -4327,6 +4327,51 @@ export type Database = {
         }
         Relationships: []
       }
+      market_alert_deliveries: {
+        Row: {
+          contact_key: string
+          created_at: string
+          error: string | null
+          http_status: number | null
+          id: string
+          lead_id: string
+          payload: Json
+          period_month: string
+          sent_at: string | null
+          status: string
+          triggered_by: string | null
+          zone_key: string
+        }
+        Insert: {
+          contact_key: string
+          created_at?: string
+          error?: string | null
+          http_status?: number | null
+          id?: string
+          lead_id: string
+          payload: Json
+          period_month: string
+          sent_at?: string | null
+          status?: string
+          triggered_by?: string | null
+          zone_key: string
+        }
+        Update: {
+          contact_key?: string
+          created_at?: string
+          error?: string | null
+          http_status?: number | null
+          id?: string
+          lead_id?: string
+          payload?: Json
+          period_month?: string
+          sent_at?: string | null
+          status?: string
+          triggered_by?: string | null
+          zone_key?: string
+        }
+        Relationships: []
+      }
       marketing_snapshot: {
         Row: {
           ad_spend_eur: number

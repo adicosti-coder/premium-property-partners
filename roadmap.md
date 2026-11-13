@@ -15,7 +15,9 @@
 - [x] Indici de referință inițiali pentru toate zonele (VDI.ro, Cubix, Imobiliare.ro, anunțuri XCity)
 - [x] XCity Towers și Vivalia ca zone separate
 - [ ] Actualizarea periodică automată a indicilor (de ales frecvența)
-- [ ] Trimiterea lunară a alertei de piață (acum doar se salvează acordul)
+- [x] Trimiterea lunară a alertei de piață către Make.com (buton manual în Cereri randament)
+- [ ] Adresa webhook-ului Make.com pentru alertă (MAKE_MONTHLY_ALERT_WEBHOOK) — de la Adrian
+- [ ] De decis: tarif pe noapte / venit hotelier curent în tabelul de indici (acum doar vânzare €/mp și chirie clasică)
 
 ## Pagina /cazare în engleză — 13 noiembrie
 - [x] Canonical propriu /cazare și /cazare?lang=en, hreflang ro/en/x-default, ambele adrese în sitemap; teste și build
