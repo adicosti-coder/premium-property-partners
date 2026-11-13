@@ -34,6 +34,9 @@ const SOURCE_LABEL: Record<string, string> = {
   "rental-calculator": "Calculator chirie",
 };
 
+export const sourceLabel = (source: string | null) =>
+  SOURCE_LABEL[source ?? ""] ?? (source?.startsWith("calculator_unificat") ? "Calculator" : source ?? "—");
+
 const fmtDate = (d: string) =>
   new Intl.DateTimeFormat("ro-RO", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Bucharest" }).format(new Date(d));
 
@@ -220,7 +223,7 @@ const CereriRandament = () => {
                         <td className="py-2 pr-3">{zone}</td>
                         <td className="py-2 pr-3">{type}</td>
                         <td className="py-2 pr-3 whitespace-nowrap font-medium">{income(sd)}</td>
-                        <td className="py-2"><Badge variant="secondary">{SOURCE_LABEL[r.source ?? ""] ?? r.source}</Badge></td>
+                        <td className="py-2"><Badge variant="secondary">{sourceLabel(r.source)}</Badge>{typeof sd?.intent_label === "string" && <p className="mt-1 text-xs text-muted-foreground">{sd.intent_label as string}</p>}{typeof sd?.sale_value_mid === "number" && <p className="text-xs text-muted-foreground">Vânzare ~{Math.round(sd.sale_value_mid as number).toLocaleString("ro-RO")} €</p>}{sd?.market_alert_opt_in === true && <Badge variant="outline" className="mt-1">Alertă lunară</Badge>}</td>
                         <td className="py-2 pr-3 min-w-36">
                           <Badge variant={r.email_status === "failed" ? "destructive" : "outline"}>{labels[r.email_status] ?? r.email_status}</Badge>
                           {r.email_error && <p className="mt-1 max-w-56 break-words text-xs text-destructive">{r.email_error}</p>}

@@ -4,7 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { fetchOwnerContactReady, fetchOwnerReview, fetchOwnerReminders, OWNER_FLOW_QUERY_KEY } from "@/lib/ownerFlowData";
-import { Loader2, Search, CheckCircle2, MessageSquare, TrendingDown } from "lucide-react";
+import { Loader2, Search, CheckCircle2, MessageSquare, TrendingDown, Calculator } from "lucide-react";
+import { CALCULATOR_LEADS_QUERY_KEY, fetchCalculatorLeads } from "@/components/admin/CalculatorLeadsPanel";
 import AdminErrorBoundary from "@/components/admin/AdminErrorBoundary";
 
 const OwnerListingSearch = lazy(() => import("@/components/admin/OwnerListingSearch"));
@@ -12,8 +13,9 @@ const ProspectTriageQueue = lazy(() => import("@/components/admin/ProspectTriage
 const OwnerContactPanel = lazy(() => import("@/components/admin/OwnerContactPanel"));
 const OwnerFollowUpPanel = lazy(() => import("@/components/admin/OwnerFollowUpPanel"));
 const AndreiBulkCallTable = lazy(() => import("@/components/admin/AndreiBulkCallTable"));
+const CalculatorLeadsPanel = lazy(() => import("@/components/admin/CalculatorLeadsPanel"));
 
-type StepKey = "search" | "verify" | "contact" | "follow";
+type StepKey = "search" | "verify" | "contact" | "follow" | "calculator";
 
 interface Step {
   key: StepKey;
@@ -29,6 +31,7 @@ const STEPS: Step[] = [
   { key: "verify", label: "2. Verifică", short: "Verifică", hint: "Proprietari de verificat", icon: CheckCircle2, Component: ProspectTriageQueue as ComponentType<unknown> },
   { key: "contact", label: "3. Contactează", short: "Contact", hint: "Proprietari confirmați, fără contact anterior", icon: MessageSquare, Component: OwnerContactPanel as ComponentType<unknown> },
   { key: "follow", label: "4. Urmărește", short: "Urmărește", hint: "Mementouri scadente și scăderi de preț", icon: TrendingDown, Component: OwnerFollowUpPanel as ComponentType<unknown> },
+  { key: "calculator", label: "Calculator", short: "Calculator", hint: "Proprietari veniți din calculatorul de randament (30 de zile) — fără mesaje automate", icon: Calculator, Component: CalculatorLeadsPanel as ComponentType<unknown> },
 ];
 
 /**
@@ -36,7 +39,7 @@ const STEPS: Step[] = [
  * căutare → verificare → contactare → urmărire.
  * Fiecare pas randează panoul existent (lazy), deci nu există logică duplicată.
  */
-const STEP_KEYS: StepKey[] = ["search", "verify", "contact", "follow"];
+const STEP_KEYS: StepKey[] = ["search", "verify", "contact", "follow", "calculator"];
 
 export default function OwnerFlowWorkspace() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -56,9 +59,10 @@ export default function OwnerFlowWorkspace() {
       return count ?? 0;
     },
   });
-  const counts = { search: fresh.data, verify: review.data?.length, contact: contact.data?.length, follow: follow.data?.due.length };
-  const errors = { search: fresh.error, verify: review.error, contact: contact.error, follow: follow.error };
-  const captions = { search: "noi în ultimele 24h", verify: "de verificat", contact: "gata de contactat", follow: "mementouri scadente" };
+  const calculator = useQuery({ queryKey: CALCULATOR_LEADS_QUERY_KEY, queryFn: fetchCalculatorLeads, staleTime: 30_000 });
+  const counts = { search: fresh.data, verify: review.data?.length, contact: contact.data?.length, follow: follow.data?.due.length, calculator: calculator.data?.length };
+  const errors = { search: fresh.error, verify: review.error, contact: contact.error, follow: follow.error, calculator: calculator.error };
+  const captions = { search: "noi în ultimele 24h", verify: "de verificat", contact: "gata de contactat", follow: "mementouri scadente", calculator: "cereri în 30 de zile" };
 
   const activeStep = STEPS.find((s) => s.key === active) ?? STEPS[0];
 
@@ -69,7 +73,7 @@ export default function OwnerFlowWorkspace() {
           <h1 className="text-xl font-semibold text-foreground">Flux proprietari</h1>
           <p className="mt-1 text-sm text-muted-foreground">{activeStep.hint}</p>
         </div>
-        <nav aria-label="Pașii fluxului proprietari" className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <nav aria-label="Pașii fluxului proprietari" className="grid grid-cols-2 sm:grid-cols-5 gap-2">
           {STEPS.map((step) => {
             const isActive = step.key === active;
             const count = counts[step.key];
