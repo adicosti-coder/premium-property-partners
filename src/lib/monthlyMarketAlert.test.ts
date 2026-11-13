@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import { UNIFIED_ZONES } from "./unifiedCalculator";
+import { hotelIndexSeedSql, hotelIndexValues } from "./marketIndexHotelReference";
 import {
   MARKET_ALERT_ZONES,
   alertPeriodMonth,
   buildMonthlyAlertPayload,
   pickMarketIndex,
+  previousValuesFromPayload,
   resolveAlertZoneKey,
+  rowHasIndexValues,
   selectAlertSubscribers,
   type AlertLead,
   type MarketIndexRow,
@@ -24,7 +28,8 @@ const lead = (over: Partial<AlertLead> & { sd?: Record<string, unknown> } = {}):
 });
 const opts = { indexedZones: new Set(["xcity", "central"]), dncPhones: new Set<string>(), blockedEmails: new Set<string>() };
 const idx = (over: Partial<MarketIndexRow> = {}): MarketIndexRow => ({
-  zone_key: "xcity", rooms: 0, sale_eur_sqm: "2380", rent_eur_month: 550, source: "Anunțuri XCity", source_url: null, period_month: "2026-11-01", ...over,
+  zone_key: "xcity", rooms: 0, sale_eur_sqm: "2380", rent_eur_month: 550,
+  nightly_rate_eur: "76", hotel_occupancy: "0.7", hotel_net_min_eur_month: 1002, hotel_net_max_eur_month: 1065, hotel_source: "Grila calculatorului", source: "Anunțuri XCity", source_url: null, period_month: "2026-11-01", ...over,
 });
 
 describe("alerta lunară de piață", () => {
@@ -89,7 +94,7 @@ describe("alerta lunară de piață", () => {
     expect(p.Cartier).toEqual({ Nume: "XCity Towers", Cheie: "xcity" });
     expect(p.Valori_Vechi?.Vanzare_EUR_mp).toBe(2300);
     expect(p.Valori_Curente_Luna_Asta).toMatchObject({ Luna: "2026-11", Vanzare_EUR_mp: 2380, Chirie_Clasica_EUR_luna: 550 });
-    expect(p.Variatie_Procente).toEqual({ Vanzare_EUR_mp: 3.5, Chirie_Clasica_EUR_luna: 0 });
+    expect(p.Variatie_Procente).toMatchObject({ Vanzare_EUR_mp: 3.5, Chirie_Clasica_EUR_luna: 0 });
     expect(p.Prima_Alerta).toBe(false);
   });
 
@@ -103,5 +108,47 @@ describe("alerta lunară de piață", () => {
 
   it("luna alertei se calculează după ora României", () => {
     expect(alertPeriodMonth(new Date("2026-11-30T22:30:00Z"))).toBe("2026-12-01");
+  });
+
+  it("valorile curente includ tariful pe noapte, ocuparea și venitul net hotelier 15–20%", () => {
+    const sub = selectAlertSubscribers([lead()], opts).eligible[0];
+    const p = buildMonthlyAlertPayload({
+      sub, current: idx(), periodMonth: "2026-12-01",
+      previous: { Luna: "2026-11", Vanzare_EUR_mp: 2380, Chirie_Clasica_EUR_luna: 550, Tarif_Hotelier_EUR_noapte: 80, Venit_Net_Hotelier_EUR_luna_Min: 1000, Venit_Net_Hotelier_EUR_luna_Max: 1065 },
+    });
+    expect(p.Valori_Curente_Luna_Asta).toMatchObject({
+      Tarif_Hotelier_EUR_noapte: 76, Ocupare_Hotelier_Procent: 70,
+      Venit_Net_Hotelier_EUR_luna_Min: 1002, Venit_Net_Hotelier_EUR_luna_Max: 1065,
+    });
+    expect(p.Variatie_Procente.Tarif_Hotelier_EUR_noapte).toBe(-5);
+    expect(p.Variatie_Procente.Venit_Net_Hotelier_EUR_luna_Min).toBe(0.2);
+  });
+
+  it("alertele vechi fără valori hoteliere nu produc variații inventate", () => {
+    const prev = previousValuesFromPayload({ Luna: "2026-10", Vanzare_EUR_mp: 2300, Chirie_Clasica_EUR_luna: 550 });
+    expect(prev?.Tarif_Hotelier_EUR_noapte).toBeNull();
+    const sub = selectAlertSubscribers([lead()], opts).eligible[0];
+    const p = buildMonthlyAlertPayload({ sub, current: idx(), previous: prev, periodMonth: "2026-12-01" });
+    expect(p.Variatie_Procente.Tarif_Hotelier_EUR_noapte).toBeNull();
+    expect(p.Variatie_Procente.Venit_Net_Hotelier_EUR_luna_Max).toBeNull();
+  });
+
+  it("o zonă doar cu valori hoteliere contează ca zonă cu indice", () => {
+    expect(rowHasIndexValues(idx({ sale_eur_sqm: null, rent_eur_month: null }))).toBe(true);
+    expect(rowHasIndexValues(idx({ sale_eur_sqm: null, rent_eur_month: null, nightly_rate_eur: null, hotel_net_min_eur_month: null }))).toBe(false);
+  });
+
+  it("valorile hoteliere din tabel vin din grila calculatorului: ocupare 70%, comision 15–20% din net", () => {
+    const x = hotelIndexValues("xcity");
+    expect(x).toEqual({ nightly_rate_eur: 76, hotel_occupancy: 0.7, hotel_net_min_eur_month: 1002, hotel_net_max_eur_month: 1065 });
+    for (const z of UNIFIED_ZONES) {
+      const v = hotelIndexValues(z.value);
+      expect(v.hotel_net_min_eur_month).toBeLessThan(v.hotel_net_max_eur_month);
+    }
+  });
+
+  it("scriptul de populare conține exact valorile hoteliere ale grilei pentru toate zonele", () => {
+    const seed = readFileSync("supabase/seeds/timisoara_market_indices.sql", "utf8");
+    expect(seed).toContain(hotelIndexSeedSql());
   });
 });
