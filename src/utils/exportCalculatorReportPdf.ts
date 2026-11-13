@@ -46,7 +46,7 @@ const COPY = {
     saleToday: "Vânzare azi (sumă încasată)", hotel5: (y: number) => `Regim hotelier, ${y} ani (păstrezi proprietatea)`, rent5: (y: number) => `Chirie clasică, ${y} ani (păstrezi proprietatea)`,
     noSale: "evaluare individuală",
     disclaimer: "Estimări orientative, nu o garanție de venit sau o evaluare ANEVAR. Proiecția nu presupune creșteri de preț sau indexări. Administrare 15–20% din venitul net (brut minus comisioanele platformelor și utilitățile); menajul e plătit separat de oaspete; impozitele și reparațiile nu sunt incluse.",
-    brand: (r: string, c: number) => `RealTrust & ApArt Hotel Timișoara · ${r} din peste ${c} de recenzii verificate`,
+    brand: (r: string, c: number) => `RealTrust & ApArt Hotel Timișoara · ${r}/${GUEST_REPUTATION.bestRating} din peste ${c} de recenzii verificate`,
   },
   en: {
     title: "Property report — sale, long-term rent and short-term rental",
@@ -61,7 +61,7 @@ const COPY = {
     saleToday: "Sell today (amount received)", hotel5: (y: number) => `Short-term rental, ${y} years (you keep the property)`, rent5: (y: number) => `Long-term rent, ${y} years (you keep the property)`,
     noSale: "individual assessment",
     disclaimer: "Indicative estimates, not an income guarantee or a certified valuation. The projection assumes no price growth or indexation. Management 15–20% of net income (gross minus platform fees and utilities); cleaning is paid separately by the guest; taxes and repairs are not included.",
-    brand: (r: string, c: number) => `RealTrust & ApArt Hotel Timișoara · ${r} from over ${c} verified reviews`,
+    brand: (r: string, c: number) => `RealTrust & ApArt Hotel Timișoara · ${r}/${GUEST_REPUTATION.bestRating} from over ${c} verified reviews`,
   },
 } as const;
 
@@ -102,6 +102,7 @@ export async function generateCalculatorReportPdf(input: CalculatorReportInput):
 
   const ensure = (need: number) => { if (y + need > h - 22) { doc.addPage(); y = 22; } };
   const section = (label: string) => {
+    y += 5;
     ensure(18);
     doc.setTextColor(...DARK); doc.setFont("helvetica", "bold"); doc.setFontSize(11.5);
     doc.text(label, m, y); y += 2.5;
@@ -119,8 +120,9 @@ export async function generateCalculatorReportPdf(input: CalculatorReportInput):
   const para = (text: string, size = 9.5) => {
     doc.setFont("helvetica", "normal"); doc.setFontSize(size); doc.setTextColor(...GRAY);
     const lines = doc.splitTextToSize(text, innerW) as string[];
+    y += 2;
     ensure(lines.length * 4.6 + 2);
-    doc.text(lines, m, y); y += lines.length * 4.6 + 2;
+    doc.text(lines, m, y + 2); y += lines.length * 4.6 + 2;
   };
 
   section(t.property);
