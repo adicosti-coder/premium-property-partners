@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { Helmet } from "react-helmet-async";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Card, CardContent } from "@/components/ui/card";
@@ -115,38 +114,12 @@ const PropertyReviews = ({ propertyId, propertyName }: PropertyReviewsProps) => 
     );
   }
 
-  const reviewSchema = reviews && reviews.length > 0 ? {
-    "@context": "https://schema.org",
-    "@type": "LodgingBusiness",
-    "name": propertyName,
-    "url": `https://realtrust.ro/proprietate/${propertyId}`,
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": averageRating,
-      "reviewCount": totalReviewCount,
-      "bestRating": 10,
-      "worstRating": 1,
-    },
-    "review": reviews.slice(0, 5).map((r) => ({
-      "@type": "Review",
-      "author": { "@type": "Person", "name": r.guest_name },
-      "datePublished": (r.review_date || r.created_at.split("T")[0]),
-      "reviewBody": r.content || r.title || "",
-      "reviewRating": {
-        "@type": "Rating",
-        "ratingValue": r.rating,
-        "bestRating": 10,
-      },
-    })),
-  } : null;
+  // Structured data for these reviews is emitted once, on the page's
+  // LodgingBusiness node (PropertyDetail + reviewStructuredData). A second
+  // LodgingBusiness here duplicated the entity with another URL and scale.
 
   return (
     <div className="space-y-6">
-      {reviewSchema && (
-        <Helmet>
-          <script type="application/ld+json">{JSON.stringify(reviewSchema)}</script>
-        </Helmet>
-      )}
 
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">

@@ -10,6 +10,8 @@ import { FAQSchemaProvider } from "@/hooks/useFAQSchema";
 import CanonicalHreflang from "@/components/seo/CanonicalHreflang";
 import ComplexRedirect from "@/components/seo/ComplexRedirect";
 import TrailingSlashRedirect from "@/components/seo/TrailingSlashRedirect";
+import LegacyPropertyRedirect from "@/components/seo/LegacyPropertyRedirect";
+import { LEGACY_PROPERTY_REDIRECTS } from "@/data/legacyPropertyPaths";
 import { captureCampaignAttribution } from "@/lib/campaignAttribution";
 import { isChunkLoadError, reserveChunkReload } from "@/lib/chunkRecovery";
 import RouteLoading from "@/components/RouteLoading";
@@ -272,20 +274,9 @@ const App = () => (
                     <Route path="/blog/locatie/:location" element={<BlogLocation />} />
                     <Route path="/blog/:slug" element={<BlogArticlePage />} />
                     <Route path="/proprietate/:slug" element={<PropertyDetail />} />
-                    <Route path="/nordone-apart-hotel-premium" element={<PropertyDetail />} />
-                    <Route path="/ring-apart-hotel-spacious-deluxe" element={<Navigate to="/nordone-apart-hotel-premium" replace />} />
-                    <Route path="/green-forest-apart-hotel" element={<PropertyDetail />} />
-                    <Route path="/fructus-plaza-ultracentral-apart-hotel" element={<PropertyDetail />} />
-                    <Route path="/fullview-studio-deluxe" element={<PropertyDetail />} />
-                    <Route path="/avenue-of-mara-apart-hotel" element={<PropertyDetail />} />
-                    <Route path="/helios-apart-hotel" element={<PropertyDetail />} />
-                    <Route path="/ateneo-trevi-2-apart-hotel" element={<PropertyDetail />} />
-                    <Route path="/sunset-da-ra-studio-deluxe" element={<PropertyDetail />} />
-                    <Route path="/ateneo-apart-hotel-studio-deluxe" element={<PropertyDetail />} />
-                    <Route path="/modern-studio-apart-hotel" element={<PropertyDetail />} />
-                    <Route path="/moonlight-emerald-suite" element={<PropertyDetail />} />
-                    <Route path="/xcity-3-apart-hotel" element={<PropertyDetail />} />
-                    <Route path="/ring-residence-apart-hotel" element={<PropertyDetail />} />
+                    {Object.entries(LEGACY_PROPERTY_REDIRECTS).map(([from, to]) => (
+                      <Route key={from} path={from} element={<LegacyPropertyRedirect to={to} />} />
+                    ))}
                     <Route path="/investitii" element={<Investitii />} />
                     <Route path="/rezerva-direct" element={<WhyBookDirect />} />
                     <Route path="/autentificare-proprietar" element={<OwnerAuth />} />

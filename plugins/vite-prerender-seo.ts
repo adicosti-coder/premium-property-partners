@@ -12,6 +12,8 @@ import path from 'path';
 import { PUBLIC_ROUTE_SEO } from '../src/lib/publicRouteSeo';
 import { normalizeSeoPath, prerenderHeadLinks, prerenderLanguageScript, SITE_ORIGIN } from '../src/lib/seoLanguagePolicy';
 import { CONSOLIDATED_ARTICLE_REDIRECTS, isConsolidatedArticle } from '../src/data/consolidatedArticleRedirects';
+import { LEGACY_PROPERTY_REDIRECTS } from '../src/data/legacyPropertyPaths';
+import { buildAggregateRating } from '../src/lib/reviewStructuredData';
 import { ORGANIZATION_SCHEMA, REAL_ESTATE_AGENT_SCHEMA, LODGING_BUSINESS_SCHEMA } from '../src/lib/orgIdentity';
 import { CONTACT_HOURS, REAL_ESTATE_SINCE } from '../src/lib/businessFacts';
 import {
@@ -696,17 +698,9 @@ export function buildGuestPropertyRoutes(taken: Set<string>): PrerenderRoute[] {
       const geoNode = coords
         ? { geo: { '@type': 'GeoCoordinates', latitude: coords[1], longitude: coords[0] } }
         : {};
-      const ratingNode = p.rating && p.reviews
-        ? {
-            aggregateRating: {
-              '@type': 'AggregateRating',
-              ratingValue: p.rating,
-              reviewCount: p.reviews,
-              bestRating: 10,
-              worstRating: 1,
-            },
-          }
-        : {};
+      // Same builder and 1–10 scale as the rendered page (src/lib/reviewStructuredData).
+      const aggregateRating = buildAggregateRating(p.rating, p.reviews);
+      const ratingNode = aggregateRating ? { aggregateRating } : {};
       const amenityFeature = p.amenities.slice(0, 15).map((a) => ({
         '@type': 'LocationFeatureSpecification',
         name: a,
@@ -2108,6 +2102,16 @@ export default function vitePrerenderSeo(): Plugin {
           fs.writeFileSync(path.join(outDir, 'blog', `${slug}.html`), redirectHtml, 'utf-8');
         }
         console.log(`[prerender-seo] ${Object.keys(CONSOLIDATED_ARTICLE_REDIRECTS).length} consolidated article redirects written`);
+
+        // Old top-level apartment addresses: permanent-redirect documents to
+        // the single /proprietate/<slug> page (no duplicate structured data).
+        for (const [from, target] of Object.entries(LEGACY_PROPERTY_REDIRECTS)) {
+          const redirectHtml = generateRedirectHtml(target);
+          const rel = from.replace(/^\//, '');
+          fs.mkdirSync(path.join(outDir, rel), { recursive: true });
+          fs.writeFileSync(path.join(outDir, rel, 'index.html'), redirectHtml, 'utf-8');
+          fs.writeFileSync(path.join(outDir, `${rel}.html`), redirectHtml, 'utf-8');
+        }
 
         console.log(`[prerender-seo] Done — ${allRoutes.length} pages prerendered (${staticRoutes.length} static + ${propertyRoutes.length} db properties + ${guestRoutes.length} guest apartments + ${contentRoutes.length} content routes)`);
       },

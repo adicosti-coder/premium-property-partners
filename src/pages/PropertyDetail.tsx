@@ -17,6 +17,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import StickyPropertyCTA from "@/components/StickyPropertyCTA";
 import SEOHead from "@/components/SEOHead";
+import RouteLoading from "@/components/RouteLoading";
+import JsonLdScript from "@/components/seo/JsonLdScript";
 import { useCazareOverride } from "@/hooks/useCazareOverrides";
 import { trackListingClick } from "@/lib/listingClickTracking";
 import NotFound from "@/pages/NotFound";
@@ -63,6 +65,7 @@ import {
   generateBreadcrumbSchema,
   type PropertySchemaData 
 } from "@/utils/schemaGenerators";
+import { lodgingReviewFields, sortGuestReviews } from "@/lib/reviewStructuredData";
 import { generatePropertySEO } from "@/utils/generatePropertySEO";
 import { getDisplayLocation, resolvePropertyCoordinates, getPropertyPois } from "@/utils/propertyGeo";
 import ContextualLinks from "@/components/seo/ContextualLinks";
@@ -276,10 +279,10 @@ const PropertyDetail = () => {
             supabase
               .rpc("get_public_property_reviews", { p_property_id: propertyId })
               .then((res: any) => ({
-                data: (res.data || [])
-                  .sort((a: any, b: any) => b.created_at.localeCompare(a.created_at))
+                // Same order as the visible review list, so marked-up reviews are on the page.
+                data: sortGuestReviews(res.data || [])
                   .slice(0, 10)
-                  .map((r: any) => ({ id: r.id, guest_name: r.guest_name, rating: r.rating, content: r.content, title: r.title, created_at: r.created_at })),
+                  .map((r: any) => ({ id: r.id, guest_name: r.guest_name, rating: r.rating, content: r.content, title: r.title, review_date: r.review_date, created_at: r.created_at })),
                 error: res.error,
               })),
           ]);
@@ -516,24 +519,15 @@ const PropertyDetail = () => {
     return `${property.name} – ${language === 'ro' ? `fotografie ${idx + 1}` : `photo ${idx + 1}`}`;
   };
 
-  // Generate rich schema for this property (with real reviews for Google rich snippets)
-  const reviewSchemaItems = dbReviews.length > 0 ? dbReviews.slice(0, 5).map((r: any) => ({
-    "@type": "Review" as const,
-    "author": { "@type": "Person" as const, "name": r.guest_name },
-    "datePublished": r.created_at?.split("T")[0],
-    "reviewBody": r.content || r.title || "Experiență excelentă!",
-    "reviewRating": {
-      "@type": "Rating" as const,
-      "ratingValue": Math.min(r.rating / 2, 5), // Convert 1-10 to 1-5 scale
-      "bestRating": 5,
-      "worstRating": 1,
-    },
-  })) : undefined;
-
-  const avgRating = dbReviews.length > 0
-    ? (dbReviews.reduce((sum: number, r: any) => sum + r.rating, 0) / dbReviews.length / 2).toFixed(1)
-    : staticProperty?.rating ? (staticProperty.rating / 2).toFixed(1) : "4.9";
-  const reviewCount = dbReviews.length > 0 ? dbReviews.length : (staticProperty?.reviews || 50);
+  // Review / AggregateRating JSON-LD: one LodgingBusiness node, 1–10 scale
+  // (same as shown on the page), only valid reviews. See reviewStructuredData.
+  const lodgingId = `https://realtrust.ro/proprietate/${slug}#lodgingbusiness`;
+  const lodgingReviews = lodgingReviewFields({
+    item: { id: lodgingId, name: displayName },
+    ratingValue: effectiveRating,
+    reviewCount: effectiveReviewCount,
+    reviews: dbReviews,
+  });
 
   // FAQ items are now registered ONLY by PropertyFAQ component via useRegisterFAQs
   // Do NOT register here to avoid duplicate FAQPage schemas
@@ -602,8 +596,8 @@ const PropertyDetail = () => {
       bedrooms: property.bedrooms || 1,
       bathrooms: property.bathrooms || 1,
       size: property.size || 0,
-      rating: parseFloat(avgRating),
-      reviewCount,
+      rating: Number(effectiveRating) || 0,
+      reviewCount: Number(effectiveReviewCount) || 0,
       amenities: property.amenities || [],
       latitude: resolvedCoordinates?.[1],
       longitude: resolvedCoordinates?.[0],
@@ -634,22 +628,13 @@ const PropertyDetail = () => {
     ...(normalizedListingType === 'cazare' ? [{
       "@context": "https://schema.org",
       "@type": "LodgingBusiness",
-      "@id": `https://realtrust.ro/proprietate/${slug}#lodgingbusiness`,
+      "@id": lodgingId,
       "name": displayName,
       "url": `https://realtrust.ro/proprietate/${slug}`,
-      "image": galleryImages[0] || "",
+      ...(galleryImages[0] ? { "image": galleryImages[0] } : {}),
       "provider": { "@id": "https://realtrust.ro/#realestateagent" },
       "parentOrganization": { "@id": "https://realtrust.ro/#lodgingbusiness" },
-      ...(reviewCount > 0 && parseFloat(avgRating) > 0 ? {
-        "aggregateRating": {
-          "@type": "AggregateRating",
-          "ratingValue": avgRating,
-          "reviewCount": reviewCount,
-          "bestRating": "5",
-          "worstRating": "1",
-        },
-      } : {}),
-      ...(reviewSchemaItems && { "review": reviewSchemaItems }),
+      ...lodgingReviews,
       "address": {
         "@type": "PostalAddress",
         "addressLocality": "Timișoara",
@@ -821,8 +806,11 @@ const PropertyDetail = () => {
         type="product"
         productPrice={effectivePrice || undefined}
         productCurrency="EUR"
-        jsonLd={propertySchemas}
       />
+      {/* Property JSON-LD (incl. Review/AggregateRating) is effect-managed so a
+          discarded render can never leave a stale duplicate in the head. */}
+      <JsonLdScript id="property-detail" data={propertySchemas} />
+      <Suspense fallback={<RouteLoading />}>
       <Header />
       
       <main className="pt-20">
@@ -1152,6 +1140,7 @@ const PropertyDetail = () => {
               {/* ═══════════════════════════════════════════════════════
                   5. LOCAȚIE — Proximitate & Hartă
                   ═══════════════════════════════════════════════════════ */}
+              <Suspense fallback={null}>
               <PropertyProximity
                 propertySlug={property.slug}
                 propertyName={property.name}
@@ -1159,6 +1148,7 @@ const PropertyDetail = () => {
                 propertyLatitude={resolvedCoordinates?.[1] ?? null}
                 propertyLongitude={resolvedCoordinates?.[0] ?? null}
               />
+              </Suspense>
 
               <div className="space-y-4">
                 <h2 className="text-2xl font-serif font-semibold flex items-center gap-2">
@@ -1170,7 +1160,9 @@ const PropertyDetail = () => {
                     ? 'Descoperă restaurante, magazine, parcuri și atracții în apropierea apartamentului.'
                     : 'Discover restaurants, shops, parks and attractions near the apartment.'}
                 </p>
+                <Suspense fallback={null}>
                 <PropertyNeighborhoodMap propertySlug={property.slug} propertyName={property.name} propertyLocation={property.location} propertyLatitude={resolvedCoordinates?.[1] ?? null} propertyLongitude={resolvedCoordinates?.[0] ?? null} />
+                </Suspense>
                 <GoogleMapEmbed latitude={resolvedCoordinates?.[1] ?? null} longitude={resolvedCoordinates?.[0] ?? null} query={property.location} title={`Hartă Google — ${property.name}`} className="h-72 md:h-96" />
               </div>
 
@@ -1182,9 +1174,11 @@ const PropertyDetail = () => {
                   <h2 className="text-2xl font-serif font-semibold">
                     {language === 'ro' ? 'Verifică disponibilitatea și rezervă direct' : 'Check availability & book direct'}
                   </h2>
+                  <Suspense fallback={null}>
                   <PriceCompareWidget basePrice={effectivePrice} />
                   <StayCalculator property={property as any} onBook={openDirectBooking} />
                   <AvailabilityCalendar propertyId={property.id} propertySlug={property.slug} bookingUrl={property.bookingUrl} />
+                  </Suspense>
                   <div className="bg-card border rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <p className="text-sm text-muted-foreground">
                       {language === 'ro'
@@ -1217,6 +1211,7 @@ const PropertyDetail = () => {
               {/* ═══════════════════════════════════════════════════════
                   5. SOCIAL PROOF — Recenzii & FAQ
                   ═══════════════════════════════════════════════════════ */}
+              <Suspense fallback={null}>
               {dbProperty?.id && normalizedListingType === 'cazare' && (
                 <PropertyReviews propertyId={dbProperty.id} propertyName={property.name} />
               )}
@@ -1232,6 +1227,7 @@ const PropertyDetail = () => {
                 amenities={dbProperty?.amenities || (staticProperty ? property.amenities : [])}
                 houseRules={dbProperty?.house_rules || []}
               />
+              </Suspense>
 
               {/* ═══════════════════════════════════════════════════════
                   6. INVESTIȚIE & ANALIZĂ (pentru investitori/proprietari)
@@ -1350,7 +1346,9 @@ const PropertyDetail = () => {
                           : `* Calculations assume ${nightlyRate}€/night, ${occupancyPct}% occupancy, 25% down, 6.5% interest, 25 yrs. Figures are estimates.`}
                       </p>
 
-                      <InvestorGuideButton fullWidth size="lg" className="py-7 text-lg rounded-2xl" />
+                      <Suspense fallback={null}>
+                        <InvestorGuideButton fullWidth size="lg" className="py-7 text-lg rounded-2xl" />
+                      </Suspense>
                     </div>
                   );
                 })()
@@ -1373,6 +1371,7 @@ const PropertyDetail = () => {
                 const baseRentForEngine = dbProperty?.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
                 const estNightly = dbProperty?.base_price_per_night || Math.max(Math.round(baseRentForEngine / 10), 40);
                 return (
+                  <Suspense fallback={null}>
                   <InvestmentEngineV34
                     propertyName={property.name}
                     propertyCode={dbProperty?.property_code}
@@ -1381,6 +1380,7 @@ const PropertyDetail = () => {
                     defaultNightlyRate={estNightly}
                     hideRecommendations
                   />
+                  </Suspense>
                 );
               })()}
 
@@ -1718,6 +1718,7 @@ const PropertyDetail = () => {
         pricePerNight={dbProperty?.base_price_per_night ?? (staticProperty ? effectivePrice : undefined)}
       />
       <GlobalConversionWidgets showExitIntent={false} />
+      </Suspense>
       </Suspense>
     </div>
   );
