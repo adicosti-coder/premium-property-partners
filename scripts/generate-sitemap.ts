@@ -16,7 +16,7 @@
  *   - https only
  *   - apex host `realtrust.ro` (www + function host are rewritten)
  *   - no query strings (utm_*, gclid… are dropped) except `?lang=en` on
- *     translated article pages (src/lib/seoLanguagePolicy.ts), which are
+ *     translated articles and translated static pages (src/lib/seoLanguagePolicy.ts), which are
  *     listed only with reciprocal ro/en/x-default alternates
  *   - no trailing slash except the root
  *   - deduplicated by <loc>
@@ -27,7 +27,7 @@
 
 import { writeFileSync, existsSync, readFileSync } from "fs";
 import { resolve } from "path";
-import { ENGLISH_VERSION_PATTERN } from "../src/lib/seoLanguagePolicy";
+import { mayHaveEnglishVersion } from "../src/lib/seoLanguagePolicy";
 import { CONSOLIDATED_ARTICLE_REDIRECTS } from "../src/data/consolidatedArticleRedirects";
 
 const BASE_URL = "https://realtrust.ro";
@@ -103,7 +103,7 @@ const canonicalizeUrl = (raw: string, keepEnglish = false): string | null => {
   const english =
     keepEnglish &&
     url.searchParams.get("lang")?.toLowerCase() === "en" &&
-    ENGLISH_VERSION_PATTERN.test(path);
+    mayHaveEnglishVersion(path);
   return `${BASE_URL}${path}${english ? "?lang=en" : ""}`;
 };
 

@@ -120,3 +120,53 @@ describe("consolidated articles", () => {
     expect(html).not.toContain("noindex");
   });
 });
+
+import { isTranslatedStaticPath, mayHaveEnglishVersion, prerenderHeadLinks, TRANSLATED_STATIC_PATHS } from "./seoLanguagePolicy";
+import {
+  isTranslatedStaticPath as edgeIsTranslatedStatic,
+  TRANSLATED_STATIC_PATHS as EDGE_TRANSLATED_STATIC_PATHS,
+} from "../../supabase/functions/_shared/seoLanguage";
+import { isEnglishVersionAvailable } from "./seoEnglishAvailability";
+import staticSitemapXml from "../../public/sitemap-static.xml?raw";
+
+const CAZARE = "https://realtrust.ro/cazare";
+
+describe("/cazare is declared fully translated", () => {
+  it("is in the translated list on the site and in the sitemap functions", () => {
+    expect(isTranslatedStaticPath("/cazare/")).toBe(true);
+    expect(edgeIsTranslatedStatic("/cazare")).toBe(true);
+    expect([...EDGE_TRANSLATED_STATIC_PATHS]).toEqual([...TRANSLATED_STATIC_PATHS]);
+    expect(mayHaveEnglishVersion("/cazare")).toBe(true);
+    expect(mayHaveEnglishVersion("/preturi")).toBe(false);
+  });
+  it("Romanian canonical is /cazare and English canonical is /cazare?lang=en", () => {
+    const available = isEnglishVersionAvailable("/cazare");
+    expect(available).toBe(true);
+    expect(buildSeoUrls("/cazare", "", available).canonical).toBe(CAZARE);
+    expect(buildSeoUrls("/cazare", "?lang=en&utm_source=fb", available).canonical).toBe(`${CAZARE}?lang=en`);
+  });
+  it("both languages list ro, en and x-default", () => {
+    for (const search of ["", "?lang=en"]) {
+      expect(buildSeoUrls("/cazare", search, true).alternates).toEqual([
+        { hreflang: "ro", href: CAZARE },
+        { hreflang: "en", href: `${CAZARE}?lang=en` },
+        { hreflang: "x-default", href: CAZARE },
+      ]);
+    }
+  });
+  it("prerendered HTML ships no fixed canonical and the full hreflang set", () => {
+    const links = prerenderHeadLinks("/cazare", true);
+    expect(links.some((l) => l.includes('rel="canonical"'))).toBe(false);
+    expect(links).toContain(`<link rel="alternate" hreflang="en" href="${CAZARE}?lang=en" />`);
+  });
+  it("the sitemap lists /cazare?lang=en with reciprocal alternates", () => {
+    const blocks = staticSitemapXml.match(/<url>[\s\S]*?<\/url>/g) ?? [];
+    for (const loc of [CAZARE, `${CAZARE}?lang=en`]) {
+      const block = blocks.find((b) => b.includes(`<loc>${loc}</loc>`));
+      expect(block).toBeDefined();
+      expect(block).toContain(`hreflang="ro" href="${CAZARE}"`);
+      expect(block).toContain(`hreflang="en" href="${CAZARE}?lang=en"`);
+      expect(block).toContain(`hreflang="x-default" href="${CAZARE}"`);
+    }
+  });
+});

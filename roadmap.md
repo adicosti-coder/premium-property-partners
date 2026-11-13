@@ -1,5 +1,8 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Pagina /cazare în engleză — 13 noiembrie
+- [x] Canonical propriu /cazare și /cazare?lang=en, hreflang ro/en/x-default, ambele adrese în sitemap; teste și build
+
 ## Outreach proprietari — optimizări 11 noiembrie (seara)
 - [x] Rezumat [APROBARE NOUĂ] în alerta 1/2 (zonă, tip, preț, chirie estimată din comparabile, scor /10)
 - [x] Reluare unică la 30 de zile pentru proprietarii fără răspuns, anunț activ, 09:00–19:30, data salvată

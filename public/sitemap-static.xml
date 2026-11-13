@@ -106,6 +106,15 @@
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/cazare"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/cazare?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/cazare"/>
+  </url>
+<url>
+    <loc>https://realtrust.ro/cazare?lang=en</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/cazare"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/cazare?lang=en"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/cazare"/>
   </url>
 <url>

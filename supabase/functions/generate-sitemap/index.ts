@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { hasEnglishTranslation, sitemapAlternateLinks, sitemapLanguageBlocks } from "../_shared/seoLanguage.ts";
+import { hasEnglishTranslation, isTranslatedStaticPath, sitemapAlternateLinks, sitemapLanguageBlocks } from "../_shared/seoLanguage.ts";
 import { CONSOLIDATED_ARTICLE_SLUG_LIST } from "../_shared/consolidatedArticles.ts";
 
 const corsHeaders = {
@@ -172,20 +172,15 @@ serve(async (req: Request) => {
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 `;
 
-    // Romanian-only pages: ro + x-default. English alternates only for pages
-    // with a real translation (see _shared/seoLanguage.ts).
-    const hreflang = (path: string) => sitemapAlternateLinks(path, false);
-
-    // Add static pages — no <lastmod>: these pages have no per-page timestamp,
-    // and emitting the current date on every request is a meaningless signal.
+    // Static pages list ro + x-default; pages declared fully translated
+    // (_shared/seoLanguage.ts) also list `?lang=en` with reciprocal alternates.
+    // No <lastmod>: these pages have no per-page timestamp, and emitting the
+    // current date on every request is a meaningless signal.
     for (const page of staticPages) {
-      xml += `  <url>
-    <loc>${BASE_URL}${page.url}</loc>
-    <changefreq>${page.changefreq}</changefreq>
-    <priority>${page.priority}</priority>
-${hreflang(page.url)}
-  </url>
-`;
+      xml += sitemapLanguageBlocks(page.url, isTranslatedStaticPath(page.url), {
+        changefreq: page.changefreq,
+        priority: page.priority,
+      });
     }
 
 
@@ -246,7 +241,7 @@ ${hreflang(page.url)}
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>${imageTag}
-${hreflang(`/proprietate/${property.slug}`)}
+${sitemapAlternateLinks(`/proprietate/${property.slug}`, false)}
   </url>
 `;
       }

@@ -10,7 +10,7 @@ import type { Plugin } from 'vite';
 import fs from 'fs';
 import path from 'path';
 import { PUBLIC_ROUTE_SEO } from '../src/lib/publicRouteSeo';
-import { normalizeSeoPath, prerenderHeadLinks, prerenderLanguageScript, SITE_ORIGIN } from '../src/lib/seoLanguagePolicy';
+import { isTranslatedStaticPath, normalizeSeoPath, prerenderHeadLinks, prerenderLanguageScript, SITE_ORIGIN } from '../src/lib/seoLanguagePolicy';
 import { CONSOLIDATED_ARTICLE_REDIRECTS, isConsolidatedArticle } from '../src/data/consolidatedArticleRedirects';
 import { LEGACY_PROPERTY_REDIRECTS } from '../src/data/legacyPropertyPaths';
 import { buildAggregateRating, brandAggregateRating } from '../src/lib/reviewStructuredData';
@@ -2060,6 +2060,12 @@ export default function vitePrerenderSeo(): Plugin {
           const route = allRoutes.find((item) => item.path === routePath);
           if (route) Object.assign(route, languages.ro);
           else allRoutes.push({ path: routePath, ...languages.ro, canonical: `${BASE_URL}${routePath}`, jsonLd: { '@context': 'https://schema.org', '@type': 'WebPage', name: languages.ro.title } });
+          // Fully translated static pages: self-canonical `?lang=en` + ro/en/x-default.
+          if (isTranslatedStaticPath(routePath)) {
+            const translated = route ?? allRoutes[allRoutes.length - 1];
+            translated.englishAvailable = true;
+            translated.english = { title: languages.en.title, description: languages.en.description };
+          }
         }
 
         // One title per page, at most 60 characters, no duplicates.

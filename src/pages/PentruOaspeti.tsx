@@ -374,6 +374,7 @@ const PentruOaspeti = () => {
           : "Premium short-term rental apartments in Timișoara — free parking, 24/7 self check-in, best rate when booking direct."}
         url="https://realtrust.ro/cazare"
         jsonLd={lodgingJsonLd}
+        englishAvailable
       />
 
       <Header />
