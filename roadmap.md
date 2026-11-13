@@ -1,16 +1,19 @@
 # Roadmap — optimizări sistem analiză și administrare
 
 ## Calculator complet randament și evaluare — 13 noiembrie (seara)
-- [ ] Prețuri de vânzare €/mp în 3 niveluri (anunțuri colectate → tabel de referință → grila evaluării gratuite)
-- [ ] 3 carduri (vânzare, chirie clasică, regim hotelier + randament) și proiecție la 5 ani
-- [ ] Panou „Rafinează estimarea” cu cele 4 bife aprobate; analiza foto leagă scorul și 2–3 recomandări
-- [ ] Proprietăți reale administrate în zona aleasă, cu nota lor
-- [ ] Intenție, acord alertă lunară, raport PDF după contact, buton direct „Continuă pe WhatsApp”
-- [ ] Pre-completare din link (zona, camere, mp, nume, intentie) + mesaj de bun venit
-- [ ] Cereri randament + listă „Calculator” în Flux proprietari (fără Make, fără mesaje automate)
-- [ ] Evenimente lead_calculator_vanzare / _hotelier / _chirie cu valoarea estimată
-- [ ] /evaluare-gratuita folosește aceeași grilă de vânzare
-- [ ] Teste noi, toate testele, build, verificare pe telefon
+- [x] Prețuri de vânzare €/mp în 3 niveluri (anunțuri colectate → tabel de referință → grila evaluării gratuite)
+- [x] 3 carduri (vânzare, chirie clasică, regim hotelier + randament) și proiecție la 5 ani
+- [x] Panou „Rafinează estimarea” cu cele 4 bife aprobate; analiza foto leagă scorul și 2–3 recomandări
+- [x] Proprietăți reale administrate în zona aleasă, cu nota lor
+- [x] Intenție, acord alertă lunară, raport PDF după contact, buton direct „Continuă pe WhatsApp”
+- [x] Pre-completare din link (zona, camere, mp, nume, intentie) + mesaj de bun venit
+- [x] Cereri randament + listă „Calculator” în Flux proprietari (fără Make, fără mesaje automate)
+- [x] Evenimente lead_calculator_vanzare / _hotelier / _chirie cu valoarea estimată
+- [x] /evaluare-gratuita folosește aceeași grilă de vânzare
+- [x] Teste noi, toate testele, build, verificare pe telefon
+- [ ] De confirmat: afișarea randamentului calculat peste 9,4% (acum se arată intervalul 6,5–9,4% și „calcul individual”)
+- [ ] Completarea tabelului de indici publici (VDI.ro, Imo360, Imobiliare.ro, OferteImobiliare.ro) — de ales sursa și frecvența
+- [ ] Trimiterea lunară a alertei de piață (acum doar se salvează acordul)
 
 ## Pagina /cazare în engleză — 13 noiembrie
 - [x] Canonical propriu /cazare și /cazare?lang=en, hreflang ro/en/x-default, ambele adrese în sitemap; teste și build
