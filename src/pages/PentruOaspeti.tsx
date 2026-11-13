@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { GUEST_REPUTATION, guestRatingLabel, guestReviewCountLabel } from "@/lib/businessFacts";
 
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 const GuestGuideLeadMagnet = lazy(() => import("@/components/GuestGuideLeadMagnet"));
