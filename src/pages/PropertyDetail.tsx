@@ -1135,6 +1135,7 @@ const PropertyDetail = () => {
               {/* ═══════════════════════════════════════════════════════
                   5. LOCAȚIE — Proximitate & Hartă
                   ═══════════════════════════════════════════════════════ */}
+              <Suspense fallback={null}>
               <PropertyProximity
                 propertySlug={property.slug}
                 propertyName={property.name}
@@ -1142,6 +1143,7 @@ const PropertyDetail = () => {
                 propertyLatitude={resolvedCoordinates?.[1] ?? null}
                 propertyLongitude={resolvedCoordinates?.[0] ?? null}
               />
+              </Suspense>
 
               <div className="space-y-4">
                 <h2 className="text-2xl font-serif font-semibold flex items-center gap-2">
@@ -1153,7 +1155,9 @@ const PropertyDetail = () => {
                     ? 'Descoperă restaurante, magazine, parcuri și atracții în apropierea apartamentului.'
                     : 'Discover restaurants, shops, parks and attractions near the apartment.'}
                 </p>
+                <Suspense fallback={null}>
                 <PropertyNeighborhoodMap propertySlug={property.slug} propertyName={property.name} propertyLocation={property.location} propertyLatitude={resolvedCoordinates?.[1] ?? null} propertyLongitude={resolvedCoordinates?.[0] ?? null} />
+                </Suspense>
                 <GoogleMapEmbed latitude={resolvedCoordinates?.[1] ?? null} longitude={resolvedCoordinates?.[0] ?? null} query={property.location} title={`Hartă Google — ${property.name}`} className="h-72 md:h-96" />
               </div>
 
@@ -1165,9 +1169,11 @@ const PropertyDetail = () => {
                   <h2 className="text-2xl font-serif font-semibold">
                     {language === 'ro' ? 'Verifică disponibilitatea și rezervă direct' : 'Check availability & book direct'}
                   </h2>
+                  <Suspense fallback={null}>
                   <PriceCompareWidget basePrice={effectivePrice} />
                   <StayCalculator property={property as any} onBook={openDirectBooking} />
                   <AvailabilityCalendar propertyId={property.id} propertySlug={property.slug} bookingUrl={property.bookingUrl} />
+                  </Suspense>
                   <div className="bg-card border rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <p className="text-sm text-muted-foreground">
                       {language === 'ro'
@@ -1200,6 +1206,7 @@ const PropertyDetail = () => {
               {/* ═══════════════════════════════════════════════════════
                   5. SOCIAL PROOF — Recenzii & FAQ
                   ═══════════════════════════════════════════════════════ */}
+              <Suspense fallback={null}>
               {dbProperty?.id && normalizedListingType === 'cazare' && (
                 <PropertyReviews propertyId={dbProperty.id} propertyName={property.name} />
               )}
@@ -1215,6 +1222,7 @@ const PropertyDetail = () => {
                 amenities={dbProperty?.amenities || (staticProperty ? property.amenities : [])}
                 houseRules={dbProperty?.house_rules || []}
               />
+              </Suspense>
 
               {/* ═══════════════════════════════════════════════════════
                   6. INVESTIȚIE & ANALIZĂ (pentru investitori/proprietari)
@@ -1333,7 +1341,9 @@ const PropertyDetail = () => {
                           : `* Calculations assume ${nightlyRate}€/night, ${occupancyPct}% occupancy, 25% down, 6.5% interest, 25 yrs. Figures are estimates.`}
                       </p>
 
-                      <InvestorGuideButton fullWidth size="lg" className="py-7 text-lg rounded-2xl" />
+                      <Suspense fallback={null}>
+                        <InvestorGuideButton fullWidth size="lg" className="py-7 text-lg rounded-2xl" />
+                      </Suspense>
                     </div>
                   );
                 })()
@@ -1356,6 +1366,7 @@ const PropertyDetail = () => {
                 const baseRentForEngine = dbProperty?.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
                 const estNightly = dbProperty?.base_price_per_night || Math.max(Math.round(baseRentForEngine / 10), 40);
                 return (
+                  <Suspense fallback={null}>
                   <InvestmentEngineV34
                     propertyName={property.name}
                     propertyCode={dbProperty?.property_code}
@@ -1364,6 +1375,7 @@ const PropertyDetail = () => {
                     defaultNightlyRate={estNightly}
                     hideRecommendations
                   />
+                  </Suspense>
                 );
               })()}
 
