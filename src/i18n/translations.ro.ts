@@ -190,7 +190,7 @@ export const ro = {
     verifiedReviews: "Recenzii verificate",
     happyClients: "Clienți mulțumiți",
     platformReviewsLabel: "Recenzii de pe Platforme",
-    platformReviewsTitle: "Peste 500 de recenzii de 5 stele",
+    platformReviewsTitle: "Peste 500 de recenzii verificate", // afișat din GUEST_REPUTATION (businessFacts)
     platformReviewsSubtitle: "de la oaspeții noștri pe toate platformele",
   },
   

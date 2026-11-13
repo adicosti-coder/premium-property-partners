@@ -1,5 +1,6 @@
 import type { PdfContext } from "../pdfTypes";
 import { COLORS } from "../pdfTypes";
+import { GUEST_REPUTATION, guestRatingLabel, guestReviewCountLabel } from "@/lib/businessFacts";
 import { drawSectionHeader, drawPageFooter } from "../pdfHelpers";
 
 export const drawTestimonialsPage = (ctx: PdfContext) => {
@@ -128,7 +129,9 @@ export const drawTestimonialsPage = (ctx: PdfContext) => {
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...COLORS.gold);
   doc.text(
-    isRo ? "★ 9.7 / 10 RATING MEDIU PE BOOKING.COM  •  500+ RECENZII" : "★ 9.7 / 10 AVERAGE BOOKING.COM RATING  •  500+ REVIEWS",
+    isRo
+      ? `★ ${guestRatingLabel("ro")} / ${GUEST_REPUTATION.bestRating} RATING MEDIU PE BOOKING.COM  •  ${guestReviewCountLabel()} RECENZII`
+      : `★ ${guestRatingLabel("en")} / ${GUEST_REPUTATION.bestRating} AVERAGE BOOKING.COM RATING  •  ${guestReviewCountLabel()} REVIEWS`,
     pageWidth / 2, ctx.yPosition + 12.5, { align: "center" }
   );
 
