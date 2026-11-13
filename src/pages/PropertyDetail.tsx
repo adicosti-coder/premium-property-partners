@@ -63,6 +63,7 @@ import {
   generateBreadcrumbSchema,
   type PropertySchemaData 
 } from "@/utils/schemaGenerators";
+import { lodgingReviewFields, sortGuestReviews } from "@/lib/reviewStructuredData";
 import { generatePropertySEO } from "@/utils/generatePropertySEO";
 import { getDisplayLocation, resolvePropertyCoordinates, getPropertyPois } from "@/utils/propertyGeo";
 import ContextualLinks from "@/components/seo/ContextualLinks";
@@ -276,10 +277,10 @@ const PropertyDetail = () => {
             supabase
               .rpc("get_public_property_reviews", { p_property_id: propertyId })
               .then((res: any) => ({
-                data: (res.data || [])
-                  .sort((a: any, b: any) => b.created_at.localeCompare(a.created_at))
+                // Same order as the visible review list, so marked-up reviews are on the page.
+                data: sortGuestReviews(res.data || [])
                   .slice(0, 10)
-                  .map((r: any) => ({ id: r.id, guest_name: r.guest_name, rating: r.rating, content: r.content, title: r.title, created_at: r.created_at })),
+                  .map((r: any) => ({ id: r.id, guest_name: r.guest_name, rating: r.rating, content: r.content, title: r.title, review_date: r.review_date, created_at: r.created_at })),
                 error: res.error,
               })),
           ]);
@@ -516,24 +517,15 @@ const PropertyDetail = () => {
     return `${property.name} – ${language === 'ro' ? `fotografie ${idx + 1}` : `photo ${idx + 1}`}`;
   };
 
-  // Generate rich schema for this property (with real reviews for Google rich snippets)
-  const reviewSchemaItems = dbReviews.length > 0 ? dbReviews.slice(0, 5).map((r: any) => ({
-    "@type": "Review" as const,
-    "author": { "@type": "Person" as const, "name": r.guest_name },
-    "datePublished": r.created_at?.split("T")[0],
-    "reviewBody": r.content || r.title || "Experiență excelentă!",
-    "reviewRating": {
-      "@type": "Rating" as const,
-      "ratingValue": Math.min(r.rating / 2, 5), // Convert 1-10 to 1-5 scale
-      "bestRating": 5,
-      "worstRating": 1,
-    },
-  })) : undefined;
-
-  const avgRating = dbReviews.length > 0
-    ? (dbReviews.reduce((sum: number, r: any) => sum + r.rating, 0) / dbReviews.length / 2).toFixed(1)
-    : staticProperty?.rating ? (staticProperty.rating / 2).toFixed(1) : "4.9";
-  const reviewCount = dbReviews.length > 0 ? dbReviews.length : (staticProperty?.reviews || 50);
+  // Review / AggregateRating JSON-LD: one LodgingBusiness node, 1–10 scale
+  // (same as shown on the page), only valid reviews. See reviewStructuredData.
+  const lodgingId = `https://realtrust.ro/proprietate/${slug}#lodgingbusiness`;
+  const lodgingReviews = lodgingReviewFields({
+    item: { id: lodgingId, name: displayName },
+    ratingValue: effectiveRating,
+    reviewCount: effectiveReviewCount,
+    reviews: dbReviews,
+  });
 
   // FAQ items are now registered ONLY by PropertyFAQ component via useRegisterFAQs
   // Do NOT register here to avoid duplicate FAQPage schemas
@@ -602,8 +594,8 @@ const PropertyDetail = () => {
       bedrooms: property.bedrooms || 1,
       bathrooms: property.bathrooms || 1,
       size: property.size || 0,
-      rating: parseFloat(avgRating),
-      reviewCount,
+      rating: Number(effectiveRating) || 0,
+      reviewCount: Number(effectiveReviewCount) || 0,
       amenities: property.amenities || [],
       latitude: resolvedCoordinates?.[1],
       longitude: resolvedCoordinates?.[0],
@@ -634,22 +626,13 @@ const PropertyDetail = () => {
     ...(normalizedListingType === 'cazare' ? [{
       "@context": "https://schema.org",
       "@type": "LodgingBusiness",
-      "@id": `https://realtrust.ro/proprietate/${slug}#lodgingbusiness`,
+      "@id": lodgingId,
       "name": displayName,
       "url": `https://realtrust.ro/proprietate/${slug}`,
-      "image": galleryImages[0] || "",
+      ...(galleryImages[0] ? { "image": galleryImages[0] } : {}),
       "provider": { "@id": "https://realtrust.ro/#realestateagent" },
       "parentOrganization": { "@id": "https://realtrust.ro/#lodgingbusiness" },
-      ...(reviewCount > 0 && parseFloat(avgRating) > 0 ? {
-        "aggregateRating": {
-          "@type": "AggregateRating",
-          "ratingValue": avgRating,
-          "reviewCount": reviewCount,
-          "bestRating": "5",
-          "worstRating": "1",
-        },
-      } : {}),
-      ...(reviewSchemaItems && { "review": reviewSchemaItems }),
+      ...lodgingReviews,
       "address": {
         "@type": "PostalAddress",
         "addressLocality": "Timișoara",
