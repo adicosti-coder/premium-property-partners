@@ -1,53 +1,12 @@
 import { Helmet } from "react-helmet-async";
 import { BRAND } from "@/lib/orgIdentity";
-import { generateHomepageSchemas, generateSpeakableSchema, DatabaseReview } from "@/utils/schemaGenerators";
+import { generateHomepageSchemas, generateSpeakableSchema } from "@/utils/schemaGenerators";
 
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabaseClient";
+import { GUEST_REPUTATION } from "@/lib/businessFacts";
 import { enrichLodgingBusinessSchema } from "@/utils/lodgingSchema";
 
 const DeferredHomeSEO = ({ language }: { language: string }) => {
-  const { data: reviews } = useQuery({
-    queryKey: ["homepage-reviews-schema"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .rpc("get_public_property_reviews");
-      if (error) throw error;
-      const top = (data || [])
-        .sort((a: any, b: any) => b.created_at.localeCompare(a.created_at))
-        .slice(0, 10);
-      const propIds = Array.from(new Set(top.map((r: any) => r.property_id).filter(Boolean)));
-      let nameById = new Map<string, string>();
-      if (propIds.length) {
-        const { data: props } = await supabase.from("properties").select("id, name").in("id", propIds);
-        (props || []).forEach((p: any) => nameById.set(p.id, p.name));
-      }
-      return top.map((r: any) => ({
-        id: r.id, guest_name: r.guest_name, rating: r.rating, content: r.content,
-        title: r.title, created_at: r.created_at,
-        property_name: nameById.get(r.property_id),
-      })) as DatabaseReview[];
-    },
-    staleTime: Infinity, gcTime: Infinity,
-    refetchOnWindowFocus: false, refetchOnMount: false, refetchOnReconnect: false,
-  });
-
-  // Derive aggregate rating from the already limited review sample to avoid a second heavy query on homepage.
-  const { data: ratingData } = useQuery({
-    queryKey: ["homepage-aggregate-rating"],
-    queryFn: async () => null,
-    staleTime: Infinity, gcTime: Infinity,
-    refetchOnWindowFocus: false, refetchOnMount: false, refetchOnReconnect: false,
-    enabled: false,
-    initialData: (() => {
-      if (!reviews?.length) return null;
-      const avg = reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length;
-      const avgNormalized = avg > 5 ? (avg / 2).toFixed(1) : avg.toFixed(1);
-      return { ratingValue: avgNormalized, reviewCount: String(reviews.length) };
-    })(),
-  });
-
   const homepageFaqItems = [
     { question: language === "ro" ? "Care este profitul real pe care îl pot obține din apartamentul meu?" : "What is the real profit I can get from my apartment?",
       answer: language === "ro" ? "Estimăm veniturile pe baza datelor de piață actuale, unde un preț mediu pe noapte (ADR) este de aproximativ 55€, cu o rată de ocupare medie de 65%." : "We estimate revenues based on current market data, where the average nightly rate (ADR) is approximately €55, with an average occupancy rate of 65%." },
@@ -64,7 +23,7 @@ const DeferredHomeSEO = ({ language }: { language: string }) => {
     { question: language === "ro" ? "Care sunt prețurile apartamentelor noi din Timișoara în 2026?" : "What are the prices of new apartments in Timișoara in 2026?",
       answer: language === "ro" ? "Apartamente noi Timișoara prețuri 2026: garsoniere de la 65.000€, 2 camere între 95.000–145.000€, 3 camere între 140.000–220.000€. Ansamblurile premium (ISHO, Openville, Take Ionescu) pornesc de la 1.800€/mp, iar zonele emergente (Calea Aradului, Girocului) de la 1.400€/mp." : "New apartment prices in Timișoara 2026: studios from €65,000, 2-room from €95,000–145,000, 3-room from €140,000–220,000. Premium developments (ISHO, Openville, Take Ionescu) start at €1,800/sqm, emerging areas (Calea Aradului, Girocului) from €1,400/sqm." },
     { question: language === "ro" ? "Ce păreri au clienții despre agenția imobiliară RealTrust Timișoara?" : "What do clients say about RealTrust real estate agency Timișoara?",
-      answer: language === "ro" ? "Agenție imobiliară Timișoara păreri RealTrust: scor consolidat 9.7/10 din peste 180 recenzii verificate (Booking, Airbnb, Google). Clienții apreciază transparența comisioanelor, comunicarea promptă și rezultatele financiare predictibile pentru proprietari." : "RealTrust real estate agency Timișoara reviews: consolidated 9.7/10 score from over 180 verified reviews (Booking, Airbnb, Google). Clients value commission transparency, prompt communication and predictable financial results for owners." },
+      answer: language === "ro" ? "Agenție imobiliară Timișoara păreri RealTrust: scor ${String(GUEST_REPUTATION.ratingValue).replace(".", ",")}/10 pe Booking.com din peste ${GUEST_REPUTATION.reviewCount} de recenzii verificate. Clienții apreciază transparența comisioanelor, comunicarea promptă și rezultatele financiare predictibile pentru proprietari." : "RealTrust real estate agency Timișoara reviews: ${GUEST_REPUTATION.ratingValue}/10 score on Booking.com from over ${GUEST_REPUTATION.reviewCount} verified reviews. Clients value commission transparency, prompt communication and predictable financial results for owners." },
     { question: language === "ro" ? "Aveți apartamente de închiriat aproape de UPT Politehnica Timișoara?" : "Do you have apartments for rent near UPT Politehnica Timișoara?",
       answer: language === "ro" ? "Da — apartamente de închiriat lângă UPT Timișoara în Complex Studențesc, la 3-7 minute pe jos de Politehnica Timișoara, UVT și UMF. Garsoniere de la 280€/lună, 2 camere 380-550€/lună, contracte pe an universitar pentru studenți români și Erasmus." : "Yes — apartments for rent near UPT Timișoara in Complex Studențesc, 3-7 min walk from Politehnica, UVT and UMF. Studios from €280/month, 2-room €380-550/month, academic year contracts for Romanian and Erasmus students." },
   ];
@@ -73,9 +32,9 @@ const DeferredHomeSEO = ({ language }: { language: string }) => {
   useRegisterFAQs("homepage", homepageFaqItems);
 
   const speakableSchema = generateSpeakableSchema("RealTrust", "https://realtrust.ro", [".page-summary", "h1", "h2", ".faq-section"]);
-  const homepageSchemas = [...generateHomepageSchemas(reviews), speakableSchema];
+  const homepageSchemas = [...generateHomepageSchemas(), speakableSchema];
 
-  enrichLodgingBusinessSchema(homepageSchemas, ratingData, BRAND.sameAs);
+  enrichLodgingBusinessSchema(homepageSchemas, BRAND.sameAs);
 
   // RealEstateAgent & Organization schemas are now injected globally by
   // SEOHead.tsx on every page. DeferredHomeSEO only injects homepage-specific
