@@ -18,20 +18,20 @@ const HomeAuthorityBlocks = () => {
 
   const reasons = isEn
     ? [
-        { icon: MapPin, title: "Local experience", text: "The team operates only in Timișoara and its metropolitan area, so pricing and demand are assessed on local data." },
-        { icon: Users, title: "Dedicated team", text: "One consultant per client, plus operations staff for check-in, cleaning and maintenance." },
-        { icon: Building2, title: "Portfolio", text: "15 apartments and houses currently managed under the ApArt Hotel brand." },
-        { icon: ListChecks, title: "Documented process", text: "Onboarding in 7-14 days: valuation, photography, listing on Booking and Airbnb, check-in setup." },
-        { icon: LineChart, title: "Reported results", text: `Consolidated guest reputation score of ${GUEST_SCORE_EN}/10 on Booking; portfolio properties attract an estimated net yield between 6.5% and 9.4% per year, depending on occupancy, location and furnishing.` },
-        { icon: FileText, title: "Transparency", text: "Commissions stated up front (15–20% management plus platform fees) and monthly written reporting." },
+        { icon: MapPin, title: "Uninterrupted local experience", text: "Through SC Imo Business Centrum SRL, we have been active without interruption on the Timișoara real estate market since 2001. We know the active partner developments first-hand — City of Mara, Monarch, NordOne, XCity and the Torontalului area — so prices and demand are assessed on local data." },
+        { icon: Building2, title: "360° approach", text: "One partner for the whole life of your property: real estate brokerage, advice for safe investments, long-term property management and short-stay (hotel-regime) management under the ApArt Hotel brand." },
+        { icon: LineChart, title: "Dynamic pricing, adjusted daily", text: "Pricing algorithms adjusted every day to events and demand in Timișoara, plus automatic synchronisation across booking channels — your nightly rate stays up to date with no manual work." },
+        { icon: Users, title: "Dedicated team", text: "One consultant per client, plus operations staff for check-in, cleaning and maintenance, for the 15 apartments and houses currently managed under the ApArt Hotel brand." },
+        { icon: ListChecks, title: "Documented, transparent process", text: "Onboarding in 7-14 days: valuation, photography, listing on Booking and Airbnb, check-in setup. Commissions stated up front (15–20% management plus platform fees) and monthly written reporting." },
+        { icon: FileText, title: "Reported results", text: `Consolidated guest reputation score of ${GUEST_SCORE_EN}/10 on Booking; portfolio properties attract an estimated net yield between 6.5% and 9.4% per year, depending on occupancy, location and furnishing.` },
       ]
     : [
-        { icon: MapPin, title: "Experiență locală", text: "Echipa lucrează exclusiv în Timișoara și zona metropolitană, deci prețurile și cererea sunt evaluate pe date locale." },
-        { icon: Users, title: "Echipă dedicată", text: "Un consultant alocat fiecărui client, plus personal de operațiuni pentru check-in, curățenie și mentenanță." },
-        { icon: Building2, title: "Portofoliu", text: "15 apartamente și case administrate în prezent sub brandul ApArt Hotel." },
-        { icon: ListChecks, title: "Proces documentat", text: "Onboarding în 7-14 zile: evaluare, fotografie, listare pe Booking și Airbnb, configurare check-in." },
-        { icon: LineChart, title: "Rezultate raportate", text: `Scor consolidat de reputație ${GUEST_SCORE_RO}/10 pe Booking; proprietățile din portofoliu atrag un randament net estimat între 6,5% și 9,4% pe an, în funcție de ocupare, locație și amenajare.` },
-        { icon: FileText, title: "Transparență", text: "Comisioane comunicate în avans (comision de administrare 15–20% din venitul net plus comisioanele platformelor) și raportare lunară scrisă." },
+        { icon: MapPin, title: "Experiență locală neîntreruptă", text: "Prin SC Imo Business Centrum SRL, suntem prezenți neîntrerupt pe piața imobiliară din Timișoara din 2001. Cunoaștem direct ansamblurile partenere active — City of Mara, Monarch, NordOne, XCity și zona Torontalului — deci prețurile și cererea sunt evaluate pe date locale." },
+        { icon: Building2, title: "Abordare 360°", text: "Un singur partener pentru toată viața proprietății: intermediere imobiliară, consultanță pentru investiții sigure, property management pe termen lung și regim hotelier sub brandul ApArt Hotel." },
+        { icon: LineChart, title: "Tarifare dinamică, ajustată zilnic", text: "Algoritmi de tarifare dinamică adaptați zilnic la evenimentele și cererea din Timișoara + sincronizare automată pe canale — tariful pe noapte rămâne actual, fără intervenție manuală." },
+        { icon: Users, title: "Echipă dedicată", text: "Un consultant alocat fiecărui client, plus personal de operațiuni pentru check-in, curățenie și mentenanță, pentru cele 15 apartamente și case administrate în prezent sub brandul ApArt Hotel." },
+        { icon: ListChecks, title: "Proces documentat și transparent", text: "Onboarding în 7-14 zile: evaluare, fotografie, listare pe Booking și Airbnb, configurare check-in. Comisioane comunicate în avans (comision de administrare 15–20% din venitul net plus comisioanele platformelor) și raportare lunară scrisă." },
+        { icon: FileText, title: "Rezultate raportate", text: `Scor consolidat de reputație ${GUEST_SCORE_RO}/10 pe Booking; proprietățile din portofoliu atrag un randament net estimat între 6,5% și 9,4% pe an, în funcție de ocupare, locație și amenajare.` },
       ];
 
   return (

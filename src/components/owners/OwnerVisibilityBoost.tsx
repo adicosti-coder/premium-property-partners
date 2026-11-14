@@ -7,7 +7,7 @@ const items = [
   {
     icon: LineChart,
     title: "Prețuri dinamice algoritmice",
-    desc: "Prin RoomPriceGenie & Pynbooking, tariful pe noapte se ajustează zilnic după cererea din piață, evenimente locale și gradul de ocupare.",
+    desc: "Algoritmi de tarifare dinamică adaptați zilnic la evenimentele și cererea din Timișoara + sincronizare automată pe canale, ca tariful pe noapte să rămână mereu actual.",
   },
   {
     icon: Search,
