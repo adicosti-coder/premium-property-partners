@@ -11,7 +11,8 @@ interface Options<Row> {
   columns: string;
   page: number;                                // 0-indexed
   pageSize: PageSize;
-  order?: { column: string; ascending?: boolean };
+  /** nullsFirst: unde ajung valorile lipsă; tiebreaker: coloană unică pentru ordine stabilă între pagini */
+  order?: { column: string; ascending?: boolean; nullsFirst?: boolean; tiebreaker?: string };
   /** Optional builder for extra filters (`.eq`, `.ilike`, `.in`, etc.) */
   applyFilters?: (q: any) => any;
   enabled?: boolean;
@@ -37,14 +38,23 @@ export function usePaginatedQuery<Row = any>(opts: Options<Row>): PaginatedResul
   const to = from + pageSize - 1;
 
   const q = useQuery({
-    queryKey: [...queryKey, table, columns, page, pageSize, order?.column, order?.ascending],
+    queryKey: [...queryKey, table, columns, page, pageSize, order?.column, order?.ascending, order?.nullsFirst, order?.tiebreaker],
     enabled,
     placeholderData: keepPreviousData,
     queryFn: async () => {
       let query = (supabase.from(table as any) as any)
         .select(columns, { count: "exact" })
         .range(from, to);
-      if (order) query = query.order(order.column, { ascending: order.ascending ?? false });
+      if (order) {
+        const ascending = order.ascending ?? false;
+        query = query.order(
+          order.column,
+          order.nullsFirst === undefined ? { ascending } : { ascending, nullsFirst: order.nullsFirst },
+        );
+        if (order.tiebreaker && order.tiebreaker !== order.column) {
+          query = query.order(order.tiebreaker, { ascending });
+        }
+      }
       if (applyFilters) query = applyFilters(query);
       const { data, error, count } = await query;
       if (error) throw error;
