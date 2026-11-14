@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, forwardRef, memo } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { 
-  X, Send, Bot, Loader2, 
+  X, Send, Loader2, 
   ExternalLink, Minimize2, Mic, Headphones,
   Layers, ShieldCheck, FileDown, RotateCcw,
   Copy, Check, Phone, PhoneOff, Star, Camera,
@@ -840,11 +840,7 @@ const AIChatbot = ({ initialOpen = false }: { initialOpen?: boolean } = {}) => {
     if (isOpen && !isMinimized && inputRef.current && !voiceMode) inputRef.current.focus();
   }, [isOpen, isMinimized, voiceMode]);
 
-  // Unread notification
-  useEffect(() => {
-    const timer = setTimeout(() => { if (!isOpen && messages.length <= 1) setHasUnread(true); }, 15000);
-    return () => clearTimeout(timer);
-  }, [isOpen]);
+  // Unread badge only for real replies written by the team from Admin (see polling above).
 
   // Open from external event
   useEffect(() => {
