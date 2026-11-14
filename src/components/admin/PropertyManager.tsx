@@ -25,6 +25,7 @@ import {
   Search,
   Filter,
   RotateCcw,
+  ArrowUpDown,
 } from "lucide-react";
 import type { PageSize } from "@/hooks/admin/usePaginatedQuery";
 import { AdminPagination } from "./shared/AdminPagination";
@@ -39,6 +40,16 @@ import PortfolioSeoPanel from "./property/PortfolioSeoPanel";
 import CoverRotationPanel from "./CoverRotationPanel";
 import AdminSaleOffers from "./property/AdminSaleOffers";
 import { PropertyEditor } from "./property/dialogs/PropertyEditor";
+import { SortableTableHead } from "./property/SortableTableHead";
+import {
+  DEFAULT_PROPERTY_SORT,
+  PROPERTY_SORT_OPTIONS,
+  keyToSort,
+  sortToKey,
+  toggleColumnSort,
+  type PropertySort,
+  type PropertySortColumn,
+} from "./property/propertySort";
 
 export default function PropertyManager() {
   const { t } = useLanguage();
@@ -53,6 +64,13 @@ export default function PropertyManager() {
     urlStatus === "active" || urlStatus === "inactive" ? urlStatus : "all",
   );
   const [showFilters, setShowFilters] = useState(true);
+
+  // Sortare (server-side)
+  const [sort, setSort] = useState<PropertySort>(DEFAULT_PROPERTY_SORT);
+  const handleColumnSort = useCallback((column: PropertySortColumn) => {
+    setSort((current) => toggleColumnSort(current, column));
+    setPage(0);
+  }, []);
 
   // Pagination
   const [page, setPage] = useState(0);
@@ -83,15 +101,19 @@ export default function PropertyManager() {
     search: searchTerm,
     listingType: filterListingType,
     status: filterStatus,
+    sort,
   });
 
+  const isDefaultSort =
+    sort.column === DEFAULT_PROPERTY_SORT.column && sort.ascending === DEFAULT_PROPERTY_SORT.ascending;
   const hasActiveFilters =
-    Boolean(searchTerm) || filterListingType !== "all" || filterStatus !== "all";
+    Boolean(searchTerm) || filterListingType !== "all" || filterStatus !== "all" || !isDefaultSort;
 
   const resetFilters = useCallback(() => {
     setSearchTerm("");
     setFilterListingType("all");
     setFilterStatus("all");
+    setSort(DEFAULT_PROPERTY_SORT);
     setPage(0);
   }, []);
 
@@ -206,6 +228,33 @@ export default function PropertyManager() {
             placeholder="Caută după nume, locație, etichetă, sursă..."
             className="pl-9"
           />
+        </div>
+        <div className="w-full sm:w-auto sm:min-w-[260px]">
+          <Label htmlFor="property-sort" className="sr-only">
+            Sortează după
+          </Label>
+          <Select
+            value={sortToKey(sort)}
+            onValueChange={(key) => {
+              setSort(keyToSort(key));
+              setPage(0);
+            }}
+          >
+            <SelectTrigger id="property-sort" className="h-12 sm:h-10 gap-2" aria-label="Sortează după">
+              <ArrowUpDown className="w-4 h-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <span className="text-muted-foreground shrink-0">Sortează după:</span>
+              <span className="flex-1 truncate text-left">
+                <SelectValue />
+              </span>
+            </SelectTrigger>
+            <SelectContent>
+              {PROPERTY_SORT_OPTIONS.map((o) => (
+                <SelectItem key={o.key} value={o.key} className="min-h-11">
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <Button
           variant="outline"
@@ -328,21 +377,41 @@ export default function PropertyManager() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[50px]">
-                      <GripVertical className="w-4 h-4" />
-                    </TableHead>
-                    <TableHead>
-                      <Home className="w-4 h-4 inline mr-1" />
+                    <SortableTableHead
+                      column="display_order"
+                      label="ordinea afișării"
+                      sort={sort}
+                      onSort={handleColumnSort}
+                      className="w-[70px]"
+                    >
+                      <GripVertical className="w-4 h-4" aria-hidden="true" />
+                    </SortableTableHead>
+                    <SortableTableHead column="name" label="nume" sort={sort} onSort={handleColumnSort}>
+                      <Home className="w-4 h-4" aria-hidden="true" />
                       {t.admin.properties?.name || "Name"}
-                    </TableHead>
+                    </SortableTableHead>
                     <TableHead>
                       <MapPin className="w-4 h-4 inline mr-1" />
                       {t.admin.properties?.location || "Location"}
                     </TableHead>
-                    <TableHead>Preț/n</TableHead>
+                    <SortableTableHead
+                      column="base_price_per_night"
+                      label="preț pe noapte"
+                      sort={sort}
+                      onSort={handleColumnSort}
+                    >
+                      Preț/n
+                    </SortableTableHead>
                     <TableHead>Cap.</TableHead>
                     <TableHead>Dorm.</TableHead>
-                    <TableHead>Capital</TableHead>
+                    <SortableTableHead
+                      column="capital_necesar"
+                      label="capital / preț vânzare"
+                      sort={sort}
+                      onSort={handleColumnSort}
+                    >
+                      Capital
+                    </SortableTableHead>
                     <TableHead>ROI</TableHead>
                     <TableHead>Contact</TableHead>
                     <TableHead>Sursă</TableHead>
