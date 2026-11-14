@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useOptionalSharedAssistantContext } from "@/hooks/useSharedAssistantContext";
 import { cn } from "@/lib/utils";
 import { voiceBookingTools } from "@/lib/voiceBookingTools";
+import { startAndreiVoiceSession } from "@/lib/voiceSessionStart";
 
 const AGENT_IDS = {
   ro: "agent_2601kgsvskeef4gvytn91he7x8y2",
@@ -151,7 +152,7 @@ export function useElevenLabsVoice() {
       }
       
       console.log("[ElevenLabs] Token received for agent:", data.agentId, "- starting WebRTC session...");
-      await conversation.startSession({ conversationToken: data.token, connectionType: "webrtc" });
+      await startAndreiVoiceSession(conversation.startSession as any, data, { pagePath: window.location.pathname, language });
       // Release the pre-acquired stream after WebRTC takes over
       stream?.getTracks().forEach(track => track.stop());
     } catch (error: any) {

@@ -17,6 +17,9 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { supabase, supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
 import { useConversation } from "@elevenlabs/react";
+import { voiceBookingTools } from "@/lib/voiceBookingTools";
+import { isVoiceErrorDisconnect } from "@/lib/voiceSessionVariables";
+import { startAndreiVoiceSession } from "@/lib/voiceSessionStart";
 import { QUICK_CHIPS } from "@/lib/chatQuickChips";
 import { useOptionalSharedAssistantContext } from "@/hooks/useSharedAssistantContext";
 import { neighborhoods } from "@/data/neighborhoods";
@@ -469,14 +472,28 @@ const AIChatbot = ({ initialOpen = false }: { initialOpen?: boolean } = {}) => {
   // --- ElevenLabs Voice ---
   const voiceRetryCount = useRef(0);
   const conversation = useConversation({
+    // The agent declares these client tools; without handlers its tool calls fail silently.
+    clientTools: {
+      list_properties: (params: any) => voiceBookingTools.list_properties(params),
+      check_availability: (params: any) => voiceBookingTools.check_availability(params),
+      create_booking: (params: any) => voiceBookingTools.create_booking(params),
+      search_local_guide: (params: any) => voiceBookingTools.search_local_guide(params),
+      get_guest_guide: (params: any) => voiceBookingTools.get_guest_guide(params),
+      submit_review: (params: any) => voiceBookingTools.submit_review(params),
+      calculate_roi: (params: any) => voiceBookingTools.calculate_roi(params),
+      capture_lead: (params: any) => voiceBookingTools.capture_lead(params),
+    },
     onConnect: () => {
       console.log("[AIChatbot] Voice connected successfully");
       voiceRetryCount.current = 0;
       setIsConnectingVoice(false);
       toast.success(language === "ro" ? "Mod vocal activat!" : "Voice mode activated!");
     },
-    onDisconnect: () => {
-      console.log("[AIChatbot] Voice disconnected");
+    onDisconnect: (details: unknown) => {
+      console.log("[AIChatbot] Voice disconnected", details);
+      if (isVoiceErrorDisconnect(details)) {
+        toast.error(language === "ro" ? "Convorbirea vocală s-a întrerupt. Încercați din nou sau scrieți-ne în chat." : "The voice call was interrupted. Try again or write to us in the chat.");
+      }
       setVoiceMode(false);
       setIsConnectingVoice(false);
     },
@@ -513,7 +530,7 @@ const AIChatbot = ({ initialOpen = false }: { initialOpen?: boolean } = {}) => {
       }
 
       console.log("[AIChatbot] Token received, starting WebRTC for agent:", data.agentId);
-      await conversation.startSession({ conversationToken: data.token, connectionType: "webrtc" });
+      await startAndreiVoiceSession(conversation.startSession as any, data, { pagePath: window.location.pathname, language });
       stream.getTracks().forEach(t => t.stop());
       setVoiceMode(true);
     } catch (error: any) {
