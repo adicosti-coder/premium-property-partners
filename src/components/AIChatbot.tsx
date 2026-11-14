@@ -1270,19 +1270,7 @@ const AIChatbot = ({ initialOpen = false }: { initialOpen?: boolean } = {}) => {
 
                   {/* Quick Actions */}
                   {messages.length <= 1 && !isLoading && !showQualificationWizard && (
-                    <div className="mt-6 space-y-4">
-                      {/* Qualification wizard trigger */}
-                      {!qualificationData && (currentPath.includes("/pentru-proprietari") || currentPath.includes("/investitii") || currentPath === "/") && (
-                        <motion.button
-                          initial={{ opacity: 0, y: 5 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          onClick={() => setShowQualificationWizard(true)}
-                          className="w-full px-4 py-3 rounded-2xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/30 text-sm font-semibold text-primary hover:from-primary/20 hover:to-accent/20 transition-all flex items-center justify-center gap-2"
-                        >
-                          <TrendingUp className="w-4 h-4" />
-                          {language === "ro" ? "📊 Analiză Proprietate — Află Scorul și randamentul" : "📊 Property Analysis — Get Score & ROI"}
-                        </motion.button>
-                      )}
+                    <div className="mt-4 space-y-3">
                       <div className="grid gap-2 px-1">
                         {text.quickActions.map((chip) => (
                           <button
@@ -1300,6 +1288,18 @@ const AIChatbot = ({ initialOpen = false }: { initialOpen?: boolean } = {}) => {
                           </button>
                         ))}
                       </div>
+                      {/* Qualification wizard trigger */}
+                      {!qualificationData && (currentPath.includes("/pentru-proprietari") || currentPath.includes("/investitii") || currentPath === "/") && (
+                        <motion.button
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          onClick={() => setShowQualificationWizard(true)}
+                          className="w-full px-4 py-3 rounded-2xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/30 text-sm font-semibold text-primary hover:from-primary/20 hover:to-accent/20 transition-all flex items-center justify-center gap-2"
+                        >
+                          <TrendingUp className="w-4 h-4" />
+                          {language === "ro" ? "📊 Analiză Proprietate — Află Scorul și randamentul" : "📊 Property Analysis — Get Score & ROI"}
+                        </motion.button>
+                      )}
                     </div>
                   )}
 
