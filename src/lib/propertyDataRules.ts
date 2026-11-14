@@ -53,7 +53,7 @@ export function validatePropertyPrices(input: PropertyPriceInput): PriceIssue[] 
       if (value != null && Number.isFinite(value) && value > MAX_PRICE_PER_NIGHT_EUR) {
         issues.push({
           field,
-          message: `${label} (${fmt(value)} €) depășește plafonul de ${fmt(MAX_PRICE_PER_NIGHT_EUR)} €/noapte. Pare un preț de vânzare — trece-l la „Preț (€)”.`,
+          message: `${label} (${fmt(value)} €) depășește plafonul de ${fmt(MAX_PRICE_PER_NIGHT_EUR)} €/noapte. Pare un preț de vânzare sau o chirie lunară.`,
         });
       }
     }
