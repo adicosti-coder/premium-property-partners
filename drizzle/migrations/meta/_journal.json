@@ -1016,6 +1016,13 @@
       "when": 1794602985033,
       "tag": "0144_market_indices_hotel_values",
       "breakpoints": true
+    },
+    {
+      "idx": 145,
+      "version": "7",
+      "when": 1794652383393,
+      "tag": "0145_normalize_property_fields",
+      "breakpoints": true
     }
   ]
 }
