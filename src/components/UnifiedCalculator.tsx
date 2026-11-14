@@ -549,7 +549,7 @@ leadSent ? (
           <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
           <span className="text-xs font-semibold uppercase tracking-widest text-primary">{ro ? "Calculator venit · rezultat pe loc" : "Income calculator · instant result"}</span>
         </div>
-        <h2 className="font-serif text-2xl font-semibold text-foreground md:text-3xl">{ro ? "Cât poate produce proprietatea ta?" : "How much can your property earn?"}</h2>
+        <h2 className="font-serif text-2xl font-semibold text-foreground md:text-3xl">{ro ? "Cât valorează și cât poate aduce proprietatea ta?" : "How much is your property worth and how much can it earn?"}</h2>
         {welcomeOpen && prefill.name && (
           <div role="status" className="mt-3 flex items-start justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2 text-sm text-foreground">
             <p>{ro ? `Bună, ${prefill.name}! Am pregătit deja calculul${prefill.zone ? ` pentru ${zoneLabel}` : ""}. Verifică datele și ajustează ce nu se potrivește.` : `Hi ${prefill.name}! Your calculation is ready${prefill.zone ? ` for ${zoneLabel}` : ""}. Check the details and adjust anything that doesn't fit.`}</p>
