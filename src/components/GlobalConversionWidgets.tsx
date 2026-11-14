@@ -48,6 +48,7 @@ const FeedbackBanner = lazyWithChunkRecovery(() => import("@/components/Feedback
 interface GlobalConversionWidgetsProps {
   showMobileCTA?: boolean;
   showExitIntent?: boolean;
+  /** @deprecated The Andrei chat is global (GlobalChatAssistant); kept for existing callers. */
   showChatbot?: boolean;
   showVoiceWidget?: boolean;
 }
@@ -60,7 +61,6 @@ interface GlobalConversionWidgetsProps {
 const GlobalConversionWidgets = ({
   showMobileCTA = true,
   showExitIntent = true,
-  showChatbot = true,
   showVoiceWidget = true,
 }: GlobalConversionWidgetsProps) => {
   const [phase1Ready, setPhase1Ready] = useState(false);
