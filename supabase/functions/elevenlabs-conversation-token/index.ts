@@ -96,8 +96,21 @@ serve(async (req) => {
     const data = await response.json();
     console.log("[elevenlabs-conversation-token] Token received successfully for agent:", agentId);
 
+    // Signed WebSocket URL = fallback for networks that block WebRTC audio.
+    let signedUrl: string | null = null;
+    try {
+      const su = await fetch(
+        `https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${agentId}`,
+        { headers: { "xi-api-key": ELEVENLABS_API_KEY } },
+      );
+      if (su.ok) signedUrl = (await su.json()).signed_url ?? null;
+      else console.warn("[elevenlabs-conversation-token] signed URL failed:", su.status, await su.text());
+    } catch (e) {
+      console.warn("[elevenlabs-conversation-token] signed URL error:", (e as Error).message);
+    }
+
     return new Response(
-      JSON.stringify({ token: data.token, agentId }),
+      JSON.stringify({ token: data.token, signedUrl, agentId }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {

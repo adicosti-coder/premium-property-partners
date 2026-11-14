@@ -18,7 +18,8 @@ import { cn } from "@/lib/utils";
 import { supabase, supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
 import { useConversation } from "@elevenlabs/react";
 import { voiceBookingTools } from "@/lib/voiceBookingTools";
-import { buildVoiceSessionVariables, isVoiceErrorDisconnect } from "@/lib/voiceSessionVariables";
+import { isVoiceErrorDisconnect } from "@/lib/voiceSessionVariables";
+import { startAndreiVoiceSession } from "@/lib/voiceSessionStart";
 import { QUICK_CHIPS } from "@/lib/chatQuickChips";
 import { useOptionalSharedAssistantContext } from "@/hooks/useSharedAssistantContext";
 import { neighborhoods } from "@/data/neighborhoods";
@@ -529,11 +530,7 @@ const AIChatbot = ({ initialOpen = false }: { initialOpen?: boolean } = {}) => {
       }
 
       console.log("[AIChatbot] Token received, starting WebRTC for agent:", data.agentId);
-      await conversation.startSession({
-        conversationToken: data.token,
-        connectionType: "webrtc",
-        dynamicVariables: buildVoiceSessionVariables({ pagePath: window.location.pathname, language }),
-      });
+      await startAndreiVoiceSession(conversation.startSession as any, data, { pagePath: window.location.pathname, language });
       stream.getTracks().forEach(t => t.stop());
       setVoiceMode(true);
     } catch (error: any) {
