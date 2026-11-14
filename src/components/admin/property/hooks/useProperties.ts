@@ -2,6 +2,7 @@ import { useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { usePaginatedQuery, type PageSize } from "@/hooks/admin/usePaginatedQuery";
+import { DEFAULT_PROPERTY_SORT, sortToServerOrder, type PropertySort } from "../propertySort";
 
 // NOTE: explicit column list — never "*". Cast as `string` at usage to skip
 // deep select-string type parsing (see query-builder-type-performance).
@@ -66,10 +67,12 @@ export interface UsePropertiesOptions {
   search: string;
   listingType: string; // "all" or specific
   status: PropertyStatusFilter;
+  /** Sortare aplicată pe server; implicit cele mai recente actualizări. */
+  sort?: PropertySort;
 }
 
 export function useProperties(opts: UsePropertiesOptions) {
-  const { page, pageSize, search, listingType, status } = opts;
+  const { page, pageSize, search, listingType, status, sort = DEFAULT_PROPERTY_SORT } = opts;
   const trimmedSearch = search.trim();
   const qc = useQueryClient();
 
@@ -102,7 +105,7 @@ export function useProperties(opts: UsePropertiesOptions) {
     columns: PROPERTY_COLUMNS,
     page,
     pageSize,
-    order: { column: "updated_at", ascending: false },
+    order: sortToServerOrder(sort),
     applyFilters,
   });
 
