@@ -141,7 +141,7 @@ const ConciergeListingCards = ({ cards }: { cards: ConciergeListingCard[] }) => 
   if (!cards.length) return null;
 
   return (
-    <div className="mt-3 grid gap-2.5">
+    <div className="not-prose mt-3 grid gap-2.5">
       {cards.map((card) => {
         const advisoryHref = `https://wa.me/40799069256?text=${encodeURIComponent(`Bună ziua, doresc consultanță RealTrust pentru ${card.name}: ${card.url}`)}`;
         return (
@@ -1013,7 +1013,7 @@ const AIChatbot = ({ initialOpen = false }: { initialOpen?: boolean } = {}) => {
               "fixed z-50 bg-card border border-border/50 shadow-[0_30px_100px_rgba(0,0,0,0.38)] flex flex-col overflow-hidden transition-all duration-500",
               isMinimized
                 ? "bottom-8 right-8 w-72 h-16 rounded-full"
-                : "bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-24 right-2 md:right-4 left-2 md:left-auto w-auto max-w-[calc(100vw-1rem)] md:w-[420px] h-[min(74dvh,640px)] md:h-[min(calc(100vh-8rem),640px)] rounded-[1.75rem]"
+                : "bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-24 right-2 md:right-4 left-2 md:left-auto w-auto max-w-[calc(100vw-1rem)] md:w-[420px] h-[min(80dvh,640px)] md:h-[min(calc(100vh-8rem),640px)] rounded-[1.75rem]"
             )}
           >
             {/* Stream Progress Bar */}
@@ -1043,9 +1043,9 @@ const AIChatbot = ({ initialOpen = false }: { initialOpen?: boolean } = {}) => {
                 {!isMinimized && (
                   <div className="min-w-0">
                     <h3 className="font-serif font-semibold text-base md:text-lg tracking-tight text-foreground truncate">
-                      {voiceMode ? text.voiceModeActive : `${text.title} · ${language === "en" ? "Virtual Consultant" : "Consultant Virtual"}`}
+                      {voiceMode ? text.voiceModeActive : text.title}
                     </h3>
-                    {!voiceMode && <p className="text-[11px] leading-tight text-muted-foreground truncate">RealTrust &amp; ApArt Hotel</p>}
+                    {!voiceMode && <p className="text-[11px] leading-tight text-muted-foreground">{text.role}</p>}
                     <div className="flex items-center gap-1.5 mt-0.5">
                       {voiceMode ? <VoiceWave /> : (
                         <>
@@ -1478,12 +1478,12 @@ const AIChatbot = ({ initialOpen = false }: { initialOpen?: boolean } = {}) => {
                       type="button"
                       onClick={() => openWhatsAppHandoff("ai_chatbot_handoff")}
                       title={text.whatsappHint}
-                      className="flex min-h-12 items-center gap-1.5 rounded-full px-2 text-xs font-semibold text-foreground hover:bg-whatsapp/10"
+                      className="flex min-h-12 items-center gap-1.5 whitespace-nowrap rounded-full px-2 text-xs font-semibold text-foreground hover:bg-whatsapp/10"
                     >
                       <MessageCircle className="h-4 w-4 text-whatsapp" aria-hidden="true" />
                       {text.whatsapp}
                     </button>
-                    <div className="flex items-center gap-1.5 min-w-0">
+                    <div className="hidden md:flex items-center gap-1.5 min-w-0">
                       <span className="text-[10px] text-muted-foreground">{input.length}/2000</span>
                       <span className="text-muted-foreground/30 mx-1">·</span>
                       <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
