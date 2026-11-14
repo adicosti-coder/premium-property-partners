@@ -8,7 +8,7 @@ import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
 /**
  * Property Management revenue & operations stack for owners:
- * 1. Dynamic pricing (RoomPriceGenie + Pynbooking algorithmic integration) + listing SEO.
+ * 1. Dynamic pricing (described to owners as a benefit, without vendor names) + listing SEO.
  * 2. Co-hosting transparency — payouts land directly in the owner's account.
  * 3. Safety & Smart Access package (smart locks + non-intrusive sensors).
  */
@@ -29,7 +29,7 @@ const OwnerPmRevenueStack = () => {
         {
           icon: TrendingUp,
           title: "Prețuri dinamice, ajustate automat",
-          desc: "Tarifele se ajustează automat în funcție de cererea din piață, evenimente locale și grad de ocupare, prin integrarea algoritmică cu RoomPriceGenie & Pynbooking — fără intervenție manuală și fără tarife depășite.",
+          desc: "Algoritmi de tarifare dinamică adaptați zilnic la evenimentele și cererea din Timișoara + sincronizare automată pe canale — fără intervenție manuală și fără tarife depășite.",
         },
         {
           icon: BarChart3,
@@ -87,7 +87,7 @@ const OwnerPmRevenueStack = () => {
         {
           icon: TrendingUp,
           title: "Dynamic rates, adjusted automatically",
-          desc: "Rates adjust automatically based on market demand, local events and occupancy, through the algorithmic integration with RoomPriceGenie & Pynbooking — no manual work and no outdated prices.",
+          desc: "Dynamic pricing algorithms adjusted daily to events and demand in Timișoara + automatic synchronisation across channels — no manual work and no outdated prices.",
         },
         {
           icon: BarChart3,

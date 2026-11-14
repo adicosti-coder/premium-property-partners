@@ -55,7 +55,7 @@ const CalculatorROI = () => {
     },
     {
       question: "Chirie vs hotelier în Timișoara: ce aduce mai mult?",
-      answer: "Depinde de zonă. În ISHO, City of Mara și în centru, regimul hotelier aduce de obicei un venit net estimat mai mare decât chiria clasică, datorită cererii turistice și de business. În zone cu puțini turiști, chiria pe termen lung poate fi mai stabilă. Calculatorul compară ambele variante pe chirii reale din zona ta.",
+      answer: "Depinde de zonă. În City of Mara, în ansamblurile din zona Iulius Town (NordOne, Monarch, XCity) și în centru, regimul hotelier aduce de obicei un venit net estimat mai mare decât chiria clasică, datorită cererii turistice și de business. În zone cu puțini turiști, chiria pe termen lung poate fi mai stabilă. Calculatorul compară ambele variante pe chirii și prețuri reale din zona ta.",
     },
     {
       question: "Care este randamentul imobiliar în Timișoara în 2026?",
@@ -111,7 +111,7 @@ const CalculatorROI = () => {
               Calculator Randament Imobiliar (ROI) Timișoara
             </h1>
             <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
-              Chirie clasică vs. regim hotelier, pe chirii reale din zona ta. <strong>Rezultat în 1 minut, gratuit.</strong>
+              Compară chiria clasică pe termen lung cu regimul hotelier, pe chirii și prețuri reale din zona ta din Timișoara. <strong>Rezultat în 1 minut, gratuit.</strong>
             </p>
             <ul className="mt-4 flex flex-wrap justify-center gap-2 text-xs md:text-sm" aria-label="Avantaje">
               <li className="rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-foreground">6,5–9,4% net estimat</li>
@@ -152,12 +152,14 @@ const CalculatorROI = () => {
             <div className="grid gap-5 md:grid-cols-[1fr_auto] md:items-center">
               <div>
                 <h2 className="text-2xl font-serif font-semibold text-foreground">Următorul pas după calcul</h2>
-                <p className="mt-2 text-muted-foreground">Compară rezultatul cu oportunitățile active sau trimite proprietatea pentru o estimare personalizată.</p>
+                <p className="mt-2 text-muted-foreground">Alege direcția potrivită pentru proprietatea ta. Un consultant RealTrust verifică cifrele pe apartamentul tău, fără obligații.</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Vrei mai multe detalii? Cere o <Link to="/analiza-roi-apartament" className="text-primary hover:underline">analiză de randament personalizată</Link> sau vezi <Link to="/catalog-investitii" className="text-primary hover:underline">catalogul de investiții</Link>.
+                </p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <Link to="/analiza-roi-apartament" className="inline-flex min-h-12 items-center rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Analiză Randament personalizată</Link>
-                <Link to="/catalog-investitii" className="inline-flex min-h-12 items-center rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Vezi catalogul de investiții</Link>
-                <Link to="/pentru-proprietari" className="inline-flex min-h-12 items-center rounded-md border border-input bg-background px-5 text-sm font-semibold text-foreground hover:bg-accent hover:text-accent-foreground">Discută cu echipa</Link>
+                <Link to="/pentru-proprietari" className="inline-flex min-h-12 items-center rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Vreau administrare în regim hotelier / ApArt Hotel</Link>
+                <Link to="/servicii-imobiliare" className="inline-flex min-h-12 items-center rounded-md border border-input bg-background px-5 text-sm font-semibold text-foreground hover:bg-accent hover:text-accent-foreground">Vreau consultanță pentru vânzare / achiziție clasică</Link>
               </div>
             </div>
           </section>
@@ -170,7 +172,7 @@ const CalculatorROI = () => {
                 <h2 className="text-2xl font-serif font-semibold text-foreground">Costuri de achiziție</h2>
               </div>
               <p className="text-muted-foreground">
-                Prețul de achiziție al unui apartament în Timișoara variază în funcție de cartier: <Link to="/imobiliare-timisoara/isho" className="text-primary hover:underline">ISHO</Link> (2.400-2.600 €/mp), <Link to="/imobiliare-timisoara/complex-studentesc" className="text-primary hover:underline">Complex Studențesc</Link> (1.900-2.200 €/mp), Dumbrăvița și Giroc (1.800-2.100 €/mp). La preț se adaugă: notar (~1%), comision agenție (1-3%), TVA (dacă este cazul), mobilier și amenajare (5.000-15.000€).
+                Prețul de achiziție al unui apartament în Timișoara variază în funcție de cartier și ansamblu. Conform indicilor de piață din octombrie 2026: ansamblurile din zona Iulius Town — NordOne, Monarch, XCity — aproximativ 2.180-2.380 €/mp, City of Mara și zona Torontalului aproximativ 2.250-2.290 €/mp, <Link to="/imobiliare-timisoara/complex-studentesc" className="text-primary hover:underline">Complex Studențesc</Link> (1.900-2.200 €/mp), Dumbrăvița și Giroc (1.800-2.100 €/mp). La preț se adaugă: notar (~1%), comision agenție (1-3%), TVA (dacă este cazul), mobilier și amenajare (5.000-15.000€).
               </p>
             </div>
 
@@ -182,8 +184,11 @@ const CalculatorROI = () => {
               <p className="text-muted-foreground mb-3">
                 <strong>Chirie clasică:</strong> 350-700 €/lună pentru 1-2 camere în Timișoara, cu chiriaș pe termen lung. Venit predictibil, cu randament limitat (4-6% brut).
               </p>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground mb-3">
                 <strong>Regim hotelier:</strong> tarif mediu ilustrativ 50-90 €/noapte × 70% ocupare × 30 nopți = 1.050-1.890 €/lună brut. Diferența față de chiria clasică se situează tipic între 1,6× și 2,5×, în funcție de locație și sezon.
+              </p>
+              <p className="text-muted-foreground">
+                <strong>Cum citești rezultatul:</strong> calculatorul pornește de la prețurile și chiriile reale din zona aleasă și îți arată, una lângă alta, chiria clasică și venitul net estimat în regim hotelier. Cifrele sunt estimări orientative, nu venituri garantate; un consultant le verifică pe apartamentul tău înainte de orice decizie.
               </p>
             </div>
 
@@ -223,10 +228,10 @@ const CalculatorROI = () => {
                 <h2 className="text-2xl font-serif font-semibold text-foreground">Cash flow și amortizare</h2>
               </div>
               <p className="text-muted-foreground mb-3">
-                <strong>Cash flow lunar</strong> = venit brut − management − utilități − mentenanță − rată credit (dacă există) − taxe. Pentru un apartament achiziționat cash în ISHO, cash flow-ul net se situează tipic la 700-900 €/lună.
+                <strong>Cash flow lunar</strong> = venit brut − management − utilități − mentenanță − rată credit (dacă există) − taxe. Calculatorul de mai sus îți arată cash flow-ul lunar estimat pentru zona și tipul apartamentului tău.
               </p>
               <p className="text-muted-foreground">
-                <strong>Amortizarea investiției:</strong> la un ROI net între 6,5% și 9,4%, recuperarea capitalului se face în aproximativ 10-15 ani. Adăugând aprecierea proprietății (5-8% pe an în Timișoara), randamentul total ajunge la 11-17% pe an.
+                <strong>Amortizarea investiției:</strong> la un randament net între 6,5% și 9,4%, recuperarea capitalului se face în aproximativ 10-15 ani. Adăugând aprecierea proprietății (5-8% pe an în Timișoara), randamentul total ajunge la 11-17% pe an.
               </p>
             </div>
 

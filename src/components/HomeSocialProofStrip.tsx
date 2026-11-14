@@ -7,7 +7,7 @@ const HomeSocialProofStrip = () => {
   const { language } = useLanguage();
   const ro = language !== "en";
   const items = [
-    { Icon: Award, title: realEstateSinceLabel(language), text: ro ? "Tradiție și consiliere imobiliară de încredere în Timișoara." : "Trusted real estate tradition and advice in Timișoara." },
+    { Icon: Award, title: realEstateSinceLabel(language), text: ro ? "Experiență neîntreruptă în Timișoara: intermediere, investiții, administrare și regim hotelier." : "Uninterrupted experience in Timișoara: brokerage, investments, management and short-stay rentals." },
     { Icon: Star, title: `${GUEST_SCORE_RO}/10 Booking · 4,9/5 Airbnb`, text: ro ? "Evaluarea oaspeților noștri." : "Our guests' rating." },
     { Icon: ShieldCheck, title: ro ? "90 de zile perioadă de probă" : "90-day trial period", text: ro ? "Testează serviciul fără obligații pe termen lung." : "Try the service without a long-term commitment." },
   ];
