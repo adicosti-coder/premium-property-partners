@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect, useCallback, forwardRef, memo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { 
   X, Send, Bot, Loader2, 
   ExternalLink, Minimize2, Mic, Headphones,
   Layers, ShieldCheck, FileDown, RotateCcw,
   Copy, Check, Phone, PhoneOff, Star, Camera,
-  CheckCircle2, MapPin, TrendingUp
+  CheckCircle2, MapPin, TrendingUp, MessageCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,8 @@ import { supabase, supabaseConfig, getSupabasePublishableKey } from "@/lib/supab
 import { useConversation } from "@elevenlabs/react";
 import { useOptionalSharedAssistantContext } from "@/hooks/useSharedAssistantContext";
 import { neighborhoods } from "@/data/neighborhoods";
+import { buildHandoffUrl } from "@/lib/chatWhatsAppHandoff";
+import { trackCriticalConversion } from "@/lib/conversionTracking";
 // jsPDF loaded dynamically on export to avoid 132KB from initial bundle
 
 interface Message {
@@ -334,45 +336,25 @@ const getInstantReply = (msg: string, fallback = false): string | null => {
   return fallback ? "⚡ Am primit mesajul tău! Andrei îți răspunde chiar acum 👇 (dacă preferi, lasă numărul și îți scriem pe WhatsApp)" : null;
 };
 
-// Context-aware quick actions based on current page
-const getContextualQuickActions = (lang: "ro" | "en"): string[] => {
-  const path = typeof window !== "undefined" ? window.location.pathname : "/";
-  
-  if (path.startsWith("/pentru-proprietari") || path.startsWith("/investitii")) {
-    return lang === "ro"
-      ? ["💰 Calculează randamentul proprietății mele", "📊 Comision 15–20% — ce include fiecare pachet?", "📸 Vreau evaluare gratuită a apartamentului", "📖 Citește Ghidul 2026"]
-      : ["💰 Calculate my property's yield", "📊 15–20% commission — what's included?", "📸 I want a free apartment evaluation", "📖 Read the 2026 Guide"];
-  }
-  if (path.startsWith("/proprietate/")) {
-    return lang === "ro"
-      ? ["📅 Verifică disponibilitatea live", "🏷️ Aplică codul DIRECT5 (-5%)", "🛎️ Ce facilități premium sunt incluse?", "📞 Rezervă direct cu discount"]
-      : ["📅 Check live availability", "🏷️ Apply DIRECT5 code (-5%)", "🛎️ What premium amenities are included?", "📞 Book directly with discount"];
-  }
-  if (path.startsWith("/oaspeti") || path.startsWith("/cazare")) {
-    return lang === "ro"
-      ? ["🏠 Ce apartamente sunt libere acum?", "👨‍👩‍👧 Recomandă-mi cazare pentru familie", "🍽️ Top restaurante lângă apartament", "✈️ Transfer aeroport & check-in rapid"]
-      : ["🏠 Which apartments are free now?", "👨‍👩‍👧 Recommend family-friendly stays", "🍽️ Top restaurants near apartment", "✈️ Airport transfer & express check-in"];
-  }
-  if (path.startsWith("/zona/")) {
-    return lang === "ro"
-      ? ["📊 Randamentul mediu în această zonă", "🏠 Apartamente disponibile aici", "📈 Comparație randament cu alte zone", "🗓️ Programează o vizită în zonă"]
-      : ["📊 Average yield in this area", "🏠 Available apartments here", "📈 ROI comparison with other areas", "🗓️ Schedule a visit in this area"];
-  }
-  if (path.startsWith("/blog")) {
-    return lang === "ro"
-      ? ["💡 Cum îmi maximizez venitul din regim hotelier?", "📊 Airbnb vs Booking — ce platformă e mai bună?", "🏠 Vreau să-mi listez proprietatea", "📥 Ghidul complet al investitorului"]
-      : ["💡 How to maximize short-term rental income?", "📊 Airbnb vs Booking — which is better?", "🏠 I want to list my property", "📥 Complete investor guide"];
-  }
-  if (path.startsWith("/imobiliare")) {
-    return lang === "ro"
-      ? ["🏗️ Portofoliu investițional verificat", "💰 Simulare randament investiție", "🔑 Caut apartament cu potențial STR", "📞 Consultanță RealTrust"]
-      : ["🏗️ Verified investment portfolio", "💰 Investment yield simulation", "🔑 Looking for STR-potential apartment", "📞 RealTrust advisory"];
-  }
-  // Default — Hub / Homepage
-  return lang === "ro"
-    ? ["🏷️ Estimează valoarea apartamentului meu", "🏠 Ce apartamente sunt libere acum?", "💰 Calculează-mi randamentul investiției", "📸 Evaluare gratuită a proprietății mele"]
-    : ["🏠 Which apartments are free now?", "💰 Calculate my investment yield", "📸 Free evaluation of my property", "🗺️ Local guide — restaurants & attractions"];
+// Quick-start chips shown in an empty chat. "whatsapp" opens the handoff instead of asking the AI.
+type QuickChip = { label: string; kind: "send" | "whatsapp" };
+const QUICK_CHIPS: Record<"ro" | "en", QuickChip[]> = {
+  ro: [
+    { label: "📊 Calculează randamentul apartamentului meu", kind: "send" },
+    { label: "🔑 Cum funcționează regimul hotelier (comision 15–20%)", kind: "send" },
+    { label: "🏡 Vreau o evaluare gratuită pentru vânzare/chirie", kind: "send" },
+    { label: "💬 Continuă direct pe WhatsApp cu Andrei", kind: "whatsapp" },
+  ],
+  en: [
+    { label: "📊 Calculate my apartment's yield", kind: "send" },
+    { label: "🔑 How short-term rental management works (15–20% commission)", kind: "send" },
+    { label: "🏡 I want a free valuation for sale/rent", kind: "send" },
+    { label: "💬 Continue on WhatsApp with Andrei", kind: "whatsapp" },
+  ],
 };
+
+const TEASER_DELAY_MS = 5000;
+const TEASER_SEEN_KEY = "rt_andrei_teaser_seen";
 
 // --- Report Parser ---
 const parsePropertyReport = (text: string): PropertyReport | null => {
@@ -384,10 +366,12 @@ const cleanReportFromText = (text: string) => text.replace(/<RAPORT_JSON>[\s\S]*
 
 const QUALIFICATION_ZONES = ["ISHO", "Paltim", "Centru", "Iulius Town", "City of Mara", "Nord-One", "Monarch", "Ateneo", "Vivalia", "Altă zonă"];
 
-const AIChatbot = () => {
+const AIChatbot = ({ initialOpen = false }: { initialOpen?: boolean } = {}) => {
   const { language } = useLanguage();
+  const reduceMotion = useReducedMotion();
   const currentPath = typeof window !== "undefined" ? window.location.pathname : "/";
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(initialOpen);
+  const [showTeaser, setShowTeaser] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -429,12 +413,19 @@ const AIChatbot = () => {
   // --- Translations ---
   const t = {
     ro: {
-      title: "Digital Concierge",
-      status: "RealTrust Advisory 24/7",
-      greeting: "Bună ziua! Sunt **Digital Concierge RealTrust & ApArt Hotel**. 🏛️✨\n\nVă pot ajuta cu **disponibilitate live**, **portofoliu investițional verificat**, **simulare randament**, **HostScan din fotografii** și **programare consultanță**.\n\nPentru oportunități imobiliare recomand exclusiv proprietăți RealTrust administrate, verificate sau curate editorial — fără marketplace-uri și fără anunțuri externe neverificate.",
-      placeholder: "Întrebați despre cazare, randament, investiții sau consultanță...",
-      power: "Curated Portfolio · Live Data",
-      quickActions: getContextualQuickActions("ro"),
+      title: "Andrei",
+      role: "Consultant Virtual RealTrust & ApArt Hotel",
+      status: "Online · Răspunde instant",
+      openLabel: "Deschide chatul cu Andrei, consultant virtual RealTrust & ApArt Hotel",
+      teaser: "Bună! Sunt Andrei. Vă ajut cu randamentul, evaluarea sau administrarea apartamentului?",
+      closeTeaser: "Închide mesajul de întâmpinare",
+      closeChat: "Închide chatul",
+      whatsapp: "Continuă pe WhatsApp",
+      whatsappHint: "Rezumatul discuției se completează automat",
+      greeting: "Bună ziua! Sunt **Andrei**, consultantul virtual **RealTrust & ApArt Hotel**. 👋\n\nVă ajut cu **randamentul apartamentului**, **regimul hotelier**, **evaluarea gratuită** pentru vânzare sau chirie și **cazare în Timișoara**. Oricând puteți continua pe WhatsApp cu echipa noastră.",
+      placeholder: "Scrieți-i lui Andrei...",
+      power: "Echipa RealTrust poate prelua discuția",
+      quickActions: QUICK_CHIPS.ro,
       error: "A apărut o eroare. Te rog încearcă din nou.",
       errorNetwork: "Conexiune întreruptă. Verifică internetul.",
       errorRateLimit: "Prea multe cereri. Așteaptă un moment.",
@@ -448,12 +439,19 @@ const AIChatbot = () => {
       continueVoice: "Continuă vocal",
     },
     en: {
-      title: "Digital Concierge",
-      status: "RealTrust Advisory 24/7",
-      greeting: "Welcome to **RealTrust & ApArt Hotel Timișoara**. 🏛️✨ I can help with **live availability**, **verified investment listings**, **randament simulations**, **photo-based HostScan**, and **private advisory scheduling**.\n\nFor real estate opportunities, I recommend only managed, verified, or editorially curated RealTrust properties — no marketplaces and no unverified external ads.",
-      placeholder: "Ask about stays, ROI, investments or advisory...",
-      power: "Curated Portfolio · Live Data",
-      quickActions: getContextualQuickActions("en"),
+      title: "Andrei",
+      role: "RealTrust & ApArt Hotel Virtual Consultant",
+      status: "Online · Replies instantly",
+      openLabel: "Open the chat with Andrei, RealTrust & ApArt Hotel virtual consultant",
+      teaser: "Hi! I'm Andrei. Can I help with your apartment's yield, valuation or management?",
+      closeTeaser: "Close the welcome message",
+      closeChat: "Close chat",
+      whatsapp: "Continue on WhatsApp",
+      whatsappHint: "The conversation summary is filled in automatically",
+      greeting: "Hello! I'm **Andrei**, the **RealTrust & ApArt Hotel** virtual consultant. 👋\n\nI can help with **your apartment's yield**, **short-term rental management**, a **free valuation** for sale or rent and **stays in Timișoara**. You can continue on WhatsApp with our team at any time.",
+      placeholder: "Write to Andrei...",
+      power: "The RealTrust team can take over",
+      quickActions: QUICK_CHIPS.en,
       error: "An error occurred. Please try again.",
       errorNetwork: "Connection lost. Check your internet.",
       errorRateLimit: "Too many requests. Please wait.",
@@ -553,18 +551,18 @@ const AIChatbot = () => {
     const doc = new jsPDF();
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
-    doc.text("ApArt Hotel - Digital Concierge Transcript", 10, 20);
+    doc.text("Andrei - Consultant Virtual RealTrust & ApArt Hotel", 10, 20);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
     let y = 35;
     messages.forEach(m => {
-      const prefix = m.role === "user" ? "Client" : "Concierge";
+      const prefix = m.role === "user" ? "Client" : "Andrei";
       const lines = doc.splitTextToSize(`${prefix}: ${m.content}`, 180);
       if (y + (lines.length * 5) > 280) { doc.addPage(); y = 20; }
       doc.text(lines, 10, y);
       y += (lines.length * 5) + 8;
     });
-    doc.save("ApArt_Concierge_Transcript.pdf");
+    doc.save("RealTrust_Andrei_Conversatie.pdf");
   };
 
   // --- Image Upload Handler ---
@@ -754,8 +752,39 @@ const AIChatbot = () => {
   useEffect(() => {
     if (messages.length === 0) {
       setMessages([{ id: "greeting", role: "assistant", content: text.greeting, timestamp: new Date() }]);
+      return;
     }
+    // Saved chats keep their history, but the welcome bubble always shows the current identity.
+    setMessages(prev => prev.map(m => m.id.startsWith("greeting") ? { ...m, content: text.greeting } : m));
+  }, [language]);
+
+  // Discreet welcome bubble: once per browser session, 5 s after the launcher appears.
+  useEffect(() => {
+    let seen = false;
+    try { seen = sessionStorage.getItem(TEASER_SEEN_KEY) === "1"; } catch { /* noop */ }
+    if (seen || isOpen) return;
+    const timer = setTimeout(() => setShowTeaser(true), TEASER_DELAY_MS);
+    return () => clearTimeout(timer);
   }, []);
+
+  const dismissTeaser = useCallback(() => {
+    setShowTeaser(false);
+    try { sessionStorage.setItem(TEASER_SEEN_KEY, "1"); } catch { /* noop */ }
+  }, []);
+
+  const openChat = useCallback(() => {
+    setIsOpen(true); setIsMinimized(false); setHasUnread(false);
+    dismissTeaser();
+  }, [dismissTeaser]);
+
+  const openWhatsAppHandoff = useCallback((source: string) => {
+    trackCriticalConversion("whatsapp_click", { source });
+    const url = buildHandoffUrl(messages, {
+      language: language === "en" ? "en" : "ro",
+      pageUrl: typeof window !== "undefined" ? window.location.href.split("#")[0] : undefined,
+    });
+    window.open(url, "_blank", "noopener,noreferrer");
+  }, [messages, language]);
 
   // Private thread: pull messages Andrei writes manually from Admin into this chat
   useEffect(() => {
@@ -819,10 +848,9 @@ const AIChatbot = () => {
 
   // Open from external event
   useEffect(() => {
-    const handler = () => { setIsOpen(true); setIsMinimized(false); setHasUnread(false); };
-    window.addEventListener('open-ai-chatbot', handler);
-    return () => window.removeEventListener('open-ai-chatbot', handler);
-  }, []);
+    window.addEventListener('open-ai-chatbot', openChat);
+    return () => window.removeEventListener('open-ai-chatbot', openChat);
+  }, [openChat]);
 
   // Transfer callback
   useEffect(() => {
@@ -913,43 +941,65 @@ const AIChatbot = () => {
 
   return (
     <>
-      {/* Premium Floating Button */}
+      {/* Compact launcher: avatar bubble (mobile) / avatar + status pill (desktop) */}
       <AnimatePresence>
         {!isOpen && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0 }}
-            whileHover={{ scale: 1.05, y: -5 }}
-            onClick={() => { setIsOpen(true); setIsMinimized(false); setHasUnread(false); }}
-            className="fixed bottom-[calc(10.5rem+env(safe-area-inset-bottom))] md:bottom-[136px] right-4 z-40 w-16 h-16 rounded-full bg-primary text-primary-foreground shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex items-center justify-center border-4 border-primary/20 backdrop-blur-md"
-            aria-label={text.title}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
+            className="fixed right-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-24 z-40 flex items-end gap-2"
           >
-            <Bot className="w-8 h-8 relative z-10" />
-            {/* Pulsar ring 1 */}
-            <motion.div
-              animate={{ scale: [1, 1.8], opacity: [0.5, 0] }}
-              transition={{ repeat: Infinity, duration: 2, ease: "easeOut" }}
-              className="absolute inset-0 border-2 border-primary rounded-full"
-            />
-            {/* Pulsar ring 2 (delayed) */}
-            <motion.div
-              animate={{ scale: [1, 1.8], opacity: [0.4, 0] }}
-              transition={{ repeat: Infinity, duration: 2, ease: "easeOut", delay: 0.6 }}
-              className="absolute inset-0 border-2 border-primary rounded-full"
-            />
-            {/* Inner glow pulse */}
-            <motion.div
-              animate={{ scale: [1, 1.15, 1], opacity: [0.25, 0.05, 0.25] }}
-              transition={{ repeat: Infinity, duration: 2.5 }}
-              className="absolute inset-0 bg-primary rounded-full"
-            />
-            {hasUnread && (
-              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-1 -right-1 w-5 h-5 bg-destructive rounded-full flex items-center justify-center">
-                <span className="text-[10px] text-destructive-foreground font-bold">1</span>
-              </motion.div>
-            )}
-          </motion.button>
+            <AnimatePresence>
+              {showTeaser && (
+                <motion.div
+                  key="teaser"
+                  initial={reduceMotion ? { opacity: 0 } : { opacity: 0, x: 12, scale: 0.96 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: 8 }}
+                  transition={{ type: "spring", damping: 22, stiffness: 260 }}
+                  className="relative mb-1 flex max-w-[min(15rem,calc(100vw-7rem))] items-start rounded-2xl rounded-br-md border border-border bg-card shadow-lg"
+                >
+                  <button
+                    type="button"
+                    onClick={openChat}
+                    className="min-h-12 py-2.5 pl-3.5 pr-1 text-left text-[13px] leading-snug text-foreground"
+                  >
+                    {text.teaser}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={dismissTeaser}
+                    aria-label={text.closeTeaser}
+                    className="flex h-12 w-10 shrink-0 items-start justify-center pt-2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <motion.button
+              type="button"
+              onClick={openChat}
+              aria-label={text.openLabel}
+              animate={showTeaser && !reduceMotion ? { rotate: [0, -8, 8, -4, 0] } : { rotate: 0 }}
+              transition={{ duration: 0.6 }}
+              className="relative flex h-14 min-w-14 items-center gap-3 rounded-full border border-accent/40 bg-card p-1 shadow-xl md:pr-5"
+            >
+              <span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary font-serif text-xl font-semibold text-primary-foreground">
+                A
+                <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-card bg-success" aria-hidden="true" />
+              </span>
+              <span className="hidden min-w-0 text-left md:block">
+                <span className="block text-sm font-semibold leading-tight text-foreground">{text.title}</span>
+                <span className="block text-[11px] leading-tight text-muted-foreground">{text.status}</span>
+              </span>
+              {hasUnread && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground" aria-hidden="true">1</span>
+              )}
+            </motion.button>
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -961,11 +1011,13 @@ const AIChatbot = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            role="dialog"
+            aria-label={`${text.title} · ${text.role}`}
             className={cn(
-              "fixed z-50 bg-card backdrop-blur-xl border border-border/50 shadow-[0_30px_100px_rgba(0,0,0,0.38)] flex flex-col overflow-hidden transition-all duration-500",
+              "fixed z-50 bg-card border border-border/50 shadow-[0_30px_100px_rgba(0,0,0,0.38)] flex flex-col overflow-hidden transition-all duration-500",
               isMinimized
                 ? "bottom-8 right-8 w-72 h-16 rounded-full"
-                : "bottom-[max(4.5rem,calc(env(safe-area-inset-bottom)+4.5rem))] md:bottom-4 right-2 md:right-4 left-2 md:left-auto w-auto max-w-[calc(100vw-1rem)] md:w-[450px] h-[min(74vh,700px)] md:h-[700px] rounded-[1.75rem]"
+                : "bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-24 right-2 md:right-4 left-2 md:left-auto w-auto max-w-[calc(100vw-1rem)] md:w-[420px] h-[min(74dvh,640px)] md:h-[min(calc(100vh-8rem),640px)] rounded-[1.75rem]"
             )}
           >
             {/* Stream Progress Bar */}
@@ -988,20 +1040,22 @@ const AIChatbot = () => {
                       ? "bg-accent/15 border-accent/30"
                       : "bg-accent/10 border-accent/25"
                   )}>
-                    {voiceMode ? <Phone className="w-6 h-6 text-accent" /> : <Bot className="w-7 h-7 text-primary" />}
+                    {voiceMode ? <Phone className="w-6 h-6 text-accent" /> : <span className="font-serif text-xl font-semibold text-primary" aria-hidden="true">A</span>}
                   </div>
-                  <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-accent border-[3px] border-card rounded-full" />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-success border-2 border-card rounded-full" aria-hidden="true" />
                 </div>
                 {!isMinimized && (
                   <div className="min-w-0">
                     <h3 className="font-serif font-semibold text-base md:text-lg tracking-tight text-foreground truncate">
-                      {voiceMode ? text.voiceModeActive : text.title}
+                      {voiceMode ? text.voiceModeActive : `${text.title} · ${language === "en" ? "Virtual Consultant" : "Consultant Virtual"}`}
                     </h3>
-                    <div className="flex items-center gap-2 mt-0.5">
+                    {!voiceMode && <p className="text-[11px] leading-tight text-muted-foreground truncate">RealTrust &amp; ApArt Hotel</p>}
+                    <div className="flex items-center gap-1.5 mt-0.5">
                       {voiceMode ? <VoiceWave /> : (
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-[0.14em] font-medium">
-                          {text.status}
-                        </span>
+                        <>
+                          <span className="h-1.5 w-1.5 rounded-full bg-success" aria-hidden="true" />
+                          <span className="text-[11px] font-medium text-success">{text.status}</span>
+                        </>
                       )}
                     </div>
                   </div>
@@ -1022,7 +1076,7 @@ const AIChatbot = () => {
                 <Button variant="ghost" size="icon" className="rounded-xl hover:bg-muted/50 h-9 w-9 hidden md:flex" onClick={() => setIsMinimized(!isMinimized)}>
                   <Minimize2 className="w-4 h-4 text-muted-foreground" />
                 </Button>
-                <Button variant="ghost" size="icon" className="rounded-xl hover:bg-muted/50 h-9 w-9" onClick={() => { setIsOpen(false); setIsMinimized(false); abortControllerRef.current?.abort(); if (voiceMode) endVoiceMode(); }}>
+                <Button variant="ghost" size="icon" className="rounded-xl hover:bg-muted/50 h-9 w-9" aria-label={text.closeChat} onClick={() => { setIsOpen(false); setIsMinimized(false); abortControllerRef.current?.abort(); if (voiceMode) endVoiceMode(); }}>
                   <X className="w-4 h-4 text-muted-foreground" />
                 </Button>
               </div>
@@ -1233,14 +1287,20 @@ const AIChatbot = () => {
                           {language === "ro" ? "📊 Analiză Proprietate — Află Scorul și randamentul" : "📊 Property Analysis — Get Score & ROI"}
                         </motion.button>
                       )}
-                      <div className="flex flex-wrap gap-2 justify-center px-4">
-                        {text.quickActions.map((action, i) => (
+                      <div className="grid gap-2 px-1">
+                        {text.quickActions.map((chip) => (
                           <button
-                            key={i}
-                            onClick={() => handleSend(action)}
-                            className="px-4 py-2.5 rounded-xl bg-muted/50 border border-border/50 text-[11px] font-bold uppercase tracking-wider hover:bg-primary/10 hover:border-primary/40 transition-all text-foreground"
+                            key={chip.label}
+                            type="button"
+                            onClick={() => chip.kind === "whatsapp" ? openWhatsAppHandoff("ai_chatbot_quick_chip") : handleSend(chip.label)}
+                            className={cn(
+                              "min-h-12 w-full rounded-xl border px-4 py-2.5 text-left text-[13px] font-medium transition-colors",
+                              chip.kind === "whatsapp"
+                                ? "border-whatsapp/40 bg-whatsapp/10 text-foreground hover:bg-whatsapp/15"
+                                : "border-border/60 bg-card text-foreground hover:border-primary/40 hover:bg-primary/5",
+                            )}
                           >
-                            {action}
+                            {chip.label}
                           </button>
                         ))}
                       </div>
@@ -1418,10 +1478,15 @@ const AIChatbot = () => {
                   </div>
 
                   <div className="flex items-center justify-between mt-3 px-1 md:px-2 gap-2">
-                    <div className="flex items-center gap-2 opacity-40">
-                      <ShieldCheck className="w-3.5 h-3.5" />
-                      <span className="text-[10px] font-bold uppercase tracking-widest">Secured</span>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => openWhatsAppHandoff("ai_chatbot_handoff")}
+                      title={text.whatsappHint}
+                      className="flex min-h-12 items-center gap-1.5 rounded-full px-2 text-xs font-semibold text-foreground hover:bg-whatsapp/10"
+                    >
+                      <MessageCircle className="h-4 w-4 text-whatsapp" aria-hidden="true" />
+                      {text.whatsapp}
+                    </button>
                     <div className="flex items-center gap-1.5 min-w-0">
                       <span className="text-[10px] text-muted-foreground">{input.length}/2000</span>
                       <span className="text-muted-foreground/30 mx-1">·</span>
