@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { supabase, supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
 import { useConversation } from "@elevenlabs/react";
+import { QUICK_CHIPS } from "@/lib/chatQuickChips";
 import { useOptionalSharedAssistantContext } from "@/hooks/useSharedAssistantContext";
 import { neighborhoods } from "@/data/neighborhoods";
 import { buildHandoffUrl } from "@/lib/chatWhatsAppHandoff";
@@ -337,21 +338,7 @@ const getInstantReply = (msg: string, fallback = false): string | null => {
 };
 
 // Quick-start chips shown in an empty chat. "whatsapp" opens the handoff instead of asking the AI.
-type QuickChip = { label: string; kind: "send" | "whatsapp" };
-const QUICK_CHIPS: Record<"ro" | "en", QuickChip[]> = {
-  ro: [
-    { label: "📊 Calculează randamentul apartamentului meu", kind: "send" },
-    { label: "🔑 Cum funcționează regimul hotelier (comision 15–20%)", kind: "send" },
-    { label: "🏡 Vreau o evaluare gratuită pentru vânzare/chirie", kind: "send" },
-    { label: "💬 Continuă direct pe WhatsApp cu Andrei", kind: "whatsapp" },
-  ],
-  en: [
-    { label: "📊 Calculate my apartment's yield", kind: "send" },
-    { label: "🔑 How short-term rental management works (15–20% commission)", kind: "send" },
-    { label: "🏡 I want a free valuation for sale/rent", kind: "send" },
-    { label: "💬 Continue on WhatsApp with Andrei", kind: "whatsapp" },
-  ],
-};
+
 
 const TEASER_DELAY_MS = 5000;
 const TEASER_SEEN_KEY = "rt_andrei_teaser_seen";
@@ -1276,15 +1263,28 @@ const AIChatbot = ({ initialOpen = false }: { initialOpen?: boolean } = {}) => {
                           <button
                             key={chip.label}
                             type="button"
-                            onClick={() => chip.kind === "whatsapp" ? openWhatsAppHandoff("ai_chatbot_quick_chip") : handleSend(chip.label)}
+                            onClick={() => {
+                              if (chip.kind === "whatsapp") openWhatsAppHandoff("ai_chatbot_quick_chip");
+                              else if (chip.kind === "voice") { if (!isConnectingVoice && !voiceMode) void startVoiceMode(); }
+                              else handleSend(chip.label);
+                            }}
+                            disabled={chip.kind === "voice" && isConnectingVoice}
+                            aria-busy={chip.kind === "voice" && isConnectingVoice ? true : undefined}
                             className={cn(
-                              "min-h-12 w-full rounded-xl border px-4 py-2.5 text-left text-[13px] font-medium transition-colors",
+                              "min-h-12 w-full rounded-xl border px-4 py-2.5 text-left text-[13px] font-medium transition-colors disabled:opacity-70",
                               chip.kind === "whatsapp"
                                 ? "border-whatsapp/40 bg-whatsapp/10 text-foreground hover:bg-whatsapp/15"
-                                : "border-border/60 bg-card text-foreground hover:border-primary/40 hover:bg-primary/5",
+                                : chip.kind === "voice"
+                                  ? "border-accent/50 bg-accent/10 text-foreground hover:bg-accent/15"
+                                  : "border-border/60 bg-card text-foreground hover:border-primary/40 hover:bg-primary/5",
                             )}
                           >
-                            {chip.label}
+                            {chip.kind === "voice" && isConnectingVoice ? (
+                              <span className="inline-flex items-center gap-2">
+                                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                                {language === "ro" ? "Se pornește microfonul..." : "Starting microphone..."}
+                              </span>
+                            ) : chip.label}
                           </button>
                         ))}
                       </div>
