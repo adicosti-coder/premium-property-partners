@@ -38,7 +38,6 @@ const DesktopStickyContactBar = lazyWithChunkRecovery(() => import("@/components
 
 // Defer non-critical widgets to reduce initial main-thread work
 const ExitIntentPopup = lazyWithChunkRecovery(() => import("@/components/ExitIntentPopup"));
-const AIChatbot = lazyWithChunkRecovery(() => import("@/components/AIChatbot"));
 const PWAInstallPrompt = lazyWithChunkRecovery(() => import("@/components/PWAInstallPrompt"));
 const ElevenLabsWidgetLazy = lazyWithChunkRecovery(() => import("@/components/ElevenLabsWidget").then(m => ({ default: m.ElevenLabsWidget })));
 const ReferralPopup = lazyWithChunkRecovery(() => import("@/components/ReferralPopup"));
@@ -139,8 +138,7 @@ const GlobalConversionWidgets = ({
         <Suspense fallback={null}>
           
           <PWAInstallPrompt />
-          {/* AI chatbot launcher replaced by the global LeadEngagementWidget (same corner). */}
-          {false && showChatbot && <AIChatbot />}
+          {/* The Andrei chat (AIChatbot) is mounted once globally by GlobalChatAssistant in App. */}
            {showVoiceWidget && !isMobile && <ElevenLabsWidgetLazy />}
           {showExitIntent && <ExitIntentPopup />}
           <ReferralPopup />

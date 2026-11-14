@@ -20,7 +20,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 
 const CookieConsent = lazy(() => import("@/components/CookieConsent"));
-const GlobalLeadWidget = lazy(() => import("@/components/GlobalLeadWidget"));
+const GlobalChatAssistant = lazy(() => import("@/components/GlobalChatAssistant"));
 const SocialCampaign = lazy(() => import("@/pages/SocialCampaign"));
 const AnalizaShortLink = lazy(() => import("@/pages/AnalizaShortLink"));
 
@@ -225,7 +225,7 @@ const DeferredShell = ({ children }: { children: React.ReactNode }) => {
       {consentReady && (
         <Suspense fallback={null}>
           <CookieConsent />
-          <GlobalLeadWidget />
+          <GlobalChatAssistant />
         </Suspense>
       )}
       <Toaster />
