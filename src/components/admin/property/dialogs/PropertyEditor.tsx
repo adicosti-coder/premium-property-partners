@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { filterPropertyImages } from "@/utils/propertyImageFilter";
 import { supabase } from "@/lib/supabaseClient";
+import {
+  cleanPropertyName,
+  safeHiddenNightlyPrice,
+  showsNightlyPrice,
+  validatePropertyPrices,
+  type PriceField,
+} from "@/lib/propertyDataRules";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -355,8 +362,21 @@ export function PropertyEditor({ open, mode, propertyId, onOpenChange, onSaved }
     }
   };
 
+  const toNumber = (v: string) => (v ? parseFloat(v) : null);
+  const priceIssues = validatePropertyPrices({
+    listingType: formData.listing_type,
+    basePricePerNight: toNumber(formData.base_price_per_night),
+    weekendPricePerNight: toNumber(formData.weekend_price_per_night),
+    capital: toNumber(formData.capital_necesar),
+  });
+  const priceIssueFor = (field: PriceField) => priceIssues.find((i) => i.field === field)?.message;
+  // Câmpurile pe noapte sunt ascunse la vânzare/închiriere; importurile vechi au copiat
+  // acolo prețul de vânzare, deci peste plafon nu se mai trimit.
+  const nightlyPayload = (v: string) =>
+    showsNightlyPrice(formData.listing_type) ? toNumber(v) : safeHiddenNightlyPrice(toNumber(v));
+
   const buildPropertyPayload = (imagePath: string | null | undefined) => ({
-    name: formData.name,
+    name: cleanPropertyName(formData.name),
     location: formData.location,
     latitude: formData.latitude ? parseFloat(formData.latitude) : null,
     longitude: formData.longitude ? parseFloat(formData.longitude) : null,
@@ -375,8 +395,8 @@ export function PropertyEditor({ open, mode, propertyId, onOpenChange, onSaved }
     listing_type: formData.listing_type,
     booking_rating: formData.booking_rating ? parseFloat(formData.booking_rating) : null,
     booking_review_count: formData.booking_review_count ? parseInt(formData.booking_review_count) : null,
-    base_price_per_night: formData.base_price_per_night ? parseFloat(formData.base_price_per_night) : null,
-    weekend_price_per_night: formData.weekend_price_per_night ? parseFloat(formData.weekend_price_per_night) : null,
+    base_price_per_night: nightlyPayload(formData.base_price_per_night),
+    weekend_price_per_night: nightlyPayload(formData.weekend_price_per_night),
     source_url: formData.source_url || null,
     source_platform: formData.source_platform || null,
     capacity: formData.capacity ? parseInt(formData.capacity) : null,
@@ -388,11 +408,19 @@ export function PropertyEditor({ open, mode, propertyId, onOpenChange, onSaved }
 
   const handleSave = async () => {
     const { fields, label } = getRequiredFields(formData.listing_type);
-    const missing = fields.some((f) => !formData[f]);
+    const missing = fields.some((f) => !String(formData[f] ?? "").trim());
     if (missing || (mode === "edit" && !editingProperty)) {
       toast({
         title: "Completează câmpurile obligatorii",
         description: `${label} sunt obligatorii.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    if (priceIssues.length > 0) {
+      toast({
+        title: "Verifică prețurile",
+        description: priceIssues[0].message,
         variant: "destructive",
       });
       return;
@@ -891,7 +919,11 @@ export function PropertyEditor({ open, mode, propertyId, onOpenChange, onSaved }
                         setFormData({ ...formData, base_price_per_night: e.target.value })
                       }
                       placeholder="45"
+                      aria-invalid={!!priceIssueFor("base_price_per_night")}
                     />
+                    {priceIssueFor("base_price_per_night") && (
+                      <p className="text-xs text-destructive">{priceIssueFor("base_price_per_night")}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label>Preț weekend / noapte (€)</Label>
@@ -902,7 +934,11 @@ export function PropertyEditor({ open, mode, propertyId, onOpenChange, onSaved }
                         setFormData({ ...formData, weekend_price_per_night: e.target.value })
                       }
                       placeholder="55"
+                      aria-invalid={!!priceIssueFor("weekend_price_per_night")}
                     />
+                    {priceIssueFor("weekend_price_per_night") && (
+                      <p className="text-xs text-destructive">{priceIssueFor("weekend_price_per_night")}</p>
+                    )}
                   </div>
                 </div>
               </>
@@ -925,7 +961,11 @@ export function PropertyEditor({ open, mode, propertyId, onOpenChange, onSaved }
                     value={formData.capital_necesar}
                     onChange={(e) => setFormData({ ...formData, capital_necesar: e.target.value })}
                     placeholder={isInchiriere ? "450 (chirie lunară)" : "145000 (preț total)"}
+                    aria-invalid={!!priceIssueFor("capital_necesar")}
                   />
+                  {priceIssueFor("capital_necesar") && (
+                    <p className="text-xs text-destructive">{priceIssueFor("capital_necesar")}</p>
+                  )}
                   <p className="text-xs text-muted-foreground">
                     {isInchiriere ? "Chirie lunară în EUR" : "Prețul total în EUR"}
                   </p>

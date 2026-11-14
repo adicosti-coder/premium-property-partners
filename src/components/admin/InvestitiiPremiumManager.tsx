@@ -19,6 +19,7 @@ import {
   Phone, User, Mail, Link2, Filter, Search, RotateCcw,
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
+import { cleanPropertyName, validatePropertyPrices } from "@/lib/propertyDataRules";
 import PropertyImageGallery from "./PropertyImageGallery";
 import MapLocationPicker from "./MapLocationPicker";
 import { Image as ImageIcon } from "lucide-react";
@@ -338,12 +339,26 @@ export default function InvestitiiPremiumManager() {
     setIsEditOpen(true);
   };
 
+  const priceIssues = editingProperty
+    ? validatePropertyPrices({
+        listingType: "investitie",
+        basePricePerNight: editingProperty.base_price_per_night,
+        weekendPricePerNight: editingProperty.weekend_price_per_night,
+        capital: (editingProperty as { capital_necesar?: number | null }).capital_necesar ?? null,
+      })
+    : [];
+  const priceIssueFor = (field: string) => priceIssues.find((i) => i.field === field)?.message;
+
   const handleSave = async () => {
     if (!editingProperty) return;
+    if (priceIssues.length > 0) {
+      toast({ title: "Verifică prețurile", description: priceIssues[0].message, variant: "destructive" });
+      return;
+    }
     setSaving(true);
 
     const payload: any = {
-      name: editingProperty.name,
+      name: cleanPropertyName(editingProperty.name),
       slug: editingProperty.slug || null,
       location: editingProperty.location,
       description_ro: editingProperty.description_ro,
@@ -986,10 +1001,12 @@ export default function InvestitiiPremiumManager() {
                   <div>
                     <Label>Preț/Noapte (€)</Label>
                     <Input type="number" value={editingProperty.base_price_per_night || ""} onChange={(e) => updateField("base_price_per_night", e.target.value ? Number(e.target.value) : null)} />
+                    {priceIssueFor("base_price_per_night") && <p className="text-xs text-destructive mt-1">{priceIssueFor("base_price_per_night")}</p>}
                   </div>
                   <div>
                     <Label>Preț Weekend (€)</Label>
                     <Input type="number" value={editingProperty.weekend_price_per_night || ""} onChange={(e) => updateField("weekend_price_per_night", e.target.value ? Number(e.target.value) : null)} />
+                    {priceIssueFor("weekend_price_per_night") && <p className="text-xs text-destructive mt-1">{priceIssueFor("weekend_price_per_night")}</p>}
                   </div>
                   <div>
                     <Label>Rating Booking</Label>
