@@ -945,6 +945,7 @@ export default function InvestitiiPremiumManager() {
                   <div>
                     <Label>Capital Necesar (€)</Label>
                     <Input type="number" value={editingProperty.capital_necesar || ""} onChange={(e) => updateField("capital_necesar", e.target.value ? Number(e.target.value) : null)} />
+                    {priceIssueFor("capital_necesar") && <p className="text-xs text-destructive mt-1">{priceIssueFor("capital_necesar")}</p>}
                   </div>
                   <div>
                     <Label>Venit Estimat</Label>
