@@ -1,0 +1,2 @@
+# platform-e2e-test rules
+- `platform-e2e-test` probes the Calculator lead via `system_e2e_lead_probe()`, which inserts inside a rolled-back subtransaction (lead row and queued pg_net calls discarded); background-job alerts use `_shared/consecutiveFailures.ts` (>2 consecutive or stuck >2h) for both `automation_runs` and `cron_run_log` — E2E never sends real WhatsApp/CRM traffic and one rule decides alerts.
