@@ -642,8 +642,8 @@ const CatalogInvestitii = () => {
                     </h2>
                     <p className="text-muted-foreground text-center max-w-2xl mx-auto mb-12">
                       {isRo
-                        ? "Apartamente selectate cu potențial dovedit de randament, gata de administrare în regim hotelier."
-                        : "Curated apartments with proven yield potential, ready for hotel-style management."}
+                        ? "Apartamente selectate cu randament net estimat transparent, gata de administrare în regim hotelier."
+                        : "Curated apartments with a transparently estimated net yield, ready for hotel-style management."}
                     </p>
                     <div className="grid md:grid-cols-2 gap-6">
                       {saleProperties.map((prop, i) => (
