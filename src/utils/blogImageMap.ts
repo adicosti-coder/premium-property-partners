@@ -125,8 +125,6 @@ export const blogImageMap: Record<string, string> = {
   "calea-girocului-vs-calea-sagului-randament-apartamente": timisoaraCartiereInvestitii2026,
   "investitii-complex-studentesc-timisoara-2026": timisoaraInvestitii,
   "calea-lipovei-vs-aradului-chirii-2026": timisoaraCartiereInvestitii2026,
-  "isho-timisoara-analiza-adr-premium": brandPremium,
-  "isho-vs-city-of-mara-comparatie-investitie-2026": timisoaraCartiereInvestitii2026,
   "shopping-timisoara-iulius-town-shopping-city-targuri-branduri-locale": timisoaraShoppingEvenimente,
   "viata-de-noapte-in-timisoara-top-cluburi-baruri-terase-de-vara-2026": timisoaraNightlife2026,
   "top-20-atractii-turistice-timisoara-ghid-complet-2026": ghidTuristicTimisoara,

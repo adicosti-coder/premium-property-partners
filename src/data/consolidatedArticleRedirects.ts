@@ -29,6 +29,9 @@ export const CONSOLIDATED_ARTICLE_REDIRECTS: Record<string, string> = {
   "chirii-termen-lung-apartamente-nzeb-timisoara":
     "/blog/apartamente-nzeb-timisoara-lista-completa-2026-impact-roi",
   "5-greseli-comune-administrare": "/blog/faq-obiectii-proprietari-raspunsuri",
+  // ISHO nu mai este prezentat pe site (15 nov 2026).
+  "isho-timisoara-analiza-adr-premium": "/zone-investitii-timisoara",
+  "isho-vs-city-of-mara-comparatie-investitie-2026": "/complexe/city-of-mara",
 };
 
 export const resolveConsolidatedArticle = (slug?: string): string | null =>
