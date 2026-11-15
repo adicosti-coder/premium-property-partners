@@ -91,7 +91,7 @@ const ProcesulNostru = () => {
     en: {
       seoTitle: "Our Process — 5 Steps to Profit | RealTrust Timișoara",
       seoDescription:
-        "See the 5 steps RealTrust takes to turn your Timișoara apartment into a passive income source with over 9% net randament.",
+        "See the 5 steps RealTrust takes to turn your Timișoara apartment into an income source, with an estimated net yield of 6.5–9.4% per year.",
       breadcrumb: "Our Process",
       badge: "The RealTrust Process · 5 steps",
       title: "How we turn your apartment",
