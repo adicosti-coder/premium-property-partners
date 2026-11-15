@@ -56,8 +56,9 @@ Lista completă cu specificații, facilități și linkuri de rezervare: [/llms-
 - [Cazare regim hotelier](/cazare): Cazare în apartamente premium în regim hotelier în Timișoara.
 - [Pentru proprietari](/pentru-proprietari): Servicii de administrare apartamente în regim hotelier.
 - [Calculator Randament Imobiliar (ROI)](/calculator-randament): Calculator randament net pentru apartamente în regim hotelier vs. închiriere clasică.
-- [Catalog investiții](/catalog-investitii): Apartamente cu randament calculat transparent (9,4% net).
+- [Catalog investiții](/catalog-investitii): Apartamente cu randament net estimat 6,5–9,4% pe an, calculat transparent.
 - [Imobiliare Timișoara](/imobiliare): Anunțuri vânzări și închirieri în Timișoara.
+- [Ansambluri rezidențiale](/ansambluri-rezidentiale): Ansamblurile din Timișoara în care RealTrust vinde, închiriază și administrează apartamente.
 - [Hub cartiere](/cartiere): Ghid pe cartiere — Cetate, Iosefin, Fabric, Dumbrăvița, Aradului.
 - [Piața imobiliară](/piata-imobiliara-timisoara): Prețuri €/mp și tendințe lunare pe cartiere.
 - [Servicii imobiliare](/servicii-imobiliare): Vânzări, închirieri, administrare, consultanță.
@@ -66,6 +67,14 @@ Lista completă cu specificații, facilități și linkuri de rezervare: [/llms-
 - [Despre noi](/despre-noi): Echipă fondată de Adrian Costi în Timișoara.
 - [Contact](/contact): Date oficiale de contact.
 - [Blog](/blog): Articole despre regim hotelier, ROI, piață imobiliară Timișoara.
+
+## Ansambluri rezidențiale
+
+- [XCity Towers](/complexe/xcity-towers): Apartamente de vânzare, închiriere și regim hotelier pe Calea Aradului.
+- [Vivalia](/complexe/vivalia): Apartamente în ansamblul Vivalia, Timișoara.
+- [City of Mara](/complexe/city-of-mara): Apartamente în City of Mara, zona Circumvalațiunii.
+- [Nord One](/complexe/nord-one): Apartamente în nordul Timișoarei, zona Aradului / Torontalului.
+- [Fructus Plaza](/complexe/fructus-plaza): Apartamente ultracentrale în Fructus Plaza.
 
 ## Optional
 
