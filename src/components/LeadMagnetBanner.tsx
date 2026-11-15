@@ -154,9 +154,9 @@ const LeadMagnetBanner = ({ variant = "inline", className }: LeadMagnetBannerPro
                           <Sparkles className="w-5 h-5 mb-1" />
                           <span className="text-[10px] font-medium block">GHID INVESTITOR</span>
                         </div>
-                        <h4 className="text-sm font-bold leading-tight mb-1">
+                        <p className="text-sm font-bold leading-tight mb-1">
                           Timișoara 2026
-                        </h4>
+                        </p>
                         <p className="text-[10px] opacity-80 leading-tight">
                           Capitala Culturală Europeană
                         </p>
