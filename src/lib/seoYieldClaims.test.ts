@@ -20,6 +20,7 @@ const SEO_SOURCES = [
   "src/pages/ProcesulNostru.tsx",
   "src/pages/ComplexLanding.tsx",
   "src/pages/Complexe.tsx",
+  "src/components/SEOLocalEntitiesBlock.tsx",
   "public/llms.txt",
 ];
 
