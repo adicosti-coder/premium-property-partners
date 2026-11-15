@@ -7,7 +7,7 @@
 - [x] llms.txt: catalog cu 6,5–9,4% și linkuri spre ansambluri
 - [x] Ocupare 78–95% din textele cartierelor: rămâne neschimbată (decizie 15 nov)
 - [x] ISHO scos din textele publice, pagini dedicate redirecționate
-- [ ] De decis: anunțul activ „Apartament Premium cu 2 Camere în ISHO” și cele 2 articole de blog despre ISHO (+4 care îl menționează)
+- [x] Anunț ISHO redenumit; 2 articole ISHO ascunse și redirecționate; 4 articole curățate
 
 ## Calculator complet randament și evaluare — 13 noiembrie (seara)
 - [x] Prețuri de vânzare €/mp în 3 niveluri (anunțuri colectate → tabel de referință → grila evaluării gratuite)
