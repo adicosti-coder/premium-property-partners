@@ -324,7 +324,7 @@ const CatalogInvestitii = () => {
     : [
         { icon: TrendingUp, text: "+40% tourism growth — European Capital of Culture", gradient: "from-amber-500/20 to-yellow-500/10" },
         { icon: Building, text: "Romania's 2nd IT hub — constant demand", gradient: "from-blue-500/20 to-indigo-500/10" },
-        { icon: BarChart3, text: "8-11% hotel-style ROI vs 3-4% classic rental", gradient: "from-emerald-500/20 to-green-500/10" },
+        { icon: BarChart3, text: "Estimated 6.5–9.4% net hotel-style yield vs 3-4% classic rental", gradient: "from-emerald-500/20 to-green-500/10" },
         { icon: Euro, text: "Prices 30-50% below Bucharest or Cluj", gradient: "from-amber-500/20 to-orange-500/10" },
         { icon: Plane, text: "Modernized infrastructure: airport, trams, urban regeneration", gradient: "from-purple-500/20 to-violet-500/10" },
       ];
