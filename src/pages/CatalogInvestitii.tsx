@@ -199,8 +199,8 @@ const CatalogInvestitii = () => {
   const t = {
     title: isRo ? "Catalog investiții Timișoara 2026 | RealTrust" : "Timișoara Investment Catalog 2026 | RealTrust",
     subtitle: isRo
-      ? "Proprietăți premium cu randament garantat în Capitala Culturală a Europei"
-      : "Premium properties with guaranteed returns in the European Capital of Culture",
+      ? "Proprietăți premium cu randament net estimat de 6,5–9,4% în Capitala Culturală a Europei"
+      : "Premium properties with an estimated 6.5–9.4% net yield in the European Capital of Culture",
     unlockTitle: isRo ? "Deblochează Catalogul Complet" : "Unlock the Full Catalog",
     unlockDesc: isRo
       ? "Introdu emailul tău pentru acces instant la toate proprietățile, analizele financiare și oportunitățile de investiție."
@@ -317,7 +317,7 @@ const CatalogInvestitii = () => {
     ? [
         { icon: TrendingUp, text: "Creștere turistică +40% — Capitala Culturală Europeană", gradient: "from-amber-500/20 to-yellow-500/10" },
         { icon: Building, text: "Al 2-lea hub IT din România — cerere constantă", gradient: "from-blue-500/20 to-indigo-500/10" },
-        { icon: BarChart3, text: "Randament 8-11% hotelier vs 3-4% chirie clasică", gradient: "from-emerald-500/20 to-green-500/10" },
+        { icon: BarChart3, text: "Randament net estimat 6,5–9,4% hotelier vs 3-4% chirie clasică", gradient: "from-emerald-500/20 to-green-500/10" },
         { icon: Euro, text: "Prețuri cu 30-50% sub București sau Cluj", gradient: "from-amber-500/20 to-orange-500/10" },
         { icon: Plane, text: "Infrastructură modernizată: aeroport, tramvaie, regenerare urbană", gradient: "from-purple-500/20 to-violet-500/10" },
       ]
@@ -469,7 +469,7 @@ const CatalogInvestitii = () => {
                   <div className="space-y-2">
                     {[
                       isRo ? "Analiză completă de piață Timișoara 2026" : "Complete Timișoara 2026 market analysis",
-                      isRo ? "Proprietăți cu randament dovedit de 8-11%" : "Properties with proven 8-11% ROI",
+                      isRo ? "Proprietăți cu randament net estimat de 6,5–9,4%" : "Properties with an estimated 6.5–9.4% net yield",
                       isRo ? "Comparație financiară hotelier vs. clasic" : "Hotel-style vs. classic financial comparison",
                       isRo ? "Studii de caz din portofoliul activ" : "Case studies from active portfolio",
                     ].map((item, i) => (

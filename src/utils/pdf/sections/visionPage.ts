@@ -38,8 +38,8 @@ export const drawVisionPage = (ctx: PdfContext) => {
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...COLORS.white);
   const visionTitle = isRo
-    ? "Transformăm proprietăți în\ninvestiții cu randament garantat."
-    : "We transform properties into\ninvestments with guaranteed returns.";
+    ? "Transformăm proprietăți în\ninvestiții cu randament estimat transparent."
+    : "We transform properties into\ninvestments with transparently estimated returns.";
   doc.text(visionTitle, pageWidth / 2, 62, { align: "center" });
 
   // Vision description
