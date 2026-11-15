@@ -1565,14 +1565,13 @@ export function buildStaticRoutes(): PrerenderRoute[] {
   // /ansambluri-rezidentiale — managed residential complexes (canonical short route)
   routes.push({
     path: '/ansambluri-rezidentiale',
-    // Title, description and h1 come from PUBLIC_ROUTE_SEO (applied below).
-    title: '',
-    description: '',
-    h1: '',
+    // Same audited metadata as the React page (PUBLIC_ROUTE_SEO).
+    ...PUBLIC_ROUTE_SEO['/ansambluri-rezidentiale'].ro,
     canonical: `${BASE_URL}/ansambluri-rezidentiale`,
     seoBody: `
       <h2>Ansambluri rezidențiale din Timișoara: apartamente, prețuri și administrare</h2>
-      <p>Pagina /ansambluri-rezidentiale este dedicată ansamblurilor rezidențiale și proprietăților administrate de RealTrust în Timișoara: <strong>ISHO</strong>, <strong>ATENEO Residence</strong>, <strong>City of Mara</strong>, <strong>Fructus Plaza</strong>, <strong>XCity Towers</strong> și alte dezvoltări premium.</p>
+      <p>Ansamblurile rezidențiale din Timișoara în care RealTrust intermediază vânzări și închirieri și administrează apartamente în regim hotelier: <a href="${BASE_URL}/complexe/xcity-towers">XCity Towers</a>, <a href="${BASE_URL}/complexe/vivalia">Vivalia</a>, <a href="${BASE_URL}/complexe/city-of-mara">City of Mara</a>, <a href="${BASE_URL}/complexe/nord-one">NordOne</a>, <a href="${BASE_URL}/complexe/fructus-plaza">Fructus Plaza</a>, <a href="${BASE_URL}/complexe/ateneo">ATENEO</a>, <a href="${BASE_URL}/complexe/denya-forest">Denya Forest</a>, ISHO și alte dezvoltări.</p>
+      <p>Pentru fiecare ansamblu găsești anunțurile disponibile, prețul orientativ pe metru pătrat din zonă și o estimare de venit în regim hotelier, comparată cu chiria clasică.</p>
       <h3>Ansambluri rezidențiale Timișoara cu potențial investițional</h3>
       <p>Prezentăm zone, facilități și rezultate reale de ocupare pentru investitori interesați de apartamente noi, randament net estimat de 6,5–9,4% și administrare în regim hotelier în cele mai căutate micro-piețe din Timișoara.</p>
     `,
