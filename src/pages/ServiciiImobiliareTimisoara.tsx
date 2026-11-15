@@ -197,7 +197,7 @@ const ServiciiImobiliareTimisoara = () => {
               {isRo ? (
                 <>
                   <p>
-                    Monitorizăm zilnic <strong>piața imobiliară Timișoara</strong> și actualizăm prețurile pe cartiere. Prețul mediu/m² variază între 1.700 € (Soarelui, Steaua, Mehala) și 2.600 € (Centru, ISHO, Iulius Town), iar randamentul net în regim hotelier este estimat la <strong>6,5–9,4% pe an</strong>. Cartiere precum <strong>Braytim</strong> și Mehala câștigă teren la familii și investitori.
+                    Monitorizăm zilnic <strong>piața imobiliară Timișoara</strong> și actualizăm prețurile pe cartiere. Prețul mediu/m² variază între 1.700 € (Soarelui, Steaua, Mehala) și 2.600 € (Centru, Iulius Town), iar randamentul net în regim hotelier este estimat la <strong>6,5–9,4% pe an</strong>. Cartiere precum <strong>Braytim</strong> și Mehala câștigă teren la familii și investitori.
                   </p>
                   <p>
                     Apartamente și case de vânzare lângă marii angajatori (<strong>Continental Automotive</strong>, Hella, Flex) sunt cele mai căutate pentru închirieri pe termen lung — un agent imobiliar Timișoara dedicat din echipa RealTrust te ghidează în alegere.
@@ -206,7 +206,7 @@ const ServiciiImobiliareTimisoara = () => {
               ) : (
                 <>
                   <p>
-                    We monitor the <strong>Timișoara real estate market</strong> daily and update prices by neighborhood. Average €/m² ranges from €1,700 (Soarelui, Steaua, Mehala) to €2,600 (Center, ISHO, Iulius Town), with verified short-term rental net ROI up to <strong>9.4%</strong>. Neighborhoods like <strong>Braytim</strong> and Mehala are gaining traction with families and investors.
+                    We monitor the <strong>Timișoara real estate market</strong> daily and update prices by neighborhood. Average €/m² ranges from €1,700 (Soarelui, Steaua, Mehala) to €2,600 (Center, Iulius Town), with verified short-term rental net ROI up to <strong>9.4%</strong>. Neighborhoods like <strong>Braytim</strong> and Mehala are gaining traction with families and investors.
                   </p>
                   <p>
                     Apartments and houses for sale near major employers (<strong>Continental Automotive</strong>, Hella, Flex) are the most sought-after for long-term rentals — a dedicated RealTrust Timișoara real estate agent will guide you through the choice.

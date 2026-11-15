@@ -23,8 +23,8 @@ export function SEODualCTASection() {
         ? "Investiții Imobiliare în Ansambluri Rezidențiale Timișoara"
         : "Real Estate Investments in Residential Complexes Timișoara",
       desc: isRo
-        ? "Analizăm constant randamentul activelor din cele mai importante complexe din Timișoara, precum ISHO, Paltim, Cetate sau City of Mara, pentru a-ți oferi oportunități cu randament ridicat."
-        : "We constantly analyze asset yields in Timișoara's top residential complexes — ISHO, Paltim, Cetate, City of Mara — to bring you high-randament opportunities.",
+        ? "Analizăm constant randamentul activelor din cele mai importante complexe din Timișoara, precum Paltim, Cetate sau City of Mara, pentru a-ți oferi oportunități cu randament ridicat."
+        : "We constantly analyze asset yields in Timișoara's top residential complexes — Paltim, Cetate, City of Mara — to bring you high-randament opportunities.",
       cta: isRo
         ? "Vezi Catalogul complet de Ansambluri Rezidențiale în Timișoara"
         : "Browse the full Residential Complexes Catalog in Timișoara",

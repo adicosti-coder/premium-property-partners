@@ -7,7 +7,6 @@ import { MapPin, Loader2 } from 'lucide-react';
 // Zone coordinates in Timișoara
 const ZONE_COORDS: Record<string, [number, number]> = {
   "Fructus Plaza": [21.2270, 45.7580],
-  "ISHO": [21.2180, 45.7470],
   "Paltim": [21.2320, 45.7580],
   "Centru": [21.2246, 45.7537],
   "Iulius Town": [21.2370, 45.7630],

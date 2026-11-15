@@ -92,13 +92,11 @@ serve(async (req: Request) => {
       { url: "/imobiliare-timisoara/sagului", priority: "0.8", changefreq: "monthly" },
       { url: "/imobiliare-timisoara/complex-studentesc", priority: "0.8", changefreq: "monthly" },
       { url: "/imobiliare-timisoara/calea-lipovei", priority: "0.8", changefreq: "monthly" },
-      { url: "/imobiliare-timisoara/isho", priority: "0.8", changefreq: "monthly" },
       // Zone landing pages
       { url: "/zona/centru", priority: "0.7", changefreq: "weekly" },
       { url: "/zona/iulius-town", priority: "0.7", changefreq: "weekly" },
       { url: "/zona/fabric", priority: "0.7", changefreq: "weekly" },
       // Complex landing pages (SEO)
-      { url: "/complexe/isho", priority: "0.7", changefreq: "weekly" },
       { url: "/complexe/ateneo", priority: "0.7", changefreq: "weekly" },
       { url: "/complexe/green-forest", priority: "0.7", changefreq: "weekly" },
       { url: "/complexe/helios", priority: "0.7", changefreq: "weekly" },
@@ -268,7 +266,7 @@ ${sitemapAlternateLinks(`/proprietate/${property.slug}`, false)}
     // already in the static list as /complexe/<slug>; the rest are served by
     // the generic detail route /complex/<slug>, which is their canonical form.
     const LANDING_SLUGS = new Set([
-      "isho", "paltim", "ateneo", "green-forest", "helios", "fructus-plaza",
+      "paltim", "ateneo", "green-forest", "helios", "fructus-plaza",
       "city-of-mara", "vivalia", "nord-one", "xcity-towers", "denya-forest",
     ]);
     if (complexes && complexes.length > 0) {

@@ -13,7 +13,7 @@ Vei genera conținut în limba română, profesionist, de încredere, cu date co
 
 REGULI:
 - Folosește un ton elegant, de expert, fără exagerări.
-- Include NATURAL entități locale din Timișoara: Parcul Rozelor, Iulius Town, ISHO, Piața Unirii, Piața Victoriei, Parcul Botanic, Universitatea de Vest, Universitatea Politehnica, Centrul Vechi, Bastionul Theresia, Fabric, Iosefin, Dâmbovița, Giroc, Complexul Studențesc, Calea Aradului, Shopping City, Bega, Amazonia Aquapark.
+- Include NATURAL entități locale din Timișoara: Parcul Rozelor, Iulius Town, Piața Unirii, Piața Victoriei, Parcul Botanic, Universitatea de Vest, Universitatea Politehnica, Centrul Vechi, Bastionul Theresia, Fabric, Iosefin, Dâmbovița, Giroc, Complexul Studențesc, Calea Aradului, Shopping City, Bega, Amazonia Aquapark.
 - Nu inventa statistici specifice — folosește formulări precum "potențial ridicat", "tendință ascendentă", "zonă premium".
 
 Vei primi date despre o proprietate și vei genera un JSON cu exact această structură (fără markdown, doar JSON valid):
@@ -65,7 +65,7 @@ You MUST write all output in ENGLISH ONLY. Do NOT use Romanian. Local place name
 
 RULES:
 - Elegant, expert tone, no hype.
-- Naturally weave in local Timișoara landmarks: Parcul Rozelor, Iulius Town, ISHO, Piața Unirii, Piața Victoriei, Parcul Botanic, West University, Polytechnic University, Old Town, Bastionul Theresia, Fabric, Iosefin, Dâmbovița, Giroc, Student Complex, Calea Aradului, Shopping City, Bega, Amazonia Aquapark.
+- Naturally weave in local Timișoara landmarks: Parcul Rozelor, Iulius Town, Piața Unirii, Piața Victoriei, Parcul Botanic, West University, Polytechnic University, Old Town, Bastionul Theresia, Fabric, Iosefin, Dâmbovița, Giroc, Student Complex, Calea Aradului, Shopping City, Bega, Amazonia Aquapark.
 - Do NOT invent specific statistics — use phrasing like "strong potential", "upward trend", "premium area".
 
 Return a JSON object with EXACTLY this structure (no markdown, valid JSON only):

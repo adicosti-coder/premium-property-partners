@@ -26,7 +26,6 @@ const PROPERTY_TYPES: { key: PropertyTypeKey; mult: number; ro: string; en: stri
 ];
 
 const ZONES: { key: string; slug: string; factor: number; ro: string; en: string }[] = [
-  { key: "isho", slug: "isho", factor: 1.06, ro: "ISHO", en: "ISHO" },
   { key: "city-of-mara", slug: "alta", factor: 1.04, ro: "City of Mara", en: "City of Mara" },
   {
     key: "circumvalatiunii",

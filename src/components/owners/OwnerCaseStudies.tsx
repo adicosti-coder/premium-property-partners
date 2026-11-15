@@ -32,7 +32,7 @@ const OwnerCaseStudies = () => {
           {
             icon: Home,
             label: "Garsonieră / Studio",
-            zone: "Circumvalațiunii / ISHO",
+            zone: "Circumvalațiunii",
             title: "Studio convertit în regim hotelier",
             before: "330 €/lună",
             after: "760 €/lună",
@@ -86,7 +86,7 @@ const OwnerCaseStudies = () => {
           {
             icon: Home,
             label: "Studio",
-            zone: "Circumvalațiunii / ISHO",
+            zone: "Circumvalațiunii",
             title: "Studio converted to short-stay operation",
             before: "€330/month",
             after: "€760/month",

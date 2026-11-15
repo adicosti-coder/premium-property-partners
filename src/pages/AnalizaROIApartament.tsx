@@ -42,7 +42,6 @@ const marketEvolution = [
 ];
 
 const complexLinks = [
-  { name: "ISHO", href: "/complexe/isho", profile: "premium urban", yield: "6,5–9,4%" },
   { name: "City of Mara", href: "/complexe/city-of-mara", profile: "central business", yield: "6,5–9,4%" },
   { name: "Ateneo", href: "/complexe/ateneo", profile: "nou, lichiditate bună", yield: "6,5–9,4%" },
   { name: "Fructus Plaza", href: "/complexe/fructus-plaza", profile: "ultracentral", yield: "6,5–9,4%" },

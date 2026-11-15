@@ -51,7 +51,6 @@ const TIMISOARA_ZONES = [
   "Complex Studențesc",
   "Take Ionescu",
   "Torontalului",
-  "ISHO",
   "City of Mara",
   "Altă zonă din Timișoara",
 ] as const;

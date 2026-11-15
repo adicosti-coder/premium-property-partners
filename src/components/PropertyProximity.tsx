@@ -35,7 +35,6 @@ const categoryIcons: Record<GeoPoiCategory, React.ComponentType<{ className?: st
 const poiSearchMapping: Record<string, string> = {
   "Iulius Town": "Iulius Town",
   "Iulius Mall": "Iulius Town",
-  "ISHO": "ISHO",
   "Piața Unirii": "Piața Unirii",
   "Piața Victoriei": "Piața Victoriei",
   "Parcul Rozelor": "Parcul Rozelor",

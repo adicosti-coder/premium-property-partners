@@ -290,7 +290,7 @@ const Blog = () => {
   const blogFaqItems = [
     {
       question: "Care sunt prețurile imobiliare în Timișoara în 2026?",
-      answer: "Prețurile medii pe metru pătrat în Timișoara variază între 1.300 €/mp (Mehala, Ronaț) și 2.600 €/mp (Centru, ISHO). Dumbrăvița și Giroc se situează la 1.800-2.100 €/mp, cu apreciere anuală de 5-8%.",
+      answer: "Prețurile medii pe metru pătrat în Timișoara variază între 1.300 €/mp (Mehala, Ronaț) și 2.600 €/mp (Centru). Dumbrăvița și Giroc se situează la 1.800-2.100 €/mp, cu apreciere anuală de 5-8%.",
     },
     {
       question: "Cum a evoluat piața imobiliară Timișoara în ultimii ani?",
@@ -298,7 +298,7 @@ const Blog = () => {
     },
     {
       question: "Care este randamentul chiriei în Timișoara — clasic vs regim hotelier?",
-      answer: "Chirie clasică: 4-6% randament brut. Regim hotelier administrat profesional (RealTrust): 6,5–9,4% net estimat pe an, multiplicator 1.6-2.5x. Cele mai performante zone: ISHO, Centru, Complex Studențesc, Iulius Town.",
+      answer: "Chirie clasică: 4-6% randament brut. Regim hotelier administrat profesional (RealTrust): 6,5–9,4% net estimat pe an, multiplicator 1.6-2.5x. Cele mai performante zone: Centru, Complex Studențesc, Iulius Town.",
     },
     {
       question: "Sunt apartamente disponibile lângă Continental, Hella sau Spitalul Premiere?",

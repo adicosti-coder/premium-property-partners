@@ -354,7 +354,7 @@ const parsePropertyReport = (text: string): PropertyReport | null => {
 };
 const cleanReportFromText = (text: string) => text.replace(/<RAPORT_JSON>[\s\S]*?<\/RAPORT_JSON>/g, "").trim();
 
-const QUALIFICATION_ZONES = ["ISHO", "Paltim", "Centru", "Iulius Town", "City of Mara", "Nord-One", "Monarch", "Ateneo", "Vivalia", "Altă zonă"];
+const QUALIFICATION_ZONES = ["Centru", "Paltim", "Iulius Town", "City of Mara", "Nord-One", "Monarch", "Ateneo", "Vivalia", "Altă zonă"];
 
 const AIChatbot = ({ initialOpen = false }: { initialOpen?: boolean } = {}) => {
   const { language } = useLanguage();
@@ -384,7 +384,7 @@ const AIChatbot = ({ initialOpen = false }: { initialOpen?: boolean } = {}) => {
       return saved ? JSON.parse(saved) : null;
     } catch { return null; }
   });
-  const [wizardForm, setWizardForm] = useState({ name: "", phone: "", zone: "ISHO" });
+  const [wizardForm, setWizardForm] = useState({ name: "", phone: "", zone: "Centru" });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [messages, setMessages] = useState<Message[]>(() => {

@@ -112,7 +112,7 @@ serve(async (req) => {
       </h2>
       <ul style="margin:0;padding-left:20px;color:#374151;font-size:14px;line-height:1.8;">
         <li>${isRo ? "ROI net verificat 9.4% în regim hotelier" : "Verified 9.4% net ROI in short-term rental"}</li>
-        <li>${isRo ? "Top cartiere: Iosefin, Elisabetin, ISHO, Ultracentral" : "Top neighborhoods: Iosefin, Elisabetin, ISHO, Ultracentral"}</li>
+        <li>${isRo ? "Top cartiere: Iosefin, Elisabetin, Ultracentral" : "Top neighborhoods: Iosefin, Elisabetin, Ultracentral"}</li>
         <li>${isRo ? "Comparativ fiscal PFA vs SRL (cu calculator)" : "PFA vs SRL tax comparison (with calculator)"}</li>
         <li>${isRo ? "Studii de caz cu randamente reale" : "Case studies with real returns"}</li>
       </ul>

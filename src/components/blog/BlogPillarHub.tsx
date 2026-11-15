@@ -394,12 +394,12 @@ const BlogPillarHub = () => {
               <strong>Piața imobiliară Timișoara</strong> a parcurs o <strong>evoluție</strong> remarcabilă în
               ultimii ani: prețurile medii pe metru pătrat au crescut cu 35–50% între 2020 și 2026,
               susținute de expansiunea hub-urilor industriale (Continental, Hella, Flex), dezvoltarea
-              ansamblurilor moderne (ISHO, Openville, Atria Urban Resort) și cererea constantă pentru
+              ansamblurilor moderne (Openville, Atria Urban Resort) și cererea constantă pentru
               regim hotelier post-pandemic.
             </p>
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="rounded-xl border border-border bg-background p-4">
-                <h3 className="text-base font-semibold text-foreground mb-1">Centru &amp; ISHO</h3>
+                <h3 className="text-base font-semibold text-foreground mb-1">Centru</h3>
                 <p className="text-sm text-muted-foreground">
                   2.300–2.600 €/mp, apreciere 8–10% anual.
                 </p>

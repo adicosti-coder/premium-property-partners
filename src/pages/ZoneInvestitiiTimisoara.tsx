@@ -71,18 +71,7 @@ const ZONES: ZoneRow[] = [
     access: "Tramvai, gară, mers pe jos până în Cetate",
     note: "Cartier istoric în reabilitare progresivă: potențial de apreciere, dar calitate foarte variabilă de la o stradă la alta.",
   },
-  {
-    slug: "isho",
-    name: "ISHO",
-    rent: "Ridicat",
-    hotelPotential: "Ridicat",
-    demand: "Ridicat",
-    liquidity: "Ridicat",
-    profile: "Angajați IT, expați, oaspeți de business",
-    risk: "Mediu",
-    access: "Pietonal spre centru, trafic dificil cu mașina",
-    note: "Clădiri noi, servicii la parter, cerere dublă (chirie lungă + cazare). Prețul de intrare cere un tarif mediu pe noapte peste media orașului.",
-  },
+
   {
     name: "Fabric",
     rent: "Mediu",
@@ -263,8 +252,8 @@ const ZoneInvestitiiTimisoara = () => {
           >
             <p className="text-sm md:text-base leading-relaxed text-foreground/90">
               În Timișoara nu există o zonă „cea mai bună” în mod absolut: rezultatul depinde de
-              strategie. Pentru tarif pe noapte și cerere pe tot anul conduc Cetate/Centru, Iosefin
-              și ISHO. Pentru lichiditate și cerere din mai multe surse, Circumvalațiunii și Calea
+              strategie. Pentru tarif pe noapte și cerere pe tot anul conduc Cetate/Centru
+              și Iosefin. Pentru lichiditate și cerere din mai multe surse, Circumvalațiunii și Calea
               Aradului sunt cele mai echilibrate. Pentru preț de intrare mic și chiriaș stabil pe
               termen lung, Calea Șagului, Calea Lipovei și Girocului sunt mai potrivite. Complexul
               Studențesc dă venit brut ridicat, cu sezonalitate accentuată.

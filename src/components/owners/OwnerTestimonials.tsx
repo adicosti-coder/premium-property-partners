@@ -20,7 +20,7 @@ const OwnerTestimonials = () => {
           quote:
             "Am uitat că am apartament. Primesc raportul lunar, banii intră în cont, iar randamentul a depășit 9.6% în primul an. Liniște absolută.",
           name: "Mihai D.",
-          role: "Proprietar 2 apartamente · ISHO",
+          role: "Proprietar 2 apartamente · Timișoara",
           roi: "9.6% randament net",
         },
         {
@@ -49,7 +49,7 @@ const OwnerTestimonials = () => {
           quote:
             "I forgot I own an apartment. I get the monthly report, money lands in my account, and yield went above 9.6% in year one. Absolute peace of mind.",
           name: "Mihai D.",
-          role: "Owner of 2 apartments · ISHO",
+          role: "Owner of 2 apartments · Timișoara",
           roi: "9.6% net randament",
         },
         {

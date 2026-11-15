@@ -50,7 +50,6 @@ import {
  */
 
 const ZONES = [
-  { value: "isho", ro: "ISHO", en: "ISHO" },
   { value: "city-of-mara", ro: "City of Mara", en: "City of Mara" },
   { value: "circumvalatiunii", ro: "Circumvalațiunii", en: "Circumvalațiunii" },
   { value: "centru", ro: "Centru / Cetate", en: "City centre / Cetate" },

@@ -64,7 +64,7 @@ const SITE_LINKS: InternalLink[] = [
     labelEn: "residential complexes we monitor",
     href: "/ansambluri-rezidentiale",
     matchCategories: ["Imobiliare", "Investiții"],
-    matchTags: ["ansamblu", "complex", "isho", "bloc nou", "dezvoltator"],
+    matchTags: ["ansamblu", "complex", "bloc nou", "dezvoltator"],
   },
   {
     label: "vânzări, închirieri și consultanță imobiliară",

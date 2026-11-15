@@ -49,7 +49,6 @@ const OwnerCoverageMap = () => {
     "Calea Șagului",
     "Dumbrăvița",
     "Giroc",
-    "ISHO",
     "Openville",
     "Ateneo",
   ];

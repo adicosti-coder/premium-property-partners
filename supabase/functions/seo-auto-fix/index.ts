@@ -612,7 +612,7 @@ LocalEntitiesMissing: ${JSON.stringify(audit.local_entities_missing || []).slice
       `Generate a complete SEO fix bundle. Output JSON: {"title": "...", "meta_description": "...", "canonical_url": "${suggestedCanonical}", "json_ld": { schema.org object appropriate for pageType="${pageType}", with @context, @type, name, description, url, image, address (Timișoara), telephone "+40799069256" }, "extra_keywords": [{"keyword": "...", "reason": "..."}, ...]}. All copy in RO. Title 50-60 chars. Meta 140-155 chars. canonical_url MUST be the normalized absolute URL on https://${CANONICAL_HOST} (no query, no hash, no trailing slash).`,
   };
 
-  const system = `You are an expert SEO engineer for a Romanian real estate brand "RealTrust & ApArt Hotel" in Timișoara. Output ONLY valid JSON, no prose. Brand voice: professional, trustworthy, ROI-focused (9.4% net). Always favor local keywords (Timișoara, neighborhood names like Iosefin, Iulius Town, Complex Studențesc, Dumbrăvița, Giroc, ISHO, Aeroport, UVT). Phone: +40799069256. Email: info@realtrust.ro.`;
+  const system = `You are an expert SEO engineer for a Romanian real estate brand "RealTrust & ApArt Hotel" in Timișoara. Output ONLY valid JSON, no prose. Brand voice: professional, trustworthy, ROI-focused (9.4% net). Always favor local keywords (Timișoara, neighborhood names like Iosefin, Iulius Town, Complex Studențesc, Dumbrăvița, Giroc, Aeroport, UVT). Phone: +40799069256. Email: info@realtrust.ro.`;
   const user = `${baseContext}\n\nTASK: ${fixInstructions[fixType]}`;
 
   const raw = await callGemini(system, user);

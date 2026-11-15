@@ -62,8 +62,8 @@ const PILLARS: Pillar[] = [
   {
     to: "/ansambluri-rezidentiale",
     icon: Landmark,
-    ro: { title: "Ansambluri rezidențiale", desc: "ISHO, Ateneo, City of Mara, Fructus Plaza și alte dezvoltări premium." },
-    en: { title: "Residential complexes", desc: "ISHO, Ateneo, City of Mara, Fructus Plaza and other premium projects." },
+    ro: { title: "Ansambluri rezidențiale", desc: "Ateneo, City of Mara, Fructus Plaza și alte dezvoltări premium." },
+    en: { title: "Residential complexes", desc: "Ateneo, City of Mara, Fructus Plaza and other premium projects." },
   },
   {
     to: "/cartiere",

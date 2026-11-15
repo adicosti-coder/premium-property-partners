@@ -381,7 +381,7 @@ IMPORTANT: When multiple photos are provided, evaluate the ENTIRE property holis
 Compare consistency between rooms (e.g., if living room has premium finishes but bathroom is outdated, note this).
 
 When you complete a full property analysis, include a structured report at the end using this exact format:
-<RAPORT_JSON>{"scor": 115, "max_scor": 140, "zona": "ISHO", "roi_estimat": "9.4%", "tarif_noapte": 110, "note_consultant": "Proprietate excelentă cu finisaje premium și potențial ridicat de randament.", "recomandari": ["Optimizare iluminat", "Adăugare smart lock"], "categorie": "Premium"}</RAPORT_JSON>`;
+<RAPORT_JSON>{"scor": 115, "max_scor": 140, "zona": "Iosefin", "roi_estimat": "9.4%", "tarif_noapte": 110, "note_consultant": "Proprietate excelentă cu finisaje premium și potențial ridicat de randament.", "recomandari": ["Optimizare iluminat", "Adăugare smart lock"], "categorie": "Premium"}</RAPORT_JSON>`;
 
     // Build user message content (text + optional images array)
     let userContent: any;

@@ -104,7 +104,7 @@ const Imobiliare = () => {
   const faqItems = language === "ro" ? [
     {
       question: "Cum funcționează evaluarea apartamentului în Timișoara?",
-      answer: "Evaluarea apartamentului este gratuită și se face în 24-48h: analizăm zona (ISHO, Complex Studențesc, Dumbrăvița, Giroc, Săcălaz, Giarmata Vii etc.), starea proprietății, comparabile vândute recent și potențialul de randament. Primești un raport PDF cu preț minim, mediu și maxim de listare.",
+      answer: "Evaluarea apartamentului este gratuită și se face în 24-48h: analizăm zona (Complex Studențesc, Dumbrăvița, Giroc, Săcălaz, Giarmata Vii etc.), starea proprietății, comparabile vândute recent și potențialul de randament. Primești un raport PDF cu preț minim, mediu și maxim de listare.",
     },
     {
       question: "Ce include consultanța imobiliară RealTrust în Timișoara?",
@@ -112,11 +112,11 @@ const Imobiliare = () => {
     },
     {
       question: "Cum evoluează piața imobiliară din Timișoara în 2026?",
-      answer: "Piața imobiliară Timișoara crește moderat cu 5-8% în 2026, susținută de Parcul Industrial și Tehnologic Timișoara, Continental Automotive și expansiunea metropolitană (Dumbrăvița, Giroc, Săcălaz, Giarmata Vii). Cele mai active zone: ISHO, Complex Studențesc, Iosefin.",
+      answer: "Piața imobiliară Timișoara crește moderat cu 5-8% în 2026, susținută de Parcul Industrial și Tehnologic Timișoara, Continental Automotive și expansiunea metropolitană (Dumbrăvița, Giroc, Săcălaz, Giarmata Vii). Cele mai active zone: Complex Studențesc, Iosefin.",
     },
     {
       question: "Ce randament am la o investiție imobiliară în Timișoara?",
-      answer: "Pentru regim hotelier administrat profesional: randament net estimat de 6,5–9,4% pe an (în funcție de ocupare și costurile reale). Pentru chirie clasică pe termen lung: 4-5% net. Cele mai bune randamente sunt în Complex Studențesc (cerere studenți UVT/UPT) și ISHO (proximitate Iulius Town și aeroport).",
+      answer: "Pentru regim hotelier administrat profesional: randament net estimat de 6,5–9,4% pe an (în funcție de ocupare și costurile reale). Pentru chirie clasică pe termen lung: 4-5% net. Cele mai bune randamente sunt în Complex Studențesc (cerere studenți UVT/UPT).",
     },
     {
       question: "Care sunt costurile la cumpărarea unui apartament în Timișoara?",
@@ -129,7 +129,7 @@ const Imobiliare = () => {
   ] : [
     {
       question: "How does apartment evaluation work in Timișoara?",
-      answer: "Apartment evaluation is free and delivered in 24-48h: we analyze the zone (ISHO, Student Complex, Dumbrăvița, Giroc, Săcălaz, Giarmata Vii etc.), property condition, recent comparables and yield potential. You receive a PDF report with min/avg/max listing price.",
+      answer: "Apartment evaluation is free and delivered in 24-48h: we analyze the zone (Student Complex, Dumbrăvița, Giroc, Săcălaz, Giarmata Vii etc.), property condition, recent comparables and yield potential. You receive a PDF report with min/avg/max listing price.",
     },
     {
       question: "What does RealTrust real estate consulting include in Timișoara?",
@@ -137,11 +137,11 @@ const Imobiliare = () => {
     },
     {
       question: "How is the Timișoara real estate market evolving in 2026?",
-      answer: "Timișoara real estate is growing moderately at 5-8% in 2026, supported by Timișoara Industrial & Technology Park, Continental Automotive and metropolitan expansion (Dumbrăvița, Giroc, Săcălaz, Giarmata Vii). Most active zones: ISHO, Student Complex, Iosefin.",
+      answer: "Timișoara real estate is growing moderately at 5-8% in 2026, supported by Timișoara Industrial & Technology Park, Continental Automotive and metropolitan expansion (Dumbrăvița, Giroc, Săcălaz, Giarmata Vii). Most active zones: Student Complex, Iosefin.",
     },
     {
       question: "What yield can I get from a Timișoara real estate investment?",
-      answer: "Professionally managed hotel-style: 6.5–9.4% estimated net yearly ROI. Long-term classic rental: 4-5% net. Best yields are in Student Complex (UVT/UPT student demand) and ISHO (proximity to Iulius Town and airport).",
+      answer: "Professionally managed hotel-style: 6.5–9.4% estimated net yearly ROI. Long-term classic rental: 4-5% net. Best yields are in Student Complex (UVT/UPT student demand).",
     },
     {
       question: "What are the costs of buying an apartment in Timișoara?",
@@ -421,8 +421,8 @@ const Imobiliare = () => {
                 </h3>
                 <p className="text-sm text-muted-foreground mb-4">
                   {language === "ro"
-                    ? "Creștere moderată 5-8% în 2026, susținută de Parcul Industrial și Tehnologic Timișoara, Continental Automotive și expansiunea metropolitană (Dumbrăvița, Giroc, Săcălaz, Giarmata Vii). ISHO și Complex Studențesc rămân cele mai active zone."
-                    : "Moderate 5-8% growth in 2026, driven by Timișoara Industrial & Technology Park, Continental Automotive and metropolitan expansion (Dumbrăvița, Giroc, Săcălaz, Giarmata Vii). ISHO and Student Complex remain the most active areas."}
+                    ? "Creștere moderată 5-8% în 2026, susținută de Parcul Industrial și Tehnologic Timișoara, Continental Automotive și expansiunea metropolitană (Dumbrăvița, Giroc, Săcălaz, Giarmata Vii). Complex Studențesc rămâne cea mai activă zonă."
+                    : "Moderate 5-8% growth in 2026, driven by Timișoara Industrial & Technology Park, Continental Automotive and metropolitan expansion (Dumbrăvița, Giroc, Săcălaz, Giarmata Vii). Student Complex remains the most active area."}
                 </p>
                 <Link to="/piata-imobiliara-timisoara">
                   <Button variant="outline" size="sm" className="w-full group">

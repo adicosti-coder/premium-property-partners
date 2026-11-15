@@ -29,7 +29,6 @@ import { supabase } from "@/integrations/supabase/client";
 // Sursa: anunțurile de închiriere colectate de RealTrust în ultimele 12 luni (25.10.2026).
 // Ring Residence nu are încă destule anunțuri → 1,00 (media orașului).
 export const ZONES = [
-  { label: "ISHO", factor: 1.43 },               // 2 cam. mediană 660 € (14 anunțuri)
   { label: "City of Mara", factor: 1.3 },        // 600 € (12)
   { label: "NordOne", factor: 1.41 },            // 650 € (4)
   { label: "Ring Residence", factor: 1.0 },      // date insuficiente

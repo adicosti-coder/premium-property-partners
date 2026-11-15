@@ -30,7 +30,7 @@ async function translate(
   fields: { title: string; excerpt: string; content?: string; withContent: boolean },
 ): Promise<{ title_en: string; excerpt_en: string; content_en?: string }> {
   const sys =
-    "You translate Romanian real-estate/tourism blog copy into natural, professional English for an international audience. Keep proper nouns (Timișoara, ISHO, Iulius Town, RealTrust, ApArt Hotel, ANAF, Continental) as-is. Keep numbers, prices, and units unchanged. If input is Markdown, preserve formatting exactly. Return STRICT JSON only.";
+    "You translate Romanian real-estate/tourism blog copy into natural, professional English for an international audience. Keep proper nouns (Timișoara, Iulius Town, RealTrust, ApArt Hotel, ANAF, Continental) as-is. Keep numbers, prices, and units unchanged. If input is Markdown, preserve formatting exactly. Return STRICT JSON only.";
 
   const schemaHint = fields.withContent
     ? '{"title_en":"...","excerpt_en":"...","content_en":"..."}'

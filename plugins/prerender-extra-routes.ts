@@ -579,7 +579,7 @@ export function buildRemainingStaticRoutes(): ExtraRoute[] {
       'Imobiliare Timișoara: vânzări, închirieri și regim hotelier',
       `
       <p>${ENTITY_SHORT}</p>
-      <p>Portofoliul include apartamente în ansambluri precum ISHO, RING, Paltim, Fructus Plaza și City of Mara, precum și unități în cartierele Cetate, Iosefin, Fabric, Dumbrăvița și zona Aradului.</p>
+      <p>Portofoliul include apartamente în ansambluri precum RING, Paltim, Fructus Plaza și City of Mara, precum și unități în cartierele Cetate, Iosefin, Fabric, Dumbrăvița și zona Aradului.</p>
       <p>Vezi <a href="${BASE_URL}/servicii-imobiliare">serviciile imobiliare</a>, <a href="${BASE_URL}/catalog-investitii">catalogul de investiții</a>, <a href="${BASE_URL}/cartiere">cartierele din Timișoara</a> și <a href="${BASE_URL}/ansambluri-rezidentiale">ansamblurile rezidențiale</a>.</p>
       `,
       'CollectionPage',

@@ -23,7 +23,7 @@ const EVAL_FAQS = [
   {
     question: "Cât valorează apartamentul meu din Timișoara?",
     answer:
-      "Valoarea unui apartament în Timișoara depinde de cartier (Circumvalațiunii, ISHO, Complex Studențesc, Iosefin), suprafață utilă, an construcție, etaj, finisaje și dotări. Echipa noastră analizează tranzacții comparabile recente din zonă și îți oferă o estimare în maximum 24 de ore lucrătoare, gratuit și fără obligații.",
+      "Valoarea unui apartament în Timișoara depinde de cartier (Circumvalațiunii, Complex Studențesc, Iosefin), suprafață utilă, an construcție, etaj, finisaje și dotări. Echipa noastră analizează tranzacții comparabile recente din zonă și îți oferă o estimare în maximum 24 de ore lucrătoare, gratuit și fără obligații.",
   },
   {
     question: "Care este diferența dintre estimarea de piață și un raport de evaluare ANEVAR?",
@@ -454,7 +454,7 @@ const EvaluareGratuita = () => {
             <p className="text-muted-foreground leading-relaxed">
               Metodologia noastră combină <strong>analiza comparativă a pieței</strong> (CMA) cu date proprii din peste
               500 de tranzacții recente din Timișoara. Analizăm prețul mediu pe metru pătrat în cartierul tău
-              (Circumvalațiunii, ISHO, Iosefin, Complex Studențesc, Fabric, Elisabetin, Dumbrăvița, Ghiroda),
+              (Circumvalațiunii, Iosefin, Complex Studențesc, Fabric, Elisabetin, Dumbrăvița, Ghiroda),
               ajustăm pentru etaj, finisaje, an de construcție, dotări și expunere, apoi corelăm cu cererea curentă.
             </p>
             <ul className="grid md:grid-cols-2 gap-3 text-sm">
@@ -508,12 +508,6 @@ const EvaluareGratuita = () => {
                   details: "P+1, 140 mp, teren 400 mp, an 2018",
                   price: "€235.000 – €260.000",
                   factors: "Estimare preț casă Dumbrăvița — zonă metropolitană în expansiune",
-                },
-                {
-                  title: "Apartament 3 camere · ISHO",
-                  details: "78 mp, etaj 5, vedere Bega, complet mobilat",
-                  price: "€155.000 – €172.000",
-                  factors: "Premium, randament regim hotelier 8-10%",
                 },
                 {
                   title: "Apartament 2 camere · Complex Studențesc",

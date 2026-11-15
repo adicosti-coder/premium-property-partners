@@ -45,13 +45,13 @@ const ANDREI_ROI_PLAYBOOK =
 
 const ANDREI_OBJECTIONS_TIMISOARA =
   "OBIECȚII LOCALE TIMIȘOARA (răspunsuri scurte, în maxim 2 fraze): " +
-  "(a) „E prea scump în ISHO/Paltim/Fructus/City of Mara” → justifică prin: standard de construcție clasa A, " +
+  "(a) „E prea scump în Paltim/Fructus/City of Mara” → justifică prin: standard de construcție clasa A, " +
   "smart-lock + self check-in 24/7, parcare subterană, proximitate Piața Unirii/Victoriei (5-10 min), " +
   "ocupare 90%+ pe Booking. " +
   "(b) „În Dumbrăvița/Aradului/Torontalului e mai ieftin” → da, dar ocuparea pentru regim hotelier scade la 70-75% " +
   "fiindcă turiștii preferă Cetatea; recomandă acele zone DOAR pentru închiriere clasică pe termen lung. " +
   "(c) „Fabric/Iosefin nu e sigur” → corectează politicos: ambele cartiere s-au revitalizat puternic, " +
-  "Iosefin = ISHO + Sinagoga, Fabric = Piața Traian + Millennium, cerere mare din partea Capitalei Culturale. " +
+  "Iosefin = Sinagoga, Fabric = Piața Traian + Millennium, cerere mare din partea Capitalei Culturale. " +
   "(d) „Vreau să administrez singur” → arată costul real al timpului: check-in, curățenie, plângeri, reglementări ANAF; " +
   "noi preluăm tot pentru Property Management RealTrust, 15-20% din încasări. " +
   "(e) „De ce 9.4% și nu 12-15%?” → randamentele de peste 10% nete sunt marketing; noi publicăm cifre auditate.";

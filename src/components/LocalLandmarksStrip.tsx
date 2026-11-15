@@ -43,16 +43,6 @@ export function LocalLandmarksStrip() {
         : "Premium residential neighborhood with interwar villas, 5 min from Rose Park and 10 min walk to Piața Victoriei. Direct tram to UVT.",
     },
     {
-      slug: "isho",
-      icon: ShoppingBag,
-      title: ro
-        ? "Apartamente ISHO & Fabric — lângă Iulius Town"
-        : "ISHO & Fabric apartments — near Iulius Town",
-      desc: ro
-        ? "Complex iconic mixed-use pe malul Begăi, la 7 minute de Iulius Town și Openville. Profil premium, cerere ridicată din partea profesioniștilor IT și a turiștilor de business."
-        : "Iconic mixed-use complex on Bega riverbank, 7 min to Iulius Town and Openville. Premium demand from IT pros and business travelers.",
-    },
-    {
       slug: "circumvalatiunii",
       icon: ShoppingBag,
       title: ro
@@ -94,8 +84,8 @@ export function LocalLandmarksStrip() {
           </h2>
           <p className="text-sm md:text-base text-muted-foreground">
             {ro
-              ? "Proprietăți selectate în Complexul Studențesc, Iosefin, Elisabetin, ISHO și Aradului — aproape de UVT, UPT, UMF, Iulius Town, Shopping City Timișoara și Parcul Rozelor."
-              : "Selected properties in Student Complex, Iosefin, Elisabetin, ISHO and Aradului — near UVT, UPT, UMF, Iulius Town, Shopping City Timișoara and Rose Park."}
+              ? "Proprietăți selectate în Complexul Studențesc, Iosefin, Elisabetin și Aradului — aproape de UVT, UPT, UMF, Iulius Town, Shopping City Timișoara și Parcul Rozelor."
+              : "Selected properties in Student Complex, Iosefin, Elisabetin and Aradului — near UVT, UPT, UMF, Iulius Town, Shopping City Timișoara and Rose Park."}
           </p>
         </div>
 

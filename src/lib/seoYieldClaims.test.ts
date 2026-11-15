@@ -20,6 +20,7 @@ const SEO_SOURCES = [
   "src/pages/ProcesulNostru.tsx",
   "src/pages/ComplexLanding.tsx",
   "src/pages/Complexe.tsx",
+  "src/components/SEOLocalEntitiesBlock.tsx",
   "public/llms.txt",
 ];
 
@@ -48,7 +49,8 @@ describe("residential complex search metadata", () => {
   it("finds every hand-written complex page", () => {
     expect(names.get("xcity-towers")).toBe("XCity Towers");
     expect(names.get("vivalia")).toBe("Vivalia");
-    expect(names.size).toBeGreaterThanOrEqual(11);
+    expect(names.has("isho")).toBe(false);
+    expect(names.size).toBeGreaterThanOrEqual(10);
   });
 
   it("keeps every complex title within 60 characters in both languages", () => {
@@ -78,5 +80,11 @@ describe("audited page titles", () => {
       expect(langs.ro.title.length).toBeLessThanOrEqual(60);
       expect(langs.en.title.length).toBeLessThanOrEqual(60);
     }
+  });
+});
+
+describe("ISHO withdrawn from search-facing text (15 Nov 2026)", () => {
+  it.each(SEO_SOURCES)("%s does not mention ISHO", (file) => {
+    expect(read(file)).not.toMatch(/\bISHO\b/i);
   });
 });
