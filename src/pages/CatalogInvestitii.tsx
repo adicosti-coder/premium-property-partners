@@ -662,8 +662,8 @@ const CatalogInvestitii = () => {
                     </h2>
                     <p className="text-muted-foreground text-center max-w-2xl mx-auto mb-12">
                       {isRo
-                        ? "Proprietăți administrate de RealTrust cu rezultate reale. Studii de caz cu randamente dovedite."
-                        : "Properties managed by RealTrust with real results. Case studies with proven returns."}
+                        ? "Proprietăți administrate de RealTrust cu rezultate reale. Studii de caz cu cifre din portofoliul activ."
+                        : "Properties managed by RealTrust with real results. Case studies with figures from the active portfolio."}
                     </p>
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {rentalProperties.slice(0, 6).map((prop, i) => (
