@@ -710,7 +710,7 @@ export const generateHomepageRealEstateAgentSchema = () => ({
     "cazare temporară Timișoara",
     "regim hotelier Complex Studențesc",
   ],
-  "keywords": "agenție imobiliară Timișoara, servicii imobiliare Timișoara, investiții imobiliare randament Timișoara, apartamente noi Timișoara de vânzare, apartamente noi Timișoara ISHO, apartamente de închiriat Timișoara studenți, închirieri apartamente Timișoara Complex Studențesc, proprietăți de vânzare Timișoara Calea Girocului, cazare Timișoara lângă Spitalul Județean",
+  "keywords": "agenție imobiliară Timișoara, servicii imobiliare Timișoara, investiții imobiliare randament Timișoara, apartamente noi Timișoara de vânzare, apartamente noi Timișoara apartamente de închiriat Timișoara studenți, închirieri apartamente Timișoara Complex Studențesc, proprietăți de vânzare Timișoara Calea Girocului, cazare Timișoara lângă Spitalul Județean",
   "hasOfferCatalog": {
     "@type": "OfferCatalog",
     "name": "Servicii Imobiliare Timișoara",

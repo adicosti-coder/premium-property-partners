@@ -264,7 +264,7 @@ const ZoneInvestitiiTimisoara = () => {
             <p className="text-sm md:text-base leading-relaxed text-foreground/90">
               În Timișoara nu există o zonă „cea mai bună” în mod absolut: rezultatul depinde de
               strategie. Pentru tarif pe noapte și cerere pe tot anul conduc Cetate/Centru, Iosefin
-              și ISHO. Pentru lichiditate și cerere din mai multe surse, Circumvalațiunii și Calea
+             . Pentru lichiditate și cerere din mai multe surse, Circumvalațiunii și Calea
               Aradului sunt cele mai echilibrate. Pentru preț de intrare mic și chiriaș stabil pe
               termen lung, Calea Șagului, Calea Lipovei și Girocului sunt mai potrivite. Complexul
               Studențesc dă venit brut ridicat, cu sezonalitate accentuată.

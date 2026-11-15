@@ -250,7 +250,7 @@ const CatalogInvestitii = () => {
         {
           question: "Care sunt prețurile apartamentelor în Timișoara în 2026?",
           answer:
-            "Prețurile apartamentelor din Timișoara variază între 1.500–2.000 EUR/mp în zonele periferice (Mehala, Plopi) și 2.300–3.200 EUR/mp în zonele premium (Centru, ISHO, Iulius Town, Complex Studențesc). În ansamblurile noi precum ATENEO, City of Mara, Adora Forest, Vivalia sau Nord One, prețurile pornesc de la 1.900 EUR/mp în Dumbrăvița, Giroc și Ghiroda.",
+            "Prețurile apartamentelor din Timișoara variază între 1.500–2.000 EUR/mp în zonele periferice (Mehala, Plopi) și 2.300–3.200 EUR/mp în zonele premium (Centru, Iulius Town, Complex Studențesc). În ansamblurile noi precum ATENEO, City of Mara, Adora Forest, Vivalia sau Nord One, prețurile pornesc de la 1.900 EUR/mp în Dumbrăvița, Giroc și Ghiroda.",
         },
         {
           question: "Există terenuri de vânzare în Timișoara și zonele metropolitane?",
@@ -282,7 +282,7 @@ const CatalogInvestitii = () => {
         {
           question: "What are apartment prices in Timișoara in 2026?",
           answer:
-            "Timișoara apartment prices range from 1,500–2,000 EUR/sqm in outer areas (Mehala, Plopi) up to 2,300–3,200 EUR/sqm in premium zones (Centru, ISHO, Iulius Town, Student Complex). New developments like ATENEO, City of Mara, Adora Forest, Vivalia or Nord One start from 1,900 EUR/sqm in Dumbrăvița, Giroc and Ghiroda.",
+            "Timișoara apartment prices range from 1,500–2,000 EUR/sqm in outer areas (Mehala, Plopi) up to 2,300–3,200 EUR/sqm in premium zones (Centru, Iulius Town, Student Complex). New developments like ATENEO, City of Mara, Adora Forest, Vivalia or Nord One start from 1,900 EUR/sqm in Dumbrăvița, Giroc and Ghiroda.",
         },
         {
           question: "Are there land plots for sale in Timișoara and metro area?",

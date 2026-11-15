@@ -23,7 +23,7 @@ const EVAL_FAQS = [
   {
     question: "Cât valorează apartamentul meu din Timișoara?",
     answer:
-      "Valoarea unui apartament în Timișoara depinde de cartier (Circumvalațiunii, ISHO, Complex Studențesc, Iosefin), suprafață utilă, an construcție, etaj, finisaje și dotări. Echipa noastră analizează tranzacții comparabile recente din zonă și îți oferă o estimare în maximum 24 de ore lucrătoare, gratuit și fără obligații.",
+      "Valoarea unui apartament în Timișoara depinde de cartier (Circumvalațiunii, Complex Studențesc, Iosefin), suprafață utilă, an construcție, etaj, finisaje și dotări. Echipa noastră analizează tranzacții comparabile recente din zonă și îți oferă o estimare în maximum 24 de ore lucrătoare, gratuit și fără obligații.",
   },
   {
     question: "Care este diferența dintre estimarea de piață și un raport de evaluare ANEVAR?",
@@ -454,7 +454,7 @@ const EvaluareGratuita = () => {
             <p className="text-muted-foreground leading-relaxed">
               Metodologia noastră combină <strong>analiza comparativă a pieței</strong> (CMA) cu date proprii din peste
               500 de tranzacții recente din Timișoara. Analizăm prețul mediu pe metru pătrat în cartierul tău
-              (Circumvalațiunii, ISHO, Iosefin, Complex Studențesc, Fabric, Elisabetin, Dumbrăvița, Ghiroda),
+              (Circumvalațiunii, Iosefin, Complex Studențesc, Fabric, Elisabetin, Dumbrăvița, Ghiroda),
               ajustăm pentru etaj, finisaje, an de construcție, dotări și expunere, apoi corelăm cu cererea curentă.
             </p>
             <ul className="grid md:grid-cols-2 gap-3 text-sm">

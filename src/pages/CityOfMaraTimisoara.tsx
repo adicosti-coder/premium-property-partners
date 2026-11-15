@@ -862,7 +862,7 @@ const CityOfMaraTimisoara = () => {
           <div className="rounded-lg border border-primary/20 bg-primary/5 p-6 md:flex md:items-center md:justify-between md:p-8">
             <div>
               <ShieldCheck className="mb-3 h-8 w-8 text-primary" />
-              <h2 className="text-2xl font-bold text-foreground">Vrei comparație cu ISHO, Ateneo sau Fructus Plaza?</h2>
+              <h2 className="text-2xl font-bold text-foreground">Vrei comparație cu Ateneo sau Fructus Plaza?</h2>
               <p className="mt-2 text-muted-foreground">Comparăm randamentul, prețul de intrare, lichiditatea și riscul operațional între complexele premium din Timișoara.</p>
             </div>
             <div className="mt-5 flex flex-wrap gap-3 md:mt-0">

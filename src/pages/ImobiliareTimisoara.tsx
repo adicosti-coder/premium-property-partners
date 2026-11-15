@@ -42,11 +42,11 @@ const ImobiliareTimisoara = () => {
   const faqItems = [
     {
       question: "Cum se face evaluarea unui apartament în Timișoara?",
-      answer: "Evaluarea apartamentului în Timișoara se realizează gratuit de RealTrust, ținând cont de cartier (Centru, ISHO, Dumbrăvița, Giroc, Chișoda), suprafață utilă, an construcție, finisaje și prețurile comparabile recente. Primești un raport în 24h.",
+      answer: "Evaluarea apartamentului în Timișoara se realizează gratuit de RealTrust, ținând cont de cartier (Centru, Dumbrăvița, Giroc, Chișoda), suprafață utilă, an construcție, finisaje și prețurile comparabile recente. Primești un raport în 24h.",
     },
     {
       question: "Care sunt prețurile imobiliare în Timișoara în 2026?",
-      answer: "Prețurile medii pe metru pătrat în Timișoara variază între 1.400 €/mp (Mehala, Ronaț) și 2.600 €/mp (Centru, ISHO). Dumbrăvița și Giroc se situează la 1.800-2.100 €/mp, cu apreciere anuală de 5-8% pentru proiectele noi.",
+      answer: "Prețurile medii pe metru pătrat în Timișoara variază între 1.400 €/mp (Mehala, Ronaț) și 2.600 €/mp (Centru). Dumbrăvița și Giroc se situează la 1.800-2.100 €/mp, cu apreciere anuală de 5-8% pentru proiectele noi.",
     },
     {
       question: "Vindeți și terenuri în Timișoara, Giroc sau Chișoda?",
@@ -54,7 +54,7 @@ const ImobiliareTimisoara = () => {
     },
     {
       question: "Care sunt cele mai active cartiere pentru investiții?",
-      answer: "ISHO, Centru, Complex Studențesc și Dumbrăvița domină cererea de regim hotelier. Giroc și Chișoda atrag familii pentru locuință, iar Aradului și Lipovei oferă cele mai bune randamente la închiriere clasică.",
+      answer: "Centru, Complex Studențesc și Dumbrăvița domină cererea de regim hotelier. Giroc și Chișoda atrag familii pentru locuință, iar Aradului și Lipovei oferă cele mai bune randamente la închiriere clasică.",
     },
   ];
 
@@ -86,7 +86,7 @@ const ImobiliareTimisoara = () => {
     <div className="min-h-screen bg-background">
       <SEOHead
         title="Imobiliare Timișoara — apartamente pe zone | RealTrust"
-        description="Apartamente de vânzare în Timișoara, pe cartiere: Girocului, Aradului, Circumvalațiunii, Șagului, Complex Studențesc, ISHO. Prețuri și randamente actualizate."
+        description="Apartamente de vânzare în Timișoara, pe cartiere: Girocului, Aradului, Circumvalațiunii, Șagului, Complex Studențesc. Prețuri și randamente actualizate."
         url="https://realtrust.ro/cartiere"
         jsonLd={jsonLd}
         breadcrumbItems={[
@@ -235,7 +235,7 @@ const ImobiliareTimisoara = () => {
                   Evaluare apartament Timișoara — află prețul corect
                 </h2>
                 <p className="text-muted-foreground">
-                  Vrei să vinzi sau să refinanțezi? Evaluarea gratuită RealTrust analizează cartierul (Centru, ISHO, Dumbrăvița, Giroc, Chișoda, Complex Studențesc), suprafața, anul construcției și comparabile recente. Primești raport în 24h.
+                  Vrei să vinzi sau să refinanțezi? Evaluarea gratuită RealTrust analizează cartierul (Centru, Dumbrăvița, Giroc, Chișoda, Complex Studențesc), suprafața, anul construcției și comparabile recente. Primești raport în 24h.
                 </p>
               </div>
             </div>

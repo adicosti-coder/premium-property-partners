@@ -159,7 +159,7 @@ const Investitii = () => {
     },
     {
       question: "Care sunt zonele cu cel mai bun potențial pentru investiții?",
-      answer: "Zonele cu potențial ridicat: ISHO (proximitate Iulius Town), Complex Studențesc (cerere studenți și Bulevardul Vasile Pârvan), Centrul Istoric (turism), Iosefin/Elisabetin (regenerare urbană) și zonele metropolitane Dumbrăvița, Ghiroda și Giroc (case noi).",
+      answer: "Zonele cu potențial ridicat: Complex Studențesc (cerere studenți și Bulevardul Vasile Pârvan), Centrul Istoric (turism), Iosefin/Elisabetin (regenerare urbană) și zonele metropolitane Dumbrăvița, Ghiroda și Giroc (case noi).",
     },
     {
       question: "Cât capital am nevoie pentru o investiție la cheie în Timișoara?",
@@ -175,7 +175,7 @@ const Investitii = () => {
     },
     {
       question: "Care este evoluția prețurilor imobiliare în Timișoara?",
-      answer: "În ultimii 5 ani, prețurile au crescut cu aproximativ 35-45% în zonele centrale (ISHO, Centrul Istoric) și cu 50-60% în zonele metropolitane (Dumbrăvița, Giroc, Chișoda). Pentru 2026 estimăm o creștere moderată de 5-8%, cu cel mai bun potențial în Iosefin și Complex Studențesc.",
+      answer: "În ultimii 5 ani, prețurile au crescut cu aproximativ 35-45% în zonele centrale (Centrul Istoric) și cu 50-60% în zonele metropolitane (Dumbrăvița, Giroc, Chișoda). Pentru 2026 estimăm o creștere moderată de 5-8%, cu cel mai bun potențial în Iosefin și Complex Studențesc.",
     },
   ] : [
     {
@@ -184,7 +184,7 @@ const Investitii = () => {
     },
     {
       question: "What are the best areas for real estate investment in Timișoara?",
-      answer: "Highest-potential zones: ISHO (near Iulius Town), Student Complex (student demand + Vasile Pârvan Boulevard), Historic Center (tourism), Iosefin/Elisabetin (urban regeneration), and metropolitan areas Dumbrăvița, Ghiroda and Giroc (new houses).",
+      answer: "Highest-potential zones: Student Complex (student demand + Vasile Pârvan Boulevard), Historic Center (tourism), Iosefin/Elisabetin (urban regeneration), and metropolitan areas Dumbrăvița, Ghiroda and Giroc (new houses).",
     },
     {
       question: "How much capital do I need for a turnkey investment in Timișoara?",
@@ -200,7 +200,7 @@ const Investitii = () => {
     },
     {
       question: "What is the price trend for Timișoara real estate?",
-      answer: "Last 5 years: prices grew ~35-45% in central areas (ISHO, Historic Center) and 50-60% in metropolitan areas (Dumbrăvița, Giroc, Chișoda). For 2026 we forecast moderate 5-8% growth, with best upside in Iosefin and Student Complex.",
+      answer: "Last 5 years: prices grew ~35-45% in central areas (Historic Center) and 50-60% in metropolitan areas (Dumbrăvița, Giroc, Chișoda). For 2026 we forecast moderate 5-8% growth, with best upside in Iosefin and Student Complex.",
     },
   ];
 

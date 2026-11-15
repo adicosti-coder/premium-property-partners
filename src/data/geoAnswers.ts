@@ -197,7 +197,7 @@ export const GEO_ANSWERS: GeoAnswer[] = [
     group: "zone",
     question: "Care sunt cele mai bune zone pentru investiții în Timișoara?",
     answer:
-      "Nu există o zonă „cea mai bună” în absolut — depinde de strategie. Pentru tarif pe noapte și cerere pe tot anul conduc Cetate/Centru, Iosefin și ISHO; pentru lichiditate și cerere din mai multe surse, Circumvalațiunii și Calea Aradului; pentru preț de intrare mic și chiriaș stabil pe termen lung, Calea Șagului, Calea Lipovei și Girocului; Complexul Studențesc dă venit brut ridicat, cu sezonalitate accentuată.",
+      "Nu există o zonă „cea mai bună” în absolut — depinde de strategie. Pentru tarif pe noapte și cerere pe tot anul conduc Cetate/Centru, Iosefin; pentru lichiditate și cerere din mai multe surse, Circumvalațiunii și Calea Aradului; pentru preț de intrare mic și chiriaș stabil pe termen lung, Calea Șagului, Calea Lipovei și Girocului; Complexul Studențesc dă venit brut ridicat, cu sezonalitate accentuată.",
     source: { href: "/zone-investitii-timisoara", label: "comparația completă a zonelor" },
   },
   {
@@ -205,7 +205,7 @@ export const GEO_ANSWERS: GeoAnswer[] = [
     group: "zone",
     question: "În ce zonă din Timișoara se închiriază cel mai bine pe termen scurt?",
     answer:
-      "Cel mai bine funcționează zonele de unde oaspetele ajunge pe jos în centrul istoric sau la un generator de trafic: Cetate/Centru, Iosefin, ISHO și zona Iulius Town. În afara acestora, Calea Aradului compensează prin accesul rapid spre aeroport și A1, iar Complexul Studențesc prin evenimente universitare.",
+      "Cel mai bine funcționează zonele de unde oaspetele ajunge pe jos în centrul istoric sau la un generator de trafic: Cetate/Centru, Iosefin și zona Iulius Town. În afara acestora, Calea Aradului compensează prin accesul rapid spre aeroport și A1, iar Complexul Studențesc prin evenimente universitare.",
     source: { href: "/cartiere", label: "ghidul cartierelor din Timișoara" },
   },
   {

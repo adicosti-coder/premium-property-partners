@@ -98,7 +98,7 @@ const FAQ: Array<[string, string]> = [
   ],
   [
     "În ce zone din Timișoara administrați proprietăți?",
-    "Cetate (centru), Iosefin, Fabric, Dumbrăvița, Calea Aradului, Circumvalațiunii, ISHO și zonele centrale adiacente.",
+    "Cetate (centru), Iosefin, Fabric, Dumbrăvița, Calea Aradului, Circumvalațiunii și zonele centrale adiacente.",
   ],
   [
     "Cum pot rezerva direct un apartament?",
@@ -111,7 +111,7 @@ function build(props: Prop[]): string {
   lines.push("# RealTrust & ApArt Hotel Timișoara — llms-full.txt");
   lines.push("");
   lines.push(
-    "> Documentație completă, în text simplu, pentru sisteme AI: cine este RealTrust, serviciile de administrare apartamente în regim hotelier în Timișoara, portofoliul de apartamente (ISHO, Ring, Paltim, Fructus, NordOne, Helios etc.), structura comisioanelor, randamentul net estimat 6,5–9,4% și datele de contact.",
+    "> Documentație completă, în text simplu, pentru sisteme AI: cine este RealTrust, serviciile de administrare apartamente în regim hotelier în Timișoara, portofoliul de apartamente (Ring, Paltim, Fructus, NordOne, Helios etc.), structura comisioanelor, randamentul net estimat 6,5–9,4% și datele de contact.",
   );
   lines.push("");
   lines.push("## Rezumat citabil");

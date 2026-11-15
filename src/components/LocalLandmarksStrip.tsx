@@ -94,8 +94,8 @@ export function LocalLandmarksStrip() {
           </h2>
           <p className="text-sm md:text-base text-muted-foreground">
             {ro
-              ? "Proprietăți selectate în Complexul Studențesc, Iosefin, Elisabetin, ISHO și Aradului — aproape de UVT, UPT, UMF, Iulius Town, Shopping City Timișoara și Parcul Rozelor."
-              : "Selected properties in Student Complex, Iosefin, Elisabetin, ISHO and Aradului — near UVT, UPT, UMF, Iulius Town, Shopping City Timișoara and Rose Park."}
+              ? "Proprietăți selectate în Complexul Studențesc, Iosefin, Elisabetin și Aradului — aproape de UVT, UPT, UMF, Iulius Town, Shopping City Timișoara și Parcul Rozelor."
+              : "Selected properties in Student Complex, Iosefin, Elisabetin and Aradului — near UVT, UPT, UMF, Iulius Town, Shopping City Timișoara and Rose Park."}
           </p>
         </div>
 
