@@ -23,11 +23,11 @@ Piața de închirieri pe termen scurt din ${city} a înregistrat o creștere con
 Investiția imobiliară în ${city} oferă nu doar randament financiar, ci și diversificare a portofoliului și protecție împotriva inflației. Proprietățile bine poziționate, administrate profesional, pot genera venituri pasive stabile și o apreciere a capitalului pe termen mediu și lung. Consultanța noastră personalizată vă ajută să identificați cele mai bune oportunități adaptate profilului dumneavoastră de risc și obiectivelor financiare.
 `,
     catalog: (city: string) => `
-Catalogul de investiții ${city} 2026 prezintă o selecție curatoriată de proprietăți premium cu randament verificat, disponibile atât pentru achiziție directă, cât și pentru administrare în regim hotelier. Fiecare proprietate din catalog a fost evaluată după criterii riguroase: localizare strategică, calitatea construcției, potențialul de ocupare și randamentul net estimat.
+Catalogul de investiții ${city} 2026 prezintă o selecție curatoriată de proprietăți premium cu randament net estimat, disponibile atât pentru achiziție directă, cât și pentru administrare în regim hotelier. Fiecare proprietate din catalog a fost evaluată după criterii riguroase: localizare strategică, calitatea construcției, potențialul de ocupare și randamentul net estimat.
 
 ${city}, ca al doilea hub IT din România și fostă Capitală Culturală Europeană, beneficiază de o cerere diversificată și stabilă. Turiștii de afaceri, studenții internaționali, participanții la conferințe și vizitatorii culturali generează o cerere de cazare pe tot parcursul anului, reducând riscul de sezonalitate care afectează alte piețe turistice.
 
-Analiza noastră financiară comparativă demonstrează că proprietățile administrate în regim hotelier profesional generează un randament net de 8-11% anual, comparativ cu 3-4% în cazul chiriei clasice. Această diferență semnificativă se datorează tarifelor pe noapte mai mari, optimizării continue a prețurilor în funcție de cerere și reducerii perioadelor de vacanță între chiriași.
+Analiza noastră financiară comparativă demonstrează că proprietățile administrate în regim hotelier profesional au un randament net estimat de 6,5–9,4% pe an, comparativ cu 3-4% în cazul chiriei clasice. Cifrele sunt estimări, nu venituri garantate. Această diferență semnificativă se datorează tarifelor pe noapte mai mari, optimizării continue a prețurilor în funcție de cerere și reducerii perioadelor de vacanță între chiriași.
 
 Portofoliul nostru activ include proprietăți în cele mai căutate zone ale orașului ${city}: de la apartamente studio eficiente energetic, ideale pentru investitori cu buget accesibil, până la apartamente cu 2-3 camere în complexuri rezidențiale premium, potrivite pentru familii și grupuri. Fiecare proprietate vine cu o analiză detaliată: capital necesar, venit estimat, cheltuieli operaționale și proiecție ROI pe 5 ani.
 
@@ -51,11 +51,11 @@ The short-term rental market in ${city} has recorded consistent growth in recent
 Real estate investment in ${city} offers not only financial returns, but also portfolio diversification and inflation protection. Well-positioned, professionally managed properties can generate stable passive income and medium to long-term capital appreciation. Our personalized consulting helps you identify the best opportunities adapted to your risk profile and financial objectives.
 `,
     catalog: (city: string) => `
-The ${city} 2026 Investment Catalog presents a curated selection of premium properties with verified returns, available for both direct purchase and hotel-style management. Each property in the catalog has been evaluated according to rigorous criteria: strategic location, construction quality, occupancy potential and estimated net yield.
+The ${city} 2026 Investment Catalog presents a curated selection of premium properties with estimated net returns, available for both direct purchase and hotel-style management. Each property in the catalog has been evaluated according to rigorous criteria: strategic location, construction quality, occupancy potential and estimated net yield.
 
 ${city}, as Romania's second IT hub and former European Capital of Culture, benefits from diversified and stable demand. Business tourists, international students, conference participants and cultural visitors generate accommodation demand throughout the year, reducing the seasonality risk that affects other tourist markets.
 
-Our comparative financial analysis demonstrates that professionally managed hotel-style properties generate a net yield of 8-11% annually, compared to 3-4% for classic rentals. This significant difference is due to higher nightly rates, continuous price optimization based on demand and reduced vacancy periods between tenants.
+Our comparative financial analysis demonstrates that professionally managed hotel-style properties have an estimated net yield of 6.5–9.4% per year, compared to 3-4% for classic rentals. These figures are estimates, not guaranteed income. This significant difference is due to higher nightly rates, continuous price optimization based on demand and reduced vacancy periods between tenants.
 
 Our active portfolio includes properties in the most sought-after areas of ${city}: from energy-efficient studio apartments, ideal for budget-conscious investors, to 2-3 bedroom apartments in premium residential complexes, suitable for families and groups. Each property comes with a detailed analysis: required capital, estimated income, operational expenses and 5-year ROI projection.
 

@@ -605,8 +605,8 @@ const Imobiliare = () => {
               </div>
               <p className="text-sm md:text-base font-medium text-foreground">
                 {language === "ro"
-                  ? "Cauți investiții? Vezi topul cartierelor din Timișoara cu randament de peste 9%"
-                  : "Looking to invest? See top Timișoara neighborhoods with 9%+ randament"}
+                  ? "Cauți investiții? Vezi cartierele din Timișoara cu randament net estimat de 6,5–9,4%"
+                  : "Looking to invest? See Timișoara neighborhoods with an estimated 6.5–9.4% net yield"}
               </p>
             </div>
             <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary group-hover:underline shrink-0">
