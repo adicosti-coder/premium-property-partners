@@ -71,18 +71,7 @@ const ZONES: ZoneRow[] = [
     access: "Tramvai, gară, mers pe jos până în Cetate",
     note: "Cartier istoric în reabilitare progresivă: potențial de apreciere, dar calitate foarte variabilă de la o stradă la alta.",
   },
-  {
-    slug: "isho",
-    name: "ISHO",
-    rent: "Ridicat",
-    hotelPotential: "Ridicat",
-    demand: "Ridicat",
-    liquidity: "Ridicat",
-    profile: "Angajați IT, expați, oaspeți de business",
-    risk: "Mediu",
-    access: "Pietonal spre centru, trafic dificil cu mașina",
-    note: "Clădiri noi, servicii la parter, cerere dublă (chirie lungă + cazare). Prețul de intrare cere un tarif mediu pe noapte peste media orașului.",
-  },
+
   {
     name: "Fabric",
     rent: "Mediu",

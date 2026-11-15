@@ -10,7 +10,7 @@ export const OWNER_CONTACT_ANCHOR_ID = "contact-proprietari";
 export interface OwnerRoiPrefillPayload {
   /** Cheia tipului de proprietate (garsoniera | 2-camere | 3-camere) */
   propertyType: string;
-  /** Cheia zonei/proiectului (isho | city-of-mara | circumvalatiunii | centru) */
+  /** Cheia zonei/proiectului (city-of-mara | circumvalatiunii | centru) */
   zone: string;
   /** Chiria clasică lunară selectată în calculator (EUR) */
   monthlyRent: number;
