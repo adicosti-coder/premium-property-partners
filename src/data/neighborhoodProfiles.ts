@@ -197,7 +197,7 @@ export const neighborhoodProfiles: NeighborhoodProfile[] = [
       {
         heading: "Cum este zona",
         paragraphs: [
-          "Calea Șagului este o zonă de locuit strâns legată de economia reală a orașului: pe direcția ei se află o parte importantă a platformelor industriale și logistice ale Timișoarei, plus retail de mari dimensiuni. Asta îi dă un caracter practic — mai puțin spectaculos decât Cetate sau dar cu o funcție clară.",
+          "Calea Șagului este o zonă de locuit strâns legată de economia reală a orașului: pe direcția ei se află o parte importantă a platformelor industriale și logistice ale Timișoarei, plus retail de mari dimensiuni. Asta îi dă un caracter practic — mai puțin spectaculos decât Cetate, dar cu o funcție clară.",
           "Pe tronsoanele apropiate de centru, țesutul este de bloc dens cu comerț la parter. Spre ieșirea din oraș apar hale, showroom-uri și dezvoltări rezidențiale mai noi, cu densitate mai mică.",
         ],
       },

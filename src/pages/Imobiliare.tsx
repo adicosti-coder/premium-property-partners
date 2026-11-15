@@ -421,8 +421,8 @@ const Imobiliare = () => {
                 </h3>
                 <p className="text-sm text-muted-foreground mb-4">
                   {language === "ro"
-                    ? "Creștere moderată 5-8% în 2026, susținută de Parcul Industrial și Tehnologic Timișoara, Continental Automotive și expansiunea metropolitană (Dumbrăvița, Giroc, Săcălaz, Giarmata Vii). Complex Studențesc rămân cele mai active zone."
-                    : "Moderate 5-8% growth in 2026, driven by Timișoara Industrial & Technology Park, Continental Automotive and metropolitan expansion (Dumbrăvița, Giroc, Săcălaz, Giarmata Vii). ISHO and Student Complex remain the most active areas."}
+                    ? "Creștere moderată 5-8% în 2026, susținută de Parcul Industrial și Tehnologic Timișoara, Continental Automotive și expansiunea metropolitană (Dumbrăvița, Giroc, Săcălaz, Giarmata Vii). Complex Studențesc rămâne cea mai activă zonă."
+                    : "Moderate 5-8% growth in 2026, driven by Timișoara Industrial & Technology Park, Continental Automotive and metropolitan expansion (Dumbrăvița, Giroc, Săcălaz, Giarmata Vii). Student Complex remains the most active area."}
                 </p>
                 <Link to="/piata-imobiliara-timisoara">
                   <Button variant="outline" size="sm" className="w-full group">
