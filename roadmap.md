@@ -5,8 +5,9 @@
 - [x] Promisiuni de randament nepermise scoase din paginile citite de Google și AI (9%+, 8–11%, garantat/verificat/dovedit) + test
 - [x] Descrierile ansamblurilor din baza de date (Ateneo, Campeador, City of Mara, Fructus Plaza, Nord-One, Vivalia)
 - [x] llms.txt: catalog cu 6,5–9,4% și linkuri spre ansambluri
-- [ ] De decis: cifrele de ocupare peste 75% (78–95%) din textele cartierelor/ansamblurilor
-- [ ] De decis: ISHO în listele de zone (llms.txt, pagini de cartier)
+- [x] Ocupare 78–95% din textele cartierelor: rămâne neschimbată (decizie 15 nov)
+- [x] ISHO scos din textele publice, pagini dedicate redirecționate
+- [ ] De decis: anunțul activ „Apartament Premium cu 2 Camere în ISHO” și cele 2 articole de blog despre ISHO (+4 care îl menționează)
 
 ## Calculator complet randament și evaluare — 13 noiembrie (seara)
 - [x] Prețuri de vânzare €/mp în 3 niveluri (anunțuri colectate → tabel de referință → grila evaluării gratuite)
