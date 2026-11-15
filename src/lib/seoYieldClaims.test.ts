@@ -49,7 +49,8 @@ describe("residential complex search metadata", () => {
   it("finds every hand-written complex page", () => {
     expect(names.get("xcity-towers")).toBe("XCity Towers");
     expect(names.get("vivalia")).toBe("Vivalia");
-    expect(names.size).toBeGreaterThanOrEqual(11);
+    expect(names.has("isho")).toBe(false);
+    expect(names.size).toBeGreaterThanOrEqual(10);
   });
 
   it("keeps every complex title within 60 characters in both languages", () => {
