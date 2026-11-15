@@ -90,7 +90,7 @@ export const neighborhoods: NeighborhoodData[] = [
     description:
       'Zona Girocului este unul dintre cele mai dinamice cartiere rezidențiale din Timișoara, aflat în sud-vestul orașului. Dezvoltarea imobiliară accelerată din ultimii ani a transformat această zonă într-un pol atractiv pentru familii tinere și investitori. Accesul facil către centrul orașului prin Calea Girocului, proximitatea parcurilor și a centrelor comerciale (Shopping City Timișoara la 5 minute) și oferta variată de apartamente noi fac din Girocului o alegere excelentă. Transportul public este bine dezvoltat, cu linii de autobuz frecvente. Profilul rezidenților: tineri profesioniști, familii cu copii și investitori în regim hotelier. Prețurile sunt cu 10-15% sub media orașului, oferind potențial de apreciere semnificativ.',
     metaTitle: 'Apartamente Zona Girocului Timișoara | RealTrust Imobiliare',
-    metaDescription: 'Apartamente de vânzare în Zona Girocului, Timișoara. Prețuri de la 1.650 €/mp, administrare RealTrust inclusă. Investiții imobiliare cu randament verificat.',
+    metaDescription: 'Apartamente de vânzare în Zona Girocului, Timișoara. Prețuri de la 1.650 €/mp, administrare RealTrust inclusă. Investiții cu randament net estimat 6,5–9,4%.',
     faq: [
       { question: 'Care este prețul mediu pe metru pătrat în zona Girocului?', answer: 'Prețul mediu în zona Girocului este de aproximativ 1.650 €/mp, cu 10-15% sub media orașului Timișoara, oferind un potențial excelent de apreciere.' },
       { question: 'Ce facilități sunt disponibile în zona Girocului?', answer: 'Zona Girocului beneficiază de Shopping City Timișoara la 5 minute, parcuri, școli, grădinițe și linii de autobuz frecvente către centrul orașului.' },
@@ -114,7 +114,7 @@ export const neighborhoods: NeighborhoodData[] = [
     description:
       'Calea Aradului conectează Timișoara de autostrada A1 și de aeroportul internațional, fiind una dintre arterele principale ale orașului. Zona este recunoscută pentru accesibilitatea excelentă, parcurile generoase (Parcul Botanic) și infrastructura modernă. Dezvoltări rezidențiale recente precum Vivalia și complexele de pe Calea Torontalului au crescut atractivitatea zonei. Profilul rezidenților include profesioniști IT, familii și persoane care navighează frecvent spre București sau alte orașe. Proximitatea mall-ului Iulius Town și a zonei de business Openville consolidează statutul de zonă premium pentru investiții.',
     metaTitle: 'Apartamente Zona Aradului Timișoara | RealTrust Imobiliare',
-    metaDescription: 'Apartamente de vânzare pe Calea Aradului, Timișoara. Preț mediu 1.780 €/mp, acces rapid la aeroport. Administrare RealTrust și randament garantat.',
+    metaDescription: 'Apartamente de vânzare pe Calea Aradului, Timișoara. Preț mediu 1.780 €/mp, acces rapid la aeroport. Administrare RealTrust, randament net estimat 6,5–9,4%.',
     faq: [
       { question: 'Cât de aproape este zona Aradului de aeroport?', answer: 'Aeroportul Internațional Timișoara Traian Vuia este la aproximativ 10 minute cu mașina de zona Aradului, prin acces direct la autostrada A1.' },
       { question: 'Care sunt avantajele zonei Aradului pentru investitori?', answer: 'Zona Aradului oferă acces rapid la aeroport, proximitatea Iulius Town și Openville, plus un profil de chiriași cu venituri ridicate (profesioniști IT). Prețul mediu este 1.780 €/mp.' },
@@ -181,11 +181,11 @@ export const neighborhoods: NeighborhoodData[] = [
     avgPricePerSqm: 1720,
     listingsCount: 4,
     description:
-      'Complexul Studențesc din Timișoara este o zonă vibrantă, dominată de campusurile Universității Politehnica și ale Universității de Vest. Cererea de cazare este constantă datorită populației studențești de peste 40.000 de persoane și a fluxului continuu de profesori, cercetători și participanți la conferințe. Zona dispune de facilități moderne — cantină, librării, terenuri sportive — și este conectată excelent la centrul orașului prin tramvai (10 minute). Investițiile în garsoniere și studiouri din această zonă generează randamente de 8-10% net, susținute de cererea ridicată pe tot parcursul anului universitar. Profilul rezidenților: studenți, cadre didactice și tineri profesioniști.',
+      'Complexul Studențesc din Timișoara este o zonă vibrantă, dominată de campusurile Universității Politehnica și ale Universității de Vest. Cererea de cazare este constantă datorită populației studențești de peste 40.000 de persoane și a fluxului continuu de profesori, cercetători și participanți la conferințe. Zona dispune de facilități moderne — cantină, librării, terenuri sportive — și este conectată excelent la centrul orașului prin tramvai (10 minute). Investițiile în garsoniere și studiouri din această zonă au un randament net estimat de 6,5–9,4% pe an, susținut de cererea ridicată pe tot parcursul anului universitar. Profilul rezidenților: studenți, cadre didactice și tineri profesioniști.',
     metaTitle: 'Apartamente de vânzare Complex Studențesc Timișoara | RealTrust',
-    metaDescription: 'Apartamente în Complexul Studențesc Timișoara. Cerere constantă, randament 8-10%, preț mediu 1.720 €/mp. Ideal investiții cu management RealTrust.',
+    metaDescription: 'Apartamente în Complexul Studențesc Timișoara. Cerere constantă, randament net estimat 6,5–9,4%, preț mediu 1.720 €/mp. Ideal investiții cu management RealTrust.',
     faq: [
-      { question: 'Ce randament oferă o investiție în Complexul Studențesc?', answer: 'Garsonierele și studiourile din Complexul Studențesc generează randamente de 8-10% net, susținute de cererea constantă a celor peste 40.000 de studenți.' },
+      { question: 'Ce randament oferă o investiție în Complexul Studențesc?', answer: 'Garsonierele și studiourile din Complexul Studențesc au un randament net estimat de 6,5–9,4% pe an, susținut de cererea constantă a celor peste 40.000 de studenți.' },
       { question: 'Cât de aproape este Complexul Studențesc de centrul orașului?', answer: 'Complexul Studențesc este conectat la centrul Timișoarei prin tramvai, cu o călătorie de aproximativ 10 minute.' },
       { question: 'Ce tip de proprietăți sunt cele mai căutate în Complex Studențesc?', answer: 'Garsonierele și apartamentele cu 2 camere sunt cele mai căutate, atât de studenți pentru închiriere pe termen lung, cât și de turiștii care vizitează universitățile.' },
     ],
@@ -229,7 +229,7 @@ export const neighborhoods: NeighborhoodData[] = [
     description:
       'Elisabetin este unul dintre cele mai elegante cartiere rezidențiale ale Timișoarei, recunoscut pentru vilele sale interbelice, străzile umbrite și atmosfera liniștită. Situat la sud de centrul istoric, Elisabetin oferă acces pietonal de 10 minute spre Piața Victoriei și conexiune directă cu tramvaiul către Universitatea de Vest (UVT) și Universitatea Politehnica (UPT). Zona include Parcul Rozelor, una dintre cele mai frumoase atracții ale orașului, și o densitate ridicată de cafenele specialty și restaurante de autor. Apartamentele de închiriat Elisabetin Timișoara sunt căutate atât de familii tinere, cât și de turiști care preferă o experiență premium, departe de zgomotul centrului. Investitorii apreciază stabilitatea prețurilor și ratele de ocupare ridicate în regim hotelier.',
     metaTitle: 'Apartamente Elisabetin Timișoara | Cartier Premium RealTrust',
-    metaDescription: 'Apartamente Elisabetin Timișoara — cartier rezidențial premium lângă Parcul Rozelor și UVT. Preț 1.820 €/mp, regim hotelier cu randament verificat.',
+    metaDescription: 'Apartamente Elisabetin Timișoara — cartier rezidențial premium lângă Parcul Rozelor și UVT. Preț 1.820 €/mp, regim hotelier cu randament net estimat 6,5–9,4%.',
     faq: [
       { question: 'Ce face Elisabetin un cartier premium?', answer: 'Elisabetin se distinge prin arhitectura interbelică, vile elegante, Parcul Rozelor și o densitate ridicată de cafenele și restaurante de autor. Atmosferă rezidențială liniștită la 10 minute pietonal de Piața Victoriei.' },
       { question: 'Sunt apartamente de închiriat Elisabetin Timișoara potrivite pentru investiții?', answer: 'Da. Cererea constantă din partea familiilor tinere și a turiștilor premium asigură ocupare ridicată în regim hotelier, cu randamente nete de 7-9%. Prețul mediu este 1.820 €/mp.' },
