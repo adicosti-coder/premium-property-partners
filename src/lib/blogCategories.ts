@@ -40,7 +40,7 @@ export const BLOG_CATEGORIES: BlogCategoryMeta[] = [
     slug: "investitii-imobiliare",
     name: "Investiții Imobiliare",
     dbCategories: ["Investiții", "Imobiliare", "market-insights", "analize", "piață"],
-    title: "Investiții Imobiliare Timișoara — Randament, randament, Studii de Caz",
+    title: "Investiții Imobiliare Timișoara — Randament, Analize, Studii de Caz",
     description:
       "Analize de piață, randament net estimat 6,5–9,4% pe an, studii de caz reale și ghiduri pentru investitori imobiliari în Timișoara — inclusiv regim hotelier.",
     intro:

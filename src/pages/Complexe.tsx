@@ -56,9 +56,9 @@ const Complexe = () => {
 
   const translations = {
     ro: {
-      title: "Complexe Rezidențiale Timișoara | Management Regim Hotelier",
-      metaDescription: "Apartamente în regim hotelier în 12 complexe rezidențiale din Timișoara: ISHO, ATENEO, City of Mara, Fructus Plaza, XCity Towers și altele. Randament net estimat 6,5–9,4% pe an.",
-      heroTitle: "Complexe Rezidențiale",
+      title: "Ansambluri rezidențiale Timișoara | Apartamente RealTrust",
+      metaDescription: "Ansambluri rezidențiale din Timișoara: XCity Towers, Vivalia, City of Mara, NordOne, Fructus Plaza. Apartamente de vânzare, închiriere și regim hotelier.",
+      heroTitle: "Ansambluri rezidențiale",
       heroTitleHighlight: "Timișoara",
       heroSubtitle: "Administrăm proprietăți în cele mai exclusiviste ansambluri rezidențiale din Timișoara. Descoperă complexul tău și află potențialul de venit.",
       properties: "proprietăți",
@@ -95,8 +95,8 @@ const Complexe = () => {
       ],
     },
     en: {
-      title: "Residential Complexes Timișoara | Short-Term Rental Management",
-      metaDescription: "Professional short-term rental management for Timișoara's most sought-after residential complexes: Fructus Plaza, City of Mara, Ateneo, Ring, Vivalia and more. Estimated 6.5–9.4% net yearly randament.",
+      title: "Residential complexes Timișoara | RealTrust apartments",
+      metaDescription: "Residential complexes in Timișoara: XCity Towers, Vivalia, City of Mara, NordOne, Fructus Plaza. Apartments for sale, rent and short-term rental.",
       heroTitle: "Residential Complexes",
       heroTitleHighlight: "Timișoara",
       heroSubtitle: "We manage properties in Timișoara's most exclusive residential complexes. Discover your complex and find out your income potential.",

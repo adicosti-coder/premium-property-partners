@@ -10,6 +10,7 @@
  */
 
 import { hasEnglishTranslation } from '../src/lib/seoLanguagePolicy';
+import { getComplexLandingSeo } from '../src/lib/complexLandingSeo';
 
 const BASE_URL = 'https://realtrust.ro';
 const SUPABASE_URL = 'https://mvzssjyzbwccioqvhjpo.supabase.co';
@@ -438,6 +439,8 @@ export function buildComplexRoutes(
   complexes: DbComplex[],
   landingSlugs: Set<string>,
   takenPaths: Set<string>,
+  /** Display names of the hand-written landing pages, keyed by slug. */
+  landingNames: Map<string, string> = new Map(),
 ): ExtraRoute[] {
   const routes: ExtraRoute[] = [];
   const seen = new Set<string>();
@@ -462,17 +465,23 @@ export function buildComplexRoutes(
     const detailPath = `/complexe/${c.slug}`;
     if (takenPaths.has(detailPath)) continue;
     const canonical = `${BASE_URL}${detailPath}`;
+    // Hand-written landing pages own their metadata in React; the static
+    // document uses the same shared builder so both versions agree.
+    const landing = landingSlugs.has(c.slug)
+      ? getComplexLandingSeo(landingNames.get(c.slug) ?? c.name, 'ro')
+      : null;
     const description = clampText(
-      c.meta_description_ro?.trim() ||
+      landing?.description ||
+        c.meta_description_ro?.trim() ||
         c.description_ro?.trim() ||
         `Apartamente în ansamblul ${c.name} din ${zone}, Timișoara: disponibilitate, administrare în regim hotelier și analiză de randament cu RealTrust.`,
       158,
     );
     routes.push({
       path: detailPath,
-      title: clampText(c.meta_title_ro?.trim() || `${c.name} Timișoara | Apartamente RealTrust`, 60),
+      title: clampText(landing?.title || c.meta_title_ro?.trim() || `${c.name} Timișoara | Apartamente RealTrust`, 60),
       description,
-      h1: `${c.name}, Timișoara`,
+      h1: landing?.h1 || `${c.name}, Timișoara`,
       canonical,
       seoBody: `
         <p>${esc(description)}</p>

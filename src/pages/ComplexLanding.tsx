@@ -22,6 +22,7 @@ import {
 import ContextualLinks from "@/components/seo/ContextualLinks";
 import ComplexDetail from "./ComplexDetail";
 import { buildComplexLinks } from "@/lib/internalLinking";
+import { getComplexLandingSeo } from "@/lib/complexLandingSeo";
 
 const UnifiedCalculator = lazy(() => import("@/components/UnifiedCalculator"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
@@ -237,21 +238,24 @@ const ComplexLanding = () => {
   }
 
   const isRo = language === "ro";
+  const seo = getComplexLandingSeo(complex.name, isRo ? "ro" : "en");
+  const canonical = `https://realtrust.ro/complexe/${complex.slug}`;
 
+  // Same node id as the prerendered document; only facts true for every
+  // complex (no per-complex amenities we have not verified).
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ApartmentComplex",
-    name: `${complex.name}, Timișoara`,
-    description: `Apartamente în regim hotelier în ${complex.name} administrate de RealTrust.`,
+    "@id": `${canonical}#complex`,
+    name: complex.name,
+    url: canonical,
+    description: seo.description,
     address: {
       "@type": "PostalAddress",
       addressLocality: "Timișoara",
+      addressRegion: "Timiș",
       addressCountry: "RO",
     },
-    amenityFeature: [
-      { "@type": "LocationFeatureSpecification", name: "Self check-in 24/7", value: true },
-      { "@type": "LocationFeatureSpecification", name: "Parcare subterană", value: true },
-    ],
   };
 
   const stats = [
@@ -264,14 +268,9 @@ const ComplexLanding = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title={isRo
-          ? `Apartamente de închiriat și vânzare în ${complex.name} Timișoara | RealTrust`
-          : `Apartments for rent and sale in ${complex.name} Timișoara | RealTrust`}
-        description={isRo
-          ? `Apartamente disponibile în ${complex.name}, Timișoara. randament ${complex.roi}, venit ${complex.avgIncome}/lună, ocupare ${complex.occupancy}. Cele mai recente anunțuri verificate de RealTrust + analiză financiară completă pentru regim hotelier.`
-          : `Apartments available in ${complex.name}, Timișoara. randament ${complex.roi}, income ${complex.avgIncome}/month, occupancy ${complex.occupancy}. Latest RealTrust-verified listings plus complete short-term-rental financial analysis.`}
-
-        url={`https://realtrust.ro/complexe/${complex.slug}`}
+        title={seo.title}
+        description={seo.description}
+        url={canonical}
         jsonLd={jsonLd}
         breadcrumbItems={[
           { name: isRo ? "Acasă" : "Home", url: "https://realtrust.ro" },
@@ -302,9 +301,7 @@ const ComplexLanding = () => {
                 Timișoara
               </Badge>
               <h1 className="text-3xl md:text-5xl font-serif font-bold text-foreground mb-6">
-                {isRo
-                  ? `Apartament ${complex.name} în regim hotelier — Timișoara`
-                  : `${complex.name} Apartment — Short-Term Rental Timișoara`}
+                {seo.h1}
               </h1>
               <p className="text-lg text-muted-foreground mb-8">
                 {isRo
@@ -318,7 +315,7 @@ const ComplexLanding = () => {
                     {isRo ? "Solicită o consultație gratuită" : "Request a free consultation"}
                   </Button>
                 </Link>
-                <Link to="/oaspeti">
+                <Link to="/cazare">
                   <Button variant="outline" size="lg" className="gap-2">
                     <Calendar className="w-4 h-4" />
                     {isRo ? "Vezi apartamentele disponibile" : "View available apartments"}

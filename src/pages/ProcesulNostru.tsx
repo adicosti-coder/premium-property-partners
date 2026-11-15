@@ -31,7 +31,7 @@ const ProcesulNostru = () => {
     ro: {
       seoTitle: "Procesul Nostru — 5 Pași spre Profit | RealTrust Timișoara",
       seoDescription:
-        "Vezi cei 5 pași pe care RealTrust îi parcurge pentru a transforma apartamentul tău din Timișoara într-o sursă de venit pasiv cu peste 9% randament net.",
+        "Vezi cei 5 pași pe care RealTrust îi parcurge pentru a transforma apartamentul tău din Timișoara într-o sursă de venit, cu randament net estimat de 6,5–9,4% pe an.",
       breadcrumb: "Procesul Nostru",
       badge: "Procesul RealTrust · 5 pași",
       title: "Cum transformăm apartamentul tău",
@@ -82,7 +82,7 @@ const ProcesulNostru = () => {
         {
           icon: Rocket,
           title: "Profit lunar",
-          desc: "Banii intră direct în contul tău lunar, însoțiți de raport financiar transparent. randament net verificat de 9%+ pe an.",
+          desc: "Banii intră direct în contul tău lunar, însoțiți de raport financiar transparent. Randament net estimat: 6,5–9,4% pe an.",
           result: "6,5–9,4% randament net anual",
           duration: "De la ziua 30",
         },
@@ -91,7 +91,7 @@ const ProcesulNostru = () => {
     en: {
       seoTitle: "Our Process — 5 Steps to Profit | RealTrust Timișoara",
       seoDescription:
-        "See the 5 steps RealTrust takes to turn your Timișoara apartment into a passive income source with over 9% net randament.",
+        "See the 5 steps RealTrust takes to turn your Timișoara apartment into an income source, with an estimated net yield of 6.5–9.4% per year.",
       breadcrumb: "Our Process",
       badge: "The RealTrust Process · 5 steps",
       title: "How we turn your apartment",
@@ -142,7 +142,7 @@ const ProcesulNostru = () => {
         {
           icon: Rocket,
           title: "Monthly profit",
-          desc: "Money lands in your account monthly, alongside a transparent financial report. Verified 9%+ net annual ROI.",
+          desc: "Money lands in your account monthly, alongside a transparent financial report. Estimated net yield: 6.5–9.4% per year.",
           result: "6.5–9.4% net annual ROI",
           duration: "From day 30",
         },

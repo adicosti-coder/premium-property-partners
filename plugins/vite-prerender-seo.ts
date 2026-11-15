@@ -10,6 +10,7 @@ import type { Plugin } from 'vite';
 import fs from 'fs';
 import path from 'path';
 import { PUBLIC_ROUTE_SEO } from '../src/lib/publicRouteSeo';
+import { readComplexLandingNames } from '../src/lib/complexLandingSeo';
 import { isTranslatedStaticPath, normalizeSeoPath, prerenderHeadLinks, prerenderLanguageScript, SITE_ORIGIN } from '../src/lib/seoLanguagePolicy';
 import { CONSOLIDATED_ARTICLE_REDIRECTS, isConsolidatedArticle } from '../src/data/consolidatedArticleRedirects';
 import { LEGACY_PROPERTY_REDIRECTS } from '../src/data/legacyPropertyPaths';
@@ -120,7 +121,7 @@ const HOMEPAGE_SEO_BODY = `
   <p>Proprietățile noastre sunt situate la 5–15 minute de Iulius Town / Iulius Mall Openville, Shopping City Timișoara (Auchan), Vox Park, <strong>Aeroport Timișoara</strong> / Aeroportul Internațional Timișoara „Traian Vuia" și Gara de Nord Timișoara. Oferim <strong>apartamente de închiriat Timișoara Aeroport</strong>, <strong>cazare Timișoara Spitalul Județean</strong> și opțiuni de <strong>regim hotelier Timișoara Gara de Nord</strong> — ideale pentru pasageri în tranzit, familiile pacienților, medici, personal medical și călători business.</p>
 
   <h3>Investiții imobiliare în Centru Timișoara, ISHO și zonele premium</h3>
-  <p>Pentru investitori, propunem oportunități verificate în Cetate / Centru, ISHO (cel mai iconic proiect de regenerare urbană din Timișoara, pe malul Begăi), Take Ionescu și Soarelui — zone cu randamente atractive (8–10% net pentru regim hotelier) și apreciere a capitalului peste media pieței. Avem inclusiv <strong>apartamente de vânzare Timișoara Openville</strong>, proprietăți premium lângă hub-ul de business Iulius Town / Openville și <strong>apartamente Timișoara Piața Unirii</strong> pentru cumpărători care caută Centru Vechi și randament excelent.</p>
+  <p>Pentru investitori, propunem oportunități verificate în Cetate / Centru, ISHO (cel mai iconic proiect de regenerare urbană din Timișoara, pe malul Begăi), Take Ionescu și Soarelui — zone cu randament net estimat de 6,5–9,4% pe an în regim hotelier și apreciere a capitalului peste media pieței. Avem inclusiv <strong>apartamente de vânzare Timișoara Openville</strong>, proprietăți premium lângă hub-ul de business Iulius Town / Openville și <strong>apartamente Timișoara Piața Unirii</strong> pentru cumpărători care caută Centru Vechi și randament excelent.</p>
 
   <h3>Apartamente de vânzare Timișoara — proprietăți de vânzare în toate cartierele</h3>
   <p>Ca <strong>agenție imobiliară Timișoara</strong> de încredere, oferim <strong>apartamente de vânzare Timișoara</strong> și <strong>proprietăți de vânzare Timișoara</strong> verificate în toate cartierele importante: garsoniere, apartamente cu 2 camere, 3 camere și 4 camere de vânzare în Centru, Iosefin, Elisabetin, Complex Studențesc, ISHO, Take Ionescu, Calea Aradului, Calea Lipovei și Circumvalațiunii. Consultanță completă pentru cumpărătorii de apartamente în Timișoara, evaluare gratuită, negociere și asistență la actele notariale.</p>
@@ -132,7 +133,7 @@ const HOMEPAGE_SEO_BODY = `
   <p><strong>Administrare proprietăți Timișoara</strong> oferită de RealTrust acoperă tot ciclul: marketing pe Booking, Airbnb și directe, check-in / check-out 24/7, curățenie hotelieră, mentenanță, raportare lunară financiară transparentă și optimizare yield management. <strong>Administrare apartamente regim hotelier Timișoara</strong> cu randament net estimat 6,5–9,4% anual — partener de încredere pentru proprietari și investitori.</p>
 
   <h3>Servicii oferite</h3>
-  <p>Investiții imobiliare Timișoara cu randament verificat, vânzări apartamente Timișoara, închirieri pe termen lung Timișoara, evaluare gratuită proprietate, calculator randament imobiliar (ROI) online, consultanță investiții imobiliare și administrare profesională pentru proprietari, investitori și oaspeți.</p>
+  <p>Investiții imobiliare Timișoara cu randament net estimat 6,5–9,4%, vânzări apartamente Timișoara, închirieri pe termen lung Timișoara, evaluare gratuită proprietate, calculator randament imobiliar (ROI) online, consultanță investiții imobiliare și administrare profesională pentru proprietari, investitori și oaspeți.</p>
 
   <h3>Proximitate landmark-uri Timișoara și acces transport public</h3>
   <p>Toate proprietățile noastre sunt aproape de universități (UVT, UPT, UMF), mall-uri (Iulius Town, Shopping City Timișoara), parcuri (Parcul Central, Parcul Rozelor, Parcul Botanic), Catedrala Mitropolitană, malul Bega, Spitalul Județean Timișoara, Aeroportul Internațional și Gara de Nord — la 5, 10 sau 15 minute pe jos sau cu transport public. Acces facil la stația de tramvai (linii 1, 2, 4, 8) și autobuz (E1, E4, 33, 40), cu mijloc de transport în comun la sub 100m de fiecare proprietate.</p>
@@ -209,7 +210,7 @@ const neighborhoods = [
     { q: 'Ce atracții sunt în zona Șagului?', a: 'Amazonia Aquapark la 5 minute, parcuri, școli și tramvai spre centru (15 min).' },
   ]},
   { slug: 'complex-studentesc', name: 'Complex Studențesc', fullName: 'Complexul Studențesc', avgPrice: 1720, faq: [
-    { q: 'Ce randament oferă o investiție în Complexul Studențesc?', a: 'Randamente de 8-10% net, susținute de cererea celor peste 40.000 de studenți.' },
+    { q: 'Ce randament oferă o investiție în Complexul Studențesc?', a: 'Randament net estimat de 6,5–9,4% pe an în regim hotelier, susținut de cererea celor peste 40.000 de studenți. Cifra exactă depinde de apartament.' },
   ]},
   { slug: 'calea-lipovei', name: 'Calea Lipovei', fullName: 'Calea Lipovei', avgPrice: 1550, faq: [
     { q: 'De ce sunt prețurile mai mici pe Calea Lipovei?', a: 'Zonă în curs de modernizare (1.550 €/mp), cu potențial mare de apreciere.' },
@@ -217,13 +218,13 @@ const neighborhoods = [
   { slug: 'isho', name: 'ISHO', fullName: 'ISHO & Fabric', avgPrice: 2150, faq: [
     { q: 'Ce face ISHO diferit?', a: 'Cel mai iconic proiect de regenerare urbană din Timișoara — complex mixed-use pe malul Begăi.' },
     { q: 'Care este prețul mediu la ISHO?', a: '2.150 €/mp, cel mai ridicat din Timișoara.' },
-    { q: 'Ce randament au investițiile imobiliare în ISHO?', a: 'Randament net 8–10% în regim hotelier RealTrust, datorită cererii constante și aprecierii capitalului peste media pieței Timișoara.' },
+    { q: 'Ce randament au investițiile imobiliare în ISHO?', a: 'Randament net estimat de 6,5–9,4% pe an în regim hotelier RealTrust, susținut de cererea constantă și de aprecierea capitalului din zonă.' },
     { q: 'Ce este în apropiere de ISHO și Fabric?', a: 'Piața Traian, City Business Centre, Iulius Town, malul Begăi, Centrul Vechi (Piața Unirii) — toate la 5–15 minute pe jos sau cu mașina.' },
   ], seoBody: `
     <h2>Apartamente de vânzare în ISHO &amp; Fabric, Timișoara</h2>
     <p>Cartierul <strong>ISHO</strong> și zona istorică <strong>Fabric</strong> formează cea mai dinamică micro-piață imobiliară din Timișoara. ISHO este cel mai iconic proiect de regenerare urbană din oraș — complex mixed-use pe malul Begăi cu apartamente premium, birouri, retail și spații verzi. Preț mediu 2.150 €/mp, cu apreciere constantă și cerere de chirie ridicată.</p>
-    <h2>Investiții imobiliare ISHO Timișoara — randament și randament</h2>
-    <p>Apartamentele din ISHO oferă <strong>randament net 8–10% în regim hotelier</strong> administrat de RealTrust, datorită proximității față de <strong>City Business Centre</strong>, <strong>Iulius Town</strong>, Vox Park și Centrul Vechi. Cumpărătorii pot accesa <strong>credit ipotecar Timișoara</strong> cu DAE de la 6,2% prin partenerii noștri bancari.</p>
+    <h2>Investiții imobiliare ISHO Timișoara — randament și apreciere</h2>
+    <p>Apartamentele din ISHO oferă <strong>randament net estimat de 6,5–9,4% în regim hotelier</strong> administrat de RealTrust, datorită proximității față de <strong>City Business Centre</strong>, <strong>Iulius Town</strong>, Vox Park și Centrul Vechi. Cumpărătorii pot accesa <strong>credit ipotecar Timișoara</strong> cu DAE de la 6,2% prin partenerii noștri bancari.</p>
     <h3>Puncte de interes lângă ISHO &amp; Fabric</h3>
     <p><strong>Piața Traian</strong> (reper istoric Fabric, 5 min), <strong>City Business Centre</strong> (hub corporate, 7 min), Iulius Town &amp; Openville (10 min), Centrul Vechi cu Piața Unirii și Catedrala Mitropolitană (10 min), Spitalul Județean (8 min), UVT &amp; Politehnica (12 min), Aeroport (15 min).</p>
     <h3>Apartamente de închiriat ISHO Timișoara</h3>
@@ -1373,9 +1374,9 @@ export function buildStaticRoutes(): PrerenderRoute[] {
       <p><strong>Evoluție prețuri imobiliare Timișoara</strong>: media €/mp a crescut de la 1.250 € (2020) la 1.890 € (Q1 2026), cu un CAGR de aproximativ 7,1%. Cele mai puternice creșteri s-au înregistrat în ISHO (+62%), Circumvalațiunii / City of Mara (+48%) și Complex Studențesc (+41%). Prognoză 2026–2028: apreciere medie 5–8% anual, susținută de cererea din partea companiilor mari (Continental, Nokia, Hella, Flex, Atos) și de fluxul universitar (UVT, UPT, UMF — peste 40.000 studenți activi).</p>
 
       <h2>Analiza zonelor cheie din Timișoara pentru investitori</h2>
-      <p>Cele mai performante micro-piețe pentru investitori în 2026: <strong>ISHO</strong> (2.150 €/mp, ocupare 85–90% regim hotelier), <strong>Centru / Cetate</strong> (apreciere capital + venit dual din business travel și turism), <strong>Complex Studențesc</strong> (cerere garantată 9 luni/an, randament 8–10% net), <strong>Calea Aradului</strong> (proximitate Aeroport + Continental Automotive — chiriași business cu venituri mari) și <strong>Dumbrăvița / Ghiroda</strong> (case noi, profil familial, apreciere capital peste media orașului).</p>
+      <p>Cele mai performante micro-piețe pentru investitori în 2026: <strong>ISHO</strong> (2.150 €/mp, ocupare 85–90% regim hotelier), <strong>Centru / Cetate</strong> (apreciere capital + venit dual din business travel și turism), <strong>Complex Studențesc</strong> (cerere constantă în timpul anului universitar, randament net estimat 6,5–9,4%), <strong>Calea Aradului</strong> (proximitate Aeroport + Continental Automotive — chiriași business cu venituri mari) și <strong>Dumbrăvița / Ghiroda</strong> (case noi, profil familial, apreciere capital peste media orașului).</p>
 
-      <h3>Investiții în regim hotelier — randament verificat</h3>
+      <h3>Investiții în regim hotelier — randament net estimat</h3>
       <p>Modelul nostru de <strong>regim hotelier Timișoara</strong> generează randament net estimat 6,5–9,4% pe portofoliul activ (13 cazări active). Include marketing pe Booking, Airbnb și platforme directe, check-in / check-out 24/7, curățenie hotelieră, mentenanță, raportare lunară și yield management dinamic. Comision 15–20% management + 15–23% comision platforme. Capital necesar de la 75.000 € pentru o garsonieră în Centru sau Complex Studențesc.</p>
 
       <h3>Calculator taxe notariale și costuri tranzacție</h3>
@@ -1564,20 +1565,20 @@ export function buildStaticRoutes(): PrerenderRoute[] {
   // /ansambluri-rezidentiale — managed residential complexes (canonical short route)
   routes.push({
     path: '/ansambluri-rezidentiale',
-    title: 'Ansambluri Rezidențiale Timișoara — ISHO, ATENEO, City of Mara | RealTrust',
-    description: 'Complexe rezidențiale Timișoara administrate de RealTrust: ISHO, ATENEO, City of Mara, Fructus Plaza, XCity Towers. Investiții cu randament verificat.',
-    h1: 'Complexe Rezidențiale Premium Timișoara',
+    // Same audited metadata as the React page (PUBLIC_ROUTE_SEO).
+    ...PUBLIC_ROUTE_SEO['/ansambluri-rezidentiale'].ro,
     canonical: `${BASE_URL}/ansambluri-rezidentiale`,
     seoBody: `
-      <h2>Complexe rezidențiale din Timișoara administrate de RealTrust</h2>
-      <p>Pagina /ansambluri-rezidentiale este dedicată ansamblurilor rezidențiale și proprietăților administrate de RealTrust în Timișoara: <strong>ISHO</strong>, <strong>ATENEO Residence</strong>, <strong>City of Mara</strong>, <strong>Fructus Plaza</strong>, <strong>XCity Towers</strong> și alte dezvoltări premium.</p>
+      <h2>Ansambluri rezidențiale din Timișoara: apartamente, prețuri și administrare</h2>
+      <p>Ansamblurile rezidențiale din Timișoara în care RealTrust intermediază vânzări și închirieri și administrează apartamente în regim hotelier: <a href="${BASE_URL}/complexe/xcity-towers">XCity Towers</a>, <a href="${BASE_URL}/complexe/vivalia">Vivalia</a>, <a href="${BASE_URL}/complexe/city-of-mara">City of Mara</a>, <a href="${BASE_URL}/complexe/nord-one">NordOne</a>, <a href="${BASE_URL}/complexe/fructus-plaza">Fructus Plaza</a>, <a href="${BASE_URL}/complexe/ateneo">ATENEO</a>, <a href="${BASE_URL}/complexe/denya-forest">Denya Forest</a>, ISHO și alte dezvoltări.</p>
+      <p>Pentru fiecare ansamblu găsești anunțurile disponibile, prețul orientativ pe metru pătrat din zonă și o estimare de venit în regim hotelier, comparată cu chiria clasică.</p>
       <h3>Ansambluri rezidențiale Timișoara cu potențial investițional</h3>
-      <p>Prezentăm zone, facilități și rezultate reale de ocupare pentru investitori interesați de apartamente noi, randament verificat și administrare în regim hotelier în cele mai căutate micro-piețe din Timișoara.</p>
+      <p>Prezentăm zone, facilități și rezultate reale de ocupare pentru investitori interesați de apartamente noi, randament net estimat de 6,5–9,4% și administrare în regim hotelier în cele mai căutate micro-piețe din Timișoara.</p>
     `,
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
-      name: 'Complexe Rezidențiale Timișoara',
+      name: 'Ansambluri rezidențiale Timișoara',
       url: `${BASE_URL}/ansambluri-rezidentiale`,
     },
   });
@@ -1596,7 +1597,7 @@ export function buildStaticRoutes(): PrerenderRoute[] {
     {
       slug: 'investitii-imobiliare',
       name: 'Investiții Imobiliare',
-      title: 'Investiții Imobiliare Timișoara — Randament, randament, Studii de Caz | RealTrust',
+      title: 'Investiții Imobiliare Timișoara — Randament, Analize, Studii de Caz | RealTrust',
       description: 'Analize de piață, randament net estimat 6,5–9,4%, studii de caz reale și ghiduri pentru investitori imobiliari în Timișoara — inclusiv regim hotelier.',
       intro: 'Strategii verificate de investiții imobiliare în Timișoara: de la calcul randament până la exit strategy.',
     },
@@ -2025,9 +2026,9 @@ export default function vitePrerenderSeo(): Plugin {
           `[prerender-seo] Found ${articles.length} public articles, ${complexes.length} complexes`,
         );
 
-        const complexLandingSlugs = readComplexLandingSlugs(
-          fs.readFileSync(path.resolve(process.cwd(), 'src/pages/ComplexLanding.tsx'), 'utf-8'),
-        );
+        const complexLandingSource = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/ComplexLanding.tsx'), 'utf-8');
+        const complexLandingSlugs = readComplexLandingSlugs(complexLandingSource);
+        const complexLandingNames = readComplexLandingNames(complexLandingSource);
 
         const takenPaths = new Set<string>([
           ...staticPaths,
@@ -2040,7 +2041,7 @@ export default function vitePrerenderSeo(): Plugin {
           // their own indexable document or a card in the hubs.
           ...buildArticleRoutes(articles.filter((a) => !isConsolidatedArticle(a.slug))),
           ...buildBlogHubRoutes(articles.filter((a) => !isConsolidatedArticle(a.slug))),
-          ...buildComplexRoutes(complexes, complexLandingSlugs, takenPaths),
+          ...buildComplexRoutes(complexes, complexLandingSlugs, takenPaths, complexLandingNames),
           ...buildRemainingStaticRoutes(),
         ].filter((r) => {
           if (takenPaths.has(r.path)) return false;

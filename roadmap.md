@@ -1,5 +1,13 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## SEO/GEO — 15 noiembrie
+- [x] Titluri: /cazare („Cazare regim hotelier Timișoara”), /ansambluri-rezidentiale, paginile de ansamblu (numele primul)
+- [x] Promisiuni de randament nepermise scoase din paginile citite de Google și AI (9%+, 8–11%, garantat/verificat/dovedit) + test
+- [x] Descrierile ansamblurilor din baza de date (Ateneo, Campeador, City of Mara, Fructus Plaza, Nord-One, Vivalia)
+- [x] llms.txt: catalog cu 6,5–9,4% și linkuri spre ansambluri
+- [ ] De decis: cifrele de ocupare peste 75% (78–95%) din textele cartierelor/ansamblurilor
+- [ ] De decis: ISHO în listele de zone (llms.txt, pagini de cartier)
+
 ## Calculator complet randament și evaluare — 13 noiembrie (seara)
 - [x] Prețuri de vânzare €/mp în 3 niveluri (anunțuri colectate → tabel de referință → grila evaluării gratuite)
 - [x] 3 carduri (vânzare, chirie clasică, regim hotelier + randament) și proiecție la 5 ani

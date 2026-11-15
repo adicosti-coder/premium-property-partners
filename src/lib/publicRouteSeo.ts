@@ -25,8 +25,12 @@ export const PUBLIC_ROUTE_SEO: Record<string, Record<'ro' | 'en', Metadata>> = {
     en: { title: 'Real estate services Timișoara | RealTrust', description: 'Real estate transactions and services in Timișoara: sales, purchases, rentals and property valuations, with support from RealTrust.', h1: 'Real estate transactions and services in Timișoara' },
   },
   '/cazare': {
-    ro: { title: 'Cazare în Timișoara | ApArt Hotel', description: 'Cazare în Timișoara în apartamente și case în regim hotelier prin ApArt Hotel. Descoperă proprietățile disponibile și rezervă direct.', h1: 'Cazare în regim hotelier în Timișoara' },
+    ro: { title: 'Cazare regim hotelier Timișoara | ApArt Hotel', description: 'Cazare în Timișoara în apartamente și case în regim hotelier prin ApArt Hotel. Descoperă proprietățile disponibile și rezervă direct.', h1: 'Cazare în regim hotelier în Timișoara' },
     en: { title: 'Accommodation in Timișoara | ApArt Hotel', description: 'Accommodation in Timișoara in short-term rental apartments and houses through ApArt Hotel. Discover available properties and book directly.', h1: 'Short-term rental accommodation in Timișoara' },
+  },
+  '/ansambluri-rezidentiale': {
+    ro: { title: 'Ansambluri rezidențiale Timișoara | Apartamente RealTrust', description: 'Ansambluri rezidențiale din Timișoara: XCity Towers, Vivalia, City of Mara, NordOne, Fructus Plaza. Apartamente de vânzare, închiriere și regim hotelier.', h1: 'Ansambluri rezidențiale Timișoara' },
+    en: { title: 'Residential complexes Timișoara | RealTrust apartments', description: 'Residential complexes in Timișoara: XCity Towers, Vivalia, City of Mara, NordOne, Fructus Plaza. Apartments for sale, rent and short-term rental.', h1: 'Residential Complexes Timișoara' },
   },
 };
 
