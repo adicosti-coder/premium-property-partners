@@ -33,29 +33,6 @@ export const neighborhoods: NeighborhoodData[] = [
   // ZONE PREMIUM (avgPricePerSqm >= 1900€) — apar primele
   // ═══════════════════════════════════════════════════════════════
   {
-    slug: 'isho',
-    name: 'ISHO',
-    fullName: 'ISHO & Fabric',
-    avgPricePerSqm: 2150,
-    listingsCount: 5,
-    description:
-      'ISHO (I Should Have One) este cel mai iconic proiect de regenerare urbană din Timișoara, dezvoltat pe fosta platformă industrială din cartierul Fabric. Complexul mixed-use include apartamente premium, birouri, spații comerciale și restaurante, toate proiectate de arhitecți de renume. Zona Fabric, cu atmosfera sa boemiană și proximitatea de malul Begăi, atrage profesioniști creativi, expați și investitori care caută proprietăți cu apreciere rapidă. Accesul pietonal spre centrul vechi durează 10 minute. Prețurile sunt cele mai ridicate din Timișoara, reflectând calitatea construcției și locația unică. Profilul rezidenților: profesioniști IT, manageri, artiști și turiști premium.',
-    metaTitle: 'Apartamente ISHO Timișoara | RealTrust Imobiliare',
-    metaDescription: 'Apartamente premium ISHO Fabric, Timișoara. Cel mai exclusivist complex — 2.150 €/mp, design urban premium. Administrare profesională RealTrust.',
-    faq: [
-      { question: 'Ce face ISHO diferit față de alte complexuri din Timișoara?', answer: 'ISHO este cel mai iconic proiect de regenerare urbană din Timișoara — un complex mixed-use cu apartamente premium, birouri, restaurante și spații comerciale, proiectat de arhitecți de renume pe malul Begăi.' },
-      { question: 'Care este prețul mediu la ISHO?', answer: 'Prețul mediu la ISHO este de 2.150 €/mp, cel mai ridicat din Timișoara, reflectând calitatea construcției, designul arhitectural și locația premium lângă centrul vechi.' },
-      { question: 'Este ISHO potrivit pentru investiții pe termen lung?', answer: 'Da, ISHO atrage chiriași premium (profesioniști IT, expați, turiști de business) și are un potențial ridicat de apreciere datorită locației unice și brandului puternic.' },
-    ],
-    listings: [
-      { id: 'ish-1', title: 'Apartament 2 camere ISHO Living', price: 129000, pricePerSqm: 2150, rooms: 2, floor: 8, surface: 60, badge: 'administrare', imageAlt: 'Apartament ISHO Living Timișoara' },
-      { id: 'ish-2', title: 'Studio premium cu vedere la Bega', price: 84000, pricePerSqm: 2200, rooms: 1, floor: 6, surface: 38, badge: 'administrare', imageAlt: 'Studio ISHO vedere Bega' },
-      { id: 'ish-3', title: 'Apartament 3 camere penthouse', price: 236500, pricePerSqm: 2200, rooms: 3, floor: 12, surface: 108, badge: 'vanzare', imageAlt: 'Penthouse ISHO Timișoara' },
-      { id: 'ish-4', title: 'Garsonieră ISHO — investiție', price: 72000, pricePerSqm: 2120, rooms: 1, floor: 3, surface: 34, badge: 'administrare', imageAlt: 'Garsonieră ISHO investiție' },
-      { id: 'ish-5', title: 'Duplex 4 camere premium', price: 290000, pricePerSqm: 2230, rooms: 4, floor: 10, surface: 130, badge: 'vanzare', imageAlt: 'Duplex ISHO Timișoara' },
-    ],
-  },
-  {
     slug: 'circumvalatiunii',
     name: 'Circumvalațiunii',
     fullName: 'Circumvalațiunii',

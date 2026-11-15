@@ -8,7 +8,7 @@ export { SITE_ORIGIN };
 
 /** Complexes with a richer landing page under /complexe/:slug (single canonical). */
 export const COMPLEX_LANDING_SLUGS = new Set([
-  "isho", "paltim", "ateneo", "green-forest", "helios", "fructus-plaza",
+  "paltim", "ateneo", "green-forest", "helios", "fructus-plaza",
   "city-of-mara", "vivalia", "nord-one", "xcity-towers", "denya-forest",
 ]);
 

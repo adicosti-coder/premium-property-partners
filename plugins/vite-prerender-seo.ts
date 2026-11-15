@@ -14,6 +14,7 @@ import { readComplexLandingNames } from '../src/lib/complexLandingSeo';
 import { isTranslatedStaticPath, normalizeSeoPath, prerenderHeadLinks, prerenderLanguageScript, SITE_ORIGIN } from '../src/lib/seoLanguagePolicy';
 import { CONSOLIDATED_ARTICLE_REDIRECTS, isConsolidatedArticle } from '../src/data/consolidatedArticleRedirects';
 import { LEGACY_PROPERTY_REDIRECTS } from '../src/data/legacyPropertyPaths';
+import { REMOVED_ZONE_REDIRECTS } from '../src/data/removedZonePaths';
 import { buildAggregateRating, brandAggregateRating } from '../src/lib/reviewStructuredData';
 import { ORGANIZATION_SCHEMA, REAL_ESTATE_AGENT_SCHEMA, LODGING_BUSINESS_SCHEMA } from '../src/lib/orgIdentity';
 import { CONTACT_HOURS, REAL_ESTATE_SINCE } from '../src/lib/businessFacts';
@@ -215,25 +216,6 @@ const neighborhoods = [
   { slug: 'calea-lipovei', name: 'Calea Lipovei', fullName: 'Calea Lipovei', avgPrice: 1550, faq: [
     { q: 'De ce sunt prețurile mai mici pe Calea Lipovei?', a: 'Zonă în curs de modernizare (1.550 €/mp), cu potențial mare de apreciere.' },
   ]},
-  { slug: 'isho', name: 'ISHO', fullName: 'ISHO & Fabric', avgPrice: 2150, faq: [
-    { q: 'Ce face ISHO diferit?', a: 'Cel mai iconic proiect de regenerare urbană din Timișoara — complex mixed-use pe malul Begăi.' },
-    { q: 'Care este prețul mediu la ISHO?', a: '2.150 €/mp, cel mai ridicat din Timișoara.' },
-    { q: 'Ce randament au investițiile imobiliare în ISHO?', a: 'Randament net estimat de 6,5–9,4% pe an în regim hotelier RealTrust, susținut de cererea constantă și de aprecierea capitalului din zonă.' },
-    { q: 'Ce este în apropiere de ISHO și Fabric?', a: 'Piața Traian, City Business Centre, Iulius Town, malul Begăi, Centrul Vechi (Piața Unirii) — toate la 5–15 minute pe jos sau cu mașina.' },
-  ], seoBody: `
-    <h2>Apartamente de vânzare în ISHO &amp; Fabric, Timișoara</h2>
-    <p>Cartierul <strong>ISHO</strong> și zona istorică <strong>Fabric</strong> formează cea mai dinamică micro-piață imobiliară din Timișoara. ISHO este cel mai iconic proiect de regenerare urbană din oraș — complex mixed-use pe malul Begăi cu apartamente premium, birouri, retail și spații verzi. Preț mediu 2.150 €/mp, cu apreciere constantă și cerere de chirie ridicată.</p>
-    <h2>Investiții imobiliare ISHO Timișoara — randament și apreciere</h2>
-    <p>Apartamentele din ISHO oferă <strong>randament net estimat de 6,5–9,4% în regim hotelier</strong> administrat de RealTrust, datorită proximității față de <strong>City Business Centre</strong>, <strong>Iulius Town</strong>, Vox Park și Centrul Vechi. Cumpărătorii pot accesa <strong>credit ipotecar Timișoara</strong> cu DAE de la 6,2% prin partenerii noștri bancari.</p>
-    <h3>Puncte de interes lângă ISHO &amp; Fabric</h3>
-    <p><strong>Piața Traian</strong> (reper istoric Fabric, 5 min), <strong>City Business Centre</strong> (hub corporate, 7 min), Iulius Town &amp; Openville (10 min), Centrul Vechi cu Piața Unirii și Catedrala Mitropolitană (10 min), Spitalul Județean (8 min), UVT &amp; Politehnica (12 min), Aeroport (15 min).</p>
-    <h3>Apartamente de închiriat ISHO Timișoara</h3>
-    <p>Pentru chirie clasică, ISHO atrage chiriași corporate (Continental, Hella, Nokia) și expați cu venituri ridicate. Chirie medie 1 cameră: 450–550 €/lună; 2 camere: 600–800 €/lună. Pentru regim hotelier, ocupare medie 78% și ADR 65–95€/noapte.</p>
-    <h3>Spații comerciale &amp; terenuri ISHO Fabric</h3>
-    <p>Zona include și <strong>spații comerciale Timișoara</strong> de tip street retail în ISHO Galleria și pe Bulevardul Take Ionescu, plus <strong>terenuri de vânzare Timișoara</strong> intravilan în Fabric pentru dezvoltări mici. RealTrust intermediază închirieri și vânzări pentru investitori interesați de yield comercial 7–9% net.</p>
-    <h3>Piața imobiliară Timișoara — context ISHO</h3>
-    <p><strong>Piața imobiliară Timișoara</strong> crește anual cu 5–8% în 2025–2026, iar ISHO este pol de creștere cu apreciere peste medie. Vezi <a href="https://realtrust.ro/piata-imobiliara-timisoara">analiza completă a pieței</a> și <a href="https://realtrust.ro/calculator-randament">calculatorul de randament</a>.</p>
-  ` },
   { slug: 'iosefin', name: 'Iosefin', fullName: 'Iosefin', avgPrice: 1850, faq: [
     { q: 'Care este prețul mediu pe metru pătrat în Iosefin Timișoara?', a: 'Prețurile apartamentelor în Iosefin variază între 1.700 și 2.100 €/mp (medie 1.850 €/mp). Garsonierele se tranzacționează între 60.000 și 75.000 €.' },
     { q: 'De ce să investesc în Iosefin?', a: 'Arhitectură habsburgică, Piața Iosefin, Sinagoga din Iosefin, acces 8 min pe jos spre Piața Unirii. Randament regim hotelier 8–9% net.' },
@@ -2112,7 +2094,7 @@ export default function vitePrerenderSeo(): Plugin {
 
         // Old top-level apartment addresses: permanent-redirect documents to
         // the single /proprietate/<slug> page (no duplicate structured data).
-        for (const [from, target] of Object.entries(LEGACY_PROPERTY_REDIRECTS)) {
+        for (const [from, target] of [...Object.entries(LEGACY_PROPERTY_REDIRECTS), ...Object.entries(REMOVED_ZONE_REDIRECTS)]) {
           const redirectHtml = generateRedirectHtml(target);
           const rel = from.replace(/^\//, '');
           fs.mkdirSync(path.join(outDir, rel), { recursive: true });

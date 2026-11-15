@@ -4,11 +4,6 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
-    <loc>https://realtrust.ro/imobiliare-timisoara/isho</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://realtrust.ro/imobiliare-timisoara/circumvalatiunii</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -111,13 +106,6 @@
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/zona/fabric"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/zona/fabric"/>
-  </url>
-<url>
-    <loc>https://realtrust.ro/complexe/isho</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/complexe/isho"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/complexe/isho"/>
   </url>
 <url>
     <loc>https://realtrust.ro/complexe/ateneo</loc>

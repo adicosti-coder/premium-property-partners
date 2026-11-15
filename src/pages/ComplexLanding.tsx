@@ -46,22 +46,6 @@ interface ComplexData {
 
 
 const complexesData: Record<string, ComplexData> = {
-  isho: {
-    name: "ISHO",
-    slug: "isho",
-    roi: "6,5–9,4%",
-    avgIncome: "€1,200",
-    occupancy: "65–75%",
-    rating: "9.6",
-    avgPrice: 95000,
-    avgADR: 55,
-    zoneMatchers: ["ISHO", "Iosefin"],
-    advantages: [
-      { ro: "Situat lângă Centrul Vechi și Piața Unirii — acces direct la cele mai vizitate zone turistice", en: "Located near the Old Town and Unirii Square — direct access to the most visited tourist areas" },
-      { ro: "Comunitate mixtă rezidențial-business cu cerere constantă de cazare pe termen scurt", en: "Mixed residential-business community with constant demand for short-term accommodation" },
-      { ro: "Infrastructură premium cu spații comerciale, restaurante și coworking la parter", en: "Premium infrastructure with commercial spaces, restaurants and coworking on the ground floor" },
-    ],
-  },
   paltim: {
     name: "Paltim",
     slug: "paltim",

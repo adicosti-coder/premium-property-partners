@@ -13,6 +13,7 @@ import ComplexRedirect from "@/components/seo/ComplexRedirect";
 import TrailingSlashRedirect from "@/components/seo/TrailingSlashRedirect";
 import LegacyPropertyRedirect from "@/components/seo/LegacyPropertyRedirect";
 import { LEGACY_PROPERTY_REDIRECTS } from "@/data/legacyPropertyPaths";
+import { REMOVED_ZONE_REDIRECTS } from "@/data/removedZonePaths";
 import { captureCampaignAttribution } from "@/lib/campaignAttribution";
 import { isChunkLoadError, reserveChunkReload } from "@/lib/chunkRecovery";
 import RouteLoading from "@/components/RouteLoading";
@@ -301,6 +302,9 @@ const App = () => (
                     {/* Canonical: /ansambluri-rezidentiale (hub). Detail pages keep /complexe/:slug. */}
                     <Route path="/ansambluri-rezidentiale" element={<Complexe />} />
                     <Route path="/complexe" element={<RedirectWithQuery to="/ansambluri-rezidentiale" />} />
+                    {Object.entries(REMOVED_ZONE_REDIRECTS).map(([from, to]) => (
+                      <Route key={from} path={from} element={<RedirectWithQuery to={to} />} />
+                    ))}
                     <Route path="/complex/:slug" element={<ComplexRedirect />} />
                     <Route path="/complexe/city-of-mara" element={<CityOfMaraTimisoara />} />
                     <Route path="/complexe/:slug" element={<ComplexLanding />} />
