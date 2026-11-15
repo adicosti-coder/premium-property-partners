@@ -16,3 +16,15 @@ describe("ISHO pages withdrawn (15 Nov 2026)", () => {
     expect(neighborhoods.some((n) => n.slug === "isho")).toBe(false);
   });
 });
+
+import { CONSOLIDATED_ARTICLE_REDIRECTS } from "./consolidatedArticleRedirects";
+
+describe("ISHO blog articles withdrawn (15 Nov 2026)", () => {
+  it("sends the ISHO vs City of Mara article to the City of Mara page", () => {
+    expect(CONSOLIDATED_ARTICLE_REDIRECTS["isho-vs-city-of-mara-comparatie-investitie-2026"]).toBe("/complexe/city-of-mara");
+  });
+
+  it("sends the ISHO ADR analysis to the investment zones page", () => {
+    expect(CONSOLIDATED_ARTICLE_REDIRECTS["isho-timisoara-analiza-adr-premium"]).toBe("/zone-investitii-timisoara");
+  });
+});
