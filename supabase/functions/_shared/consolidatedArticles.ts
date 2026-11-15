@@ -22,6 +22,8 @@ export const CONSOLIDATED_ARTICLE_SLUGS: readonly string[] = [
   "top-20-atractii-turistice-timisoara-ghid-complet-2026",
   "chirii-termen-lung-apartamente-nzeb-timisoara",
   "5-greseli-comune-administrare",
+  "isho-timisoara-analiza-adr-premium",
+  "isho-vs-city-of-mara-comparatie-investitie-2026",
 ];
 
 export const CONSOLIDATED_ARTICLE_SLUG_LIST = `(${CONSOLIDATED_ARTICLE_SLUGS.join(",")})`;
