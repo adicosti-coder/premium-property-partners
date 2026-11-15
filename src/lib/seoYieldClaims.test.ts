@@ -82,3 +82,9 @@ describe("audited page titles", () => {
     }
   });
 });
+
+describe("ISHO withdrawn from search-facing text (15 Nov 2026)", () => {
+  it.each(SEO_SOURCES)("%s does not mention ISHO", (file) => {
+    expect(read(file)).not.toMatch(/\bISHO\b/i);
+  });
+});
