@@ -570,7 +570,7 @@ const CatalogInvestitii = () => {
                   <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 mb-10">
                     {[
                       { zone: isRo ? "Centru / Iosefin" : "Center / Iosefin", price: "2.500 – 3.200" },
-                      { zone: "ISHO / Iulius Town", price: "2.400 – 3.000" },
+                      { zone: "Iulius Town", price: "2.400 – 3.000" },
                       { zone: isRo ? "Complex Studențesc" : "Student Complex", price: "2.300 – 2.800" },
                       { zone: "Dumbrăvița / Ghiroda", price: "1.900 – 2.500" },
                       { zone: "Giroc / Moșnița Nouă", price: "1.800 – 2.300" },
@@ -590,7 +590,6 @@ const CatalogInvestitii = () => {
                   </h3>
                   <div className="grid sm:grid-cols-2 gap-3 mb-10">
                     {[
-                      { name: "ISHO", status: isRo ? "Finalizat — disponibil imediat" : "Completed — available now" },
                       { name: "ATENEO", status: isRo ? "În construcție — finalizare T4 2026" : "Under construction — Q4 2026" },
                       { name: "City of Mara", status: isRo ? "Faza 2 — finalizare T2 2026" : "Phase 2 — Q2 2026" },
                       { name: "Adora Forest", status: isRo ? "În construcție — Dumbrăvița" : "Under construction — Dumbrăvița" },

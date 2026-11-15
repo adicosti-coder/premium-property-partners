@@ -18,9 +18,8 @@ export const PROPERTY_TYPES = [
 
 // rent = chiria mediană reală pe zonă / mediana Timișoara (~460 €, 2 camere),
 // din anunțurile de închiriere colectate de RealTrust în ultimele 12 luni (oct. 2026).
-// adr/occupancy = cererea pe termen scurt (centrul și ISHO atrag cei mai mulți turiști).
+// adr/occupancy = cererea pe termen scurt (centrul atrage cei mai mulți turiști).
 export const ZONES = [
-  { value: "isho", label: "ISHO", rent: 1.43, adr: 1.2, occupancy: 0.78 },
   { value: "city-of-mara", label: "City of Mara", rent: 1.3, adr: 1.05, occupancy: 0.72 },
   { value: "nordone", label: "NordOne", rent: 1.41, adr: 1.1, occupancy: 0.74 },
   { value: "ring-residence", label: "Ring Residence", rent: 1.0, adr: 1.0, occupancy: 0.73 },

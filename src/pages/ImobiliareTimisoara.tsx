@@ -260,7 +260,7 @@ const ImobiliareTimisoara = () => {
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
-                { zone: "Centru & ISHO", price: "2.400-2.600 €/mp", trend: "+6% YoY" },
+                { zone: "Centru", price: "2.400-2.600 €/mp", trend: "+6% YoY" },
                 { zone: "Dumbrăvița & Giroc", price: "1.800-2.100 €/mp", trend: "+8% YoY" },
                 { zone: "Aradului & Lipovei", price: "1.500-1.700 €/mp", trend: "+5% YoY" },
                 { zone: "Complex Studențesc", price: "1.900-2.200 €/mp", trend: "+7% YoY" },

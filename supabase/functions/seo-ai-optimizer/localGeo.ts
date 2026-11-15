@@ -10,7 +10,6 @@ export interface LocalEntity {
 
 export const TIMISOARA_LOCAL_ENTITIES: LocalEntity[] = [
   // Neighborhoods (high weight — core local SEO)
-  { name: "ISHO", category: "neighborhood", weight: 3, keywords: ["isho"] },
   { name: "Zona Aradului", category: "neighborhood", weight: 3, keywords: ["aradului", "calea aradului"] },
   { name: "Zona Girocului", category: "neighborhood", weight: 3, keywords: ["girocului", "calea girocului"] },
   { name: "Complex Studențesc", category: "neighborhood", weight: 3, keywords: ["complex studentesc", "complex studențesc"] },

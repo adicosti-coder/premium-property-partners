@@ -510,12 +510,6 @@ const EvaluareGratuita = () => {
                   factors: "Estimare preț casă Dumbrăvița — zonă metropolitană în expansiune",
                 },
                 {
-                  title: "Apartament 3 camere · ISHO",
-                  details: "78 mp, etaj 5, vedere Bega, complet mobilat",
-                  price: "€155.000 – €172.000",
-                  factors: "Premium, randament regim hotelier 8-10%",
-                },
-                {
                   title: "Apartament 2 camere · Complex Studențesc",
                   details: "48 mp, etaj 2, semi-renovat, lângă UVT",
                   price: "€78.000 – €88.000",

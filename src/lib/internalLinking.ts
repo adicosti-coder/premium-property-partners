@@ -129,13 +129,12 @@ export interface ComplexEntry {
 }
 
 export const COMPLEXES: ComplexEntry[] = [
-  { slug: "isho", name: "ISHO", href: "/complexe/isho", zoneSlug: "isho", matchers: ["isho"] },
   { slug: "ateneo", name: "Ateneo", href: "/complexe/ateneo", zoneSlug: "elisabetin", matchers: ["ateneo", "trevi"] },
   { slug: "green-forest", name: "Green Forest", href: "/complexe/green-forest", matchers: ["green forest", "padurea verde", "pădurea verde"] },
-  { slug: "helios", name: "Helios", href: "/complexe/helios", zoneSlug: "isho", matchers: ["helios"] },
+  { slug: "helios", name: "Helios", href: "/complexe/helios", matchers: ["helios"] },
   { slug: "fructus-plaza", name: "Fructus Plaza", href: "/complexe/fructus-plaza", zoneSlug: "iosefin", matchers: ["fructus"] },
   { slug: "city-of-mara", name: "City of Mara", href: "/complexe/city-of-mara", zoneSlug: "circumvalatiunii", matchers: ["city of mara", "mara", "avenue of mara"] },
-  { slug: "vivalia", name: "Vivalia", href: "/complexe/vivalia", zoneSlug: "isho", matchers: ["vivalia"] },
+  { slug: "vivalia", name: "Vivalia", href: "/complexe/vivalia", matchers: ["vivalia"] },
   { slug: "nord-one", name: "NordOne", href: "/complexe/nord-one", zoneSlug: "zona-aradului", matchers: ["nord one", "nordone"] },
   { slug: "xcity-towers", name: "XCity Towers", href: "/complexe/xcity-towers", matchers: ["xcity", "x city", "x-city"] },
   { slug: "denya-forest", name: "Denya Forest", href: "/complexe/denya-forest", zoneSlug: "dumbravita", matchers: ["denya"] },
@@ -163,7 +162,6 @@ export const complexesInZone = (zoneSlug: string): ComplexEntry[] =>
 
 /** Neighborhood (zone) page for a free-text location, when we can be sure. */
 const ZONE_MATCHERS: { slug: string; keywords: string[] }[] = [
-  { slug: "isho", keywords: ["isho", "fabric", "take ionescu", "traian", "vivalia", "helios"] },
   { slug: "circumvalatiunii", keywords: ["circumvalatiunii", "city of mara", "mara", "unirii", "ultracentral", "ultra-central"] },
   { slug: "zona-girocului", keywords: ["girocului", "soarelui", "martirilor"] },
   { slug: "zona-aradului", keywords: ["aradului", "iulius", "torontalului", "openville", "nord one", "nordone"] },
@@ -333,7 +331,7 @@ export const CLUSTER_LINKS: Record<string, ContextualLink[]> = {
     { href: "/rezerva-direct", label: "avantajele rezervării directe", description: "Fără comisioane suplimentare de platformă." },
     { href: "/zona/centru", label: "cazare în centrul Timișoarei", description: "Apartamente la pas de Piața Unirii și Victoriei." },
     { href: "/zona/iulius-town", label: "cazare lângă Iulius Town", description: "Ideal pentru călătorii de business și shopping." },
-    { href: "/zona/fabric", label: "cazare în cartierul Fabric", description: "Zona ISHO și malul Begăi." },
+    { href: "/zona/fabric", label: "cazare în cartierul Fabric", description: "Piața Traian și malul Begăi." },
     { href: "/hostscan-ai", label: "ești proprietar? scanează potențialul apartamentului", description: "Analiză AI gratuită pentru gazde." },
   ],
 };

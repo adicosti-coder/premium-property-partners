@@ -175,7 +175,6 @@ export const REAL_ESTATE_AGENT_SCHEMA = {
     { "@type": "Place", name: "Cetate, Timișoara" },
     { "@type": "Place", name: "Iosefin, Timișoara" },
     { "@type": "Place", name: "Complex Studențesc, Timișoara" },
-    { "@type": "Place", name: "ISHO, Timișoara" },
     { "@type": "Place", name: "Dumbrăvița, Timișoara" },
     { "@type": "Place", name: "Fabric, Timișoara" },
     { "@type": "Place", name: "Calea Aradului, Timișoara" },

@@ -34,9 +34,9 @@ const OwnerGuideHub = () => {
           to: "/blog?category=fiscalitate",
         },
         {
-          title: "Cum am crescut venitul unui apartament din ISHO cu 25%",
+          title: "Cum am crescut venitul unui apartament din Timișoara cu 25%",
           desc: "Studiu de caz real: pricing dinamic, fotografii premium și optimizare listări pe Booking & Airbnb.",
-          to: "/ansambluri/isho",
+          to: "/ansambluri-rezidentiale",
         },
       ],
       complexCta: "Vezi proprietăți în ansambluri rezidențiale",
@@ -63,9 +63,9 @@ const OwnerGuideHub = () => {
           to: "/blog?category=fiscalitate",
         },
         {
-          title: "How we grew an ISHO apartment's income by 25%",
+          title: "How we grew a Timișoara apartment's income by 25%",
           desc: "Real case study: dynamic pricing, premium photography and Booking & Airbnb listing optimization.",
-          to: "/ansambluri/isho",
+          to: "/ansambluri-rezidentiale",
         },
       ],
       complexCta: "Browse properties in residential complexes",

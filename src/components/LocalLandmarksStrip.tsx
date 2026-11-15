@@ -43,16 +43,6 @@ export function LocalLandmarksStrip() {
         : "Premium residential neighborhood with interwar villas, 5 min from Rose Park and 10 min walk to Piața Victoriei. Direct tram to UVT.",
     },
     {
-      slug: "isho",
-      icon: ShoppingBag,
-      title: ro
-        ? "Apartamente ISHO & Fabric — lângă Iulius Town"
-        : "ISHO & Fabric apartments — near Iulius Town",
-      desc: ro
-        ? "Complex iconic mixed-use pe malul Begăi, la 7 minute de Iulius Town și Openville. Profil premium, cerere ridicată din partea profesioniștilor IT și a turiștilor de business."
-        : "Iconic mixed-use complex on Bega riverbank, 7 min to Iulius Town and Openville. Premium demand from IT pros and business travelers.",
-    },
-    {
       slug: "circumvalatiunii",
       icon: ShoppingBag,
       title: ro

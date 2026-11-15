@@ -43,7 +43,6 @@ export const TIMISOARA_LOCAL_ENTITIES: LocalEntity[] = [
   { name: "Chișoda", category: "neighborhood", weight: 2, keywords: ["chisoda", "chișoda"] },
   { name: "Săcălaz", category: "neighborhood", weight: 2, keywords: ["sacalaz", "săcălaz"] },
   // Complexe rezidențiale recunoscute automat
-  { name: "ISHO", category: "neighborhood", weight: 3, keywords: ["isho"] },
   { name: "Paltim", category: "neighborhood", weight: 3, keywords: ["paltim"] },
   { name: "Fructus Plaza", category: "neighborhood", weight: 3, keywords: ["fructus"] },
   { name: "City of Mara", category: "neighborhood", weight: 3, keywords: ["city of mara", "city-of-mara"] },
