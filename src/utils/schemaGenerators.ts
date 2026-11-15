@@ -477,9 +477,6 @@ export const generatePlaceSchema = (property: PropertySchemaData) => {
   if (locationLower.includes("iulius") || locationLower.includes("dâmbovița")) {
     nearbyLandmarks.push({ "@type": "LocalBusiness", "name": "Iulius Town Timișoara" });
   }
-  if (locationLower.includes("isho") || locationLower.includes("iosefin")) {
-    nearbyLandmarks.push({ "@type": "Landmark", "name": "ISHO Timișoara" });
-  }
   if (locationLower.includes("centru") || locationLower.includes("unirii")) {
     nearbyLandmarks.push({ "@type": "Landmark", "name": "Piața Unirii Timișoara" });
   }
@@ -701,8 +698,6 @@ export const generateHomepageRealEstateAgentSchema = () => ({
     "apartamente de închiriat Timișoara studenți",
     "închirieri apartamente Timișoara Complex Studențesc",
     "investiții imobiliare randament Timișoara",
-    "imobiliare Timișoara ISHO",
-    "apartamente noi Timișoara ISHO",
     "apartamente noi Timișoara de vânzare",
     "proprietăți de vânzare Timișoara Calea Girocului",
     "cazare Timișoara lângă Spitalul Județean",
