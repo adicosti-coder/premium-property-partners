@@ -15,7 +15,6 @@
 
 - Keep the homepage hero LCP image sets strictly separated by mobile/desktop media queries so high-DPR phones never fetch desktop assets.
 - Start the decorative desktop hero video only after genuine user interaction so the responsive image remains the stable LCP candidate.
-- The static homepage hero shell in `index.html` repeats the React hero headline, subtitle and mobile text-shadow exactly (`heroShellParity.test.ts`) — a larger late React paragraph becomes a new LCP and adds ~1.5s on mobile.
 - Auto-consented listings view joins prospect/contact data with normalized WhatsApp names and exports filtered rows via shared tested helpers — avoids invented owner data.
 - Automatic property publishing prepares a cropped stored cover before activation and derives bedrooms from original source descriptions via a shared deterministic helper — prevents raw portal footers and living rooms counted as bedrooms.
 - The Advisor injects mandatory geography from stored property GPS or explicitly approximate district references and versions its cache when geography rules change — prevents stale or invented compass positioning.
