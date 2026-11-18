@@ -189,7 +189,10 @@
       .ash-sub{max-width:42rem;margin:0 0 2rem;font-size:1.125rem;line-height:1.625;color:hsl(var(--foreground))}
       @media(min-width:768px){.ash-h1{font-size:3rem}.ash-h1 .mid{font-size:1.875rem}.ash-sub{font-size:1.25rem}}
       @media(min-width:1024px){.ash-h1{font-size:3.75rem}.ash-h1 .mid{font-size:2.25rem}}
-      @media(max-width:767px){.ash-h1,.ash-sub{text-shadow:0 1px 4px rgba(0,0,0,.5)}}
+      /* Same text-shadow as .hero-text-shadow (src/index.css): the shadow is part of the
+         text's painted area, so a smaller shell shadow lets the React subtitle register
+         as a new, late LCP. Keep these two values identical. */
+      @media(max-width:767px){.ash-h1,.ash-sub{text-shadow:0 1px 4px rgba(0,0,0,.55),0 0 18px rgba(0,0,0,.25)}}
     </style>
 
     <!-- Self-hosted Google Fonts — eliminates 2 DNS lookups + external requests -->
@@ -250,7 +253,7 @@
               <span class="mid">Imobiliare, Investiții</span>
               <span><span class="pill">și Property Management</span></span>
             </h1>
-            <p class="ash-sub">Vânzări, cumpărări, închirieri pe termen lung și administrare apartamente în regim hotelier.<br>Soluții complete pentru proprietari și investitori imobiliari.<br>Randament net 9,4% — ocupare 70%.</p>
+            <p class="ash-sub">Vânzări, cumpărări, închirieri pe termen lung și administrare apartamente în regim hotelier.<br>Soluții complete pentru proprietari și investitori imobiliari.<br>Randament net estimat între 6,5% și 9,4% pe an, în funcție de ocupare, locație și amenajare.</p>
           </div>
         </div>
     </div>
