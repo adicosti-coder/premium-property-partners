@@ -135,6 +135,7 @@ const SharedComparison = lazyWithRetry(() => import("./pages/SharedComparison"))
 const CallDashboard = lazyWithRetry(() => import("./pages/CallDashboard"));
 const AdminLeadDashboard = lazyWithRetry(() => import("./pages/AdminLeadDashboard"));
 const DbHealth = lazyWithRetry(() => import("./pages/admin/DbHealth"));
+const WebVitalsAdmin = lazyWithRetry(() => import("./pages/admin/WebVitals"));
 const AndreiDashboard = lazyWithRetry(() => import("./pages/admin/AndreiDashboard"));
 const CereriRandament = lazyWithRetry(() => import("./pages/admin/CereriRandament"));
 const FastReview = lazyWithRetry(() => import("./pages/admin/FastReview"));
@@ -356,6 +357,7 @@ const App = () => (
                     <Route path="/admin/call-dashboard" element={<CallDashboard />} />
                     <Route path="/admin/lead-dashboard" element={<AdminLeadDashboard />} />
                     <Route path="/admin/stare-baza" element={<DbHealth />} />
+                    <Route path="/admin/viteza-site" element={<WebVitalsAdmin />} />
                     <Route path="/admin/properties/fast-review" element={<FastReview />} />
                     <Route path="/prospect-listings" element={<RedirectWithQuery to="/admin/prospect-listings" />} />
                     <Route path="/contact" element={<ContactPage />} />

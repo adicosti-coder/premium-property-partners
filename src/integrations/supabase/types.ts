@@ -12776,6 +12776,93 @@ export type Database = {
         }
         Relationships: []
       }
+      web_vital_alerts: {
+        Row: {
+          alert_key: string
+          baseline_p75: number | null
+          baseline_samples: number | null
+          created_at: string
+          current_p75: number
+          current_samples: number
+          device: string
+          email_sent: boolean
+          id: string
+          metric: string
+          reason: string
+          releases: string[]
+          severity: string
+          whatsapp_sent: boolean
+        }
+        Insert: {
+          alert_key: string
+          baseline_p75?: number | null
+          baseline_samples?: number | null
+          created_at?: string
+          current_p75: number
+          current_samples: number
+          device: string
+          email_sent?: boolean
+          id?: string
+          metric: string
+          reason: string
+          releases?: string[]
+          severity: string
+          whatsapp_sent?: boolean
+        }
+        Update: {
+          alert_key?: string
+          baseline_p75?: number | null
+          baseline_samples?: number | null
+          created_at?: string
+          current_p75?: number
+          current_samples?: number
+          device?: string
+          email_sent?: boolean
+          id?: string
+          metric?: string
+          reason?: string
+          releases?: string[]
+          severity?: string
+          whatsapp_sent?: boolean
+        }
+        Relationships: []
+      }
+      web_vital_samples: {
+        Row: {
+          created_at: string
+          device: string
+          id: number
+          metric: string
+          metric_id: string
+          page_group: string
+          rating: string | null
+          release: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          device: string
+          id?: never
+          metric: string
+          metric_id: string
+          page_group: string
+          rating?: string | null
+          release: string
+          value: number
+        }
+        Update: {
+          created_at?: string
+          device?: string
+          id?: never
+          metric?: string
+          metric_id?: string
+          page_group?: string
+          rating?: string | null
+          release?: string
+          value?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       booking_availability: {
@@ -12923,6 +13010,7 @@ export type Database = {
       _extract_domain: { Args: { url: string }; Returns: string }
       admin_db_health_snapshot: { Args: never; Returns: Json }
       admin_run_lead_retention: { Args: never; Returns: Json }
+      admin_web_vitals_summary: { Args: never; Returns: Json }
       anonymize_expired_leads: { Args: never; Returns: Json }
       anonymize_ip_address: { Args: { ip_address: string }; Returns: string }
       auto_blacklist_prospect: {
@@ -13805,6 +13893,18 @@ export type Database = {
         Args: { _found: number; _keyword: string; _platform: string }
         Returns: undefined
       }
+      record_web_vital: {
+        Args: {
+          p_device: string
+          p_metric: string
+          p_metric_id: string
+          p_page_group: string
+          p_rating: string
+          p_release: string
+          p_value: number
+        }
+        Returns: undefined
+      }
       redeem_owner_code: { Args: { p_code: string }; Returns: Json }
       reset_prospect_invalid_status: {
         Args: { p_prospect_id: string }
@@ -13916,6 +14016,16 @@ export type Database = {
       wa_is_technical_block_only: {
         Args: { _reason: string }
         Returns: boolean
+      }
+      web_vitals_window_stats: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          device: string
+          good_rate: number
+          metric: string
+          p75: number
+          samples: number
+        }[]
       }
       zone_norm: { Args: { p: string }; Returns: string }
     }

@@ -41,6 +41,8 @@ export default defineConfig(({ mode }) => {
     "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(supabaseUrl),
     "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(publishableKey),
     ...(mapboxToken && { "import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN": JSON.stringify(mapboxToken) }),
+    // Publish identifier attached to real-visitor speed measurements (UTC build minute).
+    __APP_RELEASE__: JSON.stringify(mode === "production" ? new Date().toISOString().slice(0, 16).replace("T", " ") : "dev"),
   };
 
   return {

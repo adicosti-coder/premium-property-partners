@@ -252,6 +252,7 @@ const RAW_GROUPS: AdminGroup[] = [
       { value: "leads-analytics", label: "Funnel Lead-uri", icon: BarChart3 },
       { value: "tracking-qa", label: "Validare Tracking", icon: Activity, keywords: ["ga4", "meta", "capi", "pixel", "conversii", "test", "dry run"] },
       { value: "tracking-alerts", label: "Alerte Tracking", icon: Activity, keywords: ["ga4", "alerta", "scadere", "sesiuni", "email", "monitorizare"] },
+      { value: "viteza-site", label: "Viteză site (vizitatori reali)", icon: Activity, externalRoute: "/admin/viteza-site", keywords: ["viteza", "lcp", "cls", "inp", "core web vitals", "pagespeed", "performanta", "regresie", "alerta"] },
       { value: "conversion-report", label: "Raport Conversii", icon: BarChart3, keywords: ["utm", "gclid", "atribuire", "sursa", "rata conversie", "saptamanal", "raport"] },
       { value: "listing-conversions", label: "Conversii Anunțuri", icon: BarChart3, keywords: ["vizite", "cazare", "contact", "evaluare", "anunturi active", "conversii"] },
 

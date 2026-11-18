@@ -2,13 +2,16 @@
  * Real User Monitoring (RUM) for Core Web Vitals.
  *
  * Uses the official `web-vitals` library to capture LCP, CLS, INP, FCP, TTFB
- * from real visitor sessions and reports them via GA4 (`event: web_vitals`) +
- * an optional external webhook (VITE_MAKE_WEB_VITALS_WEBHOOK_URL).
+ * from real visitor sessions and reports them via GA4 (`event: web_vitals`),
+ * our backend (`record_web_vital`, checked for regressions every 6h by
+ * `web-vitals-regression-check`) and an optional external webhook
+ * (VITE_MAKE_WEB_VITALS_WEBHOOK_URL).
  *
  * Loaded AFTER first user interaction (see src/main.tsx) so the measurement
  * code itself does not affect the metrics it measures.
  */
 import type { Metric } from "web-vitals";
+import { deviceClassForWidth, pageGroupForPath, shouldReportVitals } from "@/lib/webVitalsBeacon";
 
 type WindowWithGtag = Window & {
   gtag?: (...args: unknown[]) => void;
@@ -66,8 +69,42 @@ function sendToWebhook(metric: Metric) {
   }
 }
 
+// Public URL + publishable key, injected by vite.config.ts (avoids pulling the
+// full backend client into this lazily loaded telemetry chunk).
+const SUPABASE_PUBLIC_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined) || "";
+const SUPABASE_PUBLIC_ANON_KEY = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined) || "";
+const RELEASE = typeof __APP_RELEASE__ === "string" ? __APP_RELEASE__ : "necunoscut";
+
+function sendToBackend(metric: Metric) {
+  if (typeof window === "undefined" || !SUPABASE_PUBLIC_URL || !SUPABASE_PUBLIC_ANON_KEY) return;
+  if (!shouldReportVitals(window.location.hostname)) return;
+  try {
+    void fetch(`${SUPABASE_PUBLIC_URL}/rest/v1/rpc/record_web_vital`, {
+      method: "POST",
+      keepalive: true,
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SUPABASE_PUBLIC_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_PUBLIC_ANON_KEY}`,
+      },
+      body: JSON.stringify({
+        p_metric: metric.name,
+        p_metric_id: metric.id,
+        p_value: metric.value,
+        p_rating: metric.rating,
+        p_device: deviceClassForWidth(window.innerWidth),
+        p_page_group: pageGroupForPath(window.location.pathname),
+        p_release: RELEASE,
+      }),
+    }).catch(() => {});
+  } catch {
+    // never throw from telemetry
+  }
+}
+
 function report(metric: Metric) {
   sendToGtag(metric);
+  sendToBackend(metric);
   sendToWebhook(metric);
 }
 
