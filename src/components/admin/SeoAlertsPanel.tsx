@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import SeoAlertSettingsCard from "@/components/admin/SeoAlertSettingsCard";
 import SitemapStatusBadge from "@/components/admin/SitemapStatusBadge";
 import { buildRemediationPlan, extractAlertUrls } from "@/lib/seoAlertRemediation";
+import { realIndexingIssues } from "../../../supabase/functions/_shared/gscIndexingClassification";
 
 interface SeoAlert {
   id: string;
@@ -128,14 +129,17 @@ export const SeoAlertsPanel = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("seo_indexing_snapshots")
-        .select("checked_pages, issues_count, created_at")
+        .select("checked_pages, issues_count, issues, created_at")
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       if (error) throw error;
       if (!data) return null;
       const checked = Number(data.checked_pages ?? 0);
-      const notIndexed = Number(data.issues_count ?? 0);
+      // Correct canonical alternates (e.g. /anunturi?tranzactie=vanzare) are not problems.
+      const notIndexed = Array.isArray(data.issues)
+        ? realIndexingIssues(data.issues as Array<Record<string, string>>).length
+        : Number(data.issues_count ?? 0);
       return {
         checked,
         notIndexed,

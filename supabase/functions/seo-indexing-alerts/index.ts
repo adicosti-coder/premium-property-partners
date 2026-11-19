@@ -1,6 +1,7 @@
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { classifyInspection } from "../_shared/gscIndexingClassification.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -66,7 +67,11 @@ serve(async (req) => {
     }
 
     // URL Inspection for each
-    const issues: Array<{ url: string; verdict: string; coverageState: string; lastCrawl?: string }> = [];
+    type Inspected = { url: string; verdict: string; coverageState: string; lastCrawl?: string; googleCanonical?: string; userCanonical?: string };
+    const issues: Inspected[] = [];
+    // Correct canonicalization (e.g. /anunturi?tranzactie=vanzare → /anunturi) is
+    // desired behaviour: reported to the panel, never counted or e-mailed as a problem.
+    const canonicalized: Inspected[] = [];
     for (const url of pages) {
       try {
         const r = await fetch(`${GATEWAY}/v1/urlInspection/index:inspect`, {
@@ -79,15 +84,17 @@ serve(async (req) => {
         if (!ir) continue;
         const verdict = ir.verdict || "";
         const coverage = ir.coverageState || "";
-        // Critical = anything not PASS
-        if (verdict !== "PASS") {
-          issues.push({
-            url,
-            verdict,
-            coverageState: coverage,
-            lastCrawl: ir.lastCrawlTime,
-          });
-        }
+        const entry: Inspected = {
+          url,
+          verdict,
+          coverageState: coverage,
+          lastCrawl: ir.lastCrawlTime,
+          googleCanonical: ir.googleCanonical,
+          userCanonical: ir.userCanonical,
+        };
+        const kind = classifyInspection(entry);
+        if (kind === "issue") issues.push(entry);
+        else if (kind === "expected_canonical") canonicalized.push(entry);
       } catch (e) { console.error("inspect err", url, e); }
     }
 
@@ -124,7 +131,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, checked: pages.length, issues: issues.length, details: issues }),
+      JSON.stringify({ success: true, checked: pages.length, issues: issues.length, details: issues, canonicalized }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e: any) {

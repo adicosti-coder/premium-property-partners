@@ -141,6 +141,8 @@ const GooglePerformanceWidget = () => {
       const checkedAt = new Date().toISOString();
       const issuesMap = new Map<string, any>();
       (res?.details || []).forEach((i: any) => issuesMap.set(i.url, i));
+      // Correct canonical alternates (e.g. filter URLs) are expected, not problems.
+      (res?.canonicalized || []).forEach((i: any) => issuesMap.set(i.url, { ...i, verdict: "CANONICAL" }));
       setIndexStatus((prev) => {
         const next = { ...prev };
         urls.forEach((u) => {
@@ -152,10 +154,12 @@ const GooglePerformanceWidget = () => {
         return next;
       });
 
+      const canonicalCount = (res?.canonicalized || []).length;
+      const canonicalNote = canonicalCount > 0 ? ` ${canonicalCount} cu canonic corect (normal, nu e problemă).` : "";
       if (res?.issues > 0) {
-        toast({ title: `⚠️ ${res.issues} probleme de indexare`, description: `Verificate ${res.checked} pagini. Status actualizat în tabel.`, variant: "destructive" });
+        toast({ title: `⚠️ ${res.issues} probleme de indexare`, description: `Verificate ${res.checked} pagini.${canonicalNote} Status actualizat în tabel.`, variant: "destructive" });
       } else {
-        toast({ title: "✅ Indexare OK", description: `${res?.checked || 0} pagini verificate, toate indexate.` });
+        toast({ title: "✅ Indexare OK", description: `${res?.checked || 0} pagini verificate, fără probleme.${canonicalNote}` });
       }
     } catch (e: any) {
       toast({ title: "Eroare verificare", description: e?.message || "Necunoscut", variant: "destructive" });
@@ -635,11 +639,12 @@ const GooglePerformanceWidget = () => {
                 {data.topPages.length === 0 ? (
                   <p className="text-xs text-muted-foreground">Fără pagini de afișat.</p>
                 ) : (() => {
-                  const STATUS_RANK: Record<string, number> = { ISSUE: 0, NEUTRAL: 1, PARTIAL: 2, PASS: 3, UNKNOWN: 4 };
+                  const STATUS_RANK: Record<string, number> = { ISSUE: 0, NEUTRAL: 1, PARTIAL: 2, CANONICAL: 3, PASS: 3, UNKNOWN: 4 };
                   const statusOf = (url: string) => {
                     const s = indexStatus[url];
                     if (!s) return "UNKNOWN";
                     if (s.verdict === "PASS") return "PASS";
+                    if (s.verdict === "CANONICAL") return "CANONICAL";
                     if (s.verdict === "PARTIAL") return "PARTIAL";
                     if (s.verdict === "NEUTRAL") return "NEUTRAL";
                     return "ISSUE";
@@ -679,6 +684,7 @@ const GooglePerformanceWidget = () => {
                     const s = indexStatus[url];
                     if (!s) return <Badge variant="outline" className="text-[10px] text-muted-foreground border-dashed">neverificat</Badge>;
                     if (s.verdict === "PASS") return <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-600 bg-emerald-500/5">✓ Indexat</Badge>;
+                    if (s.verdict === "CANONICAL") return <Badge variant="outline" className="text-[10px] text-muted-foreground" title={s.coverageState}>↪ Canonic corect</Badge>;
                     if (s.verdict === "NEUTRAL") return <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-600 bg-amber-500/5">⚠ {s.coverageState || "Neutru"}</Badge>;
                     if (s.verdict === "PARTIAL") return <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-600 bg-amber-500/5">⚠ Parțial</Badge>;
                     return <Badge variant="outline" className="text-[10px] border-red-500/40 text-red-600 bg-red-500/5" title={s.coverageState}>✗ {s.coverageState || "Neindexat"}</Badge>;

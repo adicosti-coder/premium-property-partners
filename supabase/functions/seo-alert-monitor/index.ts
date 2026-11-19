@@ -6,6 +6,7 @@ import { requireAdmin } from "../_shared/adminAuth.ts";
 import { sendTeamEmail } from "../_shared/teamEmail.ts";
 import { isInternalCall } from "../_shared/cronAuth.ts";
 import { escapeHtml } from "../_shared/htmlEscape.ts";
+import { realIndexingIssues } from "../_shared/gscIndexingClassification.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -82,7 +83,10 @@ Deno.serve(async (req: Request) => {
 
   // Indexing coverage summary (indexed vs not indexed), not just error counts.
   const checkedPages = Number(snap?.checked_pages ?? 0);
-  const issuesCount = Number(snap?.issues_count ?? 0);
+  // Re-classify stored issues so correct canonical alternates (also in snapshots
+  // saved before the classifier existed) never count as unindexed pages.
+  const snapIssues = realIndexingIssues(Array.isArray(snap?.issues) ? snap!.issues as Array<Record<string, string>> : []);
+  const issuesCount = Array.isArray(snap?.issues) ? snapIssues.length : Number(snap?.issues_count ?? 0);
   const indexingSummary = {
     checked_pages: checkedPages,
     not_indexed: issuesCount,
@@ -99,7 +103,7 @@ Deno.serve(async (req: Request) => {
       details: {
         ...indexingSummary,
         issues_count: issuesCount,
-        issues: snap.issues,
+        issues: snapIssues,
       },
     });
   }
