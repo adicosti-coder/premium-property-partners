@@ -13217,6 +13217,19 @@ export type Database = {
           max_drop_pct: number
         }[]
       }
+      get_daily_price_trends_unguarded: {
+        Args: { p_days?: number }
+        Returns: {
+          avg_drop_pct: number
+          avg_price: number
+          avg_price_per_sqm: number
+          avg_source_days: number
+          day: string
+          drops_count: number
+          listings_count: number
+          max_drop_pct: number
+        }[]
+      }
       get_ga4_daily_sessions: { Args: { p_days?: number }; Returns: Json }
       get_keyword_scan_report: {
         Args: { p_days?: number; p_platform?: string }
@@ -13481,6 +13494,15 @@ export type Database = {
           unique_platforms: number
         }[]
       }
+      get_prospect_injection_daily_summary_unguarded: {
+        Args: { p_days?: number }
+        Returns: {
+          day_label: string
+          top_reason: string
+          total_rejected: number
+          unique_platforms: number
+        }[]
+      }
       get_prospect_injection_rejection_by_platform: {
         Args: { p_days?: number }
         Returns: {
@@ -13520,7 +13542,23 @@ export type Database = {
           rejection_reason: string
         }[]
       }
+      get_prospect_injection_rejection_summary_unguarded: {
+        Args: { p_days?: number }
+        Returns: {
+          count_24h: number
+          count_period: number
+          rejection_reason: string
+        }[]
+      }
       get_prospect_injection_rejection_trend: {
+        Args: { p_days?: number }
+        Returns: {
+          count: number
+          day_label: string
+          rejection_reason: string
+        }[]
+      }
+      get_prospect_injection_rejection_trend_unguarded: {
         Args: { p_days?: number }
         Returns: {
           count: number
@@ -13661,6 +13699,24 @@ export type Database = {
         }[]
       }
       get_zone_price_report_v2: {
+        Args: { p_days?: number; p_type?: string }
+        Returns: {
+          avg_price: number
+          avg_price_prev_month: number
+          avg_price_sqm: number
+          avg_price_this_month: number
+          avg_sqm_prev_month: number
+          avg_sqm_this_month: number
+          last_seen_at: string
+          max_price_sqm: number
+          min_price_sqm: number
+          platforms: number
+          property_type: string
+          samples: number
+          zone: string
+        }[]
+      }
+      get_zone_price_report_v2_unguarded: {
         Args: { p_days?: number; p_type?: string }
         Returns: {
           avg_price: number

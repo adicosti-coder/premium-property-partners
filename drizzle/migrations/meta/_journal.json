@@ -1030,6 +1030,13 @@
       "when": 1794993577023,
       "tag": "0146_web_vitals_monitoring",
       "breakpoints": true
+    },
+    {
+      "idx": 147,
+      "version": "7",
+      "when": 1795246427566,
+      "tag": "0147_lock_admin_price_reports",
+      "breakpoints": true
     }
   ]
 }
