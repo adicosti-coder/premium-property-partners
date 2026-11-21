@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { CHAT_PAGE_GUIDANCE, resolveChatPageContext, type ChatPageContext } from "../_shared/chatPageContext.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { TOOL_DEFINITIONS, executeTool } from "./tools.ts";
 import { getCorsHeaders } from "../_shared/securityHeaders.ts";
@@ -60,7 +61,7 @@ function extractListingFilters(message: string): { max_results: number; zone?: s
 
 // ─── System Prompt Builder ──────────────────────────────────
 
-async function buildSystemPrompt(language: string, pageContext: string = "/"): Promise<string> {
+async function buildSystemPrompt(language: string, page: ChatPageContext = { path: "/", kind: "general" }): Promise<string> {
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
   const { data: properties } = await sb
@@ -164,13 +165,8 @@ ${investmentLines || "Portofoliul investițional se actualizează continuu. Reco
 13. For questions about packages (15–20% of net income), explain what each tier includes specifically
 
 === PAGE CONTEXT ===
-The user is currently on: ${pageContext}
-${pageContext.includes("/pentru-proprietari") || pageContext.includes("/investitii") ? "→ OWNER/INVESTOR page: Focus on ROI, management packages, Investor Guide 2026. Proactively offer calculate_roi." : ""}
-${pageContext.includes("/proprietate/") ? "→ PROPERTY DETAIL page: Focus on this specific property — availability, price, amenities, DIRECT5 discount. Proactively offer check_availability." : ""}
-${pageContext.includes("/oaspeti") || pageContext.includes("/cazare") ? "→ GUEST page: Focus on booking, availability, local tips, transfer. Proactively use check_availability and get_tourist_recommendations." : ""}
-${pageContext.includes("/zona/") ? "→ ZONE LANDING page: Focus on this neighborhood — properties, investment potential, local attractions. Offer ROI comparison." : ""}
-${pageContext.includes("/blog") ? "→ BLOG page: Connect article topics to services. Suggest related properties or investment analysis." : ""}
-${pageContext.includes("/imobiliare") ? "→ REAL ESTATE page: Focus on property listings, investment opportunities, consultancy. Offer calculate_roi proactively." : ""}
+The user is currently on the site path: "${page.path}"
+${CHAT_PAGE_GUIDANCE[page.kind]}
 Adapt your suggestions and tone to match the page context.`;
 }
 
@@ -322,7 +318,9 @@ serve(async (req) => {
 
     // Async lead detection
     const pageInfo = { title: String(pageTitle || "").replace(/[<>]/g, "").slice(0, 200), description: String(pageDescription || "").replace(/[<>]/g, "").slice(0, 300), url: /^https?:\/\/(www\.)?realtrust\.ro\//.test(String(pageUrl)) || String(pageUrl).startsWith("http://localhost") || /lovable\.app\//.test(String(pageUrl)) ? String(pageUrl).slice(0, 300) : "" };
-    const pageContext = (() => { const v = String(rawPageContext || "/").trim().slice(0, 200); return /^\/[A-Za-z0-9\-._~\/%?=&#]*$/.test(v) ? v : "/"; })();
+    // Untrusted: reduced to a plain pathname + one fixed page kind (see _shared/chatPageContext.ts).
+    const page = resolveChatPageContext(rawPageContext);
+    const pageContext = page.path;
     const leadPromise = detectAndSaveLead(message, conversationHistory, pageContext, pageInfo).catch((e) => { console.error(e); return null; });
     const logCtx = { leadPromise, pageInfo };
     notifyChatLead(message, sessionId, pageContext, conversationHistory).catch(console.error);
@@ -334,7 +332,7 @@ serve(async (req) => {
       });
     }
 
-    let systemPrompt = await buildSystemPrompt(language, pageContext);
+    let systemPrompt = await buildSystemPrompt(language, page);
     systemPrompt += `\n\n=== ANDREI (CONSULTANT RealTrust) — PROPRIETARI ===
 Când vizitatorul este proprietar sau întreabă despre vânzare, închiriere, evaluare, comision sau randament, răspunde din perspectiva lui Andrei, consultant RealTrust Timișoara, în același stil ca pe WhatsApp: scurt (2-3 propoziții), cald, profesionist, consultativ, fără presiune.
 - VÂNZARE: prioritizează „Vânzare Asistată” (cumpărători calificați, dosare complete, negociere și acte) și propune o evaluare GRATUITĂ a prețului de piață.

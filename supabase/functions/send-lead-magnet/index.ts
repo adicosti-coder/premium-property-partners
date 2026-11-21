@@ -84,9 +84,11 @@ serve(async (req) => {
             "Content-Type": "application/json",
             "apikey": supabaseServiceKey,
             "Authorization": `Bearer ${supabaseServiceKey}`,
-            "Prefer": "resolution=merge-duplicates,return=minimal"
+            // ignore-duplicates: a new address is subscribed, an existing (possibly
+            // unsubscribed) address is never reactivated by someone else.
+            "Prefer": "resolution=ignore-duplicates,return=minimal"
           },
-          body: JSON.stringify({ email, is_active: true }),
+          body: JSON.stringify({ email: email.trim().toLowerCase(), is_active: true }),
         });
 
         if (!newsletterResponse.ok) {

@@ -95,7 +95,10 @@ Deno.serve(async (req) => {
       const last9 = (s: string) => s.replace(/\D/g, "").slice(-9);
       // Formularul salvează direct (fără id întors), deci găsim cererea după telefon.
       let query = supabase.from("leads").select("id, name, whatsapp_number, created_at, source, simulation_data,submission_id");
-      query = d.lead_id
+      // A caller-chosen lead id is honoured only with the visitor capability token
+      // or an internal retry; everyone else is matched by their own fresh save.
+      const trusted = Boolean(internal || capability);
+      query = d.lead_id && trusted
         ? query.eq("id", d.lead_id)
         : query.ilike("whatsapp_number", `%${last9(d.telefon)}`)
           .gte("created_at", new Date(Date.now() - 15 * 60_000).toISOString())
@@ -106,13 +109,16 @@ Deno.serve(async (req) => {
       // A stored request is only used by its own visitor (same phone, plus a fresh save,
       // the visitor capability token or an internal retry). Any other caller keeps only
       // the figures it sent itself — never another lead's id or stored calculator data.
-      const lead = found && (internal || capability || fresh) && last9(found.whatsapp_number ?? "") === last9(d.telefon)
+      // Without the token only a fresh legacy (non-unified) save with the same phone is
+      // linked, and its stored calculator data is never loaded or forwarded to Make.
+      const samePhone = found && last9(found.whatsapp_number ?? "") === last9(d.telefon);
+      const lead = samePhone && (trusted || (fresh && !String(found.source ?? "").startsWith("calculator_unificat")))
         ? found
         : null;
       if (!lead) d.lead_id = undefined;
       if (lead) {
         d.lead_id = lead.id;
-        storedCalculatorData = (lead.simulation_data ?? {}) as Record<string, unknown>;
+        storedCalculatorData = trusted ? (lead.simulation_data ?? {}) as Record<string, unknown> : {};
         storedLeadSource = lead.source ?? null;
       }
       if (lead) {

@@ -309,7 +309,6 @@ Deno.serve(async (req) => {
           `[${new Date().toISOString()}] ${error.name || 'Error'}: ${error.message}`,
           firecrawlStatus ? `Scrape.do HTTP status: ${firecrawlStatus}` : null,
           typeof error?.attempts === 'number' ? `Attempts: ${error.attempts}` : null,
-          error?.stack ? `Stack: ${String(error.stack).split('\n').slice(0, 5).join(' | ')}` : null,
         ].filter(Boolean),
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

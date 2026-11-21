@@ -265,7 +265,7 @@ export async function notifyOwnerHandover(
         );
         if (!resp.ok) {
           result.wa_failed.push(to);
-          console.error("[wa-owner-handover] admin WA alert failed:", to, resp.status, (await resp.text()).slice(0, 300));
+          console.error("[wa-owner-handover] admin WA alert failed:", `***${String(to).slice(-3)}`, resp.status);
         } else {
           result.wa_sent.push(to);
         }

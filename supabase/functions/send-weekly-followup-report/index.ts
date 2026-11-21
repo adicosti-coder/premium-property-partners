@@ -335,7 +335,7 @@ serve(async (req) => {
       throw new Error(`Resend error: ${JSON.stringify(emailData)}`);
     }
 
-    console.log("Email sent successfully to:", recipients);
+    console.log(`Email sent successfully to ${recipients.length} recipient(s)`);
 
     return new Response(
       JSON.stringify({

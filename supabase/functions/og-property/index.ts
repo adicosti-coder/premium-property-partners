@@ -35,7 +35,8 @@ Deno.serve(async (req) => {
         .from("properties")
         .select("id, name, description_ro, long_description_ro, location, slug")
         .eq("id", slug)
-        .single();
+        .eq("is_active", true)
+        .maybeSingle();
       property = data;
     } else {
       // Try slug column first
@@ -43,7 +44,8 @@ Deno.serve(async (req) => {
         .from("properties")
         .select("id, name, description_ro, long_description_ro, location, slug")
         .eq("slug", slug)
-        .single();
+        .eq("is_active", true)
+        .maybeSingle();
       property = data;
 
       // Fallback: try name match for static properties
@@ -52,8 +54,9 @@ Deno.serve(async (req) => {
           .from("properties")
           .select("id, name, description_ro, long_description_ro, location, slug")
           .ilike("name", `%${slug.replace(/-/g, " ")}%`)
+          .eq("is_active", true)
           .limit(1)
-          .single();
+          .maybeSingle();
         property = nameMatch;
       }
     }
@@ -82,7 +85,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    const canonicalUrl = `${BASE_URL}/proprietate/${slug}`;
+    // Only published properties are previewed (same rule as the public RLS policy).
+    const canonicalUrl = `${BASE_URL}/proprietate/${encodeURIComponent(slug)}`;
     const title = property
       ? `${property.name} | RealTrust Timișoara`
       : "RealTrust & ApArt Hotel Timișoara";
@@ -149,7 +153,7 @@ Deno.serve(async (req) => {
     console.error("[og-property] Error:", error.message);
     // Fallback: redirect to the SPA page
     const slug = new URL(req.url).searchParams.get("slug") || "";
-    return Response.redirect(`${BASE_URL}/proprietate/${slug}`, 302);
+    return Response.redirect(`${BASE_URL}/proprietate/${encodeURIComponent(slug)}`, 302);
   }
 });
 
