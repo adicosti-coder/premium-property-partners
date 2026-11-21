@@ -10,6 +10,10 @@ describe("andreiIneligibleReason", () => {
   it("blocks landlines", () => {
     expect(andreiIneligibleReason({ ...base, phone_normalized: "0256123456" })).toBe("Telefon invalid");
   });
+  it("blocks listings without an extracted phone (manual reveal needed)", () => {
+    expect(andreiIneligibleReason({ ...base, phone_normalized: null, contact_phone: null })).toBe("Necesită dezvăluire manuală");
+    expect(andreiIneligibleReason({ ...base, phone_normalized: "", contact_phone: "Arată numărul" })).toBe("Necesită dezvăluire manuală");
+  });
   it("blocks listings already sent to Andrei", () => {
     expect(andreiIneligibleReason({ ...base, andrei_queued_at: "2026-10-28T08:00:00Z" })).toBe("Trimis la Andrei");
   });

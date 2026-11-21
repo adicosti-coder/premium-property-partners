@@ -350,3 +350,8 @@
 - [x] Toate paginile, prerandarea, datele Google (JSON-LD), textele pentru asistenți AI și traducerile EN aliniate
 - [x] FounderProfile: scos „birou fizic în Cetate”; vizionări și consultanțe la proprietate
 - [x] Ani oficiali: ApArt Hotel 2017, firmă 2001 în datele pentru Google
+
+## Triere anunțuri colectate — 21 noiembrie
+- [x] Deduplicare între portaluri cu anunț principal, variante cu linkuri, „Ascunde duplicatele” activat implicit
+- [x] Filtru telefon (Toate / disponibil / dezvăluire manuală), „Pregătit pentru prospectare”, blocare trimitere fără telefon
+- [x] Teste deduplicare + filtru telefon; toate testele trec

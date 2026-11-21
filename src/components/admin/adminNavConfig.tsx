@@ -96,6 +96,15 @@ const RAW_GROUPS: AdminGroup[] = [
         ],
       },
       {
+        value: "triere-anunturi",
+        label: "Triere anunțuri colectate",
+        icon: Radar,
+        keywords: [
+          "triere", "duplicate", "duplicat", "deduplicare", "ascunde duplicatele", "portaluri", "olx", "imobiliare",
+          "telefon", "dezvaluire", "dezvăluire", "arata numarul", "prospectare", "scraper", "colectate",
+        ],
+      },
+      {
         value: "saved-listings",
         label: "Anunțuri salvate",
         icon: Radar,
