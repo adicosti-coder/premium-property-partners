@@ -1,0 +1,2 @@
+# Admin components rules
+- WhatsApp admin work lives in the single `hub-whatsapp` screen (`WhatsappHub.tsx`): queue/attention/report rules come only from `supabase/functions/_shared/waHubRules.ts` (tested in `src/lib/waHub.test.ts`), quick actions (retry/unblock, test send, resolve) go only through the admin-only `wa-hub-actions` function, which logs each one in `admin_audit_log`; legacy WhatsApp pages stay reachable as hub tools and old URLs — keeps one classification of 131042/131026/duplicates and no secret or test number in the browser.

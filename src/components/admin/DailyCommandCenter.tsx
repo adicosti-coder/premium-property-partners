@@ -120,8 +120,8 @@ export default function DailyCommandCenter() {
     { key: "verify", label: "De verificat", hint: "așteaptă aprobarea ta", count: d.toVerify, tab: "flux-proprietari", route: TODAY_ROUTES.verify, icon: CheckCircle2, tone: "amber" },
     { key: "hot", label: "Proprietari fierbinți", hint: "scor peste 80, gata de contact", count: d.hot, tab: "flux-proprietari", route: TODAY_ROUTES.contact, icon: Flame, tone: "rose" },
     { key: "outreach", label: "Mesaje pregătite", hint: "oferte de trimis proprietarilor", count: d.outreachPending, tab: "flux-proprietari", route: TODAY_ROUTES.contact, icon: MessageSquare, tone: "green" },
-    { key: "wa", label: "În coada WhatsApp", hint: "așteaptă trimiterea", count: d.waPending, tab: "whatsapp-queue", icon: MessageSquare, tone: "slate" },
-    { key: "wa-failed", label: "WhatsApp eșuate", hint: "necesită reluare manuală", count: d.waFailed, tab: "whatsapp-queue", icon: AlertTriangle, tone: d.waFailed > 0 ? "rose" : "slate" },
+    { key: "wa", label: "În coada WhatsApp", hint: "așteaptă trimiterea", count: d.waPending, tab: "hub-whatsapp", route: TODAY_ROUTES.whatsappQueue, icon: MessageSquare, tone: "slate" },
+    { key: "wa-failed", label: "WhatsApp eșuate", hint: "necesită reluare manuală", count: d.waFailed, tab: "hub-whatsapp", route: TODAY_ROUTES.whatsappQueue, icon: AlertTriangle, tone: d.waFailed > 0 ? "rose" : "slate" },
     { key: "drops", label: "Scăderi de preț (24h)", hint: "ocazii de negociere", count: d.priceDrops, tab: "price-drops", icon: TrendingDown, tone: "green" },
     { key: "stale", label: "Posibil expirate", hint: "nevăzute peste 21 de zile", count: d.expiringSoon, tab: "expired-listings", icon: Clock, tone: "slate" },
     { key: "anomalies", label: "Probleme automatizări", hint: "nerezolvate", count: d.anomalies, tab: "automation", icon: AlertTriangle, tone: d.anomalies > 0 ? "rose" : "slate" },
@@ -194,7 +194,7 @@ export default function DailyCommandCenter() {
           </Button>
           <Button variant="outline" className="min-h-[44px]" onClick={() => go("owner-search")}>Doar căutarea</Button>
           <Button variant="outline" className="min-h-[44px]" onClick={() => go("whatsapp-chat")}>Discuții WhatsApp</Button>
-          <Button variant="outline" className="min-h-[44px] gap-2" onClick={() => go("whatsapp-queue", TODAY_ROUTES.whatsappQueue)}>
+          <Button variant="outline" className="min-h-[44px] gap-2" onClick={() => go("hub-whatsapp", TODAY_ROUTES.whatsappQueue)}>
             <ListOrdered className="h-4 w-4 shrink-0" /> Coadă WhatsApp
           </Button>
           <Button variant="outline" className="min-h-[44px] gap-2" onClick={() => go("call-dashboard", TODAY_ROUTES.callLog)}>

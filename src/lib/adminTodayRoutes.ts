@@ -8,7 +8,10 @@ export const TODAY_ROUTES = {
   contact: "/admin/flux-proprietari?step=contact",
   /** „Apeluri de făcut” din pipeline-ul unificat — include numerele fără WhatsApp. */
   noWhatsApp: "/admin/unified-pipeline?section=prospects&subtab=calls",
-  whatsappQueue: "/admin/whatsapp-queue",
+  /** Centrul WhatsApp, pe coadă (eșuate, blocate, programate). */
+  whatsappQueue: "/admin/hub-whatsapp?section=coada",
+  /** Centrul WhatsApp, pe conversațiile care cer intervenție umană. */
+  whatsappAttention: "/admin/hub-whatsapp?section=atentie",
   callLog: "/admin/call-dashboard",
   socialEngine: "/admin/social-engine",
 } as const;

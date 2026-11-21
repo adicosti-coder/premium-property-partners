@@ -1,5 +1,10 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Centru WhatsApp unificat — 21 noiembrie
+- [x] Un singur ecran „Centru WhatsApp”: coadă/livrare, atenție manuală, rapoarte compacte, toate instrumentele vechi
+- [x] Butoane „Reîncearcă / Deblochează coada” și „Trimite mesaj test” cu confirmare și jurnal de audit
+- [x] Teste pentru filtrarea cozii, atenție manuală și acțiunile rapide; toate testele și build-ul
+
 ## SEO/GEO — 15 noiembrie
 - [x] Titluri: /cazare („Cazare regim hotelier Timișoara”), /ansambluri-rezidentiale, paginile de ansamblu (numele primul)
 - [x] Promisiuni de randament nepermise scoase din paginile citite de Google și AI (9%+, 8–11%, garantat/verificat/dovedit) + test

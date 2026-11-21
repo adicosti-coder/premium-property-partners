@@ -26,7 +26,7 @@ export const SERVICE_LABELS: Record<ServiceKey, string> = {
 
 export const FIX_ROUTES: Record<ServiceKey, string> = {
   database: "/admin/stare-baza",
-  whatsapp: "/admin/whatsapp-queue",
+  whatsapp: "/admin/hub-whatsapp?section=coada",
   make: "/admin/make-queue",
 };
 

@@ -128,6 +128,7 @@ const loaders: Record<string, Loader> = {
   "harta-preturi": () => import("@/components/admin/NeighborhoodPriceMapPanel"),
   "publicate-realtrust": () => import("@/components/admin/RealtrustPublishedPanel"),
   "whatsapp-edit-listing": () => import("@/components/admin/WhatsappEditListing"),
+  "hub-whatsapp": () => import("@/components/admin/WhatsappHub"),
 
   "investment-analysis": () => import("@/components/admin/InvestmentAnalysisManager"),
   "ai-security": () => import("@/components/admin/AISecurityPanel"),

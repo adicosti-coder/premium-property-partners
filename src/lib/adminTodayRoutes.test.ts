@@ -9,7 +9,8 @@ describe("scurtături Astăzi", () => {
     expect(TODAY_ROUTES.noWhatsApp).toBe("/admin/unified-pipeline?section=prospects&subtab=calls");
   });
   it("coada WhatsApp și jurnalul apelurilor lui Andrei au scurtături directe", () => {
-    expect(TODAY_ROUTES.whatsappQueue).toBe("/admin/whatsapp-queue");
+    expect(TODAY_ROUTES.whatsappQueue).toBe("/admin/hub-whatsapp?section=coada");
+    expect(TODAY_ROUTES.whatsappAttention).toBe("/admin/hub-whatsapp?section=atentie");
     expect(TODAY_ROUTES.callLog).toBe("/admin/call-dashboard");
   });
   it("răspunsul unui proprietar deschide chatul cu numărul lui", () => {

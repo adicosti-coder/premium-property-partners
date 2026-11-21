@@ -190,7 +190,7 @@ export default function ContentImprovementCenter() {
         </div>
       )}
       {(isWhatsapp(i) || isObjection(i)) && i.evidence?.conversation_ids?.slice(0, 5).map((id, n) => (
-        <Button key={id} variant="outline" size="sm" className="min-h-12" onClick={() => navigate(`/admin/hub-wa-conversations?view=whatsapp-live&conversation=${id}`)}>Verifică discuția {n + 1}</Button>
+        <Button key={id} variant="outline" size="sm" className="min-h-12" onClick={() => navigate(`/admin/hub-whatsapp?section=instrumente&view=whatsapp-live&conversation=${id}`)}>Verifică discuția {n + 1}</Button>
       ))}
       <div className="grid gap-3 md:grid-cols-2">
         {i.current_value && <div className="rounded bg-muted p-3"><p className="text-xs font-semibold mb-1">Acum</p><Values v={i.current_value} /></div>}
