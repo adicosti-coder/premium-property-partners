@@ -6,7 +6,8 @@ import { requireAdmin } from "../_shared/adminAuth.ts";
 import { sendTeamEmail } from "../_shared/teamEmail.ts";
 import { isInternalCall } from "../_shared/cronAuth.ts";
 import { escapeHtml } from "../_shared/htmlEscape.ts";
-import { realIndexingIssues } from "../_shared/gscIndexingClassification.ts";
+import { isRedirectCoverage, realIndexingIssues } from "../_shared/gscIndexingClassification.ts";
+import { traceRedirect, type FetchLike } from "../_shared/redirectTrace.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -85,7 +86,22 @@ Deno.serve(async (req: Request) => {
   const checkedPages = Number(snap?.checked_pages ?? 0);
   // Re-classify stored issues so correct canonical alternates (also in snapshots
   // saved before the classifier existed) never count as unindexed pages.
-  const snapIssues = realIndexingIssues(Array.isArray(snap?.issues) ? snap!.issues as Array<Record<string, string>> : []);
+  type StoredIssue = { url?: string; verdict?: string; coverageState?: string; redirectCheck?: { clean: boolean } | null };
+  const storedIssues: StoredIssue[] = Array.isArray(snap?.issues) ? (snap!.issues as StoredIssue[]) : [];
+  // "Page with redirect" rows saved without a redirect check are followed now;
+  // the check is written back so the saved snapshot and the admin panel agree.
+  let annotated = false;
+  for (const issue of storedIssues) {
+    if (!issue.url || issue.redirectCheck || !isRedirectCoverage(issue.coverageState)) continue;
+    issue.redirectCheck = await traceRedirect(issue.url, fetch as unknown as FetchLike);
+    annotated = true;
+  }
+  const snapIssues = realIndexingIssues(storedIssues);
+  if (snap && annotated) {
+    await admin.from("seo_indexing_snapshots")
+      .update({ issues: storedIssues, issues_count: snapIssues.length })
+      .eq("id", snap.id);
+  }
   const issuesCount = Array.isArray(snap?.issues) ? snapIssues.length : Number(snap?.issues_count ?? 0);
   const indexingSummary = {
     checked_pages: checkedPages,

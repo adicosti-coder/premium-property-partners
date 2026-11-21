@@ -1,4 +1,6 @@
 // Classifies a Google Search Console URL Inspection result for alerting.
+// Expected (never alerted or counted as unindexed): correct canonical alternates
+// and clean redirects verified by `redirectTrace.ts`.
 // Pure TypeScript (no Deno/Vite imports): shared by `seo-indexing-alerts`,
 // `seo-alert-monitor` and the admin GSC widget, and unit-tested.
 //
@@ -7,7 +9,7 @@
 // Google reports as NEUTRAL "Alternate page with proper canonical tag".
 // Those must never raise an indexing alert.
 
-export type InspectionClass = "indexed" | "expected_canonical" | "issue";
+export type InspectionClass = "indexed" | "expected_canonical" | "expected_redirect" | "issue";
 
 export interface InspectionInput {
   url?: string | null;
@@ -15,10 +17,17 @@ export interface InspectionInput {
   coverageState?: string | null;
   googleCanonical?: string | null;
   userCanonical?: string | null;
+  /** Result of following the redirect (see `redirectTrace.ts`); absent = not checked. */
+  redirectCheck?: { clean: boolean } | null;
 }
 
 /** Coverage states Google itself uses for a correctly canonicalized alternate. */
 const EXPECTED_CANONICAL_STATES = [/^alternate page with proper canonical tag$/i];
+
+/** Google's coverage state for a URL that redirects elsewhere. */
+export function isRedirectCoverage(coverageState: string | null | undefined): boolean {
+  return /^page with redirect$/i.test((coverageState ?? "").trim());
+}
 
 /** Compares URLs ignoring a trailing slash, the host's case and a #fragment. */
 export function normalizeInspectionUrl(raw: string | null | undefined): string {
@@ -41,6 +50,11 @@ export function classifyInspection(input: InspectionInput): InspectionClass {
   const coverage = (input.coverageState ?? "").trim();
   if (EXPECTED_CANONICAL_STATES.some((re) => re.test(coverage))) return "expected_canonical";
 
+  // A redirect is expected only once we followed it and found a single/short,
+  // loop-free hop to an indexable, self-canonical destination. Unchecked or
+  // problematic redirects (chains, loops, 4xx/5xx, noindex, other canonical) stay issues.
+  if (isRedirectCoverage(coverage)) return input.redirectCheck?.clean === true ? "expected_redirect" : "issue";
+
   // NEUTRAL with a declared canonical pointing elsewhere that Google accepted.
   if (verdict === "NEUTRAL") {
     const url = normalizeInspectionUrl(input.url);
@@ -51,7 +65,7 @@ export function classifyInspection(input: InspectionInput): InspectionClass {
   return "issue";
 }
 
-/** Keeps only results that need attention (drops indexed + expected canonicals). */
+/** Keeps only results that need attention (drops indexed, expected canonicals and clean redirects). */
 export function realIndexingIssues<T extends InspectionInput>(items: T[] | null | undefined): T[] {
   return (items ?? []).filter((i) => classifyInspection(i) === "issue");
 }

@@ -1,7 +1,8 @@
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { classifyInspection } from "../_shared/gscIndexingClassification.ts";
+import { classifyInspection, isRedirectCoverage } from "../_shared/gscIndexingClassification.ts";
+import { traceRedirect, type FetchLike, type RedirectCheck } from "../_shared/redirectTrace.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -67,11 +68,14 @@ serve(async (req) => {
     }
 
     // URL Inspection for each
-    type Inspected = { url: string; verdict: string; coverageState: string; lastCrawl?: string; googleCanonical?: string; userCanonical?: string };
+    type Inspected = { url: string; verdict: string; coverageState: string; lastCrawl?: string; googleCanonical?: string; userCanonical?: string; redirectCheck?: RedirectCheck };
     const issues: Inspected[] = [];
     // Correct canonicalization (e.g. /anunturi?tranzactie=vanzare → /anunturi) is
     // desired behaviour: reported to the panel, never counted or e-mailed as a problem.
     const canonicalized: Inspected[] = [];
+    // Clean redirects (short, loop-free, to an indexable self-canonical page) are
+    // expected too; chains, loops, 4xx/5xx, noindex or non-canonical targets stay issues.
+    const redirects: Inspected[] = [];
     for (const url of pages) {
       try {
         const r = await fetch(`${GATEWAY}/v1/urlInspection/index:inspect`, {
@@ -92,9 +96,13 @@ serve(async (req) => {
           googleCanonical: ir.googleCanonical,
           userCanonical: ir.userCanonical,
         };
+        if (isRedirectCoverage(coverage)) {
+          entry.redirectCheck = await traceRedirect(url, fetch as unknown as FetchLike);
+        }
         const kind = classifyInspection(entry);
         if (kind === "issue") issues.push(entry);
         else if (kind === "expected_canonical") canonicalized.push(entry);
+        else if (kind === "expected_redirect") redirects.push(entry);
       } catch (e) { console.error("inspect err", url, e); }
     }
 
@@ -114,7 +122,7 @@ serve(async (req) => {
         <p>Pagini verificate: ${pages.length} | Probleme: <strong>${issues.length}</strong></p>
         <table border="1" cellpadding="6" style="border-collapse:collapse;font-family:sans-serif;font-size:13px">
           <tr style="background:#f3f4f6"><th>URL</th><th>Verdict</th><th>Stare acoperire</th></tr>
-          ${issues.map(i => `<tr><td><a href="${i.url}">${i.url}</a></td><td>${i.verdict}</td><td>${i.coverageState}</td></tr>`).join("")}
+          ${issues.map(i => `<tr><td><a href="${i.url}">${i.url}</a></td><td>${i.verdict}</td><td>${i.coverageState}${i.redirectCheck ? `<br><small>${i.redirectCheck.reason}</small>` : ""}</td></tr>`).join("")}
         </table>
         <p style="margin-top:16px;color:#6b7280">Verifică în <a href="https://search.google.com/search-console">Google Search Console</a>.</p>
       `;
@@ -131,7 +139,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, checked: pages.length, issues: issues.length, details: issues, canonicalized }),
+      JSON.stringify({ success: true, checked: pages.length, issues: issues.length, details: issues, canonicalized, redirects }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e: any) {
