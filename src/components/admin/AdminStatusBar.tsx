@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { Activity, Users, Building, Zap, Flame } from "lucide-react";
+import { ConnectionHealthPill } from "./ConnectionHealth";
 
 interface Props {
   newLeads: number;
@@ -76,6 +77,8 @@ export function AdminStatusBar({ newLeads, newScraper, hotProspects, onJump }: P
   return (
     <div className="sticky bottom-0 z-30 border-t border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
       <div className="flex items-center gap-1 overflow-x-auto px-3 py-1.5 text-xs">
+        <ConnectionHealthPill />
+        <div className="h-4 w-px shrink-0 bg-border" aria-hidden />
         {items.map((it, i) => {
           const Icon = it.icon;
           return (

@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import OutreachMonitorPanel from "./OutreachMonitorPanel";
 import AndreiCallsCounter from "./AndreiCallsCounter";
 import SocialPostDraftsPanel from "./SocialPostDraftsPanel";
+import { ConnectionHealthCard } from "./ConnectionHealth";
 import { TODAY_ROUTES } from "@/lib/adminTodayRoutes";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -173,6 +174,8 @@ export default function DailyCommandCenter() {
           )}
         </CardContent>
       </Card>
+
+      <ConnectionHealthCard />
 
       <AndreiCallsCounter />
 

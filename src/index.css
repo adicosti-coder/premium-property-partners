@@ -91,6 +91,10 @@
     --success-foreground: 0 0% 100%;
     --success-soft: 142 52% 92%;
 
+    --warning: 38 92% 42%;
+    --warning-foreground: 0 0% 100%;
+    --warning-soft: 45 93% 90%;
+
     --border: 40 20% 80%;
     --input: 40 20% 82%;
     --ring: 45 90% 40%;
@@ -175,6 +179,10 @@
     --success: 142 70% 65%;
     --success-foreground: 222 47% 6%;
     --success-soft: 142 35% 18%;
+
+    --warning: 43 96% 56%;
+    --warning-foreground: 222 47% 6%;
+    --warning-soft: 38 50% 18%;
 
     --border: 222 20% 18%;
     --input: 222 20% 18%;
