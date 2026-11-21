@@ -60,4 +60,3 @@
 - Owner lead forms emit one conversion after persistence; confirmation-page visits emit none, and GA4 automatic page views are disabled in favor of the existing SPA emitter — prevents duplicate or unverified conversions.
 - Language switching updates the existing language query through the router while preserving other parameters, hash and state — prevents reload from undoing the visitor's choice.
 - Homepage entity JSON-LD comes only from `src/lib/orgIdentity.ts` (runtime + prerender); prerender replaces use function replacements — keeps entities identical and `$$` intact.
-- Admin market/rejection report RPCs are same-named plpgsql wrappers that require admin/super_admin or service_role and call service-only `*_unguarded` bodies; inner report helpers have no direct user EXECUTE — security-definer reports otherwise leak scraped listing data to any signed-up account.
