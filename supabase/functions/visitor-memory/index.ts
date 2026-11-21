@@ -2,6 +2,9 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { getCorsHeaders } from "../_shared/securityHeaders.ts";
 import { checkRateLimit, getClientIp } from "../_shared/rateLimiter.ts";
+import {
+  publicVisitorMemory, sanitizeIntent, sanitizePreferenceEvent, sanitizeViewEvent,
+} from "../_shared/visitorMemoryPolicy.ts";
 
 /* ────────────────────────────────────────────────────────────
    Visitor Memory — cross-function tracker for anonymous and
@@ -58,7 +61,7 @@ serve(async (req) => {
     /* ── GET: return current memory ── */
     if (action === "get") {
       const row = await ensureRow();
-      return new Response(JSON.stringify({ memory: row }), {
+      return new Response(JSON.stringify({ memory: publicVisitorMemory(row) }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -76,13 +79,11 @@ serve(async (req) => {
       const updates: any = { last_seen_at: new Date().toISOString() };
       if (userId) updates.user_id = userId;
 
-      if (event?.type === "view" && event.data?.propertyId) {
+      const view = event?.type === "view" ? sanitizeViewEvent(event.data) : null;
+      if (view) {
         const list = Array.isArray(row.viewed_properties) ? row.viewed_properties : [];
-        const filtered = list.filter((v: any) => v.id !== event.data.propertyId).slice(0, 19);
-        updates.viewed_properties = [
-          { id: event.data.propertyId, name: event.data.name, price: event.data.price, type: event.data.type, viewedAt: new Date().toISOString() },
-          ...filtered,
-        ];
+        const filtered = list.filter((v: any) => v.id !== view.id).slice(0, 19);
+        updates.viewed_properties = [{ ...view, viewedAt: new Date().toISOString() }, ...filtered];
       }
 
       if (event?.type === "search" && event.data?.query) {
@@ -94,16 +95,11 @@ serve(async (req) => {
       }
 
       if (event?.type === "preference") {
-        if (event.data.budget_min != null) updates.budget_min = event.data.budget_min;
-        if (event.data.budget_max != null) updates.budget_max = event.data.budget_max;
-        if (event.data.preferred_neighborhoods) updates.preferred_neighborhoods = event.data.preferred_neighborhoods;
-        if (event.data.preferred_listing_type) updates.preferred_listing_type = event.data.preferred_listing_type;
-        if (event.data.preferred_rooms) updates.preferred_rooms = event.data.preferred_rooms;
+        Object.assign(updates, sanitizePreferenceEvent(event.data));
       }
 
-      if (event?.type === "intent" && event.data?.intent) {
-        updates.last_intent = event.data.intent;
-      }
+      const intent = event?.type === "intent" ? sanitizeIntent(event.data?.intent) : null;
+      if (intent) updates.last_intent = intent;
 
       // Lead score heuristic
       const views = (updates.viewed_properties || row.viewed_properties || []).length;
@@ -121,7 +117,7 @@ serve(async (req) => {
         .select()
         .single();
 
-      return new Response(JSON.stringify({ memory: updated }), {
+      return new Response(JSON.stringify({ memory: publicVisitorMemory(updated) }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -196,16 +192,11 @@ serve(async (req) => {
       try { parsed = JSON.parse(raw.replace(/```json\n?|```/g, "").trim()); } catch { parsed = {}; }
 
       const updates: any = {
-        chatbot_summary: parsed.summary || null,
-        last_intent: parsed.intent || null,
+        chatbot_summary: typeof parsed.summary === "string" ? parsed.summary.slice(0, 500) : null,
+        last_intent: sanitizeIntent(parsed.intent),
         last_seen_at: new Date().toISOString(),
+        ...sanitizePreferenceEvent(parsed),
       };
-      if (parsed.budget_min != null) updates.budget_min = parsed.budget_min;
-      if (parsed.budget_max != null) updates.budget_max = parsed.budget_max;
-      if (Array.isArray(parsed.preferred_neighborhoods) && parsed.preferred_neighborhoods.length)
-        updates.preferred_neighborhoods = parsed.preferred_neighborhoods;
-      if (parsed.preferred_listing_type) updates.preferred_listing_type = parsed.preferred_listing_type;
-      if (parsed.preferred_rooms) updates.preferred_rooms = parsed.preferred_rooms;
       if (userId) updates.user_id = userId;
 
       const { data: updated } = await supabase
@@ -215,7 +206,7 @@ serve(async (req) => {
         .select()
         .single();
 
-      return new Response(JSON.stringify({ memory: updated, parsed }), {
+      return new Response(JSON.stringify({ memory: publicVisitorMemory(updated) }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -227,7 +218,7 @@ serve(async (req) => {
       if (row.preferred_listing_type) q = q.eq("listing_type", row.preferred_listing_type);
       if (row.preferred_rooms) q = q.eq("rooms", row.preferred_rooms);
       const { data: props } = await q;
-      return new Response(JSON.stringify({ memory: row, recommendations: props || [] }), {
+      return new Response(JSON.stringify({ memory: publicVisitorMemory(row), recommendations: props || [] }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

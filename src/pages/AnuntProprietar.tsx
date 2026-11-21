@@ -269,7 +269,7 @@ export default function AnuntProprietar() {
         published_at: new Date().toISOString(),
         unpublished_at: null,
         consent_id: consent?.id ?? null,
-        consent_proof: consent?.consent_text ?? null,
+        // The consent text stays in the admin-only consent register, never on the public row.
         created_by: user?.id ?? null,
       };
       const { error } = published

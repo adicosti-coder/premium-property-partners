@@ -1037,6 +1037,13 @@
       "when": 1795246427566,
       "tag": "0147_lock_admin_price_reports",
       "breakpoints": true
+    },
+    {
+      "idx": 148,
+      "version": "7",
+      "when": 1795251974211,
+      "tag": "0148_harden_guest_owner_visitor_privacy",
+      "breakpoints": true
     }
   ]
 }

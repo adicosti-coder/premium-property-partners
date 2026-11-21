@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { guestGuideAccess, redactGuestGuide } from "../_shared/guestGuideAccess.ts";
+import { checkRateLimit, getClientIp } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,6 +18,14 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // Links are unguessable tokens; the limit only stops bulk guessing attempts.
+    const rl = checkRateLimit(`guest-guide:${getClientIp(req)}`, { maxRequests: 20, windowMs: 60_000 });
+    if (!rl.allowed) {
+      return new Response(JSON.stringify({ error: "rate_limit" }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" },
+      });
+    }
     const { bookingId } = await req.json();
     const authHeader = req.headers.get("Authorization") || "";
     if (!isValidAccessToken(bookingId) && !isValidBookingId(bookingId)) {
@@ -61,16 +71,10 @@ serve(async (req) => {
       });
     }
 
-    const today = new Date().toISOString().slice(0, 10);
-    const canShowAccessCode = guide.check_in_date && guide.check_out_date
-      ? today >= guide.check_in_date && today <= guide.check_out_date
-      : false;
-
+    // Access secrets are only revealed inside the stay window (see _shared/guestGuideAccess.ts).
+    const access = guestGuideAccess(guide, new Date(), isAdmin);
     return new Response(JSON.stringify({
-      guide: {
-        ...guide,
-        pin_code: canShowAccessCode ? guide.pin_code : null,
-      },
+      guide: redactGuestGuide(guide, access),
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

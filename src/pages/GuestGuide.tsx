@@ -2,7 +2,7 @@ import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Copy, Check, Phone, Wifi, Key, MapPin, Clock, Video, MessageCircle, Shield, ChevronDown, ChevronUp, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,6 +19,11 @@ const t = {
     checkOut: "Check-out",
     pinCode: "Cod Keybox Acces",
     pinLocked: "Codul keybox va fi vizibil în ziua check-in-ului",
+    pinEnded: "Codul de acces nu mai este afișat după check-out",
+    wifiLocked: "Parola Wi-Fi apare în ziua check-in-ului",
+    instructionsTitle: "Acces și parcare",
+    instructionsLocked: "Instrucțiunile de acces și parcare apar cu o zi înainte de check-in",
+    instructionsEnded: "Instrucțiunile de acces nu mai sunt afișate după check-out",
     pinAvailable: "Codul tău de acces",
     wifi: "Wi-Fi",
     wifiName: "Rețea",
@@ -46,6 +51,11 @@ const t = {
     checkOut: "Check-out",
     pinCode: "Keybox Access Code",
     pinLocked: "The keybox code will be visible on your check-in day",
+    pinEnded: "The access code is no longer shown after check-out",
+    wifiLocked: "The Wi-Fi password appears on your check-in day",
+    instructionsTitle: "Access and parking",
+    instructionsLocked: "Access and parking instructions appear one day before check-in",
+    instructionsEnded: "Access instructions are no longer shown after check-out",
     pinAvailable: "Your access code",
     wifi: "Wi-Fi",
     wifiName: "Network",
@@ -87,12 +97,15 @@ const GuestGuide = () => {
     enabled: !!bookingId,
   });
 
-  const isCheckInDay = useMemo(() => {
-    if (!guide?.check_in_date) return false;
-    const today = new Date().toISOString().slice(0, 10);
-    const checkOut = guide.check_out_date;
-    return today >= guide.check_in_date && today <= checkOut;
-  }, [guide]);
+  // The server decides what may be shown (stay window); the page only explains locked items.
+  const access = guide?.access as
+    | { state?: string; has_pin?: boolean; has_wifi_password?: boolean; has_instructions?: boolean }
+    | undefined;
+  const isCheckInDay = !!guide?.pin_code;
+  const stayEnded = access?.state === "ended";
+  const showPinCard = !!guide?.pin_code || !!access?.has_pin;
+  const instructionsHidden = !!access?.has_instructions
+    && !guide?.access_instructions && !guide?.access_video_url && !guide?.parking_instructions;
 
   const copyToClipboard = async (text: string, field: string) => {
     await navigator.clipboard.writeText(text);
@@ -128,7 +141,7 @@ const GuestGuide = () => {
     );
   }
 
-  const whatsappUrl = `https://wa.me/${guide.whatsapp_number?.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(labels.whatsappMsg + ` (${guide.booking_id})`)}`;
+  const whatsappUrl = `https://wa.me/${guide.whatsapp_number?.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(labels.whatsappMsg + (guide.property_name ? ` (${guide.property_name})` : ""))}`;
   const mapsUrl = guide.parking_gps_lat && guide.parking_gps_lng
     ? `https://www.google.com/maps?q=${guide.parking_gps_lat},${guide.parking_gps_lng}`
     : null;
@@ -181,7 +194,7 @@ const GuestGuide = () => {
         </Card>
 
         {/* Keybox Code */}
-        {guide.pin_code && (
+        {showPinCard && (
           <Card className={isCheckInDay ? "border-primary/50 bg-primary/5" : ""}>
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
@@ -204,7 +217,7 @@ const GuestGuide = () => {
               ) : (
                 <div className="flex items-center gap-2 text-muted-foreground bg-muted/50 rounded-lg p-3">
                   <Shield className="w-4 h-4 shrink-0" />
-                  <p className="text-xs">{labels.pinLocked}</p>
+                  <p className="text-xs">{stayEnded ? labels.pinEnded : labels.pinLocked}</p>
                 </div>
               )}
             </CardContent>
@@ -234,6 +247,12 @@ const GuestGuide = () => {
                     {copiedField === "ssid" ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                   </Button>
                 </div>
+                {!guide.wifi_password && access?.has_wifi_password && !stayEnded && (
+                  <div className="flex items-center gap-2 text-muted-foreground bg-muted/50 rounded-lg p-3">
+                    <Shield className="w-4 h-4 shrink-0" />
+                    <p className="text-xs">{labels.wifiLocked}</p>
+                  </div>
+                )}
                 {guide.wifi_password && (
                   <div className="flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2">
                     <div>
@@ -250,6 +269,22 @@ const GuestGuide = () => {
                     </Button>
                   </div>
                 )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Access details exist but are outside the allowed window */}
+        {instructionsHidden && (
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <MapPin className="w-4 h-4 text-primary" />
+                <span className="font-semibold text-sm text-foreground">{labels.instructionsTitle}</span>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground bg-muted/50 rounded-lg p-3">
+                <Shield className="w-4 h-4 shrink-0" />
+                <p className="text-xs">{stayEnded ? labels.instructionsEnded : labels.instructionsLocked}</p>
               </div>
             </CardContent>
           </Card>

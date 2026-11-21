@@ -686,7 +686,7 @@ const handler = async (req: Request): Promise<Response> => {
   const { allowed, remaining } = checkRateLimit(clientIp);
   
   if (!allowed) {
-    console.log(`Rate limit exceeded for IP: ${clientIp}`);
+    console.log("Rate limit exceeded for lead notifications");
     return new Response(
       JSON.stringify({ 
         error: "Rate limit exceeded", 
@@ -706,7 +706,8 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const rawData = await req.json();
-    console.log("Raw lead data received:", JSON.stringify(rawData));
+    // Never log the request body: it holds names, phone numbers and emails.
+    console.log("Lead notification received, source:", String(rawData?.source ?? "unknown").slice(0, 40));
 
     // Validate and sanitize input based on source type
     let leadData: LeadNotificationRequest;
@@ -721,7 +722,7 @@ const handler = async (req: Request): Promise<Response> => {
       leadData = validateProfitCalculatorLead(rawData);
     }
 
-    console.log("Validated lead data:", JSON.stringify(leadData));
+    console.log("Lead notification validated, source:", leadData.source);
 
     let htmlContent: string;
     let emailSubject: string;

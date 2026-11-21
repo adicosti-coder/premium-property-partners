@@ -101,14 +101,21 @@ Deno.serve(async (req) => {
           .gte("created_at", new Date(Date.now() - 15 * 60_000).toISOString())
           .order("created_at", { ascending: false }).limit(1);
       const { data: rows } = await query;
-      const lead = rows?.[0];
+      const found = rows?.[0];
+      const fresh = found && Date.now() - new Date(found.created_at).getTime() < 15 * 60_000;
+      // A stored request is only used by its own visitor (same phone, plus a fresh save,
+      // the visitor capability token or an internal retry). Any other caller keeps only
+      // the figures it sent itself — never another lead's id or stored calculator data.
+      const lead = found && (internal || capability || fresh) && last9(found.whatsapp_number ?? "") === last9(d.telefon)
+        ? found
+        : null;
+      if (!lead) d.lead_id = undefined;
       if (lead) {
         d.lead_id = lead.id;
         storedCalculatorData = (lead.simulation_data ?? {}) as Record<string, unknown>;
         storedLeadSource = lead.source ?? null;
       }
-      const fresh = lead && Date.now() - new Date(lead.created_at).getTime() < 15 * 60_000;
-      if (lead && (internal || capability || fresh) && last9(lead.whatsapp_number ?? "") === last9(d.telefon)) {
+      if (lead) {
         // Calculator dispatch uses only stored values, never retry payload figures.
         if (String(lead.source ?? "").startsWith("calculator_unificat")) {
           if (lead.submission_id && !internal && !capability) return json({ error: "Visitor token required" }, 403);

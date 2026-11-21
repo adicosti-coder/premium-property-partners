@@ -13,10 +13,8 @@ const getOrCreateSessionId = (): string => {
   return id;
 };
 
+/** Only the visitor's own preferences come back; ids and lead score stay on the server. */
 export interface VisitorMemory {
-  id: string;
-  session_id: string;
-  user_id: string | null;
   viewed_properties: any[];
   search_history: any[];
   budget_min: number | null;
@@ -26,7 +24,6 @@ export interface VisitorMemory {
   preferred_rooms: number | null;
   chatbot_summary: string | null;
   last_intent: string | null;
-  lead_score: number;
 }
 
 export function useVisitorMemory() {

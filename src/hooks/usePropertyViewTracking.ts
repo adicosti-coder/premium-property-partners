@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { isBrowser, getSessionStorage, setSessionStorage } from "@/utils/browserStorage";
+import { deviceClass, referrerOrigin } from "@/lib/viewPrivacy";
 
 const getSessionId = (): string => {
   if (!isBrowser()) return `ssr-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
@@ -38,8 +39,8 @@ export const usePropertyViewTracking = (propertyId: string | undefined) => {
           property_id: propertyId,
           user_id: user?.id || null,
           session_id: getSessionId(),
-          referrer: document.referrer || null,
-          user_agent: navigator.userAgent,
+          referrer: referrerOrigin(document.referrer),
+          user_agent: deviceClass(navigator.userAgent),
           page_path: pagePath,
         });
 
