@@ -60,4 +60,3 @@
 - Owner lead forms emit one conversion after persistence; confirmation-page visits emit none, and GA4 automatic page views are disabled in favor of the existing SPA emitter — prevents duplicate or unverified conversions.
 - Language switching updates the existing language query through the router while preserving other parameters, hash and state — prevents reload from undoing the visitor's choice.
 - Homepage entity JSON-LD comes only from `src/lib/orgIdentity.ts` (runtime + prerender); prerender replaces use function replacements — keeps entities identical and `$$` intact.
-- Repeat lead submissions merged by trigger `leads_dedupe_upsert` only fill empty fields and log the submitted values in `activity_history`; `submit-lead` returns no lead id or report token for a merged lead, and chat CRM stages move only for leads the chat created — a public caller cannot prove they own a stored contact.
