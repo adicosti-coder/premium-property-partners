@@ -5,7 +5,7 @@
  * Trimiterea spre Andrei/WhatsApp trece prin `andrei-bulk-queue` (revalidare pe server)
  * și este blocată pentru anunțurile fără număr extras.
  */
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +23,7 @@ import type { PageSize } from "@/hooks/admin/usePaginatedQuery";
 import { Ban, Copy, ExternalLink, Layers, Loader2, MessageCircle, Phone, PhoneOff, RefreshCw, RotateCcw, Search, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { groupCrossPortalDuplicates, listingPhone, portalKey, signalsOf } from "@/lib/crossPortalDedup";
-import { buildTriageRows, DEFAULT_TRIAGE_FILTERS, isDismissed, summarizeTriage, triageBlockReason, triagePool, type TriageFilters, type TriageListing, type TriageRow } from "@/lib/scrapedListingsTriage";
+import { activeQuickFilter, applyQuickFilter, buildTriageRows, DEFAULT_TRIAGE_FILTERS, isDismissed, summarizeTriage, triageBlockReason, triagePool, type TriageFilters, type TriageListing, type TriageQuickFilter, type TriageRow } from "@/lib/scrapedListingsTriage";
 import { hasImplausiblePrice } from "@/lib/ownerListingRules";
 import { normalizeRoPhone } from "@/lib/ownerOutreachTemplates";
 import { OWNER_FLOW_QUERY_KEY } from "@/lib/ownerFlowData";
@@ -109,6 +109,18 @@ export default function ScrapedListingsTriage() {
   const safePage = Math.min(page, pageCount - 1);
   const visible = rows.slice(safePage * pageSize, safePage * pageSize + pageSize);
   const update = (patch: Partial<TriageFilters>) => { setFilters((f) => ({ ...f, ...patch })); setPage(0); };
+  const listRef = useRef<HTMLDivElement>(null);
+  const quick = activeQuickFilter(filters);
+  const onQuick = (q: TriageQuickFilter) => {
+    update(applyQuickFilter(filters, q));
+    // Pe mobil lista e sub filtre: o aducem în vedere ca rezultatul să se vadă imediat.
+    requestAnimationFrame(() => {
+      const el = listRef.current;
+      if (!el || el.getBoundingClientRect().top < window.innerHeight * 0.6) return;
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    });
+  };
   const toggleExpanded = (key: string) => setExpanded((prev) => { const n = new Set(prev); if (n.has(key)) n.delete(key); else n.add(key); return n; });
 
   const saveManualPhone = async (l: Listing) => {
@@ -210,23 +222,29 @@ export default function ScrapedListingsTriage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {[
-              { label: "Imobile unice", value: summary.properties },
-              { label: "Cu telefon", value: summary.withPhone },
-              { label: "Necesită dezvăluire", value: summary.manualReveal },
-              { label: "Pregătite pentru prospectare", value: summary.ready },
-            ].map((c) => (
-              <div key={c.label} className="rounded-lg border bg-muted/30 p-3">
-                <div className="text-lg font-semibold tabular-nums">{isLoading ? "…" : c.value.toLocaleString("ro-RO")}</div>
-                <div className="text-xs text-muted-foreground">{c.label}</div>
-              </div>
-            ))}
+            {([
+              { key: "properties", label: "Imobile unice", value: summary.properties },
+              { key: "withPhone", label: "Cu telefon", value: summary.withPhone },
+              { key: "manualReveal", label: "Necesită dezvăluire", value: summary.manualReveal },
+              { key: "ready", label: "Pregătite pentru prospectare", value: summary.ready },
+            ] as { key: TriageQuickFilter; label: string; value: number }[]).map((c) => {
+              const on = quick === c.key;
+              return (
+                <button key={c.key} type="button" onClick={() => onQuick(c.key)} aria-pressed={on}
+                  aria-label={`${c.label}: ${c.value}. ${on && c.key !== "properties" ? "Filtru activ — apasă din nou pentru toate imobilele" : "Filtrează lista"}`}
+                  className={`min-h-12 cursor-pointer rounded-lg border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] ${on ? "border-primary bg-primary/10 ring-1 ring-primary" : "bg-muted/30 [@media(hover:hover)]:hover:border-primary/50 [@media(hover:hover)]:hover:bg-accent"}`}>
+                  <div className="text-lg font-semibold tabular-nums">{isLoading ? "…" : c.value.toLocaleString("ro-RO")}</div>
+                  <div className="text-xs text-muted-foreground">{c.label}</div>
+                  {on && c.key !== "properties" && <div className="mt-1 text-[11px] font-medium text-primary">Filtru activ · apasă pentru toate</div>}
+                </button>
+              );
+            })}
           </div>
 
           <div className="space-y-2">
             <span id="phone-filter-label" className="text-xs font-medium text-muted-foreground">Telefon</span>
             <ToggleGroup type="single" value={filters.phone} aria-labelledby="phone-filter-label"
-              onValueChange={(v) => v && update({ phone: v as TriageFilters["phone"] })}
+              onValueChange={(v) => v && update({ phone: v as TriageFilters["phone"], readyOnly: false })}
               className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <ToggleGroupItem value="all" variant="outline" className="min-h-12 justify-between gap-2 px-3 data-[state=on]:border-primary data-[state=on]:bg-primary/10 data-[state=on]:text-foreground">
                 Toate <Badge variant="secondary">{phoneCounts.all}</Badge>
@@ -273,6 +291,13 @@ export default function ScrapedListingsTriage() {
         </CardContent>
       </Card>
 
+      <div ref={listRef} className="scroll-mt-20">
+        {filters.readyOnly && (
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-md border border-primary bg-primary/10 px-3 py-2 text-sm">
+            <span>Doar anunțuri pregătite pentru prospectare · {rows.length.toLocaleString("ro-RO")}</span>
+            <Button variant="ghost" size="sm" className="min-h-12" onClick={() => update({ readyOnly: false })}>Arată toate</Button>
+          </div>
+        )}
       {error ? (
         <p role="alert" className="text-sm text-destructive">Anunțurile nu au putut fi încărcate: {(error as Error).message}</p>
       ) : isLoading ? (
@@ -297,6 +322,7 @@ export default function ScrapedListingsTriage() {
             onPage={setPage} onPageSize={(s) => { setPageSize(s); setPage(0); }} isFetching={isFetching} />
         </div>
       )}
+      </div>
 
       <Dialog open={!!dismissFor} onOpenChange={(o) => !o && !dismissing && setDismissFor(null)}>
         <DialogContent>

@@ -102,3 +102,41 @@ describe("Indisponibile / renunțate", () => {
     expect(summarizeTriage(g).ready).toBe(1);
   });
 });
+
+import { activeQuickFilter, applyQuickFilter } from "./scrapedListingsTriage";
+
+describe("cardurile de cifre ca filtre rapide", () => {
+  const apply = (f: typeof DEFAULT_TRIAGE_FILTERS, q: Parameters<typeof applyQuickFilter>[1]) => ({ ...f, ...applyQuickFilter(f, q) });
+  const ids = (f: typeof DEFAULT_TRIAGE_FILTERS) => buildTriageRows(groups, f).map((r) => r.listing.id).sort();
+
+  it("„Cu telefon” și „Necesită dezvăluire” sunt aceleași filtre ca butoanele Telefon", () => {
+    const withPhone = apply(DEFAULT_TRIAGE_FILTERS, "withPhone");
+    expect(withPhone.phone).toBe("available");
+    expect(ids(withPhone)).toEqual(["olx"]);
+    const manual = apply(DEFAULT_TRIAGE_FILTERS, "manualReveal");
+    expect(manual.phone).toBe("manual");
+    expect(ids(manual)).toEqual(["solo"]);
+  });
+  it("„Pregătite pentru prospectare” arată doar anunțurile eligibile", () => {
+    const ready = apply(DEFAULT_TRIAGE_FILTERS, "ready");
+    expect(ready.readyOnly).toBe(true);
+    expect(ids(ready)).toEqual(["olx"]);
+    expect(ids(apply(DEFAULT_TRIAGE_FILTERS, "ready")).every((id) => isReadyForOutreach([olx, imo, solo].find((x) => x.id === id)!))).toBe(true);
+  });
+  it("„Imobile unice” resetează filtrul rapid și respectă „Ascunde duplicatele”", () => {
+    const reset = apply(apply(DEFAULT_TRIAGE_FILTERS, "ready"), "properties");
+    expect(activeQuickFilter(reset)).toBe("properties");
+    expect(ids(reset)).toEqual(["olx", "solo"]);
+    expect(ids({ ...reset, hideDuplicates: false })).toEqual(["imo", "olx", "solo"]);
+  });
+  it("a doua apăsare pe cardul activ revine la toate imobilele", () => {
+    const once = apply(DEFAULT_TRIAGE_FILTERS, "withPhone");
+    expect(activeQuickFilter(once)).toBe("withPhone");
+    expect(activeQuickFilter(apply(once, "withPhone"))).toBe("properties");
+  });
+  it("cardul activ urmează filtrele Telefon de dedesubt", () => {
+    expect(activeQuickFilter({ ...DEFAULT_TRIAGE_FILTERS, phone: "manual" })).toBe("manualReveal");
+    expect(activeQuickFilter({ ...DEFAULT_TRIAGE_FILTERS, phone: "available" })).toBe("withPhone");
+    expect(activeQuickFilter(DEFAULT_TRIAGE_FILTERS)).toBe("properties");
+  });
+});

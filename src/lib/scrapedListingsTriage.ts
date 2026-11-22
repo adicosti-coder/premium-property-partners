@@ -60,6 +60,8 @@ export interface TriageFilters {
   status: "all" | "active" | "inactive" | "dismissed";
   /** Anunțurile marcate „Indisponibil / renunțat” sunt ascunse implicit. */
   hideDismissed: boolean;
+  /** Doar anunțurile pregătite pentru prospectare (privat, scor > 60, telefon valid, eligibile). */
+  readyOnly: boolean;
   portal: string;
   search: string;
 }
@@ -69,6 +71,7 @@ export const DEFAULT_TRIAGE_FILTERS: TriageFilters = {
   phone: "all",
   status: "all",
   hideDismissed: true,
+  readyOnly: false,
   portal: "all",
   search: "",
 };
@@ -90,6 +93,7 @@ function matchesBase(l: TriageListing, f: TriageFilters): boolean {
   if (f.status === "active" && l.is_active === false) return false;
   if (f.status === "inactive" && l.is_active !== false) return false;
   if (f.portal !== "all" && portalKey(l) !== f.portal) return false;
+  if (f.readyOnly && !isReadyForOutreach(l)) return false;
   const terms = norm(f.search).split(" ").filter(Boolean);
   if (terms.length) {
     const hay = norm(`${l.title ?? ""} ${l.zone ?? ""} ${l.location ?? ""} ${l.source_platform ?? ""}`);
@@ -145,4 +149,26 @@ export function summarizeTriage<T extends TriageListing>(groups: DuplicateGroup<
     if (isReadyForOutreach(g.primary)) ready++;
   }
   return { listings, properties: groups.length, duplicateGroups, variants, withPhone, manualReveal: groups.length - withPhone, ready };
+}
+
+/** Cardurile de cifre din antet, folosite ca filtre rapide. */
+export type TriageQuickFilter = "properties" | "withPhone" | "manualReveal" | "ready";
+
+/** Ce card e evidențiat, după filtrele curente. */
+export function activeQuickFilter(f: TriageFilters): TriageQuickFilter {
+  if (f.readyOnly) return "ready";
+  if (f.phone === "available") return "withPhone";
+  if (f.phone === "manual") return "manualReveal";
+  return "properties";
+}
+
+/** Filtrele după apăsarea unui card; apăsarea din nou pe cardul activ revine la toate imobilele. */
+export function applyQuickFilter(f: TriageFilters, q: TriageQuickFilter): Partial<TriageFilters> {
+  const target = activeQuickFilter(f) === q ? "properties" : q;
+  switch (target) {
+    case "withPhone": return { phone: "available", readyOnly: false };
+    case "manualReveal": return { phone: "manual", readyOnly: false };
+    case "ready": return { phone: "all", readyOnly: true };
+    default: return { phone: "all", readyOnly: false };
+  }
 }
