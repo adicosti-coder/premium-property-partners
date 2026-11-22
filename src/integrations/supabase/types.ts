@@ -6740,6 +6740,13 @@ export type Database = {
           enrichment_next_retry_at: string | null
           enrichment_saved_at: string | null
           enrichment_status: string | null
+          estimate_followup_at: string | null
+          estimate_followup_note: string | null
+          estimate_followup_queue_id: string | null
+          estimate_followup_status: string | null
+          estimate_last_opened_at: string | null
+          estimate_open_count: number
+          estimate_opened_at: string | null
           expiry_check_status: string | null
           features: string[] | null
           floor: string | null
@@ -6857,6 +6864,13 @@ export type Database = {
           enrichment_next_retry_at?: string | null
           enrichment_saved_at?: string | null
           enrichment_status?: string | null
+          estimate_followup_at?: string | null
+          estimate_followup_note?: string | null
+          estimate_followup_queue_id?: string | null
+          estimate_followup_status?: string | null
+          estimate_last_opened_at?: string | null
+          estimate_open_count?: number
+          estimate_opened_at?: string | null
           expiry_check_status?: string | null
           features?: string[] | null
           floor?: string | null
@@ -6974,6 +6988,13 @@ export type Database = {
           enrichment_next_retry_at?: string | null
           enrichment_saved_at?: string | null
           enrichment_status?: string | null
+          estimate_followup_at?: string | null
+          estimate_followup_note?: string | null
+          estimate_followup_queue_id?: string | null
+          estimate_followup_status?: string | null
+          estimate_last_opened_at?: string | null
+          estimate_open_count?: number
+          estimate_opened_at?: string | null
           expiry_check_status?: string | null
           features?: string[] | null
           floor?: string | null

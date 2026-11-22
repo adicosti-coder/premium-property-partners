@@ -3,6 +3,8 @@
 // Internal-only (cron secret / service role) sau admin.
 import { outreachWindow } from "../_shared/ownerOutreachPolicy.ts";
 import { OWNER_RECONTACT_SOURCE } from "../_shared/waOwnerRecontact.ts";
+import { ESTIMATE_FOLLOWUP_SOURCE } from "../_shared/estimateFollowup.ts";
+import { ensureEstimateFollowupTemplate } from "../_shared/estimateFollowupTemplate.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { isInternalWaNumber } from "../_shared/waInternalNumbers.ts";
 import { requireAdmin } from "../_shared/adminAuth.ts";
@@ -353,11 +355,30 @@ Deno.serve(async (req) => {
   // Rămâne loc pentru încă un ciclu de trimitere înainte de timeout-ul funcției.
   const TIME_BUDGET_MS = 40_000;
 
+  let estimateTemplateStatus: string | null = null;
   for (const [idx, item] of queue.entries()) {
-    // Reluarea către proprietari (30 de zile) pleacă doar 09:00–19:30, ora României.
-    if (item.source === OWNER_RECONTACT_SOURCE && !outreachWindow(new Date()).open) {
-      results.push({ id: item.id, status: "deferred", reason: "owner_recontact_window" });
+    const isEstimateFollowup = item.source === ESTIMATE_FOLLOWUP_SOURCE;
+    // Reluarea (30 de zile) și follow-up-ul după deschiderea linkului pleacă doar 09:00–19:30, ora României.
+    if ((item.source === OWNER_RECONTACT_SOURCE || isEstimateFollowup) && !outreachWindow(new Date()).open) {
+      results.push({ id: item.id, status: "deferred", reason: isEstimateFollowup ? "estimate_followup_window" : "owner_recontact_window" });
       continue;
+    }
+    // Follow-up-ul după deschiderea linkului e inițiat de noi (fără sesiune deschisă de 24h):
+    // pleacă doar cu șablonul Meta aprobat; până atunci rămâne în coadă, vizibil în Centrul WhatsApp.
+    if (isEstimateFollowup) {
+      estimateTemplateStatus ??= await ensureEstimateFollowupTemplate();
+      if (estimateTemplateStatus !== "APPROVED") {
+        const note = `Necesită șablon Meta aprobat (${estimateTemplateStatus.split(":")[0]})`;
+        await supabase.from("wa_outbound_queue")
+          .update({ last_error: `în așteptare: ${note.toLowerCase()}`, scheduled_at: new Date(Date.now() + 2 * 3_600_000).toISOString() })
+          .eq("id", item.id).eq("status", "pending");
+        if (item.prospect_listing_id) {
+          await supabase.from("prospect_listings").update({ estimate_followup_note: note })
+            .eq("id", item.prospect_listing_id).eq("estimate_followup_status", "scheduled");
+        }
+        results.push({ id: item.id, status: "deferred", reason: "estimate_followup_template_not_approved", template_status: estimateTemplateStatus });
+        continue;
+      }
     }
     // ── Normalizare unică E.164: "0733…", "+40733…", "40733…" = același număr ──
     const rawPhone = item.phone_normalized;
@@ -454,7 +475,7 @@ Deno.serve(async (req) => {
     // ── Deduplicare: prim contact deja trimis către același număr ────────────
     // Follow-up-urile sunt intenționat un al doilea mesaj, deci sunt exceptate.
     let alreadySent = false;
-    if (!isFollowup) {
+    if (!isFollowup && !isEstimateFollowup) {
       const dedupSince = new Date(Date.now() - 72 * 3_600_000).toISOString();
       const since24h = new Date(Date.now() - 24 * 3_600_000).toISOString();
       const [{ count: recentCount }, { count: inFlight }, { data: convs }] = await Promise.all([
@@ -482,7 +503,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (isFollowup) T("Deduplicare prim contact", true, "Reamintire — exceptată intenționat");
+    if (isFollowup || isEstimateFollowup) T("Deduplicare prim contact", true, "Reamintire — exceptată intenționat");
     if (alreadySent) {
       T("Rezultat deduplicare", false, "Duplicat → marcat „Trimis”, nu se retrimite");
       await supabase
@@ -523,7 +544,7 @@ Deno.serve(async (req) => {
     // Orice altă rulare (paralelă sau ulterioară) vede imediat că numărul e
     // „în curs de trimitere / trimis” și nu mai trimite, chiar dacă
     // confirmarea Meta întârzie. Reamintirile au propria cheie.
-    const reserveKind = isFollowup || item.source === OWNER_RECONTACT_SOURCE ? `queue-${item.source}` : "queue-first-contact";
+    const reserveKind = isFollowup || isEstimateFollowup || item.source === OWNER_RECONTACT_SOURCE ? `queue-${item.source}` : "queue-first-contact";
     const reserved = await reservePhoneSend(supabase, phoneDigits, reserveKind, 23 * 3_600_000, { queue_id: item.id });
     T("Rezervare număr înainte de trimitere", reserved, reserved ? "Număr marcat „în curs de trimitere”" : "Număr deja rezervat de altă trimitere în ultimele 23h");
     if (!reserved) {
@@ -558,7 +579,7 @@ Deno.serve(async (req) => {
         conversationId = conv.id;
       }
 
-      const selectedTemplate = item.source === "followup" || item.source === "followup2" || item.source === "andrei_followup" || item.source === OWNER_RECONTACT_SOURCE
+      const selectedTemplate = item.source === "followup" || item.source === "followup2" || item.source === "andrei_followup" || item.source === OWNER_RECONTACT_SOURCE || isEstimateFollowup
         ? item.template_name
         : item.source === "publish_consent_request"
           ? await preferredPublishConsentTemplate()

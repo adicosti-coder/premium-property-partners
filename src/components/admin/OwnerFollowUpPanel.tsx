@@ -16,6 +16,7 @@ import { fetchOwnerReminders, OWNER_FLOW_QUERY_KEY } from "@/lib/ownerFlowData";
 import { getTemplate, detectListingTransaction, whatsappLink } from "@/lib/ownerOutreachTemplates";
 
 const PriceDropAlertsPanel = lazy(() => import("@/components/admin/PriceDropAlertsPanel"));
+const EstimateLinkOpensPanel = lazy(() => import("@/components/admin/EstimateLinkOpensPanel"));
 
 interface Reminder {
   id: string;
@@ -196,6 +197,12 @@ export default function OwnerFollowUpPanel() {
           )}
         </CardContent>
       </section>
+
+      <AdminErrorBoundary resetKey="estimate-opens">
+        <Suspense fallback={null}>
+          <EstimateLinkOpensPanel />
+        </Suspense>
+      </AdminErrorBoundary>
 
       {pending && pending.phone_normalized && (
         <section aria-label="Confirmă mementoul" className="border border-primary rounded-lg p-4 space-y-3">

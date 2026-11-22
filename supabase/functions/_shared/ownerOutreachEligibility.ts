@@ -10,7 +10,7 @@ export const BLOCKED_AGENCY_STATUS = "blocked_agency";
 
 /** Surse de prim contact / reluare la rece din coada WhatsApp (nu răspunsuri cerute de proprietar). */
 export const COLD_OUTREACH_SOURCES = new Set([
-  "auto_import", "auto_score", "scraper", "owner_recontact", "followup", "followup2",
+  "auto_import", "auto_score", "scraper", "owner_recontact", "followup", "followup2", "estimate_followup",
 ]);
 
 export type OutreachProspect = {

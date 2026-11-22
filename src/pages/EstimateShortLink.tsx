@@ -25,6 +25,31 @@ const EstimateShortLink = () => {
     return () => { alive = false; };
   }, [clean]);
 
+  // Prima deschidere reală (estimare afișată, pagină vizibilă cel puțin 2 secunde) → follow-up unic la 24h.
+  // Echipa autentificată și browserele automatizate nu contează ca deschidere.
+  useEffect(() => {
+    if (state.status !== "ready" || !clean) return;
+    if (typeof document === "undefined" || navigator.webdriver) return;
+    const key = `rt-estimate-open:${clean}`;
+    try { if (sessionStorage.getItem(key)) return; } catch { /* stocare indisponibilă */ }
+    let sent = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const send = async () => {
+      if (sent || document.visibilityState !== "visible") return;
+      sent = true;
+      try { sessionStorage.setItem(key, "1"); } catch { /* ignorat */ }
+      const { data } = await supabase.auth.getSession();
+      if (data.session) return;
+      await supabase.functions.invoke("estimate-link-open", { body: { code: clean } }).catch(() => undefined);
+    };
+    const arm = () => {
+      if (document.visibilityState === "visible" && !timer) timer = setTimeout(send, 2000);
+    };
+    arm();
+    document.addEventListener("visibilitychange", arm);
+    return () => { if (timer) clearTimeout(timer); document.removeEventListener("visibilitychange", arm); };
+  }, [state.status, clean]);
+
   if (state.status === "ready" && state.prefill) return <AnalizaAnunt key={clean ?? ""} prefill={state.prefill} />;
 
   return (

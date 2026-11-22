@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { toast } from "@/hooks/use-toast";
 import { ExternalLink, FileChartColumn, Info, Loader2, Pencil, PhoneCall } from "lucide-react";
 import MarkAsAgencyButton from "./MarkAsAgencyButton";
+import EstimateFollowupBadges from "./EstimateFollowupBadges";
 import { consentDate, consentPhone, consentPhoneVariants, originalListingUrl } from "./autoConsentedListingUtils";
 
 export interface VoiceProspectSummary {
@@ -147,6 +148,7 @@ export default function VoiceProspectCard({ prospect: p, rank, calling, onCall, 
           <section><h4 className="font-semibold mb-2">Descriere</h4><p className="whitespace-pre-wrap">{data.listing.description || data.listing.enriched_description || "Fără descriere salvată."}</p>{data.listing.features?.length ? <p className="mt-2 text-muted-foreground">{data.listing.features.join(" · ")}</p> : null}</section>
           <section><h4 className="font-semibold mb-2">Notițe anterioare</h4><p className="whitespace-pre-wrap">{data.listing.admin_notes || "Nicio notiță salvată."}</p>{data.listing.call_summary && <p className="whitespace-pre-wrap mt-2">Rezumat apel: {data.listing.call_summary}</p>}</section>
           <section><h4 className="font-semibold mb-2">Istoric WhatsApp</h4>
+            <EstimateFollowupBadges row={data.listing} className="mb-2" />
             {data.historyError && <p role="alert" className="text-destructive">Istoricul nu a putut fi încărcat complet.</p>}
             {!data.messages.length && !data.queue.length && !data.historyError && <p className="text-muted-foreground">Nu există mesaje WhatsApp înregistrate.</p>}
             <ol className="divide-y divide-border">{data.messages.map(m => <li key={m.id} className="py-3"><div className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground"><span>{m.direction === "inbound" ? "Proprietar" : "RealTrust / Andrei"} · {m.delivery_status || "—"}</span><time>{consentDate(m.created_at)}</time></div><p className="mt-1 whitespace-pre-wrap">{m.content}</p>{m.error && <p className="text-destructive">{m.error}</p>}</li>)}</ol>
