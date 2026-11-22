@@ -355,3 +355,11 @@
 - [x] Deduplicare între portaluri cu anunț principal, variante cu linkuri, „Ascunde duplicatele” activat implicit
 - [x] Filtru telefon (Toate / disponibil / dezvăluire manuală), „Pregătit pentru prospectare”, blocare trimitere fără telefon
 - [x] Teste deduplicare + filtru telefon; toate testele trec
+
+## Outreach WhatsApp — 22 noiembrie (în lucru, oprit: credite epuizate)
+- [x] Regula comună agenții / particular confirmat / scor > 60 + teste
+- [x] Baza de date: cod scurt pe anunț, marcare „agenție blocată”, trigger-e automate restricționate
+- [ ] outreach-dispatch, coada WhatsApp și webhook-ul să folosească regula (fără răspuns automat la agenții)
+- [ ] Răspuns prietenos la saluturi, fără blocul DA/NU/RETRAG; cerere de acord conversațională
+- [ ] Ruta /e/:cod + linkul scurt în mesajele și șabloanele WhatsApp
+- [ ] „Flux proprietari”: selecția implicită fără agenții și cu scor > 60

@@ -6796,6 +6796,7 @@ export type Database = {
           search_keywords: string[]
           seller_type: string
           seller_type_reason: string | null
+          short_code: string | null
           size: number | null
           source_fingerprint: string | null
           source_platform: string
@@ -6912,6 +6913,7 @@ export type Database = {
           search_keywords?: string[]
           seller_type?: string
           seller_type_reason?: string | null
+          short_code?: string | null
           size?: number | null
           source_fingerprint?: string | null
           source_platform: string
@@ -7028,6 +7030,7 @@ export type Database = {
           search_keywords?: string[]
           seller_type?: string
           seller_type_reason?: string | null
+          short_code?: string | null
           size?: number | null
           source_fingerprint?: string | null
           source_platform?: string
@@ -13011,6 +13014,7 @@ export type Database = {
       admin_db_health_snapshot: { Args: never; Returns: Json }
       admin_run_lead_retention: { Args: never; Returns: Json }
       admin_web_vitals_summary: { Args: never; Returns: Json }
+      agency_text_norm: { Args: { t: string }; Returns: string }
       anonymize_expired_leads: { Args: never; Returns: Json }
       anonymize_ip_address: { Args: { ip_address: string }; Returns: string }
       auto_blacklist_prospect: {
@@ -13147,6 +13151,7 @@ export type Database = {
         Args: { _credits: number }
         Returns: boolean
       }
+      gen_estimate_code: { Args: never; Returns: string }
       get_analysis_by_token: {
         Args: { _token: string }
         Returns: {
@@ -13230,6 +13235,7 @@ export type Database = {
           max_drop_pct: number
         }[]
       }
+      get_estimate_link: { Args: { p_code: string }; Returns: Json }
       get_ga4_daily_sessions: { Args: { p_days?: number }; Returns: Json }
       get_keyword_scan_report: {
         Args: { p_days?: number; p_platform?: string }
@@ -13911,6 +13917,10 @@ export type Database = {
           p_twilio_reason: string
         }
         Returns: undefined
+      }
+      prospect_is_agency: {
+        Args: { p: Database["public"]["Tables"]["prospect_listings"]["Row"] }
+        Returns: boolean
       }
       public_social_preview: {
         Args: never
