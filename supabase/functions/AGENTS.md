@@ -12,7 +12,7 @@
 - Listing/contact pages ship a static #route-shell heading (prerender plugin) removed on first React H1 (max 3s) so real-user FCP/LCP don't wait for the JS bundle.
 - WhatsApp first-contact templates always use the Meta-approved resolver (v6 → v5 → v3), never an environment override; outbound stops for DNC/STOP or any prior inbound interaction.
 - Client qualification reuses history/zone and separates owner handover; AI reads latest ordered turns and discards stale replies — avoids repeated questions.
-- Owner-consent queue messages resolve their dedicated template against Meta's approved Romanian body at send time; use the existing intro resolver until approval so inspection templates never reach owners.
+- Owner-consent queue messages resolve their dedicated template against Meta's approved Romanian body at send time (newest version from `_shared/waPublishConsentTemplate.ts`, else the previous approved version, else the intro resolver), and the resolver submits a missing newest version via `ensurePublishConsentTemplate()` — wording changes never interrupt sending while Meta reviews them.
 - WhatsApp sends normalize phones via `_shared/waPhone.ts` (all format variants in DB lookups) and reserve the number in `request_idempotency` before calling Meta; no automatic resend after timeouts — prevents duplicate messages from parallel or delayed runs.
 - Admin „Publică acum” calls `publish-consented-listing` (consent check, per-prospect lock, retries on 5xx, audit) instead of the worker directly — prevents double or silently failed publications.
 - Lead inserts in edge functions never chain `.single()` after insert — the dedupe trigger returns 0 rows on merge and `.single()` makes the API roll the merge back.

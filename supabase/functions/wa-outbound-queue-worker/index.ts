@@ -13,7 +13,7 @@ import { fetchWithRetry } from "../_shared/fetchRetry.ts";
 import { drainMakeRelayDlq, relayToMake } from "../_shared/makeRelay.ts";
 import { preferredIntroTemplate, preferredPublishConsentTemplate } from "../_shared/waPreferredTemplate.ts";
 import { canonicalWaPhone, markPhoneSent, phoneVariants, releasePhoneSend, reservePhoneSend, toWaDigits } from "../_shared/waPhone.ts";
-import { WA_PUBLISH_CONSENT_TEMPLATE, consentAnalysisUrl } from "../_shared/waPublishConsentTemplate.ts";
+import { consentAnalysisUrl, isPublishConsentTemplate } from "../_shared/waPublishConsentTemplate.ts";
 import { autoOutreachBlockReason, AUTO_OUTREACH_BLOCK_LABELS, COLD_OUTREACH_SOURCES, isAgencyProspect } from "../_shared/ownerOutreachEligibility.ts";
 
 const corsHeaders = {
@@ -585,7 +585,7 @@ Deno.serve(async (req) => {
           ? await preferredPublishConsentTemplate()
           : await preferredIntroTemplate();
       let templateParams = Array.isArray(item.template_params) ? item.template_params : [];
-      if (selectedTemplate === WA_PUBLISH_CONSENT_TEMPLATE ||
+      if (isPublishConsentTemplate(selectedTemplate) ||
         (selectedTemplate === "prospect_intro_premium_v6" && (templateParams.length === 0 || item.source === "publish_consent_request"))) {
         const { data: prospect } = item.prospect_listing_id
           ? await supabase
@@ -594,7 +594,7 @@ Deno.serve(async (req) => {
             .eq("id", item.prospect_listing_id)
             .maybeSingle()
           : { data: null };
-        templateParams = selectedTemplate === WA_PUBLISH_CONSENT_TEMPLATE
+        templateParams = isPublishConsentTemplate(selectedTemplate)
           ? [consentAnalysisUrl(prospect)]
           : [String(prospect?.zone || "Timișoara").trim() || "Timișoara"];
       }

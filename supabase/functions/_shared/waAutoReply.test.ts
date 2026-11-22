@@ -99,13 +99,14 @@ test("un interval real după cererea de apel este notat", () => {
 
 // ── Acordul de publicare: text cerere + recunoaștere răspuns pozitiv ──
 
-test("cererea de acord arată analiza gratuită și cere „CONFIRM”", () => {
+test("cererea de acord v4: Andrei, estimarea de randament, gratuit și DA / NU", () => {
   const text = publishConsentRequestText({ title: "Apartament 2 camere Iosefin", source_url: "https://www.olx.ro/d/oferta/apartament-2-camere-iosefin-IDabc.html?x=1&y=2" });
-  expect(text).toContain("Bună ziua! Am generat o evaluare gratuită de piață");
-  expect(text).toContain("https://realtrust.ro/analiza-anunt?url=https%3A%2F%2Fwww.olx.ro%2Fd%2Foferta%2Fapartament-2-camere-iosefin-IDabc.html%3Fx%3D1%26y%3D2");
-  expect(text).toContain("Comision 0%");
-  expect(text).toContain("fără exclusivitate");
-  expect(text).toContain("Răspundeți DA pentru acord sau NU dacă nu doriți");
+  expect(text).toBe(
+    "Bună ziua! Sunt Andrei de la RealTrust Timișoara. Am pregătit o scurtă estimare de randament pentru proprietatea dumneavoastră: " +
+    "https://realtrust.ro/analiza-anunt?url=https%3A%2F%2Fwww.olx.ro%2Fd%2Foferta%2Fapartament-2-camere-iosefin-IDabc.html%3Fx%3D1%26y%3D2\n\n" +
+    "Avem investitori și cumpărători activi în zonă. Promovarea la noi este 100% gratuită (0% comision proprietar, fără exclusivitate).\n\n" +
+    "Dacă doriți să o prezentăm gratuit clienților noștri pe RealTrust, răspundeți simplu cu „DA” și o verificăm înainte de activare. Dacă nu vă interesează, un simplu „NU” este suficient.");
+  expect(publishConsentRequestText({ short_code: "k7m2qx9a" })).toContain("proprietatea dumneavoastră: https://realtrust.ro/e/k7m2qx9a\n");
 });
 
 test("cererea de acord fără link de anunț folosește pagina de analiză simplă", () => {

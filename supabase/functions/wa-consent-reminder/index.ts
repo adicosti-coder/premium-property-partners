@@ -7,7 +7,7 @@ import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { isExpressOptOut } from "../_shared/dncPolicy.ts";
 import { phoneVariants } from "../_shared/waPhone.ts";
 import { preferredPublishConsentTemplate } from "../_shared/waPreferredTemplate.ts";
-import { WA_PUBLISH_CONSENT_TEMPLATE, consentAnalysisUrl } from "../_shared/waPublishConsentTemplate.ts";
+import { consentAnalysisUrl, isPublishConsentTemplate } from "../_shared/waPublishConsentTemplate.ts";
 import { isAgencyProspect } from "../_shared/ownerOutreachEligibility.ts";
 
 const corsHeaders = {
@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
         const { error: qErr } = await sb.from("wa_outbound_queue").insert({
           phone_normalized: r.phone_normalized, prospect_listing_id: p.id,
           template_name: templateName, template_language: "ro",
-          template_params: templateName === WA_PUBLISH_CONSENT_TEMPLATE ? [consentAnalysisUrl(p)] : [],
+          template_params: isPublishConsentTemplate(templateName) ? [consentAnalysisUrl(p)] : [],
           status: "pending", priority: 5, source: "publish_consent_reminder",
         });
         status = qErr ? "queue_failed" : "queued";

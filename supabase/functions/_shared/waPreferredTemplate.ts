@@ -2,24 +2,35 @@
 // butoane de răspuns rapid) imediat ce Meta o aprobă, altfel varianta veche.
 // Astfel trecerea se face singură, fără intervenție manuală.
 import { WA_API_VERSION, WA_BUSINESS_ACCOUNT_ID, waToken } from "./waConfig.ts";
-import { WA_PUBLISH_CONSENT_TEMPLATE, isApprovedConsentTemplate } from "./waPublishConsentTemplate.ts";
+import { WA_PUBLISH_CONSENT_PREVIOUS_TEMPLATE, WA_PUBLISH_CONSENT_TEMPLATE, approvedConsentTemplate } from "./waPublishConsentTemplate.ts";
+import { ensurePublishConsentTemplate } from "./waPublishConsentEnsure.ts";
 
 export const WA_PREMIUM_TEMPLATE = "prospect_intro_premium_v6";
 export const WA_PREVIOUS_TEMPLATE = "prospect_intro_premium_v5";
 export const WA_LEGACY_TEMPLATE = "prospect_intro_premium_v3";
 
-/** Dedicated consent text is enabled only after Meta approves its exact body. */
+/**
+ * Șablonul dedicat de acord se folosește doar după ce Meta îi aprobă corpul exact:
+ * v4 când e aprobat, altfel v3 în perioada de tranziție, altfel șablonul de prim contact.
+ * Dacă v4 nu e încă înregistrat, îl trimite imediat la aprobare.
+ */
 export async function preferredPublishConsentTemplate(): Promise<string> {
   const token = waToken();
   if (token) {
     try {
-      const resp = await fetch(
-        `https://graph.facebook.com/${WA_API_VERSION}/${WA_BUSINESS_ACCOUNT_ID}/message_templates?fields=name,status,language,components&name=${WA_PUBLISH_CONSENT_TEMPLATE}&limit=100`,
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-      if (resp.ok && isApprovedConsentTemplate((await resp.json())?.data ?? [])) {
-        return WA_PUBLISH_CONSENT_TEMPLATE;
+      const fetchRows = async (name: string) => {
+        const resp = await fetch(
+          `https://graph.facebook.com/${WA_API_VERSION}/${WA_BUSINESS_ACCOUNT_ID}/message_templates?fields=name,status,language,components&name=${name}&limit=100`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        return resp.ok ? ((await resp.json())?.data ?? []) : null;
+      };
+      const [v4, v3] = await Promise.all([fetchRows(WA_PUBLISH_CONSENT_TEMPLATE), fetchRows(WA_PUBLISH_CONSENT_PREVIOUS_TEMPLATE)]);
+      if (v4 && !v4.some((t: { name?: string }) => t.name === WA_PUBLISH_CONSENT_TEMPLATE)) {
+        await ensurePublishConsentTemplate().catch(() => undefined);
       }
+      const chosen = approvedConsentTemplate([...(v4 ?? []), ...(v3 ?? [])]);
+      if (chosen) return chosen;
     } catch { /* Keep the existing approved first-contact resolver until approval. */ }
   }
   return preferredIntroTemplate();

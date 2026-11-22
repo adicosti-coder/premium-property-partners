@@ -8,7 +8,7 @@ import { requireAdmin } from "../_shared/adminAuth.ts";
 import { isExpressOptOut } from "../_shared/dncPolicy.ts";
 import { publishConsentRequestText } from "../_shared/waAutoReply.ts";
 import { preferredPublishConsentTemplate } from "../_shared/waPreferredTemplate.ts";
-import { WA_PUBLISH_CONSENT_TEMPLATE, consentAnalysisUrl } from "../_shared/waPublishConsentTemplate.ts";
+import { consentAnalysisUrl, isPublishConsentTemplate } from "../_shared/waPublishConsentTemplate.ts";
 import { isAgencyProspect } from "../_shared/ownerOutreachEligibility.ts";
 
 const corsHeaders = {
@@ -166,7 +166,7 @@ Deno.serve(async (req) => {
       prospect_listing_id: p.id,
       template_name: templateName,
       template_language: "ro",
-      template_params: templateName === WA_PUBLISH_CONSENT_TEMPLATE ? [consentAnalysisUrl(p)] : [],
+      template_params: isPublishConsentTemplate(templateName) ? [consentAnalysisUrl(p)] : [],
       status: "pending",
       priority: 5,
       source: "publish_consent_request",
