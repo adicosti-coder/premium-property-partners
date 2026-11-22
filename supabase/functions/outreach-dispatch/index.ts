@@ -10,7 +10,7 @@ import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { toOutreachPhone, phoneVariants, reservePhoneSend, markPhoneSent, releasePhoneSend } from "../_shared/waPhone.ts";
 import { outreachWindow, OUTREACH_COOLDOWN_DAYS, OUTREACH_COOLDOWN_KIND } from "../_shared/ownerOutreachPolicy.ts";
 import { isTestPhone } from "../_shared/testPhoneAllowlist.ts";
-import { autoOutreachBlockReason, BLOCKED_AGENCY_STATUS } from "../_shared/ownerOutreachEligibility.ts";
+import { autoFirstMessageSkip, autoOutreachBlockReason, BLOCKED_AGENCY_STATUS } from "../_shared/ownerOutreachEligibility.ts";
 import { rentalFirstMessage } from "../_shared/rentalIntroMessage.ts";
 import { WA_OWNER_OUTREACH_TEMPLATE, WA_OWNER_OUTREACH_LANGUAGE, ownerOutreachPreviewUrl, ownerOutreachZone } from "../_shared/waOwnerOutreachTemplate.ts";
 
@@ -26,9 +26,9 @@ type Result = { status: number; body: Record<string, unknown> };
 // deno-lint-ignore no-explicit-any
 type Sb = any;
 
-async function dispatchOne(sb: Sb, id: string, opts: { dryRun: boolean; fromQueue: boolean }): Promise<Result> {
+async function dispatchOne(sb: Sb, id: string, opts: { dryRun: boolean; fromQueue: boolean; auto?: boolean }): Promise<Result> {
   const { data: p, error } = await sb.from("prospect_listings")
-    .select("id,title,description,location,zone,price,rooms,source_url,short_code,tags,contact_name,owner_sentiment,prospect_type,lead_score,category,phone_normalized,contact_phone,seller_type,agency_suspicion_score,do_not_call,auto_blacklisted_at,lifecycle_status,outreach_status,outreach_scheduled_at")
+    .select("id,title,description,location,zone,price,rooms,source_url,short_code,tags,contact_name,owner_sentiment,prospect_type,lead_score,category,phone_normalized,contact_phone,seller_type,agency_suspicion_score,do_not_call,auto_blacklisted_at,lifecycle_status,outreach_status,outreach_scheduled_at,is_active,published_at,created_at,expiry_check_status")
     .eq("id", id).maybeSingle();
   if (error) return { status: 500, body: { error: error.message } };
   if (!p) return { status: 404, body: { error: "not_found" } };
@@ -52,6 +52,11 @@ async function dispatchOne(sb: Sb, id: string, opts: { dryRun: boolean; fromQueu
   } else if (block) reasons.push(block);
   if ((p.do_not_call || p.auto_blacklisted_at) && !isTestPhone(phone)) reasons.push("excluded");
   if (["rejected", "expired", "failed", "posted"].includes(String(p.lifecycle_status))) reasons.push("closed");
+  // Trimitere declanșată de clasificarea automată: doar anunțuri proaspete (≤ 14 zile), încă pe portal.
+  if (opts.auto && !isTestPhone(phone)) {
+    const autoSkip = autoFirstMessageSkip(p);
+    if (autoSkip === "stale" || autoSkip === "inactive_on_source") reasons.push(autoSkip);
+  }
   // Doar locuințe din Timiș: anunțurile din alte orașe sau terenurile nu primesc mesaj.
   const text = `${p.title ?? ""} ${p.location ?? ""} ${String(p.description ?? "").slice(0, 400)}`.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   if (/bucuresti|\bsector [1-6]\b|berceni|iancului|mihai bravu|pipera|ilfov|turda|cluj|\biasi\b|brasov|constanta|\barad\b(?! *(calea|str))/.test(text)) reasons.push("out_of_area");
@@ -157,7 +162,7 @@ Deno.serve(async (req) => {
   const denied = await requireInternalOrAdmin(req, corsHeaders);
   if (denied) return denied;
 
-  let body: { prospect_id?: string; dry_run?: boolean; action?: string } = {};
+  let body: { prospect_id?: string; dry_run?: boolean; action?: string; auto?: boolean } = {};
   try { body = await req.json(); } catch { /* */ }
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
@@ -168,6 +173,6 @@ Deno.serve(async (req) => {
 
   const id = String(body.prospect_id || "");
   if (!/^[0-9a-f-]{36}$/i.test(id)) return json({ error: "prospect_id invalid" }, 400);
-  const res = await dispatchOne(sb, id, { dryRun: !!body.dry_run, fromQueue: false });
+  const res = await dispatchOne(sb, id, { dryRun: !!body.dry_run, fromQueue: false, auto: body.auto === true });
   return json(res.body, res.status);
 });

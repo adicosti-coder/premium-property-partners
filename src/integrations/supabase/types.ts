@@ -13032,6 +13032,7 @@ export type Database = {
     Functions: {
       _canonical_listing_url: { Args: { url: string }; Returns: string }
       _extract_domain: { Args: { url: string }; Returns: string }
+      admin_agency_classify_status: { Args: never; Returns: Json }
       admin_db_health_snapshot: { Args: never; Returns: Json }
       admin_run_lead_retention: { Args: never; Returns: Json }
       admin_web_vitals_summary: { Args: never; Returns: Json }

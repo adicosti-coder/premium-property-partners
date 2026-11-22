@@ -89,3 +89,49 @@ export const AUTO_OUTREACH_BLOCK_LABELS: Record<AutoOutreachBlock, string> = {
   not_private: "Neconfirmat",
   low_score: `Scor ≤ ${OUTREACH_MIN_SCORE}`,
 };
+
+// ─── Primul mesaj automat după clasificarea periodică (22 nov 2026) ───
+// Clasificarea rulează pe toate anunțurile noi, dar primul mesaj automat pleacă doar
+// la anunțuri proaspete: fără valuri de mesaje către anunțuri vechi de săptămâni.
+// Fereastra 09:00–19:30, limita de 30 de zile pe număr și dezabonările le aplică `outreach-dispatch`.
+export const AUTO_OUTREACH_MAX_AGE_DAYS = 14;
+export const NEEDS_PHONE_TAG = "necesita-telefon";
+const CLOSED_LIFECYCLE = new Set(["rejected", "expired", "failed", "posted"]);
+
+/** Mobil românesc valid (07… / +407… / 407…) → „+407XXXXXXXX”, altfel null. */
+export function validOutreachMobile(raw: string | null | undefined): string | null {
+  let d = String(raw ?? "").replace(/\D/g, "");
+  if (d.startsWith("0040")) d = d.slice(2);
+  if (/^07\d{8}$/.test(d)) d = `4${d}`;
+  return /^407\d{8}$/.test(d) ? `+${d}` : null;
+}
+
+export type AutoOutreachCandidate = OutreachProspect & {
+  phone_normalized?: string | null;
+  contact_phone?: string | null;
+  is_active?: boolean | null;
+  lifecycle_status?: string | null;
+  expiry_check_status?: string | null;
+  do_not_call?: boolean | null;
+  auto_blacklisted_at?: string | null;
+  published_at?: string | null;
+  created_at?: string | null;
+};
+
+export type AutoOutreachSkip = AutoOutreachBlock | "no_phone" | "closed" | "excluded" | "already_contacted" | "stale" | "inactive_on_source";
+
+/** De ce nu pleacă primul mesaj automat după clasificare, sau null dacă toate condițiile sunt îndeplinite. */
+export function autoFirstMessageSkip(p: AutoOutreachCandidate | null | undefined, now = new Date()): AutoOutreachSkip | null {
+  const block = autoOutreachBlockReason(p);
+  if (block || !p) return block ?? "blocked_agency";
+  if (!validOutreachMobile(p.phone_normalized || p.contact_phone)) return "no_phone";
+  if (p.outreach_status) return "already_contacted";
+  if (p.do_not_call || p.auto_blacklisted_at) return "excluded";
+  if (CLOSED_LIFECYCLE.has(String(p.lifecycle_status ?? ""))) return "closed";
+  // Anunțurile parcate (nepublicate pe site) primesc și ele mesajul (decizie 22 nov 2026);
+  // cele scoase de pe portal nu.
+  if (["inactiv_sursa", "expired"].includes(String(p.expiry_check_status ?? ""))) return "inactive_on_source";
+  const ref = Date.parse(String(p.published_at || p.created_at || ""));
+  if (!Number.isFinite(ref) || now.getTime() - ref > AUTO_OUTREACH_MAX_AGE_DAYS * 86400000) return "stale";
+  return null;
+}

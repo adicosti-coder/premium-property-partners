@@ -7,6 +7,7 @@ import { fetchOwnerContactReady, fetchOwnerReview, fetchOwnerReminders, OWNER_FL
 import { Loader2, Search, CheckCircle2, MessageSquare, TrendingDown, Calculator } from "lucide-react";
 import CalculatorLeadsPanel, { CALCULATOR_LEADS_QUERY_KEY, fetchCalculatorLeads } from "@/components/admin/CalculatorLeadsPanel";
 import AdminErrorBoundary from "@/components/admin/AdminErrorBoundary";
+import AgencyClassifyStatusCard from "@/components/admin/AgencyClassifyStatusCard";
 
 const OwnerListingSearch = lazy(() => import("@/components/admin/OwnerListingSearch"));
 const ProspectTriageQueue = lazy(() => import("@/components/admin/ProspectTriageQueue"));
@@ -87,6 +88,7 @@ export default function OwnerFlowWorkspace() {
             );
           })}
         </nav>
+        <AgencyClassifyStatusCard />
       </header>
 
       <AdminErrorBoundary resetKey={active}>
