@@ -8,7 +8,7 @@ import {
 } from "@/lib/crossPortalDedup";
 import { norm } from "@/lib/portalSearch";
 import { andreiIneligibleReason } from "@/lib/andreiBulkQueue";
-import { hasAgencyKeyword, OUTREACH_MIN_SCORE, titleHasAgencyKeyword } from "../../supabase/functions/_shared/ownerOutreachEligibility";
+import { BLOCKED_AGENCY_STATUS, hasAgencyKeyword, isAgencyProspect, OUTREACH_MIN_SCORE, titleHasAgencyKeyword } from "../../supabase/functions/_shared/ownerOutreachEligibility";
 
 export type TriageListing = DedupListing & {
   do_not_call?: boolean | null;
@@ -23,6 +23,8 @@ export type TriageListing = DedupListing & {
   prospect_type?: string | null;
   contact_name?: string | null;
   dismissed_at?: string | null;
+  /** Marcat manual ca agenție din Triere (se poate anula). */
+  agency_marked_at?: string | null;
 };
 
 /** De ce nu poate pleca spre coada de contactare (telefon, stare, proprietar confirmat, contact anterior), sau null. */
@@ -89,18 +91,33 @@ export const hasAgencyTextSignal = (l: TriageListing) =>
  * null când nu se poate confirma (indisponibil, deja privat, deja contactat, fără telefon, cuvinte de agenție).
  */
 export function privateConfirmMode(l: TriageListing): "confirm" | "override" | null {
-  if (isDismissed(l) || l.seller_type === "privat") return null;
+  if (isDismissed(l) || l.seller_type === "privat" || l.agency_marked_at) return null;
   const reason = triageBlockReason(l);
   if (reason === "Neconfirmat") return "confirm";
   if (reason === "Agenție blocată") return hasAgencyTextSignal(l) ? null : "override";
   return null;
 }
 
+/** Agenție după clasificare, marcaj manual sau starea „blocked_agency” — nu primește mesaje. */
+export const isAgencyListing = (l: TriageListing) =>
+  !!l.agency_marked_at || l.outreach_status === BLOCKED_AGENCY_STATUS || isAgencyProspect(l);
+
+/**
+ * Butonul „Agenție” de pe card: `mark` pe anunțurile care nu sunt deja agenție blocată,
+ * `undo` pe cele marcate manual din Triere, null pe indisponibile sau agenții detectate automat.
+ */
+export function agencyMarkMode(l: TriageListing): "mark" | "undo" | null {
+  if (isDismissed(l)) return null;
+  if (l.agency_marked_at) return "undo";
+  return isAgencyListing(l) ? null : "mark";
+}
+
 /** Motivul exact afișat pe card când „Trimite către Andrei” e blocat. */
 export function triageReasonHint(l: TriageListing, reason: string): string {
   switch (reason) {
     case "Neconfirmat": return "Proprietar neconfirmat — apasă „Confirmă privat” sau confirmă-l în „Flux proprietari → Verifică”";
-    case "Agenție blocată": return hasAgencyTextSignal(l)
+    case "Agenție blocată": if (l.agency_marked_at) return "Marcat manual ca agenție — nu primește mesaje";
+      return hasAgencyTextSignal(l)
       ? "Agenție blocată — titlul, numele sau etichetele conțin cuvinte de agenție"
       : "Marcat ca agenție — confirmă separat doar dacă ai verificat că e proprietar";
     case `Scor ≤ ${OUTREACH_MIN_SCORE}`: return `Confirmat privat, dar scorul este ${Math.round(Number(l.lead_score ?? 0))} — trebuie peste ${OUTREACH_MIN_SCORE} pentru trimitere`;

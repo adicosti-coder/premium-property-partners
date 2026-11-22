@@ -6721,6 +6721,9 @@ export type Database = {
         Row: {
           admin_notes: string | null
           agency_classified_at: string | null
+          agency_mark_prev: Json | null
+          agency_marked_at: string | null
+          agency_marked_by: string | null
           agency_suspicion_reason: string | null
           agency_suspicion_score: number | null
           ai_score_breakdown: Json | null
@@ -6852,6 +6855,9 @@ export type Database = {
         Insert: {
           admin_notes?: string | null
           agency_classified_at?: string | null
+          agency_mark_prev?: Json | null
+          agency_marked_at?: string | null
+          agency_marked_by?: string | null
           agency_suspicion_reason?: string | null
           agency_suspicion_score?: number | null
           ai_score_breakdown?: Json | null
@@ -6983,6 +6989,9 @@ export type Database = {
         Update: {
           admin_notes?: string | null
           agency_classified_at?: string | null
+          agency_mark_prev?: Json | null
+          agency_marked_at?: string | null
+          agency_marked_by?: string | null
           agency_suspicion_reason?: string | null
           agency_suspicion_score?: number | null
           ai_score_breakdown?: Json | null
@@ -13089,12 +13098,14 @@ export type Database = {
         Args: { p_id: string; p_reason?: string }
         Returns: Json
       }
+      admin_mark_prospect_agency: { Args: { p_id: string }; Returns: Json }
       admin_restore_prospect: { Args: { p_id: string }; Returns: Json }
       admin_run_lead_retention: { Args: never; Returns: Json }
       admin_undo_confirm_prospect_private: {
         Args: { p_id: string }
         Returns: Json
       }
+      admin_undo_mark_prospect_agency: { Args: { p_id: string }; Returns: Json }
       admin_web_vitals_summary: { Args: never; Returns: Json }
       agency_text_norm: { Args: { t: string }; Returns: string }
       anonymize_expired_leads: { Args: never; Returns: Json }

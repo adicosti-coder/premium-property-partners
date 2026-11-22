@@ -21,16 +21,16 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AdminPagination } from "@/components/admin/shared/AdminPagination";
 import { SourceLink } from "@/components/admin/shared/SourceLink";
 import type { PageSize } from "@/hooks/admin/usePaginatedQuery";
-import { Ban, Copy, UserCheck, ExternalLink, Layers, Loader2, MessageCircle, Phone, PhoneOff, RefreshCw, RotateCcw, Search, ShieldAlert } from "lucide-react";
+import { Ban, Building2, Copy, UserCheck, ExternalLink, Layers, Loader2, MessageCircle, Phone, PhoneOff, RefreshCw, RotateCcw, Search, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { groupCrossPortalDuplicates, listingPhone, portalKey, signalsOf } from "@/lib/crossPortalDedup";
-import { activeQuickFilter, applyQuickFilter, buildTriageRows, DEFAULT_TRIAGE_FILTERS, isDismissed, privateConfirmMode, triageReasonHint, summarizeTriage, triageBlockReason, triagePool, type TriageFilters, type TriageListing, type TriageQuickFilter, type TriageRow } from "@/lib/scrapedListingsTriage";
+import { activeQuickFilter, agencyMarkMode, applyQuickFilter, buildTriageRows, DEFAULT_TRIAGE_FILTERS, isAgencyListing, isDismissed, privateConfirmMode, triageReasonHint, summarizeTriage, triageBlockReason, triagePool, type TriageFilters, type TriageListing, type TriageQuickFilter, type TriageRow } from "@/lib/scrapedListingsTriage";
 import { hasImplausiblePrice } from "@/lib/ownerListingRules";
 import { normalizeRoPhone } from "@/lib/ownerOutreachTemplates";
 import { OWNER_FLOW_QUERY_KEY } from "@/lib/ownerFlowData";
 
 const COLUMNS =
-  "id,source_platform,source_url,title,description,location,zone,rooms,size,price,currency,category,contact_phone,phone_normalized,images,is_active,duplicate_of,last_seen_at,scraped_at,created_at,do_not_call,seller_type,lifecycle_status,tags,andrei_queued_at,outreach_status,lead_score,agency_suspicion_score,owner_sentiment,prospect_type,contact_name,dismissed_at,dismissed_reason";
+  "id,source_platform,source_url,title,description,location,zone,rooms,size,price,currency,category,contact_phone,phone_normalized,images,is_active,duplicate_of,last_seen_at,scraped_at,created_at,do_not_call,seller_type,lifecycle_status,tags,andrei_queued_at,outreach_status,lead_score,agency_suspicion_score,owner_sentiment,prospect_type,contact_name,dismissed_at,dismissed_reason,agency_marked_at";
 
 type Listing = TriageListing & {
   contact_phone: string | null;
@@ -87,6 +87,7 @@ export default function ScrapedListingsTriage() {
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [overrideFor, setOverrideFor] = useState<Listing | null>(null);
   const [overrideChecked, setOverrideChecked] = useState(false);
+  const [agencyId, setAgencyId] = useState<string | null>(null);
 
   const { data: listings = [], isLoading, isFetching, error, refetch } = useQuery({
     queryKey: QK, queryFn: fetchAllListings, staleTime: 5 * 60_000,
@@ -181,6 +182,43 @@ export default function ScrapedListingsTriage() {
       toast.error("Confirmarea nu a putut fi anulată", { description: (e as Error).message });
     } finally {
       setConfirmingId(null);
+    }
+  };
+
+  const markAgency = async (l: Listing) => {
+    setAgencyId(l.id);
+    try {
+      const { data, error: e } = await supabase.rpc("admin_mark_prospect_agency", { p_id: l.id });
+      if (e) throw e;
+      const r = (data ?? {}) as { listing?: ListingState; cancelled_wa?: number; cancelled_owner_outreach?: number; cancelled_calls?: number };
+      if (r.listing) patchListing(l.id, r.listing);
+      const cancelled = (r.cancelled_wa ?? 0) + (r.cancelled_owner_outreach ?? 0) + (r.cancelled_calls ?? 0);
+      toast.success("Marcat ca agenție — nu primește mesaje", {
+        description: cancelled ? `Am anulat ${cancelled} ${cancelled === 1 ? "trimitere programată" : "trimiteri programate"}.` : "Nu avea trimiteri programate.",
+        action: { label: "Anulează", onClick: () => { void undoAgency(l); } },
+        duration: 8000,
+      });
+      qc.invalidateQueries({ queryKey: OWNER_FLOW_QUERY_KEY });
+    } catch (e) {
+      toast.error("Anunțul nu a fost marcat ca agenție", { description: (e as Error).message });
+    } finally {
+      setAgencyId(null);
+    }
+  };
+
+  const undoAgency = async (l: Listing) => {
+    setAgencyId(l.id);
+    try {
+      const { data, error: e } = await supabase.rpc("admin_undo_mark_prospect_agency", { p_id: l.id });
+      if (e) throw e;
+      const next = ((data ?? {}) as { listing?: ListingState }).listing;
+      if (next) patchListing(l.id, next);
+      toast.success("Marcajul de agenție a fost anulat", { description: "Nu s-a trimis niciun mesaj." });
+      qc.invalidateQueries({ queryKey: OWNER_FLOW_QUERY_KEY });
+    } catch (e) {
+      toast.error("Marcajul nu a putut fi anulat", { description: (e as Error).message });
+    } finally {
+      setAgencyId(null);
     }
   };
 
@@ -354,6 +392,9 @@ export default function ScrapedListingsTriage() {
               onConfirmPrivate={() => confirmPrivate(row.listing as Listing)}
               onOverridePrivate={() => { setOverrideChecked(false); setOverrideFor(row.listing as Listing); }}
               confirming={confirmingId === row.listing.id}
+              onMarkAgency={() => markAgency(row.listing as Listing)}
+              onUndoAgency={() => undoAgency(row.listing as Listing)}
+              markingAgency={agencyId === row.listing.id}
               restoring={restoringId === row.listing.id}
               manualPhone={manualPhone[row.listing.id] ?? ""}
               onManualPhone={(v) => setManualPhone((p) => ({ ...p, [row.listing.id]: v }))}
@@ -438,13 +479,16 @@ interface CardProps {
   onConfirmPrivate: () => void;
   onOverridePrivate: () => void;
   confirming: boolean;
+  onMarkAgency: () => void;
+  onUndoAgency: () => void;
+  markingAgency: boolean;
   manualPhone: string;
   onManualPhone: (v: string) => void;
   onSavePhone: () => void;
   savingPhone: boolean;
 }
 
-function TriageCard({ row, expanded, onToggle, onSend, onDismiss, onRestore, restoring, onConfirmPrivate, onOverridePrivate, confirming, manualPhone, onManualPhone, onSavePhone, savingPhone }: CardProps) {
+function TriageCard({ row, expanded, onToggle, onSend, onDismiss, onRestore, restoring, onConfirmPrivate, onOverridePrivate, confirming, onMarkAgency, onUndoAgency, markingAgency, manualPhone, onManualPhone, onSavePhone, savingPhone }: CardProps) {
   const l = row.listing;
   const s = signalsOf(l);
   const phone = listingPhone(l);
@@ -452,6 +496,8 @@ function TriageCard({ row, expanded, onToggle, onSend, onDismiss, onRestore, res
   const andreiReason = dismissed ? "Indisponibil" : triageBlockReason(l);
   const ready = andreiReason === null;
   const confirmMode = privateConfirmMode(l);
+  const agencyMode = agencyMarkMode(l);
+  const agency = !dismissed && isAgencyListing(l);
   const badPrice = hasImplausiblePrice({ ...l, url: l.source_url });
   const others = [row.group.primary, ...row.group.variants].filter((m) => m.id !== l.id);
 
@@ -468,6 +514,7 @@ function TriageCard({ row, expanded, onToggle, onSend, onDismiss, onRestore, res
             {dismissed
               ? <Badge variant="secondary" className="text-[10px]">Indisponibil / renunțat</Badge>
               : l.is_active === false && <Badge variant="secondary" className="text-[10px]">Inactiv</Badge>}
+            {agency && <Badge variant="destructive" className="text-[10px]">Agenție blocată</Badge>}
             {badPrice && <Badge variant="destructive" className="text-[10px]">Preț de verificat</Badge>}
           </div>
           <h3 className="line-clamp-2 text-sm font-medium">{l.title || "(fără titlu)"}</h3>
@@ -514,6 +561,16 @@ function TriageCard({ row, expanded, onToggle, onSend, onDismiss, onRestore, res
           {confirmMode === "override" && (
             <Button variant="ghost" onClick={onOverridePrivate} disabled={confirming} className="min-h-12 gap-2 text-muted-foreground" aria-label="Nu e agenție? Confirmă privat, cu verificare separată">
               <UserCheck className="h-4 w-4" /> Nu e agenție? Confirmă privat
+            </Button>
+          )}
+          {agencyMode === "mark" && (
+            <Button variant="outline" onClick={onMarkAgency} disabled={markingAgency} className="min-h-12 gap-2" aria-label="Marchează anunțul ca publicat de o agenție imobiliară">
+              {markingAgency ? <Loader2 className="h-4 w-4 animate-spin" /> : <Building2 className="h-4 w-4" />} Agenție
+            </Button>
+          )}
+          {agencyMode === "undo" && (
+            <Button variant="ghost" onClick={onUndoAgency} disabled={markingAgency} className="min-h-12 gap-2 text-muted-foreground" aria-label="Anulează marcajul de agenție">
+              {markingAgency ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />} Nu e agenție — anulează
             </Button>
           )}
           {dismissed ? (

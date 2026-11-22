@@ -175,3 +175,38 @@ describe("Confirmă privat în triere", () => {
     expect(triageBlockReason(t({ ...base, do_not_call: true }))).toBe("Nu dorește să fie contactat");
   });
 });
+
+import { agencyMarkMode, isAgencyListing } from "./scrapedListingsTriage";
+
+describe("butonul „Agenție” în triere", () => {
+  const base = { ...ownerFields, contact_phone: "0722123456" };
+  it("apare pe anunțurile care nu sunt deja agenție blocată (privat, neconfirmat, fără telefon)", () => {
+    expect(agencyMarkMode(t({ ...base }))).toBe("mark");
+    expect(agencyMarkMode(t({ ...base, seller_type: "de_verificat" }))).toBe("mark");
+    expect(agencyMarkMode(t({ ...base, contact_phone: null }))).toBe("mark");
+  });
+  it("nu apare pe agențiile deja blocate sau pe anunțurile indisponibile", () => {
+    expect(agencyMarkMode(t({ ...base, seller_type: "agentie" }))).toBeNull();
+    expect(agencyMarkMode(t({ ...base, outreach_status: "blocked_agency" }))).toBeNull();
+    expect(agencyMarkMode(t({ ...base, title: "Agenția X vinde 2 camere" }))).toBeNull();
+    expect(agencyMarkMode(t({ ...base, dismissed_at: "2026-11-22T10:00:00Z" }))).toBeNull();
+  });
+  it("după marcare: eticheta „Agenție blocată”, Trimite către Andrei blocat, fără Confirmă privat, cu anulare", () => {
+    const marked = t({ ...base, seller_type: "agentie", outreach_status: "blocked_agency", agency_marked_at: "2026-11-22T19:00:00Z" });
+    expect(isAgencyListing(marked)).toBe(true);
+    expect(triageBlockReason(marked)).toBe("Agenție blocată");
+    expect(isReadyForOutreach(marked)).toBe(false);
+    expect(privateConfirmMode(marked)).toBeNull();
+    expect(agencyMarkMode(marked)).toBe("undo");
+    expect(triageReasonHint(marked, "Agenție blocată")).toContain("Marcat manual ca agenție");
+  });
+  it("contorul „Pregătite pentru prospectare” scade după marcare, iar filtrele rămân aceleași", () => {
+    const before = groupCrossPortalDuplicates([olx, imo, solo]);
+    const filters = { ...DEFAULT_TRIAGE_FILTERS, hideDuplicates: false, portal: "olx" };
+    expect(summarizeTriage(before).ready).toBe(1);
+    const markedOlx = { ...olx, seller_type: "agentie", outreach_status: "blocked_agency", agency_marked_at: "2026-11-22T19:00:00Z" } as DedupListing;
+    const after = groupCrossPortalDuplicates([markedOlx, imo, solo]);
+    expect(summarizeTriage(after).ready).toBe(0);
+    expect(buildTriageRows(after, filters).map((r) => r.listing.id)).toEqual(["olx"]);
+  });
+});
