@@ -25,6 +25,10 @@ export type TriageListing = DedupListing & {
   dismissed_at?: string | null;
   /** Marcat manual ca agenție din Triere (se poate anula). */
   agency_marked_at?: string | null;
+  /** Blocat automat pe același număr: id-ul anunțului marcat manual (anularea readuce tot grupul). */
+  agency_mark_root?: string | null;
+  /** Pe anunțul marcat manual: câte alte anunțuri cu același număr au fost blocate odată cu el. */
+  agency_mark_sibling_count?: number | null;
 };
 
 /** De ce nu poate pleca spre coada de contactare (telefon, stare, proprietar confirmat, contact anterior), sau null. */
@@ -112,11 +116,61 @@ export function agencyMarkMode(l: TriageListing): "mark" | "undo" | null {
   return isAgencyListing(l) ? null : "mark";
 }
 
+const anunturi = (n: number) => `${n} ${n === 1 ? "anunț" : "anunțuri"}`;
+
+/** Textul de pe card pentru anunțurile marcate manual sau blocate pe același număr. */
+export function agencyMarkHint(l: TriageListing): string {
+  if (l.agency_mark_root) return "Blocat automat — același număr ca un anunț marcat manual ca agenție";
+  const n = Number(l.agency_mark_sibling_count ?? 0);
+  return n > 0
+    ? `Marcat manual ca agenție — încă ${anunturi(n)} cu același număr blocate`
+    : "Marcat manual ca agenție — nu primește mesaje";
+}
+
+/** Eticheta butonului de anulare: pe un grup, anularea readuce toate anunțurile deodată. */
+export function agencyUndoLabel(l: TriageListing): string {
+  return l.agency_mark_root || Number(l.agency_mark_sibling_count ?? 0) > 0
+    ? "Nu e agenție — anulează tot grupul"
+    : "Nu e agenție — anulează";
+}
+
+export interface AgencyMarkResult {
+  cancelled_wa?: number;
+  cancelled_owner_outreach?: number;
+  cancelled_calls?: number;
+  siblings_marked?: number;
+  siblings_cancelled?: number;
+  skipped_private?: number;
+  blocklist_added?: boolean;
+  already_listed?: boolean;
+}
+
+/** Descrierea notificării după „Agenție”: anunțuri blocate pe număr, trimiteri anulate, lista de agenții. */
+export function agencyMarkSummary(r: AgencyMarkResult): string {
+  const parts: string[] = [];
+  const siblings = Number(r.siblings_marked ?? 0);
+  if (siblings > 0) parts.push(`Am blocat încă ${anunturi(siblings)} cu același număr.`);
+  const cancelled = Number(r.cancelled_wa ?? 0) + Number(r.cancelled_owner_outreach ?? 0)
+    + Number(r.cancelled_calls ?? 0) + Number(r.siblings_cancelled ?? 0);
+  parts.push(cancelled
+    ? `Am anulat ${cancelled} ${cancelled === 1 ? "trimitere programată" : "trimiteri programate"}.`
+    : "Nu existau trimiteri programate.");
+  const skipped = Number(r.skipped_private ?? 0);
+  if (skipped > 0) {
+    parts.push(`${skipped === 1 ? "Un anunț confirmat privat" : `${skipped} anunțuri confirmate privat`} cu același număr ${skipped === 1 ? "a rămas neschimbat" : "au rămas neschimbate"}, deci numărul nu a intrat în lista de agenții.`);
+  } else if (r.blocklist_added) {
+    parts.push("Numărul a intrat în lista de agenții.");
+  } else if (r.already_listed) {
+    parts.push("Numărul era deja în lista de agenții.");
+  }
+  return parts.join(" ");
+}
+
 /** Motivul exact afișat pe card când „Trimite către Andrei” e blocat. */
 export function triageReasonHint(l: TriageListing, reason: string): string {
   switch (reason) {
     case "Neconfirmat": return "Proprietar neconfirmat — apasă „Confirmă privat” sau confirmă-l în „Flux proprietari → Verifică”";
-    case "Agenție blocată": if (l.agency_marked_at) return "Marcat manual ca agenție — nu primește mesaje";
+    case "Agenție blocată": if (l.agency_marked_at) return agencyMarkHint(l);
       return hasAgencyTextSignal(l)
       ? "Agenție blocată — titlul, numele sau etichetele conțin cuvinte de agenție"
       : "Marcat ca agenție — confirmă separat doar dacă ai verificat că e proprietar";

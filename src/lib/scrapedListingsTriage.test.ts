@@ -210,3 +210,55 @@ describe("butonul „Agenție” în triere", () => {
     expect(buildTriageRows(after, filters).map((r) => r.listing.id)).toEqual(["olx"]);
   });
 });
+
+import { agencyMarkSummary, agencyUndoLabel } from "./scrapedListingsTriage";
+
+describe("Agenție — blocare pe același număr de telefon", () => {
+  const marked = { id: "a", source_platform: "OLX", source_url: "https://www.olx.ro/d/oferta/a-IDa.html", title: "2 camere",
+    contact_phone: "0722123456", seller_type: "agentie", agency_marked_at: "2026-11-22T20:00:00Z" };
+
+  it("notificarea arată câte anunțuri suplimentare au fost blocate și că numărul a intrat în listă", () => {
+    const text = agencyMarkSummary({ siblings_marked: 3, siblings_cancelled: 1, cancelled_wa: 1, blocklist_added: true });
+    expect(text).toContain("Am blocat încă 3 anunțuri cu același număr.");
+    expect(text).toContain("Am anulat 2 trimiteri programate.");
+    expect(text).toContain("Numărul a intrat în lista de agenții.");
+  });
+
+  it("un singur anunț suplimentar folosește singularul", () => {
+    expect(agencyMarkSummary({ siblings_marked: 1 })).toContain("Am blocat încă 1 anunț cu același număr.");
+  });
+
+  it("anunțurile confirmate privat rămân neschimbate și numărul nu intră în listă", () => {
+    const text = agencyMarkSummary({ siblings_marked: 1, skipped_private: 1, blocklist_added: false });
+    expect(text).toContain("Un anunț confirmat privat cu același număr a rămas neschimbat");
+    expect(text).not.toContain("Numărul a intrat în lista de agenții.");
+  });
+
+  it("fără alte anunțuri pe număr nu se menționează blocări suplimentare", () => {
+    const text = agencyMarkSummary({ siblings_marked: 0, already_listed: true });
+    expect(text).not.toContain("Am blocat încă");
+    expect(text).toContain("Numărul era deja în lista de agenții.");
+  });
+
+  it("cardul anunțului marcat arată numărul de anunțuri blocate odată cu el", () => {
+    expect(triageReasonHint({ ...marked, agency_mark_sibling_count: 2 }, "Agenție blocată"))
+      .toBe("Marcat manual ca agenție — încă 2 anunțuri cu același număr blocate");
+    expect(triageReasonHint({ ...marked, agency_mark_sibling_count: 0 }, "Agenție blocată"))
+      .toBe("Marcat manual ca agenție — nu primește mesaje");
+  });
+
+  it("anunțul blocat pe număr explică de unde vine blocarea", () => {
+    expect(triageReasonHint({ ...marked, agency_mark_root: "root" }, "Agenție blocată"))
+      .toBe("Blocat automat — același număr ca un anunț marcat manual ca agenție");
+  });
+
+  it("anularea pe un grup readuce toate anunțurile deodată", () => {
+    expect(agencyUndoLabel({ ...marked, agency_mark_root: "root" })).toBe("Nu e agenție — anulează tot grupul");
+    expect(agencyUndoLabel({ ...marked, agency_mark_sibling_count: 2 })).toBe("Nu e agenție — anulează tot grupul");
+    expect(agencyUndoLabel({ ...marked })).toBe("Nu e agenție — anulează");
+  });
+
+  it("anunțurile blocate pe număr au tot butonul de anulare, nu de marcare", () => {
+    expect(agencyMarkMode({ ...marked, agency_mark_root: "root" })).toBe("undo");
+  });
+});

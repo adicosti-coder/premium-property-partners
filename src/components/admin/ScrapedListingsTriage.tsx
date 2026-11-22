@@ -24,13 +24,13 @@ import type { PageSize } from "@/hooks/admin/usePaginatedQuery";
 import { Ban, Building2, Copy, UserCheck, ExternalLink, Layers, Loader2, MessageCircle, Phone, PhoneOff, RefreshCw, RotateCcw, Search, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { groupCrossPortalDuplicates, listingPhone, portalKey, signalsOf } from "@/lib/crossPortalDedup";
-import { activeQuickFilter, agencyMarkMode, applyQuickFilter, buildTriageRows, DEFAULT_TRIAGE_FILTERS, isAgencyListing, isDismissed, privateConfirmMode, triageReasonHint, summarizeTriage, triageBlockReason, triagePool, type TriageFilters, type TriageListing, type TriageQuickFilter, type TriageRow } from "@/lib/scrapedListingsTriage";
+import { activeQuickFilter, agencyMarkMode, agencyMarkSummary, agencyUndoLabel, type AgencyMarkResult, applyQuickFilter, buildTriageRows, DEFAULT_TRIAGE_FILTERS, isAgencyListing, isDismissed, privateConfirmMode, triageReasonHint, summarizeTriage, triageBlockReason, triagePool, type TriageFilters, type TriageListing, type TriageQuickFilter, type TriageRow } from "@/lib/scrapedListingsTriage";
 import { hasImplausiblePrice } from "@/lib/ownerListingRules";
 import { normalizeRoPhone } from "@/lib/ownerOutreachTemplates";
 import { OWNER_FLOW_QUERY_KEY } from "@/lib/ownerFlowData";
 
 const COLUMNS =
-  "id,source_platform,source_url,title,description,location,zone,rooms,size,price,currency,category,contact_phone,phone_normalized,images,is_active,duplicate_of,last_seen_at,scraped_at,created_at,do_not_call,seller_type,lifecycle_status,tags,andrei_queued_at,outreach_status,lead_score,agency_suspicion_score,owner_sentiment,prospect_type,contact_name,dismissed_at,dismissed_reason,agency_marked_at";
+  "id,source_platform,source_url,title,description,location,zone,rooms,size,price,currency,category,contact_phone,phone_normalized,images,is_active,duplicate_of,last_seen_at,scraped_at,created_at,do_not_call,seller_type,lifecycle_status,tags,andrei_queued_at,outreach_status,lead_score,agency_suspicion_score,owner_sentiment,prospect_type,contact_name,dismissed_at,dismissed_reason,agency_marked_at,agency_mark_root,agency_mark_sibling_count";
 
 type Listing = TriageListing & {
   contact_phone: string | null;
@@ -185,18 +185,25 @@ export default function ScrapedListingsTriage() {
     }
   };
 
+  const patchStates = (states?: ListingState[]) => {
+    if (!states?.length) return;
+    const byId = new Map(states.map((st) => [st.id, st]));
+    qc.setQueryData<Listing[]>(QK, (prev) => prev?.map((r) => byId.has(r.id) ? { ...r, ...byId.get(r.id) } : r));
+  };
+
   const markAgency = async (l: Listing) => {
     setAgencyId(l.id);
     try {
       const { data, error: e } = await supabase.rpc("admin_mark_prospect_agency", { p_id: l.id });
       if (e) throw e;
-      const r = (data ?? {}) as { listing?: ListingState; cancelled_wa?: number; cancelled_owner_outreach?: number; cancelled_calls?: number };
+      const r = (data ?? {}) as AgencyMarkResult & { listing?: ListingState; affected?: ListingState[] };
       if (r.listing) patchListing(l.id, r.listing);
-      const cancelled = (r.cancelled_wa ?? 0) + (r.cancelled_owner_outreach ?? 0) + (r.cancelled_calls ?? 0);
-      toast.success("Marcat ca agenție — nu primește mesaje", {
-        description: cancelled ? `Am anulat ${cancelled} ${cancelled === 1 ? "trimitere programată" : "trimiteri programate"}.` : "Nu avea trimiteri programate.",
-        action: { label: "Anulează", onClick: () => { void undoAgency(l); } },
-        duration: 8000,
+      patchStates(r.affected);
+      const siblings = Number(r.siblings_marked ?? 0);
+      toast.success(siblings > 0 ? `Marcat ca agenție, plus încă ${siblings} ${siblings === 1 ? "anunț" : "anunțuri"} cu același număr` : "Marcat ca agenție — nu primește mesaje", {
+        description: agencyMarkSummary(r),
+        action: { label: siblings > 0 ? "Anulează tot" : "Anulează", onClick: () => { void undoAgency(l); } },
+        duration: 10000,
       });
       qc.invalidateQueries({ queryKey: OWNER_FLOW_QUERY_KEY });
     } catch (e) {
@@ -211,9 +218,13 @@ export default function ScrapedListingsTriage() {
     try {
       const { data, error: e } = await supabase.rpc("admin_undo_mark_prospect_agency", { p_id: l.id });
       if (e) throw e;
-      const next = ((data ?? {}) as { listing?: ListingState }).listing;
-      if (next) patchListing(l.id, next);
-      toast.success("Marcajul de agenție a fost anulat", { description: "Nu s-a trimis niciun mesaj." });
+      const r = (data ?? {}) as { listing?: ListingState; affected?: ListingState[]; siblings_restored?: number; blocklist_removed?: boolean };
+      if (r.listing) patchListing(l.id, r.listing);
+      patchStates(r.affected);
+      const siblings = Number(r.siblings_restored ?? 0);
+      const extra = siblings > 0 ? ` Am readus și ${siblings} ${siblings === 1 ? "anunț" : "anunțuri"} cu același număr.` : "";
+      const listNote = r.blocklist_removed ? " Numărul a fost scos din lista de agenții." : "";
+      toast.success("Marcajul de agenție a fost anulat", { description: `Nu s-a trimis niciun mesaj.${extra}${listNote}` });
       qc.invalidateQueries({ queryKey: OWNER_FLOW_QUERY_KEY });
     } catch (e) {
       toast.error("Marcajul nu a putut fi anulat", { description: (e as Error).message });
@@ -570,7 +581,7 @@ function TriageCard({ row, expanded, onToggle, onSend, onDismiss, onRestore, res
           )}
           {agencyMode === "undo" && (
             <Button variant="ghost" onClick={onUndoAgency} disabled={markingAgency} className="min-h-12 gap-2 text-muted-foreground" aria-label="Anulează marcajul de agenție">
-              {markingAgency ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />} Nu e agenție — anulează
+              {markingAgency ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />} {agencyUndoLabel(l)}
             </Button>
           )}
           {dismissed ? (

@@ -6722,6 +6722,8 @@ export type Database = {
           admin_notes: string | null
           agency_classified_at: string | null
           agency_mark_prev: Json | null
+          agency_mark_root: string | null
+          agency_mark_sibling_count: number | null
           agency_marked_at: string | null
           agency_marked_by: string | null
           agency_suspicion_reason: string | null
@@ -6856,6 +6858,8 @@ export type Database = {
           admin_notes?: string | null
           agency_classified_at?: string | null
           agency_mark_prev?: Json | null
+          agency_mark_root?: string | null
+          agency_mark_sibling_count?: number | null
           agency_marked_at?: string | null
           agency_marked_by?: string | null
           agency_suspicion_reason?: string | null
@@ -6990,6 +6994,8 @@ export type Database = {
           admin_notes?: string | null
           agency_classified_at?: string | null
           agency_mark_prev?: Json | null
+          agency_mark_root?: string | null
+          agency_mark_sibling_count?: number | null
           agency_marked_at?: string | null
           agency_marked_by?: string | null
           agency_suspicion_reason?: string | null
@@ -13083,6 +13089,11 @@ export type Database = {
     Functions: {
       _canonical_listing_url: { Args: { url: string }; Returns: string }
       _extract_domain: { Args: { url: string }; Returns: string }
+      _prospect_agency_mark_row: {
+        Args: { p_actor: string; p_id: string; p_root: string }
+        Returns: Json
+      }
+      _prospect_agency_unmark_row: { Args: { p_id: string }; Returns: number }
       _prospect_triage_state: { Args: { p_id: string }; Returns: Json }
       admin_agency_classify_status: { Args: never; Returns: Json }
       admin_confirm_prospect_private: {
