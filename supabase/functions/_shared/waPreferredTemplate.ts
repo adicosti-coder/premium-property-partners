@@ -11,8 +11,8 @@ export const WA_LEGACY_TEMPLATE = "prospect_intro_premium_v3";
 
 /**
  * Șablonul dedicat de acord se folosește doar după ce Meta îi aprobă corpul exact:
- * v4 când e aprobat, altfel v3 în perioada de tranziție, altfel șablonul de prim contact.
- * Dacă v4 nu e încă înregistrat, îl trimite imediat la aprobare.
+ * cea mai nouă versiune (v5) când e aprobată, altfel v3 în perioada de tranziție, altfel șablonul de prim contact.
+ * Dacă versiunea nouă nu e încă înregistrată, îl trimite imediat la aprobare.
  */
 export async function preferredPublishConsentTemplate(): Promise<string> {
   const token = waToken();
@@ -25,11 +25,11 @@ export async function preferredPublishConsentTemplate(): Promise<string> {
         );
         return resp.ok ? ((await resp.json())?.data ?? []) : null;
       };
-      const [v4, v3] = await Promise.all([fetchRows(WA_PUBLISH_CONSENT_TEMPLATE), fetchRows(WA_PUBLISH_CONSENT_PREVIOUS_TEMPLATE)]);
-      if (v4 && !v4.some((t: { name?: string }) => t.name === WA_PUBLISH_CONSENT_TEMPLATE)) {
+      const [latest, v3] = await Promise.all([fetchRows(WA_PUBLISH_CONSENT_TEMPLATE), fetchRows(WA_PUBLISH_CONSENT_PREVIOUS_TEMPLATE)]);
+      if (latest && !latest.some((t: { name?: string }) => t.name === WA_PUBLISH_CONSENT_TEMPLATE)) {
         await ensurePublishConsentTemplate().catch(() => undefined);
       }
-      const chosen = approvedConsentTemplate([...(v4 ?? []), ...(v3 ?? [])]);
+      const chosen = approvedConsentTemplate([...(latest ?? []), ...(v3 ?? [])]);
       if (chosen) return chosen;
     } catch { /* Keep the existing approved first-contact resolver until approval. */ }
   }

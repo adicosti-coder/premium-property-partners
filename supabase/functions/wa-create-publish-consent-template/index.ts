@@ -1,5 +1,5 @@
-// Admin / intern: trimite la Meta șablonul de acord acord_publicare_proprietar_v4 (MARKETING, ro)
-// dacă nu e deja înregistrat și raportează starea v4 și a lui v3 (folosit până la aprobarea v4).
+// Admin / intern: trimite la Meta șablonul de acord acord_publicare_proprietar_v5 (MARKETING, ro)
+// dacă nu e deja înregistrat și raportează starea v5 și a lui v3 (folosit până la aprobarea v5).
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { ensurePublishConsentTemplate, previousPublishConsentTemplateStatus } from "../_shared/waPublishConsentEnsure.ts";
@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
   const [status, previousStatus] = await Promise.all([ensurePublishConsentTemplate(), previousPublishConsentTemplateStatus()]);
   if (status === "missing_wa_token") return json({ error: "missing_credentials" }, 500);
   const failed = /^(check_failed|create_failed)/.test(status);
-  if (failed) console.error("Consent template v4 ensure failed", status);
+  if (failed) console.error("Consent template v5 ensure failed", status);
   return json({
     ok: !failed,
     template: WA_PUBLISH_CONSENT_TEMPLATE,

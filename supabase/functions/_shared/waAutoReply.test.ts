@@ -99,14 +99,18 @@ test("un interval real după cererea de apel este notat", () => {
 
 // ── Acordul de publicare: text cerere + recunoaștere răspuns pozitiv ──
 
-test("cererea de acord v4: Andrei, estimarea de randament, gratuit și DA / NU", () => {
+test("cererea de acord v5: Andrei, estimarea de preț și randament, DA / STOP", () => {
   const text = publishConsentRequestText({ title: "Apartament 2 camere Iosefin", source_url: "https://www.olx.ro/d/oferta/apartament-2-camere-iosefin-IDabc.html?x=1&y=2" });
   expect(text).toBe(
-    "Bună ziua! Sunt Andrei de la RealTrust Timișoara. Am pregătit o scurtă estimare de randament pentru proprietatea dumneavoastră: " +
-    "https://realtrust.ro/analiza-anunt?url=https%3A%2F%2Fwww.olx.ro%2Fd%2Foferta%2Fapartament-2-camere-iosefin-IDabc.html%3Fx%3D1%26y%3D2\n\n" +
-    "Avem investitori și cumpărători activi în zonă. Promovarea la noi este 100% gratuită (0% comision proprietar, fără exclusivitate).\n\n" +
-    "Dacă doriți să o prezentăm gratuit clienților noștri pe RealTrust, răspundeți simplu cu „DA” și o verificăm înainte de activare. Dacă nu vă interesează, un simplu „NU” este suficient.");
-  expect(publishConsentRequestText({ short_code: "k7m2qx9a" })).toContain("proprietatea dumneavoastră: https://realtrust.ro/e/k7m2qx9a\n");
+    "Bună ziua! Sunt Andrei de la RealTrust Timișoara. Am pregătit o estimare de preț și randament pentru proprietatea dvs.: " +
+    "https://realtrust.ro/analiza-anunt?url=https%3A%2F%2Fwww.olx.ro%2Fd%2Foferta%2Fapartament-2-camere-iosefin-IDabc.html%3Fx%3D1%26y%3D2\n" +
+    "Avem cereri active în zonă. Dacă doriți să o prezentăm clienților noștri (fără exclusivitate), răspundeți cu „DA”. Pentru dezabonare, scrieți „STOP”.");
+  expect(publishConsentRequestText({ short_code: "k7m2qx9a" })).toContain("proprietatea dvs.: https://realtrust.ro/e/k7m2qx9a\n");
+});
+
+test("răspunsul „STOP” la cererea de acord nu e citit ca acord", () => {
+  expect(detectPublishIntent("STOP", { pendingConsent: true })).not.toBe("consent");
+  expect(detectPublishIntent("Stop", { pendingConsent: true })).not.toBe("consent");
 });
 
 test("cererea de acord fără link de anunț folosește pagina de analiză simplă", () => {

@@ -1,9 +1,11 @@
 import { publishConsentRequestText } from "./waAutoReply.ts";
 import { estimateShortUrl } from "./estimateShortLink.ts";
 
-// v4 = formularea aprobată pe 22 nov 2026 (Andrei, estimare de randament, DA / NU).
-// v3 rămâne în uz până când Meta aprobă v4, apoi trecerea se face singură.
-export const WA_PUBLISH_CONSENT_TEMPLATE = "acord_publicare_proprietar_v4";
+// v5 = formularea aprobată pe 22 nov 2026, 15:12 (Andrei, estimare de preț și randament, DA / STOP).
+// v3 rămâne în uz până când Meta aprobă v5, apoi trecerea se face singură.
+// v4 (trimis la Meta mai devreme în aceeași zi) a fost înlocuit și nu se folosește niciodată.
+export const WA_PUBLISH_CONSENT_TEMPLATE = "acord_publicare_proprietar_v5";
+export const WA_PUBLISH_CONSENT_SUPERSEDED_TEMPLATES = ["acord_publicare_proprietar_v4"] as const;
 export const WA_PUBLISH_CONSENT_PREVIOUS_TEMPLATE = "acord_publicare_proprietar_v3";
 export const WA_PUBLISH_CONSENT_TEMPLATES = [WA_PUBLISH_CONSENT_TEMPLATE, WA_PUBLISH_CONSENT_PREVIOUS_TEMPLATE] as const;
 export const WA_PUBLISH_CONSENT_LANGUAGE = "ro";
@@ -33,7 +35,7 @@ export const WA_PUBLISH_CONSENT_LEGACY_BODIES = [
   "Dacă doriți să publicăm anunțul complet cu poze pe site-ul nostru, răspundeți doar cu „CONFIRM” și îl activăm în 2 minute.",
 ];
 
-/** true pentru oricare dintre șabloanele de acord (v4 sau v3) — ambele primesc linkul estimării ca {{1}}. */
+/** true pentru oricare dintre șabloanele de acord în uz (v5 sau v3) — ambele primesc linkul estimării ca {{1}}. */
 export function isPublishConsentTemplate(name: string | null | undefined): boolean {
   return (WA_PUBLISH_CONSENT_TEMPLATES as readonly string[]).includes(String(name ?? ""));
 }
@@ -58,7 +60,7 @@ const approved = (t: TemplateRow, name: string) =>
   t.name === name && t.status === "APPROVED" && t.language === WA_PUBLISH_CONSENT_LANGUAGE;
 
 /**
- * Șablonul de acord care se poate trimite acum: v4 dacă Meta l-a aprobat cu corpul exact,
+ * Șablonul de acord care se poate trimite acum: v5 dacă Meta l-a aprobat cu corpul exact,
  * altfel v3 aprobat (corp curent sau unul dintre corpurile vechi), altfel null.
  */
 export function approvedConsentTemplate(rows: TemplateRow[]): string | null {

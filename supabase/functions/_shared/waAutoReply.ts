@@ -286,13 +286,10 @@ export function publishConsentRequestText(p?: {
     `Mulțumim pentru răspuns! Estimarea gratuită pentru proprietatea dumneavoastră este aici: ${analysisUrl}`,
     `Dacă doriți să o prezentăm gratuit clienților noștri pe realtrust.ro, scrieți-ne simplu „DA”, iar noi o verificăm înainte de publicare. Pentru orice întrebare ne găsiți aici sau la ${TEAM_PHONE_DISPLAY} (echipa RealTrust / ApArt Hotel).`,
   ].join("\n\n");
-  // Formularea aprobată de Adrian pentru șablonul acord_publicare_proprietar_v4 (22 nov 2026).
+  // Formularea aprobată de Adrian pentru șablonul acord_publicare_proprietar_v5 (22 nov 2026, 15:12).
   return [
-    `Bună ziua! Sunt Andrei de la RealTrust Timișoara. Am pregătit o scurtă estimare de randament pentru proprietatea dumneavoastră: ${analysisUrl}`,
-    "",
-    "Avem investitori și cumpărători activi în zonă. Promovarea la noi este 100% gratuită (0% comision proprietar, fără exclusivitate).",
-    "",
-    "Dacă doriți să o prezentăm gratuit clienților noștri pe RealTrust, răspundeți simplu cu „DA” și o verificăm înainte de activare. Dacă nu vă interesează, un simplu „NU” este suficient.",
+    `Bună ziua! Sunt Andrei de la RealTrust Timișoara. Am pregătit o estimare de preț și randament pentru proprietatea dvs.: ${analysisUrl}`,
+    "Avem cereri active în zonă. Dacă doriți să o prezentăm clienților noștri (fără exclusivitate), răspundeți cu „DA”. Pentru dezabonare, scrieți „STOP”.",
   ].join("\n");
 }
 

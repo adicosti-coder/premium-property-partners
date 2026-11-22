@@ -32,6 +32,6 @@ describe("WhatsApp regressions", () => {
   it("safe direct request is conversational and asks for an explicit DA", () => {
     const safe = publishConsentRequestText({ safeDirect: true });
     expect(safe).toContain("„DA”"); expect(safe).not.toMatch(/RETRAG|NU dacă nu doriți/); expect(safe).not.toMatch(/Comision 0|2 minute|investitori activi/);
-    expect(publishConsentRequestText()).toContain("0% comision proprietar");
+    expect(publishConsentRequestText()).toContain("Pentru dezabonare, scrieți „STOP”.");
   });
 });

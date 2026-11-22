@@ -1,4 +1,4 @@
-// Auto-asigurarea șablonului de acord v4 la Meta: îl trimite la aprobare dacă nu e înregistrat.
+// Auto-asigurarea șablonului de acord v5 la Meta: îl trimite la aprobare dacă nu e înregistrat.
 import { WA_BUSINESS_ACCOUNT_ID, WA_API_VERSION, waToken } from "./waConfig.ts";
 import {
   WA_PUBLISH_CONSENT_CATEGORY, WA_PUBLISH_CONSENT_COMPONENTS, WA_PUBLISH_CONSENT_LANGUAGE,
@@ -17,7 +17,7 @@ async function templateRows(name: string, token: string) {
     .filter((t) => t.name === name && t.language === WA_PUBLISH_CONSENT_LANGUAGE);
 }
 
-/** Starea v4 la Meta (APPROVED / PENDING / REJECTED …); dacă lipsește, îl creează (MARKETING, ro). */
+/** Starea v5 la Meta (APPROVED / PENDING / REJECTED …); dacă lipsește, îl creează (MARKETING, ro). */
 export async function ensurePublishConsentTemplate(): Promise<string> {
   const token = waToken();
   if (!token) return "missing_wa_token";
