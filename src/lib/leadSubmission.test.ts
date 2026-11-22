@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const insertMock = vi.fn();
+const invokeMock = vi.fn();
 
 vi.mock("@/lib/supabaseClient", () => ({
   supabase: {
     from: () => ({ insert: (payload: unknown) => insertMock(payload) }),
+    functions: { invoke: (name: string, opts: unknown) => invokeMock(name, opts) },
   },
 }));
 
@@ -96,5 +98,23 @@ describe("submitLead", () => {
   it("does not send personal data when validation fails", async () => {
     await submitLead({ ...base, name: "", email: "x" });
     expect(insertMock).not.toHaveBeenCalled();
+  });
+
+  it("returns the id and report token of a newly saved server lead", async () => {
+    invokeMock.mockResolvedValue({ data: { success: true, leadId: "new-lead", reportToken: "tok" }, error: null });
+    const res = await submitLead({ ...base, viaServer: true });
+    expect(res).toEqual({ ok: true, duplicate: false, leadId: "new-lead", reportToken: "tok" });
+  });
+
+  it("accepts a repeat contact merged server-side without any id or token", async () => {
+    invokeMock.mockResolvedValue({ data: { success: true }, error: null });
+    const res = await submitLead({ ...base, viaServer: true });
+    expect(res).toEqual({ ok: true, duplicate: true, leadId: undefined, reportToken: undefined });
+  });
+
+  it("treats an unconfirmed server save as a failure", async () => {
+    invokeMock.mockResolvedValue({ data: {}, error: null });
+    const res = await submitLead({ ...base, viaServer: true });
+    expect(res).toMatchObject({ ok: false, reason: "network" });
   });
 });

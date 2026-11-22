@@ -17,6 +17,13 @@ describe("viewing persistence before WhatsApp", () => {
     expect(track).toHaveBeenCalledTimes(1);
     expect(track).toHaveBeenCalledWith({ event: "Lead_Submit", source: "whatsapp_viewing", property_id: "property-test" });
   });
+  it("accepts a repeat contact merged into an existing lead without exposing its id", async () => {
+    save.mockResolvedValue({ ok: true, duplicate: true });
+    const result = await saveViewingRequest(input, "test-token");
+    expect(result.leadId).toBeUndefined();
+    expect(result.whatsappUrl).toContain("https://wa.me/40799069256?text=");
+    expect(track).toHaveBeenCalledTimes(1);
+  });
   it("does not return a chat URL or emit Lead when saving fails", async () => {
     save.mockResolvedValue({ ok: false, reason: "network" });
     await expect(saveViewingRequest(input, "test-token")).rejects.toThrow("salvată");

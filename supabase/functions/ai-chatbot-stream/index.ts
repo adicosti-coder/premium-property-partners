@@ -573,11 +573,13 @@ When you complete a full property analysis, include a structured report at the e
 });
 
 // ─── Chat logging (feeds the Admin „Astăzi" counters) ────────
+const CHAT_SESSION_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const OFFER_RE = /\d[\d.\s]*\s?(€|eur\b|euro)|randament|9[,.]4\s*%|15\s*[-–]\s*20\s*%|evaluare(a)? gratuit|\/proprietate\/|\/imobiliare|\bofert/i;
 
 async function logChat(sessionId: string, language: string, userMsg: string, assistantMsg: string, ctx?: { leadPromise: Promise<string | null>; pageInfo: { title: string; url: string } }) {
   try {
-    if (!sessionId || !assistantMsg) return;
+    // Only client-generated random UUIDs are logged; any other value is ignored.
+    if (!CHAT_SESSION_RE.test(String(sessionId)) || !assistantMsg) return;
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     let { data: conv } = await sb.from("chat_conversations").select("id, lead_id").eq("session_id", sessionId).maybeSingle();
     if (!conv) {
@@ -598,7 +600,12 @@ async function logChat(sessionId: string, language: string, userMsg: string, ass
     if (leadId) patch.lead_id = leadId;
     if (ctx?.pageInfo?.title) { patch.page_title = ctx.pageInfo.title; patch.page_url = ctx.pageInfo.url || null; }
     await sb.from("chat_conversations").update(patch).eq("id", conv!.id);
-    if (leadId) {
+    // CRM stage changes only for a lead this chat itself created (source „Chat Premium”);
+    // a caller-supplied session can never move another lead's status.
+    const { data: chatLead } = leadId
+      ? await sb.from("leads").select("id").eq("id", leadId).like("source", "Chat Premium%").maybeSingle()
+      : { data: null };
+    if (chatLead?.id) {
       await sb.from("leads").update({ crm_status: "contactat" }).eq("id", leadId).eq("crm_status", "nou_necontactat");
       // Andrei a trimis o ofertă concretă (preț, randament, comision, evaluare, link anunț) => „Ofertat"
       if (OFFER_RE.test(assistantMsg)) {

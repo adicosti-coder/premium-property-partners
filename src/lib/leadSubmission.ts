@@ -94,8 +94,10 @@ export const submitLead = async (raw: LeadInput): Promise<LeadSubmissionResult> 
         return { ok: false, reason: "network", message: error.message };
       }
       const r = (res ?? {}) as { success?: boolean; leadId?: string; reportToken?: string };
-      if (r.success === false || !r.leadId) return { ok: false, reason: "network", message: "Lead save was not confirmed" };
-      return { ok: true, duplicate: false, leadId: r.leadId, reportToken: r.reportToken };
+      if (r.success !== true) return { ok: false, reason: "network", message: "Lead save was not confirmed" };
+      // A repeat contact is merged into the existing lead server-side; the visitor
+      // then gets no id or report token for that stored lead.
+      return { ok: true, duplicate: !r.leadId, leadId: r.leadId, reportToken: r.reportToken };
     } catch (err) {
       reportError(err, { scope: `form:lead:${data.source}` });
       return { ok: false, reason: "unknown", message: (err as Error)?.message ?? "unknown" };

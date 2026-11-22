@@ -207,6 +207,9 @@ const handler = async (req: Request): Promise<Response> => {
     // insert returns 0 rows, and .single() would make the API roll back that merge.
 
     let leadId: string | null = insertedLead?.[0]?.id ?? null;
+    // True when the submission was merged into an existing lead (same phone/email).
+    // The caller cannot prove that contact is theirs, so it gets no id or token for it.
+    let mergedIntoExisting = false;
 
     if (error || !leadId) {
       if (submissionId && error?.code === "23505") { const cached = await replay(); if (cached) return cached; }
@@ -236,6 +239,7 @@ const handler = async (req: Request): Promise<Response> => {
             .maybeSingle();
           if (lookupErr) console.error("dedupe lookup failed:", lookupErr);
           leadId = existing?.id ?? null;
+          mergedIntoExisting = !!leadId;
         }
       }
       if (!leadId) {
@@ -315,7 +319,7 @@ const handler = async (req: Request): Promise<Response> => {
     // --- Cerere contact WhatsApp (pagina Contact): Hot Lead + alertă internă + e-mail vizitator ---
     if (source === "apel_2_minute") {
       try {
-        await supabase.from("leads").update({ lead_grade: "hot", engagement_status: "hot_lead", lead_score: 90 }).eq("id", leadId);
+        if (!mergedIntoExisting) await supabase.from("leads").update({ lead_grade: "hot", engagement_status: "hot_lead", lead_score: 90 }).eq("id", leadId);
         await supabase.functions.invoke("send-transactional-email", {
           headers: { "x-webhook-secret": Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "" },
           body: {
@@ -341,7 +345,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Start on the server too: closing the browser after save must not lose WhatsApp.
-    if (calculator && leadId) {
+    if (calculator && leadId && !mergedIntoExisting) {
       const work = supabase.functions.invoke("handle-lead-whatsapp", {
         headers: { "x-webhook-secret": supabaseServiceKey },
         body: { nume: name, telefon: whatsappNumber, zona: simulationData?.location ?? simulationData?.zone ?? "Timișoara", venit_estimat_min: 0, venit_estimat_max: 0, calculator_kind: simulationData?.calculator_kind ?? "unified", lead_id: leadId },
@@ -350,7 +354,9 @@ const handler = async (req: Request): Promise<Response> => {
       if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(work);
       else await work;
     }
-    const payload = { success: true, leadId, reportToken: await createLeadReportToken(leadId) };
+    const payload = mergedIntoExisting
+      ? { success: true }
+      : { success: true, leadId, reportToken: await createLeadReportToken(leadId) };
     await idem.finish(payload);
 
     return new Response(JSON.stringify(payload), {

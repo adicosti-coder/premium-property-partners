@@ -24,7 +24,7 @@ export async function saveViewingRequest(raw: z.input<typeof viewingRequestSchem
     message, source: "whatsapp_viewing", viaServer: true, captcha_token: captchaToken,
     simulation_data: withCampaignTracking({ property_id: d.propertyId, property_name: d.propertyName, time_slot: d.timeSlot, status_label: "Nou - WhatsApp", page_url: `${window.location.origin}${window.location.pathname}` }),
   });
-  if (!result.ok || !result.leadId) throw new Error("Cererea nu a putut fi salvată. Încearcă din nou.");
+  if (!result.ok) throw new Error("Cererea nu a putut fi salvată. Încearcă din nou.");
   trackConversion({ event: "Lead_Submit", source: "whatsapp_viewing", property_id: d.propertyId });
   return { leadId: result.leadId, whatsappUrl: `https://wa.me/40799069256?text=${encodeURIComponent(message)}` };
 }

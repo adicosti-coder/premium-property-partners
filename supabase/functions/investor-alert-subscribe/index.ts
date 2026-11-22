@@ -31,8 +31,9 @@ Deno.serve(async (req) => {
   const { data: u } = jwt ? await sb.auth.getUser(jwt) : { data: null };
   // Existing subscribers can only be changed by their linked signed-in account.
   const { data: existing } = await sb.from("investor_alert_subscribers").select("id, user_id").eq("phone_normalized", phone).maybeSingle();
+  // Same reply as a new sign-up, so the endpoint never reveals who is subscribed.
   if (existing && !(u?.user?.id && existing.user_id === u.user.id)) {
-    return json({ ok: true, already_subscribed: true });
+    return json({ ok: true });
   }
   const { error } = await sb.from("investor_alert_subscribers").upsert({
     phone_normalized: phone, name, zones, max_price: maxPrice, consent_text: CONSENT_TEXT,
