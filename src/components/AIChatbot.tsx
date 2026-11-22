@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect, useCallback, forwardRef, memo } from "react";
+import { useChatAccess } from "@/hooks/useChatAccess";
+import { CHAT_VERIFICATION_STATUS } from "@/lib/chatAccess";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { 
   X, Send, Loader2, 
@@ -361,6 +363,10 @@ const AIChatbot = ({ initialOpen = false }: { initialOpen?: boolean } = {}) => {
   const reduceMotion = useReducedMotion();
   const currentPath = typeof window !== "undefined" ? window.location.pathname : "/";
   const [isOpen, setIsOpen] = useState(initialOpen);
+  const chatAccess = useChatAccess(language);
+  // Verificarea anti-robot pornește la deschiderea chatului, ca primul mesaj să nu aștepte.
+  const prepareChat = chatAccess.prepare;
+  useEffect(() => { if (isOpen) prepareChat(); }, [isOpen, prepareChat]);
   const [showTeaser, setShowTeaser] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [input, setInput] = useState("");
@@ -630,6 +636,8 @@ const AIChatbot = ({ initialOpen = false }: { initialOpen?: boolean } = {}) => {
     try {
       const apiKey = getSupabasePublishableKey();
       if (!apiKey || apiKey === "invalid-publishable-key") throw new Error("missing_env");
+      const chatToken = await chatAccess.ensureToken();
+      if (!chatToken) throw new Error("verification");
 
       const response = await fetch(STREAM_URL, {
         method: "POST",
@@ -650,11 +658,13 @@ const AIChatbot = ({ initialOpen = false }: { initialOpen?: boolean } = {}) => {
           pageUrl: /\/(proprietate|imobiliare|anunt|cazare)\//.test(currentPath) ? window.location.href.split("#")[0] : "",
           imageBase64: hasImage ? currentImage : undefined,
           qualificationContext: qualificationData || undefined,
+          chatToken,
         }),
         signal: abortControllerRef.current.signal,
       });
 
       if (!response.ok) {
+        if (response.status === CHAT_VERIFICATION_STATUS) { chatAccess.invalidate(); throw new Error("verification_expired"); }
         if (response.status === 429) throw new Error("rate_limit");
         if (response.status === 402) throw new Error("payment_required");
         throw new Error("network");
@@ -721,6 +731,11 @@ const AIChatbot = ({ initialOpen = false }: { initialOpen?: boolean } = {}) => {
         return;
       }
 
+      // Sesiune expirată: o nouă verificare și o singură reîncercare.
+      if (e.message === "verification_expired" && retryCount < 1) {
+        return handleSend(content, retryCount + 1);
+      }
+
       // Auto-retry once for network errors on mobile
       const isNetworkError = e.message === "network" || e.message === "Failed to fetch" || e.name === "TypeError";
       if (isNetworkError && retryCount < 1) {
@@ -731,6 +746,9 @@ const AIChatbot = ({ initialOpen = false }: { initialOpen?: boolean } = {}) => {
 
       let errorMessage = text.error;
       if (e.message === "rate_limit") errorMessage = text.errorRateLimit;
+      else if (e.message === "verification" || e.message === "verification_expired") errorMessage = language === "ro"
+        ? "Nu am putut confirma verificarea de securitate. Vă rog reîncercați sau scrieți-ne pe WhatsApp: 0799 069 256."
+        : "We couldn't complete the security check. Please try again or message us on WhatsApp: +40 799 069 256.";
       else if (isNetworkError) errorMessage = text.errorNetwork;
 
       const id = retryCount === 0 ? assistantId! : targetId;
@@ -1436,6 +1454,7 @@ const AIChatbot = ({ initialOpen = false }: { initialOpen?: boolean } = {}) => {
                     </button>
                   )}
 
+                  {chatAccess.gate}
                   <div className="flex gap-1.5 md:gap-2 items-center">
                     {/* Camera button — plain icon, no chrome */}
                     <label className="cursor-pointer h-12 w-12 md:h-14 md:w-14 flex items-center justify-center text-muted-foreground hover:text-accent transition-colors shrink-0" aria-label={language === "ro" ? "Atașează fotografie pentru analiză" : "Attach photo for analysis"}>

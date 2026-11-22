@@ -1114,6 +1114,13 @@
       "when": 1795365666458,
       "tag": "0158_admin_confirm_prospect_private",
       "breakpoints": true
+    },
+    {
+      "idx": 159,
+      "version": "7",
+      "when": 1795366513632,
+      "tag": "0159_public_zone_price_map_aggregate",
+      "breakpoints": true
     }
   ]
 }

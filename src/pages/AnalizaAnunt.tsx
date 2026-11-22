@@ -83,6 +83,7 @@ const AnalizaAnunt = ({ prefill }: { prefill?: AnalizaPrefill } = {}) => {
   });
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
+  const pdfTicketRef = useRef<{ id: string; ticket: string } | null>(null);
   const [analysis, setAnalysis] = useState<ListingAnalysis | null>(null);
   const [market, setMarket] = useState<Market | null>(null);
   const [sourceUrl, setSourceUrl] = useState<string | null>(null);
@@ -110,6 +111,7 @@ const AnalizaAnunt = ({ prefill }: { prefill?: AnalizaPrefill } = {}) => {
     setLoading(true);
     setAnalysis(null);
     setMarket(null);
+    pdfTicketRef.current = null;
     try {
       let a: ListingAnalysis;
       let m: any = {};
@@ -121,6 +123,7 @@ const AnalizaAnunt = ({ prefill }: { prefill?: AnalizaPrefill } = {}) => {
       }).catch(() => null);
       const c = cRes?.ok ? await cRes.json().catch(() => null) : null;
       if (c?.hit && c.analysis) {
+        pdfTicketRef.current = c.id && c.pdf_ticket ? { id: c.id, ticket: c.pdf_ticket } : null;
         a = c.analysis as ListingAnalysis;
         m = c.market ?? {};
         setAnalysis(a);
@@ -157,7 +160,10 @@ const AnalizaAnunt = ({ prefill }: { prefill?: AnalizaPrefill } = {}) => {
           method: "POST",
           headers: headers(),
           body: JSON.stringify({ action: "save", url: url.trim(), phone: phone.trim() || null, analysis: a, market: m?.ok ? m : null }),
-        }).catch(() => undefined);
+        })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((d) => { pdfTicketRef.current = d?.id && d?.pdf_ticket ? { id: d.id, ticket: d.pdf_ticket } : null; })
+          .catch(() => undefined);
       }
 
 
@@ -188,10 +194,12 @@ const AnalizaAnunt = ({ prefill }: { prefill?: AnalizaPrefill } = {}) => {
     if (!analysis) return;
     const { downloadAnalysisPdf } = await import("@/lib/analysisPdf");
     downloadAnalysisPdf({ analysis, sourceUrl, mode: "url", createdAt: new Date().toISOString(), market });
+    const t = pdfTicketRef.current;
+    if (!t) return;
     fetch(fnUrl("analyzed-listing"), {
       method: "POST",
       headers: headers(),
-      body: JSON.stringify({ action: "pdf", url: url.trim() || sourceUrl }),
+      body: JSON.stringify({ action: "pdf", id: t.id, pdf_ticket: t.ticket }),
     }).catch(() => undefined);
   };
 

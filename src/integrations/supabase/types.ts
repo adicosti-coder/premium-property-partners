@@ -13751,6 +13751,7 @@ export type Database = {
           zone: string
         }[]
       }
+      get_zone_price_map: { Args: never; Returns: Json }
       get_zone_price_report: {
         Args: { p_days?: number; p_type?: string }
         Returns: {

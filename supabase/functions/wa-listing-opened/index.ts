@@ -69,7 +69,9 @@ Deno.serve(async (req) => {
       .eq("event", "listing_opened")
       .gte("created_at", oneHourAgo)
       .limit(1);
-    if (dup && dup.length > 0) return json({ ok: true, deduplicated: true });
+    // Același răspuns ca la o înregistrare nouă: apelantul nu poate afla dacă
+    // numărul a mai deschis anunțul (fără oracol pe istoricul unui telefon).
+    if (dup && dup.length > 0) return json({ ok: true });
   }
 
   const { error } = await supabase.from("wa_transaction_events").insert({
@@ -82,7 +84,10 @@ Deno.serve(async (req) => {
     status: "opened",
     source: "site",
   });
-  if (error) return json({ error: "log_failed", details: error.message }, 500);
+  if (error) {
+    console.error("wa-listing-opened insert failed", error.code);
+    return json({ ok: true });
+  }
 
   await relayToMake("wa_listing_opened", {
     phone,

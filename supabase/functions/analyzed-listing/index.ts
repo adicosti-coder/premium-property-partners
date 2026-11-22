@@ -1,9 +1,18 @@
 // analyzed-listing — cache + history for /analiza-anunt.
 // action "lookup": returns a saved analysis of the same URL from the last 48h.
 // action "save": stores a new analysis and emits an admin event (Make webhook).
+// action "pdf": counts a download only with the signed ticket returned by lookup/save.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkRateLimit } from "../_shared/rateLimiter.ts";
 import { relayToMake } from "../_shared/makeRelay.ts";
+import { issueTicket, verifyTicket } from "../_shared/signedTicket.ts";
+
+// Numărarea descărcării PDF e permisă doar pentru analiza servită acestui vizitator:
+// lookup/save întorc un bilet semnat legat de id-ul rândului, valabil 24h.
+const PDF_TICKET = "analyzed-listing-pdf";
+const pdfTicketFor = async (id: string | undefined | null) =>
+  id ? (await issueTicket(PDF_TICKET, 86_400_000, id))?.ticket ?? null : null;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -46,6 +55,23 @@ Deno.serve(async (req) => {
   }
 
   const body = await req.json().catch(() => ({}));
+
+  if (body?.action === "pdf") {
+    const id = String(body?.id || "");
+    if (!UUID_RE.test(id) || !(await verifyTicket(PDF_TICKET, body?.pdf_ticket, id))) {
+      return json({ ok: true, tracked: false });
+    }
+    // One counted download per visitor per analysis per day — prevents inflating stats.
+    if (!checkRateLimit(`analyzed-listing-pdf:${ip}:${id}`, { maxRequests: 1, windowMs: 86_400_000 }).allowed) {
+      return json({ ok: true, tracked: false });
+    }
+    const sbPdf = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data: last } = await sbPdf.from("analyzed_listings").select("id, pdf_downloads").eq("id", id).maybeSingle();
+    if (!last) return json({ ok: true, tracked: false });
+    await sbPdf.from("analyzed_listings").update({ pdf_downloads: (last.pdf_downloads ?? 0) + 1, pdf_downloaded_at: new Date().toISOString() }).eq("id", last.id);
+    return json({ ok: true, tracked: true });
+  }
+
   const rawUrl = String(body?.url || "").slice(0, 500);
   if (!URL_RE.test(rawUrl)) return json({ error: "invalid_url" }, 400);
   const url = normUrl(rawUrl);
@@ -54,23 +80,11 @@ Deno.serve(async (req) => {
   if (body?.action === "lookup") {
     const since = new Date(Date.now() - CACHE_HOURS * 3600_000).toISOString();
     const { data } = await sb.from("analyzed_listings")
-      .select("extracted_data, market_result, created_at")
+      .select("id, extracted_data, market_result, created_at")
       .eq("url", url).eq("channel", "web").gte("created_at", since)
       .order("created_at", { ascending: false }).limit(1).maybeSingle();
     if (!data) return json({ ok: true, hit: false });
-    return json({ ok: true, hit: true, analysis: pickPublic(data.extracted_data), market: data.market_result, created_at: data.created_at });
-  }
-
-  if (body?.action === "pdf") {
-    // One counted download per visitor per listing per day — prevents inflating stats.
-    if (!checkRateLimit(`analyzed-listing-pdf:${ip}:${url}`, { maxRequests: 1, windowMs: 86_400_000 }).allowed) {
-      return json({ ok: true, tracked: false });
-    }
-    const { data: last } = await sb.from("analyzed_listings").select("id, pdf_downloads")
-      .eq("url", url).order("created_at", { ascending: false }).limit(1).maybeSingle();
-    if (!last) return json({ ok: true, tracked: false });
-    await sb.from("analyzed_listings").update({ pdf_downloads: (last.pdf_downloads ?? 0) + 1, pdf_downloaded_at: new Date().toISOString() }).eq("id", last.id);
-    return json({ ok: true, tracked: true });
+    return json({ ok: true, hit: true, analysis: pickPublic(data.extracted_data), market: data.market_result, created_at: data.created_at, id: data.id, pdf_ticket: await pdfTicketFor(data.id) });
   }
 
   if (body?.action !== "save") return json({ error: "invalid_action" }, 400);
@@ -99,5 +113,5 @@ Deno.serve(async (req) => {
     calculated_score: score, ...negotiation, created_at: row?.created_at,
   }, sb).catch((e) => console.warn("relay failed", (e as Error).message));
 
-  return json({ ok: true, id: row?.id });
+  return json({ ok: true, id: row?.id, pdf_ticket: await pdfTicketFor(row?.id) });
 });

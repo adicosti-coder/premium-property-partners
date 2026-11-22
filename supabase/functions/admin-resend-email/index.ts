@@ -32,9 +32,9 @@ Deno.serve(async (req) => {
   const failureId = String(body.failure_id ?? "").trim();
   if (!UUID_RE.test(failureId)) return json({ error: "failure_id invalid" }, 400);
 
-  const override = String(body.recipient_override ?? "").trim();
-  if (override && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(override)) {
-    return json({ error: "recipient_override invalid" }, 400);
+  // Retrimiterea merge doar către destinatarul inițial salvat; cererea nu poate alege altă adresă.
+  if (body.recipient_override != null && String(body.recipient_override).trim() !== "") {
+    return json({ error: "Retrimiterea se face doar către destinatarul inițial" }, 400);
   }
 
   const admin = createClient(
@@ -48,11 +48,12 @@ Deno.serve(async (req) => {
     .eq("id", failureId)
     .maybeSingle();
 
-  if (error) return json({ error: error.message }, 500);
+  if (error) return json({ error: "Înregistrarea nu a putut fi citită" }, 500);
   if (!row) return json({ error: "Înregistrarea nu există" }, 404);
   if (!row.html_body) return json({ error: "Conținutul e-mailului nu mai este disponibil" }, 422);
 
-  const to = override || (row.recipient as string);
+  const to = String(row.recipient ?? "").trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(to)) return json({ error: "Destinatar inițial invalid" }, 422);
 
   // Pass `admin: null` so a second failure does NOT create a duplicate row —
   // the outcome is recorded on the existing row below.
@@ -77,7 +78,6 @@ Deno.serve(async (req) => {
       last_retry_error: result.sent ? null : (result.error ?? "Trimitere eșuată"),
       resent_at: result.sent ? now : null,
       acknowledged_at: result.sent ? now : null,
-      recipient: to,
     })
     .eq("id", failureId);
 

@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { postChatStream, useChatAccess } from "@/hooks/useChatAccess";
 import { Turnstile } from "@marsidev/react-turnstile";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
@@ -53,6 +54,7 @@ function compressImage(base64: string, maxWidth = 800, quality = 0.7): Promise<s
 
 const PhotoPropertyAnalysis = () => {
   const { language } = useLanguage();
+  const chatAccess = useChatAccess(language);
   const [images, setImages] = useState<string[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -127,20 +129,12 @@ const PhotoPropertyAnalysis = () => {
         ? `Analizează aceste ${compressed.length} fotografi${compressed.length === 1 ? "e" : "i"} ale proprietății. Evaluează setul complet: corelează detaliile din fiecare cameră pentru a evalua consistența finisajelor, calitatea renovării și dotările întregului apartament. Oferă un scor final și recomandări bazate pe întreaga proprietate.`
         : `Analyze these ${compressed.length} property photo${compressed.length === 1 ? "" : "s"}. Evaluate the complete set: cross-correlate details from each room to assess finish consistency, renovation quality and amenities across the entire apartment. Provide a final score and recommendations based on the whole property.`;
 
-      const response = await fetch(STREAM_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-          apikey: apiKey || "",
-        },
-        body: JSON.stringify({
+      const response = await postChatStream(chatAccess, STREAM_URL, apiKey, {
           message: imagePrompt,
           language,
           conversationHistory: [],
           pageContext: "/pentru-proprietari",
           imagesArray: compressed, // Send ALL compressed images
-        }),
       });
 
       if (!response.ok) throw new Error("network");
@@ -247,6 +241,7 @@ const PhotoPropertyAnalysis = () => {
   return (
     <section className="py-16 bg-card">
       <div className="container mx-auto px-6 max-w-3xl">
+        {chatAccess.gate}
         {/* Header */}
         <div className="text-center mb-8 space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold">

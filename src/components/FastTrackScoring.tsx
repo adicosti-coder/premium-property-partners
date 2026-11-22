@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { postChatStream, useChatAccess } from "@/hooks/useChatAccess";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, TrendingUp, Loader2, CheckCircle2, Phone, MapPin, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ const STREAM_URL = `${supabaseConfig.url}/functions/v1/ai-chatbot-stream`;
 
 const FastTrackScoring = ({ calculatorData, zone = "Timișoara", propertyType = "apartament", className }: FastTrackScoringProps) => {
   const { language } = useLanguage();
+  const chatAccess = useChatAccess(language);
   const [isLoading, setIsLoading] = useState(false);
   const [report, setReport] = useState<QuickReport | null>(null);
   const [showReport, setShowReport] = useState(false);
@@ -67,19 +69,11 @@ const FastTrackScoring = ({ calculatorData, zone = "Timișoara", propertyType = 
 
     try {
       const apiKey = getSupabasePublishableKey();
-      const response = await fetch(STREAM_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-          apikey: apiKey || "",
-        },
-        body: JSON.stringify({
+      const response = await postChatStream(chatAccess, STREAM_URL, apiKey, {
           message: prompt,
           language,
           conversationHistory: [],
           pageContext: "/pentru-proprietari",
-        }),
       });
 
       if (!response.ok) throw new Error("network");
@@ -152,6 +146,7 @@ const FastTrackScoring = ({ calculatorData, zone = "Timișoara", propertyType = 
 
   return (
     <div className={className}>
+      {chatAccess.gate}
       {/* Trigger button */}
       {!showReport && (
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>

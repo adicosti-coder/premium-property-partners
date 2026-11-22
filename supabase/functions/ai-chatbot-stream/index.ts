@@ -3,6 +3,22 @@ import { CHAT_PAGE_GUIDANCE, resolveChatPageContext, type ChatPageContext } from
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { TOOL_DEFINITIONS, executeTool } from "./tools.ts";
 import { getCorsHeaders } from "../_shared/securityHeaders.ts";
+import { verifyTicket } from "../_shared/signedTicket.ts";
+
+// Apelurile la modelul AI plătit cer o sesiune verificată: biletul din `chat-session`
+// (vizitator care a trecut verificarea anti-robot) sau un utilizator autentificat.
+async function hasChatAccess(req: Request, chatToken: unknown): Promise<boolean> {
+  if (await verifyTicket("chat-session", chatToken)) return true;
+  const bearer = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
+  if (!bearer || bearer === Deno.env.get("SUPABASE_ANON_KEY")) return false;
+  try {
+    const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, { auth: { persistSession: false } });
+    const { data } = await sb.auth.getUser(bearer);
+    return !!data?.user?.id;
+  } catch {
+    return false;
+  }
+}
 
 // Sanitize user-supplied strings before injecting into the AI system prompt.
 // Strips control characters / newlines and enforces a hard length cap so a
@@ -308,7 +324,13 @@ serve(async (req) => {
   }
 
   try {
-    const { message, sessionId = "", language = "ro", conversationHistory = [], pageContext: rawPageContext = "/", imageBase64, imagesArray, qualificationContext, pageTitle = "", pageDescription = "", pageUrl = "" } = await req.json();
+    const { message, sessionId = "", language = "ro", conversationHistory = [], pageContext: rawPageContext = "/", imageBase64, imagesArray, qualificationContext, pageTitle = "", pageDescription = "", pageUrl = "", chatToken } = await req.json();
+
+    if (!(await hasChatAccess(req, chatToken))) {
+      return new Response(JSON.stringify({ error: "chat_verification_required" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if ((!message && !imageBase64 && !imagesArray?.length) || (message && message.length > 2000)) {
       return new Response(JSON.stringify({ error: "invalid_message" }), {

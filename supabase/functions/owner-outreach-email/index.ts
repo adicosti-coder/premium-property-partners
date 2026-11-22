@@ -55,7 +55,8 @@ Deno.serve(async (req) => {
     if (listErr) throw listErr;
     if (!listing) return json({ error: "anunțul nu există" }, 404);
 
-    const to = String(body?.email || listing.contact_email || "").trim().toLowerCase();
+    // Destinatarul vine doar din anunț: cererea nu poate alege altă adresă.
+    const to = String(listing.contact_email || "").trim().toLowerCase();
     if (!EMAIL_RE.test(to)) {
       return json({ error: "Anunțul nu are o adresă de e-mail validă." }, 400);
     }

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { postChatStream, useChatAccess } from "@/hooks/useChatAccess";
 import { motion } from "framer-motion";
 import { Send, Bot, User, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,7 @@ interface Props {
 
 const HostScanContextChat = ({ report, analysisText, language, ownerName, zone }: Props) => {
   const [messages, setMessages] = useState<Message[]>([]);
+  const chatAccess = useChatAccess(language);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -90,20 +92,12 @@ const HostScanContextChat = ({ report, analysisText, language, ownerName, zone }
         : `[Analysis context: Score ${report.scor}/${report.max_scor}, Zone ${report.zona}, ROI ${report.roi_estimat}, Rate ${report.tarif_noapte}€/night, Category: ${report.categorie || "Standard"}. Recommendations: ${report.recomandari?.join("; ")}. Consultant note: ${report.note_consultant}]\n\nUser question: `;
 
       const apiKey = getSupabasePublishableKey();
-      const response = await fetch(STREAM_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-          apikey: apiKey || "",
-        },
-        body: JSON.stringify({
+      const response = await postChatStream(chatAccess, STREAM_URL, apiKey, {
           message: contextPrefix + content,
           language,
           conversationHistory: messages.slice(-8).map((m) => ({ role: m.role, content: m.content })),
           pageContext: "/hostscan-ai",
           qualificationContext: { name: ownerName, zone },
-        }),
       });
 
       if (!response.ok) throw new Error("network");
@@ -176,6 +170,7 @@ const HostScanContextChat = ({ report, analysisText, language, ownerName, zone }
       animate={{ opacity: 1, height: "auto" }}
       className="rounded-2xl border border-border/50 overflow-hidden bg-card"
     >
+      {chatAccess.gate}
       {/* Header */}
       <div className="p-3 border-b border-border/30 bg-muted/5">
         <div className="flex items-center gap-2">

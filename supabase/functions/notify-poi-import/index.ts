@@ -195,6 +195,26 @@ serve(async (req) => {
       );
     }
 
+    // Contorul proprietarului linkului crește doar pentru importuri reale ale altor
+    // utilizatori: propriul link nu se numără, iar fiecare importator contează o singură dată.
+    if (sharedLink.user_id === importerId) {
+      return new Response(
+        JSON.stringify({ success: true, counted: false }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    const { count: priorByImporter } = await supabase
+      .from('poi_import_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('shared_link_id', sharedLink.id)
+      .eq('imported_by', importerId);
+    if ((priorByImporter || 0) > 0) {
+      return new Response(
+        JSON.stringify({ success: true, counted: false }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // ── Anti-spam: cap notifications per share code (max 5 in the last hour) ──
     const sinceIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const { count: recentEvents } = await supabase
