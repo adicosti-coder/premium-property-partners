@@ -56,13 +56,13 @@ const faqData: Record<string, { ro: { q: string; a: string }[]; en: { q: string;
   },
   "Investiții": {
     ro: [
-      { q: "Ce randament pot obține dintr-un apartament în Timișoara?", a: "Randamentul net mediu este de 9.2-9.4% pe an pentru proprietățile administrate profesional, cu o rată de ocupare de peste 85%." },
-      { q: "Merită să investesc în regim hotelier vs. chirie pe termen lung?", a: "Da, regimul hotelier generează în medie cu 40-60% mai mult venit decât chiria pe termen lung, deși implică management activ — pe care noi îl oferim." },
+      { q: "Ce randament pot obține dintr-un apartament în Timișoara?", a: "Randamentul net estimat este de 6,5–9,4% pe an pentru proprietățile administrate profesional, la o ocupare anuală asumată de 65–75% (70% în calcule)." },
+      { q: "Merită să investesc în regim hotelier vs. chirie pe termen lung?", a: "Da, regimul hotelier are un randament net estimat de 6,5–9,4% pe an, deși implică management activ — pe care noi îl oferim." },
       { q: "Care sunt costurile ascunse ale investiției?", a: "Transparența este cheia: comision management 15–20%, comisioane platforme 15-23%, utilități, mentenanță periodică. Toate sunt detaliate în rapoartele lunare." },
     ],
     en: [
-      { q: "What return can I expect from an apartment in Timișoara?", a: "Average net yield is 9.2-9.4% per year for professionally managed properties, with an occupancy rate above 85%." },
-      { q: "Is short-term rental worth it vs. long-term lease?", a: "Yes, short-term rentals generate 40-60% more revenue on average than long-term leases, though they require active management — which we provide." },
+      { q: "What return can I expect from an apartment in Timișoara?", a: "Estimated net yield is 6.5–9.4% per year for professionally managed properties, at an assumed annual occupancy of 65–75% (70% in calculations)." },
+      { q: "Is short-term rental worth it vs. long-term lease?", a: "Yes, short-term rental has an estimated net yield of 6.5–9.4% per year, though it requires active management — which we provide." },
       { q: "What are the hidden costs of investing?", a: "Transparency is key: 15–20% management fee, 15-23% platform commissions, utilities, periodic maintenance. All detailed in monthly reports." },
     ],
   },
@@ -80,12 +80,12 @@ const faqData: Record<string, { ro: { q: string; a: string }[]; en: { q: string;
 
 const defaultFaq = {
   ro: [
-    { q: "Ce face RealTrust diferit de alți administratori?", a: "Oferim transparență totală, tehnologie avansată (smart locks, pricing dinamic), echipă dedicată și rată de ocupare medie de peste 85%." },
+    { q: "Ce face RealTrust diferit de alți administratori?", a: "Oferim transparență totală, tehnologie avansată (smart locks, pricing dinamic), echipă dedicată și o ocupare anuală asumată de 65–75%." },
     { q: "Cât durează procesul de onboarding?", a: "Procesul complet de listare a unei proprietăți noi durează 5-7 zile lucrătoare, incluzând ședința foto, configurarea listărilor și verificarea echipamentelor." },
     { q: "Pot folosi apartamentul personal în timpul anului?", a: "Absolut! Poți bloca oricâte perioade dorești pentru uz personal. Flexibilitatea este un principiu fundamental al colaborării noastre." },
   ],
   en: [
-    { q: "What makes RealTrust different from other managers?", a: "We offer full transparency, advanced technology (smart locks, dynamic pricing), a dedicated team, and an average occupancy rate above 85%." },
+    { q: "What makes RealTrust different from other managers?", a: "We offer full transparency, advanced technology (smart locks, dynamic pricing), a dedicated team, and a 65–75% assumed annual occupancy." },
     { q: "How long does the onboarding process take?", a: "The complete listing process takes 5-7 business days, including photo session, listing setup, and equipment verification." },
     { q: "Can I use my apartment personally during the year?", a: "Absolutely! You can block any periods you wish for personal use. Flexibility is a core principle of our collaboration." },
   ],

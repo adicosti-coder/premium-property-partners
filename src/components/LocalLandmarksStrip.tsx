@@ -49,8 +49,8 @@ export function LocalLandmarksStrip() {
         ? "Cazare lângă Shopping City Timișoara"
         : "Stays near Shopping City Timișoara",
       desc: ro
-        ? "Calea Circumvalațiunii — acces rapid la Shopping City Timișoara, Parcul Rozelor și Bega Shopping Center. Tramvai și autobuz la sub 100m, ocupare 90%+ în regim hotelier."
-        : "Calea Circumvalațiunii — quick access to Shopping City Timișoara, Rose Park and Bega Shopping Center. Tram and bus under 100m, 90%+ occupancy in short-term rental.",
+        ? "Calea Circumvalațiunii — acces rapid la Shopping City Timișoara, Parcul Rozelor și Bega Shopping Center. Tramvai și autobuz la sub 100m, ocupare anuală asumată 65–75% în regim hotelier."
+        : "Calea Circumvalațiunii — quick access to Shopping City Timișoara, Rose Park and Bega Shopping Center. Tram and bus under 100m, 65–75% assumed annual occupancy in short-term rental.",
     },
     {
       slug: "zona-aradului",

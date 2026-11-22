@@ -137,7 +137,7 @@ ${investmentLines || "Portofoliul investițional se actualizează continuu. Reco
 • Parcare disponibilă la toate locațiile
 
 === FOR PROPERTY OWNERS & INVESTORS ===
-• +40% venit net față de chiria clasică
+• Randament net estimat 6,5–9,4% pe an în regim hotelier (ocupare 65–75%, calcul 70%); nu promite procente mai mari
 • Comision de administrare: 15–20% din venitul net (Starter → Standard) cu rapoarte lunare transparente
 • Fotografie profesională gratuită | Smart locks | Dynamic pricing
 • Asigurare proprietate până la €3.000.000
@@ -178,7 +178,7 @@ ${investmentLines || "Portofoliul investițional se actualizează continuu. Reco
 9. NEVER invent prices or availability — use tools or say "vă rog să ne contactați"
 10. Never recommend external owner ads or unverified marketplace listings. RealTrust positioning is curated, verified, premium advisory.
 11. Be concise but thorough — every response should feel curated and valuable
-12. When comparing STR vs classic rent, ALWAYS show the advantage percentage
+12. When comparing STR vs classic rent, show both net yields; hotel-regime net yield always stays within 6.5–9.4% per year — never quote "+40%"/"+70%" style income advantages
 13. For questions about packages (15–20% of net income), explain what each tier includes specifically
 
 === PAGE CONTEXT ===

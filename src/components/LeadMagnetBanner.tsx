@@ -29,9 +29,9 @@ const LeadMagnetBanner = ({ variant = "inline", className }: LeadMagnetBannerPro
     ro: {
       badge: "Ghid Gratuit 2026",
       title: "Maximul de randament în Timișoara",
-      subtitle: "Cât mai poți câștiga din imobiliare în anul Capitalei Culturale și după? Află cum transformăm apartamentele obișnuite în investiții cu randament dublu față de chiria clasică.",
-      highlight: "30% mai mult",
-      highlightContext: "venit în regim hotelier vs chirie clasică",
+      subtitle: "Cât mai poți câștiga din imobiliare în anul Capitalei Culturale și după? Află cum transformăm apartamentele obișnuite în investiții cu randament net estimat de 6,5–9,4% pe an.",
+      highlight: "6,5–9,4%",
+      highlightContext: "randament net estimat pe an în regim hotelier",
       cta: "Vreau Ghidul Gratuit",
       namePlaceholder: "Numele tău",
       emailPlaceholder: "Email-ul tău",
@@ -45,9 +45,9 @@ const LeadMagnetBanner = ({ variant = "inline", className }: LeadMagnetBannerPro
     en: {
       badge: "Free Guide 2026",
       title: "Maximum Yield in Timișoara",
-      subtitle: "How much can you still earn from real estate in the year of the European Capital of Culture and beyond? Find out how we turn ordinary apartments into investments with double the yield of classic rent.",
-      highlight: "30% more",
-      highlightContext: "income in hotel regime vs classic rent",
+      subtitle: "How much can you still earn from real estate in the year of the European Capital of Culture and beyond? Find out how we turn ordinary apartments into investments with an estimated 6.5–9.4% net yield per year.",
+      highlight: "6.5–9.4%",
+      highlightContext: "estimated net yield per year in hotel regime",
       cta: "Get the Free Guide",
       namePlaceholder: "Your name",
       emailPlaceholder: "Your email",
@@ -165,7 +165,7 @@ const LeadMagnetBanner = ({ variant = "inline", className }: LeadMagnetBannerPro
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 bg-white/10 rounded-lg px-2 py-1">
                           <TrendingUp className="w-3 h-3" />
-                          <span className="text-[9px]">+30% Randament</span>
+                          <span className="text-[9px]">6,5–9,4% net</span>
                         </div>
                         <div className="text-[8px] opacity-70">
                           Ediție Limitată 2026

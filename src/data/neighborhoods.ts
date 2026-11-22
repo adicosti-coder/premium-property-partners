@@ -39,11 +39,11 @@ export const neighborhoods: NeighborhoodData[] = [
     avgPricePerSqm: 1920,
     listingsCount: 5,
     description:
-      'Calea Circumvalațiunii este una dintre cele mai căutate zone din Timișoara pentru investiții în regim hotelier. Complexul City of Mara, situat pe această arteră, găzduiește deja multiple apartamente gestionate de RealTrust cu rate de ocupare de peste 90%. Zona beneficiază de proximitatea parcului Rozelor, a centrului comercial Bega Shopping Center și a Universității de Vest. Transportul este excelent — tramvai și autobuz la mai puțin de 100m. Rezidenții tipici sunt studenți, tineri profesioniști și turiști de business. Infrastructura matură și cererea constantă fac din Circumvalațiunii un punct fierbinte al pieței imobiliare timișorene.',
+      'Calea Circumvalațiunii este una dintre cele mai căutate zone din Timișoara pentru investiții în regim hotelier. Complexul City of Mara, situat pe această arteră, găzduiește deja multiple apartamente gestionate de RealTrust, cu o ocupare anuală asumată de 65–75%. Zona beneficiază de proximitatea parcului Rozelor, a centrului comercial Bega Shopping Center și a Universității de Vest. Transportul este excelent — tramvai și autobuz la mai puțin de 100m. Rezidenții tipici sunt studenți, tineri profesioniști și turiști de business. Infrastructura matură și cererea constantă fac din Circumvalațiunii un punct fierbinte al pieței imobiliare timișorene.',
     metaTitle: 'Apartamente Circumvalațiunii Timișoara | RealTrust Imobiliare',
-    metaDescription: 'Apartamente în zona Circumvalațiunii, Timișoara. Complex City of Mara, ocupare 90%+, preț mediu 1.920 €/mp. Management profesional RealTrust.',
+    metaDescription: 'Apartamente în zona Circumvalațiunii, Timișoara. Complex City of Mara, ocupare anuală 65–75%, preț mediu 1.920 €/mp. Management profesional RealTrust.',
     faq: [
-      { question: 'Ce rată de ocupare au apartamentele din Circumvalațiunii?', answer: 'Apartamentele gestionate de RealTrust în zona Circumvalațiunii (Complex City of Mara) au o rată de ocupare de peste 90%, datorită cererii constante din partea studenților și turiștilor de business.' },
+      { question: 'Ce rată de ocupare au apartamentele din Circumvalațiunii?', answer: 'Apartamentele gestionate de RealTrust în zona Circumvalațiunii (Complex City of Mara) au o ocupare anuală asumată de 65–75% (70% în calcule), datorită cererii constante din partea studenților și turiștilor de business.' },
       { question: 'Ce facilități sunt în zona Circumvalațiunii?', answer: 'Zona include Parcul Rozelor, Bega Shopping Center, Universitatea de Vest, tramvai și autobuz la sub 100m, plus restaurante și cafenele.' },
       { question: 'Care este profilul chiriașilor din Circumvalațiunii?', answer: 'Chiriașii tipici sunt studenți ai universităților din Timișoara, tineri profesioniști și turiști de business care caută cazare pe termen scurt.' },
     ],

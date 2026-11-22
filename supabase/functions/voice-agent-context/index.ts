@@ -28,20 +28,16 @@ function normalizeRoPhone(raw: string): string | null {
 
 // ── Andrei core playbook (injected on every call) ─────────────────────
 // Hybrid operating model: regim hotelier gestionat de RealTrust + ApArt Hotel.
-// • Venitul brut net realizat este cu ~70% MAI MARE decât chiria clasică pe termen
-//   lung pe aceeași proprietate (sursa: portofoliu intern, ocupare 75%, ADR mediu).
-// • ROI net standard publicat = 9.4%/an.
-// • Combinația „venit +70% vs chiria clasică de 7%” = argumentul principal când
-//   un proprietar întreabă de randament. Andrei NU promite 70% ROI anual — promite
-//   „venit cu ~70% mai mare decât închirierea clasică, cu un ROI net de 9.4%/an”.
+// • Randament net estimat aprobat: 6,5–9,4% pe an (ocupare anuală 65–75%, calcul 70%),
+//   după canale, utilități, menaj, impozit și comisionul RealTrust 15–20% din venitul net.
+// • Andrei nu promite procente peste interval și nu folosește comparații de tip „+70%”.
 const ANDREI_ROI_PLAYBOOK =
   "ROI PLAYBOOK (obligatoriu când proprietarul întreabă de randament): " +
   "Modelul nostru HIBRID (regim hotelier gestionat end-to-end de RealTrust + ApArt Hotel) " +
-  "generează un venit brut cu aproximativ 70% mai mare decât chiria clasică pe termen lung pe aceeași proprietate, " +
-  "rezultând un ROI NET de 9.4% pe an după costurile de operare, impozit și Property Management RealTrust (15-20% din venitul net). " +
+  "are un randament NET estimat de 6,5–9,4% pe an, după comisioanele canalelor, utilități, menaj, impozit și Property Management RealTrust (15–20% din venitul net). " +
   "Comparativ, chiria clasică în Timișoara aduce 5-7% net. " +
-  "Folosește mereu cifre clare: ocupare 75%, ADR mediu pe complex, venit lunar țintă. " +
-  "Nu inventa procente. Nu promite ROI > 9.4% pe an decât dacă ai date concrete de la dispatcher.";
+  "Folosește mereu cifre clare: ocupare anuală 65–75% (calcul 70%), ADR mediu pe complex, venit lunar țintă. " +
+  "Nu inventa procente. Nu promite randament net peste 9,4% pe an.";
 
 const ANDREI_OBJECTIONS_TIMISOARA =
   "OBIECȚII LOCALE TIMIȘOARA (răspunsuri scurte, în maxim 2 fraze): " +
@@ -54,7 +50,7 @@ const ANDREI_OBJECTIONS_TIMISOARA =
   "Iosefin = Sinagoga, Fabric = Piața Traian + Millennium, cerere mare din partea Capitalei Culturale. " +
   "(d) „Vreau să administrez singur” → arată costul real al timpului: check-in, curățenie, plângeri, reglementări ANAF; " +
   "noi preluăm tot pentru Property Management RealTrust, 15-20% din venitul net. " +
-  "(e) „De ce 9.4% și nu 12-15%?” → randamentele de peste 10% nete sunt marketing; noi publicăm cifre auditate.";
+  "(e) „De ce 6,5–9,4% și nu 12-15%?” → procentele nete de două cifre sunt marketing; noi publicăm cifre auditate.";
 
 const UNKNOWN_CONTEXT =
   "CFR NOTE: Apelant necunoscut — numărul nu este în pipeline-ul nostru. " +

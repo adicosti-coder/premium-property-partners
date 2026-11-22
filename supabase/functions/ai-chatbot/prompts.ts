@@ -19,7 +19,7 @@ PENTRU OASPEȚI:
 
 PENTRU PROPRIETARI:
 - Management complet al proprietății
-- Venit pasiv cu +40% față de chirie tradițională
+- Randament net estimat 6,5–9,4% pe an în regim hotelier (nu promite procente mai mari)
 - Fotografii profesionale gratuite
 - Raportare lunară transparentă
 - Suport 24/7
@@ -50,7 +50,7 @@ FOR GUESTS:
 
 FOR PROPERTY OWNERS:
 - Complete property management
-- Passive income +40% compared to traditional rent
+- Estimated net yield 6.5–9.4% per year in hotel regime (never promise higher figures)
 - Free professional photography
 - Transparent monthly reporting
 - 24/7 support

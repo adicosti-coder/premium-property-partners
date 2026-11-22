@@ -21,14 +21,14 @@ export const drawWhyTimisoaraPage = (ctx: PdfContext) => {
     ? [
         { icon: "📈", title: "Creștere Turistică +40%", desc: "Datorită titlului de Capitală Culturală Europeană" },
         { icon: "💻", title: "Al Doilea Hub IT", desc: "Cerere constantă pentru închirieri pe termen scurt" },
-        { icon: "💰", title: "Randamente 8-11%", desc: "Vs 3-4% chirie clasică — diferență masivă de profit" },
+        { icon: "💰", title: "Randament net 6,5–9,4%", desc: "Vs 3-4% chirie clasică — diferență masivă de profit" },
         { icon: "🏷️", title: "Prețuri Accesibile", desc: "Cu 30-50% sub București sau Cluj-Napoca" },
         { icon: "🚀", title: "Infrastructură Modernă", desc: "Aeroport extins, tramvaie noi, regenerare urbană" },
       ]
     : [
         { icon: "📈", title: "+40% Tourism Growth", desc: "Due to European Capital of Culture title" },
         { icon: "💻", title: "2nd IT Hub in Romania", desc: "Constant demand for short-term rentals" },
-        { icon: "💰", title: "8-11% Yields", desc: "Vs 3-4% classic rental — massive profit difference" },
+        { icon: "💰", title: "6.5–9.4% Net Yields", desc: "Vs 3-4% classic rental — massive profit difference" },
         { icon: "🏷️", title: "Affordable Prices", desc: "30-50% below Bucharest or Cluj-Napoca" },
         { icon: "🚀", title: "Modern Infrastructure", desc: "Expanded airport, new trams, urban regeneration" },
       ];

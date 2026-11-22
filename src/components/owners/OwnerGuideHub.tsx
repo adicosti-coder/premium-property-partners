@@ -25,7 +25,7 @@ const OwnerGuideHub = () => {
         },
         {
           title: "Ghid de amenajare pentru randament maxim",
-          desc: "Cum amenajezi un apartament în regim hotelier ca să atragi recenzii 9.5+ și ocupare peste 85%.",
+          desc: "Cum amenajezi un apartament în regim hotelier ca să atragi recenzii 9.5+ și o ocupare anuală stabilă de 65–75%.",
           to: "/blog?category=amenajare",
         },
         {
@@ -54,7 +54,7 @@ const OwnerGuideHub = () => {
         },
         {
           title: "Interior design guide for maximum yield",
-          desc: "How to furnish a short-term rental to earn 9.5+ reviews and 85%+ occupancy.",
+          desc: "How to furnish a short-term rental to earn 9.5+ reviews and a steady 65–75% annual occupancy.",
           to: "/blog?category=amenajare",
         },
         {

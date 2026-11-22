@@ -57,7 +57,7 @@ const data: Record<string, NeighborhoodData> = {
       ro: "Iulius Town este cel mai mare proiect mixed-use din vestul României, integrând shopping, birouri clasa A, restaurante și apartamente premium. Zona generează cerere constantă din partea turiștilor business, oaspeților UnitedBusinessCenter și călătorilor în tranzit.",
       en: "Iulius Town is the largest mixed-use project in western Romania, integrating shopping, Class A offices, restaurants and premium apartments. The area generates constant demand from business tourists, United Business Center guests and transit travelers.",
     },
-    stats: { roi: "9.3%", avgIncome: "€1.250", occupancy: "91%", rating: "9.5" },
+    stats: { roi: "9.3%", avgIncome: "€1.250", occupancy: "65–75%", rating: "9.5" },
     highlights: [
       {
         ro: "Acces direct la Iulius Mall (200+ magazine, food court, cinema)",
@@ -116,7 +116,7 @@ const data: Record<string, NeighborhoodData> = {
         },
         {
           q: "Care este profilul tipic al oaspeților în zona Iulius Town?",
-          a: "Aproximativ 65% sunt călători business (corporate stays 2-4 nopți), 25% turiști de weekend și 10% călători în tranzit spre/dinspre aeroport. Ocupare medie 91%.",
+          a: "Aproximativ 65% sunt călători business (corporate stays 2-4 nopți), 25% turiști de weekend și 10% călători în tranzit spre/dinspre aeroport. Ocupare anuală asumată 65–75%.",
         },
         {
           q: "Ce facilități atrag oaspeții în zona Iulius Town?",
@@ -130,7 +130,7 @@ const data: Record<string, NeighborhoodData> = {
         },
         {
           q: "What is the typical guest profile in the Iulius Town area?",
-          a: "Approximately 65% business travelers (2-4 night corporate stays), 25% weekend tourists, 10% airport transit travelers. Average occupancy 91%.",
+          a: "Approximately 65% business travelers (2-4 night corporate stays), 25% weekend tourists, 10% airport transit travelers. Assumed annual occupancy 65–75%.",
         },
         {
           q: "What attracts guests to the Iulius Town area?",

@@ -1,5 +1,13 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Aliniere cifre performanță — 22 noiembrie
+- [x] Andrei chat și apeluri: 9,7/10, 65–75% (calcul 70%), 6,5–9,4% net, 15–20% din net; fără „+40%/+70%”
+- [x] Generator descrieri anunțuri: scor 9,7/10, ocupare 65–75%, randament 6,5–9,4%
+- [x] Pagini site: Centru Istoric, FAQ proprietăți, cartiere, catalog investiții, ghiduri PDF
+- [x] Airbnb 4,9/5 și testimonialele 9,6%/9,8% rămân (confirmat Adrian)
+- [x] Articole blog (14) și descrieri anunțuri (26) din baza de date — doar cifrele, copie de siguranță păstrată
+- [x] Teste noi + toată suita (1070)
+
 ## Centru WhatsApp unificat — 21 noiembrie
 - [x] Un singur ecran „Centru WhatsApp”: coadă/livrare, atenție manuală, rapoarte compacte, toate instrumentele vechi
 - [x] Butoane „Reîncearcă / Deblochează coada” și „Trimite mesaj test” cu confirmare și jurnal de audit
@@ -10,7 +18,7 @@
 - [x] Promisiuni de randament nepermise scoase din paginile citite de Google și AI (9%+, 8–11%, garantat/verificat/dovedit) + test
 - [x] Descrierile ansamblurilor din baza de date (Ateneo, Campeador, City of Mara, Fructus Plaza, Nord-One, Vivalia)
 - [x] llms.txt: catalog cu 6,5–9,4% și linkuri spre ansambluri
-- [x] Ocupare 78–95% din textele cartierelor: rămâne neschimbată (decizie 15 nov)
+- [x] Ocupare 78–95% din textele cartierelor: aliniată la 65–75% pe 22 nov
 - [x] ISHO scos din textele publice, pagini dedicate redirecționate
 - [x] Anunț ISHO redenumit; 2 articole ISHO ascunse și redirecționate; 4 articole curățate
 

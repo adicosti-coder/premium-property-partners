@@ -494,7 +494,7 @@ const Investitii = () => {
                               {t.cardOccupancy}
                             </td>
                             <td className="py-2.5 text-right font-sans font-bold text-green-400 text-base">
-                              85–92%
+                              65–75%
                             </td>
                           </tr>
                         </tbody>

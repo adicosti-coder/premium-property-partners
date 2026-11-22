@@ -37,7 +37,7 @@ const OwnerObjectionsFAQ = () => {
           {
             icon: TrendingUp,
             q: "De ce să nu închiriez pe termen lung, mai simplu?",
-            a: "Pe aceleași apartamente din Timișoara, regimul hotelier gestionat profesionist produce în medie cu circa 40% mai mult net decât chiria clasică — la o ocupare de lucru de 75% ținta noastră este 9,4% randament net anual. În plus, dispar exact riscurile care doare la chiria pe termen lung: rău-platnicii (la noi banii intră înainte de cazare), evacuarea prin instanță, apartamentul văzut o dată la 12 luni. Curățenia profesională la fiecare plecare înseamnă că starea apartamentului este verificată de câteva ori pe lună, nu o dată pe an. Compromisul e real și îl spunem deschis: venitul variază lunar și apartamentul are nevoie de un standard minim de amenajare.",
+            a: "Pe aceleași apartamente din Timișoara, regimul hotelier gestionat profesionist are un randament net estimat de 6,5–9,4% pe an, la o ocupare anuală asumată de 65–75% (70% în calcule). În plus, dispar exact riscurile care doare la chiria pe termen lung: rău-platnicii (la noi banii intră înainte de cazare), evacuarea prin instanță, apartamentul văzut o dată la 12 luni. Curățenia profesională la fiecare plecare înseamnă că starea apartamentului este verificată de câteva ori pe lună, nu o dată pe an. Compromisul e real și îl spunem deschis: venitul variază lunar și apartamentul are nevoie de un standard minim de amenajare.",
           },
           {
             icon: LineChart,
@@ -65,7 +65,7 @@ const OwnerObjectionsFAQ = () => {
           {
             icon: TrendingUp,
             q: "Why not just rent long term?",
-            a: "On the same Timișoara apartments, professionally managed short-term rental nets roughly 40% more than long-term rent — at a 75% working occupancy our target is 9.4% net annual yield. It also removes the long-term risks: non-paying tenants (we're paid before check-in), court evictions, and seeing your apartment once a year. Professional cleaning after every stay means the apartment is inspected several times a month. The trade-off is real and we say it openly: income varies month to month and the apartment needs a minimum furnishing standard.",
+            a: "On the same Timișoara apartments, professionally managed short-term rental has an estimated net yield of 6.5–9.4% per year, at an assumed annual occupancy of 65–75% (70% in calculations). It also removes the long-term risks: non-paying tenants (we're paid before check-in), court evictions, and seeing your apartment once a year. Professional cleaning after every stay means the apartment is inspected several times a month. The trade-off is real and we say it openly: income varies month to month and the apartment needs a minimum furnishing standard.",
           },
           {
             icon: LineChart,

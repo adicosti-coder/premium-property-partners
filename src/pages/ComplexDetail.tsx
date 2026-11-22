@@ -86,7 +86,7 @@ const ComplexDetail = () => {
       localSeoTitle: "Management Regim Hotelier",
       localSeoText: "RealTrust oferă servicii complete de administrare în regim hotelier pentru proprietățile din",
       benefits: [
-        "Venituri cu până la 40% mai mari decât chiria clasică",
+        "Randament net estimat 6,5–9,4% pe an în regim hotelier",
         "Management complet - nu trebuie să te ocupi de nimic",
         "Transparență financiară totală",
         "Mentenanță preventivă inclusă",
@@ -116,7 +116,7 @@ const ComplexDetail = () => {
       localSeoTitle: "Short-Term Rental Management",
       localSeoText: "RealTrust offers complete short-term rental management services for properties in",
       benefits: [
-        "Income up to 40% higher than traditional rent",
+        "Estimated net yield of 6.5–9.4% per year in hotel regime",
         "Complete management - you don't have to do anything",
         "Total financial transparency",
         "Preventive maintenance included",

@@ -1,4 +1,5 @@
 import type { jsPDF as JsPDFType } from "jspdf";
+import { GUEST_SCORE_EN, GUEST_SCORE_RO } from "@/lib/businessFacts";
 
 interface ExportOptions {
   language?: "ro" | "en";
@@ -274,8 +275,8 @@ export const exportInvestorGuidePdf = async ({ language = "ro" }: ExportOptions 
   
   drawSubsection(isRo ? "Predicții pentru Piața Imobiliară" : "Real Estate Market Predictions");
   drawParagraph(isRo 
-    ? "Analiștii estimează o creștere de 15-20% a prețurilor imobiliare în zonele centrale până în 2027, cu un potențial de randament în regim hotelier care depășește 10% anual în locațiile premium."
-    : "Analysts estimate a 15-20% increase in real estate prices in central areas by 2027, with hotel-style rental yields potentially exceeding 10% annually in premium locations."
+    ? "Analiștii estimează o creștere de 15-20% a prețurilor imobiliare în zonele centrale până în 2027, cu un randament net estimat în regim hotelier de 6,5–9,4% pe an."
+    : "Analysts estimate a 15-20% increase in real estate prices in central areas by 2027, with estimated hotel-style net yields of 6.5–9.4% per year."
   );
 
   // ========== PAGE 4: RANDAMENT HOTELIER VS CLASIC ==========
@@ -373,16 +374,16 @@ export const exportInvestorGuidePdf = async ({ language = "ro" }: ExportOptions 
   
   const zones = isRo 
     ? [
-        { name: "Piața Victoriei / Centru Istoric", roi: "9.5-11%", desc: "Cea mai căutată locație pentru turiști și călători de business. Proximitate la restaurante, muzee, Opera." },
-        { name: "Piața Unirii / Cetate", roi: "8.5-10%", desc: "Zonă istorică premium cu arhitectură barocă. Ideală pentru sejururi culturale și romantice." },
-        { name: "Iulius Town / Dâmbovița", roi: "8-9.5%", desc: "Hub modern cu mall, birouri IT și acces facil. Popular pentru călătorii de business de lungă durată." },
+        { name: "Piața Victoriei / Centru Istoric", roi: "8.5-9.4%", desc: "Cea mai căutată locație pentru turiști și călători de business. Proximitate la restaurante, muzee, Opera." },
+        { name: "Piața Unirii / Cetate", roi: "8-9.4%", desc: "Zonă istorică premium cu arhitectură barocă. Ideală pentru sejururi culturale și romantice." },
+        { name: "Iulius Town / Dâmbovița", roi: "7.5-9%", desc: "Hub modern cu mall, birouri IT și acces facil. Popular pentru călătorii de business de lungă durată." },
         { name: "Take Ionescu / Complexul Studențesc", roi: "7.5-9%", desc: "Zonă vibrantă cu viață de noapte. Populară pentru grupuri și tineri profesioniști." },
         { name: "Fabric / Iosefin", roi: "7-8.5%", desc: "Zone în dezvoltare cu potențial de creștere. Prețuri de achiziție mai accesibile, randament în creștere." }
       ]
     : [
-        { name: "Victory Square / Historic Center", roi: "9.5-11%", desc: "Most sought-after location for tourists and business travelers. Close to restaurants, museums, Opera." },
-        { name: "Union Square / Citadel", roi: "8.5-10%", desc: "Premium historic area with baroque architecture. Ideal for cultural and romantic stays." },
-        { name: "Iulius Town / Dâmbovița", roi: "8-9.5%", desc: "Modern hub with mall, IT offices and easy access. Popular for long-term business travelers." },
+        { name: "Victory Square / Historic Center", roi: "8.5-9.4%", desc: "Most sought-after location for tourists and business travelers. Close to restaurants, museums, Opera." },
+        { name: "Union Square / Citadel", roi: "8-9.4%", desc: "Premium historic area with baroque architecture. Ideal for cultural and romantic stays." },
+        { name: "Iulius Town / Dâmbovița", roi: "7.5-9%", desc: "Modern hub with mall, IT offices and easy access. Popular for long-term business travelers." },
         { name: "Take Ionescu / Student Complex", roi: "7.5-9%", desc: "Vibrant area with nightlife. Popular for groups and young professionals." },
         { name: "Fabric / Iosefin", roi: "7-8.5%", desc: "Developing areas with growth potential. More accessible purchase prices, growing ROI." }
       ];
@@ -452,8 +453,8 @@ export const exportInvestorGuidePdf = async ({ language = "ro" }: ExportOptions 
   
   drawSubsection(isRo ? "Rezultate Dovedite" : "Proven Results");
   
-  drawHighlightBox(isRo ? "OCUPARE MEDIE" : "AVG OCCUPANCY", "85%", isRo ? "portofoliu 2024" : "2024 portfolio");
-  drawHighlightBox(isRo ? "RATING MEDIU" : "AVG RATING", "9.2/10", isRo ? "Booking.com" : "Booking.com");
+  drawHighlightBox(isRo ? "OCUPARE ANUALĂ" : "ANNUAL OCCUPANCY", "65–75%", isRo ? "calcul 70%" : "70% in calculations");
+  drawHighlightBox(isRo ? "RATING MEDIU" : "AVG RATING", `${isRo ? GUEST_SCORE_RO : GUEST_SCORE_EN}/10`, isRo ? "Booking.com" : "Booking.com");
   drawHighlightBox(isRo ? "PROPRIETARI MULȚUMIȚI" : "SATISFIED OWNERS", "98%", isRo ? "rată de retenție" : "retention rate");
 
   // ========== LAST PAGE: CTA ==========

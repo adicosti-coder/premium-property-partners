@@ -16,7 +16,7 @@ type CityKey =
   | "lugoj";
 
 // Baseline: 1-bedroom (2-camere) in Iosefin, October 2025.
-// Multipliers tuned to internal portfolio data (75–85% occupancy, 6.5–9.4% estimated net annual ROI).
+// Multipliers tuned to internal portfolio data (65–75% annual occupancy, 70% in calculations, 6.5–9.4% estimated net annual ROI).
 const TYPE_MULTIPLIER: Record<ApartmentType, { adr: number; revenue: number; cleaning: number; net: number }> = {
   garsoniera: { adr: 0.78, revenue: 0.72, cleaning: 0.85, net: 0.7 },
   "2-camere": { adr: 1, revenue: 1, cleaning: 1, net: 1 },
@@ -97,7 +97,7 @@ const OwnerHowItWorks = () => {
           icon: ClipboardCheck,
           number: "01",
           title: "Evaluare gratuită, calibrată pe date reale",
-          description: "Estimăm venitul lunar pe intervale recalibrate trimestrial din portofoliul nostru în regim hotelier (75–85% ocupare, tarife 2025–2026, comisioane Booking/Airbnb deduse). Fără promisiuni umflate — doar cifre verificate pe apartamente similare din zona ta.",
+          description: "Estimăm venitul lunar pe intervale recalibrate trimestrial din portofoliul nostru în regim hotelier (ocupare anuală 65–75%, 70% în calcule, tarife 2025–2026, comisioane Booking/Airbnb deduse). Fără promisiuni umflate — doar cifre verificate pe apartamente similare din zona ta.",
           detail: "Răspuns în 24h",
         },
         {
@@ -174,7 +174,7 @@ const OwnerHowItWorks = () => {
           icon: ClipboardCheck,
           number: "01",
           title: "Free evaluation, calibrated on real data",
-          description: "We estimate monthly income using ranges recalibrated quarterly from our hotel-regime portfolio (75–85% occupancy, 2025–2026 rates, Booking/Airbnb fees deducted). No inflated promises — only verified figures from comparable apartments in your area.",
+          description: "We estimate monthly income using ranges recalibrated quarterly from our hotel-regime portfolio (65–75% annual occupancy, 70% in calculations, 2025–2026 rates, Booking/Airbnb fees deducted). No inflated promises — only verified figures from comparable apartments in your area.",
           detail: "Answer in 24h",
         },
         {

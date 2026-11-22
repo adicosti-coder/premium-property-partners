@@ -50,7 +50,7 @@ const complexLinks = [
 const scenarioCards = [
   { title: "Conservator", occupancy: "65%", adr: "55–65€", roi: "6.8–8.0%", note: "potrivit pentru apartamente standard, fără poziționare premium" },
   { title: "RealTrust standard", occupancy: "70%", adr: "68–82€", roi: "6,5–9,4%", note: "modelul de lucru recomandat pentru randament stabil" },
-  { title: "Premium complex", occupancy: "75%", adr: "85–110€", roi: "10%+", note: "unități în complexe noi, aproape de business și servicii" },
+  { title: "Premium complex", occupancy: "75%", adr: "85–110€", roi: "8,5–9,4%", note: "unități în complexe noi, aproape de business și servicii" },
 ];
 
 const sensitivityMatrix = [65, 70, 75].map(occupancy => {

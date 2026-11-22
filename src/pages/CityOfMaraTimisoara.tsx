@@ -41,7 +41,7 @@ const strengths = [
 
 const apartmentTypes = [
   { type: "Studio", area: "38–42 mp", use: "Regim hotelier / corporate", roi: "8.4–9.2%", price: "de la 78.000€" },
-  { type: "2 camere", area: "50–58 mp", use: "Chirie premium / investiție", roi: "8.6–9.6%", price: "de la 105.000€" },
+  { type: "2 camere", area: "50–58 mp", use: "Chirie premium / investiție", roi: "8.6–9.4%", price: "de la 105.000€" },
   { type: "3 camere", area: "68–82 mp", use: "Familie / revânzare", roi: "7.4–8.6%", price: "de la 145.000€" },
   { type: "Penthouse", area: "90+ mp", use: "Premium / capital appreciation", roi: "6.8–8.0%", price: "la cerere" },
 ];
@@ -75,7 +75,7 @@ const proximityHighlights = [
 const yieldScenarios = [
   { label: "Conservator", occupancy: "65%", monthly: "520–650€", detail: "chirie lungă sau corporate, risc operațional scăzut" },
   { label: "Echilibrat", occupancy: "75%", monthly: "720–920€", detail: "mix chirie medie + perioade scurte, mobilare premium" },
-  { label: "Dinamic", occupancy: "82%", monthly: "950–1.250€", detail: "regim hotelier administrat profesional, calendar optimizat" },
+  { label: "Dinamic", occupancy: "75%", monthly: "950–1.250€", detail: "regim hotelier administrat profesional, calendar optimizat" },
 ];
 
 const decisionHighlights = [

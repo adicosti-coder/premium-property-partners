@@ -275,7 +275,7 @@ const CatalogInvestitii = () => {
         {
           question: "Care sunt avantajele zonelor cu parcuri industriale (Continental, Hella, VGP, WDP, Incontro)?",
           answer:
-            "Cartierele Aradului, Calea Torontalului și Ghiroda beneficiază de cerere constantă de chirie din partea angajaților relocați la Continental, Hella, VGP, WDP, Incontro și Linde. Proprietățile aici au ocupare 95%+ și sunt ideale pentru închiriere medii și lungi.",
+            "Cartierele Aradului, Calea Torontalului și Ghiroda beneficiază de cerere constantă de chirie din partea angajaților relocați la Continental, Hella, VGP, WDP, Incontro și Linde. Proprietățile aici au cerere stabilă (ocupare anuală asumată 65–75% în regim hotelier) și sunt ideale pentru închiriere medii și lungi.",
         },
       ]
     : [
@@ -307,7 +307,7 @@ const CatalogInvestitii = () => {
         {
           question: "What are the benefits of areas near industrial parks (Continental, Hella, VGP, WDP, Incontro)?",
           answer:
-            "Aradului, Calea Torontalului and Ghiroda neighborhoods benefit from constant rental demand from employees relocated to Continental, Hella, VGP, WDP, Incontro and Linde. Properties here have 95%+ occupancy and are ideal for medium and long-term rentals.",
+            "Aradului, Calea Torontalului and Ghiroda neighborhoods benefit from constant rental demand from employees relocated to Continental, Hella, VGP, WDP, Incontro and Linde. Properties here see steady demand (65–75% assumed annual occupancy in hotel regime) and are ideal for medium and long-term rentals.",
         },
       ];
 
@@ -625,8 +625,8 @@ const CatalogInvestitii = () => {
                       </h3>
                       <p className="text-sm text-muted-foreground leading-relaxed">
                         {isRo
-                          ? "Proximitatea față de Continental, Hella, VGP, WDP, Incontro și Linde generează cerere constantă de chirie pe Calea Aradului, Calea Torontalului și Ghiroda — ocupare 95%+."
-                          : "Proximity to Continental, Hella, VGP, WDP, Incontro and Linde drives steady rental demand on Calea Aradului, Calea Torontalului and Ghiroda — 95%+ occupancy."}
+                          ? "Proximitatea față de Continental, Hella, VGP, WDP, Incontro și Linde generează cerere constantă de chirie pe Calea Aradului, Calea Torontalului și Ghiroda — ocupare anuală asumată 65–75%."
+                          : "Proximity to Continental, Hella, VGP, WDP, Incontro and Linde drives steady rental demand on Calea Aradului, Calea Torontalului and Ghiroda — 65–75% assumed annual occupancy."}
                       </p>
                     </div>
                   </div>

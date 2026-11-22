@@ -113,32 +113,32 @@ const PropertyFAQ = ({
         { q: `Ce acte sunt necesare pentru achiziție?`, a: `Pentru cumpărarea unui apartament aveți nevoie de: act de identitate, certificat fiscal, extras de carte funciară actualizat. Vă putem recomanda un notar de încredere din Timișoara.` },
         { q: `Se poate achiziționa cu credit ipotecar?`, a: `Da, apartamentul este eligibil pentru credit ipotecar. Colaborăm cu brokeri de credite care pot obține cele mai bune dobânzi. Avansul minim este de 15-25%.` },
         { q: `Care este potențialul zonei pentru investiție?`, a: `Zona ${location} din Timișoara are un trend ascendent al valorii imobiliare. Proximitatea față de centre comerciale, universități și transport public asigură cerere constantă.` },
-        { q: `Apartamentul poate fi dat în regim hotelier?`, a: `Da! RealTrust oferă servicii complete de administrare în regim hotelier cu randament net de 9-10%. Proprietatea poate genera venit imediat după achiziție.` },
+        { q: `Apartamentul poate fi dat în regim hotelier?`, a: `Da! RealTrust oferă servicii complete de administrare în regim hotelier cu randament net estimat de 6,5–9,4% pe an. Proprietatea poate genera venit imediat după achiziție.` },
       ] : [
         locationItem,
         { q: `What is the sale price?`, a: pricePerNight ? `The asking price is €${pricePerNight.toLocaleString('en-US')}. Contact us for negotiation details and payment options.` : `Contact us to find out the current price and sale conditions.` },
         { q: `What documents are needed for purchase?`, a: `To buy an apartment you need: valid ID, tax certificate, updated land registry extract. We can recommend a trusted notary in Timișoara.` },
         { q: `Can it be purchased with a mortgage?`, a: `Yes, the apartment is eligible for mortgage financing. We work with credit brokers who can secure the best rates. Minimum down payment is 15-25%.` },
         { q: `What is the area's investment potential?`, a: `The ${location} area in Timișoara has an upward trend in real estate values. Proximity to shopping centers, universities, and public transport ensures constant demand.` },
-        { q: `Can the apartment be rented short-term?`, a: `Yes! RealTrust offers complete short-term rental management with 9-10% net yield. The property can generate income immediately after purchase.` },
+        { q: `Can the apartment be rented short-term?`, a: `Yes! RealTrust offers complete short-term rental management with an estimated 6.5–9.4% net yield per year. The property can generate income immediately after purchase.` },
       ];
     }
 
     if (isInvestmentType) {
       return language === "ro" ? [
         locationItem,
-        ...(pricePerNight ? [{ q: `Care este prețul de achiziție și cum se calculează randamentul?`, a: `Prețul de achiziție este de €${pricePerNight.toLocaleString('ro-RO')}. Randamentul net se calculează pe baza venitului anual din regim hotelier minus costurile de administrare (20%) și impozit (7%).` }] : []),
-        { q: `Ce randament net pot obține în regim hotelier?`, a: `Proprietățile administrate de RealTrust generează un randament net de 9-10% pe an, cu o rată de ocupare medie de 85-98%. Rezultatul depinde de sezon, locație și calitatea finisajelor.` },
+        ...(pricePerNight ? [{ q: `Care este prețul de achiziție și cum se calculează randamentul?`, a: `Prețul de achiziție este de €${pricePerNight.toLocaleString('ro-RO')}. Randamentul net se calculează pe baza venitului anual din regim hotelier minus comisioanele platformelor, utilitățile, menajul, comisionul de administrare (15–20% din venitul net) și impozitul.` }] : []),
+        { q: `Ce randament net pot obține în regim hotelier?`, a: `Proprietățile administrate de RealTrust au un randament net estimat de 6,5–9,4% pe an, la o ocupare anuală asumată de 65–75% (70% în calcule). Rezultatul depinde de sezon, locație și calitatea finisajelor.` },
         { q: `Cum funcționează administrarea de către RealTrust?`, a: `RealTrust se ocupă de tot: listare pe Booking.com și Airbnb, fotografii profesionale, dynamic pricing, comunicare cu oaspeții, curățenie profesionistă, mentenanță și raportare lunară transparentă.` },
-        { q: `Care sunt costurile de administrare?`, a: `Comisionul de management este de 15–20% din venitul brut, în funcție de pachetul ales. Nu există costuri ascunse — totul este transparent în raportarea lunară.` },
+        { q: `Care sunt costurile de administrare?`, a: `Comisionul de management este de 15–20% din venitul net (brut minus comisioanele canalelor și utilitățile), în funcție de pachetul ales. Nu există costuri ascunse — totul este transparent în raportarea lunară.` },
         { q: `Cât de rapid poate genera venit proprietatea?`, a: `Apartamentele sunt operaționale în 2-4 săptămâni de la predare. RealTrust se ocupă de amenajare, fotografiere și listare pe toate platformele majore.` },
         { q: `Proprietatea este asigurată?`, a: `Da, toate proprietățile administrate beneficiază de asigurare de 3 milioane EUR prin programele Booking.com și Airbnb, plus asigurare suplimentară RealTrust.` },
       ] : [
         locationItem,
-        ...(pricePerNight ? [{ q: `What is the purchase price and how is the yield calculated?`, a: `The purchase price is €${pricePerNight.toLocaleString('en-US')}. Net yield is calculated based on annual short-term rental income minus management costs (20%) and tax (7%).` }] : []),
-        { q: `What net yield can I expect from short-term rental?`, a: `Properties managed by RealTrust generate 9-10% net yield per year, with an average occupancy rate of 85-98%. Results depend on season, location, and finish quality.` },
+        ...(pricePerNight ? [{ q: `What is the purchase price and how is the yield calculated?`, a: `The purchase price is €${pricePerNight.toLocaleString('en-US')}. Net yield is calculated based on annual short-term rental income minus platform fees, utilities, cleaning, the management fee (15–20% of net income) and tax.` }] : []),
+        { q: `What net yield can I expect from short-term rental?`, a: `Properties managed by RealTrust have an estimated net yield of 6.5–9.4% per year, at an assumed annual occupancy of 65–75% (70% in calculations). Results depend on season, location, and finish quality.` },
         { q: `How does RealTrust management work?`, a: `RealTrust handles everything: listing on Booking.com and Airbnb, professional photography, dynamic pricing, guest communication, professional cleaning, maintenance, and transparent monthly reporting.` },
-        { q: `What are the management costs?`, a: `The management fee is 15–20% of gross revenue, depending on the chosen package. No hidden costs — everything is transparent in the monthly report.` },
+        { q: `What are the management costs?`, a: `The management fee is 15–20% of net income (gross minus channel fees and utilities), depending on the chosen package. No hidden costs — everything is transparent in the monthly report.` },
         { q: `How quickly can the property generate income?`, a: `Apartments are operational within 2-4 weeks of handover. RealTrust handles furnishing, photography, and listing on all major platforms.` },
         { q: `Is the property insured?`, a: `Yes, all managed properties benefit from €3 million insurance through Booking.com and Airbnb programs, plus additional RealTrust insurance.` },
       ];

@@ -1,4 +1,5 @@
 import { useParams } from "react-router-dom";
+import { GUEST_SCORE_EN, GUEST_SCORE_RO } from "@/lib/businessFacts";
 import { lazy, Suspense } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -70,10 +71,10 @@ const zones: Record<string, ZoneData> = {
     rating: "4.9",
     seoTitle: "Cazare Regim Hotelier Centrul Istoric Timișoara — lângă Piața Victoriei",
     seoTitleEn: "Hotel-Regime Accommodation Old Town Timișoara — near Victory Square",
-    seoDescription: "Cazare regim hotelier în Centrul Istoric Timișoara, la 2 min de Piața Victoriei. Apartamente premium gestionate profesional, check-in inteligent, rating 4.9/5.",
-    seoDescriptionEn: "Hotel-regime accommodation in Timișoara Old Town, 2 min from Victory Square. Premium apartments, smart check-in, 4.9/5 rating.",
-    summaryRo: "Cazare regim hotelier în Centrul Istoric Timișoara: apartamente gestionate profesional cu check-in inteligent, rating 4.9/5, ocupare anuală asumată 65–75%, la 2 minute de Piața Victoriei. Ideal pentru turiști și investitori.",
-    summaryEn: "Hotel-regime accommodation in Timișoara Old Town: professionally managed apartments with smart check-in, 4.9/5 rating, 65–75% assumed annual occupancy, 2 minutes from Victory Square.",
+    seoDescription: `Cazare regim hotelier în Centrul Istoric Timișoara, la 2 min de Piața Victoriei. Apartamente premium gestionate profesional, check-in inteligent, scor ${GUEST_SCORE_RO}/10 pe Booking.com.`,
+    seoDescriptionEn: `Hotel-regime accommodation in Timișoara Old Town, 2 min from Victory Square. Premium apartments, smart check-in, ${GUEST_SCORE_EN}/10 Booking.com score.`,
+    summaryRo: `Cazare regim hotelier în Centrul Istoric Timișoara: apartamente gestionate profesional cu check-in inteligent, scor ${GUEST_SCORE_RO}/10 pe Booking.com, ocupare anuală asumată 65–75%, la 2 minute de Piața Victoriei. Ideal pentru turiști și investitori.`,
+    summaryEn: `Hotel-regime accommodation in Timișoara Old Town: professionally managed apartments with smart check-in, ${GUEST_SCORE_EN}/10 Booking.com score, 65–75% assumed annual occupancy, 2 minutes from Victory Square.`,
   },
   "iulius-town": {
     slug: "iulius-town",

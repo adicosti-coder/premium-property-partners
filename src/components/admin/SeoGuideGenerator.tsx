@@ -58,7 +58,8 @@ Context piață imobiliară Timișoara (2024-2026, agregat RealTrust):
 - Creștere anuală preț apartamente: +6-9% în zonele premium.
 - Migrație interregională (București → Timișoara) pentru raport preț/calitate viață.
 - Regim hotelier: cerere B2B (companii ABB, Continental, Flex) și turism cultural post-Capitală Culturală 2023.
-- Ocupare medie regim hotelier zone centrale: 72-82%.
+- Ocupare anuală asumată regim hotelier: 65–75% (70% în calcule); nu folosi valori mai mari.
+- Randament net estimat regim hotelier: 6,5–9,4% pe an.
 `.trim();
 
 const SYSTEM_PROMPT = `Ești un expert SEO și copywriter imobiliar pentru piața din Timișoara.
