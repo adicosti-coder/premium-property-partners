@@ -8,6 +8,7 @@ import {
 } from "@/lib/crossPortalDedup";
 import { norm } from "@/lib/portalSearch";
 import { andreiIneligibleReason } from "@/lib/andreiBulkQueue";
+import { hasAgencyKeyword, OUTREACH_MIN_SCORE, titleHasAgencyKeyword } from "../../supabase/functions/_shared/ownerOutreachEligibility";
 
 export type TriageListing = DedupListing & {
   do_not_call?: boolean | null;
@@ -77,6 +78,39 @@ export const DEFAULT_TRIAGE_FILTERS: TriageFilters = {
 };
 
 export const isDismissed = (l: TriageListing) => !!l.dismissed_at;
+
+/** Cuvinte de agenție în titlu, nume sau etichete: nicio confirmare manuală nu le poate ridica. */
+export const hasAgencyTextSignal = (l: TriageListing) =>
+  hasAgencyKeyword(l.contact_name) || titleHasAgencyKeyword(l.title) || (l.tags ?? []).some((t) => hasAgencyKeyword(t));
+
+/**
+ * Ce variantă de „Confirmă privat” apare pe card: `confirm` pentru proprietarii neconfirmați,
+ * `override` (cu confirmare separată) pentru anunțurile marcate ca agenție doar prin clasificare,
+ * null când nu se poate confirma (indisponibil, deja privat, deja contactat, fără telefon, cuvinte de agenție).
+ */
+export function privateConfirmMode(l: TriageListing): "confirm" | "override" | null {
+  if (isDismissed(l) || l.seller_type === "privat") return null;
+  const reason = triageBlockReason(l);
+  if (reason === "Neconfirmat") return "confirm";
+  if (reason === "Agenție blocată") return hasAgencyTextSignal(l) ? null : "override";
+  return null;
+}
+
+/** Motivul exact afișat pe card când „Trimite către Andrei” e blocat. */
+export function triageReasonHint(l: TriageListing, reason: string): string {
+  switch (reason) {
+    case "Neconfirmat": return "Proprietar neconfirmat — apasă „Confirmă privat” sau confirmă-l în „Flux proprietari → Verifică”";
+    case "Agenție blocată": return hasAgencyTextSignal(l)
+      ? "Agenție blocată — titlul, numele sau etichetele conțin cuvinte de agenție"
+      : "Marcat ca agenție — confirmă separat doar dacă ai verificat că e proprietar";
+    case `Scor ≤ ${OUTREACH_MIN_SCORE}`: return `Confirmat privat, dar scorul este ${Math.round(Number(l.lead_score ?? 0))} — trebuie peste ${OUTREACH_MIN_SCORE} pentru trimitere`;
+    case "Procesat": return "Deja în lucru (apel / răspuns înregistrat)";
+    case "Telefon invalid": return "Numărul nu e un mobil românesc valid (07…) — nu se trimite pe WhatsApp";
+    case "Trimis pe WhatsApp": return "Proprietarul a primit deja mesajul pe WhatsApp";
+    case "Trimis la Andrei": return "Deja trimis către Andrei";
+    default: return reason;
+  }
+}
 
 /**
  * Anunțurile care intră în grupare: fără cele indisponibile când sunt ascunse

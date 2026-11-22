@@ -6787,6 +6787,9 @@ export type Database = {
           price: number | null
           price_checked_at: string | null
           price_per_sqm: number | null
+          private_confirm_prev: Json | null
+          private_confirmed_at: string | null
+          private_confirmed_by: string | null
           prospect_type: string
           published_at: string | null
           quality_analysis: Json | null
@@ -6915,6 +6918,9 @@ export type Database = {
           price?: number | null
           price_checked_at?: string | null
           price_per_sqm?: number | null
+          private_confirm_prev?: Json | null
+          private_confirmed_at?: string | null
+          private_confirmed_by?: string | null
           prospect_type?: string
           published_at?: string | null
           quality_analysis?: Json | null
@@ -7043,6 +7049,9 @@ export type Database = {
           price?: number | null
           price_checked_at?: string | null
           price_per_sqm?: number | null
+          private_confirm_prev?: Json | null
+          private_confirmed_at?: string | null
+          private_confirmed_by?: string | null
           prospect_type?: string
           published_at?: string | null
           quality_analysis?: Json | null
@@ -13044,7 +13053,16 @@ export type Database = {
     Functions: {
       _canonical_listing_url: { Args: { url: string }; Returns: string }
       _extract_domain: { Args: { url: string }; Returns: string }
+      _prospect_triage_state: { Args: { p_id: string }; Returns: Json }
       admin_agency_classify_status: { Args: never; Returns: Json }
+      admin_confirm_prospect_private: {
+        Args: {
+          p_auto_outreach?: boolean
+          p_id: string
+          p_override_agency?: boolean
+        }
+        Returns: Json
+      }
       admin_db_health_snapshot: { Args: never; Returns: Json }
       admin_dismiss_prospect: {
         Args: { p_id: string; p_reason?: string }
@@ -13052,6 +13070,10 @@ export type Database = {
       }
       admin_restore_prospect: { Args: { p_id: string }; Returns: Json }
       admin_run_lead_retention: { Args: never; Returns: Json }
+      admin_undo_confirm_prospect_private: {
+        Args: { p_id: string }
+        Returns: Json
+      }
       admin_web_vitals_summary: { Args: never; Returns: Json }
       agency_text_norm: { Args: { t: string }; Returns: string }
       anonymize_expired_leads: { Args: never; Returns: Json }

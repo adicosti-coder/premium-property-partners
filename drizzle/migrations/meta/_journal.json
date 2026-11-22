@@ -1107,6 +1107,13 @@
       "when": 1795363989492,
       "tag": "0157_prospect_dismiss_unavailable",
       "breakpoints": true
+    },
+    {
+      "idx": 158,
+      "version": "7",
+      "when": 1795365666458,
+      "tag": "0158_admin_confirm_prospect_private",
+      "breakpoints": true
     }
   ]
 }

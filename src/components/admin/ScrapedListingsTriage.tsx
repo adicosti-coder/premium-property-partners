@@ -14,16 +14,17 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AdminPagination } from "@/components/admin/shared/AdminPagination";
 import { SourceLink } from "@/components/admin/shared/SourceLink";
 import type { PageSize } from "@/hooks/admin/usePaginatedQuery";
-import { Ban, Copy, ExternalLink, Layers, Loader2, MessageCircle, Phone, PhoneOff, RefreshCw, RotateCcw, Search, ShieldAlert } from "lucide-react";
+import { Ban, Copy, UserCheck, ExternalLink, Layers, Loader2, MessageCircle, Phone, PhoneOff, RefreshCw, RotateCcw, Search, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { groupCrossPortalDuplicates, listingPhone, portalKey, signalsOf } from "@/lib/crossPortalDedup";
-import { activeQuickFilter, applyQuickFilter, buildTriageRows, DEFAULT_TRIAGE_FILTERS, isDismissed, summarizeTriage, triageBlockReason, triagePool, type TriageFilters, type TriageListing, type TriageQuickFilter, type TriageRow } from "@/lib/scrapedListingsTriage";
+import { activeQuickFilter, applyQuickFilter, buildTriageRows, DEFAULT_TRIAGE_FILTERS, isDismissed, privateConfirmMode, triageReasonHint, summarizeTriage, triageBlockReason, triagePool, type TriageFilters, type TriageListing, type TriageQuickFilter, type TriageRow } from "@/lib/scrapedListingsTriage";
 import { hasImplausiblePrice } from "@/lib/ownerListingRules";
 import { normalizeRoPhone } from "@/lib/ownerOutreachTemplates";
 import { OWNER_FLOW_QUERY_KEY } from "@/lib/ownerFlowData";
@@ -64,11 +65,6 @@ const PORTAL_LABELS: Record<string, string> = {
 };
 const portalLabel = (k: string) => PORTAL_LABELS[k] ?? k;
 
-const REASON_HINTS: Record<string, string> = {
-  Neconfirmat: "Proprietar neconfirmat — confirmă-l în „Flux proprietari → Verifică”",
-  Procesat: "Deja în lucru (apel / răspuns înregistrat)",
-};
-
 function priceLabel(l: Listing): string {
   if (l.price == null) return "fără preț";
   const rent = /inchir|hotel/i.test(`${l.category ?? ""}`);
@@ -88,6 +84,9 @@ export default function ScrapedListingsTriage() {
   const [dismissFor, setDismissFor] = useState<Listing | null>(null);
   const [dismissing, setDismissing] = useState(false);
   const [restoringId, setRestoringId] = useState<string | null>(null);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [overrideFor, setOverrideFor] = useState<Listing | null>(null);
+  const [overrideChecked, setOverrideChecked] = useState(false);
 
   const { data: listings = [], isLoading, isFetching, error, refetch } = useQuery({
     queryKey: QK, queryFn: fetchAllListings, staleTime: 5 * 60_000,
@@ -144,6 +143,46 @@ export default function ScrapedListingsTriage() {
 
   const patchListing = (id: string, patch: Partial<Listing>) =>
     qc.setQueryData<Listing[]>(QK, (prev) => prev?.map((r) => r.id === id ? { ...r, ...patch } : r));
+
+  type ListingState = Partial<Listing> & { id: string };
+  const confirmPrivate = async (l: Listing, overrideAgency = false) => {
+    setConfirmingId(l.id);
+    try {
+      const { data, error: e } = await supabase.rpc("admin_confirm_prospect_private", { p_id: l.id, p_override_agency: overrideAgency });
+      if (e) throw e;
+      const next = ((data ?? {}) as { listing?: ListingState }).listing;
+      if (next) patchListing(l.id, next);
+      setOverrideFor(null);
+      const merged = { ...l, ...(next ?? {}) } as Listing;
+      const reason = triageBlockReason(merged);
+      toast.success("Confirmat ca proprietar privat", {
+        description: reason ? `Încă nu se poate trimite: ${triageReasonHint(merged, reason)}.` : "Poate fi trimis acum către Andrei.",
+        action: { label: "Anulează", onClick: () => { void undoConfirmPrivate(l); } },
+        duration: 8000,
+      });
+      qc.invalidateQueries({ queryKey: OWNER_FLOW_QUERY_KEY });
+    } catch (e) {
+      toast.error("Nu a fost confirmat", { description: (e as Error).message });
+    } finally {
+      setConfirmingId(null);
+    }
+  };
+
+  const undoConfirmPrivate = async (l: Listing) => {
+    setConfirmingId(l.id);
+    try {
+      const { data, error: e } = await supabase.rpc("admin_undo_confirm_prospect_private", { p_id: l.id });
+      if (e) throw e;
+      const next = ((data ?? {}) as { listing?: ListingState }).listing;
+      if (next) patchListing(l.id, next);
+      toast.success("Confirmarea a fost anulată");
+      qc.invalidateQueries({ queryKey: OWNER_FLOW_QUERY_KEY });
+    } catch (e) {
+      toast.error("Confirmarea nu a putut fi anulată", { description: (e as Error).message });
+    } finally {
+      setConfirmingId(null);
+    }
+  };
 
   const restore = async (l: Listing) => {
     setRestoringId(l.id);
@@ -312,6 +351,9 @@ export default function ScrapedListingsTriage() {
               onSend={() => setConfirmFor(row.listing as Listing)}
               onDismiss={() => setDismissFor(row.listing as Listing)}
               onRestore={() => restore(row.listing as Listing)}
+              onConfirmPrivate={() => confirmPrivate(row.listing as Listing)}
+              onOverridePrivate={() => { setOverrideChecked(false); setOverrideFor(row.listing as Listing); }}
+              confirming={confirmingId === row.listing.id}
               restoring={restoringId === row.listing.id}
               manualPhone={manualPhone[row.listing.id] ?? ""}
               onManualPhone={(v) => setManualPhone((p) => ({ ...p, [row.listing.id]: v }))}
@@ -337,6 +379,28 @@ export default function ScrapedListingsTriage() {
             <Button variant="outline" onClick={() => setDismissFor(null)} disabled={dismissing} className="min-h-12">Înapoi</Button>
             <Button variant="destructive" onClick={dismiss} disabled={dismissing} className="min-h-12 gap-2">
               {dismissing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />} Marchează indisponibil
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!overrideFor} onOpenChange={(o) => !o && confirmingId === null && setOverrideFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmi ca privat un anunț marcat ca agenție?</DialogTitle>
+            <DialogDescription>
+              Clasificarea l-a marcat ca agenție. Confirmă doar dacă ai verificat că anunțul e al proprietarului. Agențiile nu primesc niciodată mesaje.
+            </DialogDescription>
+          </DialogHeader>
+          {overrideFor && <p className="text-sm font-medium">{overrideFor.title || "(fără titlu)"}</p>}
+          <div className="flex min-h-12 items-start gap-3 rounded-md border p-3">
+            <Checkbox id="override-agency" checked={overrideChecked} onCheckedChange={(v) => setOverrideChecked(v === true)} className="mt-0.5" />
+            <Label htmlFor="override-agency" className="cursor-pointer text-sm leading-snug">Am verificat: nu este agenție, este proprietarul.</Label>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setOverrideFor(null)} disabled={confirmingId !== null} className="min-h-12">Înapoi</Button>
+            <Button onClick={() => overrideFor && confirmPrivate(overrideFor, true)} disabled={!overrideChecked || confirmingId !== null} className="min-h-12 gap-2">
+              {confirmingId ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserCheck className="h-4 w-4" />} Confirmă privat
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -371,19 +435,23 @@ interface CardProps {
   onDismiss: () => void;
   onRestore: () => void;
   restoring: boolean;
+  onConfirmPrivate: () => void;
+  onOverridePrivate: () => void;
+  confirming: boolean;
   manualPhone: string;
   onManualPhone: (v: string) => void;
   onSavePhone: () => void;
   savingPhone: boolean;
 }
 
-function TriageCard({ row, expanded, onToggle, onSend, onDismiss, onRestore, restoring, manualPhone, onManualPhone, onSavePhone, savingPhone }: CardProps) {
+function TriageCard({ row, expanded, onToggle, onSend, onDismiss, onRestore, restoring, onConfirmPrivate, onOverridePrivate, confirming, manualPhone, onManualPhone, onSavePhone, savingPhone }: CardProps) {
   const l = row.listing;
   const s = signalsOf(l);
   const phone = listingPhone(l);
   const dismissed = isDismissed(l);
   const andreiReason = dismissed ? "Indisponibil" : triageBlockReason(l);
   const ready = andreiReason === null;
+  const confirmMode = privateConfirmMode(l);
   const badPrice = hasImplausiblePrice({ ...l, url: l.source_url });
   const others = [row.group.primary, ...row.group.variants].filter((m) => m.id !== l.id);
 
@@ -437,7 +505,17 @@ function TriageCard({ row, expanded, onToggle, onSend, onDismiss, onRestore, res
           <Button onClick={onSend} disabled={!!andreiReason} className="min-h-12 gap-2" aria-label={andreiReason ? `Nu se poate trimite: ${andreiReason}` : "Trimite către Andrei (WhatsApp)"}>
             <MessageCircle className="h-4 w-4" /> Trimite către Andrei
           </Button>
-          {andreiReason && !dismissed && <p className="text-center text-xs text-muted-foreground">{REASON_HINTS[andreiReason] ?? andreiReason}</p>}
+          {andreiReason && !dismissed && <p className="text-center text-xs text-muted-foreground">{triageReasonHint(l, andreiReason)}</p>}
+          {confirmMode === "confirm" && (
+            <Button variant="secondary" onClick={onConfirmPrivate} disabled={confirming} className="min-h-12 gap-2" aria-label="Confirmă proprietarul ca privat">
+              {confirming ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserCheck className="h-4 w-4" />} Confirmă privat
+            </Button>
+          )}
+          {confirmMode === "override" && (
+            <Button variant="ghost" onClick={onOverridePrivate} disabled={confirming} className="min-h-12 gap-2 text-muted-foreground" aria-label="Nu e agenție? Confirmă privat, cu verificare separată">
+              <UserCheck className="h-4 w-4" /> Nu e agenție? Confirmă privat
+            </Button>
+          )}
           {dismissed ? (
             <Button variant="outline" onClick={onRestore} disabled={restoring} className="min-h-12 gap-2" aria-label="Readu anunțul în listă">
               {restoring ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />} Readu în listă

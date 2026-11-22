@@ -140,3 +140,38 @@ describe("cardurile de cifre ca filtre rapide", () => {
     expect(activeQuickFilter(DEFAULT_TRIAGE_FILTERS)).toBe("properties");
   });
 });
+
+import { privateConfirmMode, triageReasonHint, type TriageListing } from "./scrapedListingsTriage";
+
+const t = (over: Partial<TriageListing>): TriageListing => l(over as Partial<DedupListing>) as TriageListing;
+
+describe("Confirmă privat în triere", () => {
+  const base = { ...ownerFields, contact_phone: "0722123456" };
+  it("apare pe proprietarii neconfirmați cu telefon", () => {
+    expect(privateConfirmMode(t({ ...base, seller_type: "de_verificat" }))).toBe("confirm");
+  });
+  it("nu apare pe anunțurile deja private, indisponibile, contactate sau fără telefon", () => {
+    expect(privateConfirmMode(t({ ...base }))).toBeNull();
+    expect(privateConfirmMode(t({ ...base, seller_type: "de_verificat", dismissed_at: "2026-11-22T10:00:00Z" }))).toBeNull();
+    expect(privateConfirmMode(t({ ...base, seller_type: "de_verificat", outreach_status: "sent" }))).toBeNull();
+    expect(privateConfirmMode(t({ ...base, seller_type: "de_verificat", contact_phone: null }))).toBeNull();
+  });
+  it("agenție marcată doar de clasificare: cere confirmarea separată", () => {
+    expect(privateConfirmMode(t({ ...base, seller_type: "agentie" }))).toBe("override");
+    expect(privateConfirmMode(t({ ...base, seller_type: "de_verificat", outreach_status: "blocked_agency" }))).toBe("override");
+  });
+  it("cuvinte de agenție în titlu sau nume: nu se poate confirma deloc", () => {
+    expect(privateConfirmMode(t({ ...base, seller_type: "agentie", title: "Agenția X vinde 2 camere" }))).toBeNull();
+    expect(privateConfirmMode(t({ ...base, seller_type: "de_verificat", contact_name: "Best Imobiliare SRL" }))).toBeNull();
+  });
+  it("după confirmare: scor 60 rămâne blocat cu motivul exact, scor 61 devine pregătit", () => {
+    const low = t({ ...base, lead_score: 60 });
+    expect(triageBlockReason(low)).toBe("Scor ≤ 60");
+    expect(triageReasonHint(low, "Scor ≤ 60")).toContain("scorul este 60");
+    expect(isReadyForOutreach(t({ ...base, lead_score: 61 }))).toBe(true);
+  });
+  it("după confirmare fără telefon valid sau cu opt-out: rămâne blocat", () => {
+    expect(triageBlockReason(t({ ...base, contact_phone: "0256123456" }))).not.toBeNull();
+    expect(triageBlockReason(t({ ...base, do_not_call: true }))).toBe("Nu dorește să fie contactat");
+  });
+});
