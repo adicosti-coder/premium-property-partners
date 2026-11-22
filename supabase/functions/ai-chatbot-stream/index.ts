@@ -4,6 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { TOOL_DEFINITIONS, executeTool } from "./tools.ts";
 import { getCorsHeaders } from "../_shared/securityHeaders.ts";
 import { verifyTicket } from "../_shared/signedTicket.ts";
+import { assistantCompanyFactsBlock } from "../_shared/assistantCompanyFacts.ts";
 
 // Apelurile la modelul AI plătit cer o sesiune verificată: biletul din `chat-session`
 // (vizitator care a trecut verificarea anti-robot) sau un utilizator autentificat.
@@ -111,7 +112,7 @@ async function buildSystemPrompt(language: string, page: ChatPageContext = { pat
 === COMPANY ===
 • ApArt Hotel Timișoara (RealTrust) — Administrare Premium Regim Hotelier
 • WhatsApp: ${whatsapp} | Email: info@realtrust.ro
-• Rating: 4.9/5 ⭐ | Ocupare medie: 98% | Experiență: 25+ ani
+${assistantCompanyFactsBlock(language)}
 • Pachete administrare: Starter (15%), Essential (18%), Standard (20%) — din venitul net
 
 === ACCOMMODATION PORTFOLIO (ApArt Hotel / managed stays) ===
