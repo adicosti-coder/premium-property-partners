@@ -20,16 +20,16 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AdminPagination } from "@/components/admin/shared/AdminPagination";
 import { SourceLink } from "@/components/admin/shared/SourceLink";
 import type { PageSize } from "@/hooks/admin/usePaginatedQuery";
-import { Copy, ExternalLink, Layers, Loader2, MessageCircle, Phone, PhoneOff, RefreshCw, Search, ShieldAlert } from "lucide-react";
+import { Ban, Copy, ExternalLink, Layers, Loader2, MessageCircle, Phone, PhoneOff, RefreshCw, RotateCcw, Search, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { groupCrossPortalDuplicates, listingPhone, portalKey, signalsOf } from "@/lib/crossPortalDedup";
-import { buildTriageRows, DEFAULT_TRIAGE_FILTERS, summarizeTriage, triageBlockReason, type TriageFilters, type TriageListing, type TriageRow } from "@/lib/scrapedListingsTriage";
+import { buildTriageRows, DEFAULT_TRIAGE_FILTERS, isDismissed, summarizeTriage, triageBlockReason, triagePool, type TriageFilters, type TriageListing, type TriageRow } from "@/lib/scrapedListingsTriage";
 import { hasImplausiblePrice } from "@/lib/ownerListingRules";
 import { normalizeRoPhone } from "@/lib/ownerOutreachTemplates";
 import { OWNER_FLOW_QUERY_KEY } from "@/lib/ownerFlowData";
 
 const COLUMNS =
-  "id,source_platform,source_url,title,description,location,zone,rooms,size,price,currency,category,contact_phone,phone_normalized,images,is_active,duplicate_of,last_seen_at,scraped_at,created_at,do_not_call,seller_type,lifecycle_status,tags,andrei_queued_at,outreach_status,lead_score,agency_suspicion_score,owner_sentiment,prospect_type,contact_name";
+  "id,source_platform,source_url,title,description,location,zone,rooms,size,price,currency,category,contact_phone,phone_normalized,images,is_active,duplicate_of,last_seen_at,scraped_at,created_at,do_not_call,seller_type,lifecycle_status,tags,andrei_queued_at,outreach_status,lead_score,agency_suspicion_score,owner_sentiment,prospect_type,contact_name,dismissed_at,dismissed_reason";
 
 type Listing = TriageListing & {
   contact_phone: string | null;
@@ -39,6 +39,8 @@ type Listing = TriageListing & {
   tags: string[] | null;
   andrei_queued_at: string | null;
   outreach_status: string | null;
+  dismissed_at: string | null;
+  dismissed_reason: string | null;
 };
 
 const QK = ["scraped-listings-triage"] as const;
@@ -83,12 +85,17 @@ export default function ScrapedListingsTriage() {
   const [sending, setSending] = useState(false);
   const [manualPhone, setManualPhone] = useState<Record<string, string>>({});
   const [savingPhoneId, setSavingPhoneId] = useState<string | null>(null);
+  const [dismissFor, setDismissFor] = useState<Listing | null>(null);
+  const [dismissing, setDismissing] = useState(false);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
 
   const { data: listings = [], isLoading, isFetching, error, refetch } = useQuery({
     queryKey: QK, queryFn: fetchAllListings, staleTime: 5 * 60_000,
   });
 
-  const groups = useMemo(() => groupCrossPortalDuplicates(listings), [listings]);
+  const pool = useMemo(() => triagePool(listings, filters), [listings, filters]);
+  const groups = useMemo(() => groupCrossPortalDuplicates(pool), [pool]);
+  const dismissedCount = useMemo(() => listings.filter(isDismissed).length, [listings]);
   const summary = useMemo(() => summarizeTriage(groups), [groups]);
   const portals = useMemo(() => [...new Set(listings.map((l) => portalKey(l)))].sort(), [listings]);
   const rows = useMemo(() => buildTriageRows(groups, filters), [groups, filters]);
@@ -120,6 +127,48 @@ export default function ScrapedListingsTriage() {
       toast.error("Telefonul nu a fost salvat", { description: (e as Error).message });
     } finally {
       setSavingPhoneId(null);
+    }
+  };
+
+  const patchListing = (id: string, patch: Partial<Listing>) =>
+    qc.setQueryData<Listing[]>(QK, (prev) => prev?.map((r) => r.id === id ? { ...r, ...patch } : r));
+
+  const restore = async (l: Listing) => {
+    setRestoringId(l.id);
+    try {
+      const { error: e } = await supabase.rpc("admin_restore_prospect", { p_id: l.id });
+      if (e) throw e;
+      toast.success("Anunț readus în listă");
+      await refetch();
+      qc.invalidateQueries({ queryKey: OWNER_FLOW_QUERY_KEY });
+    } catch (e) {
+      toast.error("Anunțul nu a putut fi readus", { description: (e as Error).message });
+    } finally {
+      setRestoringId(null);
+    }
+  };
+
+  const dismiss = async () => {
+    if (!dismissFor) return;
+    const l = dismissFor;
+    setDismissing(true);
+    try {
+      const { data, error: e } = await supabase.rpc("admin_dismiss_prospect", { p_id: l.id, p_reason: "indisponibil" });
+      if (e) throw e;
+      const r = (data ?? {}) as { cancelled_wa?: number; cancelled_owner_outreach?: number; cancelled_calls?: number };
+      const cancelled = (r.cancelled_wa ?? 0) + (r.cancelled_owner_outreach ?? 0) + (r.cancelled_calls ?? 0);
+      patchListing(l.id, { dismissed_at: new Date().toISOString(), dismissed_reason: "indisponibil", is_active: false, lifecycle_status: "expired" });
+      setDismissFor(null);
+      toast.success("Marcat ca indisponibil", {
+        description: cancelled ? `Am anulat ${cancelled} ${cancelled === 1 ? "trimitere programată" : "trimiteri programate"}.` : "Nu avea trimiteri programate.",
+        action: { label: "Anulează", onClick: () => { void restore(l); } },
+        duration: 8000,
+      });
+      qc.invalidateQueries({ queryKey: OWNER_FLOW_QUERY_KEY });
+    } catch (e) {
+      toast.error("Anunțul nu a fost marcat", { description: (e as Error).message });
+    } finally {
+      setDismissing(false);
     }
   };
 
@@ -209,8 +258,13 @@ export default function ScrapedListingsTriage() {
                 <SelectItem value="all">Toate stările</SelectItem>
                 <SelectItem value="active">Doar active</SelectItem>
                 <SelectItem value="inactive">Doar inactive</SelectItem>
+                <SelectItem value="dismissed">Indisponibile / renunțate ({dismissedCount})</SelectItem>
               </SelectContent>
             </Select>
+            <div className="flex min-h-12 items-center gap-3 rounded-md border px-3">
+              <Switch id="hide-dismissed" checked={filters.hideDismissed} disabled={filters.status === "dismissed"} onCheckedChange={(v) => update({ hideDismissed: v })} />
+              <Label htmlFor="hide-dismissed" className="cursor-pointer text-sm">Ascunde indisponibilele</Label>
+            </div>
             <div className="flex min-h-12 items-center gap-3 rounded-md border px-3">
               <Switch id="hide-duplicates" checked={filters.hideDuplicates} onCheckedChange={(v) => update({ hideDuplicates: v })} />
               <Label htmlFor="hide-duplicates" className="cursor-pointer text-sm">Ascunde duplicatele</Label>
@@ -231,6 +285,9 @@ export default function ScrapedListingsTriage() {
             <TriageCard key={row.listing.id} row={row as TriageRow<Listing>} expanded={expanded.has(row.group.key)}
               onToggle={() => toggleExpanded(row.group.key)}
               onSend={() => setConfirmFor(row.listing as Listing)}
+              onDismiss={() => setDismissFor(row.listing as Listing)}
+              onRestore={() => restore(row.listing as Listing)}
+              restoring={restoringId === row.listing.id}
               manualPhone={manualPhone[row.listing.id] ?? ""}
               onManualPhone={(v) => setManualPhone((p) => ({ ...p, [row.listing.id]: v }))}
               onSavePhone={() => saveManualPhone(row.listing as Listing)}
@@ -240,6 +297,24 @@ export default function ScrapedListingsTriage() {
             onPage={setPage} onPageSize={(s) => { setPageSize(s); setPage(0); }} isFetching={isFetching} />
         </div>
       )}
+
+      <Dialog open={!!dismissFor} onOpenChange={(o) => !o && !dismissing && setDismissFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Marchezi anunțul ca indisponibil?</DialogTitle>
+            <DialogDescription>
+              Anunțul iese din listă și din cozile de contactare; mesajele WhatsApp și apelurile programate pentru el se anulează. Istoricul rămâne, iar acțiunea se poate anula.
+            </DialogDescription>
+          </DialogHeader>
+          {dismissFor && <p className="text-sm font-medium">{dismissFor.title || "(fără titlu)"}</p>}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDismissFor(null)} disabled={dismissing} className="min-h-12">Înapoi</Button>
+            <Button variant="destructive" onClick={dismiss} disabled={dismissing} className="min-h-12 gap-2">
+              {dismissing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />} Marchează indisponibil
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!confirmFor} onOpenChange={(o) => !o && !sending && setConfirmFor(null)}>
         <DialogContent>
@@ -267,17 +342,21 @@ interface CardProps {
   expanded: boolean;
   onToggle: () => void;
   onSend: () => void;
+  onDismiss: () => void;
+  onRestore: () => void;
+  restoring: boolean;
   manualPhone: string;
   onManualPhone: (v: string) => void;
   onSavePhone: () => void;
   savingPhone: boolean;
 }
 
-function TriageCard({ row, expanded, onToggle, onSend, manualPhone, onManualPhone, onSavePhone, savingPhone }: CardProps) {
+function TriageCard({ row, expanded, onToggle, onSend, onDismiss, onRestore, restoring, manualPhone, onManualPhone, onSavePhone, savingPhone }: CardProps) {
   const l = row.listing;
   const s = signalsOf(l);
   const phone = listingPhone(l);
-  const andreiReason = triageBlockReason(l);
+  const dismissed = isDismissed(l);
+  const andreiReason = dismissed ? "Indisponibil" : triageBlockReason(l);
   const ready = andreiReason === null;
   const badPrice = hasImplausiblePrice({ ...l, url: l.source_url });
   const others = [row.group.primary, ...row.group.variants].filter((m) => m.id !== l.id);
@@ -292,7 +371,9 @@ function TriageCard({ row, expanded, onToggle, onSend, manualPhone, onManualPhon
               ? <Badge className="text-[10px]">Principal · {row.duplicateCount} {row.duplicateCount === 1 ? "variantă" : "variante"}</Badge>
               : <Badge variant="outline" className="text-[10px]">Duplicat al anunțului principal</Badge>)}
             {ready && <Badge variant="outline" className="border-primary bg-primary/10 text-[10px] text-primary">✓ Pregătit pentru prospectare</Badge>}
-            {l.is_active === false && <Badge variant="secondary" className="text-[10px]">Inactiv</Badge>}
+            {dismissed
+              ? <Badge variant="secondary" className="text-[10px]">Indisponibil / renunțat</Badge>
+              : l.is_active === false && <Badge variant="secondary" className="text-[10px]">Inactiv</Badge>}
             {badPrice && <Badge variant="destructive" className="text-[10px]">Preț de verificat</Badge>}
           </div>
           <h3 className="line-clamp-2 text-sm font-medium">{l.title || "(fără titlu)"}</h3>
@@ -330,7 +411,16 @@ function TriageCard({ row, expanded, onToggle, onSend, manualPhone, onManualPhon
           <Button onClick={onSend} disabled={!!andreiReason} className="min-h-12 gap-2" aria-label={andreiReason ? `Nu se poate trimite: ${andreiReason}` : "Trimite către Andrei (WhatsApp)"}>
             <MessageCircle className="h-4 w-4" /> Trimite către Andrei
           </Button>
-          {andreiReason && <p className="text-center text-xs text-muted-foreground">{REASON_HINTS[andreiReason] ?? andreiReason}</p>}
+          {andreiReason && !dismissed && <p className="text-center text-xs text-muted-foreground">{REASON_HINTS[andreiReason] ?? andreiReason}</p>}
+          {dismissed ? (
+            <Button variant="outline" onClick={onRestore} disabled={restoring} className="min-h-12 gap-2" aria-label="Readu anunțul în listă">
+              {restoring ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />} Readu în listă
+            </Button>
+          ) : (
+            <Button variant="ghost" onClick={onDismiss} className="min-h-12 gap-2 text-muted-foreground hover:text-destructive" aria-label="Marchează anunțul ca indisponibil / renunță">
+              <Ban className="h-4 w-4" /> Indisponibil / Renunță
+            </Button>
+          )}
           {others.length > 0 && (
             <Button variant="outline" onClick={onToggle} aria-expanded={expanded} className="min-h-12 gap-2">
               <Copy className="h-4 w-4" /> {expanded ? "Ascunde variantele" : `Vezi ${others.length} ${others.length === 1 ? "variantă" : "variante"}`}

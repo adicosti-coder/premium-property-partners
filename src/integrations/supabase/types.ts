@@ -6727,6 +6727,10 @@ export type Database = {
           currency: string | null
           dedup_key: string | null
           description: string | null
+          dismissed_at: string | null
+          dismissed_by: string | null
+          dismissed_prev: Json | null
+          dismissed_reason: string | null
           do_not_call: boolean
           do_not_call_at: string | null
           do_not_call_reason: string | null
@@ -6851,6 +6855,10 @@ export type Database = {
           currency?: string | null
           dedup_key?: string | null
           description?: string | null
+          dismissed_at?: string | null
+          dismissed_by?: string | null
+          dismissed_prev?: Json | null
+          dismissed_reason?: string | null
           do_not_call?: boolean
           do_not_call_at?: string | null
           do_not_call_reason?: string | null
@@ -6975,6 +6983,10 @@ export type Database = {
           currency?: string | null
           dedup_key?: string | null
           description?: string | null
+          dismissed_at?: string | null
+          dismissed_by?: string | null
+          dismissed_prev?: Json | null
+          dismissed_reason?: string | null
           do_not_call?: boolean
           do_not_call_at?: string | null
           do_not_call_reason?: string | null
@@ -13034,6 +13046,11 @@ export type Database = {
       _extract_domain: { Args: { url: string }; Returns: string }
       admin_agency_classify_status: { Args: never; Returns: Json }
       admin_db_health_snapshot: { Args: never; Returns: Json }
+      admin_dismiss_prospect: {
+        Args: { p_id: string; p_reason?: string }
+        Returns: Json
+      }
+      admin_restore_prospect: { Args: { p_id: string }; Returns: Json }
       admin_run_lead_retention: { Args: never; Returns: Json }
       admin_web_vitals_summary: { Args: never; Returns: Json }
       agency_text_norm: { Args: { t: string }; Returns: string }

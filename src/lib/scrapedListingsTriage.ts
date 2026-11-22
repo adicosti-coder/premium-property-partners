@@ -21,6 +21,7 @@ export type TriageListing = DedupListing & {
   owner_sentiment?: string | null;
   prospect_type?: string | null;
   contact_name?: string | null;
+  dismissed_at?: string | null;
 };
 
 /** De ce nu poate pleca spre coada de contactare (telefon, stare, proprietar confirmat, contact anterior), sau null. */
@@ -56,7 +57,9 @@ export interface TriageRow<T extends TriageListing = TriageListing> {
 export interface TriageFilters {
   hideDuplicates: boolean;
   phone: PhoneAvailabilityFilter;
-  status: "all" | "active" | "inactive";
+  status: "all" | "active" | "inactive" | "dismissed";
+  /** Anunțurile marcate „Indisponibil / renunțat” sunt ascunse implicit. */
+  hideDismissed: boolean;
   portal: string;
   search: string;
 }
@@ -65,11 +68,25 @@ export const DEFAULT_TRIAGE_FILTERS: TriageFilters = {
   hideDuplicates: true,
   phone: "all",
   status: "all",
+  hideDismissed: true,
   portal: "all",
   search: "",
 };
 
+export const isDismissed = (l: TriageListing) => !!l.dismissed_at;
+
+/**
+ * Anunțurile care intră în grupare: fără cele indisponibile când sunt ascunse
+ * (ca un anunț renunțat să nu ascundă variantele lui de pe alte portaluri).
+ */
+export function triagePool<T extends TriageListing>(listings: T[], f: TriageFilters): T[] {
+  if (f.status === "dismissed" || !f.hideDismissed) return listings;
+  return listings.filter((l) => !isDismissed(l));
+}
+
 function matchesBase(l: TriageListing, f: TriageFilters): boolean {
+  if (f.status === "dismissed") { if (!isDismissed(l)) return false; }
+  else if (f.hideDismissed && isDismissed(l)) return false;
   if (f.status === "active" && l.is_active === false) return false;
   if (f.status === "inactive" && l.is_active !== false) return false;
   if (f.portal !== "all" && portalKey(l) !== f.portal) return false;

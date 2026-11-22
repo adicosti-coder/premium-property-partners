@@ -67,3 +67,38 @@ describe("pregătit pentru prospectare", () => {
     expect(isReadyForOutreach({ ...olx, lead_score: 61 })).toBe(true);
   });
 });
+
+import { triagePool } from "./scrapedListingsTriage";
+
+describe("Indisponibile / renunțate", () => {
+  const gone = l({ id: "gone", source_platform: "Publi24", source_url: "https://www.publi24.ro/anunturi/x.html", title: "4 camere Girocului", rooms: 4, size: 95, price: 160000, dismissed_at: "2026-11-22T16:20:00Z" } as Partial<DedupListing>);
+  const all = [olx, imo, solo, gone];
+
+  it("sunt ascunse implicit din lista principală", () => {
+    expect(DEFAULT_TRIAGE_FILTERS.hideDismissed).toBe(true);
+    const g = groupCrossPortalDuplicates(triagePool(all, DEFAULT_TRIAGE_FILTERS));
+    expect(buildTriageRows(g, DEFAULT_TRIAGE_FILTERS).map((r) => r.listing.id)).not.toContain("gone");
+  });
+  it("apar din nou când comutatorul e oprit", () => {
+    const f = { ...DEFAULT_TRIAGE_FILTERS, hideDismissed: false };
+    const g = groupCrossPortalDuplicates(triagePool(all, f));
+    expect(buildTriageRows(g, f).map((r) => r.listing.id)).toContain("gone");
+  });
+  it("starea „Indisponibile” arată doar anunțurile renunțate", () => {
+    const f = { ...DEFAULT_TRIAGE_FILTERS, status: "dismissed" as const };
+    const g = groupCrossPortalDuplicates(triagePool(all, f));
+    expect(buildTriageRows(g, f).map((r) => r.listing.id)).toEqual(["gone"]);
+  });
+  it("un principal renunțat nu își ascunde varianta de pe alt portal", () => {
+    const dismissedOlx = { ...olx, dismissed_at: "2026-11-22T16:20:00Z" };
+    const g = groupCrossPortalDuplicates(triagePool([dismissedOlx, imo, solo], DEFAULT_TRIAGE_FILTERS));
+    expect(buildTriageRows(g, DEFAULT_TRIAGE_FILTERS).map((r) => r.listing.id).sort()).toEqual(["imo", "solo"]);
+  });
+  it("„Toate stările”, „Ascunde duplicatele” și „Pregătit pentru prospectare” rămân neschimbate", () => {
+    const g = groupCrossPortalDuplicates(triagePool(all, DEFAULT_TRIAGE_FILTERS));
+    const rows = buildTriageRows(g, DEFAULT_TRIAGE_FILTERS);
+    expect(rows.map((r) => r.listing.id).sort()).toEqual(["olx", "solo"]);
+    expect(isReadyForOutreach(olx)).toBe(true);
+    expect(summarizeTriage(g).ready).toBe(1);
+  });
+});
