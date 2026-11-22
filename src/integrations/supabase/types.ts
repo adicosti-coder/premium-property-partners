@@ -1998,6 +1998,27 @@ export type Database = {
           },
         ]
       }
+      content_figures_backup_20261122: {
+        Row: {
+          data: Json
+          row_id: string
+          saved_at: string
+          tbl: string
+        }
+        Insert: {
+          data: Json
+          row_id: string
+          saved_at?: string
+          tbl: string
+        }
+        Update: {
+          data?: Json
+          row_id?: string
+          saved_at?: string
+          tbl?: string
+        }
+        Relationships: []
+      }
       content_improvements: {
         Row: {
           baseline: Json | null
