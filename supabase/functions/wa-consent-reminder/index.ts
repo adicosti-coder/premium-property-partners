@@ -8,6 +8,7 @@ import { isExpressOptOut } from "../_shared/dncPolicy.ts";
 import { phoneVariants } from "../_shared/waPhone.ts";
 import { preferredPublishConsentTemplate } from "../_shared/waPreferredTemplate.ts";
 import { WA_PUBLISH_CONSENT_TEMPLATE, consentAnalysisUrl } from "../_shared/waPublishConsentTemplate.ts";
+import { isAgencyProspect } from "../_shared/ownerOutreachEligibility.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -72,10 +73,11 @@ Deno.serve(async (req) => {
   for (const r of rows ?? []) {
     const variants = phoneVariants(r.phone_normalized);
     const { data: p } = r.prospect_listing_id
-      ? await sb.from("prospect_listings").select("id, title, zone, rooms, source_url, short_code, do_not_call, do_not_call_reason")
+      ? await sb.from("prospect_listings").select("id, title, zone, rooms, source_url, short_code, do_not_call, do_not_call_reason, seller_type, agency_suspicion_score, owner_sentiment, prospect_type, contact_name, tags, outreach_status")
         .eq("id", r.prospect_listing_id).maybeSingle()
       : { data: null };
     if (!p) { skipped.push({ id: r.id, reason: "anunț lipsă" }); continue; }
+    if (isAgencyProspect(p) || p.outreach_status === "blocked_agency") { skipped.push({ id: r.id, reason: "agenție blocată" }); continue; }
     if (p.do_not_call && isExpressOptOut(p.do_not_call_reason)) { skipped.push({ id: r.id, reason: "a cerut să nu fie contactat" }); continue; }
     const { data: dnc } = await sb.from("wa_dnc_list").select("id").in("phone_normalized", variants).limit(1).maybeSingle()
       .then((x) => x, () => ({ data: null }));

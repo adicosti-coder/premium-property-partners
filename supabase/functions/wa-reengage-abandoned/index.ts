@@ -12,6 +12,7 @@ import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { relayToMake } from "../_shared/makeRelay.ts";
 import { buildReengageMessage, loadProspectContext } from "../_shared/waAutoReply.ts";
 import { phoneVariants, releasePhoneSend, reservePhoneSend, toWaDigits } from "../_shared/waPhone.ts";
+import { isAgencyProspect } from "../_shared/ownerOutreachEligibility.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -129,11 +130,16 @@ Deno.serve(async (req) => {
     // Respectă „nu contacta” (blocajele tehnice permit WhatsApp)
     const { data: prospect } = await supabase
       .from("prospect_listings")
-      .select("id, do_not_call, do_not_call_reason")
+      .select("id, do_not_call, do_not_call_reason, seller_type, agency_suspicion_score, owner_sentiment, prospect_type, contact_name, tags, outreach_status")
       .in("phone_normalized", variants)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
+    if (prospect && (isAgencyProspect(prospect) || prospect.outreach_status === "blocked_agency")) {
+      results.push({ conversation_id: c.id, skipped: "blocked_agency" });
+      skipped++;
+      continue;
+    }
     if (prospect?.do_not_call) {
       const { data: technical } = await supabase.rpc("wa_is_technical_block_only", {
         _reason: prospect.do_not_call_reason ?? null,
