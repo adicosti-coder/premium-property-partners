@@ -1,5 +1,6 @@
 // outreach-dispatch — trimite un anunț nou de proprietar privat către scenariul
 // Make.com de Outreach (MAKE_OUTREACH_WEBHOOK_URL) și îl marchează "outreach_pending".
+// Doar proprietar particular confirmat (seller_type=privat) cu scor > 60; agențiile → `blocked_agency`.
 // Apelat de triggerul trg_fire_make_outreach (x-cron-secret) sau de Admin (test, dry_run).
 // Reguli: doar mobile 07…, cel mult un mesaj la 30 de zile pe număr, trimitere doar
 // 09:00–19:30 (ora României); în afara intervalului anunțul intră în `queued` și pleacă
@@ -9,6 +10,7 @@ import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { toOutreachPhone, phoneVariants, reservePhoneSend, markPhoneSent, releasePhoneSend } from "../_shared/waPhone.ts";
 import { outreachWindow, OUTREACH_COOLDOWN_DAYS, OUTREACH_COOLDOWN_KIND } from "../_shared/ownerOutreachPolicy.ts";
 import { isTestPhone } from "../_shared/testPhoneAllowlist.ts";
+import { autoOutreachBlockReason, BLOCKED_AGENCY_STATUS } from "../_shared/ownerOutreachEligibility.ts";
 import { rentalFirstMessage } from "../_shared/rentalIntroMessage.ts";
 import { WA_OWNER_OUTREACH_TEMPLATE, WA_OWNER_OUTREACH_LANGUAGE, ownerOutreachPreviewUrl, ownerOutreachZone } from "../_shared/waOwnerOutreachTemplate.ts";
 
@@ -26,7 +28,7 @@ type Sb = any;
 
 async function dispatchOne(sb: Sb, id: string, opts: { dryRun: boolean; fromQueue: boolean }): Promise<Result> {
   const { data: p, error } = await sb.from("prospect_listings")
-    .select("id,title,description,location,zone,price,rooms,source_url,category,phone_normalized,contact_phone,seller_type,agency_suspicion_score,do_not_call,auto_blacklisted_at,lifecycle_status,outreach_status,outreach_scheduled_at")
+    .select("id,title,description,location,zone,price,rooms,source_url,short_code,tags,contact_name,owner_sentiment,prospect_type,lead_score,category,phone_normalized,contact_phone,seller_type,agency_suspicion_score,do_not_call,auto_blacklisted_at,lifecycle_status,outreach_status,outreach_scheduled_at")
     .eq("id", id).maybeSingle();
   if (error) return { status: 500, body: { error: error.message } };
   if (!p) return { status: 404, body: { error: "not_found" } };
@@ -37,7 +39,17 @@ async function dispatchOne(sb: Sb, id: string, opts: { dryRun: boolean; fromQueu
   if (!phone) reasons.push("not_mobile");
 
   // Numărul de test al lui Adrian ocolește și excluderea de contact, și verificarea de agenție.
-  if (((p.agency_suspicion_score ?? 0) >= 70 || ["agency", "agentie"].includes(String(p.seller_type || ""))) && !isTestPhone(phone)) reasons.push("agency");
+  // Agențiile sunt blocate complet; trimiterea pleacă doar la particular confirmat cu scor > 60.
+  const block = isTestPhone(phone) ? null : autoOutreachBlockReason(p);
+  if (block === "blocked_agency") {
+    reasons.push("agency");
+    if (!opts.dryRun && (!p.outreach_status || p.outreach_status === "queued")) {
+      await sb.from("prospect_listings").update({
+        outreach_status: BLOCKED_AGENCY_STATUS, outreach_status_at: new Date().toISOString(), outreach_error: "agentie", outreach_scheduled_at: null,
+      }).eq("id", id);
+      return { status: 200, body: { ok: false, skipped: ["agency"], status: BLOCKED_AGENCY_STATUS } };
+    }
+  } else if (block) reasons.push(block);
   if ((p.do_not_call || p.auto_blacklisted_at) && !isTestPhone(phone)) reasons.push("excluded");
   if (["rejected", "expired", "failed", "posted"].includes(String(p.lifecycle_status))) reasons.push("closed");
   // Doar locuințe din Timiș: anunțurile din alte orașe sau terenurile nu primesc mesaj.

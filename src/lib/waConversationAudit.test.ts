@@ -29,9 +29,9 @@ describe("WhatsApp regressions", () => {
     const f = auditWaConversation([{ direction: "inbound", content: "Sunt in Lipovei" }, { direction: "outbound", content: "În ce zonă căutați?" }, { direction: "outbound", content: "Avem deja cumpărători calificați. Comision 0%" }]);
     expect(f.map(f => f.code)).toEqual(expect.arrayContaining(["repeated_zone", "invented_claim", "fee_conflict"]));
   });
-  it("safe direct request preserves approved Meta body", () => {
+  it("safe direct request is conversational and asks for an explicit DA", () => {
     const safe = publishConsentRequestText({ safeDirect: true });
-    expect(safe).toContain("DA pentru acord sau NU"); expect(safe).not.toMatch(/Comision 0|2 minute|investitori activi/);
+    expect(safe).toContain("„DA”"); expect(safe).not.toMatch(/RETRAG|NU dacă nu doriți/); expect(safe).not.toMatch(/Comision 0|2 minute|investitori activi/);
     expect(publishConsentRequestText()).toContain("Comision 0%");
   });
 });

@@ -9,6 +9,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { relayToMake } from "../_shared/makeRelay.ts";
+import { estimateShortUrl } from "../_shared/estimateShortLink.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -53,7 +54,7 @@ Deno.serve(async (req) => {
 
   const { data: listing, error: lErr } = await admin
     .from("prospect_listings")
-    .select("id, title, contact_phone, phone_normalized, source_url, zone")
+    .select("id, title, contact_phone, phone_normalized, source_url, short_code, zone")
     .eq("id", prospectId)
     .maybeSingle();
   if (lErr || !listing) return json({ error: "prospect_not_found" }, 404);
@@ -75,7 +76,7 @@ Deno.serve(async (req) => {
     return json({ ok: false, skipped: "cooldown_7d" });
   }
 
-  const analysisUrl = `https://realtrust.ro/analiza-anunt?url=${encodeURIComponent(listing.source_url)}`;
+  const analysisUrl = estimateShortUrl(listing) ?? `https://realtrust.ro/analiza-anunt?url=${encodeURIComponent(listing.source_url)}`;
   const message =
     `Buna ziua! Am generat o evaluare gratuita pentru proprietatea dvo. ` +
     `Puteti vedea analiza de piata aici: ${analysisUrl} - Echipa RealTrust Timisoara`;

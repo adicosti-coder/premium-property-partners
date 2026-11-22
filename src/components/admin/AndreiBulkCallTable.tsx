@@ -30,6 +30,10 @@ interface Row {
   source_platform: string | null;
   lifecycle_status: string | null;
   seller_type: string | null;
+  lead_score?: number | null;
+  agency_suspicion_score?: number | null;
+  owner_sentiment?: string | null;
+  prospect_type?: string | null;
   category: string | null;
   tags: string[] | null;
   andrei_queued_at: string | null;
@@ -51,7 +55,7 @@ export default function AndreiBulkCallTable() {
     staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase.from("prospect_listings")
-        .select("id,title,zone,rooms,price,currency,contact_name,contact_phone,phone_normalized,source_platform,lifecycle_status,seller_type,category,tags,andrei_queued_at,andrei_call_after,outreach_status")
+        .select("id,title,zone,rooms,price,currency,contact_name,contact_phone,phone_normalized,source_platform,lifecycle_status,seller_type,category,tags,andrei_queued_at,andrei_call_after,outreach_status,lead_score,agency_suspicion_score,owner_sentiment,prospect_type")
         .eq("is_active", true).eq("seller_type", "privat").eq("do_not_call", false)
         .order("created_at", { ascending: false }).limit(200);
       if (error) throw error;

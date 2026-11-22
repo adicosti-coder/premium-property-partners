@@ -16,7 +16,7 @@ import {
 
 const json = (b: unknown, s = 200) =>
   new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-const COLS = "id, title, zone, location, category, source_url, phone_normalized, contact_phone, outreach_status, outreach_status_at, outreach_recontact_at, lifecycle_status, expiry_check_status, do_not_call, auto_blacklisted_at, agency_suspicion_score, seller_type";
+const COLS = "id, title, zone, location, category, source_url, short_code, phone_normalized, contact_phone, outreach_status, outreach_status_at, outreach_recontact_at, lifecycle_status, expiry_check_status, do_not_call, auto_blacklisted_at, agency_suspicion_score, seller_type, lead_score, owner_sentiment, prospect_type, contact_name, tags";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });

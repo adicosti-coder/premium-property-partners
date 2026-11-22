@@ -1,4 +1,6 @@
 /** Reguli pentru selecția în masă „Trimite către Andrei”. */
+import { isAgencyProspect, OUTREACH_MIN_SCORE } from "../../supabase/functions/_shared/ownerOutreachEligibility";
+
 export interface AndreiQueueRow {
   phone_normalized: string | null;
   contact_phone: string | null;
@@ -8,6 +10,13 @@ export interface AndreiQueueRow {
   tags: string[] | null;
   category?: string | null;
   outreach_status?: string | null;
+  // Semnale de agenție și scorul (regula: agențiile niciodată, doar particular cu scor > 60).
+  lead_score?: number | null;
+  agency_suspicion_score?: number | null;
+  owner_sentiment?: string | null;
+  prospect_type?: string | null;
+  contact_name?: string | null;
+  title?: string | null;
 }
 
 export function toRoE164(p?: string | null): string {
@@ -19,12 +28,14 @@ export function toRoE164(p?: string | null): string {
 /** Motivul pentru care rândul nu poate fi trimis, sau null dacă e eligibil. */
 export function andreiIneligibleReason(r: AndreiQueueRow): string | null {
   if (r.andrei_queued_at || (r.tags ?? []).includes("apelat-andrei")) return "Trimis la Andrei";
+  if (r.outreach_status === "blocked_agency" || isAgencyProspect(r)) return "Agenție blocată";
   if (r.outreach_status) return "Trimis pe WhatsApp";
   const phone = toRoE164(r.phone_normalized || r.contact_phone);
   // Fără cifre salvate = numărul trebuie dezvăluit manual pe portal; nu intră în coadă.
   if (!/\d{6,}/.test(phone)) return "Necesită dezvăluire manuală";
   if (!/^\+407\d{8}$/.test(phone)) return "Telefon invalid";
   if (r.seller_type !== "privat") return "Neconfirmat";
+  if (!(Number(r.lead_score ?? 0) > OUTREACH_MIN_SCORE)) return `Scor ≤ ${OUTREACH_MIN_SCORE}`;
   if (!["new", "callback"].includes(r.lifecycle_status ?? "")) return "Procesat";
   return null;
 }

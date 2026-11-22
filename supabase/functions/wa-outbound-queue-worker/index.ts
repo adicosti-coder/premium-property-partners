@@ -12,6 +12,7 @@ import { drainMakeRelayDlq, relayToMake } from "../_shared/makeRelay.ts";
 import { preferredIntroTemplate, preferredPublishConsentTemplate } from "../_shared/waPreferredTemplate.ts";
 import { canonicalWaPhone, markPhoneSent, phoneVariants, releasePhoneSend, reservePhoneSend, toWaDigits } from "../_shared/waPhone.ts";
 import { WA_PUBLISH_CONSENT_TEMPLATE, consentAnalysisUrl } from "../_shared/waPublishConsentTemplate.ts";
+import { autoOutreachBlockReason, AUTO_OUTREACH_BLOCK_LABELS, COLD_OUTREACH_SOURCES, isAgencyProspect } from "../_shared/ownerOutreachEligibility.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -290,7 +291,7 @@ Deno.serve(async (req) => {
   }
 
   const SELECT_COLS =
-    "id, phone_normalized, prospect_listing_id, template_name, template_language, template_params, attempts, conversation_id, source, priority, scheduled_at, prospect_listings(created_at, lead_score)";
+    "id, phone_normalized, prospect_listing_id, template_name, template_language, template_params, attempts, conversation_id, source, priority, scheduled_at, prospect_listings(created_at, lead_score, seller_type, agency_suspicion_score, owner_sentiment, prospect_type, contact_name, title, tags, outreach_status)";
   let query = supabase.from("wa_outbound_queue").select(SELECT_COLS);
 
   if (body.queue_id) {
@@ -374,6 +375,21 @@ Deno.serve(async (req) => {
     if (canon !== rawPhone) {
       await supabase.from("wa_outbound_queue").update({ phone_normalized: canon }).eq("id", item.id);
       item.phone_normalized = canon;
+    }
+    // ── Agenții (niciodată) și primul contact la rece doar privat cu scor > 60 ──
+    {
+      const pl = (item as any).prospect_listings ?? null;
+      const agency = !!pl && (isAgencyProspect(pl) || pl.outreach_status === "blocked_agency");
+      const coldBlock = COLD_OUTREACH_SOURCES.has(String(item.source ?? "")) ? autoOutreachBlockReason(pl) : null;
+      const why = agency ? "blocked_agency" : coldBlock;
+      T("Eligibilitate proprietar", !why, why ? `Blocat: ${AUTO_OUTREACH_BLOCK_LABELS[why]}` : "Particular confirmat");
+      if (why) {
+        await supabase.from("wa_outbound_queue")
+          .update({ status: "cancelled", last_error: `blocat: ${AUTO_OUTREACH_BLOCK_LABELS[why].toLowerCase()}` })
+          .eq("id", item.id).in("status", ["pending", "failed"]);
+        results.push({ id: item.id, status: why === "blocked_agency" ? "blocked_agency" : `blocked_${why}` });
+        continue;
+      }
     }
     // ── Listă excludere (DNC / agenții / refuzuri) ───────────────────────────
     const { data: dnc } = await supabase
@@ -553,7 +569,7 @@ Deno.serve(async (req) => {
         const { data: prospect } = item.prospect_listing_id
           ? await supabase
             .from("prospect_listings")
-            .select("title, zone, source_url")
+            .select("title, zone, source_url, short_code")
             .eq("id", item.prospect_listing_id)
             .maybeSingle()
           : { data: null };

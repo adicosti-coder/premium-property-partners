@@ -1,9 +1,10 @@
 import { supabase } from "@/lib/supabaseClient";
 import { hasImplausiblePrice, isActiveOwnerListing, isIndividualOwnerListing, isResidentialRealEstate, ownerVerification } from "@/lib/ownerListingRules";
 import { isWhatsappCapable, normalizeRoPhone } from "@/lib/ownerOutreachTemplates";
+import { isAgencyProspect, OUTREACH_MIN_SCORE } from "../../supabase/functions/_shared/ownerOutreachEligibility";
 
 export const OWNER_FLOW_QUERY_KEY = ["owner-flow"] as const;
-const COLUMNS = "id,title,description,zone,location,rooms,price,currency,contact_name,contact_phone,phone_normalized,contact_email,prospect_type,source_platform,lead_score,lifecycle_status,source_url,category,created_at,is_active,do_not_call,ai_score_breakdown,rejection_reason,score,images,quality_score,quality_analysis,quality_analyzed_at,scraped_at";
+const COLUMNS = "id,title,description,zone,location,rooms,price,currency,contact_name,contact_phone,phone_normalized,contact_email,prospect_type,source_platform,lead_score,lifecycle_status,source_url,category,created_at,is_active,do_not_call,ai_score_breakdown,rejection_reason,score,images,quality_score,quality_analysis,quality_analyzed_at,scraped_at,seller_type,agency_suspicion_score,owner_sentiment,tags,outreach_status";
 
 export function candidateOf(r: { title: string | null; description: string | null; source_url: string | null; prospect_type: string | null; is_active: boolean | null; lifecycle_status: string | null; ai_score_breakdown: unknown }) {
   const b = r.ai_score_breakdown;
@@ -43,7 +44,9 @@ async function conversationsFor(phones: string[]) {
 
 export async function fetchOwnerContactReady() {
   const candidates = (await activeCandidates()).filter((r) => ["new", "callback"].includes(r.lifecycle_status ?? "")
-    && ownerVerification(candidateOf(r)) === "confirmed" && isWhatsappCapable(normalizeRoPhone(r.phone_normalized || r.contact_phone)));
+    && ownerVerification(candidateOf(r)) === "confirmed" && isWhatsappCapable(normalizeRoPhone(r.phone_normalized || r.contact_phone))
+    // Selecția implicită: agențiile niciodată, doar scor peste 60.
+    && r.outreach_status !== "blocked_agency" && !isAgencyProspect(r) && (r.lead_score ?? 0) > OUTREACH_MIN_SCORE);
   const contacted = new Set<string>();
   const blockedPhones = new Set<string>();
   for (let start = 0; start < candidates.length; start += 100) {

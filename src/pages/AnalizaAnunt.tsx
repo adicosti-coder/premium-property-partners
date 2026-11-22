@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import GoogleMapEmbed from "@/components/maps/GoogleMapEmbed";
 import { toast } from "sonner";
 import { Loader2, Search, FileDown, MessageCircle, TrendingDown, Target, Hotel, Gauge } from "lucide-react";
@@ -53,6 +53,7 @@ const CRITERIA: Array<[keyof Market["scores"], string]> = [
   ["pret_mp", "Raport preț/m²"],
 ];
 
+const SUPPORTED_LISTING_URL = /^https:\/\/(www\.)?[^/]*(storia|olx|publi24|imobiliare)\.ro\//i;
 const eur = (n: number) => `${Math.round(n).toLocaleString("ro-RO")} €`;
 const fnUrl = (name: string) => `${supabaseConfig.url}/functions/v1/${name}`;
 const headers = () => ({
@@ -61,15 +62,25 @@ const headers = () => ({
   Authorization: `Bearer ${getSupabasePublishableKey()}`,
 });
 
-const AnalizaAnunt = () => {
+/** Datele precompletate din linkul scurt https://realtrust.ro/e/<cod> (rezolvat în EstimateShortLink). */
+export type AnalizaPrefill = {
+  url: string | null;
+  zone: string | null;
+  listingType: "vanzare" | "inchiriere" | null;
+};
+
+const AnalizaAnunt = ({ prefill }: { prefill?: AnalizaPrefill } = {}) => {
   // Linkurile din alertele WhatsApp pentru investitori vin cu ?url=… precompletat.
   const [url, setUrl] = useState(() => {
+    if (prefill) return prefill.url?.slice(0, 500) ?? "";
     if (typeof window === "undefined") return "";
     return new URLSearchParams(window.location.search).get("url")?.slice(0, 500) ?? "";
   });
   // Linkurile din primul mesaj WhatsApp către proprietari vin și cu ?zona=…&tip=….
-  const [outreach] = useState(() =>
-    typeof window === "undefined" ? { zone: null, type: null, listingType: null } : parseOwnerOutreachParams(window.location.search));
+  const [outreach] = useState(() => {
+    if (prefill) return { zone: prefill.zone, type: prefill.listingType, listingType: prefill.listingType };
+    return typeof window === "undefined" ? { zone: null, type: null, listingType: null } : parseOwnerOutreachParams(window.location.search);
+  });
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState<ListingAnalysis | null>(null);
@@ -78,7 +89,21 @@ const AnalizaAnunt = () => {
 
   const analyze = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!/^https:\/\/(www\.)?[^/]*(storia|olx|publi24|imobiliare)\.ro\//i.test(url.trim())) {
+    await runAnalysis();
+  };
+
+  // Linkul scurt /e/<cod> deschide direct estimarea anunțului, fără alt clic.
+  const autoRan = useRef(false);
+  useEffect(() => {
+    // Doar portalurile suportate; altfel pagina rămâne precompletată, fără mesaj de eroare.
+    if (!prefill?.url || autoRan.current || !SUPPORTED_LISTING_URL.test(prefill.url)) return;
+    autoRan.current = true;
+    void runAnalysis();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefill?.url]);
+
+  async function runAnalysis() {
+    if (!SUPPORTED_LISTING_URL.test(url.trim())) {
       toast.error("Lipește un link https de pe Storia, OLX, Publi24 sau Imobiliare.ro.");
       return;
     }
@@ -157,7 +182,7 @@ const AnalizaAnunt = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const downloadPdf = async () => {
     if (!analysis) return;

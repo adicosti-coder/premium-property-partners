@@ -153,6 +153,9 @@ export default function ProspectTriageQueue() {
         .from("prospect_listings")
         .update({
           prospect_type: "proprietar",
+          // Confirmarea ta = proprietar particular; cu scor peste 60 pleacă automat primul mesaj (09:00–19:30).
+          seller_type: "privat",
+          seller_type_reason: "Confirmat manual de administrator",
           ai_score_breakdown: { ...(row.ai_score_breakdown && typeof row.ai_score_breakdown === "object" ? row.ai_score_breakdown : {}), explicit_owner_signal: true },
           lifecycle_status: "new",
           rejection_reason: null,
@@ -161,7 +164,12 @@ export default function ProspectTriageQueue() {
         .eq("id", row.id);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: OWNER_FLOW_QUERY_KEY });
-      toast({ title: "Proprietar confirmat", description: row.title?.slice(0, 60) ?? row.id });
+      toast({
+        title: "Proprietar confirmat",
+        description: (row.lead_score ?? 0) > 60
+          ? "Primul mesaj WhatsApp pleacă automat (09:00–19:30), dacă nu e agenție și numărul n-a mai fost contactat."
+          : "Scor de 60 sau mai mic: nu pleacă mesaj automat.",
+      });
       setRows(prev => prev.filter(r => r.id !== row.id));
     } catch (e: any) {
       toast({ title: "Eroare aprobare", description: e.message, variant: "destructive" });

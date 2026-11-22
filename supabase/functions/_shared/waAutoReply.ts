@@ -3,6 +3,7 @@
 
 import { isHotelCalcRequest } from "./waOwnerOutreachTemplate.ts";
 import { detectZone } from "./detectZone.ts";
+import { estimateShortUrl } from "./estimateShortLink.ts";
 
 export type ProspectContext = {
   prospect_type?: string | null;
@@ -269,18 +270,21 @@ export function publishConsentRequestText(p?: {
   zone?: string | null;
   rooms?: number | null;
   source_url?: string | null;
+  short_code?: string | null;
   /** Suprascrie link-ul de analiză (folosit de șablonul Meta cu {{2}}). */
   analysisUrl?: string;
   /** Direct reply only; keep the approved Meta body unchanged. */
   safeDirect?: boolean;
 } | null): string {
   const analysisUrl = p?.analysisUrl
+    || estimateShortUrl(p)
     || (p?.source_url
       ? `https://realtrust.ro/analiza-anunt?url=${encodeURIComponent(p.source_url)}`
       : "https://realtrust.ro/analiza-anunt");
+  // Răspuns direct, conversațional: fără formulări juridice rigide; acordul rămâne un „DA” explicit.
   if (p?.safeDirect) return [
-    `Publicarea pe realtrust.ro este gratuită și separată de serviciul de intermediere. Puteți consulta analiza aici: ${analysisUrl}`,
-    "Sunteți de acord să publicăm anunțul pe RealTrust? Răspundeți DA pentru acord sau NU dacă nu doriți. Îl verificăm înainte de publicare; retragerea se cere oricând prin RETRAG.",
+    `Mulțumim pentru răspuns! Estimarea gratuită pentru proprietatea dumneavoastră este aici: ${analysisUrl}`,
+    `Dacă doriți să o prezentăm gratuit clienților noștri pe realtrust.ro, scrieți-ne simplu „DA”, iar noi o verificăm înainte de publicare. Pentru orice întrebare ne găsiți aici sau la ${TEAM_PHONE_DISPLAY} (echipa RealTrust / ApArt Hotel).`,
   ].join("\n\n");
   return [
     `Bună ziua! Am generat o evaluare gratuită de piață pentru proprietatea dvs.: ${analysisUrl}`,
@@ -867,4 +871,38 @@ export function clientCallSummary(messages: ConversationMessage[], interval: str
     day: answerAfter(messages, "client_viewing_ask_day"),
     time: answerAfter(messages, "client_viewing_ask_time"),
   };
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Saluturi simple de la proprietari: răspuns scurt și prietenos, fără blocul DA/NU/RETRAG.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Telefonul direct al echipei RealTrust / ApArt Hotel, afișat în răspunsuri. */
+export const TEAM_PHONE_DISPLAY = "0799 069 256";
+
+const GREETING_RE =
+  /^(?:buna(?:\s+(?:ziua|seara|dimineata))?|buna\s+ziua\s+si\s+dumneavoastra|salut(?:are)?|servus|neata|hello|hi|hey|hei|sarut\s+mana(?:\s+(?:si\s+)?buna\s+ziua)?|o\s+zi\s+buna|ziua\s+buna)(?:\s+(?:andrei|domnule|doamna|dle|dna|tuturor|va\s+salut))?(?:\s+(?:multumesc|mersi))?$/;
+
+/** true pentru un salut simplu („Bună ziua”, „Salut”, „Bună!”), fără altă întrebare sau cerere. */
+export function isSimpleGreeting(raw: string): boolean {
+  const t = String(raw ?? "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+    .replace(/[\p{Extended_Pictographic}\uFE0F]/gu, " ")
+    .replace(/[!.,;:?…'"()-]+/g, " ")
+    .replace(/\s+/g, " ").trim();
+  if (!t || t.length > 40) return false;
+  return GREETING_RE.test(t);
+}
+
+/** Răspunsul prietenos la salut: estimarea (link scurt) + discuție directă cu echipa. */
+export function ownerGreetingReply(p?: { short_code?: string | null } | null): string {
+  const link = estimateShortUrl(p);
+  return [
+    "Bună ziua! Mulțumim că ne-ați scris. 😊",
+    link
+      ? `Estimarea gratuită pentru proprietatea dumneavoastră o găsiți aici: ${link}`
+      : "Vă putem pregăti gratuit o estimare a venitului pe care îl poate aduce proprietatea dumneavoastră.",
+    `Dacă vreți să discutăm despre potențialul de venit, vă răspundem cu drag aici sau direct la ${TEAM_PHONE_DISPLAY} (echipa RealTrust / ApArt Hotel).`,
+  ].join("\n\n");
 }

@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
 
   const { data: prospects, error } = await supabase
     .from("prospect_listings")
-    .select("id, title, zone, rooms, source_url, phone_normalized, contact_phone, do_not_call, do_not_call_reason")
+    .select("id, title, zone, rooms, source_url, short_code, phone_normalized, contact_phone, do_not_call, do_not_call_reason")
     .in("id", ids);
   if (error) return json({ error: error.message }, 500);
 

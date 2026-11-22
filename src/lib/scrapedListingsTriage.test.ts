@@ -7,7 +7,7 @@ const l = (over: Partial<DedupListing>): DedupListing => ({
   rooms: 2, size: 54, price: 98000, currency: "EUR", category: "vanzare", is_active: true, ...over,
 });
 
-const ownerFields = { seller_type: "privat", lifecycle_status: "new", tags: [], andrei_queued_at: null, outreach_status: null };
+const ownerFields = { seller_type: "privat", lifecycle_status: "new", tags: [], andrei_queued_at: null, outreach_status: null, lead_score: 75 };
 const olx = l({ id: "olx", contact_phone: "0722123456", ...ownerFields });
 const imo = l({ id: "imo", source_platform: "imobiliare.ro", source_url: "https://www.imobiliare.ro/oferta/b-123456", size: 55, price: 99000 });
 const solo = l({ id: "solo", source_platform: "Storia.ro", source_url: "https://www.storia.ro/ro/oferta/c-IDc", title: "3 camere Iosefin", rooms: 3, size: 80, price: 150000 });
@@ -59,5 +59,11 @@ describe("pregătit pentru prospectare", () => {
     expect(triageBlockReason({ ...olx, seller_type: "de_verificat" })).toBe("Neconfirmat");
     expect(triageBlockReason({ ...olx, outreach_status: "whatsapp_sent" })).toBe("Trimis pe WhatsApp");
     expect(triageBlockReason({ ...olx, is_active: false })).toBe("Anunț inactiv");
+  });
+  it("agențiile sunt blocate, iar scorul trebuie să fie peste 60", () => {
+    expect(triageBlockReason({ ...olx, contact_name: "Imobiliare Vest SRL" })).toBe("Agenție blocată");
+    expect(triageBlockReason({ ...olx, outreach_status: "blocked_agency" })).toBe("Agenție blocată");
+    expect(triageBlockReason({ ...olx, lead_score: 60 })).toBe("Scor ≤ 60");
+    expect(isReadyForOutreach({ ...olx, lead_score: 61 })).toBe(true);
   });
 });

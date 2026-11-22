@@ -163,3 +163,21 @@ test.each(["Nu sunt interesată", "Nu ma intereseaza", "Nu doresc", "Fără agen
 test.each(["Sunt interesat", "Da, mă interesează", "Vreau să colaborăm"])("NU e refuz: %s", (t) => {
   expect(isClearRefusal(t)).toBe(false);
 });
+
+test("salut simplu → răspuns prietenos cu link scurt și telefon, fără DA/NU/RETRAG", async () => {
+  const { isSimpleGreeting, ownerGreetingReply } = await import("./waAutoReply.ts");
+  for (const g of ["Bună ziua", "Salut!", "Bună", "buna seara", "Bună ziua 🙂", "Salutare Andrei"]) expect(isSimpleGreeting(g)).toBe(true);
+  for (const g of ["Bună ziua, cât e comisionul?", "Nu doresc", "DA", "Salut, e încă disponibil?"]) expect(isSimpleGreeting(g)).toBe(false);
+  const r = ownerGreetingReply({ short_code: "k7m2qx9a" });
+  expect(r).toContain("https://realtrust.ro/e/k7m2qx9a");
+  expect(r).toContain("0799 069 256");
+  expect(r).not.toMatch(/RETRAG|Răspundeți DA|NU dacă/);
+});
+
+test("cererea directă de acord e conversațională și cere un DA explicit", async () => {
+  const { publishConsentRequestText } = await import("./waAutoReply.ts");
+  const t = publishConsentRequestText({ short_code: "k7m2qx9a", safeDirect: true });
+  expect(t).toContain("https://realtrust.ro/e/k7m2qx9a");
+  expect(t).toContain("„DA”");
+  expect(t).not.toMatch(/RETRAG|NU dacă nu doriți/);
+});

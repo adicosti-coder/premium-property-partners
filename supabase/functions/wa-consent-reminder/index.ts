@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
   for (const r of rows ?? []) {
     const variants = phoneVariants(r.phone_normalized);
     const { data: p } = r.prospect_listing_id
-      ? await sb.from("prospect_listings").select("id, title, zone, rooms, source_url, do_not_call, do_not_call_reason")
+      ? await sb.from("prospect_listings").select("id, title, zone, rooms, source_url, short_code, do_not_call, do_not_call_reason")
         .eq("id", r.prospect_listing_id).maybeSingle()
       : { data: null };
     if (!p) { skipped.push({ id: r.id, reason: "anunț lipsă" }); continue; }

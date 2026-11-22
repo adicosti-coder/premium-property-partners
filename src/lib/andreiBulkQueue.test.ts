@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { andreiIneligibleReason } from "./andreiBulkQueue";
 
-const base = { phone_normalized: "0722123456", contact_phone: null, lifecycle_status: "new", seller_type: "privat", andrei_queued_at: null, tags: [] };
+const base = { phone_normalized: "0722123456", contact_phone: null, lifecycle_status: "new", seller_type: "privat", andrei_queued_at: null, tags: [], lead_score: 75 };
 
 describe("andreiIneligibleReason", () => {
   it("accepts a private owner with a Romanian mobile and unprocessed status", () => {
@@ -25,5 +25,14 @@ describe("andreiIneligibleReason", () => {
   });
   it("blocks owners already contacted on WhatsApp", () => {
     expect(andreiIneligibleReason({ ...base, outreach_status: "whatsapp_sent" })).toBe("Trimis pe WhatsApp");
+  });
+});
+
+describe("regula agenții / scor > 60 la trimiterea către Andrei", () => {
+  it("blochează agențiile și scorul de 60 sau mai mic", () => {
+    expect(andreiIneligibleReason({ ...base, contact_name: "Agenție Imobiliară Vest" })).toBe("Agenție blocată");
+    expect(andreiIneligibleReason({ ...base, outreach_status: "blocked_agency" })).toBe("Agenție blocată");
+    expect(andreiIneligibleReason({ ...base, lead_score: 60 })).toBe("Scor ≤ 60");
+    expect(andreiIneligibleReason({ ...base, lead_score: 61 })).toBeNull();
   });
 });

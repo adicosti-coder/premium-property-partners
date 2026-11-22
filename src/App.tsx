@@ -24,6 +24,7 @@ const CookieConsent = lazy(() => import("@/components/CookieConsent"));
 const GlobalChatAssistant = lazy(() => import("@/components/GlobalChatAssistant"));
 const SocialCampaign = lazy(() => import("@/pages/SocialCampaign"));
 const AnalizaShortLink = lazy(() => import("@/pages/AnalizaShortLink"));
+const EstimateShortLink = lazy(() => import("@/pages/EstimateShortLink"));
 
 // Handle dynamic import failures (stale cache) by reloading the page
 const handleDynamicImportError = (error: Error): never => {
@@ -299,6 +300,7 @@ const App = () => (
                     <Route path="/recomanda" element={<ReferralProgram />} />
                     <Route path="/s/:slug" element={<SocialCampaign />} />
                     <Route path="/aa/:tip/:zona" element={<AnalizaShortLink />} />
+                    <Route path="/e/:code" element={<EstimateShortLink />} />
 
                     {/* Canonical: /ansambluri-rezidentiale (hub). Detail pages keep /complexe/:slug. */}
                     <Route path="/ansambluri-rezidentiale" element={<Complexe />} />

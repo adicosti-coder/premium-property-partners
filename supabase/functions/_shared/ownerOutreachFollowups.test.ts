@@ -25,7 +25,7 @@ describe("alerta de aprobare 1/2 pentru admin", () => {
 
 describe("re-contactarea unică la 30 de zile", () => {
   const now = new Date("2026-12-15T10:00:00Z");
-  const base = { outreach_status: "whatsapp_delivered", outreach_status_at: "2026-11-10T10:00:00Z", outreach_recontact_at: null, lifecycle_status: "new", expiry_check_status: "ok", do_not_call: false };
+  const base = { outreach_status: "whatsapp_delivered", outreach_status_at: "2026-11-10T10:00:00Z", outreach_recontact_at: null, lifecycle_status: "new", expiry_check_status: "ok", do_not_call: false, seller_type: "privat", lead_score: 72 };
   it("textul este cel aprobat, cu zona și linkul", () => {
     expect(WA_OWNER_RECONTACT_BODY).toBe("Bună ziua! Am văzut că apartamentul dumneavoastră din {{1}} este încă disponibil. Avem noi cereri de la investitori și clienți calificați în zonă. Doriți să îl prezentăm acestora? {{2}}\n\nVă mulțumim!");
     expect(OWNER_RECONTACT_AFTER_DAYS).toBe(30);
@@ -40,5 +40,10 @@ describe("re-contactarea unică la 30 de zile", () => {
     expect(recontactBlocker({ ...base, outreach_status: "replied" }, now)).toBe("status");
     expect(recontactBlocker({ ...base, outreach_status: "unsubscribed" }, now)).toBe("status");
     expect(recontactBlocker({ ...base, do_not_call: true }, now)).toBe("excluded");
+  });
+  it("reluarea respectă regula agenții / particular / scor > 60", () => {
+    expect(recontactBlocker({ ...base, contact_name: "Imobiliare Vest SRL" }, now)).toBe("agency");
+    expect(recontactBlocker({ ...base, seller_type: "de_verificat" }, now)).toBe("not_private");
+    expect(recontactBlocker({ ...base, lead_score: 60 }, now)).toBe("low_score");
   });
 });

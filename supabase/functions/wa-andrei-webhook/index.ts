@@ -25,7 +25,10 @@ import {
   isConditionalConsent,
   isClearRefusal,
   PUBLISH_CONSENT_RECONFIRM_TEXT,
+  isSimpleGreeting,
+  ownerGreetingReply,
 } from "../_shared/waAutoReply.ts";
+import { isAgencyProspect } from "../_shared/ownerOutreachEligibility.ts";
 import { notifyClientChatLink } from "../_shared/waClientEmail.ts";
 import { notifyAgentInbound, notifyOwnerHandover, notifyClientCallRequest, ADMIN_WA_ALERT_NUMBERS, type OwnerHandoverResult } from "../_shared/waAgentNotify.ts";
 import { notifyConsentReply } from "../_shared/waPublishConsentNotify.ts";
@@ -427,6 +430,19 @@ Deno.serve(async (req) => {
           .eq("direction", "outbound");
 
         const ownerCtx = outboundCount ? await loadProspectContext(supabase, from) : null;
+        // Agențiile nu primesc niciun răspuns automat (doar un om poate răspunde din Admin).
+        let agencyContact = false;
+        let latestListing: { short_code?: string | null } | null = null;
+        try {
+          const { data: lp } = await supabase.from("prospect_listings")
+            .select("short_code, seller_type, agency_suspicion_score, owner_sentiment, prospect_type, contact_name, title, tags, outreach_status")
+            .or(phoneVariants(from).flatMap((v) => [`phone_normalized.eq.${v}`, `contact_phone.eq.${v}`]).join(","))
+            .order("created_at", { ascending: false }).limit(1).maybeSingle();
+          latestListing = lp ?? null;
+          agencyContact = !!lp && (isAgencyProspect(lp) || lp.outreach_status === "blocked_agency");
+        } catch (e) {
+          console.error("[wa-webhook] agency check failed:", e);
+        }
         // Pentru clienți, continuăm vizionarea în pași mici folosind mesajele
         // deja salvate: zonă → camere → zi → oră. Proprietarii rămân pe fluxul lor.
         let clientPreparedQuick: { kind: string; text: string } | null = null;
@@ -727,9 +743,16 @@ Deno.serve(async (req) => {
           }
         }
 
+        // Salut simplu („Bună ziua”, „Salut”) → răspuns scurt și prietenos, fără blocul DA/NU/RETRAG.
+        // Doar pentru proprietarii cu anunț în baza noastră (clienții rămân pe fluxul lor).
+        const greetingOnly = !!outboundCount && !!latestListing && !publishIntent && isSimpleGreeting(text);
+        if (greetingOnly && !isSafetyReply) {
+          quick = { kind: "friendly_greeting", text: ownerGreetingReply(latestListing) };
+        }
+
         // Cererea de acord a fost pregătită din Admin, dar fereastra de 24h era
         // închisă → punem întrebarea acum, la primul răspuns al proprietarului.
-        if (!publishIntent && !isClearRefusal(text) && !/^\s*stop\b/i.test(text) && (!quick || quick.kind === "intake")) {
+        if (!greetingOnly && !publishIntent && !isClearRefusal(text) && !/^\s*stop\b/i.test(text) && (!quick || quick.kind === "intake")) {
           try {
             const { data: pending } = await supabase
               .from("wa_publish_consents")
@@ -742,7 +765,7 @@ Deno.serve(async (req) => {
             if (pending && pending.notes !== "question_sent") {
               const { data: pr } = await supabase
                 .from("prospect_listings")
-                .select("title, zone, rooms, source_url")
+                .select("title, zone, rooms, source_url, short_code")
                 .eq("id", pending.prospect_listing_id ?? "")
                 .maybeSingle();
               quick = {
@@ -763,7 +786,7 @@ Deno.serve(async (req) => {
         // dacă nu există încă nicio cerere de acord, o creăm și punem automat
         // întrebarea „CONFIRM”, ca Andrei să nu mai scrie manual.
         if (
-          !publishIntent && outboundCount && !isClearRefusal(text) && !/^\s*stop\b/i.test(text) && !/[?]|comision|costuri|pret/i.test(text) && !String(quick?.kind ?? "").startsWith("owner_") &&
+          !greetingOnly && !publishIntent && outboundCount && !isClearRefusal(text) && !/^\s*stop\b/i.test(text) && !/[?]|comision|costuri|pret/i.test(text) && !String(quick?.kind ?? "").startsWith("owner_") &&
           quick?.kind !== "quick_no" && quick?.kind !== "quick_stop" &&
           quick?.kind !== "publish_consent_request"
         ) {
@@ -774,7 +797,7 @@ Deno.serve(async (req) => {
               .eq("phone_normalized", from);
             const { data: pr } = await supabase
               .from("prospect_listings")
-              .select("id, title, zone, rooms, source_url")
+              .select("id, title, zone, rooms, source_url, short_code")
               .eq("phone_normalized", from)
               .order("created_at", { ascending: false })
               .limit(1)
@@ -840,7 +863,12 @@ Deno.serve(async (req) => {
           conversationsToReply.delete(convId);
           intakeConversations.delete(convId);
         }
-        if (quick) {
+        if (agencyContact) {
+          // Agenție: niciun răspuns automat și nici agentul AI.
+          quick = null;
+          conversationsToReply.delete(convId);
+          intakeConversations.delete(convId);
+        } else if (quick) {
           // Răspuns la butoanele din primul mesaj → trimitem imediat răspunsul
           // potrivit, independent de regula de 3 ore, ca discuția să continue.
           const previousQuick = quickReplyConversations.get(convId);

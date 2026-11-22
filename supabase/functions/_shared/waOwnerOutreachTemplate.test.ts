@@ -19,6 +19,10 @@ describe("primul mesaj către proprietari", () => {
     expect(u.searchParams.get("url")).toBe("https://www.olx.ro/d/oferta/x");
     expect(new URL(ownerOutreachPreviewUrl({ category: "inchiriere" })).searchParams.get("tip")).toBe("inchiriere");
   });
+  it("cu cod scurt, linkul e exclusiv https://realtrust.ro/e/<cod>, fără parametri", () => {
+    expect(ownerOutreachPreviewUrl({ zone: "Iosefin", category: "vanzare", source_url: "https://www.olx.ro/d/oferta/x", short_code: "k7m2qx9a" }))
+      .toBe("https://realtrust.ro/e/k7m2qx9a");
+    expect(ownerOutreachPreviewUrl({ zone: "Iosefin", short_code: "BAD!" })).toContain("/analiza-anunt?");
 });
 
 describe("răspunsurile proprietarului", () => {

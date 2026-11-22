@@ -7,6 +7,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { isRoMobileE164, toE164 } from "../_shared/andreiQueue.ts";
 import { queueVoiceFallback } from "../_shared/voiceFallback.ts";
+import { autoOutreachBlockReason, OUTREACH_MIN_SCORE } from "../_shared/ownerOutreachEligibility.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -30,7 +31,7 @@ Deno.serve(async (req) => {
     const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const sb = createClient(url, key);
     const { data: rows, error } = await sb.from("prospect_listings")
-      .select("id, phone_normalized, contact_phone, seller_type, do_not_call, is_active, lifecycle_status, tags, andrei_queued_at, outreach_status")
+      .select("id, phone_normalized, contact_phone, seller_type, do_not_call, is_active, lifecycle_status, tags, andrei_queued_at, outreach_status, lead_score, agency_suspicion_score, owner_sentiment, prospect_type, contact_name, title")
       .in("id", ids);
     if (error) throw error;
 
@@ -40,8 +41,11 @@ Deno.serve(async (req) => {
     for (const r of rows ?? []) {
       const to = toE164(r.phone_normalized || r.contact_phone);
       const tags = (r.tags as string[] | null) ?? [];
+      const block = autoOutreachBlockReason(r);
       const reason = !isRoMobileE164(to) ? "telefon invalid (doar mobil 07…)"
-        : r.seller_type !== "privat" ? "proprietar neconfirmat"
+        : block === "blocked_agency" ? "agenție blocată"
+        : block === "not_private" ? "proprietar neconfirmat"
+        : block === "low_score" ? `scor ≤ ${OUTREACH_MIN_SCORE}`
         : r.do_not_call ? "nu dorește să fie contactat"
         : !r.is_active ? "anunț inactiv"
         : !["new", "callback"].includes(r.lifecycle_status ?? "") ? "deja procesat"

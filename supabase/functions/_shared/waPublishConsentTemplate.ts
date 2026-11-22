@@ -1,4 +1,5 @@
 import { publishConsentRequestText } from "./waAutoReply.ts";
+import { estimateShortUrl } from "./estimateShortLink.ts";
 
 export const WA_PUBLISH_CONSENT_TEMPLATE = "acord_publicare_proprietar_v3";
 export const WA_PUBLISH_CONSENT_LANGUAGE = "ro";
@@ -28,7 +29,9 @@ export function consentPropertyLabel(p?: { title?: string | null; zone?: string 
     .replace(/[\r\n\t]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 200);
 }
 
-export function consentAnalysisUrl(p?: { source_url?: string | null } | null): string {
+export function consentAnalysisUrl(p?: { source_url?: string | null; short_code?: string | null } | null): string {
+  const short = estimateShortUrl(p);
+  if (short) return short;
   const u = String(p?.source_url || "").trim();
   return u ? `https://realtrust.ro/analiza-anunt?url=${encodeURIComponent(u)}` : "https://realtrust.ro/analiza-anunt";
 }

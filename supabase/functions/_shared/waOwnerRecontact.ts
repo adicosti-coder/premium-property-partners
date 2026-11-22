@@ -2,6 +2,7 @@
 // cu butoane, dacă anunțul rămâne activ la 30 de zile după outreach.
 import { WA_BUSINESS_ACCOUNT_ID, WA_API_VERSION, waToken } from "./waConfig.ts";
 import { WA_OWNER_OUTREACH_FOOTER } from "./waOwnerOutreachTemplate.ts";
+import { autoOutreachBlockReason } from "./ownerOutreachEligibility.ts";
 
 export const WA_OWNER_RECONTACT_TEMPLATE = "outreach_proprietar_reluare_v1";
 export const WA_OWNER_RECONTACT_LANGUAGE = "ro";
@@ -37,6 +38,12 @@ export type RecontactCandidate = {
   auto_blacklisted_at?: string | null;
   agency_suspicion_score?: number | null;
   seller_type?: string | null;
+  lead_score?: number | null;
+  owner_sentiment?: string | null;
+  prospect_type?: string | null;
+  contact_name?: string | null;
+  title?: string | null;
+  tags?: string[] | null;
 };
 
 /** Motivul pentru care anunțul NU se re-contactează, sau null dacă e eligibil. */
@@ -48,7 +55,9 @@ export function recontactBlocker(p: RecontactCandidate, now: Date = new Date()):
   if (CLOSED_LIFECYCLE.has(String(p.lifecycle_status ?? ""))) return "closed";
   if (INACTIVE_SOURCE.has(String(p.expiry_check_status ?? ""))) return "inactive_on_source";
   if (p.do_not_call || p.auto_blacklisted_at) return "excluded";
-  if ((p.agency_suspicion_score ?? 0) >= 70 || ["agency", "agentie"].includes(String(p.seller_type ?? ""))) return "agency";
+  // Aceeași regulă ca primul mesaj: agențiile niciodată, doar particular confirmat cu scor > 60.
+  const block = autoOutreachBlockReason(p);
+  if (block) return block === "blocked_agency" ? "agency" : block;
   return null;
 }
 

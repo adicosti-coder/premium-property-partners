@@ -1065,6 +1065,13 @@
       "when": 1795330748149,
       "tag": "0151_owner_outreach_agency_block_and_estimate_codes",
       "breakpoints": true
+    },
+    {
+      "idx": 152,
+      "version": "7",
+      "when": 1795336207746,
+      "tag": "0152_owner_outreach_fire_on_manual_confirmation",
+      "breakpoints": true
     }
   ]
 }

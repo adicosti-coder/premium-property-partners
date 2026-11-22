@@ -16,6 +16,11 @@ export type TriageListing = DedupListing & {
   tags?: string[] | null;
   andrei_queued_at?: string | null;
   outreach_status?: string | null;
+  lead_score?: number | null;
+  agency_suspicion_score?: number | null;
+  owner_sentiment?: string | null;
+  prospect_type?: string | null;
+  contact_name?: string | null;
 };
 
 /** De ce nu poate pleca spre coada de contactare (telefon, stare, proprietar confirmat, contact anterior), sau null. */
@@ -28,6 +33,12 @@ export function triageBlockReason(l: TriageListing): string | null {
     andrei_queued_at: l.andrei_queued_at ?? null,
     tags: l.tags ?? null,
     outreach_status: l.outreach_status ?? null,
+    lead_score: l.lead_score ?? null,
+    agency_suspicion_score: l.agency_suspicion_score ?? null,
+    owner_sentiment: l.owner_sentiment ?? null,
+    prospect_type: l.prospect_type ?? null,
+    contact_name: l.contact_name ?? null,
+    title: l.title ?? null,
   });
 }
 

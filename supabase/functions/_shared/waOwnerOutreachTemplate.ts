@@ -1,5 +1,6 @@
 // Primul mesaj de outreach către proprietari (trimis de Make cu acest șablon Meta).
 // Conține 3 butoane de răspuns rapid; răspunsurile sunt procesate în wa-andrei-webhook.
+import { estimateShortUrl } from "./estimateShortLink.ts";
 
 export const WA_OWNER_OUTREACH_TEMPLATE = "outreach_proprietar_butoane_v1";
 export const WA_OWNER_OUTREACH_LANGUAGE = "ro";
@@ -25,10 +26,16 @@ export function ownerOutreachZone(p?: { zone?: string | null; location?: string 
   return (z || "Timișoara").slice(0, 60);
 }
 
-/** Linkul spre analiza gratuită existentă, personalizat pe zonă și tip, fără a publica nimic. */
+/**
+ * Linkul spre analiza gratuită: scurt și curat (`https://realtrust.ro/e/<cod>`) când anunțul are cod;
+ * varianta lungă rămâne doar ca rezervă pentru rânduri fără cod.
+ */
 export function ownerOutreachPreviewUrl(p?: {
   zone?: string | null; location?: string | null; category?: string | null; source_url?: string | null;
+  short_code?: string | null;
 } | null): string {
+  const short = estimateShortUrl(p);
+  if (short) return short;
   const params = new URLSearchParams();
   params.set("zona", ownerOutreachZone(p));
   const tip = /vanzare|sale/i.test(String(p?.category ?? "")) ? "vanzare" : "inchiriere";
@@ -44,7 +51,7 @@ export const WA_OWNER_OUTREACH_COMPONENTS = [
   {
     type: "BODY",
     text: WA_OWNER_OUTREACH_BODY,
-    example: { body_text: [["Iosefin", "https://realtrust.ro/analiza-anunt?zona=Iosefin&tip=vanzare"]] },
+    example: { body_text: [["Iosefin", "https://realtrust.ro/e/k7m2qx9a"]] },
   },
   { type: "FOOTER", text: WA_OWNER_OUTREACH_FOOTER },
   {
