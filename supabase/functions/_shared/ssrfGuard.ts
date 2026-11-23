@@ -45,3 +45,37 @@ export async function assertSafePublicUrl(raw: string): Promise<URL> {
   if (v4.some(isPrivateV4) || v6.some(isPrivateV6)) throw new Error("URL not allowed");
   return u;
 }
+
+export interface SafeFetchOptions {
+  maxRedirects?: number;
+  /** Injectable for tests. */
+  fetchImpl?: typeof fetch;
+  /** Injectable for tests. */
+  validate?: (raw: string) => Promise<URL>;
+}
+
+/**
+ * GET a caller-supplied URL without ever reaching private/internal hosts.
+ * Every hop (including each redirect target) is re-validated, because a
+ * public page can redirect to an internal address.
+ * Throws "URL not allowed" when any hop is blocked.
+ */
+export async function safePublicFetch(
+  raw: string,
+  init: RequestInit = {},
+  opts: SafeFetchOptions = {},
+): Promise<Response> {
+  const fetchImpl = opts.fetchImpl ?? fetch;
+  const validate = opts.validate ?? assertSafePublicUrl;
+  const maxRedirects = opts.maxRedirects ?? 5;
+  let current = raw;
+  for (let hop = 0; hop <= maxRedirects; hop++) {
+    const safe = await validate(current);
+    const resp = await fetchImpl(safe.toString(), { ...init, redirect: "manual" });
+    const location = resp.status >= 300 && resp.status < 400 ? resp.headers.get("location") : null;
+    if (!location) return resp;
+    try { await resp.body?.cancel(); } catch { /* ignore */ }
+    current = new URL(location, safe).toString();
+  }
+  throw new Error("Too many redirects");
+}

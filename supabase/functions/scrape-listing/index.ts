@@ -9,6 +9,7 @@ import {
 } from "./extract.ts";
 import { uploadImagesForProperty } from "./storage.ts";
 import { cleanListingUrl, directFetchHtml, parseStructuredHtml } from "./directFetch.ts";
+import { assertSafePublicUrl } from "../_shared/ssrfGuard.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -97,6 +98,24 @@ Deno.serve(async (req) => {
     }
     const cleanUrl = cleanListingUrl(rawUrl);
     const url = cleanUrl;
+
+    // Only public web addresses: refuse internal networks, loopback, cloud
+    // metadata, credentials in the URL and non-standard ports.
+    if (mode !== 'save') {
+      try {
+        await assertSafePublicUrl(cleanUrl);
+      } catch {
+        return new Response(
+          JSON.stringify({ success: false, error: 'Adresa nu este permisă (doar pagini web publice).' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } else if (!/^https?:\/\//i.test(cleanUrl)) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Adresa trebuie să fie http(s).' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;

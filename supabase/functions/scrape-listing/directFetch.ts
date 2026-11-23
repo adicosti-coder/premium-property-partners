@@ -1,6 +1,8 @@
 // Free, fast first attempt for server-rendered listing pages, plus URL cleanup.
 // Scrape.do stays the fallback for JS-only / anti-bot portals.
 
+import { safePublicFetch, type SafeFetchOptions } from "../_shared/ssrfGuard.ts";
+
 const TRACKING_PARAMS = /^(utm_.*|fbclid|gclid|gbraid|wbraid|msclkid|igshid|mibextid|sfnsn|ref|ref_src|_gl|mc_cid|mc_eid|si|s)$/i;
 
 /** Strip tracking params and unwrap Facebook/Google redirect links. */
@@ -87,17 +89,17 @@ export function parseStructuredHtml(html: string): Record<string, any> {
 }
 
 /** Plain server-side GET. Returns null when the page looks blocked or JS-only. */
-export async function directFetchHtml(url: string, timeoutMs = 12000): Promise<string | null> {
+export async function directFetchHtml(url: string, timeoutMs = 12000, guard: SafeFetchOptions = {}): Promise<string | null> {
   try {
-    const resp = await fetch(url, {
-      redirect: 'follow',
+    // Every hop is checked: private, loopback and metadata addresses are refused.
+    const resp = await safePublicFetch(url, {
       signal: AbortSignal.timeout(timeoutMs),
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml',
         'Accept-Language': 'ro-RO,ro;q=0.9,en;q=0.8',
       },
-    });
+    }, guard);
     if (!resp.ok) return null;
     const html = await resp.text();
     if (html.length < 3000) return null;

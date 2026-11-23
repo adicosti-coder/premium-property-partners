@@ -4,6 +4,7 @@
  * only selected ones are marked as published.
  */
 import { toWebp } from '../_shared/webpEncode.ts';
+import { safePublicFetch } from '../_shared/ssrfGuard.ts';
 
 /** Download an image from URL and upload to Supabase Storage */
 export async function downloadAndUploadImage(
@@ -13,9 +14,16 @@ export async function downloadAndUploadImage(
   index: number
 ): Promise<{ storagePath: string | null; originalUrl: string }> {
   try {
-    const response = await fetch(imageUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; RealTrust/1.0)' },
-    });
+    let response: Response;
+    try {
+      response = await safePublicFetch(imageUrl, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; RealTrust/1.0)' },
+      });
+    } catch {
+      // Private/internal or unresolvable address: never fetch, never store it.
+      console.warn(`Image URL refused by address guard (index ${index}).`);
+      return { storagePath: null, originalUrl: imageUrl };
+    }
     if (!response.ok) {
       console.warn(`Image fetch returned ${response.status} for ${imageUrl}; using original URL as fallback.`);
       return { storagePath: imageUrl, originalUrl: imageUrl };

@@ -2,6 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { signSessionId } from "../_shared/twimlWebhookSig.ts";
 import { phoneVariants } from "../_shared/waPhone.ts";
+import { sanitizeVoiceCustomPrompt, VOICE_CUSTOM_PROMPT_MARKER } from "../_shared/voiceCustomPrompt.ts";
+import { logAudit } from "../_shared/auditLog.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -69,7 +71,16 @@ serve(async (req) => {
 
     const body = await req.json();
     const { toNumber, scraperLeadId, leadId, objective = "qualify", customPrompt, languageRetryOf, forceElevenLabs } = body;
-    const hasCustomPrompt = typeof customPrompt === "string" && customPrompt.trim().length > 0;
+    // Admin text is only extra call context: sanitised, capped and later fenced
+    // as data inside Andrei's prompt — it never replaces the base rules.
+    const customCheck = sanitizeVoiceCustomPrompt(customPrompt);
+    if (!customCheck.ok) {
+      return new Response(JSON.stringify({ error: customCheck.reason }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const safeCustomPrompt = customCheck.value;
+    const hasCustomPrompt = !!safeCustomPrompt;
     const initiatorUserId: string | null = isInternalRetry
       ? null
       : (globalThis as any).__initiator_user_id || null;
@@ -177,7 +188,7 @@ serve(async (req) => {
     }
 
     const agentPrompt = ownerPrompt && !hasCustomPrompt ? ownerPrompt : hasCustomPrompt
-      ? `__CUSTOM_PROMPT__\n${customPrompt.trim()}`
+      ? `${VOICE_CUSTOM_PROMPT_MARKER}${safeCustomPrompt}`
       : `Ești Andrei, concierge vocal RealTrust, agenție de imobiliare premium din Timișoara. Suni amabil un potențial client. ${leadContext} Obiectiv: ${objective === "qualify" ? "calificare interes (buget, timeline, tip proprietate)" : objective === "schedule" ? "programare vizionare/întâlnire" : "follow-up"}. Vorbești scurt, natural, în limba română. Maxim 2-3 propoziții per replică. Atenție la acordul genului feminin: „două minute”, „două camere”, „două opțiuni”, NICIODATĂ „doi minute”. Dacă nu răspunde sau pare deranjat, închizi politicos.`;
 
     // Create session row first (so webhook can find it via call_sid)
@@ -200,6 +211,17 @@ serve(async (req) => {
       .single();
 
     if (sessErr || !session) throw new Error(`DB insert failed: ${sessErr?.message}`);
+
+    if (hasCustomPrompt) {
+      await logAudit(supabase, {
+        action: "voice_custom_prompt_used",
+        actor_user_id: initiatorUserId,
+        actor_label: initiatorUserId ? null : "system",
+        entity_type: "voice_session",
+        entity_id: session.id,
+        details: { length: safeCustomPrompt!.length, preview: safeCustomPrompt!.slice(0, 300) },
+      });
+    }
 
     // Build TwiML webhook URL with session id
     const twimlSig = await signSessionId(session.id);

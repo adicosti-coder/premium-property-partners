@@ -1,7 +1,10 @@
-// Public endpoint — increments impressions/clicks for an A/B variant on a path.
-// Called from SEOHead component each time a page renders an override variant.
+// Increments impressions/clicks for an A/B variant on a path.
+// Internal-only (cron/service role or admin): the weekly resolver promotes
+// SEO winners from these counts, so anonymous callers must not be able to
+// inflate them. No public page calls this endpoint.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,6 +16,9 @@ const json = (b: unknown, s = 200) =>
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method !== "POST") return json({ ok: false }, 405);
+  const denied = await requireInternalOrAdmin(req, corsHeaders);
+  if (denied) return denied;
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
