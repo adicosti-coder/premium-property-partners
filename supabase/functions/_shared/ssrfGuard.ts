@@ -37,9 +37,13 @@ export async function assertSafePublicUrl(raw: string): Promise<URL> {
     if (isPrivateV4(h)) throw new Error("URL not allowed");
     return u;
   }
+  // Read Deno via globalThis so this module also type-checks in the web test suite.
+  const dns = (globalThis as unknown as {
+    Deno: { resolveDns(host: string, type: "A" | "AAAA"): Promise<string[]> };
+  }).Deno;
   const [v4, v6] = await Promise.all([
-    Deno.resolveDns(h, "A").catch(() => [] as string[]),
-    Deno.resolveDns(h, "AAAA").catch(() => [] as string[]),
+    dns.resolveDns(h, "A").catch(() => [] as string[]),
+    dns.resolveDns(h, "AAAA").catch(() => [] as string[]),
   ]);
   if (v4.length + v6.length === 0) throw new Error("URL not resolvable");
   if (v4.some(isPrivateV4) || v6.some(isPrivateV6)) throw new Error("URL not allowed");
