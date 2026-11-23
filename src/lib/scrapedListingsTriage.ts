@@ -96,10 +96,14 @@ export const hasAgencyTextSignal = (l: TriageListing) =>
  */
 export function privateConfirmMode(l: TriageListing): "confirm" | "override" | null {
   if (isDismissed(l) || l.seller_type === "privat" || l.agency_marked_at) return null;
-  const reason = triageBlockReason(l);
-  if (reason === "Neconfirmat") return "confirm";
-  if (reason === "Agenție blocată") return hasAgencyTextSignal(l) ? null : "override";
-  return null;
+  // „Nu e agenție” apare pe orice agenție blocată automat (și pe anunțurile inactive),
+  // cu excepția celor cu cuvinte de agenție în text sau deja contactate.
+  if (isAgencyListing(l)) {
+    if (hasAgencyTextSignal(l)) return null;
+    if (l.outreach_status && l.outreach_status !== BLOCKED_AGENCY_STATUS) return null;
+    return "override";
+  }
+  return triageBlockReason(l) === "Neconfirmat" ? "confirm" : null;
 }
 
 /** Agenție după clasificare, marcaj manual sau starea „blocked_agency” — nu primește mesaje. */

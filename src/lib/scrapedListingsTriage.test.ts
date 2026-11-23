@@ -262,3 +262,9 @@ describe("Agenție — blocare pe același număr de telefon", () => {
     expect(agencyMarkMode({ ...marked, agency_mark_root: "root" })).toBe("undo");
   });
 });
+
+describe("butonul „Nu e agenție” pe agențiile blocate automat", () => {
+  it("apare și pe anunțurile inactive blocate ca agenție", () => {
+    expect(privateConfirmMode({ id: "x", title: "Apartament 2 camere", seller_type: "agentie", is_active: false, outreach_status: "blocked_agency" } as any)).toBe("override");
+  });
+});

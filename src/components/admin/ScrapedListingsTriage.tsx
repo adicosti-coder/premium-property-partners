@@ -571,7 +571,7 @@ function TriageCard({ row, expanded, onToggle, onSend, onDismiss, onRestore, res
           )}
           {confirmMode === "override" && (
             <Button variant="ghost" onClick={onOverridePrivate} disabled={confirming} className="min-h-12 gap-2 text-muted-foreground" aria-label="Nu e agenție? Confirmă privat, cu verificare separată">
-              <UserCheck className="h-4 w-4" /> Nu e agenție? Confirmă privat
+              <UserCheck className="h-4 w-4" /> Nu e agenție
             </Button>
           )}
           {agencyMode === "mark" && (
