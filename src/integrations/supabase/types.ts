@@ -13904,6 +13904,10 @@ export type Database = {
         Args: { _delta?: number; _id: string }
         Returns: undefined
       }
+      is_generic_search_listing: {
+        Args: { p_title: string; p_url: string }
+        Returns: boolean
+      }
       is_property_owner: { Args: { _property_id: string }; Returns: boolean }
       list_orphan_prospects: {
         Args: { _limit?: number; _since_hours?: number }

@@ -71,7 +71,7 @@ describe("pregătit pentru prospectare", () => {
 import { triagePool } from "./scrapedListingsTriage";
 
 describe("Indisponibile / renunțate", () => {
-  const gone = l({ id: "gone", source_platform: "Publi24", source_url: "https://www.publi24.ro/anunturi/x.html", title: "4 camere Girocului", rooms: 4, size: 95, price: 160000, dismissed_at: "2026-11-22T16:20:00Z" } as Partial<DedupListing>);
+  const gone = l({ id: "gone", source_platform: "Publi24", source_url: "https://www.publi24.ro/anunturi/imobiliare/de-vanzare/apartamente/anunt/4-camere-girocului/x1.html", title: "4 camere Girocului", rooms: 4, size: 95, price: 160000, dismissed_at: "2026-11-22T16:20:00Z" } as Partial<DedupListing>);
   const all = [olx, imo, solo, gone];
 
   it("sunt ascunse implicit din lista principală", () => {
@@ -266,5 +266,36 @@ describe("Agenție — blocare pe același număr de telefon", () => {
 describe("butonul „Nu e agenție” pe agențiile blocate automat", () => {
   it("apare și pe anunțurile inactive blocate ca agenție", () => {
     expect(privateConfirmMode({ id: "x", title: "Apartament 2 camere", seller_type: "agentie", is_active: false, outreach_status: "blocked_agency" } as any)).toBe("override");
+  });
+});
+
+import { isTriageListing } from "./scrapedListingsTriage";
+
+describe("paginile de căutare generice nu apar în Triere", () => {
+  const laproprietar = l({ id: "search", source_platform: "laproprietar.ro", source_url: "https://laproprietar.ro/imobiliare/timisoara",
+    title: "Apartamente de vânzare și de închiriat în Timișoara — de la proprietar", rooms: 1, size: null, price: null });
+  const storiaSearch = l({ id: "storia-search", source_platform: "Storia.ro", source_url: "https://www.storia.ro/ro/rezultate/vanzare/apartament/timis/timisoara", title: "Apartamente de vânzare: Timisoara" });
+  const all = [olx, imo, solo, laproprietar, storiaSearch];
+
+  it("nu intră în grupare și nu sunt numărate ca imobile", () => {
+    const g = groupCrossPortalDuplicates(triagePool(all, DEFAULT_TRIAGE_FILTERS));
+    expect(summarizeTriage(g).properties).toBe(2);
+    expect(summarizeTriage(g).listings).toBe(3);
+  });
+  it("lipsesc din listă în orice stare, inclusiv cu „Ascunde duplicatele” oprit", () => {
+    for (const status of ["all", "active", "inactive", "dismissed"] as const) {
+      const f = { ...DEFAULT_TRIAGE_FILTERS, status, hideDuplicates: false, hideDismissed: false };
+      const ids = buildTriageRows(groupCrossPortalDuplicates(triagePool(all, f)), f).map((r) => r.listing.id);
+      expect(ids).not.toContain("search");
+      expect(ids).not.toContain("storia-search");
+    }
+  });
+  it("nici dacă ajung direct într-un grup (filtrul de rânduri le respinge)", () => {
+    const g = [{ key: "search", primary: laproprietar, variants: [], reasons: {}, portals: ["laproprietar"] }];
+    expect(buildTriageRows(g, DEFAULT_TRIAGE_FILTERS)).toHaveLength(0);
+  });
+  it("anunțurile individuale rămân", () => {
+    expect(isTriageListing(olx)).toBe(true);
+    expect(isTriageListing(laproprietar)).toBe(false);
   });
 });

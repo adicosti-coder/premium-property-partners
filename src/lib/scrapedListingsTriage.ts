@@ -3,7 +3,7 @@
  * și filtrul de disponibilitate a telefonului peste grupurile din `crossPortalDedup`.
  */
 import {
-  matchesPhoneFilter, outreachBlockReason, phoneAvailability, portalKey,
+  isGenericSearchListing, matchesPhoneFilter, outreachBlockReason, phoneAvailability, portalKey,
   type DedupListing, type DuplicateGroup, type PhoneAvailabilityFilter,
 } from "@/lib/crossPortalDedup";
 import { norm } from "@/lib/portalSearch";
@@ -187,16 +187,21 @@ export function triageReasonHint(l: TriageListing, reason: string): string {
   }
 }
 
+/** Anunțurile reale din Triere: fără paginile de căutare, categoriile, agregatoarele și articolele salvate greșit. */
+export const isTriageListing = (l: TriageListing) => !isGenericSearchListing(l);
+
 /**
- * Anunțurile care intră în grupare: fără cele indisponibile când sunt ascunse
- * (ca un anunț renunțat să nu ascundă variantele lui de pe alte portaluri).
+ * Anunțurile care intră în grupare: niciodată paginile de căutare generice și fără cele
+ * indisponibile când sunt ascunse (ca un anunț renunțat să nu ascundă variantele lui de pe alte portaluri).
  */
 export function triagePool<T extends TriageListing>(listings: T[], f: TriageFilters): T[] {
-  if (f.status === "dismissed" || !f.hideDismissed) return listings;
-  return listings.filter((l) => !isDismissed(l));
+  const real = listings.filter(isTriageListing);
+  if (f.status === "dismissed" || !f.hideDismissed) return real;
+  return real.filter((l) => !isDismissed(l));
 }
 
 function matchesBase(l: TriageListing, f: TriageFilters): boolean {
+  if (!isTriageListing(l)) return false;
   if (f.status === "dismissed") { if (!isDismissed(l)) return false; }
   else if (f.hideDismissed && isDismissed(l)) return false;
   if (f.status === "active" && l.is_active === false) return false;

@@ -24,7 +24,7 @@ import type { PageSize } from "@/hooks/admin/usePaginatedQuery";
 import { Ban, Building2, Copy, UserCheck, ExternalLink, Layers, Loader2, MessageCircle, Phone, PhoneOff, RefreshCw, RotateCcw, Search, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { groupCrossPortalDuplicates, listingPhone, portalKey, signalsOf } from "@/lib/crossPortalDedup";
-import { activeQuickFilter, agencyMarkMode, agencyMarkSummary, agencyUndoLabel, type AgencyMarkResult, applyQuickFilter, buildTriageRows, DEFAULT_TRIAGE_FILTERS, isAgencyListing, isDismissed, privateConfirmMode, triageReasonHint, summarizeTriage, triageBlockReason, triagePool, type TriageFilters, type TriageListing, type TriageQuickFilter, type TriageRow } from "@/lib/scrapedListingsTriage";
+import { activeQuickFilter, agencyMarkMode, agencyMarkSummary, agencyUndoLabel, type AgencyMarkResult, applyQuickFilter, buildTriageRows, DEFAULT_TRIAGE_FILTERS, isAgencyListing, isDismissed, isTriageListing, privateConfirmMode, triageReasonHint, summarizeTriage, triageBlockReason, triagePool, type TriageFilters, type TriageListing, type TriageQuickFilter, type TriageRow } from "@/lib/scrapedListingsTriage";
 import { hasImplausiblePrice } from "@/lib/ownerListingRules";
 import { normalizeRoPhone } from "@/lib/ownerOutreachTemplates";
 import { OWNER_FLOW_QUERY_KEY } from "@/lib/ownerFlowData";
@@ -95,9 +95,9 @@ export default function ScrapedListingsTriage() {
 
   const pool = useMemo(() => triagePool(listings, filters), [listings, filters]);
   const groups = useMemo(() => groupCrossPortalDuplicates(pool), [pool]);
-  const dismissedCount = useMemo(() => listings.filter(isDismissed).length, [listings]);
+  const dismissedCount = useMemo(() => listings.filter((l) => isDismissed(l) && isTriageListing(l)).length, [listings]);
   const summary = useMemo(() => summarizeTriage(groups), [groups]);
-  const portals = useMemo(() => [...new Set(listings.map((l) => portalKey(l)))].sort(), [listings]);
+  const portals = useMemo(() => [...new Set(listings.filter(isTriageListing).map((l) => portalKey(l)))].sort(), [listings]);
   const rows = useMemo(() => buildTriageRows(groups, filters), [groups, filters]);
   const phoneCounts = useMemo(() => ({
     all: buildTriageRows(groups, { ...filters, phone: "all" }).length,

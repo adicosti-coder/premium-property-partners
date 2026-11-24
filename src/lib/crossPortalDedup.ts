@@ -231,7 +231,7 @@ export function signalsOf(l: DedupListing): Signals {
     tx,
     phone: listingPhone(l),
     titleTokens: titleTokens(l.title),
-    listingPage: !isSearchPageUrl(l.source_url, l.title) && isIndividualOwnerListing({ url: l.source_url }),
+    listingPage: !isGenericSearchListing(l) && isIndividualOwnerListing({ url: l.source_url }),
   };
 }
 
@@ -300,6 +300,10 @@ const stamp = (l: DedupListing) => {
   const t = Date.parse(l.last_seen_at ?? l.scraped_at ?? l.created_at ?? "");
   return Number.isFinite(t) ? t : 0;
 };
+
+/** Pagină de căutare, categorie, agregator sau articol salvată ca anunț: nu e un imobil și nu intră în Triere. */
+export const isGenericSearchListing = (l: Pick<DedupListing, "source_url" | "title">) =>
+  isSearchPageUrl(l.source_url, l.title);
 
 export interface DuplicateGroup<T extends DedupListing = DedupListing> {
   key: string;

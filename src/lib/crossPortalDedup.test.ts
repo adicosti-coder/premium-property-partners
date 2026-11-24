@@ -154,3 +154,18 @@ describe("filtrul de disponibilitate a telefonului", () => {
     expect(outreachBlockReason(withPhone)).toBeNull();
   });
 });
+
+import { isGenericSearchListing } from "./crossPortalDedup";
+
+describe("pagini de căutare generice în deduplicare", () => {
+  const search = base({ id: "lp", source_platform: "laproprietar.ro", source_url: "https://laproprietar.ro/imobiliare/timisoara",
+    title: "Apartamente de vânzare și de închiriat în Timișoara — de la proprietar", contact_phone: "0722 123 456" });
+  it("sunt recunoscute ca pagini de căutare, nu ca anunțuri", () => {
+    expect(isGenericSearchListing(search)).toBe(true);
+    expect(isGenericSearchListing(olxMara)).toBe(false);
+    expect(signalsOf(search).listingPage).toBe(false);
+  });
+  it("nu se grupează cu un anunț real, nici pe același telefon", () => {
+    expect(compareListings(olxMara, search).match).toBe(false);
+  });
+});
