@@ -1,8 +1,11 @@
 // Sends the AI analysis summary by email (Resend) right after an analysis is finished.
 // Public endpoint: fixed template, validated recipient, rate limited (anti-relay).
+// Requires the email ticket issued only to whoever ran the analysis — the share
+// link alone cannot send the report or consume its single delivery.
 import { checkRateLimit } from "../_shared/rateLimiter.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendTeamEmail } from "../_shared/teamEmail.ts";
+import { verifyTicket } from "../_shared/signedTicket.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -48,7 +51,7 @@ Deno.serve(async (req) => {
     return json({ error: "rate_limited", message: "Prea multe e-mailuri trimise. Reîncearcă mai târziu." }, 429);
   }
 
-  let payload: { token?: string; email?: string; name?: string };
+  let payload: { token?: string; email?: string; name?: string; ticket?: string };
   try {
     payload = await req.json();
   } catch {
@@ -61,6 +64,9 @@ Deno.serve(async (req) => {
 
   if (!/^[a-f0-9]{16,64}$/i.test(token)) return json({ error: "invalid_token" }, 400);
   if (!EMAIL_RE.test(email)) return json({ error: "invalid_email", message: "Adresa de e-mail nu este validă." }, 400);
+  if (!(await verifyTicket("analysis-email", payload.ticket, token))) {
+    return json({ error: "ticket_required", message: "Trimiterea pe e-mail este disponibilă imediat după analiză. Reia analiza." }, 403);
+  }
 
   const SB_URL = Deno.env.get("SUPABASE_URL");
   const SB_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");

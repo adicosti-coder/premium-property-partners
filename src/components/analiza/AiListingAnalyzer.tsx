@@ -61,6 +61,7 @@ export interface AnalyzerResult {
   photoCount: number;
   cached?: boolean;
   shareToken?: string | null;
+  emailTicket?: string | null;
   adjusted?: boolean;
 }
 
@@ -179,6 +180,7 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
         photoCount: tab === "photos" ? photos.length : 0,
         cached: Boolean(data.cached),
         shareToken: (data.share_token as string | null) ?? null,
+        emailTicket: (data.email_ticket as string | null) ?? null,
       };
 
       setResult(payload);
@@ -498,7 +500,7 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
 
               <AnalysisComparePanel analysis={result.analysis} shareUrl={shareUrl} />
 
-              <AnalysisEmailCard shareToken={result.shareToken} />
+              <AnalysisEmailCard shareToken={result.shareToken} emailTicket={result.emailTicket} />
 
 
 

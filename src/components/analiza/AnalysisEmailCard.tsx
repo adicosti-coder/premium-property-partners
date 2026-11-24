@@ -11,17 +11,19 @@ const EMAIL_RE = /^[^\s@]+@[^\s@,;]+\.[a-z]{2,}$/i;
 
 interface Props {
   shareToken?: string | null;
+  /** Bilet dat doar celui care a rulat analiza; fără el serverul refuză trimiterea. */
+  emailTicket?: string | null;
   defaultName?: string;
 }
 
-const AnalysisEmailCard = ({ shareToken, defaultName = "" }: Props) => {
+const AnalysisEmailCard = ({ shareToken, emailTicket, defaultName = "" }: Props) => {
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
   const send = async () => {
     if (sending) return;
-    if (!shareToken) {
+    if (!shareToken || !emailTicket) {
       toast.error("Raportul nu este încă salvat. Reia analiza.");
       return;
     }
@@ -38,7 +40,7 @@ const AnalysisEmailCard = ({ shareToken, defaultName = "" }: Props) => {
           apikey: getSupabasePublishableKey(),
           Authorization: `Bearer ${getSupabasePublishableKey()}`,
         },
-        body: JSON.stringify({ token: shareToken, email: email.trim(), name: defaultName }),
+        body: JSON.stringify({ token: shareToken, ticket: emailTicket, email: email.trim(), name: defaultName }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {

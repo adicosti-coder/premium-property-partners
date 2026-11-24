@@ -1,6 +1,7 @@
 // Public AI analysis for /hostscan-ai: accepts a listing URL or property photos
 // and returns a structured evaluation (score, estimated hotel-regime revenue, recommendations).
 import { checkRateLimit } from "../_shared/rateLimiter.ts";
+import { issueTicket } from "../_shared/signedTicket.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -266,6 +267,14 @@ async function saveAnalysis(input: {
 }
 
 
+// Bilet de trimitere pe e-mail, dat doar celui care a rulat analiza: linkul de
+// partajare singur nu permite trimiterea raportului către altă adresă.
+const ANALYSIS_EMAIL_TICKET_TTL_MS = 2 * 60 * 60 * 1000;
+async function emailTicketFor(token: string | null): Promise<string | null> {
+  if (!token) return null;
+  return (await issueTicket("analysis-email", ANALYSIS_EMAIL_TICKET_TTL_MS, token))?.ticket ?? null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
@@ -332,7 +341,7 @@ Deno.serve(async (req) => {
         cached: true,
         analysis: cached as Record<string, unknown>,
       });
-      return json({ ok: true, mode, source_url: sourceUrl, cached: true, analysis: cached, share_token: token });
+      return json({ ok: true, mode, source_url: sourceUrl, cached: true, analysis: cached, share_token: token, email_ticket: await emailTicketFor(token) });
     }
 
     let text: string;
@@ -381,7 +390,7 @@ Deno.serve(async (req) => {
         cached: true,
         analysis: cachedPhotos as Record<string, unknown>,
       });
-      return json({ ok: true, mode, source_url: null, cached: true, analysis: cachedPhotos, share_token: tokenPhotos });
+      return json({ ok: true, mode, source_url: null, cached: true, analysis: cachedPhotos, share_token: tokenPhotos, email_ticket: await emailTicketFor(tokenPhotos) });
     }
 
     userContent = [
@@ -471,6 +480,7 @@ Deno.serve(async (req) => {
       cached: false,
       analysis: parsed,
       share_token: shareToken,
+      email_ticket: await emailTicketFor(shareToken),
     });
   } catch (e) {
     console.error("analysis failed", (e as Error).message);
