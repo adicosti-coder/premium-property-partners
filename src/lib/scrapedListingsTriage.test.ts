@@ -299,3 +299,17 @@ describe("paginile de căutare generice nu apar în Triere", () => {
     expect(isTriageListing(laproprietar)).toBe(false);
   });
 });
+
+import { privateConfirmSummary } from "./scrapedListingsTriage";
+
+describe("privateConfirmSummary", () => {
+  it("numără separat anunțurile cu același număr deblocate și cele rămase agenție", () => {
+    const text = privateConfirmSummary({ blocklist_removed: true, reactivated: true, siblings_checked: 36, siblings_unblocked: 2 });
+    expect(text).toContain("încă 2 anunțuri");
+    expect(text).toContain("34 anunțuri");
+  });
+
+  it("nu pomenește lista de agenții sau reactivarea când nu s-au schimbat", () => {
+    expect(privateConfirmSummary({ siblings_checked: 0 })).toBe("");
+  });
+});

@@ -24,7 +24,7 @@ import type { PageSize } from "@/hooks/admin/usePaginatedQuery";
 import { Ban, Building2, Copy, UserCheck, ExternalLink, Layers, Loader2, MessageCircle, Phone, PhoneOff, RefreshCw, RotateCcw, Search, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { groupCrossPortalDuplicates, listingPhone, portalKey, signalsOf } from "@/lib/crossPortalDedup";
-import { activeQuickFilter, agencyMarkMode, agencyMarkSummary, agencyUndoLabel, type AgencyMarkResult, applyQuickFilter, buildTriageRows, DEFAULT_TRIAGE_FILTERS, isAgencyListing, isDismissed, isTriageListing, privateConfirmMode, triageReasonHint, summarizeTriage, triageBlockReason, triagePool, type TriageFilters, type TriageListing, type TriageQuickFilter, type TriageRow } from "@/lib/scrapedListingsTriage";
+import { activeQuickFilter, agencyMarkMode, agencyMarkSummary, agencyUndoLabel, type AgencyMarkResult, privateConfirmSummary, type PrivateConfirmResult, applyQuickFilter, buildTriageRows, DEFAULT_TRIAGE_FILTERS, isAgencyListing, isDismissed, isTriageListing, privateConfirmMode, triageReasonHint, summarizeTriage, triageBlockReason, triagePool, type TriageFilters, type TriageListing, type TriageQuickFilter, type TriageRow } from "@/lib/scrapedListingsTriage";
 import { hasImplausiblePrice } from "@/lib/ownerListingRules";
 import { normalizeRoPhone } from "@/lib/ownerOutreachTemplates";
 import { OWNER_FLOW_QUERY_KEY } from "@/lib/ownerFlowData";
@@ -151,16 +151,21 @@ export default function ScrapedListingsTriage() {
     try {
       const { data, error: e } = await supabase.rpc("admin_confirm_prospect_private", { p_id: l.id, p_override_agency: overrideAgency });
       if (e) throw e;
-      const next = ((data ?? {}) as { listing?: ListingState }).listing;
+      const r = (data ?? {}) as PrivateConfirmResult & { listing?: ListingState; affected?: ListingState[] };
+      const next = r.listing;
       if (next) patchListing(l.id, next);
+      patchStates(r.affected);
       setOverrideFor(null);
-      const merged = { ...l, ...(next ?? {}) } as Listing;
+      const merged = { ...l, ...(next ?? {}), ...(r.reactivated ? { is_active: true, lifecycle_status: "new" } : {}) } as Listing;
       const reason = triageBlockReason(merged);
+      const status = reason ? `Încă nu se poate trimite: ${triageReasonHint(merged, reason)}.` : "Poate fi trimis acum către Andrei.";
+      const extra = privateConfirmSummary(r);
       toast.success("Confirmat ca proprietar privat", {
-        description: reason ? `Încă nu se poate trimite: ${triageReasonHint(merged, reason)}.` : "Poate fi trimis acum către Andrei.",
+        description: extra ? `${extra} ${status}` : status,
         action: { label: "Anulează", onClick: () => { void undoConfirmPrivate(l); } },
-        duration: 8000,
+        duration: 10000,
       });
+      qc.invalidateQueries({ queryKey: QK });
       qc.invalidateQueries({ queryKey: OWNER_FLOW_QUERY_KEY });
     } catch (e) {
       toast.error("Nu a fost confirmat", { description: (e as Error).message });
@@ -174,9 +179,11 @@ export default function ScrapedListingsTriage() {
     try {
       const { data, error: e } = await supabase.rpc("admin_undo_confirm_prospect_private", { p_id: l.id });
       if (e) throw e;
-      const next = ((data ?? {}) as { listing?: ListingState }).listing;
-      if (next) patchListing(l.id, next);
-      toast.success("Confirmarea a fost anulată");
+      const r = (data ?? {}) as { listing?: ListingState; affected?: ListingState[] };
+      if (r.listing) patchListing(l.id, r.listing);
+      patchStates(r.affected);
+      toast.success("Confirmarea a fost anulată", { description: "Anunțul și numărul au revenit exact cum erau." });
+      qc.invalidateQueries({ queryKey: QK });
       qc.invalidateQueries({ queryKey: OWNER_FLOW_QUERY_KEY });
     } catch (e) {
       toast.error("Confirmarea nu a putut fi anulată", { description: (e as Error).message });

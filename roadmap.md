@@ -372,3 +372,4 @@
 - [x] Ruta /e/:cod + linkul scurt în mesajele și șabloanele WhatsApp
 - [x] „Flux proprietari”: selecția implicită fără agenții și cu scor > 60
 - [x] Confirmarea manuală ca particular (scor > 60) pornește primul mesaj
+- [x] „Confirmă privat” scoate numărul din lista de agenții, ridică marcajul și reactivează anunțurile dezactivate de listă

@@ -170,6 +170,26 @@ export function agencyMarkSummary(r: AgencyMarkResult): string {
   return parts.join(" ");
 }
 
+export interface PrivateConfirmResult {
+  blocklist_removed?: boolean;
+  siblings_checked?: number;
+  siblings_unblocked?: number;
+  reactivated?: boolean;
+}
+
+/** Ce a mai schimbat „Confirmă privat”: lista de agenții, reactivarea și anunțurile cu același număr. */
+export function privateConfirmSummary(r: PrivateConfirmResult): string {
+  const parts: string[] = [];
+  if (r.blocklist_removed) parts.push("Numărul a fost scos din lista de agenții.");
+  if (r.reactivated) parts.push("Anunțul a redevenit activ.");
+  const checked = Number(r.siblings_checked ?? 0);
+  const unblocked = Number(r.siblings_unblocked ?? 0);
+  if (unblocked > 0) parts.push(`Am deblocat încă ${anunturi(unblocked)} cu același număr.`);
+  const still = checked - unblocked;
+  if (still > 0) parts.push(`${still === 1 ? "Un anunț" : `${still} anunțuri`} cu același număr ${still === 1 ? "rămâne blocat" : "rămân blocate"} (alte semne de agenție).`);
+  return parts.join(" ");
+}
+
 /** Motivul exact afișat pe card când „Trimite către Andrei” e blocat. */
 export function triageReasonHint(l: TriageListing, reason: string): string {
   switch (reason) {
