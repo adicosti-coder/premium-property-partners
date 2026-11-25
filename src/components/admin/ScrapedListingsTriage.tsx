@@ -20,8 +20,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AdminPagination } from "@/components/admin/shared/AdminPagination";
 import { SourceLink } from "@/components/admin/shared/SourceLink";
+import ProspectPhoneEditor from "@/components/admin/ProspectPhoneEditor";
 import type { PageSize } from "@/hooks/admin/usePaginatedQuery";
-import { Ban, Building2, Copy, UserCheck, ExternalLink, Layers, Loader2, MessageCircle, Phone, PhoneOff, RefreshCw, RotateCcw, Search, ShieldAlert } from "lucide-react";
+import { Ban, Building2, Copy, UserCheck, Layers, Loader2, MessageCircle, Phone, PhoneOff, RefreshCw, RotateCcw, Search } from "lucide-react";
 import { toast } from "sonner";
 import { groupCrossPortalDuplicates, listingPhone, portalKey, signalsOf } from "@/lib/crossPortalDedup";
 import { activeQuickFilter, agencyMarkMode, agencyMarkSummary, agencyUndoLabel, type AgencyMarkResult, privateConfirmSummary, type PrivateConfirmResult, applyQuickFilter, buildTriageRows, DEFAULT_TRIAGE_FILTERS, isAgencyListing, isDismissed, isTriageListing, privateConfirmMode, triageReasonHint, summarizeTriage, triageBlockReason, triagePool, type TriageFilters, type TriageListing, type TriageQuickFilter, type TriageRow } from "@/lib/scrapedListingsTriage";
@@ -79,8 +80,6 @@ export default function ScrapedListingsTriage() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [confirmFor, setConfirmFor] = useState<Listing | null>(null);
   const [sending, setSending] = useState(false);
-  const [manualPhone, setManualPhone] = useState<Record<string, string>>({});
-  const [savingPhoneId, setSavingPhoneId] = useState<string | null>(null);
   const [dismissFor, setDismissFor] = useState<Listing | null>(null);
   const [dismissing, setDismissing] = useState(false);
   const [restoringId, setRestoringId] = useState<string | null>(null);
@@ -123,22 +122,39 @@ export default function ScrapedListingsTriage() {
   };
   const toggleExpanded = (key: string) => setExpanded((prev) => { const n = new Set(prev); if (n.has(key)) n.delete(key); else n.add(key); return n; });
 
-  const saveManualPhone = async (l: Listing) => {
-    const normalized = normalizeRoPhone((manualPhone[l.id] || "").trim());
-    if (!normalized) { toast.error("Număr invalid", { description: "Scrie un număr românesc, ex: 0722 123 456." }); return; }
-    setSavingPhoneId(l.id);
+  const saveManualPhone = async (l: Listing, rawPhone: string): Promise<boolean> => {
+    const normalized = normalizeRoPhone(rawPhone);
+    if (!normalized) {
+      toast.error("Număr invalid", { description: "Scrie un număr românesc, ex: 0722 123 456." });
+      return false;
+    }
     try {
-      const { error: e } = await supabase.from("prospect_listings")
-        .update({ contact_phone: normalized, phone_normalized: normalized, phone_source: "manual_admin" }).eq("id", l.id);
+      const { data, error: e } = await supabase.rpc("admin_update_prospect_phone", { p_id: l.id, p_phone: normalized });
       if (e) throw e;
-      qc.setQueryData<Listing[]>(QK, (prev) => prev?.map((r) => r.id === l.id ? { ...r, contact_phone: normalized, phone_normalized: normalized } : r));
+      const r = (data ?? {}) as {
+        already?: boolean;
+        cancelled_wa?: number;
+        cancelled_owner_outreach?: number;
+        cancelled_calls?: number;
+        listing?: Partial<Listing> & { id: string };
+      };
+      if (r.listing) patchListing(l.id, r.listing);
+      else patchListing(l.id, { contact_phone: normalized, phone_normalized: normalized });
+
+      const merged = { ...l, ...(r.listing ?? {}) } as Listing;
+      const cancelled = Number(r.cancelled_wa ?? 0) + Number(r.cancelled_owner_outreach ?? 0) + Number(r.cancelled_calls ?? 0);
+      const notes: string[] = [];
+      if (cancelled > 0) notes.push(`Am anulat ${cancelled} ${cancelled === 1 ? "programare" : "programări"} către vechiul număr.`);
+      const reason = triageBlockReason(merged);
+      notes.push(reason ? triageReasonHint(merged, reason) : "Anunțul este pregătit pentru o trimitere explicită către Andrei.");
+      notes.push("Nu s-a trimis niciun mesaj automat.");
+      toast.success(r.already ? "Numărul era deja salvat" : "Telefon salvat", { description: notes.join(" "), duration: 10000 });
+      qc.invalidateQueries({ queryKey: QK });
       qc.invalidateQueries({ queryKey: OWNER_FLOW_QUERY_KEY });
-      setManualPhone((p) => ({ ...p, [l.id]: "" }));
-      toast.success("Telefon salvat", { description: "Anunțul poate fi pregătit pentru prospectare." });
+      return true;
     } catch (e) {
       toast.error("Telefonul nu a fost salvat", { description: (e as Error).message });
-    } finally {
-      setSavingPhoneId(null);
+      return false;
     }
   };
 
@@ -414,10 +430,7 @@ export default function ScrapedListingsTriage() {
               onUndoAgency={() => undoAgency(row.listing as Listing)}
               markingAgency={agencyId === row.listing.id}
               restoring={restoringId === row.listing.id}
-              manualPhone={manualPhone[row.listing.id] ?? ""}
-              onManualPhone={(v) => setManualPhone((p) => ({ ...p, [row.listing.id]: v }))}
-              onSavePhone={() => saveManualPhone(row.listing as Listing)}
-              savingPhone={savingPhoneId === row.listing.id} />
+              onSavePhone={(phone) => saveManualPhone(row.listing as Listing, phone)} />
           ))}
           <AdminPagination page={safePage} pageCount={pageCount} total={rows.length} pageSize={pageSize}
             onPage={setPage} onPageSize={(s) => { setPageSize(s); setPage(0); }} isFetching={isFetching} />
@@ -500,13 +513,10 @@ interface CardProps {
   onMarkAgency: () => void;
   onUndoAgency: () => void;
   markingAgency: boolean;
-  manualPhone: string;
-  onManualPhone: (v: string) => void;
-  onSavePhone: () => void;
-  savingPhone: boolean;
+  onSavePhone: (phone: string) => Promise<boolean>;
 }
 
-function TriageCard({ row, expanded, onToggle, onSend, onDismiss, onRestore, restoring, onConfirmPrivate, onOverridePrivate, confirming, onMarkAgency, onUndoAgency, markingAgency, manualPhone, onManualPhone, onSavePhone, savingPhone }: CardProps) {
+function TriageCard({ row, expanded, onToggle, onSend, onDismiss, onRestore, restoring, onConfirmPrivate, onOverridePrivate, confirming, onMarkAgency, onUndoAgency, markingAgency, onSavePhone }: CardProps) {
   const l = row.listing;
   const s = signalsOf(l);
   const phone = listingPhone(l);
@@ -542,29 +552,7 @@ function TriageCard({ row, expanded, onToggle, onSend, onDismiss, onRestore, res
             {s.size != null && <span>{s.size} mp</span>}
             <span className="font-medium text-foreground">{priceLabel(l)}</span>
           </p>
-          {phone ? (
-            <p className="flex items-center gap-1.5 text-xs"><Phone className="h-3.5 w-3.5 text-primary" /> {phone}</p>
-          ) : (
-            <div className="rounded-md border border-dashed p-2">
-              <p className="flex items-center gap-1.5 text-xs font-medium"><ShieldAlert className="h-3.5 w-3.5 text-warning" /> Necesită dezvăluire manuală</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Deschide anunțul, apasă „Arată numărul” pe portal și scrie-l aici. Până atunci nu poate intra în coada de contactare.
-              </p>
-              <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-                {l.source_url && (
-                  <Button asChild variant="outline" size="sm" className="min-h-12 gap-1.5">
-                    <a href={l.source_url} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-4 w-4" /> Deschide anunțul</a>
-                  </Button>
-                )}
-                <Input value={manualPhone} onChange={(e) => onManualPhone(e.target.value)} inputMode="tel" placeholder="07XX XXX XXX"
-                  aria-label="Telefon dezvăluit manual" className="min-h-12 sm:max-w-[180px]"
-                  onKeyDown={(e) => { if (e.key === "Enter") onSavePhone(); }} />
-                <Button size="sm" variant="secondary" className="min-h-12" onClick={onSavePhone} disabled={savingPhone || !manualPhone.trim()}>
-                  {savingPhone ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvează"}
-                </Button>
-              </div>
-            </div>
-          )}
+          <ProspectPhoneEditor phone={phone} sourceUrl={l.source_url} onSave={onSavePhone} />
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-56 sm:shrink-0">
           <Button onClick={onSend} disabled={!!andreiReason} className="min-h-12 gap-2" aria-label={andreiReason ? `Nu se poate trimite: ${andreiReason}` : "Trimite către Andrei (WhatsApp)"}>

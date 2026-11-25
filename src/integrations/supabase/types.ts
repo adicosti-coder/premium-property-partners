@@ -13117,6 +13117,10 @@ export type Database = {
         Returns: Json
       }
       admin_undo_mark_prospect_agency: { Args: { p_id: string }; Returns: Json }
+      admin_update_prospect_phone: {
+        Args: { p_id: string; p_phone: string }
+        Returns: Json
+      }
       admin_web_vitals_summary: { Args: never; Returns: Json }
       agency_text_norm: { Args: { t: string }; Returns: string }
       anonymize_expired_leads: { Args: never; Returns: Json }

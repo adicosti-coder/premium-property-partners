@@ -1,5 +1,10 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Corectare telefon în Triere — 25 noiembrie
+- [x] Permite schimbarea unui număr extras greșit și adăugarea unuia lipsă, direct pe card, doar pentru anunțul curent
+- [x] Validare, audit și anularea programărilor către vechiul număr; fără mesaje automate
+- [x] 1.128 teste, build valid și verificare autentificată pe mobil; schimbare reală probată tranzacțional și restaurată integral
+
 ## Aliniere cifre performanță — 22 noiembrie
 - [x] Andrei chat și apeluri: 9,7/10, 65–75% (calcul 70%), 6,5–9,4% net, 15–20% din net; fără „+40%/+70%”
 - [x] Generator descrieri anunțuri: scor 9,7/10, ocupare 65–75%, randament 6,5–9,4%
