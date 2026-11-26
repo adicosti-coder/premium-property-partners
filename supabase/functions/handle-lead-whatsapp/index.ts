@@ -96,23 +96,21 @@ Deno.serve(async (req) => {
       // Formularul salvează direct (fără id întors), deci găsim cererea după telefon.
       let query = supabase.from("leads").select("id, name, whatsapp_number, created_at, source, simulation_data,submission_id");
       // A caller-chosen lead id is honoured only with the visitor capability token
-      // or an internal retry; everyone else is matched by their own fresh save.
+      // or an internal retry; a phone number alone never links a stored lead.
       const trusted = Boolean(internal || capability);
-      query = d.lead_id && trusted
-        ? query.eq("id", d.lead_id)
-        : query.ilike("whatsapp_number", `%${last9(d.telefon)}`)
-          .gte("created_at", new Date(Date.now() - 15 * 60_000).toISOString())
-          .order("created_at", { ascending: false }).limit(1);
-      const { data: rows } = await query;
+      const { data: rows } = d.lead_id && trusted
+        ? await query.eq("id", d.lead_id)
+        : { data: [] as any[] };
       const found = rows?.[0];
-      const fresh = found && Date.now() - new Date(found.created_at).getTime() < 15 * 60_000;
       // A stored request is only used by its own visitor (same phone, plus a fresh save,
       // the visitor capability token or an internal retry). Any other caller keeps only
       // the figures it sent itself — never another lead's id or stored calculator data.
-      // Without the token only a fresh legacy (non-unified) save with the same phone is
+      // Without the token no stored lead is
       // linked, and its stored calculator data is never loaded or forwarded to Make.
       const samePhone = found && last9(found.whatsapp_number ?? "") === last9(d.telefon);
-      const lead = samePhone && (trusted || (fresh && !String(found.source ?? "").startsWith("calculator_unificat")))
+      // Only a caller proving control of the lead (capability token or internal
+      // retry) can link it; a phone number alone never selects someone's lead.
+      const lead = trusted && samePhone && found
         ? found
         : null;
       if (!lead) d.lead_id = undefined;

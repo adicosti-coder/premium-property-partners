@@ -153,6 +153,9 @@ const ROICalculatorWidget = () => {
             venit_estimat_min: r.netMin,
             venit_estimat_max: r.netMax,
             sursa: "calculator_roi",
+            ...(result.ok && result.leadId && result.reportToken
+              ? { lead_id: result.leadId, report_token: result.reportToken }
+              : {}),
           },
         })
         .then(({ error }) => { if (error) console.warn("[ROICalculator] handle-lead-whatsapp failed", error); })
