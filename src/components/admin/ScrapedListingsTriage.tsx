@@ -173,7 +173,6 @@ export default function ScrapedListingsTriage() {
       const next = {
         ...(r.listing ?? {}),
         seller_type: r.listing?.seller_type ?? "privat",
-        private_confirmed_at: r.listing?.private_confirmed_at ?? new Date().toISOString(),
         ...(r.reactivated ? { is_active: true, lifecycle_status: "new" } : {}),
       } as Partial<Listing>;
       patchListing(l.id, next);
