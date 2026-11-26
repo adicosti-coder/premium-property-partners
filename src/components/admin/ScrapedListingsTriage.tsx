@@ -168,8 +168,15 @@ export default function ScrapedListingsTriage() {
       const { data, error: e } = await supabase.rpc("admin_confirm_prospect_private", { p_id: l.id, p_override_agency: overrideAgency });
       if (e) throw e;
       const r = (data ?? {}) as PrivateConfirmResult & { listing?: ListingState; affected?: ListingState[] };
-      const next = r.listing;
-      if (next) patchListing(l.id, next);
+      // Oprește orice reîncărcare pornită înainte de confirmare, ca să nu suprascrie starea nouă.
+      await qc.cancelQueries({ queryKey: QK });
+      const next = {
+        ...(r.listing ?? {}),
+        seller_type: r.listing?.seller_type ?? "privat",
+        private_confirmed_at: r.listing?.private_confirmed_at ?? new Date().toISOString(),
+        ...(r.reactivated ? { is_active: true, lifecycle_status: "new" } : {}),
+      } as Partial<Listing>;
+      patchListing(l.id, next);
       patchStates(r.affected);
       setOverrideFor(null);
       const merged = { ...l, ...(next ?? {}), ...(r.reactivated ? { is_active: true, lifecycle_status: "new" } : {}) } as Listing;
