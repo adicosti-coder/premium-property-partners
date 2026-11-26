@@ -200,7 +200,8 @@ serve(async (req) => {
 
     return json({
       success: true,
-      appointment_id: appointmentId,
+      // Only reveal the ID of an appointment created by this request.
+      appointment_id: createdNow ? appointmentId : undefined,
       start_utc: startUtc.toISOString(),
       end_utc: endUtc.toISOString(),
       email_sent: emailSent,

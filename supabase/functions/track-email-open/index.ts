@@ -18,7 +18,7 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    const userId = url.searchParams.get("user_id");
+    const rawUserId = url.searchParams.get("user_id");
     const emailType = url.searchParams.get("email_type");
     const followupEmailId = url.searchParams.get("followup_id");
     const abAssignmentId = url.searchParams.get("ab_id");
@@ -43,11 +43,15 @@ serve(async (req) => {
     // Verify HMAC signature to prevent forged tracking events
     const payload = campaignId
       ? { campaign_id: campaignId, email_type: emailType }
-      : { user_id: userId ?? "", email_type: emailType };
+      : { user_id: rawUserId ?? "", email_type: emailType };
     if (!verifyTrackingPayload(payload, sig)) {
       console.warn("Invalid tracking signature, dropping event");
       return pixelResponse();
     }
+
+    // Campaign signatures do not cover user_id, so campaign opens are never
+    // attributed to a user (prevents forged opens for other accounts).
+    const userId = campaignId ? null : rawUserId;
 
     if (!userId && !campaignId) {
       return pixelResponse();
