@@ -27,6 +27,8 @@ function normalizeRoMobile(raw: string): string | null {
   return `+40${d}`;
 }
 
+const recentOpens = new Map<string, number>();
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
@@ -57,21 +59,14 @@ Deno.serve(async (req) => {
   const phone = normalizeRoMobile(body.phone || "") || "";
   const url = prop.slug ? `https://realtrust.ro/proprietate/${prop.slug}` : null;
 
-  // Deduplicare: același telefon + proprietate în ultima oră → nu mai
-  // înregistrăm și nu mai anunțăm Make (previne umflarea artificială).
+  // Deduplicare locală (memorie, 1h): fără interogări în istoricul evenimentelor
+  // pe baza datelor trimise de apelant.
   if (phone) {
-    const oneHourAgo = new Date(Date.now() - 3_600_000).toISOString();
-    const { data: dup } = await supabase
-      .from("wa_transaction_events")
-      .select("id")
-      .eq("phone_normalized", phone)
-      .eq("property_id", prop.id)
-      .eq("event", "listing_opened")
-      .gte("created_at", oneHourAgo)
-      .limit(1);
-    // Același răspuns ca la o înregistrare nouă: apelantul nu poate afla dacă
-    // numărul a mai deschis anunțul (fără oracol pe istoricul unui telefon).
-    if (dup && dup.length > 0) return json({ ok: true });
+    const key = `${phone}:${prop.id}`;
+    const now = Date.now();
+    for (const [k, t] of recentOpens) if (now - t > 3_600_000) recentOpens.delete(k);
+    if (recentOpens.has(key)) return json({ ok: true });
+    recentOpens.set(key, now);
   }
 
   const { error } = await supabase.from("wa_transaction_events").insert({

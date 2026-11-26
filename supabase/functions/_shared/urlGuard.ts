@@ -69,8 +69,29 @@ export async function fetchWithSizeCap(
   url: string,
   init?: RequestInit,
   maxBytes: number = MAX_BYTES,
+  allowlist?: UrlGuardOptions,
 ): Promise<{ ok: boolean; status: number; bytes?: Uint8Array; contentType?: string; error?: string }> {
-  const res = await fetch(url, init);
+  let res: Response;
+  if (allowlist) {
+    // Follow redirects manually, re-validating every hop against the allowlist.
+    let current = url;
+    let hops = 0;
+    while (true) {
+      const check = isUrlAllowed(current, allowlist);
+      if (!check.ok) return { ok: false, status: 403, error: "Redirect target not allowed" };
+      res = await fetch(current, { ...init, redirect: "manual" });
+      if (res.status >= 300 && res.status < 400) {
+        const loc = res.headers.get("location");
+        await res.body?.cancel();
+        if (!loc || ++hops > 5) return { ok: false, status: 502, error: "Too many or invalid redirects" };
+        current = new URL(loc, current).toString();
+        continue;
+      }
+      break;
+    }
+  } else {
+    res = await fetch(url, init);
+  }
   if (!res.ok) return { ok: false, status: res.status, error: `Upstream ${res.status}` };
   const contentLength = Number(res.headers.get("content-length") || "0");
   if (contentLength > maxBytes) {

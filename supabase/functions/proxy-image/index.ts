@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
 
       const fetched = await fetchWithSizeCap(url, {
         headers: { "User-Agent": "Mozilla/5.0 (compatible; RealTrust/1.0)", Accept: "image/*" },
-      });
+      }, undefined, {});
       if (!fetched.ok || !fetched.bytes) {
         return new Response(fetched.error || "Upstream error", {
           status: fetched.status || 502,
@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
 
       const fetched = await fetchWithSizeCap(url, {
         headers: { "User-Agent": "Mozilla/5.0 (compatible; RealTrust/1.0)", Accept: "image/*" },
-      });
+      }, undefined, {});
       if (!fetched.ok || !fetched.bytes) {
         return new Response(JSON.stringify({ error: fetched.error || "Fetch failed" }), {
           status: fetched.status || 502,

@@ -119,9 +119,8 @@ async function fetchHtml(url: string): Promise<string> {
       if (html) return html;
     } catch (e) { console.warn("[benchmark] firecrawl fail", (e as Error).message); }
   }
-  const r = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 RealTrustBot" }, redirect: "manual" });
-  if (r.status >= 300 && r.status < 400) throw new Error("Redirects not allowed");
-  return (await r.text()).slice(0, 2_000_000);
+  // No direct server-side fetch of caller-chosen URLs: only the Firecrawl service fetches them.
+  throw new Error("Pagina nu a putut fi citită (serviciul de extragere indisponibil)");
 }
 
 async function fetchPageSpeed(url: string): Promise<any> {
