@@ -14,7 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -85,7 +84,6 @@ export default function ScrapedListingsTriage() {
   const [restoringId, setRestoringId] = useState<string | null>(null);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [overrideFor, setOverrideFor] = useState<Listing | null>(null);
-  const [overrideChecked, setOverrideChecked] = useState(false);
   const [agencyId, setAgencyId] = useState<string | null>(null);
 
   const { data: listings = [], isLoading, isFetching, error, refetch } = useQuery({
@@ -454,7 +452,7 @@ export default function ScrapedListingsTriage() {
               onRestore={() => restore(row.listing as Listing)}
               onReactivate={() => reactivate(row.listing as Listing)}
               onConfirmPrivate={() => confirmPrivate(row.listing as Listing)}
-              onOverridePrivate={() => { setOverrideChecked(false); setOverrideFor(row.listing as Listing); }}
+              onOverridePrivate={() => setOverrideFor(row.listing as Listing)}
               confirming={confirmingId === row.listing.id}
               onMarkAgency={() => markAgency(row.listing as Listing)}
               onUndoAgency={() => undoAgency(row.listing as Listing)}
@@ -496,12 +494,12 @@ export default function ScrapedListingsTriage() {
           </DialogHeader>
           {overrideFor && <p className="text-sm font-medium">{overrideFor.title || "(fără titlu)"}</p>}
           <div className="flex min-h-12 items-start gap-3 rounded-md border p-3">
-            <Checkbox id="override-agency" checked={overrideChecked} onCheckedChange={(v) => setOverrideChecked(v === true)} className="mt-0.5" />
-            <Label htmlFor="override-agency" className="cursor-pointer text-sm leading-snug">Am verificat: nu este agenție, este proprietarul.</Label>
+            <UserCheck aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+            <p className="text-sm leading-snug">Am verificat: nu este agenție, este proprietarul.</p>
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setOverrideFor(null)} disabled={confirmingId !== null} className="min-h-12">Înapoi</Button>
-            <Button onClick={() => overrideFor && confirmPrivate(overrideFor, true)} disabled={!overrideChecked || confirmingId !== null} className="min-h-12 gap-2">
+            <Button onClick={() => overrideFor && confirmPrivate(overrideFor, true)} disabled={confirmingId !== null} className="min-h-12 gap-2">
               {confirmingId ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserCheck className="h-4 w-4" />} Confirmă privat
             </Button>
           </DialogFooter>
