@@ -107,6 +107,14 @@ export function privateConfirmMode(l: TriageListing): "confirm" | "override" | n
   return triageBlockReason(asReactivated(l)) === "Neconfirmat" ? "confirm" : null;
 }
 
+/** Scorul minim al unui proprietar confirmat manual de admin (mirror al trigger-ului din baza de date). */
+export const PRIVATE_CONFIRMED_MIN_SCORE = 75;
+
+/** Starea după „Confirmă privat”: privat și scor ridicat la minim 75. */
+export const asConfirmedPrivate = <T extends TriageListing>(l: T): T => ({
+  ...l, seller_type: "privat", lead_score: Math.max(Number(l.lead_score ?? 0), PRIVATE_CONFIRMED_MIN_SCORE),
+});
+
 /** Inactiv, dar nerenunțat manual: administratorul îl poate reactiva direct. */
 export const canReactivate = (l: TriageListing) => l.is_active === false && !isDismissed(l);
 
