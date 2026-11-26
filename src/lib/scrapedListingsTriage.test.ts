@@ -337,8 +337,8 @@ describe("Anunțuri inactive (ex. blocate greșit pe domeniul portalului)", () =
   });
 });
 
-import { asConfirmedPrivate as __acp } from "./scrapedListingsTriage";
+import { asConfirmedPrivate as __acp, type TriageListing } from "./scrapedListingsTriage";
 describe("Confirmă privat ridică scorul la minim 75", () => {
-  it("scorul 58 devine 75", () => { expect(__acp({ id: "x", lead_score: 58 } as never).lead_score).toBe(75); });
-  it("scorul 90 rămâne 90", () => { expect(__acp({ id: "x", lead_score: 90 } as never).lead_score).toBe(90); });
+  it("scorul 58 devine 75", () => { expect(__acp({ id: "x", lead_score: 58 } as TriageListing).lead_score).toBe(75); });
+  it("scorul 90 rămâne 90", () => { expect(__acp({ id: "x", lead_score: 90 } as TriageListing).lead_score).toBe(90); });
 });
