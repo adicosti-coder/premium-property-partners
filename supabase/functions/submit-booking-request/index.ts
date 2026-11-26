@@ -183,6 +183,7 @@ const handler = async (req: Request): Promise<Response> => {
       const { data: notifyData, error: notifyError } = await supabase.functions.invoke(
         "send-booking-notification",
         {
+          headers: { "x-webhook-secret": Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "" },
           body: {
             guestName,
             guestEmail,

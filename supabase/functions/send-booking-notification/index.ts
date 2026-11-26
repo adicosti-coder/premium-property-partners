@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendTeamEmail } from "../_shared/teamEmail.ts";
+import { isInternalCall } from "../_shared/cronAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -67,9 +68,11 @@ function validateBookingRequest(data: any): BookingNotificationRequest {
   const message = data.message ? validateString(data.message, 1000) : undefined;
   const propertyName = validateString(data.propertyName, 200);
   const propertyImage = data.propertyImage ? validateString(data.propertyImage, 500) : undefined;
-  const parkingGpsLat = data.parkingGpsLat ? validateString(data.parkingGpsLat, 20) : undefined;
-  const parkingGpsLng = data.parkingGpsLng ? validateString(data.parkingGpsLng, 20) : undefined;
-  const guideUrl = data.guideUrl ? validateString(data.guideUrl, 500) : undefined;
+  // Parking GPS and guide links are never taken from the request body: callers
+  // could otherwise inject arbitrary links into branded guest emails.
+  const parkingGpsLat = undefined;
+  const parkingGpsLng = undefined;
+  const guideUrl = undefined;
 
   if (!guestName || guestName.length < 1) throw new Error("Numele este obligatoriu");
   if (!guestEmail || !isValidEmail(guestEmail)) throw new Error("Email invalid");
@@ -269,6 +272,18 @@ function buildAdminEmail(data: BookingNotificationRequest): string {
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Only internal callers (submit-booking-request, with service role) may send.
+  const authHeader = req.headers.get("Authorization") || "";
+  const serviceKeyEnv = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+  const isServiceBearer = !!serviceKeyEnv && bearer === serviceKeyEnv;
+  if (!isServiceBearer && !(await isInternalCall(req))) {
+    return new Response(JSON.stringify({ error: "Forbidden" }), {
+      status: 403,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {

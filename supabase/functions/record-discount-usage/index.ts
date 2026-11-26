@@ -138,6 +138,20 @@ serve(async (req) => {
       );
     }
 
+    // Each account may consume a given code only once — prevents one user
+    // exhausting a shared code's max_uses by replaying usage records.
+    const { count: priorUses } = await supabase
+      .from('discount_code_uses')
+      .select('id', { count: 'exact', head: true })
+      .eq('code_id', codeId)
+      .eq('user_id', userId);
+    if ((priorUses ?? 0) > 0) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Discount code already used by this account' }),
+        { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     console.log(`Recording discount usage for user=${userId}`);
 
     // Insert usage record using service role (bypasses RLS)
