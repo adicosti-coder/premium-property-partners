@@ -25,7 +25,7 @@ import type { PageSize } from "@/hooks/admin/usePaginatedQuery";
 import { Ban, Building2, Copy, UserCheck, Layers, Loader2, MessageCircle, Phone, PhoneOff, RefreshCw, RotateCcw, Search } from "lucide-react";
 import { toast } from "sonner";
 import { groupCrossPortalDuplicates, listingPhone, portalKey, signalsOf } from "@/lib/crossPortalDedup";
-import { activeQuickFilter, agencyMarkMode, agencyMarkSummary, agencyUndoLabel, type AgencyMarkResult, privateConfirmSummary, type PrivateConfirmResult, applyQuickFilter, buildTriageRows, DEFAULT_TRIAGE_FILTERS, isAgencyListing, isDismissed, isTriageListing, privateConfirmMode, triageReasonHint, summarizeTriage, triageBlockReason, triagePool, type TriageFilters, type TriageListing, type TriageQuickFilter, type TriageRow } from "@/lib/scrapedListingsTriage";
+import { activeQuickFilter, agencyMarkMode, canReactivate, agencyMarkSummary, agencyUndoLabel, type AgencyMarkResult, privateConfirmSummary, type PrivateConfirmResult, applyQuickFilter, buildTriageRows, DEFAULT_TRIAGE_FILTERS, isAgencyListing, isDismissed, isTriageListing, privateConfirmMode, triageReasonHint, summarizeTriage, triageBlockReason, triagePool, type TriageFilters, type TriageListing, type TriageQuickFilter, type TriageRow } from "@/lib/scrapedListingsTriage";
 import { hasImplausiblePrice } from "@/lib/ownerListingRules";
 import { normalizeRoPhone } from "@/lib/ownerOutreachTemplates";
 import { OWNER_FLOW_QUERY_KEY } from "@/lib/ownerFlowData";
@@ -256,6 +256,28 @@ export default function ScrapedListingsTriage() {
     }
   };
 
+  const reactivate = async (l: Listing) => {
+    setRestoringId(l.id);
+    try {
+      const { data, error: e } = await supabase.rpc("admin_reactivate_prospect", { p_id: l.id });
+      if (e) throw e;
+      const r = (data ?? {}) as { listing?: ListingState };
+      patchListing(l.id, { ...(r.listing ?? {}), is_active: true, lifecycle_status: "new" } as Partial<Listing>);
+      const merged = { ...l, ...(r.listing ?? {}), is_active: true, lifecycle_status: "new" } as Listing;
+      const reason = triageBlockReason(merged);
+      toast.success("Anunț reactivat", {
+        description: `Nu s-a trimis niciun mesaj automat. ${reason ? `Încă nu se poate trimite: ${triageReasonHint(merged, reason)}.` : "Poate fi trimis acum către Andrei."}`,
+        duration: 10000,
+      });
+      qc.invalidateQueries({ queryKey: QK });
+      qc.invalidateQueries({ queryKey: OWNER_FLOW_QUERY_KEY });
+    } catch (e) {
+      toast.error("Anunțul nu a putut fi reactivat", { description: (e as Error).message });
+    } finally {
+      setRestoringId(null);
+    }
+  };
+
   const restore = async (l: Listing) => {
     setRestoringId(l.id);
     try {
@@ -423,6 +445,7 @@ export default function ScrapedListingsTriage() {
               onSend={() => setConfirmFor(row.listing as Listing)}
               onDismiss={() => setDismissFor(row.listing as Listing)}
               onRestore={() => restore(row.listing as Listing)}
+              onReactivate={() => reactivate(row.listing as Listing)}
               onConfirmPrivate={() => confirmPrivate(row.listing as Listing)}
               onOverridePrivate={() => { setOverrideChecked(false); setOverrideFor(row.listing as Listing); }}
               confirming={confirmingId === row.listing.id}
@@ -506,6 +529,7 @@ interface CardProps {
   onSend: () => void;
   onDismiss: () => void;
   onRestore: () => void;
+  onReactivate: () => void;
   restoring: boolean;
   onConfirmPrivate: () => void;
   onOverridePrivate: () => void;
@@ -516,7 +540,7 @@ interface CardProps {
   onSavePhone: (phone: string) => Promise<boolean>;
 }
 
-function TriageCard({ row, expanded, onToggle, onSend, onDismiss, onRestore, restoring, onConfirmPrivate, onOverridePrivate, confirming, onMarkAgency, onUndoAgency, markingAgency, onSavePhone }: CardProps) {
+function TriageCard({ row, expanded, onToggle, onSend, onDismiss, onRestore, onReactivate, restoring, onConfirmPrivate, onOverridePrivate, confirming, onMarkAgency, onUndoAgency, markingAgency, onSavePhone }: CardProps) {
   const l = row.listing;
   const s = signalsOf(l);
   const phone = listingPhone(l);
@@ -524,6 +548,7 @@ function TriageCard({ row, expanded, onToggle, onSend, onDismiss, onRestore, res
   const andreiReason = dismissed ? "Indisponibil" : triageBlockReason(l);
   const ready = andreiReason === null;
   const confirmMode = privateConfirmMode(l);
+  const inactive = canReactivate(l);
   const agencyMode = agencyMarkMode(l);
   const agency = !dismissed && isAgencyListing(l);
   const badPrice = hasImplausiblePrice({ ...l, url: l.source_url });
@@ -560,13 +585,18 @@ function TriageCard({ row, expanded, onToggle, onSend, onDismiss, onRestore, res
           </Button>
           {andreiReason && !dismissed && <p className="text-center text-xs text-muted-foreground">{triageReasonHint(l, andreiReason)}</p>}
           {confirmMode === "confirm" && (
-            <Button variant="secondary" onClick={onConfirmPrivate} disabled={confirming} className="min-h-12 gap-2" aria-label="Confirmă proprietarul ca privat">
-              {confirming ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserCheck className="h-4 w-4" />} Confirmă privat
+            <Button variant="secondary" onClick={onConfirmPrivate} disabled={confirming} className="min-h-12 gap-2" aria-label={inactive ? "Confirmă proprietarul ca privat și reactivează anunțul" : "Confirmă proprietarul ca privat"} title={inactive ? "Confirmă privat și reactivează anunțul" : undefined}>
+              {confirming ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserCheck className="h-4 w-4" />} {inactive ? "Confirmă privat + reactivează" : "Confirmă privat"}
             </Button>
           )}
           {confirmMode === "override" && (
             <Button variant="ghost" onClick={onOverridePrivate} disabled={confirming} className="min-h-12 gap-2 text-muted-foreground" aria-label="Nu e agenție? Confirmă privat, cu verificare separată">
               <UserCheck className="h-4 w-4" /> Nu e agenție
+            </Button>
+          )}
+          {inactive && (
+            <Button variant="outline" onClick={onReactivate} disabled={restoring} className="min-h-12 gap-2" aria-label="Reactivează anunțul inactiv">
+              {restoring ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />} Reactivează
             </Button>
           )}
           {agencyMode === "mark" && (

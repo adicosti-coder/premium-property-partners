@@ -313,3 +313,26 @@ describe("privateConfirmSummary", () => {
     expect(privateConfirmSummary({ siblings_checked: 0 })).toBe("");
   });
 });
+
+import { asReactivated, canReactivate } from "./scrapedListingsTriage";
+
+describe("Anunțuri inactive (ex. blocate greșit pe domeniul portalului)", () => {
+  const base = { ...ownerFields, contact_phone: "0722123456" };
+  const inactive = { ...base, seller_type: "de_verificat", is_active: false, lifecycle_status: "expired" };
+  it("Confirmă privat apare și pe anunțul inactiv nerenunțat", () => {
+    expect(privateConfirmMode(t(inactive))).toBe("confirm");
+  });
+  it("Confirmă privat nu apare pe un anunț inactiv renunțat manual", () => {
+    expect(privateConfirmMode(t({ ...inactive, dismissed_at: "2026-11-22T10:00:00Z" }))).toBeNull();
+  });
+  it("Reactivează apare doar pe inactive nerenunțate", () => {
+    expect(canReactivate(t(inactive))).toBe(true);
+    expect(canReactivate(t({ ...inactive, dismissed_at: "2026-11-22T10:00:00Z" }))).toBe(false);
+    expect(canReactivate(t({ ...base, is_active: true }))).toBe(false);
+  });
+  it("după reactivare anunțul devine activ cu ciclul „new”", () => {
+    const r = asReactivated(t(inactive));
+    expect(r.is_active).toBe(true);
+    expect(r.lifecycle_status).toBe("new");
+  });
+});

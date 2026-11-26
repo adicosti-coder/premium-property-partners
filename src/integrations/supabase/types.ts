@@ -13110,6 +13110,7 @@ export type Database = {
         Returns: Json
       }
       admin_mark_prospect_agency: { Args: { p_id: string }; Returns: Json }
+      admin_reactivate_prospect: { Args: { p_id: string }; Returns: Json }
       admin_restore_prospect: { Args: { p_id: string }; Returns: Json }
       admin_run_lead_retention: { Args: never; Returns: Json }
       admin_undo_confirm_prospect_private: {
@@ -13907,6 +13908,10 @@ export type Database = {
       increment_keyword_unique_leads: {
         Args: { _delta?: number; _id: string }
         Returns: undefined
+      }
+      is_classified_portal_domain: {
+        Args: { p_domain: string }
+        Returns: boolean
       }
       is_generic_search_listing: {
         Args: { p_title: string; p_url: string }

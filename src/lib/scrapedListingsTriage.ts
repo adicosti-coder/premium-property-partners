@@ -103,8 +103,16 @@ export function privateConfirmMode(l: TriageListing): "confirm" | "override" | n
     if (l.outreach_status && l.outreach_status !== BLOCKED_AGENCY_STATUS) return null;
     return "override";
   }
-  return triageBlockReason(l) === "Neconfirmat" ? "confirm" : null;
+  // Un anunț inactiv nerenunțat poate fi confirmat: confirmarea îl și reactivează.
+  return triageBlockReason(asReactivated(l)) === "Neconfirmat" ? "confirm" : null;
 }
+
+/** Inactiv, dar nerenunțat manual: administratorul îl poate reactiva direct. */
+export const canReactivate = (l: TriageListing) => l.is_active === false && !isDismissed(l);
+
+/** Starea pe care o primește anunțul după reactivare (activ, ciclu „new”). */
+export const asReactivated = <T extends TriageListing>(l: T): T =>
+  canReactivate(l) ? { ...l, is_active: true, lifecycle_status: "new" } : l;
 
 /** Agenție după clasificare, marcaj manual sau starea „blocked_agency” — nu primește mesaje. */
 export const isAgencyListing = (l: TriageListing) =>
