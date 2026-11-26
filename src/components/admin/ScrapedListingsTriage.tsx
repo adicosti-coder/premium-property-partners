@@ -24,7 +24,7 @@ import type { PageSize } from "@/hooks/admin/usePaginatedQuery";
 import { Ban, Building2, Copy, UserCheck, Layers, Loader2, MessageCircle, Phone, PhoneOff, RefreshCw, RotateCcw, Search } from "lucide-react";
 import { toast } from "sonner";
 import { groupCrossPortalDuplicates, listingPhone, portalKey, signalsOf } from "@/lib/crossPortalDedup";
-import { activeQuickFilter, agencyMarkMode, canReactivate, agencyMarkSummary, agencyUndoLabel, type AgencyMarkResult, privateConfirmSummary, asConfirmedPrivate, type PrivateConfirmResult, applyQuickFilter, buildTriageRows, DEFAULT_TRIAGE_FILTERS, isAgencyListing, isDismissed, isTriageListing, privateConfirmMode, triageReasonHint, summarizeTriage, triageBlockReason, triagePool, type TriageFilters, type TriageListing, type TriageQuickFilter, type TriageRow } from "@/lib/scrapedListingsTriage";
+import { activeQuickFilter, agencyMarkMode, canReactivate, agencyMarkSummary, agencyUndoLabel, type AgencyMarkResult, privateConfirmSummary, asConfirmedPrivate, type PrivateConfirmResult, applyQuickFilter, buildTriageRows, DEFAULT_TRIAGE_FILTERS, isAgencyListing, isDismissed, isTriageListing, privateConfirmMode, triageReasonHint, summarizeTriage, triageBlockReason, triagePool, type TriageFilters, type TriageListing, type TriageQuickFilter, type TriageRow, buildOutreachCooldownMap, outreachCooldownFor, outreachCooldownHint, OUTREACH_COOLDOWN_DAYS_UI, RECENT_OUTREACH_REASON, type OutreachCooldownMap, type OutreachHistoryRow } from "@/lib/scrapedListingsTriage";
 import { hasImplausiblePrice } from "@/lib/ownerListingRules";
 import { normalizeRoPhone } from "@/lib/ownerOutreachTemplates";
 import { OWNER_FLOW_QUERY_KEY } from "@/lib/ownerFlowData";
@@ -71,8 +71,19 @@ function priceLabel(l: Listing): string {
   return `${Math.round(Number(l.price)).toLocaleString("ro-RO")} ${l.currency === "RON" ? "lei" : "€"}${rent ? " / lună" : ""}`;
 }
 
+async function fetchOutreachHistory(): Promise<OutreachHistoryRow[]> {
+  const since = new Date(Date.now() - OUTREACH_COOLDOWN_DAYS_UI * 86400000).toISOString();
+  const { data, error } = await supabase.from("prospect_listings")
+    .select("id,phone_normalized,contact_phone,outreach_status,outreach_status_at")
+    .gte("outreach_status_at", since).not("outreach_status", "in", "(queued,failed,skipped)").limit(5000);
+  if (error) throw error;
+  return (data ?? []) as OutreachHistoryRow[];
+}
+
 export default function ScrapedListingsTriage() {
   const qc = useQueryClient();
+  const { data: outreachHistory } = useQuery({ queryKey: ["triage-outreach-cooldown"], queryFn: fetchOutreachHistory, staleTime: 60_000 });
+  const cooldownMap = useMemo(() => buildOutreachCooldownMap(outreachHistory ?? []), [outreachHistory]);
   const [filters, setFilters] = useState<TriageFilters>(DEFAULT_TRIAGE_FILTERS);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState<PageSize>(25);
@@ -325,7 +336,7 @@ export default function ScrapedListingsTriage() {
   const sendToAndrei = async () => {
     if (!confirmFor) return;
     // Dublă verificare înainte de trimitere: fără număr extras nu pleacă nimic.
-    if (triageBlockReason(confirmFor)) { setConfirmFor(null); return; }
+    if (triageBlockReason(confirmFor) || outreachCooldownFor(confirmFor, cooldownMap)) { setConfirmFor(null); return; }
     setSending(true);
     try {
       const { data, error: e } = await supabase.functions.invoke("andrei-bulk-queue", {
@@ -333,7 +344,9 @@ export default function ScrapedListingsTriage() {
       });
       if (e) throw e;
       const skipped = (data?.skipped ?? []) as { reason: string }[];
-      if (skipped.length) toast.warning("Nu a fost trimis", { description: skipped[0].reason });
+      if (skipped.length) toast.warning("Nu a fost trimis", {
+        description: skipped[0].reason === RECENT_OUTREACH_REASON ? outreachCooldownHint(outreachCooldownFor(confirmFor, cooldownMap)) : skipped[0].reason,
+      });
       else toast.success("Trimis către Andrei (WhatsApp)");
       setConfirmFor(null);
       await refetch();
@@ -445,7 +458,7 @@ export default function ScrapedListingsTriage() {
       ) : (
         <div className="space-y-2">
           {visible.map((row) => (
-            <TriageCard key={row.listing.id} row={row as TriageRow<Listing>} expanded={expanded.has(row.group.key)}
+            <TriageCard cooldownMap={cooldownMap} key={row.listing.id} row={row as TriageRow<Listing>} expanded={expanded.has(row.group.key)}
               onToggle={() => toggleExpanded(row.group.key)}
               onSend={() => setConfirmFor(row.listing as Listing)}
               onDismiss={() => setDismissFor(row.listing as Listing)}
@@ -543,14 +556,17 @@ interface CardProps {
   onUndoAgency: () => void;
   markingAgency: boolean;
   onSavePhone: (phone: string) => Promise<boolean>;
+  cooldownMap: OutreachCooldownMap;
 }
 
-function TriageCard({ row, expanded, onToggle, onSend, onDismiss, onRestore, onReactivate, restoring, onConfirmPrivate, onOverridePrivate, confirming, onMarkAgency, onUndoAgency, markingAgency, onSavePhone }: CardProps) {
+function TriageCard({ row, expanded, onToggle, onSend, onDismiss, onRestore, onReactivate, restoring, onConfirmPrivate, onOverridePrivate, confirming, onMarkAgency, onUndoAgency, markingAgency, onSavePhone, cooldownMap }: CardProps) {
   const l = row.listing;
   const s = signalsOf(l);
   const phone = listingPhone(l);
   const dismissed = isDismissed(l);
-  const andreiReason = dismissed ? "Indisponibil" : triageBlockReason(l);
+  const baseReason = dismissed ? "Indisponibil" : triageBlockReason(l);
+  const cooldown = baseReason ? null : outreachCooldownFor(l, cooldownMap);
+  const andreiReason = baseReason ?? (cooldown ? RECENT_OUTREACH_REASON : null);
   const ready = andreiReason === null;
   const confirmMode = privateConfirmMode(l);
   const inactive = canReactivate(l);
@@ -588,7 +604,7 @@ function TriageCard({ row, expanded, onToggle, onSend, onDismiss, onRestore, onR
           <Button onClick={onSend} disabled={!!andreiReason} className="min-h-12 gap-2" aria-label={andreiReason ? `Nu se poate trimite: ${andreiReason}` : "Trimite către Andrei (WhatsApp)"}>
             <MessageCircle className="h-4 w-4" /> Trimite către Andrei
           </Button>
-          {andreiReason && !dismissed && <p className="text-center text-xs text-muted-foreground">{triageReasonHint(l, andreiReason)}</p>}
+          {andreiReason && !dismissed && <p className="text-center text-xs text-muted-foreground">{andreiReason === RECENT_OUTREACH_REASON ? outreachCooldownHint(cooldown) : triageReasonHint(l, andreiReason)}</p>}
           {confirmMode === "confirm" && (
             <Button variant="secondary" onClick={onConfirmPrivate} disabled={confirming} className="min-h-12 gap-2" aria-label={inactive ? "Confirmă proprietarul ca privat și reactivează anunțul" : "Confirmă proprietarul ca privat"} title={inactive ? "Confirmă privat și reactivează anunțul" : undefined}>
               {confirming ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserCheck className="h-4 w-4" />} {inactive ? "Confirmă privat + reactivează" : "Confirmă privat"}

@@ -322,3 +322,45 @@ export function applyQuickFilter(f: TriageFilters, q: TriageQuickFilter): Partia
     default: return { phone: "all", readyOnly: false };
   }
 }
+
+/* ---------- Fereastra de 30 de zile pe număr (aceeași regulă ca outreach-dispatch) ---------- */
+export const OUTREACH_COOLDOWN_DAYS_UI = 30;
+export const RECENT_OUTREACH_REASON = "recent_outreach_30d";
+export type OutreachHistoryRow = { id: string; phone_normalized?: string | null; contact_phone?: string | null; outreach_status?: string | null; outreach_status_at?: string | null };
+export type OutreachCooldownMap = Map<string, { id: string; at: number }[]>;
+
+const phoneKey = (p?: string | null) => { const d = (p ?? "").replace(/\D/g, ""); return d.length >= 9 ? d.slice(-9) : null; };
+const IGNORED_OUTREACH = new Set(["queued", "failed", "skipped"]);
+
+/** Mesajele care contează pentru fereastră: status trimis (nu coadă/eșec/sărit), în ultimele 30 de zile. */
+export function buildOutreachCooldownMap(rows: OutreachHistoryRow[], now = Date.now()): OutreachCooldownMap {
+  const since = now - OUTREACH_COOLDOWN_DAYS_UI * 86400000;
+  const map: OutreachCooldownMap = new Map();
+  for (const r of rows) {
+    if (!r.outreach_status || IGNORED_OUTREACH.has(r.outreach_status) || !r.outreach_status_at) continue;
+    const at = Date.parse(r.outreach_status_at);
+    if (!Number.isFinite(at) || at < since) continue;
+    for (const k of new Set([phoneKey(r.phone_normalized), phoneKey(r.contact_phone)])) {
+      if (!k) continue;
+      const list = map.get(k) ?? []; list.push({ id: r.id, at }); map.set(k, list);
+    }
+  }
+  return map;
+}
+
+/** Ultimul mesaj trimis altui anunț cu același număr, încă în fereastră → { last, until }, altfel null. */
+export function outreachCooldownFor(l: TriageListing & { id: string }, map: OutreachCooldownMap): { last: Date; until: Date } | null {
+  let best = 0;
+  for (const k of new Set([phoneKey(l.phone_normalized), phoneKey(l.contact_phone)])) {
+    for (const e of (k && map.get(k)) || []) if (e.id !== l.id && e.at > best) best = e.at;
+  }
+  return best ? { last: new Date(best), until: new Date(best + OUTREACH_COOLDOWN_DAYS_UI * 86400000) } : null;
+}
+
+const fmtShort = (d: Date) => d.toLocaleDateString("ro-RO", { day: "numeric", month: "short", timeZone: "Europe/Bucharest" }).replace(/\.$/, "");
+
+/** Text clar pentru blocarea de 30 de zile. */
+export function outreachCooldownHint(c: { last: Date; until: Date } | null): string {
+  if (!c) return "Numărul a primit deja un mesaj în ultimele 30 de zile — următorul e posibil după 30 de zile de la acel mesaj";
+  return `Numărul a primit deja un mesaj pe ${fmtShort(c.last)} — următorul e posibil după ${fmtShort(c.until)}`;
+}
