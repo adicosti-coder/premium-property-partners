@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { groupCrossPortalDuplicates, type DedupListing } from "./crossPortalDedup";
-import { buildTriageRows, DEFAULT_TRIAGE_FILTERS, isReadyForOutreach, summarizeTriage, triageBlockReason } from "./scrapedListingsTriage";
+import { buildTriageRows, DEFAULT_TRIAGE_FILTERS, isReadyForOutreach, summarizeTriage, triageBlockReason, needsManualReveal, type TriageListing } from "./scrapedListingsTriage";
 
 const l = (over: Partial<DedupListing>): DedupListing => ({
   id: "x", source_platform: "OLX", source_url: "https://www.olx.ro/d/oferta/a-IDa.html", title: "2 camere City of Mara",
@@ -341,4 +341,14 @@ import { asConfirmedPrivate as __acp } from "./scrapedListingsTriage";
 describe("Confirmă privat ridică scorul la minim 75", () => {
   it("scorul 58 devine 75", () => { expect(__acp({ id: "x", lead_score: 58 } as TriageListing).lead_score).toBe(75); });
   it("scorul 90 rămâne 90", () => { expect(__acp({ id: "x", lead_score: 90 } as TriageListing).lead_score).toBe(90); });
+});
+
+describe("needsManualReveal", () => {
+  const base = { id: "x", is_active: true, contact_phone: null, phone_normalized: null } as unknown as TriageListing;
+  it("include anunțul activ fără telefon", () => expect(needsManualReveal(base)).toBe(true));
+  it("exclude inactiv, renunțat și agenție", () => {
+    expect(needsManualReveal({ ...base, is_active: false })).toBe(false);
+    expect(needsManualReveal({ ...base, dismissed_at: "2026-11-01" })).toBe(false);
+    expect(needsManualReveal({ ...base, outreach_status: "blocked_agency" })).toBe(false);
+  });
 });

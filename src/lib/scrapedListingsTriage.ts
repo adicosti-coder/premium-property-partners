@@ -126,6 +126,10 @@ export const asReactivated = <T extends TriageListing>(l: T): T =>
 export const isAgencyListing = (l: TriageListing) =>
   !!l.agency_marked_at || l.outreach_status === BLOCKED_AGENCY_STATUS || isAgencyProspect(l);
 
+/** „Necesită dezvăluire”: doar anunțuri active fără telefon, nerenunțate și fără agenție blocată. */
+export const needsManualReveal = (l: TriageListing) =>
+  phoneAvailability(l) === "manual" && l.is_active !== false && !isDismissed(l) && !isAgencyListing(l);
+
 /**
  * Butonul „Agenție” de pe card: `mark` pe anunțurile care nu sunt deja agenție blocată,
  * `undo` pe cele marcate manual din Triere, null pe indisponibile sau agenții detectate automat.
@@ -272,6 +276,7 @@ export function buildTriageRows<T extends TriageListing>(groups: DuplicateGroup<
     const members = f.hideDuplicates ? [group.primary] : [group.primary, ...group.variants];
     for (const listing of members) {
       if (!matchesBase(listing, f) || !matchesPhoneFilter(listing, f.phone)) continue;
+      if (f.phone === "manual" && !needsManualReveal(listing)) continue;
       rows.push({ listing, group, isPrimary: listing.id === group.primary.id, duplicateCount: group.variants.length });
     }
   }
@@ -290,15 +295,16 @@ export interface TriageSummary {
 
 /** Contoarele de pe ecran, pe imobile unice (anunțul principal al fiecărui grup). */
 export function summarizeTriage<T extends TriageListing>(groups: DuplicateGroup<T>[]): TriageSummary {
-  let withPhone = 0, ready = 0, variants = 0, duplicateGroups = 0, listings = 0;
+  let withPhone = 0, manualReveal = 0, ready = 0, variants = 0, duplicateGroups = 0, listings = 0;
   for (const g of groups) {
     listings += 1 + g.variants.length;
     variants += g.variants.length;
     if (g.variants.length) duplicateGroups++;
     if (phoneAvailability(g.primary) === "available") withPhone++;
+    if (needsManualReveal(g.primary)) manualReveal++;
     if (isReadyForOutreach(g.primary)) ready++;
   }
-  return { listings, properties: groups.length, duplicateGroups, variants, withPhone, manualReveal: groups.length - withPhone, ready };
+  return { listings, properties: groups.length, duplicateGroups, variants, withPhone, manualReveal, ready };
 }
 
 /** Cardurile de cifre din antet, folosite ca filtre rapide. */

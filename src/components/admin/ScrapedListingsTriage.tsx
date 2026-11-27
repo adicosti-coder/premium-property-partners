@@ -24,7 +24,7 @@ import type { PageSize } from "@/hooks/admin/usePaginatedQuery";
 import { Ban, Building2, Copy, UserCheck, Layers, Loader2, MessageCircle, Phone, PhoneOff, RefreshCw, RotateCcw, Search } from "lucide-react";
 import { toast } from "sonner";
 import { groupCrossPortalDuplicates, listingPhone, portalKey, signalsOf } from "@/lib/crossPortalDedup";
-import { activeQuickFilter, agencyMarkMode, canReactivate, agencyMarkSummary, agencyUndoLabel, type AgencyMarkResult, privateConfirmSummary, asConfirmedPrivate, type PrivateConfirmResult, applyQuickFilter, buildTriageRows, DEFAULT_TRIAGE_FILTERS, isAgencyListing, isDismissed, isTriageListing, privateConfirmMode, triageReasonHint, summarizeTriage, triageBlockReason, triagePool, type TriageFilters, type TriageListing, type TriageQuickFilter, type TriageRow, buildOutreachCooldownMap, outreachCooldownFor, outreachCooldownHint, OUTREACH_COOLDOWN_DAYS_UI, RECENT_OUTREACH_REASON, type OutreachCooldownMap, type OutreachHistoryRow } from "@/lib/scrapedListingsTriage";
+import { activeQuickFilter, agencyMarkMode, canReactivate, agencyMarkSummary, agencyUndoLabel, type AgencyMarkResult, privateConfirmSummary, asConfirmedPrivate, type PrivateConfirmResult, applyQuickFilter, buildTriageRows, DEFAULT_TRIAGE_FILTERS, isAgencyListing, isDismissed, needsManualReveal, isTriageListing, privateConfirmMode, triageReasonHint, summarizeTriage, triageBlockReason, triagePool, type TriageFilters, type TriageListing, type TriageQuickFilter, type TriageRow, buildOutreachCooldownMap, outreachCooldownFor, outreachCooldownHint, OUTREACH_COOLDOWN_DAYS_UI, RECENT_OUTREACH_REASON, type OutreachCooldownMap, type OutreachHistoryRow } from "@/lib/scrapedListingsTriage";
 import { hasImplausiblePrice } from "@/lib/ownerListingRules";
 import { normalizeRoPhone } from "@/lib/ownerOutreachTemplates";
 import { OWNER_FLOW_QUERY_KEY } from "@/lib/ownerFlowData";
@@ -598,7 +598,7 @@ function TriageCard({ row, expanded, onToggle, onSend, onDismiss, onRestore, onR
             {s.size != null && <span>{s.size} mp</span>}
             <span className="font-medium text-foreground">{priceLabel(l)}</span>
           </p>
-          <ProspectPhoneEditor phone={phone} sourceUrl={l.source_url} onSave={onSavePhone} />
+          {(phone || needsManualReveal(l)) && <ProspectPhoneEditor phone={phone} sourceUrl={l.source_url} onSave={onSavePhone} />}
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-56 sm:shrink-0">
           <Button onClick={onSend} disabled={!!andreiReason} className="min-h-12 gap-2" aria-label={andreiReason ? `Nu se poate trimite: ${andreiReason}` : "Trimite către Andrei (WhatsApp)"}>
