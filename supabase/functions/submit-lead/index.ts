@@ -5,6 +5,7 @@ import { getCorsHeaders } from "../_shared/securityHeaders.ts";
 import { beginIdempotent } from "../_shared/idempotency.ts";
 import { applyRateLimit } from "../_shared/rateLimiter.ts";
 import { shouldSendLegacyLeadAlert } from "../_shared/calculatorLeadFlow.ts";
+import { normalizeLeadSource } from "./sourceValidation.ts";
 
 
 function validateString(value: unknown, maxLength: number): string {
@@ -36,15 +37,6 @@ function isValidUrl(value: unknown): boolean {
 const VALID_PROPERTY_TYPES = [
   "apartament", "casa", "studio", "penthouse", "vila",
   "cerere_rapida", "Apartament", "city_of_mara",
-];
-
-const VALID_SOURCES = [
-  "calculator", "quick_form", "lead_capture_form",
-  "rental-calculator", "advanced-rental-calculator", "city_of_mara_landing",
-  "pagina_contact", "apel_2_minute", "evaluare_gratuita", "analiza_anunt",
-  "whatsapp_viewing", "calculator_unificat_investitii", "calculator_unificat_oaspeti",
-  "calculator_unificat_rapid_investitii",
-  "calculator_unificat_manual", "calculator_unificat_link", "calculator_unificat_foto",
 ];
 
 const handler = async (req: Request): Promise<Response> => {
@@ -124,7 +116,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // --- Optional fields with validation ---
-    const source = VALID_SOURCES.includes(body.source) ? body.source : "calculator";
+    const source = normalizeLeadSource(body.source);
     if (source === "whatsapp_viewing") {
       const phone = whatsappNumber.replace(/[\s().-]/g, "");
       if (!/^\+407\d{8}$/.test(phone) || name.length < 2 || !body.captcha_token) {

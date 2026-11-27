@@ -1,5 +1,10 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Alertă WhatsApp pentru calculator și estimare rapidă — 27 noiembrie
+- [x] Salvează ambele formulare prin fluxul securizat care returnează ID-ul cererii și dovada vizitatorului
+- [x] Transmite dovada către alerta WhatsApp și păstrează sursele cererilor în administrare
+- [x] Teste pentru ambele formulare și validarea surselor; probă controlată fără mesaje reale
+
 ## Corectare telefon în Triere — 25 noiembrie
 - [x] Permite schimbarea unui număr extras greșit și adăugarea unuia lipsă, direct pe card, doar pentru anunțul curent
 - [x] Validare, audit și anularea programărilor către vechiul număr; fără mesaje automate

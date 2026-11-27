@@ -12,7 +12,7 @@ import { roMobileField } from "@/lib/phoneField";
 import { withCampaignTracking, getCtaVariant } from "@/lib/campaignAttribution";
 import FormTrustBadges from "@/components/forms/FormTrustBadges";
 import { toast } from "sonner";
-import { trackCriticalConversion } from "@/lib/conversionTracking";
+import { trackCriticalConversion, formatPhoneInput } from "@/lib/conversionTracking";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -187,7 +187,7 @@ const PreCalcMiniForm = ({ source = "pre_calc_owner", eyebrow, variant = "full",
     try {
       const result = await submitLead({
         name: d.name,
-        whatsapp_number: d.phone,
+        whatsapp_number: formatPhoneInput(d.phone),
         property_type: d.apartmentType,
         property_area: area,
         message: `[${source}/${channel}] Zonă: ${d.zone} · Tip: ${d.apartmentType}${area ? ` · ${area} mp` : ""} · Admin: ${d.service || "-"} · Disp: ${d.availability || "-"}${d.notes ? ` · Obs: ${d.notes}` : ""}`,
@@ -199,6 +199,7 @@ const PreCalcMiniForm = ({ source = "pre_calc_owner", eyebrow, variant = "full",
           estimated_monthly_min: range[0], estimated_monthly_max: range[1],
           channel, generated_message: message, language,
         }) as never,
+        viaServer: true,
       });
       ok = result.ok;
       if (!result.ok) console.warn("[PreCalcMiniForm] submitLead failed", result);
@@ -215,6 +216,9 @@ const PreCalcMiniForm = ({ source = "pre_calc_owner", eyebrow, variant = "full",
             ...(d.availability ? { disponibilitate: d.availability } : {}),
             ...(d.notes ? { observatii: d.notes } : {}),
             sursa: `${source}_${channel}`,
+            ...(result.ok && result.leadId && result.reportToken
+              ? { lead_id: result.leadId, report_token: result.reportToken }
+              : {}),
           },
         })
         .then(({ error }) => { if (error) console.warn("[PreCalcMiniForm] handle-lead-whatsapp failed", error); })

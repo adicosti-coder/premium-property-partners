@@ -29,7 +29,7 @@ describe("calculator Lead reporting", () => {
     window.fbq = vi.fn<(...args: unknown[]) => void>();
     window.gtag = vi.fn<(...args: unknown[]) => void>();
     vi.spyOn(window, "open").mockReturnValue(null);
-    mocks.submitLead.mockResolvedValue({ ok: true, leadId: "test-lead" });
+    mocks.submitLead.mockResolvedValue({ ok: true, leadId: "test-lead", reportToken: "test-report-token" });
     mocks.invoke.mockResolvedValue({ data: {}, error: null });
   });
   afterEach(() => { cleanup(); vi.restoreAllMocks(); delete window.fbq; delete window.gtag; });
@@ -46,6 +46,13 @@ describe("calculator Lead reporting", () => {
     expect(serverCalls[0][1].body.event_id).toBe((pixelCalls[0][3] as { eventID: string }).eventID);
     expect(window.dataLayer?.filter(event => event.event === "Lead_Submit")).toHaveLength(1);
     expect(mocks.submitLead).toHaveBeenCalledTimes(1);
+    expect(mocks.submitLead).toHaveBeenCalledWith(expect.objectContaining({
+      source: "calculator_roi_widget",
+      viaServer: true,
+    }));
+    expect(mocks.invoke).toHaveBeenCalledWith("handle-lead-whatsapp", expect.objectContaining({
+      body: expect.objectContaining({ lead_id: "test-lead", report_token: "test-report-token" }),
+    }));
     expect(mocks.invoke.mock.calls.filter(call => call[0] === "handle-lead-whatsapp")).toHaveLength(1);
   });
 

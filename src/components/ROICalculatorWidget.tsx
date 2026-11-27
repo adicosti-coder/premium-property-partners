@@ -132,6 +132,7 @@ const ROICalculatorWidget = () => {
         message: `[calculator_roi] ${typeLabel} · ${zoneLabel} · ${surfaceNum} mp · Parcare: ${parking ? "Da" : "Nu"} · Finisaje: ${finishLabel}`,
         source: "calculator_roi_widget",
         simulation_data: withCampaignTracking({ ...specs, generated_message: message }) as never,
+        viaServer: true,
       });
       if (result.ok !== true) {
         console.warn("[ROICalculator] submitLead failed", result);
