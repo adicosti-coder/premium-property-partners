@@ -4,11 +4,10 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { adminApprovalSummary, ensureInspectionTemplate, isOutsideWindowError, missingCriticalFields, sendAdminWa, sendInspectionTemplate } from "../_shared/listingInspection.ts";
 import { detectZone } from "../_shared/detectZone.ts";
+import { inspectionTeamEmail } from "../_shared/ownerNotificationContent.ts";
+import { notifyOwnerTeam } from "../_shared/ownerTeamNotifications.ts";
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
-};
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
@@ -99,6 +98,10 @@ Deno.serve(async (req) => {
     decision_note: missing.length ? `missing:${missing.join(",")}` : null,
   }, { onConflict: "prospect_listing_id" }).select("id").single();
   if (iErr || !insp) return json({ error: iErr?.message ?? "save failed" }, 500);
+  // Independent of WhatsApp's 24h window; retained in Admin if email sending fails.
+  await notifyOwnerTeam(supabase, inspectionTeamEmail({ event: "inspection", eventId: insp.id,
+    prospectId: p.id, inspectionId: insp.id, title: clean.clean_title, price: clean.price || p.price,
+    zone: clean.neighborhood || p.zone, category: p.category, phone }));
 
   // 2) Mesaj de inspecție cu butoane (fereastra Meta de 24h trebuie să fie deschisă pe numărul admin).
   const preview = String(clean.clean_description || "")

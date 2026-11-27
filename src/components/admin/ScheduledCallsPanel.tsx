@@ -8,16 +8,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { maskEmail, maskPhone } from "@/utils/security/maskPII";
 import { CalendarClock, CheckCircle2, Eye, EyeOff, Mail, MailCheck, Phone, XCircle } from "lucide-react";
+import { appointmentTypeLabel, bucharestToday, isUpcomingAppointment } from "@/lib/adminAppointmentRules";
 
 /**
  * Apelurile de 15 minute programate din pagina /pentru-proprietari.
  * Sursă: `chatbot_appointments` cu appointment_type = 'call_15min_proprietar'.
  */
 
-const APPOINTMENT_TYPE = "call_15min_proprietar";
-
 interface CallRow {
   id: string;
+  appointment_type: string | null;
   contact_name: string | null;
   contact_phone: string | null;
   contact_email: string | null;
@@ -31,7 +31,7 @@ interface CallRow {
 
 const fmtDate = (iso: string | null) =>
   iso
-    ? new Date(iso).toLocaleDateString("ro-RO", { weekday: "short", day: "numeric", month: "short" })
+    ? new Date(iso).toLocaleDateString("ro-RO", { timeZone: "Europe/Bucharest", weekday: "short", day: "numeric", month: "short" })
     : "—";
 
 const ScheduledCallsPanel = () => {
@@ -42,20 +42,20 @@ const ScheduledCallsPanel = () => {
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "scheduled-calls"],
     queryFn: async (): Promise<CallRow[]> => {
-      const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const since = bucharestToday();
       const { data, error } = await supabase
         .from("chatbot_appointments")
         .select(
-          "id, contact_name, contact_phone, contact_email, preferred_date, preferred_time_slot, notes, status, confirmation_sent_at, reminder_sent_at",
+          "id, appointment_type, contact_name, contact_phone, contact_email, preferred_date, preferred_time_slot, notes, status, confirmation_sent_at, reminder_sent_at",
         )
-        .eq("appointment_type", APPOINTMENT_TYPE)
         .gte("preferred_date", since)
         .order("preferred_date", { ascending: true })
         .limit(50);
       if (error) throw error;
-      return (data ?? []) as CallRow[];
+      return ((data ?? []) as CallRow[]).filter(row => isUpcomingAppointment(row));
     },
     staleTime: 60_000,
+    refetchInterval: 60_000,
   });
 
   const updateStatus = useMutation({
@@ -75,10 +75,10 @@ const ScheduledCallsPanel = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CalendarClock className="w-5 h-5 text-primary" aria-hidden="true" />
-          Apeluri programate (15 min)
+          Programări viitoare
         </CardTitle>
         <CardDescription>
-          Programările din pagina pentru proprietari. Reminderul se trimite automat cu 2 ore înainte.
+          Evaluări, vizionări și apeluri · ora României
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -90,7 +90,7 @@ const ScheduledCallsPanel = () => {
           </div>
         ) : !data || data.length === 0 ? (
           <p className="text-sm text-muted-foreground py-6 text-center">
-            Nu există apeluri programate în perioada următoare.
+            Nu există programări în perioada următoare.
           </p>
         ) : (
           <ul className="divide-y divide-border">
@@ -101,6 +101,7 @@ const ScheduledCallsPanel = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-medium truncate">{call.contact_name ?? "—"}</span>
+                      <Badge variant="secondary">{appointmentTypeLabel(call.appointment_type)}</Badge>
                       <Badge variant="outline">
                         {fmtDate(call.preferred_date)} · {call.preferred_time_slot ?? "—"}
                       </Badge>
@@ -110,6 +111,7 @@ const ScheduledCallsPanel = () => {
                         </Badge>
                       )}
                       {call.status === "cancelled" && <Badge variant="destructive">Anulat</Badge>}
+                      {call.status !== "confirmed" && call.status !== "cancelled" && <Badge variant="outline">{call.status === "pending" ? "Așteaptă confirmare" : call.status || "—"}</Badge>}
                       {call.confirmation_sent_at && (
                         <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
                           <MailCheck className="w-3.5 h-3.5" aria-hidden="true" /> confirmare trimisă
@@ -151,7 +153,7 @@ const ScheduledCallsPanel = () => {
                       variant="outline"
                       size="icon"
                       className="min-h-12 min-w-12"
-                      aria-label="Marchează apelul ca efectuat"
+                      aria-label="Confirmă programarea"
                       disabled={updateStatus.isPending}
                       onClick={() => updateStatus.mutate({ id: call.id, status: "confirmed" })}
                     >

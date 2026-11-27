@@ -7,6 +7,8 @@ import AndreiCallsCounter from "./AndreiCallsCounter";
 import SocialPostDraftsPanel from "./SocialPostDraftsPanel";
 import { ConnectionHealthCard } from "./ConnectionHealth";
 import { TODAY_ROUTES } from "@/lib/adminTodayRoutes";
+import ScheduledCallsPanel from "./ScheduledCallsPanel";
+import RecentListingApprovals from "./RecentListingApprovals";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -175,6 +177,8 @@ export default function DailyCommandCenter() {
         </CardContent>
       </Card>
 
+      <ScheduledCallsPanel />
+      <RecentListingApprovals />
       <ConnectionHealthCard />
 
       <AndreiCallsCounter />

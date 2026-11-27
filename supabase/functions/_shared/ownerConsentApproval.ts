@@ -1,6 +1,8 @@
 // Acordul proprietarului NU publică singur: după „DA”, anunțul rămâne
 // `pending_approval` până când administratorul răspunde 1 (aprob) / 2 (respinge)
 // pe WhatsApp. Dacă adminul aprobase deja anunțul, acordul devine direct `granted`.
+import { inspectionTeamEmail } from "./ownerNotificationContent.ts";
+import { notifyOwnerTeam } from "./ownerTeamNotifications.ts";
 
 /** Stările inspecției în care adminul a aprobat deja anunțul. */
 const ADMIN_APPROVED = new Set(["approved", "approved_waiting_consent", "published"]);
@@ -44,22 +46,22 @@ export async function recordOwnerConsent(
   },
 ): Promise<{ consentId: string | null; status: ConsentStatusAfterYes | null; waitingAdmin: boolean }> {
   const nowIso = new Date().toISOString();
-  let existing: { id: string; status: string; request_template: string | null } | null = null;
+  let existing: { id: string; status: string; request_template: string | null; consented_at?: string | null } | null = null;
   if (args.consentId) {
     const { data } = await supabase.from("wa_publish_consents")
-      .select("id, status, request_template").eq("id", args.consentId).maybeSingle();
+      .select("id, status, request_template, consented_at").eq("id", args.consentId).maybeSingle();
     existing = data;
   } else if (args.prospectId) {
     const { data } = await supabase.from("wa_publish_consents")
-      .select("id, status, request_template").eq("prospect_listing_id", args.prospectId)
+      .select("id, status, request_template, consented_at").eq("prospect_listing_id", args.prospectId)
       .neq("status", "revoked").order("created_at", { ascending: false }).limit(1).maybeSingle();
     existing = data;
   }
 
-  let insp: { status?: string | null; sent_at?: string | null } | null = null;
+  let insp: { id?: string; status?: string | null; sent_at?: string | null } | null = null;
   if (args.prospectId) {
     const { data } = await supabase.from("listing_inspections")
-      .select("status, sent_at").eq("prospect_listing_id", args.prospectId).maybeSingle();
+      .select("id, status, sent_at").eq("prospect_listing_id", args.prospectId).maybeSingle();
     insp = data;
   }
   const status = consentStatusAfterOwnerYes(insp?.status, existing?.status);
@@ -77,16 +79,23 @@ export async function recordOwnerConsent(
   let consentId: string | null = existing?.id ?? null;
   if (existing) {
     const { error } = await supabase.from("wa_publish_consents").update(row).eq("id", existing.id);
-    if (error) console.error("[owner-consent] update failed:", error);
+    if (error) { console.error("[owner-consent] update failed:", error); return { consentId, status: null, waitingAdmin: false }; }
   } else {
     const { data, error } = await supabase.from("wa_publish_consents")
       .upsert({ ...row, phone_normalized: args.phone, prospect_listing_id: args.prospectId }, { onConflict: "phone_normalized,prospect_listing_id" })
       .select("id").maybeSingle();
-    if (error) console.error("[owner-consent] upsert failed:", error);
+    if (error) { console.error("[owner-consent] upsert failed:", error); return { consentId: null, status: null, waitingAdmin: false }; }
     consentId = data?.id ?? null;
   }
 
   if (!args.prospectId) return { consentId, status, waitingAdmin: false };
+  if (consentId && !existing?.consented_at) {
+    const { data: listing } = await supabase.from("prospect_listings")
+      .select("title, price, zone, category").eq("id", args.prospectId).maybeSingle();
+    await notifyOwnerTeam(supabase, inspectionTeamEmail({ event: "consent", eventId: consentId,
+      prospectId: args.prospectId, inspectionId: insp?.id, phone: args.phone, message: args.message,
+      title: listing?.title, price: listing?.price, zone: listing?.zone, category: listing?.category }));
+  }
 
   if (status === "granted") {
     fetch(`${args.supabaseUrl}/functions/v1/auto-publish-listing-worker`, {

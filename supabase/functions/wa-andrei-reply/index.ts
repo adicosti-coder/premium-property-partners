@@ -7,14 +7,11 @@ import { checkAutoSend } from "../_shared/waAutoSendGuard.ts";
 import { INTAKE_MESSAGE } from "../_shared/waAutoReply.ts";
 import { validateEvaluationSlot, buildBookingAlert, buildHandoffAlert, ADRIAN_WHATSAPP, type EvalSlot } from "../_shared/waAssistantBooking.ts";
 import { appendSocialFollow, runtimeSocialProfiles } from "../_shared/socialFollow.ts";
+import { bookingTeamEmail, handoffTeamEmail } from "../_shared/ownerNotificationContent.ts";
+import { notifyOwnerTeam } from "../_shared/ownerTeamNotifications.ts";
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
 const GEMINI_MODEL = "gemini-3.6-flash";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, content-type, x-internal-secret",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
 
 function timingSafeEq(a: string, b: string) {
   if (!a || !b || a.length !== b.length) return false;
@@ -68,13 +65,6 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ ok: true, skipped: "disabled" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
-  if (settings.office_hours_only && !isOfficeHoursBucharest()) {
-    await supabase.from("wa_conversations")
-      .update({ status: "awaiting_human", handoff_reason: "outside_office_hours" })
-      .eq("id", conversationId);
-    return new Response(JSON.stringify({ ok: true, skipped: "outside_hours" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-  }
-
   // 2. Conversation + history
   const { data: conv } = await supabase.from("wa_conversations")
     .select("id, phone_normalized, status, prospect_id, last_outbound_at, last_inbound_at, wa_profile_name")
@@ -113,6 +103,17 @@ Deno.serve(async (req) => {
     .order("created_at", { ascending: false })
     .limit(80);
   const chronological = [...(history ?? [])].reverse();
+  const latestInbound = [...chronological].reverse().find(m => m.direction === "inbound");
+  if (settings.office_hours_only && !isOfficeHoursBucharest()) {
+    const { error, data: changed } = await supabase.from("wa_conversations")
+      .update({ status: "awaiting_human", handoff_reason: "outside_office_hours" })
+      .eq("id", conversationId).eq("status", conv.status).select("id");
+    if (!error && changed?.length) await notifyOwnerTeam(supabase, handoffTeamEmail({
+      conversationId, eventId: latestInbound?.id || conversationId, phone: conv.phone_normalized,
+      name: conv.wa_profile_name, reason: "În afara programului asistentului", message: latestInbound?.content || "—",
+    }));
+    return new Response(JSON.stringify({ ok: true, skipped: "outside_hours" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
 
   // Primul mesaj de calificare: doar mesajul curent de la utilizator, fără vreun
   // răspuns al nostru anterior — atunci Andrei trimite EXACT textul aprobat.
@@ -345,7 +346,7 @@ Răspunde DOAR cu JSON: {"reply": "textul mesajului", "booking": {"date": "AAAA-
       const { data: existing } = await supabase.from("chatbot_appointments").select("id")
         .eq("contact_phone", conv.phone_normalized).eq("preferred_date", check.startsAt.toISOString()).maybeSingle();
       if (!existing) {
-        const { error: apErr } = await supabase.from("chatbot_appointments").insert({
+        const { data: appointment, error: apErr } = await supabase.from("chatbot_appointments").insert({
           appointment_type: "evaluation",
           preferred_date: check.startsAt.toISOString(),
           preferred_time_slot: booking.time,
@@ -355,9 +356,14 @@ Răspunde DOAR cu JSON: {"reply": "textul mesajului", "booking": {"date": "AAAA-
           property_interest: listingText?.slice(0, 500) || null,
           notes: `Programat de asistentul WhatsApp · ${tag}`,
           status: "pending",
-        });
+        }).select("id").maybeSingle();
         if (apErr) console.error("[wa-andrei-reply] appointment insert failed:", apErr);
-        else await alertAdrian("wa_evaluation_booked", buildBookingAlert({ phone: conv.phone_normalized, name: conv.wa_profile_name, slot: booking, listing: listingText }));
+        else if (appointment) await Promise.all([
+          alertAdrian("wa_evaluation_booked", buildBookingAlert({ phone: conv.phone_normalized, name: conv.wa_profile_name, slot: booking, listing: listingText })),
+          notifyOwnerTeam(supabase, bookingTeamEmail({ id: appointment.id, phone: conv.phone_normalized,
+            name: listingInfo?.contact_name || conv.wa_profile_name, startsAt: check.startsAt.toISOString(),
+            time: booking.time, listing: listingText, conversationId })),
+        ]);
       }
     } else {
       console.log(`[wa-andrei-reply] booking rejected: ${check.reason}`);
@@ -365,10 +371,15 @@ Răspunde DOAR cu JSON: {"reply": "textul mesajului", "booking": {"date": "AAAA-
     }
   }
   if (handoff) {
-    await supabase.from("wa_conversations")
+    const { error: handoffError, data: changed } = await supabase.from("wa_conversations")
       .update({ status: "awaiting_human", handoff_reason: `assistant_handoff: ${handoffReason || summary}`.slice(0, 300) })
-      .eq("id", conversationId);
-    await alertAdrian("wa_assistant_handoff", buildHandoffAlert({ phone: conv.phone_normalized, name: conv.wa_profile_name, reason: handoffReason || summary }));
+      .eq("id", conversationId).eq("status", conv.status).select("id");
+    if (!handoffError && changed?.length) await Promise.all([
+      alertAdrian("wa_assistant_handoff", buildHandoffAlert({ phone: conv.phone_normalized, name: conv.wa_profile_name, reason: handoffReason || summary })),
+      notifyOwnerTeam(supabase, handoffTeamEmail({ conversationId, eventId: latestInbound?.id || conversationId,
+        phone: conv.phone_normalized, name: conv.wa_profile_name, reason: handoffReason || summary,
+        message: latestInbound?.content || "—" })),
+    ]);
   }
 
   // 6. Hot Lead → Lead Manager + alertă

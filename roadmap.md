@@ -383,3 +383,10 @@
 - [x] „Flux proprietari”: selecția implicită fără agenții și cu scor > 60
 - [x] Confirmarea manuală ca particular (scor > 60) pornește primul mesaj
 - [x] „Confirmă privat” scoate numărul din lista de agenții, ridică marcajul și reactivează anunțurile dezactivate de listă
+
+## Publicare Dănuț Tudor și notificări Andrei — 27 noiembrie
+- [x] Publică anunțul verificat și sincronizează stările de acord/inspecție/prospect
+- [x] Email către Adrian pentru programări, predare la om și acorduri/inspecții
+- [x] Programări de toate tipurile și aprobări rapide în Astăzi
+- [x] Suită completă, verificare autentificată și publicarea funcțiilor
+- Verificat: 1.153 teste aplicație + 134 teste funcții; publicare și fotografie pe realtrust.ro; email acceptat; Admin mobil/desktop și refuz 401 fără autentificare. Programare reală nouă și primirea în inbox nu au fost provocate.
