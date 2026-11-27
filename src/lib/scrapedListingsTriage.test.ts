@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { groupCrossPortalDuplicates, type DedupListing } from "./crossPortalDedup";
-import { buildTriageRows, DEFAULT_TRIAGE_FILTERS, isReadyForOutreach, summarizeTriage, triageBlockReason, needsManualReveal, type TriageListing } from "./scrapedListingsTriage";
+import { buildTriageRows, DEFAULT_TRIAGE_FILTERS, isReadyForOutreach, summarizeTriage, triageBlockReason, needsManualReveal } from "./scrapedListingsTriage";
 
 const l = (over: Partial<DedupListing>): DedupListing => ({
   id: "x", source_platform: "OLX", source_url: "https://www.olx.ro/d/oferta/a-IDa.html", title: "2 camere City of Mara",
