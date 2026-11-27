@@ -268,6 +268,54 @@ const seenAt = (l: TriageListing) => {
   return Number.isFinite(t) ? t : 0;
 };
 
+/* ---------- Data colectării, afișată pe fiecare card ---------- */
+
+/** Când a fost adus anunțul: întâi data scrape-uirii, apoi cea de creare, apoi ultima revedere. */
+export const collectedAt = (l: TriageListing) => {
+  for (const v of [l.scraped_at, l.created_at, l.last_seen_at]) {
+    const t = Date.parse(v ?? "");
+    if (Number.isFinite(t)) return new Date(t);
+  }
+  return null;
+};
+
+/** „acum”, „acum 12 minute”, „acum 3 ore”, „acum 4 zile”, „acum 2 luni” — în română. */
+export const relativeCollectionLabel = (d: Date | null, now = new Date()): string => {
+  if (!d) return "fără dată de colectare";
+  const secs = Math.max(0, Math.round((now.getTime() - d.getTime()) / 1000));
+  if (secs < 60) return "acum";
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return `acum ${mins} ${mins === 1 ? "minut" : "minute"}`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `acum ${hours} ${hours === 1 ? "oră" : "ore"}`;
+  const days = Math.floor(hours / 24);
+  if (days < 31) return `acum ${days} ${days === 1 ? "zi" : "zile"}`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `acum ${months} ${months === 1 ? "lună" : "luni"}`;
+  const years = Math.floor(months / 12);
+  return `acum ${years} ${years === 1 ? "an" : "ani"}`;
+};
+
+/** Data și ora complete, în ora României, ex. „25 nov 2026, 22:00:13”. */
+export const exactCollectionLabel = (d: Date | null): string =>
+  d ? new Intl.DateTimeFormat("ro-RO", {
+    day: "numeric", month: "short", year: "numeric",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    timeZone: "Europe/Bucharest",
+  }).format(d) : "—";
+
+/** Ce afișează cardul: textul relativ, data exactă pentru atingere/hover și marcajul pentru <time>. */
+export interface CollectionDisplay {
+  relative: string;
+  exact: string;
+  iso: string | null;
+}
+
+export const collectionDisplay = (l: TriageListing, now = new Date()): CollectionDisplay => {
+  const d = collectedAt(l);
+  return { relative: relativeCollectionLabel(d, now), exact: exactCollectionLabel(d), iso: d ? d.toISOString() : null };
+};
+
 export function buildTriageRows<T extends TriageListing>(groups: DuplicateGroup<T>[], f: TriageFilters): TriageRow<T>[] {
   const rows: TriageRow<T>[] = [];
   const ordered = [...groups].sort((a, b) =>

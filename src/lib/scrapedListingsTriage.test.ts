@@ -352,3 +352,33 @@ describe("needsManualReveal", () => {
     expect(needsManualReveal({ ...base, outreach_status: "blocked_agency" })).toBe(false);
   });
 });
+
+import { collectionDisplay, exactCollectionLabel, relativeCollectionLabel } from "./scrapedListingsTriage";
+
+describe("data colectării pe card", () => {
+  const now = new Date("2026-11-27T16:20:00Z");
+  it("text relativ: minute, ore, zile, luni", () => {
+    expect(relativeCollectionLabel(new Date("2026-11-27T16:19:30Z"), now)).toBe("acum");
+    expect(relativeCollectionLabel(new Date("2026-11-27T16:08:00Z"), now)).toBe("acum 12 minute");
+    expect(relativeCollectionLabel(new Date("2026-11-27T13:20:00Z"), now)).toBe("acum 3 ore");
+    expect(relativeCollectionLabel(new Date("2026-11-23T16:20:00Z"), now)).toBe("acum 4 zile");
+    expect(relativeCollectionLabel(new Date("2026-09-27T16:20:00Z"), now)).toBe("acum 2 luni");
+  });
+  it("data exactă e în ora României, cu ziua, luna, anul și ora", () => {
+    expect(exactCollectionLabel(new Date("2026-11-25T20:00:13Z"))).toBe("25 nov. 2026, 22:00:13");
+  });
+  it("sursa datei: scraped_at, apoi created_at, apoi last_seen_at", () => {
+    const d = collectionDisplay({
+      id: "x", scraped_at: "2026-11-25T20:00:13Z", created_at: "2026-11-20T10:00:00Z", last_seen_at: "2026-11-26T10:00:00Z",
+    } as TriageListing, now);
+    expect(d.exact).toBe("25 nov. 2026, 22:00:13");
+    expect(d.relative).toBe("acum 1 zi");
+    expect(collectionDisplay({ id: "x", created_at: "2026-11-26T10:00:00Z" } as TriageListing, now).exact).toBe("26 nov. 2026, 12:00:00");
+    expect(collectionDisplay({ id: "x", last_seen_at: "2026-11-26T10:00:00Z" } as TriageListing, now).exact).toBe("26 nov. 2026, 12:00:00");
+  });
+  it("fără nicio dată: text clar, fără marcaj ISO", () => {
+    const d = collectionDisplay({ id: "x" } as TriageListing, now);
+    expect(d.relative).toBe("fără dată de colectare");
+    expect(d.iso).toBeNull();
+  });
+});

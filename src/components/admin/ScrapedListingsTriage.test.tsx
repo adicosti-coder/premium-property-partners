@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import ScrapedListingsTriage from "./ScrapedListingsTriage";
+import { exactCollectionLabel } from "@/lib/scrapedListingsTriage";
 
 const mocks = vi.hoisted(() => ({ rpc: vi.fn(), invoke: vi.fn() }));
 vi.mock("@/lib/supabaseClient", () => ({ supabase: { rpc: mocks.rpc, functions: { invoke: mocks.invoke } } }));
@@ -13,6 +14,7 @@ const listing = {
   zone: "Sagului", rooms: 2, size: 50, price: 85000, category: "vanzare",
   contact_phone: "+40722123456", phone_normalized: "+40722123456",
   seller_type: "agency", lead_score: 58, is_active: true, lifecycle_status: "new", tags: [],
+  scraped_at: "2026-11-25T20:00:13Z", created_at: "2026-11-25T20:00:14Z", last_seen_at: "2026-11-25T20:00:13Z",
 };
 
 function setup() {
@@ -49,5 +51,21 @@ describe("Triage private override confirmation", () => {
     finish?.({ data: null, error: new Error("Temporary failure") });
     await waitFor(() => expect(confirm).toBeEnabled());
     expect(mocks.invoke).not.toHaveBeenCalled();
+  });
+});
+describe("data colectării pe card", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("arată data relativă și o dezvăluie exactă la apăsare", () => {
+    setup();
+    const exact = exactCollectionLabel(new Date("2026-11-25T20:00:13Z"));
+    const btn = screen.getByRole("button", { name: new RegExp(`Colectat .*— ${exact}`) });
+    expect(btn.getAttribute("title")).toBe(`Colectat: ${exact}`);
+    expect(within(btn).getByRole("time")).toHaveTextContent(/acum \d+ (zi|zile|ore)/);
+    expect(screen.queryByText(exact)).toBeNull();
+    fireEvent.click(btn);
+    expect(within(btn).getByText(exact)).toBeInTheDocument();
+    fireEvent.click(btn);
+    expect(screen.queryByText(exact)).toBeNull();
   });
 });

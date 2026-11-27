@@ -24,7 +24,7 @@ import type { PageSize } from "@/hooks/admin/usePaginatedQuery";
 import { Ban, Building2, Copy, UserCheck, Layers, Loader2, MessageCircle, Phone, PhoneOff, RefreshCw, RotateCcw, Search } from "lucide-react";
 import { toast } from "sonner";
 import { groupCrossPortalDuplicates, listingPhone, portalKey, signalsOf } from "@/lib/crossPortalDedup";
-import { activeQuickFilter, agencyMarkMode, canReactivate, agencyMarkSummary, agencyUndoLabel, type AgencyMarkResult, privateConfirmSummary, asConfirmedPrivate, type PrivateConfirmResult, applyQuickFilter, buildTriageRows, DEFAULT_TRIAGE_FILTERS, isAgencyListing, isDismissed, needsManualReveal, isTriageListing, privateConfirmMode, triageReasonHint, summarizeTriage, triageBlockReason, triagePool, type TriageFilters, type TriageListing, type TriageQuickFilter, type TriageRow, buildOutreachCooldownMap, outreachCooldownFor, outreachCooldownHint, OUTREACH_COOLDOWN_DAYS_UI, RECENT_OUTREACH_REASON, type OutreachCooldownMap, type OutreachHistoryRow } from "@/lib/scrapedListingsTriage";
+import { activeQuickFilter, agencyMarkMode, canReactivate, agencyMarkSummary, agencyUndoLabel, type AgencyMarkResult, privateConfirmSummary, asConfirmedPrivate, type PrivateConfirmResult, applyQuickFilter, buildTriageRows, collectionDisplay, DEFAULT_TRIAGE_FILTERS, isAgencyListing, isDismissed, needsManualReveal, isTriageListing, privateConfirmMode, triageReasonHint, summarizeTriage, triageBlockReason, triagePool, type TriageFilters, type TriageListing, type TriageQuickFilter, type TriageRow, buildOutreachCooldownMap, outreachCooldownFor, outreachCooldownHint, OUTREACH_COOLDOWN_DAYS_UI, RECENT_OUTREACH_REASON, type OutreachCooldownMap, type OutreachHistoryRow } from "@/lib/scrapedListingsTriage";
 import { hasImplausiblePrice } from "@/lib/ownerListingRules";
 import { normalizeRoPhone } from "@/lib/ownerOutreachTemplates";
 import { OWNER_FLOW_QUERY_KEY } from "@/lib/ownerFlowData";
@@ -561,6 +561,8 @@ interface CardProps {
 
 function TriageCard({ row, expanded, onToggle, onSend, onDismiss, onRestore, onReactivate, restoring, onConfirmPrivate, onOverridePrivate, confirming, onMarkAgency, onUndoAgency, markingAgency, onSavePhone, cooldownMap }: CardProps) {
   const l = row.listing;
+  const [showExactDate, setShowExactDate] = useState(false);
+  const collected = collectionDisplay(l);
   const s = signalsOf(l);
   const phone = listingPhone(l);
   const dismissed = isDismissed(l);
@@ -597,6 +599,17 @@ function TriageCard({ row, expanded, onToggle, onSend, onDismiss, onRestore, onR
             {s.rooms != null && <span>{s.rooms} {s.rooms === 1 ? "cameră" : "camere"}</span>}
             {s.size != null && <span>{s.size} mp</span>}
             <span className="font-medium text-foreground">{priceLabel(l)}</span>
+            <button
+              type="button"
+              onClick={() => setShowExactDate((v) => !v)}
+              title={`Colectat: ${collected.exact}`}
+              aria-label={`Colectat ${collected.relative} — ${collected.exact}. Apasă pentru data și ora complete`}
+              aria-expanded={showExactDate}
+              className="min-h-12 cursor-pointer rounded text-left text-xs text-muted-foreground underline decoration-dotted underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [@media(hover:hover)]:hover:text-foreground"
+            >
+              <time dateTime={collected.iso ?? undefined}>🕐 {collected.relative}</time>
+              {showExactDate && <span className="block font-medium text-foreground">{collected.exact}</span>}
+            </button>
           </p>
           {(phone || needsManualReveal(l)) && <ProspectPhoneEditor phone={phone} sourceUrl={l.source_url} onSave={onSavePhone} />}
         </div>
