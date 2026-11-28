@@ -166,7 +166,8 @@ const SEOOptimizerManager = () => {
     const m = new Map<string, number>();
     history.forEach((audit) => {
       if (audit.language && audit.language !== "ro") return;
-      if ((audit as any).raw_analysis?.ai_fallback) return;
+      // Auditurile cu AI indisponibil păstrează scorul determinist — contează.
+      if (typeof audit.overall_score !== "number") return;
       let path: string;
       try { path = new URL(audit.url).pathname.replace(/\/+$/, "") || "/"; } catch { return; }
       if (!m.has(path) && typeof audit.overall_score === "number") m.set(path, audit.overall_score);
@@ -187,8 +188,8 @@ const SEOOptimizerManager = () => {
       const path = normalize(audit.url).replace(/^[^/]+/, "");
       // Adrese vechi redirecționate: auditul lor măsoară pagina principală.
       if (isLegacyAuditPath(path)) return;
-      // Audituri eșuate (AI indisponibil) nu reflectă pagina — le ignorăm.
-      if ((audit as any).raw_analysis?.ai_fallback) return;
+      // Fallback AI = scor determinist valid; ignorăm doar auditurile fără scor.
+      if (typeof audit.overall_score !== "number") return;
       const key = `${normalize(audit.url)}::${audit.language}`;
       if (!latest.has(key)) latest.set(key, audit);
     });
