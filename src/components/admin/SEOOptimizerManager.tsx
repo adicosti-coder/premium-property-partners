@@ -62,7 +62,6 @@ const QUICK_URLS = [
   "https://realtrust.ro/analiza-roi-apartament",
   "https://realtrust.ro/piata-imobiliara-timisoara",
   // Cartiere prioritare (NeighborhoodDetail)
-  "https://realtrust.ro/imobiliare-timisoara/isho",
   "https://realtrust.ro/imobiliare-timisoara/iosefin",
   "https://realtrust.ro/imobiliare-timisoara/dumbravita",
   "https://realtrust.ro/imobiliare-timisoara/giroc",
