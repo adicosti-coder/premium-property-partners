@@ -18,6 +18,8 @@ import { REMOVED_ZONE_REDIRECTS } from '../src/data/removedZonePaths';
 import { buildAggregateRating, brandAggregateRating } from '../src/lib/reviewStructuredData';
 import { ORGANIZATION_SCHEMA, REAL_ESTATE_AGENT_SCHEMA, LODGING_BUSINESS_SCHEMA } from '../src/lib/orgIdentity';
 import { CONTACT_HOURS, REAL_ESTATE_SINCE } from '../src/lib/businessFacts';
+import { HOMEPAGE_SEO } from '../src/constants/homepageSeo';
+import { ANALYSIS_PRERENDER_BODY, HOMEPAGE_PRERENDER_BODY } from '../src/lib/prioritySeoContent';
 import {
   fetchPublicArticles,
   fetchComplexes,
@@ -877,11 +879,11 @@ export function buildStaticRoutes(): PrerenderRoute[] {
   // (Firecrawl, Bingbot, AI Overviews) see local entities without JS.
   routes.push({
     path: '/',
-    title: 'RealTrust Timișoara | Imobiliare, Investiții, Administrare',
-    description: 'RealTrust Timișoara oferă servicii imobiliare, investiții și administrare de proprietăți în regim hotelier. Analiză de randament, vânzări, închirieri și property management.',
-    h1: 'RealTrust Timișoara — Imobiliare, Investiții și Property Management',
+    title: HOMEPAGE_SEO.ro.title,
+    description: HOMEPAGE_SEO.ro.description,
+    h1: HOMEPAGE_SEO.ro.h1,
     canonical: `${BASE_URL}/`,
-    seoBody: HOMEPAGE_AUTHORITY_BODY,
+    seoBody: `${HOMEPAGE_AUTHORITY_BODY}${HOMEPAGE_PRERENDER_BODY}`,
     // Entity nodes come verbatim from orgIdentity so the static HTML and the
     // runtime homepage describe the same legal organization, agency and hotel.
     jsonLd: [ORGANIZATION_SCHEMA, REAL_ESTATE_AGENT_SCHEMA, { ...LODGING_BUSINESS_SCHEMA, aggregateRating: brandAggregateRating() }],
@@ -999,15 +1001,16 @@ export function buildStaticRoutes(): PrerenderRoute[] {
   // Analiza ROI Apartament
   routes.push({
     path: '/analiza-roi-apartament',
-    title: 'Analiză Randament Apartament | Randament investiții imobiliare',
-    description: 'Analiză profit apartament România: calculează randament investiții imobiliare, randament net, evoluția prețurilor și zonele potrivite pentru investiții în complexe.',
-    h1: 'Analiză Randament Apartament pentru investiții profitabile în România',
+    title: PUBLIC_ROUTE_SEO['/analiza-roi-apartament'].ro.title,
+    description: PUBLIC_ROUTE_SEO['/analiza-roi-apartament'].ro.description,
+    h1: PUBLIC_ROUTE_SEO['/analiza-roi-apartament'].ro.h1,
     canonical: `${BASE_URL}/analiza-roi-apartament`,
     seoBody: `
       <h2>Randament investiții imobiliare și analiză profit apartament România</h2>
-      <p>Pagina Analiză Randament Apartament oferă un calculator interactiv pentru investitori care vor să compare chiria clasică, administrarea în regim hotelier și aprecierea capitalului. Modelul folosește ocupare de 70%, administrare 15–20% din net (brut minus canale și utilități) și scenarii de randament pentru apartamente standard, RealTrust standard și complex premium.</p>
+      <p>Pagina de analiză a randamentului apartamentului oferă un calculator interactiv pentru investitori care vor să compare chiria clasică, administrarea în regim hotelier și aprecierea capitalului. Modelul folosește ocupare de 70%, administrare 15–20% din net (brut minus canale și utilități) și scenarii de randament pentru apartamente standard, RealTrust standard și complex premium.</p>
       <h2>Complexe rezidențiale recomandate pentru randament</h2>
-      <p>Analiza conectează direct investitorii cu <a href="${BASE_URL}/complexe" tabindex="-1">secțiunea Complexe</a>, inclusiv City of Mara, Ateneo și Fructus Plaza — zone unde randamentul depinde de poziționare, cerere corporate, lichiditate și calitatea administrării.</p>
+      <p>Analiza conectează direct investitorii cu <a href="${BASE_URL}/ansambluri-rezidentiale" tabindex="-1">secțiunea Complexe</a>, inclusiv City of Mara, Ateneo și Fructus Plaza — zone unde randamentul depinde de poziționare, cerere corporate, lichiditate și calitatea administrării.</p>
+      ${ANALYSIS_PRERENDER_BODY}
     `,
     jsonLd: [
       {

@@ -67,6 +67,7 @@ const HomeRecommendedLinks = lazy(() => import("@/components/home/HomeRecommende
 const BrandPillarsHub = lazy(() => import("@/components/home/BrandPillarsHub"));
 const ProcessStepsTimeline = lazy(() => import("@/components/ProcessStepsTimeline"));
 const HomeAuthorityBlocks = lazy(() => import("@/components/home/HomeAuthorityBlocks"));
+const HomepageSeoGuide = lazy(() => import("@/components/home/HomepageSeoGuide"));
 
 // Near-fold section: stats + calculator — ALWAYS rendered (no lazy gate)
 // to prevent mobile deadlock where Hero fills 100vh and observer never fires
@@ -390,6 +391,7 @@ const Index = () => {
 
 
             {/* Near-fold: stats + calculator */}
+            <Suspense fallback={null}><HomepageSeoGuide /></Suspense>
             <NearFoldSection forceCalc={calcRequested} />
 
             {/* Mid-fold: trust + service sections */}

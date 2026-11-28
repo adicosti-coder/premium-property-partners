@@ -13,9 +13,9 @@
 
 export const HOMEPAGE_SEO = {
   ro: {
-    title: "RealTrust Timișoara | Imobiliare, Investiții & Property Management",
+    title: "RealTrust Timișoara | Imobiliare, Investiții, Administrare",
     description:
-      "RealTrust Timișoara oferă servicii imobiliare, investiții și administrare de proprietăți în regim hotelier. Analiză de randament, vânzări, închirieri și property management.",
+      "RealTrust Timișoara: vânzări, închirieri, investiții și administrare în regim hotelier. Calculează randamentul net și descoperă soluții pentru proprietari.",
     socialDescription:
       "Servicii imobiliare, investiții și administrare de proprietăți în regim hotelier în Timișoara.",
     h1: "RealTrust Timișoara — Imobiliare, Investiții și Property Management",

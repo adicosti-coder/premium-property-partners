@@ -1,5 +1,11 @@
 # Roadmap — optimizări sistem analiză și administrare
 
+## Optimizare scor SEO — 28 noiembrie
+- [x] Completează conținutul util și metadatele pentru `/analiza-roi-apartament` și `/`, inclusiv în prerandare, fără schimbarea formulelor
+- [x] Înlocuiește denumirile vizibile „ROI” cu „randament imobiliar” pe pagina de analiză
+- [x] Toate cele 1.161 teste trec; calculatorul și ghidurile verificate pe mobil/desktop fără erori; build OK
+- [ ] Publicare și re-audit pentru scorurile noi — necesită publicarea versiunii actualizate; scorurile istorice nu au fost modificate
+
 ## Alertă WhatsApp pentru calculator și estimare rapidă — 27 noiembrie
 - [x] Salvează ambele formulare prin fluxul securizat care returnează ID-ul cererii și dovada vizitatorului
 - [x] Transmite dovada către alerta WhatsApp și păstrează sursele cererilor în administrare

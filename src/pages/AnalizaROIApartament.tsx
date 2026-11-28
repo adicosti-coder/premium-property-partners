@@ -28,7 +28,10 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { calculateManagedIncome } from "@/lib/managementPolicy";
 import { REAL_ESTATE_AGENT_REF } from "@/lib/orgIdentity";
+import { PUBLIC_ROUTE_SEO } from "@/lib/publicRouteSeo";
+import AnalysisZoneGuide from "@/components/AnalysisZoneGuide";
 
+const analysisSeo = PUBLIC_ROUTE_SEO["/analiza-roi-apartament"].ro;
 const Footer = lazy(() => import("@/components/Footer"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 
@@ -81,7 +84,7 @@ const zoneCriteria = [
 ];
 
 const relatedGuides = [
-  { label: "Calculator Randament Imobiliar (ROI)", href: "/calculator-randament", text: "Compară rapid chiria clasică și regimul hotelier." },
+  { label: "Calculator de randament imobiliar", href: "/calculator-randament", text: "Compară rapid chiria clasică și regimul hotelier." },
   { label: "Catalog Investiții", href: "/catalog-investitii", text: "Vezi oportunități filtrate după randament și risc." },
   { label: "Piața imobiliară", href: "/piata-imobiliara-timisoara", text: "Urmărește tendințe locale, prețuri și cerere." },
 ];
@@ -163,8 +166,8 @@ const AnalizaROIApartament = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Analiză Randament Apartament | Randament investiții imobiliare"
-        description="Calculează Randamentul Imobiliar (ROI) unei investiții imobiliare: randament net, evoluția prețurilor și zonele potrivite pentru investiții în complexe din Timișoara."
+        title={analysisSeo.title}
+        description={analysisSeo.description}
         url="https://realtrust.ro/analiza-roi-apartament"
         breadcrumbItems={[
           { name: "Acasă", url: "https://realtrust.ro" },
@@ -212,13 +215,13 @@ const AnalizaROIApartament = () => {
                   <TrendingUp className="h-4 w-4" /> Randament investiții imobiliare
                 </p>
                 <h1 className="text-4xl font-bold tracking-normal text-foreground md:text-5xl">
-                  Analiza ROI Apartament pentru investiții profitabile în România
+                  {analysisSeo.h1}
                 </h1>
                 <p className="mt-5 max-w-2xl text-lg text-muted-foreground">
                   Estimează profitul net al unui apartament, compară chiria clasică cu administrarea în regim hotelier și verifică evoluția prețurilor pe zone cu cerere ridicată.
                 </p>
                 <div className="mt-7 flex flex-wrap gap-3">
-                  <Button asChild size="lg"><a href="#calculator">Calculează Randamentul Imobiliar (ROI)</a></Button>
+                  <Button asChild size="lg"><a href="#calculator">Calculează randamentul imobiliar</a></Button>
                   <Button asChild size="lg" variant="outline"><Link to="/ansambluri-rezidentiale">Vezi Complexe <ArrowRight className="h-4 w-4" /></Link></Button>
                 </div>
               </div>
@@ -346,6 +349,8 @@ const AnalizaROIApartament = () => {
           </div>
         </section>
 
+        <AnalysisZoneGuide />
+
         <section className="border-y border-border bg-background py-14 md:py-20">
           <div className="container mx-auto px-4">
             <div className="mb-8 max-w-3xl">
@@ -451,7 +456,7 @@ const AnalizaROIApartament = () => {
                 <Home className="mb-4 h-7 w-7 text-primary" />
                 <h3 className="text-xl font-semibold text-foreground group-hover:text-primary">{item.name}</h3>
                 <p className="mt-2 text-sm text-muted-foreground">{item.profile}</p>
-                <p className="mt-4 text-sm font-semibold text-primary">ROI estimat {item.yield}</p>
+                <p className="mt-4 text-sm font-semibold text-primary">Randament net estimat {item.yield}</p>
               </Link>
             ))}
           </div>

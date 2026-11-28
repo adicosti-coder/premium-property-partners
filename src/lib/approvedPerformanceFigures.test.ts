@@ -26,6 +26,8 @@ const SOURCES = [
   "src/pages/Investitii.tsx",
   "src/pages/CityOfMaraTimisoara.tsx",
   "src/pages/AnalizaROIApartament.tsx",
+  "src/lib/prioritySeoContent.ts",
+  "src/components/AnalysisZoneGuide.tsx",
   "src/components/DualServicePaths.tsx",
   "src/components/DIYvsProfessional.tsx",
   "src/components/LeadMagnetBanner.tsx",

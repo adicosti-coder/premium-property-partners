@@ -36,8 +36,8 @@ export function ServicesH2Strip() {
       icon: TrendingUp,
       h2: isRo ? "Investiții imobiliare Timișoara" : "Real estate investments Timișoara",
       desc: isRo
-        ? "Catalog premium 2026 cu randament estimat 9.4% net și analiză AI per proprietate."
-        : "Premium 2026 catalog with estimated 9.4% net yield and AI analysis per property.",
+        ? "Catalog premium 2026 cu randament net estimat 6,5–9,4% și analiză AI per proprietate."
+        : "Premium 2026 catalog with estimated 6.5–9.4% net yield and AI analysis per property.",
     },
     {
       to: "/pentru-proprietari",

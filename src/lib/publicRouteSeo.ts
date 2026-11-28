@@ -1,8 +1,12 @@
 type Metadata = { title: string; description: string; h1: string };
 export const PUBLIC_ROUTE_SEO: Record<string, Record<'ro' | 'en', Metadata>> = {
   '/': {
-    ro: { title: 'RealTrust Timișoara | Imobiliare și administrare', description: 'Servicii imobiliare în Timișoara: vânzări, închirieri, investiții și administrare în regim hotelier prin RealTrust și ApArt Hotel.', h1: 'RealTrust Timișoara — Imobiliare, Investiții și Property Management' },
+    ro: { title: 'RealTrust Timișoara | Imobiliare, Investiții, Administrare', description: 'RealTrust Timișoara: vânzări, închirieri, investiții și administrare în regim hotelier. Calculează randamentul net și descoperă soluții pentru proprietari.', h1: 'RealTrust Timișoara — Imobiliare, Investiții și Property Management' },
     en: { title: 'RealTrust Timișoara | Real estate and management', description: 'Real estate services in Timișoara: sales, rentals, investments and short-term rental management through RealTrust and ApArt Hotel.', h1: 'RealTrust Timișoara — Real Estate, Investments and Property Management' },
+  },
+  '/analiza-roi-apartament': {
+    ro: { title: 'Randament imobiliar Timișoara | Analiză apartament', description: 'Calculează randamentul net al unui apartament în Timișoara: compară chiria clasică cu regimul hotelier, ocuparea, costurile și evoluția investiției.', h1: 'Analiză randament apartament pentru investiții în Timișoara' },
+    en: { title: 'Apartment Yield Analysis | Real estate investment returns', description: 'Estimate an apartment’s net yield in Timișoara: compare classic rent with short-term management, occupancy, costs and investment growth.', h1: 'Apartment yield analysis for investments in Timișoara' },
   },
   '/preturi': {
     ro: { title: 'Prețuri administrare Timișoara | RealTrust', description: 'Pachete RealTrust pentru administrare în regim hotelier în Timișoara: Starter 15%, Esențial 18%, Standard 20% din venitul net.', h1: 'Prețuri & Servicii de Administrare Proprietăți Timișoara' },
