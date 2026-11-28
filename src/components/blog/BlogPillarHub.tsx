@@ -529,7 +529,7 @@ const BlogPillarHub = () => {
             <p className="text-sm text-muted-foreground mt-4">
               Vezi și{" "}
               <Link to="/calculator-randament" className="text-primary hover:underline">
-                Calculatorul ROI
+                Calculatorul de randament imobiliar
               </Link>{" "}
               pentru o estimare rapidă a randamentului.
             </p>
@@ -584,7 +584,7 @@ const BlogPillarHub = () => {
             <p className="text-sm text-muted-foreground mt-4">
               Calculează propriul randament cu{" "}
               <Link to="/calculator-randament" className="text-primary hover:underline">
-                Calculatorul ROI
+                Calculatorul de randament imobiliar
               </Link>{" "}
               sau citește{" "}
               <Link to="/blog/ghid-investitii-imobiliare-timisoara-2026" className="text-primary hover:underline">

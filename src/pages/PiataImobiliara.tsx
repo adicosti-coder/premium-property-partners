@@ -8,6 +8,7 @@ import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { TrendingUp, BarChart3, MapPin, ArrowRight } from "lucide-react";
 import { neighborhoods } from "@/data/neighborhoods";
+const PageSeoGuide = lazy(() => import("@/components/PageSeoGuide"));
 
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 
@@ -79,6 +80,7 @@ const PiataImobiliara = () => {
       </main>
 
       <Suspense fallback={null}>
+        <Suspense fallback={null}><PageSeoGuide path="/piata-imobiliara-timisoara" /></Suspense>
         <Footer />
         <GlobalConversionWidgets />
       </Suspense>

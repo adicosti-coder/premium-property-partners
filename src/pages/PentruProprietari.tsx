@@ -809,7 +809,7 @@ const PentruProprietari = () => {
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button asChild variant="hero" size="lg">
-                <Link to="/calculator-randament">{language === "ro" ? "Deschide Calculatorul ROI" : "Open ROI Calculator"}</Link>
+                <Link to="/calculator-randament">{language === "ro" ? "Deschide Calculatorul de randament imobiliar" : "Open ROI Calculator"}</Link>
               </Button>
               <Button asChild variant="outline" size="lg">
                 <Link to="/evaluare-gratuita?beneficiu=calculator_roi" onClick={() => trackConversion({ event: "owner_cta_click", source: "pentru_proprietari", benefit: "calculator_roi" })}>{language === "ro" ? "Solicită evaluare gratuită" : "Request a free valuation"}</Link>
@@ -844,7 +844,7 @@ const PentruProprietari = () => {
               >
                 <Link to="/calculator-randament">
                   <TrendingUp className="w-5 h-5 mr-2" />
-                  {language === "ro" ? "Calculează Randamentul Imobiliar (ROI) acum" : "Calculate ROI Now"}
+                  {language === "ro" ? "Calculează randamentul imobiliar acum" : "Calculate ROI Now"}
                   <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>

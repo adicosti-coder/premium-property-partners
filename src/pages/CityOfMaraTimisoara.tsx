@@ -397,7 +397,7 @@ const CityOfMaraTimisoara = () => {
                 <h2 id="tipuri-apartamente-city-of-mara" className="text-3xl font-bold text-foreground">Tipuri de apartamente City of Mara</h2>
                 <p className="mt-3 text-muted-foreground">Tabel orientativ pentru vânzare apartamente noi City of Mara și analiza randamentului.</p>
               </div>
-              <Button asChild variant="outline"><Link to="/analiza-roi-apartament">Calculează Randamentul Imobiliar (ROI)</Link></Button>
+              <Button asChild variant="outline"><Link to="/analiza-roi-apartament">Calculează randamentul imobiliar</Link></Button>
             </div>
             <div className="overflow-x-auto rounded-lg border border-border bg-card">
               <table className="w-full min-w-[720px] text-left text-sm">

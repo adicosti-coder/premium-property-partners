@@ -33,7 +33,7 @@ export function SEODualCTASection() {
       to: "/analiza-roi-apartament",
       icon: Calculator,
       h2: isRo
-        ? "Calculează Randamentul Imobiliar (ROI) Apartamentului Tău în Regim Hotelier"
+        ? "Calculează randamentul imobiliar al apartamentului tău în regim hotelier"
         : "Calculate Your Apartment's ROI in Short-Term Rental",
       desc: isRo
         ? "Rulează o simulare avansată pentru a vedea dacă proprietatea ta generează un randament mai bun pe termen scurt (ApArt Hotel) comparativ cu o închiriere tradițională."

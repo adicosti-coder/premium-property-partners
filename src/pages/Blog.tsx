@@ -32,6 +32,8 @@ import PageSummary from "@/components/PageSummary";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import BlogPillarHub from "@/components/blog/BlogPillarHub";
+import { lazy, Suspense } from "react";
+const PageSeoGuide = lazy(() => import("@/components/PageSeoGuide"));
 
 interface BlogArticle {
   id: string;
@@ -398,7 +400,7 @@ const Blog = () => {
               </p>
               <div className="flex flex-wrap gap-2 text-sm">
                 <Link to="/calculator-randament" className="rounded-full border border-border bg-background px-3 py-1.5 hover:border-primary/40 hover:text-primary transition-colors">
-                  Calculator Randament Imobiliar (ROI)
+                  Calculator de randament imobiliar
                 </Link>
                 <Link to="/piata-imobiliara-timisoara" className="rounded-full border border-border bg-background px-3 py-1.5 hover:border-primary/40 hover:text-primary transition-colors">
                   Prețuri pe cartiere
@@ -731,6 +733,7 @@ const Blog = () => {
         </div>
       </main>
 
+      <Suspense fallback={null}><PageSeoGuide path="/blog" /></Suspense>
       <Footer />
       <GlobalConversionWidgets />
       <BackToTop />

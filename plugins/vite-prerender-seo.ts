@@ -10,6 +10,7 @@ import type { Plugin } from 'vite';
 import fs from 'fs';
 import path from 'path';
 import { PUBLIC_ROUTE_SEO } from '../src/lib/publicRouteSeo';
+import { LOW_SCORE_PAGE_SEO } from '../src/lib/lowScorePageSeo';
 import { readComplexLandingNames } from '../src/lib/complexLandingSeo';
 import { isTranslatedStaticPath, normalizeSeoPath, prerenderHeadLinks, prerenderLanguageScript, SITE_ORIGIN } from '../src/lib/seoLanguagePolicy';
 import { CONSOLIDATED_ARTICLE_REDIRECTS, isConsolidatedArticle } from '../src/data/consolidatedArticleRedirects';
@@ -136,7 +137,7 @@ const HOMEPAGE_SEO_BODY = `
   <p><strong>Administrare proprietăți Timișoara</strong> oferită de RealTrust acoperă tot ciclul: marketing pe Booking, Airbnb și directe, check-in / check-out 24/7, curățenie hotelieră, mentenanță, raportare lunară financiară transparentă și optimizare yield management. <strong>Administrare apartamente regim hotelier Timișoara</strong> cu randament net estimat 6,5–9,4% anual — partener de încredere pentru proprietari și investitori.</p>
 
   <h3>Servicii oferite</h3>
-  <p>Investiții imobiliare Timișoara cu randament net estimat 6,5–9,4%, vânzări apartamente Timișoara, închirieri pe termen lung Timișoara, evaluare gratuită proprietate, calculator randament imobiliar (ROI) online, consultanță investiții imobiliare și administrare profesională pentru proprietari, investitori și oaspeți.</p>
+  <p>Investiții imobiliare Timișoara cu randament net estimat 6,5–9,4%, vânzări apartamente Timișoara, închirieri pe termen lung Timișoara, evaluare gratuită proprietate, calculator de randament imobiliar online, consultanță investiții imobiliare și administrare profesională pentru proprietari, investitori și oaspeți.</p>
 
   <h3>Proximitate landmark-uri Timișoara și acces transport public</h3>
   <p>Toate proprietățile noastre sunt aproape de universități (UVT, UPT, UMF), mall-uri (Iulius Town, Shopping City Timișoara), parcuri (Parcul Central, Parcul Rozelor, Parcul Botanic), Catedrala Mitropolitană, malul Bega, Spitalul Județean Timișoara, Aeroportul Internațional și Gara de Nord — la 5, 10 sau 15 minute pe jos sau cu transport public. Acces facil la stația de tramvai (linii 1, 2, 4, 8) și autobuz (E1, E4, 33, 40), cu mijloc de transport în comun la sub 100m de fiecare proprietate.</p>
@@ -960,9 +961,9 @@ export function buildStaticRoutes(): PrerenderRoute[] {
   routes.push({
     path: '/calculator-randament',
     title: 'Randament imobiliar Timișoara | Calculator RealTrust',
-    description: 'Calculator Randament Imobiliar (ROI) Timișoara: compară chiria vs regimul hotelier pe chirii reale din fiecare zonă. Afli venitul net lunar estimat în 3 pași.',
+    description: 'Calculator de randament imobiliar Timișoara: compară chiria vs regimul hotelier pe chirii reale din fiecare zonă. Afli venitul net lunar estimat în 3 pași.',
     // Must match the React H1 in src/pages/CalculatorROI.tsx; H2/H3 mirror its sections.
-    h1: 'Calculator Randament Imobiliar (ROI) Timișoara',
+    h1: 'Calculator de randament imobiliar Timișoara',
     canonical: `${BASE_URL}/calculator-randament`,
     seoBody: `
       <h2>Cât poate produce proprietatea ta?</h2>
@@ -988,7 +989,7 @@ export function buildStaticRoutes(): PrerenderRoute[] {
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'WebApplication',
-      name: 'Calculator Randament Imobiliar (ROI) Timișoara',
+      name: 'Calculator de randament imobiliar Timișoara',
       description: 'Calculator randament imobiliar Timișoara: chirie vs hotelier, venit net lunar estimat pe zone',
       operatingSystem: 'Web',
       inLanguage: 'ro-RO',
@@ -1276,7 +1277,7 @@ export function buildStaticRoutes(): PrerenderRoute[] {
       <h3>Teme acoperite</h3>
       <ul>
         <li>Regim hotelier vs. chirie clasică</li>
-        <li>Randament (ROI) realist și comisionul de administrare 15–20% din net</li>
+        <li>Randament imobiliar realist și comisionul de administrare 15–20% din net</li>
         <li>Autorizații și legislație</li>
         <li>Taxe locale în Timișoara</li>
         <li>Contract, preaviz și daune</li>
@@ -1374,7 +1375,7 @@ export function buildStaticRoutes(): PrerenderRoute[] {
       <p>Ca <strong>consultant imobiliar Timișoara</strong> de top, RealTrust verifică pentru fiecare oportunitate: situația juridică (extras CF actualizat, sarcini, litigii), starea tehnică (expertiză structurală, instalații), eficiența energetică, istoricul tranzacțiilor și potențialul real de venit (analiză comparabilă cu portofoliul nostru de 13 cazări active administrate). Raportul complet de due diligence este livrat în 5–7 zile.</p>
 
       <h3>Ghid investitor 2026 — descarcă gratuit</h3>
-      <p>Ghidul investitorului 2026 (PDF, 40 pagini) include: analiză detaliată pe cartiere, calculator randament imobiliar (ROI) cu scenarii multiple, structură fiscală optimă (PFA vs SRL), checklist due diligence, top 5 ansambluri rezidențiale recomandate și studii de caz reale din portofoliul RealTrust.</p>
+      <p>Ghidul investitorului 2026 (PDF, 40 pagini) include: analiză detaliată pe cartiere, calculator de randament imobiliar cu scenarii multiple, structură fiscală optimă (PFA vs SRL), checklist due diligence, top 5 ansambluri rezidențiale recomandate și studii de caz reale din portofoliul RealTrust.</p>
     `,
     jsonLd: [
       {
@@ -1676,7 +1677,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   proprietate: 'Proprietăți',
   'imobiliare-timisoara': 'Cartiere',
   complexe: 'Ansambluri rezidențiale',
-  'calculator-randament': 'Calculator Randament Imobiliar (ROI)',
+  'calculator-randament': 'Calculator de randament imobiliar',
   'analiza-roi-apartament': 'Analiză Randament apartament',
   'piata-imobiliara-timisoara': 'Piața imobiliară Timișoara',
   'evaluare-gratuita': 'Evaluare gratuită',
@@ -2052,6 +2053,12 @@ export default function vitePrerenderSeo(): Plugin {
             translated.englishAvailable = true;
             translated.english = { title: languages.en.title, description: languages.en.description };
           }
+        }
+
+        // Low-score page guides: the same copy PageSeoGuide shows on the page.
+        for (const [routePath, guide] of Object.entries(LOW_SCORE_PAGE_SEO)) {
+          const route = allRoutes.find((item) => item.path === routePath);
+          if (route) route.seoBody = `${route.seoBody ?? ''}${guide.body}`;
         }
 
         // One title per page, at most 60 characters, no duplicates.

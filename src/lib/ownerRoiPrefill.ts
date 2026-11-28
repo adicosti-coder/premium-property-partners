@@ -1,5 +1,5 @@
 /**
- * ownerRoiPrefill — punte între Calculatorul ROI și formularul de contact proprietari.
+ * ownerRoiPrefill — punte între Calculatorul de randament imobiliar și formularul de contact proprietari.
  * Estimatorul emite un eveniment cu valorile selectate; formularul le preia,
  * pre-completează câmpurile și afișează o notă de context.
  */

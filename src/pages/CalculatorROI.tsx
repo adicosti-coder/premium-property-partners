@@ -11,13 +11,14 @@ import { Link } from "react-router-dom";
 import { Coins, Home, Wrench, Receipt, BedDouble, TrendingUp, Wallet, BookOpen, HelpCircle, MessageCircle } from "lucide-react";
 import { lazy, Suspense } from "react";
 import { GUEST_SCORE_RO } from "@/lib/businessFacts";
+const PageSeoGuide = lazy(() => import("@/components/PageSeoGuide"));
 
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 
 const CalculatorROI = () => {
   const breadcrumbItems = [
     { label: "Acasă", href: "/" },
-    { label: "Calculator Randament Imobiliar (ROI)" },
+    { label: "Calculator de randament imobiliar" },
   ];
 
   const tocItems = [
@@ -69,16 +70,16 @@ const CalculatorROI = () => {
     <div className="min-h-screen bg-background">
       <SEOHead
         title="Randament imobiliar Timișoara | Calculator RealTrust"
-        description="Calculator Randament Imobiliar (ROI) Timișoara: compară chiria vs regimul hotelier pe chirii reale din fiecare zonă. Afli venitul net lunar estimat în 3 pași."
+        description="Calculator de randament imobiliar Timișoara: compară chiria vs regimul hotelier pe chirii reale din fiecare zonă. Afli venitul net lunar estimat în 3 pași."
         url="https://realtrust.ro/calculator-randament"
         breadcrumbItems={[
           { name: "Acasă", url: "https://realtrust.ro" },
-          { name: "Calculator Randament Imobiliar (ROI)", url: "https://realtrust.ro/calculator-randament" },
+          { name: "Calculator de randament imobiliar", url: "https://realtrust.ro/calculator-randament" },
         ]}
         jsonLd={[FINANCIAL_SERVICE_SCHEMA as unknown as Record<string, unknown>, {
           "@context": "https://schema.org",
           "@type": "FinancialProduct",
-          name: "Calculator Randament Imobiliar (ROI) Timișoara — regim hotelier vs. chirie clasică",
+          name: "Calculator de randament imobiliar Timișoara — regim hotelier vs. chirie clasică",
           description: "Calculator gratuit de randament imobiliar: compară venitul lunar net între regim hotelier și chirie clasică, pe chirii reale din Timișoara.",
           url: "https://realtrust.ro/calculator-randament",
           provider: {
@@ -89,7 +90,7 @@ const CalculatorROI = () => {
         }, {
           "@context": "https://schema.org",
           "@type": "WebApplication",
-          name: "Calculator Randament Imobiliar (ROI) Timișoara",
+          name: "Calculator de randament imobiliar Timișoara",
           alternateName: ["Calculator chirie vs hotelier Timișoara", "Randament imobiliar Timișoara"],
           url: "https://realtrust.ro/calculator-randament",
           applicationCategory: "FinanceApplication",
@@ -108,7 +109,7 @@ const CalculatorROI = () => {
 
           <div className="text-center mb-6">
             <h1 className="text-2xl md:text-4xl font-serif font-semibold text-foreground mb-2">
-              Calculator Randament Imobiliar (ROI) Timișoara
+              Calculator de randament imobiliar Timișoara
             </h1>
             <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
               Compară chiria clasică pe termen lung cu regimul hotelier, pe chirii și prețuri reale din zona ta din Timișoara. <strong>Rezultat în 1 minut, gratuit.</strong>
@@ -271,6 +272,7 @@ const CalculatorROI = () => {
       </main>
 
       <Suspense fallback={null}>
+        <Suspense fallback={null}><PageSeoGuide path="/calculator-randament" /></Suspense>
         <Footer />
         <GlobalConversionWidgets />
       </Suspense>

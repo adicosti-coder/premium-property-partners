@@ -17,6 +17,7 @@ import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { trackConversion, formatPhoneInput } from "@/lib/conversionTracking";
 import { trackSavedOwnerLead } from "@/lib/ownerLeadConversion";
 import { gridSaleBenchmark } from "@/lib/calculatorValuation";
+const PageSeoGuide = lazy(() => import("@/components/PageSeoGuide"));
 const UnifiedCalculator = lazy(() => import("@/components/UnifiedCalculator"));
 
 const EVAL_FAQS = [
@@ -543,6 +544,7 @@ const EvaluareGratuita = () => {
         </div>
         <section id="calculator" className="scroll-mt-24 px-4 py-12"><div className="mx-auto max-w-4xl"><Suspense fallback={<div className="min-h-[400px]" />}><UnifiedCalculator /></Suspense></div></section>
       </main>
+      <Suspense fallback={null}><PageSeoGuide path="/evaluare-gratuita" /></Suspense>
       <Footer />
     </Suspense>
   );

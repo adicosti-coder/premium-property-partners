@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { withCampaignTracking } from "@/lib/campaignAttribution";
 import { trackConversion, formatPhoneInput } from "@/lib/conversionTracking";
 import { neighborhoods } from "@/data/neighborhoods";
+const PageSeoGuide = lazy(() => import("@/components/PageSeoGuide"));
 
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
@@ -327,6 +328,7 @@ const AnalizaProprietate = () => {
           </form>
         </section>
       </main>
+      <Suspense fallback={null}><PageSeoGuide path="/hostscan-ai" /></Suspense>
       <Footer />
     </Suspense>
   );

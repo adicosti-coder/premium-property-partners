@@ -24,6 +24,8 @@ import {
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList,
 } from "recharts";
+import { lazy, Suspense } from "react";
+const PageSeoGuide = lazy(() => import("@/components/PageSeoGuide"));
 
 interface Property {
   name: string;
@@ -807,6 +809,7 @@ const CatalogInvestitii = () => {
       </main>
 
       <SEOFooterText pageType="catalog" city="Timișoara" />
+      <Suspense fallback={null}><PageSeoGuide path="/catalog-investitii" /></Suspense>
       <Footer />
       <BackToTop />
     </div>

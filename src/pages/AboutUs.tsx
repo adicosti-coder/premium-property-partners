@@ -530,7 +530,7 @@ const AboutUs = () => {
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
                   { to: "/cartiere", label: language === "ro" ? "Vânzări apartamente & case Timișoara" : "Apartments & houses for sale Timișoara", icon: Building2 },
-                  { to: "/calculator-randament", label: language === "ro" ? "Calculator Randament Imobiliar (ROI)" : "Short-term Rental ROI Calculator", icon: TrendingUp },
+                  { to: "/calculator-randament", label: language === "ro" ? "Calculator de randament imobiliar" : "Short-term Rental ROI Calculator", icon: TrendingUp },
                   { to: "/cazare", label: language === "ro" ? "Cazare Premium pentru oaspeți" : "Premium stays for guests", icon: Home },
                   { to: "/evaluare-gratuita", label: language === "ro" ? "Evaluare gratuită proprietate" : "Free property valuation", icon: Award }
                 ].map((p, i) => (
@@ -740,7 +740,7 @@ const AboutUs = () => {
                   <div className="md:col-span-2 flex flex-col sm:flex-row gap-3 pt-4 border-t border-border">
                     <Button asChild className="flex-1">
                       <Link to="/calculator-randament">
-                        {language === "ro" ? "Calculează Randamentul Imobiliar (ROI) pentru proprietatea ta" : "Calculate ROI for your property"}
+                        {language === "ro" ? "Calculează randamentul imobiliar pentru proprietatea ta" : "Calculate ROI for your property"}
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Link>
                     </Button>

@@ -179,7 +179,7 @@ const OwnerContactLeadForm = ({
   );
 
 
-  // Prefill din Calculatorul ROI (aceeași pagină)
+  // Prefill din Calculatorul de randament imobiliar (aceeași pagină)
   useEffect(() => {
     const handler = (event: Event) => {
       const detail = (event as CustomEvent<OwnerRoiPrefillPayload>).detail;
@@ -352,7 +352,7 @@ const OwnerContactLeadForm = ({
         wantsYieldAnalysis ? " · Solicită analiză gratuită de randament" : ""
       }${
         roiPrefill
-          ? ` · Calculator Randament Imobiliar (ROI): chirie clasică ${roiPrefill.monthlyRent} €/lună · venit net estimat ${roiPrefill.netAnnualIncome} €/an`
+          ? ` · Calculator de randament imobiliar: chirie clasică ${roiPrefill.monthlyRent} €/lună · venit net estimat ${roiPrefill.netAnnualIncome} €/an`
           : ""
       }`,
       source,

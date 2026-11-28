@@ -18,6 +18,7 @@ import { MapPin, TrendingUp, Home, Phone, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { lazy, Suspense } from "react";
 import { CompareProvider } from "@/contexts/CompareContext";
+const PageSeoGuide = lazy(() => import("@/components/PageSeoGuide"));
 
 const MarketPulse = lazy(() => import("@/components/MarketPulse"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
@@ -230,6 +231,7 @@ const NeighborhoodDetail = () => {
       </main>
 
       <Suspense fallback={null}>
+        <Suspense fallback={null}><PageSeoGuide path={`/imobiliare-timisoara/${neighborhood.slug}`} /></Suspense>
         <Footer />
         <GlobalConversionWidgets />
       </Suspense>

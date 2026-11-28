@@ -39,6 +39,7 @@ const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversion
 const RealEstateListings = lazy(() => import("@/components/RealEstateListings"));
 const SEOFooterText = lazy(() => import("@/components/SEOFooterText"));
 import QueryBoundary from "@/components/QueryBoundary";
+const PageSeoGuide = lazy(() => import("@/components/PageSeoGuide"));
 
 const Imobiliare = () => {
   const { t, language } = useLanguage();
@@ -91,7 +92,7 @@ const Imobiliare = () => {
   const seoContent = {
     ro: {
       title: "Imobiliare Timișoara: Vânzări, Închirieri, Regim Hotelier | RealTrust",
-      description: "Investește profitabil în imobiliare Timișoara! Apartamente regim hotelier, vânzări, închirieri lângă UVT, Iulius Town, Aeroport. Calculează Randamentul Imobiliar (ROI) gratuit!"
+      description: "Investește profitabil în imobiliare Timișoara! Apartamente regim hotelier, vânzări, închirieri lângă UVT, Iulius Town, Aeroport. Calculează randamentul imobiliar gratuit!"
     },
     en: {
       title: "Real Estate Timișoara: Sales, Rentals, Hotel-Style | RealTrust",
@@ -490,7 +491,7 @@ const Imobiliare = () => {
           <div className="mt-12 max-w-4xl mx-auto rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 justify-between">
             <div className="flex-1 text-center md:text-left">
               <h3 className="text-lg md:text-xl font-semibold text-foreground mb-1">
-                {language === "ro" ? "Calculează Randamentul Imobiliar (ROI) investiției tale în 30 secunde" : "Calculate your investment yield in 30 seconds"}
+                {language === "ro" ? "Calculează randamentul imobiliar al investiției tale în 30 secunde" : "Calculate your investment yield in 30 seconds"}
               </h3>
               <p className="text-sm text-muted-foreground">
                 {language === "ro" ? "Compară regim hotelier vs. chirie clasică pentru proprietatea ta din Timișoara." : "Compare hotel-style vs. classic rental for your Timișoara property."}
@@ -500,7 +501,7 @@ const Imobiliare = () => {
               <Link to="/calculator-randament">
                 <Button variant="hero" size="lg">
                   <Calculator className="w-5 h-5 mr-2" />
-                  {language === "ro" ? "Calculează Randamentul Imobiliar (ROI)" : "Calculate ROI"}
+                  {language === "ro" ? "Calculează randamentul imobiliar" : "Calculate ROI"}
                 </Button>
               </Link>
               <Link to="/investitii">
@@ -618,6 +619,7 @@ const Imobiliare = () => {
       </section>
 
       <SEOFooterText pageType="listings" city="Timișoara" />
+      <Suspense fallback={null}><PageSeoGuide path="/imobiliare" /></Suspense>
       <Footer />
       <GlobalConversionWidgets />
       <BackToTop />

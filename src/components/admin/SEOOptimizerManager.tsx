@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { lowScoreTargets, filterTrackedUrls, LOW_SCORE_THRESHOLD, type TrackedGridFilter } from "@/lib/seoBulkReaudit";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -104,7 +105,8 @@ const SEOOptimizerManager = () => {
   const [minScore, setMinScore] = useState<number>(0);
   const [bulkRunning, setBulkRunning] = useState(false);
   const [dualRunning, setDualRunning] = useState(false);
-  const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
+  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number; label: string; currentUrl: string | null; results: { url: string; score: number | null }[] }>({ done: 0, total: 0, label: "", currentUrl: null, results: [] });
+  const [gridFilter, setGridFilter] = useState<TrackedGridFilter>("all");
   const [revertConfirm, setRevertConfirm] = useState<string | null>(null);
   const [editedMeta, setEditedMeta] = useState<Record<string, string>>({});
   const [serpPreview, setSerpPreview] = useState<AuditRow | null>(null);
@@ -393,24 +395,36 @@ const SEOOptimizerManager = () => {
     },
   });
 
-  const runBulkAudit = async () => {
+  const runBatchAudit = async (targets: string[], label: string) => {
+    if (!targets.length) { toast.info("Nicio pagină de re-auditat"); return; }
     setBulkRunning(true);
-    setBulkProgress({ done: 0, total: QUICK_URLS.length });
+    const results: { url: string; score: number | null }[] = [];
+    setBulkProgress({ done: 0, total: targets.length, label, currentUrl: targets[0], results });
     let success = 0;
-    for (let i = 0; i < QUICK_URLS.length; i++) {
+    for (let i = 0; i < targets.length; i++) {
+      setBulkProgress((p) => ({ ...p, done: i, currentUrl: targets[i] }));
+      let score: number | null = null;
       try {
-        await auditUrlWithRecovery(supabase, QUICK_URLS[i], language, true);
+        const { data } = await auditUrlWithRecovery(supabase, targets[i], language, true);
+        score = typeof data?.audit?.overall_score === "number" ? data.audit.overall_score : null;
         success++;
       } catch (e) {
-        console.error("Bulk audit fail for", QUICK_URLS[i], e);
+        console.error("Bulk audit fail for", targets[i], e);
       }
-      setBulkProgress({ done: i + 1, total: QUICK_URLS.length });
-      if (i < QUICK_URLS.length - 1) await new Promise((r) => setTimeout(r, REAUDIT_GAP_MS));
+      results.push({ url: targets[i], score });
+      setBulkProgress((p) => ({ ...p, done: i + 1, results: [...results] }));
+      if (i < targets.length - 1) await new Promise((r) => setTimeout(r, REAUDIT_GAP_MS));
     }
+    setBulkProgress((p) => ({ ...p, currentUrl: null }));
     qc.invalidateQueries({ queryKey: ["seo-audits-history"] });
     setBulkRunning(false);
-    toast.success(`Bulk audit: ${success}/${QUICK_URLS.length} URL-uri analizate`);
+    toast.success(`${label}: ${success}/${targets.length} URL-uri analizate`);
   };
+
+  const runBulkAudit = () => runBatchAudit(QUICK_URLS, "Analiză completă");
+  const weakUrls = lowScoreTargets(QUICK_URLS, trackedScores);
+  const runLowScoreAudit = () => runBatchAudit(weakUrls, `Re-audit scor < ${LOW_SCORE_THRESHOLD}`);
+  const visibleTrackedUrls = filterTrackedUrls(QUICK_URLS, trackedScores, gridFilter);
 
   const runDualLanguageAudit = async () => {
     setDualRunning(true);
@@ -801,28 +815,56 @@ const SEOOptimizerManager = () => {
               <h3 id="seo-tracked-urls" className="text-sm font-semibold">
                 Pagini urmărite <span className="font-normal text-muted-foreground">({QUICK_URLS.length})</span>
               </h3>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={runBulkAudit}
-                disabled={bulkRunning}
-                className="min-h-12 w-full sm:min-h-9 sm:w-auto"
-              >
-                {bulkRunning ? (
-                  <>
-                    <Loader2 className="w-3 h-3 mr-2 animate-spin" />
-                    Bulk {bulkProgress.done}/{bulkProgress.total}
-                  </>
-                ) : (
-                  <>
-                    <Layers className="w-3 h-3 mr-2" />
-                    Analizează toate ({QUICK_URLS.length})
-                  </>
-                )}
-              </Button>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={runLowScoreAudit}
+                  disabled={bulkRunning || weakUrls.length === 0}
+                  className="min-h-12 w-full sm:min-h-9 sm:w-auto"
+                >
+                  <RefreshCw className="w-3 h-3 mr-2" />
+                  Re-auditează paginile cu scor mic (&lt;{LOW_SCORE_THRESHOLD}) ({weakUrls.length})
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={runBulkAudit}
+                  disabled={bulkRunning}
+                  className="min-h-12 w-full sm:min-h-9 sm:w-auto"
+                >
+                  {bulkRunning ? (
+                    <>
+                      <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                      {bulkProgress.done}/{bulkProgress.total}
+                    </>
+                  ) : (
+                    <>
+                      <Layers className="w-3 h-3 mr-2" />
+                      Analizează toate ({QUICK_URLS.length})
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+            <div role="group" aria-label="Filtru pagini urmărite" className="mb-3 inline-flex rounded-md border p-0.5">
+              {([["all", `Toate (${QUICK_URLS.length})`], ["weak", `Scor mic (${weakUrls.length})`]] as const).map(([mode, text]) => (
+                <button
+                  key={mode}
+                  type="button"
+                  aria-pressed={gridFilter === mode}
+                  onClick={() => setGridFilter(mode)}
+                  className={`min-h-12 rounded px-3 text-xs sm:min-h-8 ${gridFilter === mode ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  {text}
+                </button>
+              ))}
             </div>
             <ul className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap">
-              {QUICK_URLS.map((u) => {
+              {gridFilter === "weak" && visibleTrackedUrls.length === 0 && (
+                <li className="col-span-2 text-xs text-muted-foreground">Nicio pagină sub {LOW_SCORE_THRESHOLD} puncte.</li>
+              )}
+              {visibleTrackedUrls.map((u) => {
                 const path = u.replace("https://realtrust.ro", "") || "/";
                 const score = trackedScores.get(path);
                 const active = url === u;
@@ -858,8 +900,33 @@ const SEOOptimizerManager = () => {
               })}
             </ul>
           </section>
-          {bulkRunning && (
-            <Progress value={(bulkProgress.done / Math.max(bulkProgress.total, 1)) * 100} />
+          {(bulkRunning || bulkProgress.results.length > 0) && (
+            <section aria-live="polite" className="space-y-2 rounded-md border p-3 text-xs">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="font-semibold">{bulkProgress.label}</span>
+                <span className="tabular-nums text-muted-foreground">
+                  {bulkRunning ? `Pasul ${Math.min(bulkProgress.done + 1, bulkProgress.total)} din ${bulkProgress.total}` : `Finalizat: ${bulkProgress.done}/${bulkProgress.total}`}
+                </span>
+              </div>
+              <Progress value={(bulkProgress.done / Math.max(bulkProgress.total, 1)) * 100} />
+              {bulkProgress.currentUrl && (
+                <p className="break-all text-muted-foreground">Se auditează: <span className="text-foreground">{bulkProgress.currentUrl.replace("https://realtrust.ro", "") || "/"}</span></p>
+              )}
+              {bulkProgress.results.length > 0 && (
+                <ul className="space-y-1">
+                  {bulkProgress.results.map((r) => {
+                    const p = r.url.replace("https://realtrust.ro", "") || "/";
+                    const before = trackedScores.get(p);
+                    return (
+                      <li key={r.url} className="flex justify-between gap-2">
+                        <span className="break-all">{p}</span>
+                        <span className="shrink-0 tabular-nums font-semibold">{r.score === null ? "eroare" : `scor nou ${r.score}`}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </section>
           )}
         </CardContent>
       </Card>

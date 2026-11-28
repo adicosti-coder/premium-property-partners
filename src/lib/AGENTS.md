@@ -11,3 +11,4 @@
 - The static homepage hero shell in root `index.html` repeats the React hero headline, subtitle and mobile text-shadow exactly (`heroShellParity.test.ts`) — a larger late React paragraph becomes a new LCP and adds ~1.5s on mobile.
 - Public performance claims (site copy, PDFs, assistant prompts, listing generator) are scanned by `approvedPerformanceFigures.test.ts`; add new sources to its list — stops outdated rating, occupancy and yield figures from returning.
 - Priority-page guides share trusted copy with prerender through `prioritySeoContent.ts`; mount the homepage guide below-fold — keeps crawler content available to visitors without delaying the hero.
+- Low-score page guides live in `lowScorePageSeo.ts` (metadata in `publicRouteSeo.ts`), shown by lazy `PageSeoGuide` and appended to prerender by path; admin batch re-audit selection comes from `seoBulkReaudit.ts` (tested) — keeps page, crawler copy and the <70 re-audit list consistent.

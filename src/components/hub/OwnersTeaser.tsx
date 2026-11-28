@@ -18,7 +18,7 @@ const OwnersTeaser = () => {
       title: "Randament net previzibil,",
       titleHighlight: "fără sarcini operaționale",
       subtitle: "Administrare în regim hotelier, gestionată integral de echipa noastră. Tu deții activul, noi construim operațiunea — cu raportare clară și ipoteze publice.",
-      cta: "Calculează Randamentul tău Imobiliar (ROI)",
+      cta: "Calculează randamentul tău imobiliar",
       features: [
         {
           icon: TrendingUp,

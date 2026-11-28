@@ -14,6 +14,8 @@ import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { REAL_ESTATE_AGENT_SCHEMA } from "@/lib/orgIdentity";
+import { lazy, Suspense } from "react";
+const PageSeoGuide = lazy(() => import("@/components/PageSeoGuide"));
 
 
 const packages = {
@@ -578,6 +580,7 @@ const Preturi = () => {
         </div>
       </section>
 
+      <Suspense fallback={null}><PageSeoGuide path="/preturi" /></Suspense>
       <Footer />
       <GlobalConversionWidgets />
       <BackToTop />
