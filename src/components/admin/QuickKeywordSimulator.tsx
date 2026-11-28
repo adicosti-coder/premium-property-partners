@@ -80,7 +80,14 @@ const DEFAULT_SANITIZER: SanitizerRule[] = [
   { pattern: "\\bowner\\s*only\\b",             label: "owner only" },
 ];
 
+const MAX_PATTERN_LEN = 300;
+const MAX_KEYWORD_LEN = 200;
+// Rejects patterns prone to catastrophic backtracking: a quantified group that
+// itself contains a quantifier (e.g. (a+)+, (\w*)*), or backreferences.
+const NESTED_QUANTIFIER = /\((?:[^()\\]|\\.)*[+*}](?:[^()\\]|\\.)*\)\s*(?:[+*]|\{\d+,?\d*\})/;
 function safeRe(src: string, flags = "i"): RegExp | null {
+  if (!src || src.length > MAX_PATTERN_LEN) return null;
+  if (NESTED_QUANTIFIER.test(src) || /\\[1-9]/.test(src)) return null;
   try { return new RegExp(src, flags); } catch { return null; }
 }
 
@@ -297,7 +304,7 @@ export default function QuickKeywordSimulator() {
       };
       setLogs((prev) => [entry, ...prev].slice(0, 50));
       // Keep keyword filled so the live preview (sanitizer + 3-level regex) stays visible
-      setKeyword(raw);
+      setKeyword(raw.slice(0, MAX_KEYWORD_LEN));
     } catch (e: any) {
       toast({ title: "Eroare simulare", description: e.message, variant: "destructive" });
     } finally {
@@ -644,7 +651,8 @@ export default function QuickKeywordSimulator() {
           <div className="relative flex-1">
             <Input
               value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
+              onChange={(e) => setKeyword(e.target.value.slice(0, MAX_KEYWORD_LEN))}
+              maxLength={MAX_KEYWORD_LEN}
               onKeyDown={(e) => e.key === "Enter" && !running && runTest()}
               placeholder='ex: "regim hotelier cetate" sau "apartament proprietar fără comision"'
               className="pr-9"
